@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.8 2000/07/18 16:35:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.9 2000/08/17 09:47:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -45,27 +45,27 @@ class TPrincipal;
 class TTreePlayer : public TVirtualTreePlayer {
 
 protected:
-    TTree        *fTree;            //Pointer to current Tree
-    Int_t         fDraw;            //Last entry loop number when object was drawn
-    TTreeFormula  *fVar1;           //Pointer to first variable formula
-    TTreeFormula  *fVar2;           //Pointer to second variable formula
-    TTreeFormula  *fVar3;           //Pointer to third variable formula
-    TTreeFormula  *fVar4;           //Pointer to fourth variable formula
-    TTreeFormula  *fSelect;         //Pointer to selection formula
-    TTreeFormula  *fMultiplicity;   //Pointer to formula giving ndata per entry
-    Int_t         fDimension;       //Dimension of the current expression
-    Int_t         fSelectedRows;    //Number of selected entries
-    Int_t         fPacketSize;      //Number of entries in one packet for parallel root
-    Int_t         fNbins[4];        //Number of bins per dimension
-    Double_t       fVmin[4];        //Minima of varexp columns
-    Double_t       fVmax[4];        //Maxima of varexp columns
-    Double_t      *fV1;             //Local buffer for variable 1
-    Double_t      *fV2;             //Local buffer for variable 2
-    Double_t      *fV3;             //Local buffer for variable 3
-    Double_t      *fW;              //Local buffer for weights
-    TPacketGenerator *fPacketGen;   //Packet generator
-    Int_t          fNfill;          //Local for EntryLoop
-    TH1           *fHistogram;      //Pointer to histogram used for the projection
+    TTree         *fTree;           //  Pointer to current Tree
+    TTreeFormula  *fVar1;           //  Pointer to first variable formula
+    TTreeFormula  *fVar2;           //  Pointer to second variable formula
+    TTreeFormula  *fVar3;           //  Pointer to third variable formula
+    TTreeFormula  *fVar4;           //  Pointer to fourth variable formula
+    TTreeFormula  *fSelect;         //  Pointer to selection formula
+    TTreeFormula  *fMultiplicity;   //  Pointer to formula giving ndata per entry
+    Int_t          fDraw;           //! Last entry loop number when object was drawn
+    Int_t          fNfill;          //! Local for EntryLoop
+    Int_t          fDimension;      //  Dimension of the current expression
+    Int_t          fSelectedRows;   //  Number of selected entries
+    Int_t          fPacketSize;     //  Number of entries in one packet for parallel root
+    Int_t          fNbins[4];       //  Number of bins per dimension
+    Double_t       fVmin[4];        //  Minima of varexp columns
+    Double_t       fVmax[4];        //  Maxima of varexp columns
+    Double_t      *fV1;             //[fSelectedRows]Local buffer for variable 1
+    Double_t      *fV2;             //[fSelectedRows]Local buffer for variable 2
+    Double_t      *fV3;             //[fSelectedRows]Local buffer for variable 3
+    Double_t      *fW;              //[fSelectedRows]Local buffer for weights
+    TPacketGenerator *fPacketGen;   //! Packet generator
+    TH1           *fHistogram;      //! Pointer to histogram used for the projection
 
 protected:
     const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
@@ -122,7 +122,7 @@ public:
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
 
-    ClassDef(TTreePlayer,0)  //manager class to play with TTrees
+    ClassDef(TTreePlayer,1)  //manager class to play with TTrees
 };
 
 #endif
