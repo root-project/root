@@ -34,15 +34,7 @@ TestHelpers.o:
 	@rm -f $@
 	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
 
-#load_C.$(DllSuf): load.C load.o
-#	@rm -f $@
-#	$(CMDECHO) root.exe -q -l -b build.C\(\"load.C\"\) 
-
-vtest_C.$(DllSuf): vtest.C vtest.o
-	@rm -f $@
-	$(CMDECHO) root.exe -q -l -b build.C\(\"vtest.C\"\)
-
-stlIoTest: vectorHolder_C.$(DllSuf) vtest_C.$(DllSuf) TestHelpers_C.$(DllSuf)
+stlIoTest: vectorHolder_C.$(DllSuf) vtest_C.$(DllSuf) TestHelpers_C.$(DllSuf) dequeHolder_C.$(DllSuf)
 	$(CMDECHO) echo mytest > /dev/null
 
 testWithFailure:

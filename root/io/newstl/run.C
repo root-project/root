@@ -5,8 +5,12 @@
    if (pass) gSystem->Unload("vtest_C.so");
    //if (pass) gSystem->Unload("load_C.so");
 
-   int result = gSystem->CompileMacro("load.C","k");
+   int result = gSystem->CompileMacro("TestHelpers.C","k");
    if (result != 0 && result != 1) return;
+
+   result = gSystem->CompileMacro("vectorHolder.C","k");
+   if (result != 0 && result != 1) return;
+
    result = gSystem->CompileMacro("vtest.C","k");
    if (result != 0 && result != 1) return;
 
