@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.112 2002/12/04 17:59:46 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.113 2002/12/05 17:55:36 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2693,7 +2693,6 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
    G__ClassInfo arg;
 
    int len = name.length();
-   name += '\0'; // assure that the actual length is >= len+1.
    int nesting = 0;
    const char *current, *next;
    current = next = 0;
@@ -2705,7 +2704,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
          if (nesting==0) {
             name[c] = 0;
             current = next;
-            next = &(name[c+1]);
+            if (c+1<len) next = &(name[c+1]);
             fullyQualifiedName += current;
             fullyQualifiedName += "< ";
             //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
@@ -2717,7 +2716,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
          if (nesting==0) {
             name[c] = 0;
             current = next;
-            next = &(name[c+1]);
+            if (c+1<len) next = &(name[c+1]);
             arg.Init(current);
             if (arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
@@ -2733,7 +2732,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
          if (nesting==1) {
             name[c] = 0;
             current = next;
-            next = &(name[c+1]);
+            if (c+1<len) next = &(name[c+1]);
             arg.Init(current);
             if (arg.IsValid()) {
                 GetFullyQualifiedName(arg,subQualifiedName);
