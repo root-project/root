@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.3 2004/06/21 12:42:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.4 2004/09/08 08:13:11 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    Pixel_t GetColorByIndex(Int_t ix) const { return fPixels[ix]; }
    Pixel_t GetCurrentColor() const;
 
-   virtual void ColorSelected(Pixel_t col = 0)  
+   virtual void ColorSelected(Pixel_t col = 0)
            { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPalette,0)  // Color palette widget
@@ -139,7 +139,7 @@ public:
    void     SetColor(Pixel_t color);
    Pixel_t  GetCurrentColor() const { return fCurrentColor; }
 
-   virtual  void ColorSelected(Pixel_t col = 0)  
+   virtual  void ColorSelected(Pixel_t col = 0)
             { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPick,0)  // Color picker widget
@@ -161,16 +161,15 @@ protected:
    TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte;
    TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb;
 
-   void    UpdateRGBentries(Pixel_t *c);
-   void    UpdateHLSentries(Pixel_t *c);
+   void           UpdateRGBentries(Pixel_t *c);
+   void           UpdateHLSentries(Pixel_t *c);
+   virtual void   CloseWindow();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
 public:
    TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
                  Pixel_t *color = 0);
    virtual ~TGColorDialog();
-
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    ClassDef(TGColorDialog,0)  // Color selection dialog
 };
