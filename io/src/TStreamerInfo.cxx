@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.20 2000/12/21 15:35:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.21 2000/12/21 16:52:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -197,7 +197,7 @@ void TStreamerInfo::Build()
          if (!clm) {
             // try STL container or string
             if (strcmp(dm->GetTypeName(),"string") == 0) {
-               TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset,dm->IsaPointer());
+               TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset);
                fElements->Add(stls);
                for (i=0;i<ndim;i++) stls->SetMaxIndex(i,dm->GetMaxIndex(i));
                stls->SetArrayDim(ndim);

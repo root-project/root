@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.8 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.9 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -243,7 +243,7 @@ class TStreamerSTLstring : public TStreamerSTL {
 public:
 
    TStreamerSTLstring();
-   TStreamerSTLstring(const char *name, const char *title, Int_t offset, Bool_t dmPointer);
+   TStreamerSTLstring(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerSTLstring();
    const char    *GetInclude() const;
    

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.7 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.8 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -636,7 +636,7 @@ TStreamerSTLstring::TStreamerSTLstring()
 }
 
 //______________________________________________________________________________
-TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_t offset, Bool_t dmPointer)
+TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_t offset)
         : TStreamerSTL()
 {
    // Create a TStreamerSTLstring object.
