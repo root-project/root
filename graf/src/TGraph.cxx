@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.99 2003/04/15 06:51:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.100 2003/04/25 07:36:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -30,13 +30,9 @@
 #include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
 
-TVirtualFitter *grFitter;
-TF1 *grF1 = 0;
-Foption_t fitOption;
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 
-extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
 
@@ -999,6 +995,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    Double_t *arglist = new Double_t[100];
 //  Decode string choptin and fill fitOption structure
+   Foption_t fitOption;
    fitOption.Quiet   = 0;
    fitOption.Verbose = 0;
    fitOption.Bound   = 0;
@@ -1045,24 +1042,26 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       xmax = rxmax;
    }
 //*-*- Check if Minuit is initialized and create special functions
-   grFitter = TVirtualFitter::Fitter(this);
+   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this);
    grFitter->Clear();
 
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
-   grF1 = f1;
-   if (!grF1) { Printf("Function is a null pointer"); return 0; }
-   npar = grF1->GetNpar();
+   grFitter->SetUserFunc(f1);
+   grFitter->SetFitOption(fitOption);
+   
+   if (!f1) { Printf("Function is a null pointer"); return 0; }
+   npar = f1->GetNpar();
    if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
 
 //*-*- Check that function has same dimension as histogram
-   if (grF1->GetNdim() > 1) {
+   if (f1->GetNdim() > 1) {
       Printf("Error function %s is not 1-D",f1->GetName()); return 0; }
 
 //*-*- Is a Fit range specified?
    Int_t gxfirst, gxlast;
    if (fitOption.Range) {
-      grF1->GetRange(xmin, xmax);
+      f1->GetRange(xmin, xmax);
       gxfirst = fNpoints +1;
       gxlast  = -1;
       for (i=0;i<fNpoints;i++) {
@@ -1070,13 +1069,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          if (fX[i] <= xmax  && gxlast < i) gxlast  = i;
       }
    } else {
-      grF1->SetRange(xmin, xmax);
+      f1->SetRange(xmin, xmax);
       gxfirst = 0;
       gxlast  = fNpoints-1;
    }
 
 //*-*- If case of a predefined function, then compute initial values of parameters
-   Int_t special = grF1->GetNumber();
+   Int_t special = f1->GetNumber();
    if (fitOption.Bound) special = 0;
    if      (special == 100)      InitGaus(gxfirst,gxlast);
    else if (special == 200)      InitExpo(gxfirst,gxlast);
@@ -1092,7 +1091,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
 //*-*- Set error criterion for chisquare
    arglist[0] = 1;
-   if (!fitOption.User) grFitter->SetFCN(GraphFitChisquare);
+   if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {
      //   Abnormal termination, MIGRAD might not have converged on a
@@ -1106,8 +1105,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Transfer names and initial values of parameters to Minuit
    Int_t nfixed = 0;
    for (i=0;i<npar;i++) {
-      par = grF1->GetParameter(i);
-      grF1->GetParLimits(i,al,bl);
+      par = f1->GetParameter(i);
+      f1->GetParLimits(i,al,bl);
       if (al*bl != 0 && al >= bl) {
          al = bl = 0;
          arglist[nfixed] = i+1;
@@ -1115,7 +1114,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       }
       we  = 0.3*TMath::Abs(par);
       if (we <= TMath::Abs(par)*1e-6) we = 1;
-      grFitter->SetParameter(i,grF1->GetParName(i),par,we,al,bl);
+      grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
    }
    if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
@@ -1145,9 +1144,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
 
    grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-   grF1->SetChisquare(amin);
-   Int_t ndf = grF1->GetNumberFitPoints()-npar+nfixed;
-   grF1->SetNDF(ndf);
+   f1->SetChisquare(amin);
+   Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
+   f1->SetNDF(ndf);
 
 //*-*- Get return status
    char parName[50];
@@ -1160,8 +1159,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          else                         werr = we;
       }
       if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
-      grF1->SetParameter(i,par);
-      grF1->SetParError(i,werr);
+      f1->SetParameter(i,par);
+      f1->SetParError(i,werr);
    }
 
 //*-*- Print final values of parameters.
@@ -1182,7 +1181,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          }
       }
       fnew1 = new TF1();
-      grF1->Copy(*fnew1);
+      f1->Copy(*fnew1);
       fFunctions->Add(fnew1);
       fnew1->SetParent(this);
       fnew1->Save(xmin,xmax,0,0,0,0);
@@ -1420,73 +1419,6 @@ TAxis *TGraph::GetYaxis() const
 }
 
 //______________________________________________________________________________
-void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
-                       Double_t *u, Int_t /*flag*/)
-{
-//*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
-//*-*        =========================================================
-//
-// In case of a TGraphErrors object, ex, the error along x,  is projected
-// along the y-direction by calculating the function at the points x-ex and
-// x+ex.
-//
-// The chisquare is computed as the sum of the quantity below at each point:
-//
-//                     (y - f(x))**2
-//         -----------------------------------
-//         ey**2 + ((f(x+ex) - f(x-ex))/2)**2
-//
-// where x and y are the point coordinates
-
-   Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
-   Double_t x[1], xx[1];
-   Double_t xm,xp;
-   Int_t bin, npfits=0;
-
-   TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
-   Int_t n        = gr->GetN();
-   Double_t *gx   = gr->GetX();
-   Double_t *gy   = gr->GetY();
-   Double_t fxmin = grF1->GetXmin();
-   Double_t fxmax = grF1->GetXmax();
-   npar           = grF1->GetNpar();
-
-   grF1->InitArgs(x,u);
-   f      = 0;
-   for (bin=0;bin<n;bin++) {
-      x[0] = gx[bin];
-      if (!grF1->IsInside(x)) continue;
-      cu   = gy[bin];
-      TF1::RejectPoint(kFALSE);
-      fu   = grF1->EvalPar(x,u);
-      if (TF1::RejectedPoint()) continue;
-      fsum = (cu-fu);
-      npfits++;
-      if (fitOption.W1) {
-         f += fsum*fsum;
-         continue;
-      }
-      ex  = gr->GetErrorX(bin);
-      ey  = gr->GetErrorY(bin);
-      if (ex < 0) ex = 0;
-      if (ey < 0) ey = 0;
-      if (ex >= 0) {
-        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-        xx[0] = xm; fm = grF1->EvalPar(xx,u);
-        xx[0] = xp; fp = grF1->EvalPar(xx,u);
-        eux = 0.5*(fp-fm);
-      } else
-        eux = 0.;
-      eu = ey*ey+eux*eux;
-      if (eu <= 0) eu = 1;
-      f += fsum*fsum/eu;
-   }
-   grF1->SetNumberFitPoints(npfits);
-}
-
-
-//______________________________________________________________________________
 void TGraph::InitGaus(Int_t first, Int_t last)
 {
 //*-*-*-*-*-*Compute Initial values of parameters for a gaussian*-*-*-*-*-*-*
@@ -1517,10 +1449,12 @@ void TGraph::InitGaus(Int_t first, Int_t last)
    rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
    Double_t binwidx = TMath::Abs((fX[last] - fX[first])/np);
    if (rms == 0) rms = 1;
-   grF1->SetParameter(0,binwidx*allcha/(sqrtpi*rms));
-   grF1->SetParameter(1,mean);
-   grF1->SetParameter(2,rms);
-   grF1->SetParLimits(2,0,10*rms);
+   TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
+   TF1 *f1 = (TF1*)grFitter->GetUserFunc();
+   f1->SetParameter(0,binwidx*allcha/(sqrtpi*rms));
+   f1->SetParameter(1,mean);
+   f1->SetParameter(2,rms);
+   f1->SetParLimits(2,0,10*rms);
 }
 
 //______________________________________________________________________________
@@ -1539,8 +1473,10 @@ void TGraph::InitExpo(Int_t first, Int_t last)
 
    LeastSquareLinearFit(-nchanx, constant, slope, ifail, first, last);
 
-   grF1->SetParameter(0,constant);
-   grF1->SetParameter(1,slope);
+   TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
+   TF1 *f1 = (TF1*)grFitter->GetUserFunc();
+   f1->SetParameter(0,constant);
+   f1->SetParameter(1,slope);
 
 }
 
@@ -1552,11 +1488,13 @@ void TGraph::InitPolynom(Int_t first, Int_t last)
 
    Double_t fitpar[25];
 
-   Int_t npar   = grF1->GetNpar();
+   TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
+   TF1 *f1 = (TF1*)grFitter->GetUserFunc();
+   Int_t npar   = f1->GetNpar();
 
    LeastSquareFit(npar, fitpar, first, last);
 
-   for (Int_t i=0;i<npar;i++) grF1->SetParameter(i, fitpar[i]);
+   for (Int_t i=0;i<npar;i++) f1->SetParameter(i, fitpar[i]);
 }
 
 //______________________________________________________________________________
