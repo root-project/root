@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.29 2001/05/07 12:33:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.30 2001/05/11 09:31:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -184,6 +184,7 @@ public:
     TH1              *GetHistogram() {return GetPlayer()->GetHistogram();}
     virtual Int_t    *GetIndex() {return &fIndex.fArray[0];}
     virtual Double_t *GetIndexValues() {return &fIndexValues.fArray[0];}
+    virtual TIterator*GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
     virtual TLeaf    *GetLeaf(const char *name);
     virtual TObjArray       *GetListOfBranches() {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
@@ -262,6 +263,41 @@ public:
     
     ClassDef(TTree,6)  //Tree descriptor (the main ROOT I/O class)
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TTreeFriendLeafIter                                                  //
+//                                                                      //
+// Iterator on all the leaves in a TTree and its friend                 //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TTreeFriendLeafIter : public TIterator {
+
+protected:
+   TTree             *fTree;         //tree being iterated
+   TIterator         *fLeafIter;     //current leaf sub-iterator.
+   TIterator         *fTreeIter;     //current tree sub-iterator.
+   Bool_t             fDirection;    //iteration direction
+ 
+   TTreeFriendLeafIter() : fTree(0), fLeafIter(0), fTreeIter(0), 
+       fDirection(0) {}
+
+public:
+   TTreeFriendLeafIter(const TTree *t, Bool_t dir = kIterForward);
+   TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
+   ~TTreeFriendLeafIter() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
+   TIterator &operator=(const TIterator &rhs);
+   TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
+
+   const TCollection *GetCollection() const { return 0; }
+   Option_t          *GetOption() const;
+   TObject           *Next();
+   void               Reset() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
+
+   ClassDef(TTreeFriendLeafIter,0)  //Linked list iterator
+};
+
 
 inline void TTree::Draw(Option_t *opt)
 { Draw(opt, "", "", 1000000000, 0); }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.78 2001/05/25 09:46:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.79 2001/05/31 08:54:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2004,6 +2004,15 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
    return GetEntry(serial);
 }
 
+//______________________________________________________________________________
+TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir) 
+{
+// Creates a new iterator that will go through all the leaves on the tree
+// itself and its friend.
+
+   return new TTreeFriendLeafIter(this,dir);
+
+}
 
 //______________________________________________________________________________
 TLeaf *TTree::GetLeaf(const char *name)
@@ -2882,3 +2891,96 @@ void TTree::UseCurrentStyle()
    SetMarkerStyle(gStyle->GetMarkerStyle());
    SetMarkerSize(gStyle->GetMarkerSize());
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TTreeFriendLeafIter                                                  //
+//                                                                      //
+// Iterator on all the leaves in a TTree and its friend                 //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TTreeFriendLeafIter)
+
+//______________________________________________________________________________
+TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
+  : fTree((TTree*)tree),fLeafIter(0),fTreeIter(0),fDirection(dir)
+{
+   // Create a new iterator. By default the iteration direction
+   // is kIterForward. To go backward use kIterBackward.
+}
+
+//______________________________________________________________________________
+TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter) 
+{
+  // Copy constructor
+
+  fTree = iter.fTree;
+  fDirection = iter.fDirection;
+
+}
+
+//______________________________________________________________________________
+TIterator &TTreeFriendLeafIter::operator=(const TIterator &rhs) 
+{
+   // Overridden assignment operator.
+
+   if (this != &rhs && rhs.IsA() == TTreeFriendLeafIter::Class()) {
+      const TTreeFriendLeafIter &rhs1 = (const TTreeFriendLeafIter &)rhs;
+      fDirection = rhs1.fDirection;
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &rhs) 
+{
+   // Overridden assignment operator.
+
+   if (this != &rhs ) {
+      fDirection = rhs.fDirection;
+   }
+   return *this;
+}
+ 
+//______________________________________________________________________________
+TObject *TTreeFriendLeafIter::Next()
+{
+   if (!fTree) return 0;
+
+   TObject * next;
+   TTree * nextTree;
+
+   if (!fLeafIter) {
+     fLeafIter =  fTree->GetListOfLeaves()->MakeIterator(fDirection);
+   }
+
+   next = fLeafIter->Next();
+   if (!next) {
+      if (!fTreeIter) {
+         TCollection * list = fTree->GetListOfFriends();
+         if (!list) return next;
+         fTreeIter = list->MakeIterator(fDirection);
+      }
+      TFriendElement * nextFriend = (TFriendElement*) fTreeIter->Next();
+      ///nextTree = (TTree*)fTreeIter->Next();
+      if (nextFriend) {
+         nextTree = (TTree*)nextFriend->GetTree();
+         if (!nextTree) return 0;
+         SafeDelete(fLeafIter);
+         fLeafIter = nextTree->GetListOfLeaves()->MakeIterator(fDirection);
+         next = fLeafIter->Next();
+      }
+   }
+   return next;
+}
+
+//______________________________________________________________________________
+Option_t *TTreeFriendLeafIter::GetOption() const
+{
+   // Returns the object option stored in the list.
+
+   if (fLeafIter) return fLeafIter->GetOption();
+   return "";
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.47 2001/05/31 16:59:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.48 2001/06/01 07:05:03 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -839,7 +839,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          // What we have so far might be a member function of one of the
          // leaves that are not splitted (for example "GetNtrack" for the Event class.
          TClass * cl = 0;
-         TIter next (fTree->GetListOfLeaves());
+         TIter next (fTree->GetIteratorOnAllLeaves());
          TLeaf *leafcur;
          while (!leaf && (leafcur = (TLeaf*)next())) {
             // The following code is used somewhere else, we need to factor it out.
@@ -926,7 +926,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                // What we have so far might be a data member of one of the
                // leaves that are not splitted (for example "fNtrack" for the Event class.
                TClass * cl = 0;
-               TIter next (fTree->GetListOfLeaves());
+               TIter next (fTree->GetIteratorOnAllLeaves());
                TLeaf *leafcur;
                while ((leafcur = (TLeaf*)next())) {
                   // The following code is used somewhere else, we need to factor it out.
