@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.14 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.15 2003/01/07 09:48:41 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -81,7 +81,7 @@ private :
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
-   UChar_t              *fBits;             //! bits used for voxelization
+   UChar_t              *fBitsArray;        //! bits used for voxelization
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
    TGeoNode             *fCurrentNode;      //! current node
@@ -241,7 +241,7 @@ public:
    //--- utilities 
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=1000);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
-   UChar_t               *GetBits() {return fBits;}
+   UChar_t               *GetBits() {return fBitsArray;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    
    

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.8 2002/12/03 17:42:59 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.9 2002/12/11 17:10:19 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -251,15 +251,15 @@ public:
 class TGeoMatrixCache
 {
 private:
-   Int_t                 fMatrix;     // current global transformation
-   Int_t                 fHandler;    // current matrix handler
-   Int_t                 fCacheId;    // current cache id
-   Int_t                 fLength;     // length of current matrix
-   UInt_t                fSize[7];    // size of matrix caches
-   UInt_t                fFree[7];    // offset of first free matrices
-   Double_t             *fCache[7];   // pointers to all caches
-   TBits                *fBits[7];    // flags for matrix usage
-   TGeoMatHandler      **fHandlers;   // handlers for cached matrices
+   Int_t                 fMatrix;      // current global transformation
+   Int_t                 fHandler;     // current matrix handler
+   Int_t                 fCacheId;     // current cache id
+   Int_t                 fLength;      // length of current matrix
+   UInt_t                fSize[7];     // size of matrix caches
+   UInt_t                fFree[7];     // offset of first free matrices
+   Double_t             *fCache[7];    // pointers to all caches
+   TBits                *fBitsArray[7];// flags for matrix usage
+   TGeoMatHandler      **fHandlers;    // handlers for cached matrices
 protected:
    Int_t                 fGeoMinCacheSize; // minimum starting cache size
    void                  IncreaseCache();
@@ -361,7 +361,7 @@ protected:
    Int_t                fFirstFree;   // index of first free location
    Int_t                fCurrent;     // index of current node
    Int_t                fNused;       // number of used nodes
-   TBits               *fBits;        // occupancy flags
+   TBits               *fBitsArray;   // occupancy flags
 private:
    Int_t               *fArray;       // array of nodes
 public:

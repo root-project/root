@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.10 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.11 2002/12/12 12:02:37 rdm Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -583,7 +583,7 @@ TGeoNodeArray::TGeoNodeArray()
    fCurrent = 0;
    fNused = 0;
    fOffset = 0;
-   fBits = 0;
+   fBitsArray = 0;
    fArray = 0;
 }
 //-----------------------------------------------------------------------------
@@ -601,13 +601,13 @@ TGeoNodeArray::TGeoNodeArray(Int_t ndaughters, Int_t size)
    fCurrent = 0;
    fNused = 0;
    fOffset = 0;
-   fBits = new TBits(fSize);
+   fBitsArray = new TBits(fSize);
    fArray = new Int_t[fSize*fNodeSize];
    memset(fArray, 0, fSize*fNodeSize*sizeof(Int_t));
    if (!fNdaughters) {
       // never use first location of array with no daughters
       fFirstFree = fCurrent = 1;
-      fBits->SetBitNumber(0);
+      fBitsArray->SetBitNumber(0);
    }
 }
 //-----------------------------------------------------------------------------
@@ -632,8 +632,8 @@ Int_t TGeoNodeArray::AddMatrix(TGeoMatrix *global)
 void TGeoNodeArray::Compact()
 {
 // compact the array
-   fBits->Compact();
-   Int_t new_size = fBits->GetNbits();
+   fBitsArray->Compact();
+   Int_t new_size = fBitsArray->GetNbits();
    Int_t *old_array = fArray;
    fArray = new Int_t[new_size*fNodeSize];
    memcpy(fArray, old_array, new_size*fNodeSize*sizeof(Int_t));
@@ -645,8 +645,8 @@ void TGeoNodeArray::DeleteArray()
 {
    if (fArray) delete fArray;
    fArray = 0;
-   if (fBits) delete fBits;
-   fBits = 0;
+   if (fBitsArray) delete fBitsArray;
+   fBitsArray = 0;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoNodeArray::AddNode(TGeoNode *node)
@@ -663,8 +663,8 @@ Int_t TGeoNodeArray::AddNode(TGeoNode *node)
    memset(fOffset, 0, fNodeSize*sizeof(Int_t));
    fOffset[0] = (ULong_t)node - (ULong_t)gSystem;
    // mark the location as used and compute first free
-   fBits->SetBitNumber(fFirstFree);
-   fFirstFree = fBits->FirstNullBit(fFirstFree);
+   fBitsArray->SetBitNumber(fFirstFree);
+   fFirstFree = fBitsArray->FirstNullBit(fFirstFree);
    fNused++;
    if (fFirstFree >= fSize-1) IncreaseArray();
    UChar_t *cache = (UChar_t*)&index;
@@ -704,7 +704,7 @@ void TGeoNodeArray::ClearNode()
    // clear the global matrix from matrix cache
    ClearMatrix();
    if (fCurrent<fFirstFree) fFirstFree = fCurrent;
-   fBits->SetBitNumber(fCurrent, kFALSE);
+   fBitsArray->SetBitNumber(fCurrent, kFALSE);
    fNused--;
    // empty all locations of current node
    memset(fOffset, 0, fNodeSize*sizeof(Int_t));
@@ -740,7 +740,7 @@ void TGeoNodeArray::IncreaseArray()
    }
 */
    // Increase the cache size and the TBits size
-   fBits->SetBitNumber(new_size-1, kFALSE);
+   fBitsArray->SetBitNumber(new_size-1, kFALSE);
    Int_t *new_array = new Int_t[new_size*fNodeSize];
    memset(new_array, 0, new_size*fNodeSize*sizeof(Int_t));
    memcpy(new_array, fArray, fSize*fNodeSize*sizeof(Int_t));
@@ -789,7 +789,7 @@ TGeoNodeObjArray::TGeoNodeObjArray(Int_t size)
       fSize = TGeoNodeArray::kGeoArrayInitSize;
    fObjArray = new TObjArray(fSize);
    for (Int_t i=0; i<fSize; i++) fObjArray->AddAt(new TGeoNodePos(), i);
-   fBits  = new TBits(fSize);
+   fBitsArray  = new TBits(fSize);
    fCurrent = 0;
 }
 //-----------------------------------------------------------------------------
@@ -816,8 +816,8 @@ Int_t TGeoNodeObjArray::AddNode(TGeoNode *node)
    cd(index);
    fCurrent->Map(node);
    // mark the location as used and compute first free
-   fBits->SetBitNumber(fFirstFree);
-   fFirstFree = fBits->FirstNullBit(fFirstFree);
+   fBitsArray->SetBitNumber(fFirstFree);
+   fFirstFree = fBitsArray->FirstNullBit(fFirstFree);
    fNused++;
    if (fFirstFree >= fSize-1) IncreaseArray();
    UChar_t *cache = (UChar_t*)&index;
@@ -871,7 +871,7 @@ void TGeoNodeObjArray::ClearNode()
    // clear the global matrix from matrix cache
    ClearMatrix();
    if (fIndex<fFirstFree) fFirstFree = fIndex;
-   fBits->SetBitNumber(fIndex, kFALSE);
+   fBitsArray->SetBitNumber(fIndex, kFALSE);
    fNused--;
    // mapping this node to a new logical node is the task of AddNode
 }
@@ -892,7 +892,7 @@ void TGeoNodeObjArray::IncreaseArray()
    if (free_space<fSize) new_size = fSize+free_space;
 
    // Increase the cache size and the TBits size
-   fBits->SetBitNumber(new_size-1, kFALSE);
+   fBitsArray->SetBitNumber(new_size-1, kFALSE);
    fObjArray->Expand(new_size);
    for (Int_t i=fSize; i<new_size; i++) fObjArray->AddAt(new TGeoNodePos(), i);
    gGeoManager->GetCache()->IncreasePool(new_size-fSize);
@@ -1019,7 +1019,7 @@ TGeoMatrixCache::TGeoMatrixCache()
       fSize[i]  = 0;
       fCache[i] = 0;
       fFree[i]  = 0;
-      fBits[i]  = 0;
+      fBitsArray[i]  = 0;
    }
    fGeoMinCacheSize = 1000;
    fMatrix = 0;
@@ -1045,10 +1045,10 @@ TGeoMatrixCache::TGeoMatrixCache(Int_t size)
       if (length == 0) length=2;
       if (length < 0) length=1;
       fCache[i] = new Double_t[fSize[i]*length];
-      fBits[i]  = new TBits(fSize[i]);
+      fBitsArray[i]  = new TBits(fSize[i]);
       fFree[i]  = 0;
       if (i==0) {
-         fBits[i]->SetBitNumber(0);
+         fBitsArray[i]->SetBitNumber(0);
          fFree[i] = 1;
       }
    }
@@ -1081,7 +1081,7 @@ TGeoMatrixCache::~TGeoMatrixCache()
    if (fSize[0]) {
       for (Int_t i=0; i<7; i++) {
          delete fCache[i];
-         delete fBits[i];
+         delete fBitsArray[i];
       }
       for (Int_t j=0; j<14; j++)
          delete fHandlers[j];
@@ -1124,8 +1124,8 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
 //   matrix->Print();
 //   printf("type=%x cache_id=%i length=%i handler:%i\n", type, index, data_len, h);
 
-   fBits[fCacheId]->SetBitNumber(current_free);
-   fFree[fCacheId] = fBits[fCacheId]->FirstNullBit(current_free); 
+   fBitsArray[fCacheId]->SetBitNumber(current_free);
+   fFree[fCacheId] = fBitsArray[fCacheId]->FirstNullBit(current_free); 
    if (fFree[fCacheId] >= fSize[fCacheId]-1) {
       IncreaseCache();
       location = fCache[fCacheId]+fLength*current_free;
@@ -1167,7 +1167,7 @@ void TGeoMatrixCache::ClearMatrix(Int_t mindex)
    if (!mindex) return;
    cd(mindex);
    Int_t offset = fMatrix&0x00FFFFFF;
-   fBits[fCacheId]->SetBitNumber(offset, kFALSE);
+   fBitsArray[fCacheId]->SetBitNumber(offset, kFALSE);
    if (UInt_t(offset)<fFree[fCacheId]) fFree[fCacheId] = offset;
 }
 //-----------------------------------------------------------------------------
@@ -1191,7 +1191,7 @@ void TGeoMatrixCache::IncreaseCache()
 // doubles the cache size
 //   printf("Increasing matrix cache %i ...\n", fCacheId);
    UInt_t new_size = 2*fSize[fCacheId];
-   fBits[fCacheId]->SetBitNumber(new_size-1, kFALSE);
+   fBitsArray[fCacheId]->SetBitNumber(new_size-1, kFALSE);
    Double_t *new_cache = new Double_t[new_size*fLength];
    // copy old bits to new bits and old data to new data
    memcpy(new_cache, fCache[fCacheId], fSize[fCacheId]*fLength*sizeof(Double_t));
@@ -1213,7 +1213,7 @@ void TGeoMatrixCache::Status() const
       if (length == 0) length=2;
       if (length < 0) length=1;
       ntotc = fSize[i];
-      nused = fBits[i]->CountBits();
+      nused = fBitsArray[i]->CountBits();
       nfree = ntotc-nused;
       ntot += length*sizeof(Double_t)*ntotc;
       ntotused += length*sizeof(Double_t)*nused;

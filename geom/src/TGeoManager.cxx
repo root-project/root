@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.26 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.27 2003/01/07 09:48:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -444,7 +444,7 @@ TGeoManager::TGeoManager()
 {
 // Default constructor.
    if (TClass::IsCallingNew() == TClass::kDummyNew)
-      fBits = (UChar_t*) -1;
+      fBitsArray = (UChar_t*) -1;
    else {
       Init();
       gGeoIdentity = 0;
@@ -482,7 +482,7 @@ void TGeoManager::Init()
    fStartSafe = kTRUE;
    fSafety = 0;
    fStep = 0;
-   fBits = new UChar_t[50000]; // max 25000 nodes per volume
+   fBitsArray = new UChar_t[10000]; // max 80000 nodes per volume
    fMaterials = new THashList(200,3);
    fMatrices = new THashList(200,3);
    fNodes = new TObjArray(30);
@@ -528,7 +528,7 @@ TGeoManager::~TGeoManager()
 {
 // Destructor
 
-   if (fBits == (UChar_t*) -1)
+   if (fBitsArray == (UChar_t*) -1)
       return;
 
    Warning("dtor", "deleting previous geometry: %s/%s",GetName(),GetTitle());
@@ -542,7 +542,7 @@ TGeoManager::~TGeoManager()
 //      browser->Refresh();
       printf("browser refreshed\n");
    }
-   delete [] fBits;
+   delete [] fBitsArray;
    if (fCache) delete fCache;
    if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fNodes) delete fNodes;
