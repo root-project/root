@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.7 2001/01/26 16:39:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.8 2001/02/22 09:44:41 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -43,11 +43,12 @@ private:
    Seek_t    fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
    Int_t     fProtocol;   //rootd protocol level
+   Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
 
    TNetFile() : fUrl("dummy") { fSocket = 0; }
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
-   void   PrintError(const char *where, Int_t err) const;
+   void   PrintError(const char *where, Int_t err);
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
    Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
 
@@ -58,6 +59,7 @@ public:
 
    void    Close(Option_t *option=""); // *MENU*
    void    Flush();
+   Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);

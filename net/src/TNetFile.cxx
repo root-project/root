@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.20 2001/02/22 15:18:56 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.21 2001/02/26 02:48:21 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -128,7 +128,8 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    EMessageTypes kind;
    Int_t sec, tcpwindowsize = 65535;
 
-   fOffset = 0;
+   fOffset    = 0;
+   fErrorCode = -1;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -320,10 +321,11 @@ void TNetFile::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TNetFile::PrintError(const char *where, Int_t err) const
+void TNetFile::PrintError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
+   fErrorCode = err;
    Error(where, gRootdErrStr[err]);
 }
 
@@ -363,6 +365,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    Int_t         stat, n;
    EMessageTypes kind;
 
+   fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("ReadBuffer", stat);
       result = kTRUE;
@@ -434,6 +437,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
    Int_t         stat;
    EMessageTypes kind;
 
+   fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("WriteBuffer", stat);
       result = kTRUE;
