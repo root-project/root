@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.2 2000/10/22 19:21:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.3 2000/10/27 16:28:00 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -12,9 +12,7 @@
 #ifndef ROOT_RQ_OBJECT
 #define ROOT_RQ_OBJECT
 
-// Forward declarations
-class TQObjSender;
-class TQObject;
+#include <TQObject.h>
 
 //---- RQ_OBJECT macro -----------------------------------------------
 //

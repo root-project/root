@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.5 2000/11/10 02:26:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.6 2000/12/12 18:23:09 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -165,7 +165,7 @@ protected:
 
 public:
    TQObjSender() : TQObject() { }
-   virtual ~TQObjSender() { }
+   virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
 
