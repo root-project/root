@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.19 2001/10/26 16:22:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.20 2001/10/29 06:37:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -623,6 +623,19 @@ void TAxis::SetLimits(Axis_t xmin, Axis_t xmax)
 
    fXmin = xmin;
    fXmax = xmax;
+}
+
+//______________________________________________________________________________
+void TAxis::SetNoExponent(Bool_t noExponent)
+{
+// Set the NoExponent flag
+// By default, an exponent of the form 10^N is used when the label values
+// are either all very small or very large.
+// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
+// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+
+   if (noExponent) SetBit(kNoExponent);
+   else            ResetBit(kNoExponent);
 }
 
 //______________________________________________________________________________

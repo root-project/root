@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.11 2001/10/26 16:21:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.12 2001/10/29 06:37:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,7 +50,8 @@ public:
         enum { kAxisRange   = BIT(11), 
                kCenterTitle = BIT(12),
                kRotateTitle = BIT(15),
-               kPalette     = BIT(16)};
+               kPalette     = BIT(16),
+               kNoExponent  = BIT(17)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -89,6 +90,7 @@ public:
         virtual void     Set(Int_t nbins, const Axis_t *xbins);
         virtual void     SetDrawOption(Option_t *option="") {;}
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
+        virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
         virtual void     SetTimeDisplay(Int_t value) {fTimeDisplay = value;} // *TOGGLE*
