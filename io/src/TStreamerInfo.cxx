@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.18 2000/12/15 18:10:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.19 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -118,7 +118,7 @@ void TStreamerInfo::Build()
       offset = fClass->GetBaseClassOffset(clm);
       element = new TStreamerBase(base->GetName(),base->GetTitle(),offset);
       if (clm == TObject::Class() && fClass->CanIgnoreTObjectStreamer()) {
-         element->SetType(0);
+         element->SetType(-1);
       }
       fElements->Add(element);
    }
@@ -499,6 +499,7 @@ void TStreamerInfo::Compile()
    for (i=0;i<ndata;i++) {
       element = (TStreamerElement*)fElements->At(i);
       if (!element) break;
+      if (element->GetType() < 0) continue;
       fType[fNdata]   = element->GetType();
       fNewType[fNdata]= element->GetNewType();
       fOffset[fNdata] = element->GetOffset();
