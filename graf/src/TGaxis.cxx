@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.51 2003/06/02 17:11:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.52 2003/09/02 17:09:53 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -610,10 +610,20 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionTime) {
       if (IdF>=0) {
          Int_t LnF = fTimeFormat.Length();
-         if (LnF > IdF+2) {
-            TString stringtimeoffset = fTimeFormat(IdF+2,LnF);
-            TDatime da(stringtimeoffset);
-            timeoffset = da.Convert();
+         TString stringtimeoffset = fTimeFormat(IdF+2,LnF);
+         Int_t yy, mm, dd, hh, mi, ss;
+         if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6) {
+            struct tm tp;
+            tp.tm_year  = yy-1900;
+            tp.tm_mon   = mm-1;
+            tp.tm_mday  = dd;
+            tp.tm_hour  = hh;
+            tp.tm_min   = mi;
+            tp.tm_sec   = ss;
+            tp.tm_isdst = -1;
+            timeoffset = mktime(&tp);
+         } else {
+            Error(where, "Time offset has not the right format");
          }
       } else {
          timeoffset = gStyle->GetTimeOffset();
@@ -1909,11 +1919,19 @@ void TGaxis::SetTimeFormat(const char *tformat)
 void TGaxis::SetTimeOffset(Double_t toffset)
 {
    // Change the time offset
-   TDatime TimeOffset((UInt_t)toffset);
+   char sqldate[20];
+   time_t timeoff;
+   struct tm* utctis;
+		     
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
-   if (toffset != 0.) fTimeFormat.Append(TimeOffset.AsSQLString());
+				    
+   timeoff = (time_t)((Long_t)(toffset));
+   utctis = localtime(&timeoff);
+
+   strftime(sqldate,256,"%Y-%m-%d %H:%M:%S",utctis);
+   fTimeFormat.Append(sqldate);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.44 2003/04/16 14:20:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.45 2003/09/02 17:09:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -907,11 +907,19 @@ void TAxis::SetTimeFormat(const char *tformat)
 void TAxis::SetTimeOffset(Double_t toffset)
 {
    // Change the time offset
-   TDatime TimeOffset((UInt_t)toffset);
+   char sqldate[20]; 
+   time_t timeoff;
+   struct tm* utctis;
+
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
-   if (toffset != 0.) fTimeFormat.Append(TimeOffset.AsSQLString());
+
+   timeoff = (time_t)((Long_t)(toffset));
+   utctis = localtime(&timeoff); 
+
+   strftime(sqldate,256,"%Y-%m-%d %H:%M:%S",utctis); 
+   fTimeFormat.Append(sqldate);
 }
 
 
