@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.56 2003/05/07 21:06:24 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.57 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,7 +89,7 @@ public:
   virtual Double_t defaultErrorLevel() const { return 1.0 ; }
 
   const RooIntegratorConfig* getIntegratorConfig() const ;
-  RooIntegratorConfig* defaultIntegratorConfig() const ;
+  static RooIntegratorConfig* defaultIntegratorConfig()  ;
   RooIntegratorConfig* specialIntegratorConfig() const ;
   static void setDefaultIntegratorConfig(const RooIntegratorConfig& config) ;
   void setIntegratorConfig() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.92 2003/05/10 01:37:52 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.93 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1682,7 +1682,7 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
 
 
 
-RooIntegratorConfig* RooAbsReal::defaultIntegratorConfig() const 
+RooIntegratorConfig* RooAbsReal::defaultIntegratorConfig() 
 {
   if (!_defaultIntegratorConfig) {
     _defaultIntegratorConfig = new RooIntegratorConfig ;
