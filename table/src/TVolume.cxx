@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.3 2003/01/27 20:41:37 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -38,7 +38,7 @@ static Int_t gGeomLevel = 0;
 
 TVolume *gNode;
 #endif
-R__EXTERN  Size3D gSize3D;
+//R__EXTERN  Size3D gSize3D;
 static TRotMatrix *gIdentity = 0;
 
 ClassImp(TVolume)

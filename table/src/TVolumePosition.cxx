@@ -1,6 +1,6 @@
-// @(#)root/star:$Name: v3-05-05-28May03 $:$Id: TVolumePosition.cxx,v 1.1.1.3 2003/05/28 16:19:01 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.4 2003/06/06 05:44:12 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.1.1.3 2003/05/28 16:19:01 fisyak Exp $
+// $Id: TVolumePosition.cxx,v 1.4 2003/06/06 05:44:12 brun Exp $
 
 #include "Riostream.h"
 
@@ -19,7 +19,7 @@
 
 #include "TPadView3D.h"
 
-R__EXTERN  Size3D gSize3D;
+//R__EXTERN  Size3D gSize3D;
 
 ClassImp(TVolumePosition)
 
