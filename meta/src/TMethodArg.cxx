@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodArg.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodArg.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -41,6 +41,10 @@ TMethodArg::TMethodArg(G__MethodArgInfo *info, TFunction *method) : TDictionary(
    fDataMember = 0;
    fInfo       = info;
    fMethod     = method;
+   if (fInfo) {
+      SetName(fInfo->Name());
+      SetTitle(fInfo->Type()->Name());
+   }
 }
 
 //______________________________________________________________________________
@@ -60,14 +64,6 @@ const char *TMethodArg::GetDefault() const
 }
 
 //______________________________________________________________________________
-const char *TMethodArg::GetName() const
-{
-   // Get method argument name (can be empty string or 0).
-
-   return fInfo->Name();
-}
-
-//______________________________________________________________________________
 const char *TMethodArg::GetTypeName() const
 {
    // Get type of method argument, e.g.: "class TDirectory*" -> "TDirectory"
@@ -82,39 +78,6 @@ const char *TMethodArg::GetFullTypeName() const
    // Get full type description of method argument, e.g.: "class TDirectory*".
 
    return fInfo->Type()->Name();
-}
-
-//______________________________________________________________________________
-const char *TMethodArg::GetTitle() const
-{
-   // Get method argument description. This method always returns 0.
-   // However, for backward compatibility, we currently return
-   // GetFullTypeName().
-
-   return GetFullTypeName();
-}
-
-//______________________________________________________________________________
-Int_t TMethodArg::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   if (fInfo->Name())
-      return strcmp(fInfo->Name(), obj->GetName());
-   else return -1;
-}
-
-//______________________________________________________________________________
-ULong_t TMethodArg::Hash() const
-{
-   // Return hash value for TDataType based on its name.
-
-   if (fInfo->Name()) {
-      TString s = fInfo->Name();
-      return s.Hash();
-   } else return 0;
 }
 
 //______________________________________________________________________________

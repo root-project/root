@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.5 2002/07/08 20:28:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.6 2002/08/09 19:26:26 brun Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -41,8 +41,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 #include "Property.h"
@@ -71,19 +71,13 @@ enum EProperty {
 };
 
 
-class TDictionary : public TObject {
+class TDictionary : public TNamed {
 
 public:
    TDictionary() { }
    virtual ~TDictionary() { }
 
-   virtual const char *GetName() const = 0;
-   virtual const char *GetTitle() const = 0;
    virtual Long_t      Property() const = 0;
-
-   virtual Int_t       Compare(const TObject *obj) const = 0;
-   virtual ULong_t     Hash() const = 0;
-   virtual Bool_t      IsSortable() const { return kTRUE; }
 
    // Type of STL container (returned by IsSTLContainer).
    enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};

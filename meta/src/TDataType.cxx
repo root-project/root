@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.3 2002/02/23 09:45:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.4 2002/02/23 15:45:05 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -33,8 +33,11 @@ TDataType::TDataType(G__TypedefInfo *info) : TDictionary()
    fInfo = info;
 
    if (fInfo) {
-      fName = info->Name();
+      SetName(info->Name());
+      SetTitle(info->Title());
       SetType(fInfo->TrueName());
+   } else {
+      SetTitle("Builtin basic type");
    }
 }
 
@@ -44,7 +47,8 @@ TDataType::TDataType(const char *typenam)
    // Constructor for basic data types, like "char", "unsigned char", etc.
 
    fInfo = 0;
-   fName = typenam;
+   SetName(typenam);
+   SetTitle("Builtin basic type");
 
    SetType(fName.Data());
 }
@@ -78,43 +82,6 @@ const char *TDataType::GetFullTypeName() const
       return fInfo->TrueName();
    else
       return fName.Data();
-}
-
-//______________________________________________________________________________
-const char *TDataType::GetName() const
-{
-   // Get name of typedef.
-
-   return fName.Data();
-}
-
-//______________________________________________________________________________
-const char *TDataType::GetTitle() const
-{
-   // Get typedef description string (comment).
-
-   if (fInfo)
-      return fInfo->Title();
-   else
-      return "Builtin basic type";
-}
-
-//______________________________________________________________________________
-Int_t TDataType::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   return strcmp(fName.Data(), obj->GetName());
-}
-
-//______________________________________________________________________________
-ULong_t TDataType::Hash() const
-{
-   // Return hash value for TDataType based on its name.
-
-   return fName.Hash();
 }
 
 //______________________________________________________________________________

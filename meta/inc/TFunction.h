@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.3 2002/06/26 08:04:00 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -46,17 +46,13 @@ protected:
 public:
    TFunction(G__MethodInfo *info = 0);
    virtual     ~TFunction();
-   Int_t        Compare(const TObject *obj) const;
-   const char  *GetName() const;
    virtual const char     *GetMangledName() const; 
    virtual const char     *GetPrototype() const; 
    const char  *GetSignature();
-   const char  *GetTitle() const;
    const char  *GetReturnTypeName() const;
    TList       *GetListOfMethodArgs();
    Int_t        GetNargs() const;
    Int_t        GetNargsOpt() const;
-   ULong_t      Hash() const;
    void        *InterfaceMethod() const;
    Long_t       Property() const;
 

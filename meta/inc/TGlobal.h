@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGlobal.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TGlobal.h,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   13/11/95
 
 /*************************************************************************
@@ -36,15 +36,11 @@ private:
 public:
    TGlobal(G__DataMemberInfo *info = 0);
    virtual       ~TGlobal();
-   Int_t          Compare(const TObject *obj) const;
    Int_t          GetArrayDim() const;
    Int_t          GetMaxIndex(Int_t dim) const;
    void          *GetAddress() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
-   const char    *GetName() const;
-   const char    *GetTitle() const;
-   ULong_t        Hash() const;
    Long_t         Property() const;
 
    ClassDef(TGlobal,0)  //Global variable class

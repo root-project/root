@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGlobal.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TGlobal.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   13/11/95
 
 /*************************************************************************
@@ -33,6 +33,10 @@ TGlobal::TGlobal(G__DataMemberInfo *info) : TDictionary()
    // a call to TCint::UpdateListOfGlobals().
 
    fInfo = info;
+   if (fInfo) {
+      SetName(fInfo->Name());
+      SetTitle(fInfo->Title());
+   }
 }
 
 //______________________________________________________________________________
@@ -82,41 +86,6 @@ const char *TGlobal::GetFullTypeName() const
    // Get full type description of global variable, e,g.: "class TDirectory*".
 
    return fInfo->Type()->Name();
-}
-
-//______________________________________________________________________________
-const char *TGlobal::GetName() const
-{
-   // Get global variable name.
-
-   return fInfo->Name();
-}
-
-//______________________________________________________________________________
-const char *TGlobal::GetTitle() const
-{
-   // Get global variable description string (comment).
-
-   return fInfo->Title();
-}
-
-//______________________________________________________________________________
-Int_t TGlobal::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   return strcmp(fInfo->Name(), obj->GetName());
-}
-
-//______________________________________________________________________________
-ULong_t TGlobal::Hash() const
-{
-   // Return hash value for TGlobal based on its name.
-
-   TString s = fInfo->Name();
-   return s.Hash();
 }
 
 //______________________________________________________________________________

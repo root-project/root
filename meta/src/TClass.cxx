@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.96 2002/11/24 14:13:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.97 2002/11/25 16:30:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -231,7 +231,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
-   fName           = name;
+   SetName(name);
    fClassVersion   = 0;
    fDeclFileName   = "";
    fImplFileName   = "";
@@ -269,6 +269,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
       ResetBit(kLoading);
    }
+   if (fClassInfo) SetTitle(fClassInfo->Title());
 }
 
 //______________________________________________________________________________
@@ -309,7 +310,7 @@ void TClass::Init(const char *name, Version_t cversion,
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
-   fName           = name;
+   SetName(name);
    fClassVersion   = cversion;
    fDeclFileName   = dfil ? dfil : "";
    fImplFileName   = ifil ? ifil : "";
@@ -413,6 +414,7 @@ void TClass::Init(const char *name, Version_t cversion,
       }
       if (cursav) cursav->cd();
    }
+   if (fClassInfo) SetTitle(fClassInfo->Title());
 
    ResetBit(kLoading);
 
@@ -642,16 +644,6 @@ void TClass::BuildRealDataFake(const char *name, Int_t offset, TClass *cl)
          cl->GetListOfRealData()->Add(rd);
       }
    }
-}
-
-//______________________________________________________________________________
-Int_t TClass::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   return strcmp(fName.Data(), obj->GetName());
 }
 
 //______________________________________________________________________________
@@ -1322,14 +1314,6 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
        return m;
    }
    return 0;
-}
-//______________________________________________________________________________
-const char *TClass::GetTitle() const
-{
-   // Return the description of the class.
-
-   if (!fClassInfo) return 0;
-   return GetClassInfo()->Title();
 }
 
 //______________________________________________________________________________

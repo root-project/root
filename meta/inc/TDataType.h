@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.3 2002/02/23 15:45:04 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -43,7 +43,6 @@ class TDataType : public TDictionary {
 
 private:
    G__TypedefInfo   *fInfo;     //pointer to CINT typedef info
-   TString           fName;     //name of basic type
    Int_t             fSize;     //size of basic type (in case fInfo==0)
    EDataType         fType;     //type id
 
@@ -57,10 +56,6 @@ public:
    Int_t          GetType() const { return (Int_t)fType; }
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
-   const char    *GetName() const;
-   const char    *GetTitle() const;
-   Int_t          Compare(const TObject *obj) const;
-   ULong_t        Hash() const;
    const char    *AsString(void *buf) const;
    Long_t         Property() const;
 

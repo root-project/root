@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.28 2002/11/15 14:40:05 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.29 2002/11/24 13:59:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -50,7 +50,6 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
-   TString            fName;            //name of class
    TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
@@ -116,7 +115,6 @@ public:
    void               BuildRealData(void *pointer=0);
    void               BuildRealDataFake(const char *name, Int_t offset, TClass *cl);
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
-   Int_t              Compare(const TObject *obj) const;
    void               Draw(Option_t *option="");
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
@@ -137,8 +135,6 @@ public:
    TList             *GetListOfRealData() const { return fRealData; }
    TList             *GetListOfAllPublicMethods();
    TList             *GetListOfAllPublicDataMembers();
-   const char        *GetName() const { return fName.Data(); }
-   const char        *GetTitle() const;
    const char        *GetImplFileName() const { return fImplFileName; }
    Short_t            GetImplFileLine() const { return fImplFileLine; }
    TClass            *GetActualClass(const void* object) const;
@@ -162,7 +158,6 @@ public:
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo;}
    TStreamerInfo     *GetStreamerInfo(Int_t version=0);
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
-   ULong_t            Hash() const { return fName.Hash(); }
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;

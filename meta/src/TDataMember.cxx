@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.12 2002/05/23 08:11:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.13 2002/11/22 18:57:07 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -195,7 +195,9 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
+      SetName(fInfo->Name());
       const char *t = fInfo->Title();
+      SetTitle(t);
       if (t && t[0] != '!') SetBit(kObjIsPersistent);
       fDataType = 0;
       if (IsBasic() || IsEnum()) {
@@ -471,13 +473,6 @@ const char *TDataMember::GetTrueTypeName() const
 
    return fInfo->Type()->TrueName();
 }
-//______________________________________________________________________________
-const char *TDataMember::GetName() const
-{
-   // Get data member name.
-
-   return fInfo->Name();
-}
 
 //______________________________________________________________________________
 Int_t TDataMember::GetOffset() const
@@ -524,33 +519,6 @@ Int_t TDataMember::GetOffsetCint() const
    // Get offset from "this" using the information in CINT only.
 
    return fInfo->Offset();
-}
-
-//______________________________________________________________________________
-const char *TDataMember::GetTitle() const
-{
-   // Get data member description string (comment).
-
-   return fInfo->Title();
-}
-
-//______________________________________________________________________________
-Int_t TDataMember::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   return strcmp(fInfo->Name(), obj->GetName());
-}
-
-//______________________________________________________________________________
-ULong_t TDataMember::Hash() const
-{
-   // Return hash value for TDataMember based on its name.
-
-   TString s = fInfo->Name();
-   return s.Hash();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.7 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.8 2002/11/22 18:57:07 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -55,10 +55,8 @@ public:
    Int_t          GetMaxIndex(Int_t dim) const;
    TClass        *GetClass() const { return fClass; }
    TDataType     *GetDataType() const { return fDataType; } //only for basic type
-   const char    *GetName() const;
    Int_t          GetOffset() const;
    Int_t          GetOffsetCint() const;
-   const char    *GetTitle() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    const char    *GetTrueTypeName() const;
@@ -68,8 +66,6 @@ public:
    TMethodCall   *SetterMethod(TClass *cl);
    TMethodCall   *GetterMethod(TClass *cl = 0);
 
-   Int_t          Compare(const TObject *obj) const;
-   ULong_t        Hash() const;
    Bool_t         IsBasic() const;
    Bool_t         IsEnum() const;
    Bool_t         IsaPointer() const;

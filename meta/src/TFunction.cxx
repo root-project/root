@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.7 2002/06/26 08:04:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.8 2002/07/16 14:01:20 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -36,6 +36,10 @@ TFunction::TFunction(G__MethodInfo *info) : TDictionary()
 
    fInfo       = info;
    fMethodArgs = 0;
+   if (fInfo) {
+      SetName(fInfo->Name());
+      SetTitle(fInfo->Title());
+   }
 }
 
 //______________________________________________________________________________
@@ -106,22 +110,6 @@ TList *TFunction::GetListOfMethodArgs()
 }
 
 //______________________________________________________________________________
-const char *TFunction::GetName() const
-{
-   // Get function name.
-
-   return fInfo->Name();
-}
-
-//______________________________________________________________________________
-const char *TFunction::GetTitle() const
-{
-   // Get function description string (comment).
-
-   return fInfo->Title();
-}
-
-//______________________________________________________________________________
 const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
@@ -144,25 +132,6 @@ Int_t TFunction::GetNargsOpt() const
    // Number of function optional (default) arguments.
 
    return fInfo->NDefaultArg();
-}
-
-//______________________________________________________________________________
-Int_t TFunction::Compare(const TObject *obj) const
-{
-   // Compare to other object. Returns 0<, 0 or >0 depending on
-   // whether "this" is lexicographically less than, equal to, or
-   // greater than obj.
-
-   return strcmp(fInfo->Name(), obj->GetName());
-}
-
-//______________________________________________________________________________
-ULong_t TFunction::Hash() const
-{
-   // Return hash value for TFunction based on its name.
-
-   TString s = fInfo->Name();
-   return s.Hash();
 }
 
 //______________________________________________________________________________
