@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.1 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.2 2003/02/12 17:20:55 brun Exp $
 // Author: Andrei Gheata   09/02/03
 
 /*************************************************************************
@@ -44,11 +44,6 @@ class TGeoOverlap : public TNamed,
                     public TAttFill,
                     public TAtt3D
 {
-public:
-   enum EOverlapTypes {
-      kGeoExtrusion   = 8,
-      kGeoNodeOverlap = 9
-   };      
 protected:
    Double_t         fOverlap;    // overlap distance
    TGeoVolume      *fVolume;     // volume containing the overlap
@@ -68,6 +63,7 @@ public:
    virtual TGeoNode *GetNode(Int_t iovlp) const                  = 0;
    Double_t          GetOverlap() const {return fOverlap;}
    TGeoVolume       *GetVolume() const  {return fVolume;}
+   virtual Bool_t    IsExtrusion() const                         = 0;
    Bool_t            IsFolder() const {return kFALSE;}
    virtual Bool_t    IsSortable() const {return kTRUE;}
    virtual void      Paint(Option_t *option="");
@@ -96,6 +92,7 @@ public:
    virtual           ~TGeoExtrusion() {;}
    
    virtual TGeoNode *GetNode(Int_t iovlp) const;
+   virtual Bool_t    IsExtrusion() const {return kTRUE;}
    virtual void      Draw(Option_t *option=""); // *MENU*
    virtual void      PrintInfo() const;         // *MENU*
    virtual void      Sizeof3D() const;
@@ -120,6 +117,7 @@ public:
    virtual           ~TGeoNodeOverlap() {;}
    
    virtual TGeoNode *GetNode(Int_t iovlp) const;
+   virtual Bool_t    IsExtrusion() const {return kFALSE;}
    virtual void      Draw(Option_t *option=""); // *MENU*
    virtual void      PrintInfo() const;         // *MENU*
    virtual void      Sizeof3D() const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.2 2003/02/11 08:48:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.3 2003/02/12 17:20:55 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -80,11 +80,11 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
       Error("Compare", "other object is not TGeoOverlap");
       return 0;
    }
-   if (TestBit(kGeoExtrusion)) {
-      if (other->TestBit(kGeoExtrusion)) return (fOverlap<=other->GetOverlap())?1:-1;
+   if (IsExtrusion()) {
+      if (other->IsExtrusion()) return (fOverlap<=other->GetOverlap())?1:-1;
       return -1;
-   } else if (TestBit(kGeoNodeOverlap)) {   
-      if (other->TestBit(kGeoExtrusion)) return 1;
+   } else {   
+      if (other->IsExtrusion()) return 1;
       return (fOverlap<=other->GetOverlap())?1:-1;
    }
    return 0;   
@@ -126,7 +126,6 @@ TGeoExtrusion::TGeoExtrusion()
 {
 // Default ctor.
    fNode = 0;
-   TObject::SetBit(kGeoExtrusion);
 }
 
 //______________________________________________________________________________
@@ -139,7 +138,6 @@ TGeoExtrusion::TGeoExtrusion(const char *name, TGeoVolume *vol, Int_t inode, Dou
       return;
    }
    fNode = vol->GetNode(inode);   
-   TObject::SetBit(kGeoExtrusion);
 }
 
 //______________________________________________________________________________
@@ -154,29 +152,7 @@ void TGeoExtrusion::Draw(Option_t *option)
 {
 // Draw the extrusion. Mother volume will be blue, extruding daughter green,
 // extruding points red.
-/*
-   Int_t nd = fVolume->GetNdaughters();
-   TGeoNode *current;
-   for (Int_t i=0; i<nd; i++) {
-      current = fVolume->GetNode(i);
-      if (current==fNode) {
-         current->SetVisibility(kTRUE);
-         current->GetVolume()->SetVisibility(kTRUE);
-         current->GetVolume()->SetLineColor(3);
-      } else {
-         current->SetVisibility(kFALSE);
-      }
-   }
-   fVolume->SetVisibility(kTRUE);
-   fVolume->SetLineColor(4);
-   gGeoManager->SetTopVisible();
-   gGeoManager->SetVisLevel(1);
-   gGeoManager->SetVisOption(0);
-   fVolume->Draw();      
-*/
    gGeoManager->GetGeomPainter()->DrawOverlap(this, option);
-//   fMarker->Draw("SAME");
-//   gGeoManager->ModifiedPad();
    PrintInfo();
 }
 
@@ -206,7 +182,6 @@ TGeoNodeOverlap::TGeoNodeOverlap()
 // Default ctor.
    fNode1 = 0;
    fNode2 = 0;
-   TObject::SetBit(kGeoNodeOverlap);
 }
      
 //______________________________________________________________________________
@@ -224,7 +199,6 @@ TGeoNodeOverlap::TGeoNodeOverlap(const char *name, TGeoVolume *vol, Int_t inode1
       return;
    }
    fNode2 = vol->GetNode(inode2);   
-   TObject::SetBit(kGeoNodeOverlap);
 }
 
 //______________________________________________________________________________
@@ -246,29 +220,6 @@ void TGeoNodeOverlap::Draw(Option_t *option)
 {
 // Draw the overlap. One daughter will be blue, the other green,
 // extruding points red.
-/*
-   Int_t nd = fVolume->GetNdaughters();
-   gGeoManager->SetTopVisible(kFALSE);
-   gGeoManager->SetVisLevel(1);
-   gGeoManager->SetVisOption(0);
-   TGeoNode *current;
-   for (Int_t i=0; i<nd; i++) {
-      current = fVolume->GetNode(i);
-      if (current==fNode1 || current==fNode2) {
-         current->SetVisibility(kTRUE);
-         current->GetVolume()->SetVisibility(kTRUE);
-         if (current==fNode1) 
-            current->GetVolume()->SetLineColor(3);
-         else 
-            current->GetVolume()->SetLineColor(4);
-      } else {
-         current->SetVisibility(kFALSE);
-      }
-   }
-   fVolume->Draw();      
-   fMarker->Draw("SAME");
-   gGeoManager->ModifiedPad();
-*/   
    gGeoManager->GetGeomPainter()->DrawOverlap(this, option);
    PrintInfo();
 }

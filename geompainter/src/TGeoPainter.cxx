@@ -145,7 +145,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    
    if (fPaintingOverlaps) {
       TGeoVolume *crt;
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          crt = fOverlap->GetVolume();
          fMatrix = gGeoIdentity;
          dist = crt->GetShape()->DistancetoPrimitive(px,py);
@@ -171,7 +171,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          fCheckedBox[5] = box->GetDZ();
          return 0;
       }
-      if (!fOverlap->GetNode(1)) {
+      if (fOverlap->IsExtrusion()) {
          gPad->SetSelected(view);
          return big;
       }
@@ -362,6 +362,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    TString opt = option;
    TGeoOverlap *overlap = (TGeoOverlap*)ovlp;
    if (!overlap) return;
+   
    fPaintingOverlaps = kTRUE;
    fOverlap = overlap;
    opt.ToLower();
@@ -385,8 +386,8 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
       view = new TView(11);
       view->SetAutoRange(kTRUE);
       PaintOverlap(overlap, "range");
-      overlap->GetPolyMarker()->Draw("SAME");
       view->SetAutoRange(kFALSE);
+      overlap->GetPolyMarker()->Draw("SAME");
       if (has_pad) gPad->Update();
    }
    if (!view->IsPerspective()) view->SetPerspective();
@@ -490,14 +491,14 @@ char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /
          return info;
       }   
       TString ovtype, name;
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          ovtype="EXTRUSION";
          if (volume==fOverlap->GetVolume()) name=volume->GetName();
          else name=fOverlap->GetNode(0)->GetName();
       } else {
          ovtype = "OVERLAP";
          if (volume==fOverlap->GetNode(0)->GetVolume()) name=fOverlap->GetNode(0)->GetName();
-         else name=fOverlap->GetNode(0)->GetName();
+         else name=fOverlap->GetNode(1)->GetName();
       }   
       sprintf(info, "%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
       return info;
@@ -519,7 +520,7 @@ void TGeoPainter::GrabFocus()
    if (!gPad) return;
    TView *view = gPad->GetView();
    if (!view) return;
-   if (!fCheckedNode) {
+   if (!fCheckedNode && !fPaintingOverlaps) {
       TGeoBBox *box = (TGeoBBox*)fGeom->GetTopVolume()->GetShape();
       memcpy(&fCheckedBox[0], box->GetOrigin(), 3*sizeof(Double_t));
       fCheckedBox[3] = box->GetDX();
@@ -587,8 +588,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    TGeoHMatrix *hmat = new TGeoHMatrix(); // id matrix
    TGeoVolume *vol = overlap->GetVolume();
    TGeoNode *node1, *node2;
-   Bool_t isextrusion = overlap->TestBit(TGeoOverlap::kGeoExtrusion);
-   if (isextrusion) {
+   if (fOverlap->IsExtrusion()) {
       if (!fVisLock) fVisVolumes->Add(vol);
       fOverlap->SetLineColor(3);
       fOverlap->SetLineWidth(vol->GetLineWidth());
@@ -734,7 +734,7 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glma
    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
    if (c < 0) c = 0;
    if (fPaintingOverlaps) {
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          if (fOverlap->GetVolume()->GetShape()==shape) c=8;
          else c=12;
       } else {
@@ -871,7 +871,7 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
    if (fPaintingOverlaps) {
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          if (fOverlap->GetVolume()->GetShape()==shape) c=8;
          else c=12;
       } else {
@@ -1014,7 +1014,7 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
    if (fPaintingOverlaps) {
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          if (fOverlap->GetVolume()->GetShape()==shape) c=8;
          else c=12;
       } else {
@@ -1179,7 +1179,7 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
    if (fPaintingOverlaps) {
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          if (fOverlap->GetVolume()->GetShape()==shape) c=8;
          else c=12;
       } else {
@@ -1409,7 +1409,7 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
     if (c < 0) c = 0;
    if (fPaintingOverlaps) {
-      if (fOverlap->TestBit(TGeoOverlap::kGeoExtrusion)) {
+      if (fOverlap->IsExtrusion()) {
          if (fOverlap->GetVolume()->GetShape()==shape) c=8;
          else c=12;
       } else {
