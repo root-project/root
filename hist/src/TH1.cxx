@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.50 2001/06/05 13:51:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.51 2001/06/22 09:49:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2645,6 +2645,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    if (achoice == 'Z') axis = &fZaxis;
    Axis_t cxmin = axis->GetXmin();
    Axis_t cxmax = axis->GetXmax();
+   if (cxmin > cxmax) return;
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
@@ -2671,7 +2672,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
             xmin = xmax - range;
          }
          break;
-      }
+      } 
    } else {
       while (1) {
          range *= 2;
