@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.30 2001/02/07 21:06:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.31 2001/02/15 16:13:48 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -208,16 +208,11 @@ TClass::TClass(const char *name, Version_t cversion,
          printf("old class: %s has IgnoreTobjectStreamer bit\n",name);
          IgnoreTObjectStreamer();
       }
-      if (oldcl->CanBypassStreamer()) {
-         printf("old class: %s has BypassStreamer bit\n",name);
-         BypassStreamer();
-      }
 
       TStreamerInfo *info;
       TIter next(oldcl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)next())) {
          info->SetClass(this);
-         if (info->CanBypassStreamer()) BypassStreamer();
          fStreamerInfo->Add(info);
       }
       oldcl->GetStreamerInfos()->Clear();
@@ -347,20 +342,6 @@ void TClass::BuildRealData(void *pointer)
       }
    }
 }
-
-//______________________________________________________________________________
-void TClass::BypassStreamer(Bool_t bypass)
-{
-//  When the class kBypassStreamer bit is set, the automatically
-//  generated Streamer can call directly TClass::WriteBuffer
-//  This option can be set for critical classes in collections.
-//  It saves a non negligible overhead in time at the expense of losing
-//  the control for additional operations in the Streamer function.
-
-   if (bypass) SetBit(kBypassStreamer);
-   else        ResetBit(kBypassStreamer);
-}
-
 
 //______________________________________________________________________________
 Int_t TClass::Compare(const TObject *obj) const

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.12 2000/12/20 17:36:18 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.13 2001/02/15 16:13:48 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -69,8 +69,7 @@ private:
                                        //stored in TObject::fUniqueID
 public:
    // TClass status bits
-   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
-          kBypassStreamer = BIT(14)};
+   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13)};
 
    TClass();
    TClass(const char *name);
@@ -81,8 +80,6 @@ public:
    void           AddInstance(Bool_t heap = kFALSE) { fInstanceCount++; if (heap) fOnHeap++; }
    virtual void   Browse(TBrowser *b);
    void           BuildRealData(void *pointer=0);
-   void           BypassStreamer(Bool_t bypass=kTRUE);
-   Bool_t         CanBypassStreamer() { return TestBit(kBypassStreamer);}
    Bool_t         CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    Int_t          Compare(const TObject *obj) const;
    void           Draw(Option_t *option="");
