@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.24 2002/12/17 10:15:39 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.25 2004/01/30 13:58:48 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -188,6 +188,7 @@
 #include "TROOT.h"
 #include "TProcessUUID.h"
 #include "TFile.h"
+#include "TRefTable.h"
 #include "TObjArray.h"
 #include "TExec.h"
 #include "TSystem.h"
@@ -316,6 +317,14 @@ TObject *TRef::GetObject() const
    //Try to find the object from the table of the corresponding PID
    TObject *obj = fPID->GetObjectWithID(uid);
 
+   //the reference may be in the TRefTable
+   TRefTable *table = TRefTable::GetRefTable();
+   if (table) {
+      table->SetUID(uid);
+      table->Notify();
+      obj = fPID->GetObjectWithID(uid);
+   }
+   
    //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid in the first 8 bits

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.1 2004/08/20 14:46:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.2 2004/08/20 21:23:06 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 
 #include "TRefTable.h"
 
+TRefTable *TRefTable::fgRefTable = 0;
+
 ClassImp(TRefTable)
 
 //______________________________________________________________________________
@@ -28,34 +30,39 @@ TRefTable::TRefTable()
 {
    // Default constructor for I/O
 
-   fSize = 0;
-   fN    = 0;
+   fSize      = 0;
+   fN         = 0;
    fParentID  = -1;
    fParentIDs = 0;
    fParents   = 0;
+   fOwner     = 0;
+   fgRefTable = this;
 }
 
 //______________________________________________________________________________
-TRefTable::TRefTable(Int_t size)
+TRefTable::TRefTable(TObject *owner, Int_t size)
 {
    // Create a TRefTable with initial size
 
    if (size < 10) size = 10;
-   fSize = size;
-   fN = 0;
+   fSize      = size;
+   fN         = 0;
    fParentID  = -1;
    fParentIDs = new Int_t[fSize];
    for (Int_t i=0;i<fSize;i++) {
       fParentIDs[i] = 0;
    }
-   fParents = new TObjArray(1);
+   fParents   = new TObjArray(1);
+   fOwner     = owner;
+   fgRefTable = this;
 }
 
 //______________________________________________________________________________
 TRefTable::~TRefTable()
 {
-	delete [] fParentIDs;
-	delete fParents;
+   delete [] fParentIDs;
+   delete fParents;
+   if (fgRefTable == this) fgRefTable = 0;
 }
 
 //______________________________________________________________________________
@@ -141,6 +148,26 @@ TObject *TRefTable::GetParent(Int_t uid) const
 }
 
 //______________________________________________________________________________
+TRefTable *TRefTable::GetRefTable()
+{
+   // static function returning the current TRefTable
+   
+   return fgRefTable;
+}
+
+//______________________________________________________________________________
+Bool_t TRefTable::Notify()
+{
+   // This function is called by TRef::Streamer or TStreamerInfo::ReadBuffer
+   // when reading a reference.
+   // This function, in turns, notifies the TRefTable owner for action.
+   // eg, when the owner is a TBranchRef, TBranchRef::Notify is called
+   // to read the branch containing the referenced object.
+   
+   return fOwner->Notify();
+}
+
+//______________________________________________________________________________
 void TRefTable::ReadBuffer(TBuffer &b)
 {
    // fill buffer b with the fN elements in fParentdIDs
@@ -167,4 +194,12 @@ Int_t TRefTable::SetParent(const TObject *parent)
       fParentID = nparents;
    }
    return fParentID;
+}
+
+//______________________________________________________________________________
+void TRefTable::SetRefTable(TRefTable *table)
+{
+   // static function setting the current TRefTable
+   
+   fgRefTable = table;
 }

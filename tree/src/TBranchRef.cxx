@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.2 2004/08/20 21:24:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.3 2004/08/22 01:51:22 rdm Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -38,14 +38,9 @@ TBranchRef::TBranchRef(TTree *tree)
    // main constructor called by TTree::BranchRef
 
    if (!tree) return;
-   TDirectory *dir = tree->GetDirectory();
-   if (!dir) return;
-   TFile *file = dir->GetFile();
-   if (!file) return;
    SetName("TRefTable");
    SetTitle("List of branch numbers with referenced objects");
-   fRefTable = new TRefTable(100);
-   file->SetRefTable(fRefTable);
+   fRefTable = new TRefTable(this,100);
 
    fCompress       = 1;
    fBasketSize     = 32000;
@@ -74,8 +69,6 @@ TBranchRef::TBranchRef(TTree *tree)
 TBranchRef::~TBranchRef()
 {
    delete fRefTable;
-   TFile *f = GetFile();
-   if (f) f->SetRefTable(0);
 }
 
 //______________________________________________________________________________
@@ -101,6 +94,21 @@ void TBranchRef::FillLeaves(TBuffer &b)
    // This function called by TBranch::Fill overloads TBranch::FillLeaves
 
     fRefTable->FillBuffer(b);
+}
+
+//______________________________________________________________________________
+Bool_t TBranchRef::Notify()
+{
+   // This function is called by TRefTable::Notify, itself called by
+   // TRef::GetObject.
+   // The function reads the branch containing the object referenced
+   // by the TRef.
+
+   UInt_t uid = fRefTable->GetUID();
+   GetEntry(fReadEntry);
+   TBranch *branch = (TBranch*)fRefTable->GetParent(uid);
+   if (branch) branch->GetEntry(fReadEntry);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -136,5 +144,6 @@ void TBranchRef::SetParent(const TObject *object)
    // this function is called by TBranchElement::Fill when filling
    // branches that may contain referenced objects
 
+   TRefTable::SetRefTable(fRefTable);
    fRefTable->SetParent(object);
 }

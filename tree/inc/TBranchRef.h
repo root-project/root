@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.h,v 1.5 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.h,v 1.1 2004/08/20 14:54:53 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -43,10 +43,12 @@ public:
     virtual Int_t   Fill();
     virtual void    FillLeaves(TBuffer &b);
     TRefTable      *GetRefTable() const {return fRefTable;}
+    virtual Bool_t  Notify();
     virtual void    Print(Option_t *option="") const;
     virtual void    ReadLeaves(TBuffer &b);
     virtual void    Reset(Option_t *option="");
     virtual void    SetParent(const TObject *obj);
+    virtual void    SetReadEntry(Long64_t entry) {fReadEntry = entry;}
 
     ClassDef(TBranchRef,1)  //to support referenced objects on other branches
 };

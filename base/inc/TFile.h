@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.34 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.35 2004/08/20 14:48:57 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -31,7 +31,6 @@
 class TFree;
 class TArrayC;
 class TArchiveFile;
-class TRefTable;
 
 class TFile : public TDirectory {
 
@@ -62,7 +61,6 @@ protected:
    TArchiveFile *fArchive;        //!Archive file from which we read this file
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
-   TRefTable    *fRefTable;       //!Table of parents of referenced objects
    
    static Double_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;   //Number of bytes read by all TFile objects
@@ -126,7 +124,6 @@ public:
    Int_t             GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t     GetNbytesFree() const {return fNbytesFree;}
-   TRefTable        *GetRefTable() const {return fRefTable;}
    virtual Long64_t  GetSeekFree() const {return fSeekFree;}
    virtual Long64_t  GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t  GetSize() const;
@@ -149,7 +146,6 @@ public:
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEND(Long64_t last) { fEND = last; }
    virtual void      SetOption(Option_t *option=">") { fOption = option; }
-   virtual void      SetRefTable(TRefTable *table);
    virtual void      ShowStreamerInfo();
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
