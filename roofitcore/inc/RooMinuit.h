@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMinuit.rdl,v 1.4 2002/09/05 04:33:43 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooAbsReal ;
 class RooFitResult ;
 class RooArgList ;
 class RooRealVar ;
+class RooArgSet ;
 
 class RooMinuit : public TObject {
 public:
@@ -41,6 +42,7 @@ public:
   Int_t migrad() ;
   Int_t hesse() ;
   Int_t minos() ;
+  Int_t minos(const RooArgSet& minosParamList) ;  // added FMV, 08/18/03
   Int_t seek() ;
   Int_t simplex() ;
   Int_t improve() ;

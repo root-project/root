@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.20 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.21 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,6 +49,31 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
   // Constructor
   appendToDir(this) ;
 }
+
+// added FMV, 08/13/03
+RooFitResult::RooFitResult(const RooFitResult& other) : 
+  TNamed(other),
+  _status(other._status),
+  _covQual(other._covQual),
+  _numBadNLL(other._numBadNLL),
+  _minNLL(other._minNLL),
+  _edm(other._edm),
+  _Lt(0),
+  _randomPars(0)
+{
+  // Copy constructor
+  _constPars = (RooArgList*) other._constPars->snapshot() ;
+  _initPars = (RooArgList*) other._initPars->snapshot() ;
+  _finalPars = (RooArgList*) other._finalPars->snapshot() ;
+  _globalCorr = (RooArgList*) other._globalCorr->snapshot() ;
+  if (other._randomPars) _randomPars = (RooArgList*) other._randomPars->snapshot() ;
+  if (other._Lt) _Lt = new TMatrix(*other._Lt);
+  TIterator* iter = other._corrMatrix.MakeIterator() ;
+  RooArgList* corrMatrixRow(0);
+  while (corrMatrixRow=(RooArgList*)iter->Next()) 
+    _corrMatrix.Add((RooArgList*)corrMatrixRow->snapshot() );
+}
+
 
 RooFitResult::~RooFitResult() 
 {

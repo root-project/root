@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooFitResult.rdl,v 1.15 2002/09/05 04:33:27 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,9 +30,11 @@ typedef RooArgSet* pRooArgSet ;
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
 public:
-
+ 
   // Constructors, assignment etc.
   RooFitResult(const char* name=0, const char* title=0) ;
+  RooFitResult(const RooFitResult& other) ;   				// added, FMV 08/13/03
+  virtual TObject* clone() const { return new RooFitResult(*this); }   	// added, FMV 08/13/03
   virtual ~RooFitResult() ;
 
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
@@ -83,8 +85,6 @@ public:
 
 protected:
   
-  RooFitResult(const RooFitResult& other) ;
-
   friend class RooMinuit ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;

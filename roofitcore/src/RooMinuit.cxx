@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.6 2002/09/05 04:33:42 verkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.7 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -244,6 +244,36 @@ Int_t RooMinuit::minos()
   backProp() ;
   return _status ;
 }
+
+
+// added FMV, 08/18/03 
+Int_t RooMinuit::minos(const RooArgSet& minosParamList) 
+{
+  // Execute MINOS for given list of parameters
+  Int_t nMinosPar(0) ;
+  Double_t arglist[_nPar+1];
+  if (minosParamList.getSize()>0) {
+    TIterator* aIter = minosParamList.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)aIter->Next()) {
+      RooAbsArg* par = _floatParamList->find(arg->GetName());
+      if (par && !par->isConstant()) {
+	Int_t index = _floatParamList->index(par);
+	nMinosPar++;
+        arglist[nMinosPar]=index+1;
+      }
+    }
+  }
+  arglist[0]= 500*_nPar; // maximum iterations
+
+  synchronize(kTRUE) ;
+  profileStart() ;
+  _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
+  profileStop() ;
+  backProp() ;
+  return _status ;
+}
+
 
 Int_t RooMinuit::seek() 
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooComplex.rdl,v 1.6 2002/09/05 04:33:18 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,6 +55,9 @@ public:
     return RooComplex((this->_re*other._re + this->_im*other._im)/x,
 		      (this->_im*other._re - this->_re*other._im)/x);
   }
+  inline RooComplex operator*(const Double_t& other) const {
+    return RooComplex(this->_re*other,this->_im*other);
+  }
 
 
   inline Bool_t operator==(const RooComplex& other) const {
@@ -69,7 +72,7 @@ public:
     return _im;
   }
   inline Double_t abs() const {
-    return sqrt(_re*_re + _im*_im);
+    return ::sqrt(_re*_re + _im*_im);
   }
   inline Double_t abs2() const {
     return _re*_re + _im*_im;
@@ -80,6 +83,11 @@ public:
   }
   inline RooComplex conj() const {
     return RooComplex(_re,-_im);
+  }
+  inline RooComplex sqrt() const {
+    Double_t arg=atan2(_im,_re)*0.5;
+    Double_t mag=::sqrt(::sqrt(_re*_re + _im*_im));
+    return RooComplex(mag*cos(arg),mag*sin(arg));
   }
   // ouptput formatting
   void Print() const;

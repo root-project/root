@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTruthModel.cc,v 1.18 2002/09/05 04:34:03 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.19 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -63,6 +63,12 @@ Int_t RooTruthModel::basisCode(const char* name) const
   if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
   if (!TString("(@0/@1)*exp(-@0/@1)").CompareTo(name)) return linBasisPlus ;
   if (!TString("(@0/@1)*(@0/@1)*exp(-@0/@1)").CompareTo(name)) return quadBasisPlus ;
+  if (!TString("exp(-@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisPlus;
+  if (!TString("exp(@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisMinus;
+  if (!TString("exp(-abs(@0)/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisSum;
+  if (!TString("exp(-@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisPlus;
+  if (!TString("exp(@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisMinus;
+  if (!TString("exp(-abs(@0)/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisSum;
 
   // Truth model is delta function, i.e. convolution integral
   // is basis function, therefore we can handle any basis function
@@ -143,6 +149,14 @@ Double_t RooTruthModel::evaluate() const
     Double_t tscaled = fabs(x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
   }  
+  case sinhBasis: {
+    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    return exp(-fabs(x)/tau)*sinh(x*dg/2) ;
+  }
+  case coshBasis: {
+    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    return exp(-fabs(x)/tau)*cosh(x*dg/2) ;
+  }
   default:
     assert(0) ;
   }
@@ -162,7 +176,7 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
     break ;
 
   // Analytical integration capability of convoluted PDF
-  case expBasisPlus:
+  case expBasisPlus: 
   case expBasisMinus:
   case expBasisSum:
   case sinBasisPlus:
@@ -173,6 +187,12 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   case cosBasisSum:
   case linBasisPlus:
   case quadBasisPlus:
+  case sinhBasisPlus:
+  case sinhBasisMinus:
+  case sinhBasisSum:
+  case coshBasisPlus:
+  case coshBasisMinus:
+  case coshBasisSum:
     if (matchArgs(allVars,analVars,convVar())) return 1 ;
     break ;
   }
@@ -192,6 +212,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
   // Precompiled basis functions
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
+  //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl; 
 
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   switch (basisType) {
@@ -208,8 +229,10 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t result(0) ;
       if (tau==0) return 0 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + 1/tau;
-      if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + 1/tau ;
+      //if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + 1/tau;
+      //if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + 1/tau ;
+      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + dm;  // fixed FMV 08/29/03
+      if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + dm ;  // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case cosBasis:
@@ -218,7 +241,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       if (tau==0) return 1 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*cos(dm*x.max()) + dm*sin(dm*x.max())) + 1/tau ;
-      if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
+      //if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
+      if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) + dm*sin(dm*(-x.min()))) + 1/tau ; // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case linBasis:
@@ -232,6 +256,28 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       if (tau==0) return 0 ;
       Double_t t_max = x.max()/tau ;
       return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
+    }
+  case sinhBasis:
+    {
+      Double_t result(0) ;
+      if (tau==0) return 0 ;
+      Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      Double_t taup = 2*tau/(2-tau*dg);
+      Double_t taum = 2*tau/(2+tau*dg);
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max()/taup)) - taum*(1-exp(-x.max()/taum)) ) ;
+      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( x.min()/taup)) - taum*(1-exp( x.min()/taum)) ) ;
+      return result ;
+    }
+  case coshBasis:
+    {
+      Double_t result(0) ;
+      if (tau==0) return 1 ;
+      Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      Double_t taup = 2*tau/(2-tau*dg);
+      Double_t taum = 2*tau/(2+tau*dg);
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max()/taup)) + taum*(1-exp(-x.max()/taum)) ) ;
+      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( x.min()/taup)) + taum*(1-exp( x.min()/taum)) ) ;
+      return result ;
     }
   default:
     assert(0) ;

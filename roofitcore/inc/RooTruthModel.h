@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooTruthModel.rdl,v 1.13 2002/09/05 04:34:04 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,10 +26,12 @@ public:
                                   cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
 		                                                    linBasisPlus=33,
 		                                                   quadBasisPlus=43,
+				  coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
+ 	  			  sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63,
                        genericBasis=100 } ;
 
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-                   linBasis=4, quadBasis=5 } ;
+                   linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
