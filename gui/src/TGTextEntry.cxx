@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.7 2000/10/20 15:51:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.8 2001/01/25 14:01:32 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -30,6 +30,8 @@
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
 // Hitting the enter key will generate:                                 //
 // kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
+// Hitting the tab key will generate:                                   //
+// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
 //                                                                      //
 // This widget has the behaviour e.g. of the "Location" field in        //
 // netscape. That includes handling Control/Shift key modifiers and     //
@@ -160,6 +162,13 @@ All other keys with valid ASCII codes insert themselves into the line.
 // TGTextEntry::ReturnPressed()
 //
 //    This signal is emitted when the return or enter key is pressed.
+//
+//______________________________________________________________________________
+// TGTextEntry::TabPressed()
+//
+//    This signal is emitted when the <TAB> key is pressed.
+//    Use for changing focus.
+//
 //______________________________________________________________________________
 // TGTextEntry::TextChanged(const char *text)
 //
@@ -338,6 +347,17 @@ void TGTextEntry::ReturnPressed()
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_ENTER),fWidgetId, 0);
 
    Emit("ReturnPressed()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::TabPressed()
+{
+   // This signal is emitted when the <TAB> key is pressed.
+
+   SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_TAB), fWidgetId, 0);
+   fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_TAB), fWidgetId, 0);
+
+   Emit("TabPressed()");
 }
 
 //______________________________________________________________________________
@@ -1144,10 +1164,15 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    n = strlen(tmp);
    Int_t unknown = 0;
 
-   if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return)  {
+   if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return) {
 
       ReturnPressed();                                      // emit signal
       if (!TestBit(kNotDeleted)) return kTRUE;
+      fSelectionOn = kFALSE;
+
+   } else if ((EKeySym)keysym  == kKey_Tab) {
+
+      TabPressed();                                         // emit signal
       fSelectionOn = kFALSE;
 
    } else if (event->fState & kKeyControlMask) {  // Cntrl key modifier pressed

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.7 2000/10/20 15:51:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.8 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -23,6 +23,8 @@
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
 // Hitting the enter key will generate:                                 //
 // kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
+// Hitting the tab key will generate:                                   //
+// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +169,7 @@ public:
 
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
+   virtual  void        TabPressed();                           //*SIGNAL*
    virtual  void        CursorOutLeft();                        //*SIGNAL*
    virtual  void        CursorOutRight();                       //*SIGNAL*
    virtual  void        CursorOutUp();                          //*SIGNAL*
