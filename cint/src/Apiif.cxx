@@ -255,9 +255,7 @@ static int G__G__MethodInfo_wAG__MethodInfo_0_3(G__value *result7,G__CONST char 
 
 // automatic assignment operator
 static int G__G__MethodInfo_operatoreQ_1_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__MethodInfo *dest = (G__MethodInfo*)(G__getstructoffset());
-  *dest = (*(G__MethodInfo*)libp->para[0].ref);
-  const G__MethodInfo& obj = *dest;
+   const G__MethodInfo& obj=((*(G__MethodInfo *)(G__getstructoffset()))=(*(G__MethodInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -430,9 +428,7 @@ static int G__G__DataMemberInfo_wAG__DataMemberInfo_3_2(G__value *result7,G__CON
 
 // automatic assignment operator
 static int G__G__DataMemberInfo_operatoreQ_4_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__DataMemberInfo *dest = (G__DataMemberInfo*)(G__getstructoffset());
-  *dest = (*(G__DataMemberInfo*)libp->para[0].ref);
-  const G__DataMemberInfo& obj = *dest;
+   const G__DataMemberInfo& obj=((*(G__DataMemberInfo *)(G__getstructoffset()))=(*(G__DataMemberInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -896,9 +892,7 @@ static int G__G__ClassInfo_wAG__ClassInfo_1_6(G__value *result7,G__CONST char *f
 
 // automatic assignment operator
 static int G__G__ClassInfo_operatoreQ_2_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__ClassInfo *dest = (G__ClassInfo*)(G__getstructoffset());
-  *dest = (*(G__ClassInfo*)libp->para[0].ref);
-  const G__ClassInfo& obj = *dest;
+   const G__ClassInfo& obj=((*(G__ClassInfo *)(G__getstructoffset()))=(*(G__ClassInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -976,9 +970,7 @@ static int G__G__BaseClassInfo_wAG__BaseClassInfo_8_0(G__value *result7,G__CONST
 
 // automatic assignment operator
 static int G__G__BaseClassInfo_operatoreQ_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__BaseClassInfo *dest = (G__BaseClassInfo*)(G__getstructoffset());
-  *dest = (*(G__BaseClassInfo*)libp->para[0].ref);
-  const G__BaseClassInfo& obj = *dest;
+   const G__BaseClassInfo& obj=((*(G__BaseClassInfo *)(G__getstructoffset()))=(*(G__BaseClassInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1097,9 +1089,7 @@ static int G__G__TypeInfo_wAG__TypeInfo_6_1(G__value *result7,G__CONST char *fun
 
 // automatic assignment operator
 static int G__G__TypeInfo_operatoreQ_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__TypeInfo *dest = (G__TypeInfo*)(G__getstructoffset());
-  *dest = (*(G__TypeInfo*)libp->para[0].ref);
-  const G__TypeInfo& obj = *dest;
+   const G__TypeInfo& obj=((*(G__TypeInfo *)(G__getstructoffset()))=(*(G__TypeInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1203,9 +1193,7 @@ static int G__G__MethodArgInfo_wAG__MethodArgInfo_2_1(G__value *result7,G__CONST
 
 // automatic assignment operator
 static int G__G__MethodArgInfo_operatoreQ_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__MethodArgInfo *dest = (G__MethodArgInfo*)(G__getstructoffset());
-  *dest = (*(G__MethodArgInfo*)libp->para[0].ref);
-  const G__MethodArgInfo& obj = *dest;
+   const G__MethodArgInfo& obj=((*(G__MethodArgInfo *)(G__getstructoffset()))=(*(G__MethodArgInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1356,9 +1344,7 @@ static int G__G__CallFunc_wAG__CallFunc_0_2(G__value *result7,G__CONST char *fun
 
 // automatic assignment operator
 static int G__G__CallFunc_operatoreQ_1_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__CallFunc *dest = (G__CallFunc*)(G__getstructoffset());
-  *dest = (*(G__CallFunc*)libp->para[0].ref);
-  const G__CallFunc& obj = *dest;
+   const G__CallFunc& obj=((*(G__CallFunc *)(G__getstructoffset()))=(*(G__CallFunc*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1495,9 +1481,7 @@ static int G__G__TypedefInfo_wAG__TypedefInfo_6_1(G__value *result7,G__CONST cha
 
 // automatic assignment operator
 static int G__G__TypedefInfo_operatoreQ_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__TypedefInfo *dest = (G__TypedefInfo*)(G__getstructoffset());
-  *dest = (*(G__TypedefInfo*)libp->para[0].ref);
-  const G__TypedefInfo& obj = *dest;
+   const G__TypedefInfo& obj=((*(G__TypedefInfo *)(G__getstructoffset()))=(*(G__TypedefInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1584,9 +1568,7 @@ static int G__G__TokenInfo_wAG__TokenInfo_4_1(G__value *result7,G__CONST char *f
 
 // automatic assignment operator
 static int G__G__TokenInfo_operatoreQ_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__TokenInfo *dest = (G__TokenInfo*)(G__getstructoffset());
-  *dest = (*(G__TokenInfo*)libp->para[0].ref);
-  const G__TokenInfo& obj = *dest;
+   const G__TokenInfo& obj=((*(G__TokenInfo *)(G__getstructoffset()))=(*(G__TokenInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1714,9 +1696,7 @@ static int G__G__SourceFileInfo_wAG__SourceFileInfo_5_1(G__value *result7,G__CON
 
 // automatic assignment operator
 static int G__G__SourceFileInfo_operatoreQ_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__SourceFileInfo *dest = (G__SourceFileInfo*)(G__getstructoffset());
-  *dest = (*(G__SourceFileInfo*)libp->para[0].ref);
-  const G__SourceFileInfo& obj = *dest;
+   const G__SourceFileInfo& obj=((*(G__SourceFileInfo *)(G__getstructoffset()))=(*(G__SourceFileInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1795,9 +1775,7 @@ static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__C
 
 // automatic assignment operator
 static int G__G__IncludePathInfo_operatoreQ_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-  G__IncludePathInfo *dest = (G__IncludePathInfo*)(G__getstructoffset());
-  *dest = (*(G__IncludePathInfo*)libp->para[0].ref);
-  const G__IncludePathInfo& obj = *dest;
+   const G__IncludePathInfo& obj=((*(G__IncludePathInfo *)(G__getstructoffset()))=(*(G__IncludePathInfo*)libp->para[0].ref));
    result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }

@@ -30,6 +30,7 @@
 
 #define G__MACROLINK  (-5)
 
+
 #define G__OLDIMPLEMENTATION1336
 #ifndef G__OLDIMPLEMENTATION1336
 void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int flag);
@@ -2448,7 +2449,7 @@ FILE *hfp;
 	      continue;
 	    }
 	    else {
-/* #define G__DEFAULTASSIGNOPR */
+#define G__DEFAULTASSIGNOPR
 #ifdef G__DEFAULTASSIGNOPR
 	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
 		++isassignmentoperator;
@@ -3812,8 +3813,13 @@ int isnonpublicnew;
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
     strcpy(temp,G__type2string('u',tagnum,-1,0,0));
+#ifndef G__OLDIMPLEMENTATION1680
+    fprintf(fp,"   const %s& obj=((*(%s *)(G__getstructoffset()))=(*(%s*)libp->para[0].ref));\n"
+	    ,temp,temp,temp);
+#else
     fprintf(fp,"   const %s& obj=((%s *)(G__getstructoffset()))->operator=(*(%s*)libp->para[0].ref);\n"
 	    ,temp,temp,temp);
+#endif
     fprintf(fp,"   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n");
 #ifdef G__OLDIMPLEMENTATION579
     /* This was my mistake. ifn is out of bound and must not call 
