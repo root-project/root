@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.89 2002/02/25 16:05:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.90 2002/04/26 10:18:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1891,7 +1891,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
      if (!Foption.Quiet) {
         Warning("Fit","Abnormal termination of minimization.");
      }
-     return fitResult;
    }
    if (Foption.More) {
       hFitter->ExecuteCommand("IMPROVE",arglist,0);
