@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.7 2001/03/05 10:16:50 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.8 2001/03/06 10:06:37 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -97,8 +97,8 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
   TParticlePDG* old = GetParticle(PDGcode);
 
   if (old) {
-    printf(" *** TDatabasePDG::AddParticle: can't redefine parameters\n");
-    return NULL;
+    printf(" *** TDatabasePDG::AddParticle: particle with PDGcode=%d already defined\n",PDGcode);
+    return 0;
   }
 
   TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
