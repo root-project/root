@@ -2,13 +2,20 @@
 
 # Patch to create soname.dll.a archives and to use it 
 # for symbol-providers (--no-whole-archive) for linking
-# cutting down mem usage by ld and build time
-# Also copies dlls to bin
+# Also puts dlls to bin, symlinking them to lib
 
 args=
+isdll=0
 while [ "$1" != "" ]; do
    case "$1" in
-   -o) args="$args $1"; shift; dllname="$1"; dllbase=`basename $1`; args="$args bin/$dllbase" ;;
+   -o) args="$args $1"; shift; 
+       dllname="$1"; dllbase=`basename $1`; 
+       if [ "`echo $dllname | sed 's{^lib/.*\.dll${{'`" != "$dllname" ]; then
+	   isdll=1
+	   args="$args bin/$dllbase" 
+       else
+	   args="$args $1" 
+       fi ;;
    -Wl,--no-whole-archive) 
       found_no_whole_archive=yes;
       args="$args $1" ;;
@@ -19,9 +26,8 @@ done
 
 # 
 g++ -Wl,--out-implib,${dllname}.a $args \
-  && ( if [ "`echo $dllname | sed 's{^lib/.*\.dll${{'`" != "$dllname" ]; then \
+  && ( if [ "$isdll" != "0" ]; then \
           ln -sf ../bin/$dllbase $dllname; \
-       fi ) \
-  && chmod a+x bin/$dllbase
+       fi )
 
 exit $?
