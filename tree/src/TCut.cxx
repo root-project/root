@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TCut.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   14/04/97
 
 /*************************************************************************
@@ -102,14 +102,14 @@ TCut& TCut::operator+=(const TCut& rhs)
 //______________________________________________________________________________
 TCut& TCut::operator*=(const char *rhs)
 {
-   fTitle = fTitle + "*(" + TString(rhs) + ")";;
+   fTitle = "(" + fTitle + ")*(" + TString(rhs) + ")";
    return *this;
 }
 
 //______________________________________________________________________________
 TCut& TCut::operator*=(const TCut& rhs)
 {
-   fTitle = fTitle + "*(" + rhs.fTitle + ")";;
+   fTitle = "(" + fTitle + ")*(" + rhs.fTitle + ")";
    return *this;
 }
 
