@@ -64,4 +64,4 @@ longlong: longlong.log
 templatefriend.log : templatefriend_cxx.$(DllSuf)
 
 templatefriend: templatefriend.log
-	$(TestDiff)
+	$(TestDiffW)

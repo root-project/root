@@ -23,66 +23,66 @@ byte written for entry   #9: 62
 values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 ******************************************************************************
 *Tree    :T         : An example of a ROOT tree                              *
-*Entries :       10 : Total =           12661 bytes  
+*Entries :       10 : Total =           14021 bytes  
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :B                                                                  *
 *Entries :       10 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :DataObject :                                                       *
-*Entries :       10 : Total  Size=        641 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        685 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :m_direct.m_entries : m_direct.m_entries_                           *
-*Entries :       10 : Total  Size=       2924 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       3220 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :m_direct.m_entries.first : first[m_direct.m_entries_]              *
-*Entries :       10 : Total  Size=        864 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        908 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    3 :m_direct.m_entries.second : second[m_direct.m_entries_]            *
-*Entries :       10 : Total  Size=        870 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        914 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    4 :m_direct.m_tentries : m_direct.m_tentries_                         *
-*Entries :       10 : Total  Size=       4416 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       4880 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    5 :m_direct.m_tentries.fUniqueID : fUniqueID[m_direct.m_tentries_]    *
-*Entries :       10 : Total  Size=        896 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        940 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    6 :m_direct.m_tentries.fBits : fBits[m_direct.m_tentries_]            *
-*Entries :       10 : Total  Size=        872 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        916 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    7 :m_direct.m_tentries.i : i[m_direct.m_tentries_]                    *
-*Entries :       10 : Total  Size=        848 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        892 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    8 :m_direct.m_tentries.j : j[m_direct.m_tentries_]                    *
-*Entries :       10 : Total  Size=        848 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        892 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    9 :m_direct.m_ptentries : m_direct.m_ptentries_                       *
-*Entries :       10 : Total  Size=       4450 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       4914 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   10 :m_direct.m_ptentries.fUniqueID : fUniqueID[m_direct.m_ptentries_]  *
-*Entries :       10 : Total  Size=        904 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        948 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   11 :m_direct.m_ptentries.fBits : fBits[m_direct.m_ptentries_]          *
-*Entries :       10 : Total  Size=        880 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        924 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   12 :m_direct.m_ptentries.i : i[m_direct.m_ptentries_]                  *
-*Entries :       10 : Total  Size=        856 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        900 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   13 :m_direct.m_ptentries.j : j[m_direct.m_ptentries_]                  *
-*Entries :       10 : Total  Size=        856 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=        900 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ***********************************************************
