@@ -13,7 +13,7 @@ endif
 # Compiler:
 CXX           = /opt/SUNWspro/bin/CC
 CC            = /opt/SUNWspro/bin/cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -KPIC -I/usr/openwin/include $(EXTRA_CXXFLAGS)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)

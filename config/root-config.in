@@ -73,8 +73,8 @@ solarisgcc)
    ;;
 solarisCC5)
    # Solaris CC 5.0
-   auxcflags="-D__SunOS_5_6 -library=iostream,no%Cstd"
-   auxlibs="-library=iostream,no%Cstd -lm -ldl -lnsl -lsocket"
+   auxcflags=
+   auxlibs="-lm -ldl -lnsl -lsocket"
    auxglibs=${auxlibs}
    ;;
 solariskcc)

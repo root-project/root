@@ -27,7 +27,7 @@ CXX           = KCC
 CC            = /opt/SUNWspro/bin/cc
 CXXFLAGS      = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
                 --diag_suppress 191 --diag_suppress 830 \
-                $(CXXOPT) -KPIC -I/usr/openwin/include -D__SunOS_5_6
+                $(CXXOPT) -KPIC -I/usr/openwin/include
 CFLAGS        = -KPIC -I/usr/openwin/include -O0 $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
                 --diag_suppress 191 --diag_suppress 830 $(CXXOPT) \
