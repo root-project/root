@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.29 2002/11/17 17:35:21 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.30 2002/11/20 09:11:06 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2045,7 +2045,9 @@ void THtml::CreateListOfTypes()
       TIter nextType(gROOT->GetListOfTypes());
 
       while ((type = (TDataType *) nextType())) {
-         if (*type->GetTitle() && !strchr(type->GetName(), '(')) {
+	 // no templates ('<' and '>'), no idea why the '(' is in here...
+         if (*type->GetTitle() && !strchr(type->GetName(), '(') 
+	     && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
             if (type->GetName())
                len = strlen(type->GetName());
             else
@@ -2058,7 +2060,8 @@ void THtml::CreateListOfTypes()
       maxLen += kSpaceNum;
 
       while ((type = (TDataType *) nextType())) {
-         if (*type->GetTitle() && !strchr(type->GetName(), '(')) {
+         if (*type->GetTitle() && !strchr(type->GetName(), '(')
+	     && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))){
             typesList << "<b><a name=\"";
             ReplaceSpecialChars(typesList, type->GetName());
             typesList << "\">";
