@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.102 2005/03/06 15:46:02 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.103 2005/03/08 17:28:15 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1735,9 +1735,12 @@ void RootdGetDirEntry()
       SPrintf(buffer,kMAXPATHLEN,"no directory open");
       ErrorInfo("RootdGetDirEntry: %s", buffer);
    } else if ((dp = readdir(gDirectory)) == 0) {
-      SPrintf(buffer,kMAXPATHLEN,"cannot read open directory");
-      Perror(buffer);
-      ErrorInfo("RootdGetDirEntry: %s", buffer);
+      if (GetErrno() == EBADF) {
+         SPrintf(buffer,kMAXPATHLEN,"cannot read open directory");
+         Perror(buffer);
+         ErrorInfo("RootdGetDirEntry: %s", buffer);
+      } else
+         SPrintf(buffer,kMAXPATHLEN,"no more entries");
    } else {
       SPrintf(buffer,kMAXPATHLEN,"OK:%s",dp->d_name);
    }
@@ -1756,11 +1759,7 @@ void RootdOpenDir(const char *dir)
    if (dir[0] == '/')
       edir++;
 
-   if (gAnon) {
-      SPrintf(buffer,kMAXPATHLEN,
-              "anonymous users may not open directories");
-      ErrorInfo("RootdOpenDir: %s", buffer);
-   } else if ((gDirectory = opendir(edir)) == 0) {
+   if ((gDirectory = opendir(edir)) == 0) {
       SPrintf(buffer,kMAXPATHLEN,"cannot open directory %s",edir);
       Perror(buffer);
       ErrorInfo("RootdOpenDir: %s", buffer);
