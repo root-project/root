@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.46 2001/08/28 21:45:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.47 2001/10/05 07:03:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include <iostream.h>
 
 #include "TROOT.h"
+#include "TError.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TFile.h"
@@ -3438,7 +3439,7 @@ void TPad::Print(const char *filename, Option_t *option)
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
       gVirtualX->WriteGIF(psname);
-      Printf("GIF file: %s has been created.",psname);
+      Info("TPad::Print",Form("GIF file: %s has been created.",psname));
       return;
    }
 
@@ -3453,7 +3454,7 @@ void TPad::Print(const char *filename, Option_t *option)
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      Printf("ROOT file: %s has been created",psname);
+      Info("TPad::Print",Form("ROOT file: %s has been created",psname));
       return;
    }
 
@@ -3484,7 +3485,7 @@ void TPad::Print(const char *filename, Option_t *option)
    Paint();
    gVirtualPS->Close();
    if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-   Printf("PostScript file: %s has been created",psname);
+   Info("TPad::Print",Form("PostScript file: %s has been created",psname));
    delete gVirtualPS;
    gVirtualPS = psave;
    padsav->cd();
