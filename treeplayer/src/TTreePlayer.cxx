@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.47 2001/05/07 12:34:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.48 2001/05/28 06:32:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3198,6 +3198,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
      tFitter->ExecuteCommand("MINOS",arglist,0);
   }
   fitfunc->SetChisquare(0); //to not confuse user with the stored sum of w**2
+  fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
 
    // Get return status into function
    char parName[50];

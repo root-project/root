@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.48 2001/05/08 14:01:25 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.49 2001/05/24 21:27:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1727,7 +1727,8 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
    if (Foption.Like) H1FitChisquare(npar, params, amin, params, 1);
 
    gF1->SetChisquare(amin);
-
+   gF1->SetNDF(gF1->GetNumberFitPoints()-npar-nfixed);
+   
 //*-*- Store fitted function in histogram functions list and draw
    if (!Foption.Nostore) {
       if (!Foption.Plus) {
