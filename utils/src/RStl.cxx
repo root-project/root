@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.2 2004/01/16 17:52:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.3 2004/01/16 21:29:27 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -47,10 +47,21 @@ ROOT::RStl& ROOT::RStl::inst()
 }
 
 void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
-   string registername( TClassEdit::ShortType(stlclassname.c_str(), 
-                                              TClassEdit::kDropTrailStar
-                                              | TClassEdit::kDropStlDefault ) );
 
+   G__ClassInfo cl(TClassEdit::ShortType(stlclassname.c_str(),
+                                         TClassEdit::kDropTrailStar).c_str());
+
+   if ( ! cl.IsValid() ) {
+      Error("RStl::GenerateTClassFor","%s not in the CINT dictionary",
+            stlclassname.c_str());
+      return;
+   }
+                   
+   string registername( TClassEdit::ShortType(cl.Name(), 
+                                              TClassEdit::kDropStlDefault ) );
+
+//    fprintf(stderr,"registering %s as %s\n",
+//            stlclassname.c_str(), registername.c_str());
    
    vector<string> splitName;
    TClassEdit::GetSplit(registername.c_str(),splitName);

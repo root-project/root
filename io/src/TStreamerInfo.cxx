@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.188 2004/01/16 16:27:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.189 2004/01/23 22:00:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2339,7 +2339,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::Update(TClass *oldcl, TClass *newcl) 
+void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl) 
 {
    //function called by the TClass constructor when replacing an emulated class
    //by the real class

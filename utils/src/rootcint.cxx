@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.151 2004/01/21 07:04:33 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.152 2004/01/23 18:50:03 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -910,6 +910,12 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedConstructor(G__ClassInfo& cl)
 {
+   // We need a constructor if:
+   //   the class is not abstract
+   //   the class is not an stl container
+   //   the class version is greater than 0
+   //   or (the option + has been specified and ShowMembers is missing)
+
    bool res= ((GetClassVersion(cl)>0
                || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
                   && strncmp(cl.FileName(),"prec_stl",8)!=0 )
@@ -974,6 +980,7 @@ bool NeedDestructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
 {
+
    if (TClassEdit::IsSTLCont(cl.Name()) != 0 ) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
 
@@ -1480,7 +1487,11 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
    int stltype = IsSTLContainer(m);
-   if (stltype!=0) RStl::inst().GenerateTClassFor( m.Type()->Name() );
+   if (stltype!=0) {
+//       fprintf(stderr,"Add %s which is also %s\n",
+//               m.Type()->Name(), m.Type()->TrueName() );
+      RStl::inst().GenerateTClassFor( m.Type()->Name() );
+   }
    if (!m.Type()->IsTmplt() || stltype<=0) return 0;
 
    int isArr = 0;
@@ -2679,7 +2690,11 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (!IsStreamable(m)) continue;
 
       int k = IsSTLContainer(m);
-      if (k!=0) RStl::inst().GenerateTClassFor( m.Type()->Name() );
+      if (k!=0) {
+//          fprintf(stderr,"Add %s which is also %s\n",
+//                  m.Type()->Name(), m.Type()->TrueName() );
+         RStl::inst().GenerateTClassFor( m.Type()->Name() );
+      }
       if (k<0) continue;
       else if (k>0) continue; // do not generate the member streamer for STL containers anymore.
 

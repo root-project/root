@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.45 2004/01/03 14:22:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.46 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -47,7 +47,7 @@ private:
       TMemberStreamer *fStreamer;
       CompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
       ~CompInfo() {};
-      void Update(TClass *oldcl, TClass *newcl) {
+      void Update(const TClass *oldcl, TClass *newcl) {
          if (fClass==oldcl) fClass=newcl;
          else if (fClass==0) fClass =gROOT->GetClass(fClassName);
       }
@@ -173,7 +173,7 @@ public:
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset);
-   virtual void        Update(TClass *oldClass, TClass *newClass);
+   virtual void        Update(const TClass *oldClass, TClass *newClass);
 
    static TStreamerElement   *GetCurrentElement();
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);

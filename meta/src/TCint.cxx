@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.72 2004/01/23 21:38:20 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.73 2004/01/25 09:40:09 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -761,6 +761,21 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
       f = gcl.GetMethod(method, proto, &offset).InterfaceMethod();
    }
    return (void *)f;
+}
+
+//______________________________________________________________________________
+const char *TCint::GetInterpreterTypeName(const char *name) 
+{
+   // The 'name' is known to the interpreter, this function returns
+   // the internal version of this name (usually just resolving typedefs)
+   // This is used in particular to synchronize between the name used
+   // by rootcint and by the run-time enviroment (TClass)
+   // Return 0 if the name is not known.
+   
+   if (!gInterpreter->CheckClassInfo(name)) return 0;
+   G__ClassInfo cl(name);
+   if (cl.IsValid()) return cl.Name();
+   else return 0;
 }
 
 //______________________________________________________________________________

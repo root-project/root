@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.30 2003/05/27 00:39:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.31 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    virtual void     SetSize(Int_t dsize) {fSize = dsize;}
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
    virtual void     SetType(Int_t dtype) {fType = dtype;}
-   virtual void     Update(TClass *oldClass, TClass *newClass);
+   virtual void     Update(const TClass *oldClass, TClass *newClass);
 
    ClassDef(TStreamerElement,2)  //Base class for one element (data member) to be Streamed
 };
@@ -113,7 +113,7 @@ public:
    virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
-   virtual void     Update(TClass *oldClass, TClass *newClass);
+   virtual void     Update(const TClass *oldClass, TClass *newClass);
 
    ClassDef(TStreamerBase,3)  //Streamer element of type base class
 };

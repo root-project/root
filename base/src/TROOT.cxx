@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.108 2003/11/24 10:51:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.109 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -786,6 +786,61 @@ const char *TROOT::FindObjectPathName(const TObject *) const
    return "??";
 }
 
+TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const 
+{
+   // return a TClass object corresponding to 'name' assuming it is an STL container.
+   // In particular we looking for possible alternative name (default template 
+   // parameter, typedefs template arguments, typedefed name).
+   
+   TClass *cl = 0;
+   
+   // We have not found the STL container yet.
+   // First we are going to look for a similar name but different 'default' template
+   // parameter (differences due to different STL implementation)
+   
+   string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault )) ;
+
+   if (defaultname != name) {
+      cl = (TClass*)gROOT->GetListOfClasses()->FindObject(defaultname.c_str());
+      if (load && !cl) cl = gROOT->LoadClass(defaultname.c_str());
+   } 
+     
+   if (cl==0) {
+
+      // now look for a typedef 
+      // well for now the typedefing in CINT has some issues
+      // for examples if we generated the dictionary for
+      //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
+
+      TDataType *objType = gROOT->GetType(name, load);
+      if (objType) {
+         const char *typedfName = objType->GetTypeName();
+         string defaultTypedefName(  TClassEdit::ShortType( typedfName, TClassEdit::kDropStlDefault ) );
+         
+         if (typedfName && strcmp(typedfName, name) && defaultTypedefName==name) {
+            cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
+            if (load && !cl) cl = gROOT->LoadClass(typedfName);
+         }
+      }
+   }
+   if (cl==0) {
+      // Try the alternate name where all the typedefs are resolved:
+      
+      const char *altname = gInterpreter->GetInterpreterTypeName(name);
+      if (altname && strcmp(altname,name)!=0) {
+         cl = gROOT->GetClass(altname,load);
+      }
+   }
+
+   if (load && cl==0) {
+      // Create an Emulated class for this container.
+      cl = new TClass(name, gROOT->GetVersionInt() / 100, 0, 0, -1, -1 );
+      cl->SetBit(TClass::kIsEmulation);
+   }
+
+   return cl;
+}
+
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
@@ -795,13 +850,29 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (!GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
+
    if (cl) {
       if (cl->IsLoaded()) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
+
+      if (TClassEdit::IsSTLCont(name)) {
+         const char *altname = gInterpreter->GetInterpreterTypeName(name);
+         if (altname && strcmp(altname,name)!=0) {
+
+            TClass *newcl = GetClass(altname,load);
+
+            // since the name are different but we got a TClass, we assume
+            // we need to replace and delete this class.
+            assert(newcl!=cl);
+            cl->ReplaceWith(newcl);
+            delete cl;
+            return newcl;    
+         }
+      }
    } else {
 
-      if (! TClassEdit::IsSTLCont(name)) {
+      if (!TClassEdit::IsSTLCont(name)) {
          // If the name is actually an STL container we prefer the 
          // short name rather than the true name (at least) in 
          // a first try!
@@ -814,13 +885,26 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
                return cl;
             }
          }
+      } else {
+            
+         cl = FindSTLClass(name,kFALSE);
+
+         if (cl) {
+            if (cl->IsLoaded()) return cl;
+
+            //we may pass here in case of a dummy class created by TStreamerInfo
+            return gROOT->GetClass(cl->GetName(),kTRUE);
+         }
+
       }
+
    }
 
    if (!load) return 0;
 
    TClass *loadedcl = LoadClass(name);
    if (loadedcl) return loadedcl;
+
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
    static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
@@ -828,41 +912,10 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
    if (TClassEdit::IsSTLCont(name)) {
 
-      // We have not found the STL container yet.
-      // First we are going to look for a similar name but different 'default' template
-      // parameter (differences due to different STL implementation)
+      return FindSTLClass(name,kTRUE);
 
-      string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault )) ;
-      if (defaultname != name) {
-         cl = (TClass*)GetListOfClasses()->FindObject(defaultname.c_str());
-         if (!cl) cl = LoadClass(defaultname.c_str());
-      } 
-
-      if (cl==0) {
-
-         // now look for a typedef 
-         // well for now the typedefing in CINT has some issues
-         // for examples if we generated the dictionary for
-         //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
-
-         TDataType *objType = GetType(name, load);
-         if (objType) {
-            const char *typedfName = objType->GetTypeName();
-            string defaultTypedefName(  TClassEdit::ShortType( typedfName, TClassEdit::kDropStlDefault ) );
-            
-            if (typedfName && strcmp(typedfName, name) && defaultTypedefName==name) {
-               cl = (TClass*)GetListOfClasses()->FindObject(typedfName);
-               if (!cl) cl = LoadClass(typedfName);
-            }
-         }
-      }
-      if (cl==0) {
-         // Create an Emulated class for this container.
-         cl = new TClass(name, GetVersionInt() / 100, 0, 0, -1, -1 );
-         cl->SetBit(TClass::kIsEmulation);
-      }
-      return cl;
    }
+
    if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
       return 0; // reject long longs
 

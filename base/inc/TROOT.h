@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.36 2003/11/24 10:51:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.37 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -122,8 +122,8 @@ protected:
    void            AuthCleanup();         //Cleanup remote auth info
    void            InitSystem();          //Operating System interface
    void            InitThreads();         //Initialize threads library
+   TClass         *FindSTLClass(const char *name, Bool_t load) const;
    TClass         *LoadClass(const char *name) const;
-
    void           *operator new(size_t l) { return TObject::operator new(l); }
 
 public:

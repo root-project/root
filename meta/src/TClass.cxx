@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.132 2004/01/21 07:03:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.133 2004/01/21 22:17:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -523,32 +523,7 @@ void TClass::Init(const char *name, Version_t cversion,
    }
 
    if (oldcl) {
-      //we must update the class pointers pointing to oldcl in all TStreamerElements
-      TIter nextClass(gROOT->GetListOfClasses());
-      TClass *acl;
-      while ((acl = (TClass*)nextClass())) {
-         TIter nextInfo(acl->GetStreamerInfos());
-         while ((info = (TStreamerInfo*)nextInfo())) {
-
-            info->Update(oldcl,this);
-
-         }
-      }
-
-      //we must notify all Trees in all files. In particular
-      //TLeafObjects must update pointers to the class.
-      TObject * obj;
-      TDirectory *cursav = gDirectory;
-      TFile *file;
-      TIter nextf(gROOT->GetListOfFiles());
-      while ((file = (TFile*)nextf())) {
-         TIter next(file->GetList()); //in principle we should scan all sub-directories
-         while ((obj = next())) {
-            if (obj->InheritsFrom("TTree")) obj->Notify();
-         }
-      }
-      if (cursav) cursav->cd();
-      // delay delete the old class until we are really done with it.
+      oldcl->ReplaceWith(this);
       delete oldcl;
    }
    if (fClassInfo) SetTitle(fClassInfo->Title());
@@ -1393,6 +1368,60 @@ void TClass::GetMenuItems(TList *list)
 Bool_t TClass::IsFolder(void *obj) const
 {
    return Browse(obj,(TBrowser*)0);
+}
+
+//______________________________________________________________________________
+void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const 
+{
+   // Inform the other objects to replace this object by the new TClass (newcl)
+ 
+   //we must update the class pointers pointing to 'this' in all TStreamerElements
+   TIter nextClass(gROOT->GetListOfClasses());
+   TClass *acl;
+   TStreamerInfo *info;
+   TList tobedeleted;
+   
+   const char *corename = gInterpreter->GetInterpreterTypeName(newcl->GetName());
+   if (corename==0) corename = newcl->GetName();
+
+   while ((acl = (TClass*)nextClass())) {
+      if (recurse && acl!=newcl && acl!=this) {
+         // This does not always work.  In some cases the interpreter is disable
+         // or not fully updated yet.  We still need to improve on this check.
+         const char *aclCorename = gInterpreter->GetInterpreterTypeName(acl->GetName());
+         if (aclCorename && strcmp(corename,aclCorename)==0) {
+            // This IS the same class.
+            acl->ReplaceWith(newcl, kFALSE);
+            tobedeleted.Add(acl);
+         }
+      }
+      TIter nextInfo(acl->GetStreamerInfos());
+      while ((info = (TStreamerInfo*)nextInfo())) {
+
+         info->Update(this, newcl);
+         
+      }
+   }
+
+   //we must notify all Trees in all files. In particular
+   //TLeafObjects must update pointers to the class.
+   TObject * obj;
+   TDirectory *cursav = gDirectory;
+   TFile *file;
+   TIter nextf(gROOT->GetListOfFiles());
+   while ((file = (TFile*)nextf())) {
+      TIter next(file->GetList()); //in principle we should scan all sub-directories
+      while ((obj = next())) {
+         if (obj->InheritsFrom("TTree")) obj->Notify();
+      }
+   }
+   if (cursav) cursav->cd();
+
+   TIter delIter( &tobedeleted );
+   while ((acl = (TClass*)delIter())) {
+      delete acl;
+   }
+   
 }
 
 //______________________________________________________________________________

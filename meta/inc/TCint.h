@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.13 2004/01/21 22:22:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.14 2004/01/21 23:15:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -104,6 +104,7 @@ public:
    TString GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
    void   *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
    void   *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
+   const char *GetInterpreterTypeName(const char*);
    void    Execute(const char *function, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);

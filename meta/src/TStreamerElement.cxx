@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.62 2003/11/20 17:25:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.63 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -341,7 +341,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
-void TStreamerElement::Update(TClass *oldClass, TClass *newClass)
+void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 {
    //function called by the TClass constructor when replacing an emulated class
    //by the real class
@@ -489,7 +489,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
-void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
+void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
 {
    //function called by the TClass constructor when replacing an emulated class
    //by the real class
