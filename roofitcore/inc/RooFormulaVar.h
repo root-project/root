@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.rdl,v 1.21 2002/09/05 04:33:28 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.22 2003/01/14 00:07:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,6 +52,9 @@ public:
 //   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
 //   Double_t analyticalIntegral(Int_t code) const ;
   //inline Bool_t selfNormalized() const { return kTRUE; }
+
+
+  virtual Double_t defaultErrorLevel() const ;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.cc,v 1.27 2003/01/14 00:07:50 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.28 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,6 +37,8 @@
 
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooNLLVar.hh"
+#include "RooFitCore/RooChi2Var.hh"
 
 ClassImp(RooFormulaVar)
 
@@ -144,4 +146,45 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
     os << GetTitle() ;
   }
 }
+
+Double_t RooFormulaVar::defaultErrorLevel() const 
+{
+  // See if we contain a RooNLLVar or RooChi2Var object
+
+  RooAbsReal* nllArg(0) ;
+  RooAbsReal* chi2Arg(0) ;
+
+  TIterator* iter = _actualVars.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (dynamic_cast<RooNLLVar*>(arg)) {
+      nllArg = (RooAbsReal*)arg ;
+    }
+    if (dynamic_cast<RooChi2Var*>(arg)) {
+      chi2Arg = (RooAbsReal*)arg ;
+    }
+  }
+  delete iter ;
+
+  if (nllArg && !chi2Arg) {
+    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() 
+	 << ") Formula contains a RooNLLVar, using its error level" << endl ;
+    return nllArg->defaultErrorLevel() ;
+  } else if (chi2Arg && !nllArg) {
+    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() 
+	 << ") Formula contains a RooChi2Var, using its error level" << endl ;
+    return chi2Arg->defaultErrorLevel() ;
+  } else if (!nllArg && !chi2Arg) {
+    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
+	 << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+  } else {
+    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
+	 << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+  }
+
+  return 1.0 ;
+}
+
+
+
 
