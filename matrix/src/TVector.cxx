@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.18 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.19 2002/10/25 06:29:04 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -676,7 +676,13 @@ Bool_t operator==(const TVector &v1, const TVector &v2)
    // Check to see if two vectors are identical.
 
    if (!AreCompatible(v1, v2)) return kFALSE;
-   return (memcmp(v1.fElements, v2.fElements, v1.fNrows*sizeof(Real_t)) == 0);
+   Real_t *ep1 = v1.fElements;
+   Real_t *ep2 = v2.fElements;
+   while (ep1 < v1.fElements+v1.fNrows)
+      if (!(*ep1++ == *ep2++))
+         return kFALSE;
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
