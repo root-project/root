@@ -2708,7 +2708,12 @@ int hash;
     G__CHECKNONULL(0,'C');
     G__CHECKNONULL(1,'C');
 #endif
-    G__letint(result7,'C',(long)strcat((char *)G__int(libp->para[0]),(char *)G__int(libp->para[1])));
+    {
+       char *dst = (char*)G__int(libp->para[0]);
+       char *src = (char*)G__int(libp->para[1]);
+       char* res = strcat(dst,src);
+       G__letint(result7,'C',(long)res);
+    }
     return(1);
   }
 
