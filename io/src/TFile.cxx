@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.34 2001/02/16 10:57:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.35 2001/03/14 14:01:55 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -774,19 +774,35 @@ void TFile::Map()
 //     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
 //
 //  Example of output
-//  960122/105933  At:64        N=160       TFile
-//  960122/105933  At:224       N=402       TH1F           CX = 2.09
-//  960122/105934  At:626       N=1369      TH2F           CX = 5.57
-//  960122/105934  At:1995      N=1761      TProfile       CX = 1.63
-//  960122/105936  At:3756      N=181640    THN            CX = 1.10
-//  960122/105936  At:185396    N=326       TFile
-//  960122/105936  At:185722    N=98        TFile
+//  20010404/150437  At:64        N=150       TFile         
+//  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
+//  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
+//  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
+//  20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
+//  20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
+//  20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
+//  20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
+//  20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
+//  20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
+//  20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
+//  20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
+//  20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
+//  20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
+//  20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
+//  20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
+//  20010404/150442  At:380262    N=509       TH1F           CX =  1.93
+//  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
+//  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
+//  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
+//  20010404/150442  At:402823    N=307       KeysList      
+//  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
+//  20010404/150443  At:407678    N=86        FreeSegments  
+//  20010404/150443  At:407764    N=1         END           
 //
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
    Seek_t   seekkey,seekpdir;
-   char    *header = new char[kBegin];
    char    *buffer;
    char     nwhc;
    Seek_t   idcur = fBEGIN;
@@ -794,6 +810,9 @@ void TFile::Map()
    nwheader = 64;
    Int_t nread = nwheader;
 
+   char header[kBegin];
+   char classname[512];
+   
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
@@ -819,10 +838,12 @@ void TFile::Map()
       frombuf(buffer, &seekkey);
       frombuf(buffer, &seekpdir);
       frombuf(buffer, &nwhc);
-      char *classname = new char[nwhc+1];
       int i;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
+      if (idcur == fSeekFree) strcpy(classname,"FreeSegments");
+      if (idcur == fSeekInfo) strcpy(classname,"StreamerInfo");
+      if (idcur == fSeekKeys) strcpy(classname,"KeysList");
       TDatime::GetDateTime(datime, date, time);
       if (objlen != nbytes-keylen) {
          Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
@@ -830,10 +851,9 @@ void TFile::Map()
       } else {
          Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
       }
-      delete [] classname;
       idcur += nbytes;
    }
-   delete [] header;
+   Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,1,"END");
 }
 
 //______________________________________________________________________________
