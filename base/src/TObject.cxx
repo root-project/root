@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.30 2001/12/03 10:27:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.31 2001/12/19 07:15:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -230,7 +230,7 @@ void TObject::Copy(TObject &obj)
 TObject::~TObject()
 {
    // TObject destructor. Removes object from all canvases and object browsers
-   // iff observer bit is on and remove from the global object table.
+   // if observer bit is on and remove from the global object table.
 
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
