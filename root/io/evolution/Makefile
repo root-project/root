@@ -1,5 +1,5 @@
-CLEAN_TARGETS += *.so *.root
-TEST_TARGETS += 
+CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log
+TEST_TARGETS += ClassConv ConvArray
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -8,4 +8,30 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
+ifeq ($(FAIL),)
+ConvArray: readold.log
+	$(WarnFailTest)
+else
+ConvArray: readold.log readnew.log
+endif
 
+ClassConv: ClassConv.log
+	$(TestDiff)
+
+data.root: MyClassOld_cxx.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l write.C > write.log 
+
+readold.log: MyClassOld_cxx.$(DllSuf) data.root
+	$(CMDECHO) root.exe -q -b -l readold.C > readold.log 2>&1
+	
+readnew.log: MyClass_C.$(DllSuf) data.root
+	$(CMDECHO) root.exe -q -b -l readnew.C > readnew.log 2>&1
+
+ClassConv.root: ClassConvOld_cxx.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l ClassConvWriteOld.cxx > ClassConvWriteOld.log
+
+ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root
+	$(CMDECHO) root.exe -q -b -l ClassConvReadOld.cxx > ClassConvReadOld.log
+
+ClassConv.log: ClassConv.root ClassConvNew_cxx.$(DllSuf) ClassConvReadOld.log
+	$(CMDECHO) root.exe -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
