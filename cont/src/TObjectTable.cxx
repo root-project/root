@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TObjectTable::~TObjectTable()
 }
 
 //______________________________________________________________________________
-void TObjectTable::Print(Option_t *)
+void TObjectTable::Print(Option_t *) const
 {
    // Print the object table.
 
@@ -310,7 +310,7 @@ void TObjectTable::Expand(Int_t newSize)
 }
 
 //______________________________________________________________________________
-void TObjectTable::InstanceStatistics()
+void TObjectTable::InstanceStatistics() const
 {
    // Print the object table.
 
@@ -347,7 +347,7 @@ void TObjectTable::InstanceStatistics()
 }
 
 //______________________________________________________________________________
-void TObjectTable::UpdateInstCount()
+void TObjectTable::UpdateInstCount() const
 {
    // Histogram all objects according to their classes.
 

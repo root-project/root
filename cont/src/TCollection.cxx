@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.8 2000/10/31 11:19:19 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.9 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -126,11 +126,11 @@ void TCollection::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TCollection::Dump()
+void TCollection::Dump() const
 {
    // Dump all objects in this collection.
 
-   this->ForEach(TObject,Dump)();
+   ((TCollection*)this)->ForEach(TObject,Dump)();
 }
 
 //______________________________________________________________________________
@@ -198,7 +198,7 @@ void TCollection::ls(Option_t *option)
 {
    // List (ls) all objects in this collection.
 
-   this->ForEach(TObject,ls)(option);
+   ((TCollection*)this)->ForEach(TObject,ls)(option);
 }
 
 //______________________________________________________________________________
@@ -215,7 +215,7 @@ void TCollection::Print(Option_t *option)
 {
    // Print all objects in this collection.
 
-   this->ForEach(TObject,Print)(option);
+   ((TCollection*)this)->ForEach(TObject,Print)(option);
 }
 
 //______________________________________________________________________________

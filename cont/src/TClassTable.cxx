@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.2 2000/11/02 18:17:54 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -216,7 +216,7 @@ char *TClassTable::Next()
 }
 
 //______________________________________________________________________________
-void TClassTable::PrintTable()
+void TClassTable::PrintTable() 
 {
    // Print the class table. Before printing the table is sorted
    // alphabetically.

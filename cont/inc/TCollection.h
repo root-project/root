@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.4 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
    Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
    virtual void       Delete(Option_t *option="") = 0;
    virtual void       Draw(Option_t *option="");
-   virtual void       Dump();
+   virtual void       Dump() const ;
    virtual TObject   *FindObject(const char *name) const;
    TObject           *operator()(const char *name) const;
    virtual TObject   *FindObject(const TObject *obj) const;
@@ -87,11 +87,11 @@ public:
    Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
    Bool_t             IsFolder() const { return kTRUE; }
-   virtual void       ls(Option_t *option="");
+   virtual void       ls(Option_t *option="") const ;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
    virtual void       Paint(Option_t *option="");
-   virtual void       Print(Option_t *option="");
+   virtual void       Print(Option_t *option="") const;
    virtual void       RecursiveRemove(TObject *obj);
    virtual TObject   *Remove(TObject *obj) = 0;
    virtual void       RemoveAll(TCollection *col);

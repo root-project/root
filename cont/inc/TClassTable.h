@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.2 2000/11/02 18:17:54 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
    static VoidFuncPtr_t GetDict(const char *cname);
    static void          Init();
    static char         *Next();
-   void                 Print(Option_t *option="");
+   void                 Print(Option_t *option="") const;
    static void          PrintTable();
    static void          Remove(const char *cname);
    static void          Terminate();
