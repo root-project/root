@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.3 2000/05/31 07:49:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.4 2000/06/05 07:26:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1065,12 +1065,11 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 //
 
     static Double_t xbar, ybar, x2bar;
-    static Int_t i, n;
+    static Int_t i;
     static Double_t xybar;
     static Float_t fn, xk, yk;
     static Double_t det;
 
-    n     = TMath::Abs(ndata);
     ifail = -2;
     xbar  = ybar = x2bar = xybar = 0;
     Int_t np = 0;
