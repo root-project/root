@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.5 2001/09/25 16:16:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.6 2002/01/27 13:41:33 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -107,6 +107,9 @@ private:
 
 public:
    const char *GetName() const { return fName; }
+   const char *GetValue() const { return fValue; }
+   const char *GetType() const { return fType; }
+   EEnvLevel   GetLevel() const { return fLevel; }
 };
 
 //////////////////////////////////////////////////////////////////////////

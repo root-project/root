@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.13 2002/10/30 16:12:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.14 2003/07/08 09:47:25 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -234,7 +234,7 @@ void TWriteEnvParser::KeyValue(const TString &name, const TString &value,
 {
    // Write resources out to a new file.
 
-   TEnvRec *er = fEnv->Lookup(name.Data());
+   TEnvRec *er = fEnv->Lookup(name);
    if (er && er->fModified) {
       er->fModified = kFALSE;
       fprintf(fOfp, "%s", er->fValue.Data());
@@ -444,7 +444,7 @@ const char *TEnv::Getvalue(const char *name)
       er = Lookup(name);
    if (er == 0)
       return 0;
-   return er->fValue.Data();
+   return er->fValue;
 }
 
 //______________________________________________________________________________
