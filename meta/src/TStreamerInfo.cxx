@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.198 2004/05/07 09:11:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.199 2004/05/07 13:29:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -591,7 +591,7 @@ void TStreamerInfo::BuildOld()
 
                   if (strchr(bc->GetName(),'<')!=0) {
                      TString bcName( TClassEdit::ShortType(bc->GetName()         ,TClassEdit::kDropStlDefault).c_str() );
-		     TString elName( TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropStlDefault).c_str() );
+                     TString elName( TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropStlDefault).c_str() );
                      if (bcName==elName) break;
 
                   }
@@ -908,6 +908,7 @@ void TStreamerInfo::Compile()
           && (fMethod[keep] == 0)
           && (element->GetType() > 0)
           && (element->GetArrayDim() == 0)
+          && (fType[keep] < kObject)
           && (element->GetType() == (fType[keep]%kRegrouped))
           && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)) {
          if (fLength[keep] == 0) fLength[keep]++;
