@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.116 2005/01/27 20:36:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.117 2005/02/08 18:04:50 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -616,11 +616,19 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    TString pname = path;
    if (pname.Index(re) != kNPOS) {
       // rootd daemon ...
-      helper = new TNetSystem(path);
+      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
+          h->LoadPlugin() == 0)
+         helper = (TSystem*) h->ExecPlugin(0);
+      else
+         helper = new TNetSystem(path);
    } else if (!strcmp(url.GetProtocol(), "http") &&
-                     pname.BeginsWith("http")) {
+              pname.BeginsWith("http")) {
       // http ...
-
+      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
+          h->LoadPlugin() == 0)
+         helper = (TSystem*) h->ExecPlugin(0);
+      else
+         ; // no default helper yet
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
          return 0;
@@ -1360,13 +1368,13 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    }
    idx = libs.Index(l);
    if (idx != kNPOS) {
-      // The libs contains the sub-string 'l', let's make sure it is 
+      // The libs contains the sub-string 'l', let's make sure it is
       // not just part of a larger name.
       if (idx==0 || libs[idx-1]=='/' || libs[idx-1]=='\\') {
          Ssiz_t len = libs.Length();
          idx += l.Length();
          while(idx<len && libs[idx]!='.') {
-            if (libs[idx]==' ' || idx+1==len) 
+            if (libs[idx]==' ' || idx+1==len)
                return 1;
             ++idx;
          }
@@ -1378,8 +1386,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (l.BeginsWith("lib")) {
       l.Replace(0, 3, "-l");
       idx = libs.Index(l);
-      if (idx != kNPOS && 
-          (idx==0 || libs[idx-1]==' ') && 
+      if (idx != kNPOS &&
+          (idx==0 || libs[idx-1]==' ') &&
           (libs[idx+l.Length()]==' ' || libs[idx+l.Length()]==0)) {
          return 1;
       }
@@ -2495,7 +2503,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          // check all known header extensions
          for (Int_t iExt=0; !compileHeader && iExt<6; iExt++) {
             size_t lenExt=strlen(extensions[iExt]);
-            compileHeader |=lenFilename>lenExt 
+            compileHeader |=lenFilename>lenExt
                && !strcmp(extensions[iExt], endOfFilename-lenExt);
          }
 
@@ -2520,7 +2528,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          if (gDebug>4)  ::Info("ACLiC",comp.Data());
 
          Int_t compilationResult = gSystem->Exec( comp );
-         
+
          if (filenameForCompiler.CompareTo(filename))
             // remove temporary file
             gSystem->Unlink(filenameForCompiler);
