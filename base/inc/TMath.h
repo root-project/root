@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.33 2004/04/08 10:53:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.34 2004/04/19 14:01:05 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -290,6 +290,9 @@ public:
    static Double_t StruveH1(Double_t x);             // Struve functions of order 1
    static Double_t StruveL0(Double_t x);             // Modified Struve functions of order 0
    static Double_t StruveL1(Double_t x);             // Modified Struve functions of order 1
+
+   // Statistics
+   static Bool_t Permute(Int_t *a, Int_t n, Bool_t &start); // Find permutations
 
    ClassDef(TMath,0)  //Interface to math routines
 };

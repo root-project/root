@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.47 2004/02/06 14:30:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.48 2004/03/12 15:42:38 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2807,3 +2807,60 @@ Double_t TMath::StruveL1(Double_t x)
   }  
   return sl1;  
 }
+
+//______________________________________________________________________________
+Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
+{
+  //
+  // simple recursive algorithm to find the permutations of the first
+  // n natural numbers (starting from 0)
+  // it can be found in many places on the web
+  // At the beginning the variable start has to be set to kTRUE
+  // and not touched any more. The method returns kFALSE when 
+  // all combinations are exhausted, i.e. after n! calls
+  //
+  Int_t itmp;
+  Int_t i1=-1;
+  
+  if(start) {
+    // Prime the array
+    for(Int_t i=0; i<n; a[i++]=i);
+    start=kFALSE;
+    return kTRUE;
+  } else {
+    // find rightmost upward transition 
+    for(Int_t i=n-2; i>-1; i--) {
+      if(a[i]<a[i+1]) {
+	i1=i;
+	break;
+      }
+    }
+    // no more upward transitions, end of the story
+    if(i1==-1) return kFALSE;
+    else {
+      // find lower right element higher than the lower
+      // element of the upward transition
+      for(Int_t i=n-1;i>i1;i--) {
+	if(a[i] > a[i1]) {
+	  // swap the two
+	  itmp=a[i1];
+	  a[i1]=a[i];
+	  a[i]=itmp;
+	  break;
+	}
+      }
+      // order the rest, in fact just invert, as there 
+      // are only downward transitions from here on
+      for(Int_t i=0;i<(n-i1-1)/2;i++) {
+	itmp=a[i1+i+1];
+	a[i1+i+1]=a[n-i-1];
+	a[n-i-1]=itmp;
+      }
+    }
+    return kTRUE;
+  }
+}
+
+
+
+
