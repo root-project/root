@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.42 2004/05/04 10:01:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.43 2004/06/01 09:08:50 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -98,9 +98,11 @@ ClassImp(TLatex)
 //   The command to produce a lowercase Greek letter is obtained by adding a # to
 //   the name of the letter. For an uppercase Greek letter, just capitalize the first
 //   letter of the command name.
-//   #alpha #beta #gamma #delta #varepsilon #epsilon #zeta #eta #theta #iota #kappa #lambda #mu
-//   #nu #xi #omicron #pi #varpi #rho #sigma #tau #upsilon #phi #varphi #chi #psi #omega
-//   #Gamma #Delta #Theta #Lambda #Xi #Pi #Sigma #Upsilon #Phi #Psi #Omega
+//   #alpha #beta #chi #delta #varepsilon #phi #gamma #eta #iota #varphi #kappa #lambda
+//   #mu #nu #omicron #pi #theta #rho #sigma #tau #upsilon #varomega #omega #xi #psi #zeta
+//   #Alpha #Beta #Chi #Delta #Epsilon #Phi #Gamma #Eta #Iota #vartheta
+//   #Kappa #Lambda #Mu #Nu #Omicron #Pi #Theta #Rho #Sigma #Tau
+//   #Upsilon #varsigma #Omega #Xi #Psi #Zeta #varUpsilon #epsilon
 //
 //   ** Putting One Thing Above Another
 //   ----------------------------------
@@ -341,10 +343,10 @@ FormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* 
 // length : number of chars in t.
 //
 const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
-                "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varpi","omega","xi","psi","zeta",
-                "epsilon","varpi","varpi","Delta","varpi","Phi","Gamma","varpi","varpi","varpi",
-                "varpi","Lambda","varpi","varpi","varpi","Pi","Theta","varpi","Sigma","varpi",
-                "Upsilon","varpi","Omega","Xi","Psi" };
+                "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
+                "Alpha","Beta","Chi","Delta","Epsilon","Phi","Gamma","Eta","Iota","vartheta",
+                "Kappa","Lambda","Mu","Nu","Omicron","Pi","Theta","Rho","Sigma","Tau",
+                "Upsilon","varsigma","Omega","Xi","Psi","Zeta","varUpsilon","epsilon"};
 
 const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "spade","leftrightarrow","leftarrow","uparrow","rightarrow",
@@ -608,7 +610,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                   continue;
                }
             }
-            for(k=0;k<51;k++) {
+            for(k=0;k<54;k++) {
                if (!OpFound && UInt_t(length)>i+strlen(tab[k])) {
                   if (strncmp(&text[i+1],tab[k],strlen(tab[k]))==0) {
                      OpGreek=k;
@@ -933,7 +935,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
  //        Double_t yoffset = GetHeight()*spec.size/20.; // Greek letter too low
          Double_t yoffset = 0.; // Greek letter too low
          if (OpGreek>25) letter -= 58;
-         if (OpGreek == 26) letter = '\316'; //epsilon
+         if (OpGreek == 52) letter = '\241'; //varUpsilon
+         if (OpGreek == 53) letter = '\316'; //epsilon
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
