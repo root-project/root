@@ -4,6 +4,7 @@
 #include "TLeafObject.h"
 #include "TRegexp.h"
 #include "TObjString.h"
+#include "TBranchElement.h"
 
 void TestError(const std::string &test, const char *msg);
 
@@ -17,7 +18,7 @@ template <class HolderClass> Bool_t checkHolder(const char *testname = "") {
 }
 
 template <class HolderClass> void write(const char *testname, int nEntry = 3) {
-   bool testingTopLevelVectors = false;
+   bool testingTopLevelVectors = true;
 
    TString dirname = gROOT->GetVersion();
    dirname.ReplaceAll(".","-");
@@ -52,11 +53,10 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
         TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                                        typeid(holder->fScalar).name()));
      } else {
-        TString scalarclass = cls?cls->GetName():typeid(holder->fScalar).name();
-        tree->Branch("scalar0." ,scalarclass,&holder->fScalar,32000,0);
-        tree->Branch("scalar1." ,scalarclass,&holder->fScalar,32000,1);
-        tree->Branch("scalar2." ,scalarclass,&holder->fScalar,32000,2);
-        tree->Branch("scalar99.",scalarclass,&holder->fScalar,32000,99);
+        tree->Branch("scalar0.",&(holder->fScalarPtr),32000,0);
+        tree->Branch("scalar1.",&(holder->fScalarPtr),32000,1);
+        tree->Branch("scalar2.",&(holder->fScalarPtr),32000,2);
+        tree->Branch("scalar99.",&(holder->fScalarPtr),32000,99);
      }
  
      TClass *clo = gROOT->GetClass(typeid(holder->fObject));
@@ -64,11 +64,10 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
         TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                   typeid(holder->fObject).name()));
      } else {
-       TString objectclass = clo?clo->GetName():typeid(holder->fObject).name();
-       tree->Branch("object0." ,objectclass,&holder->fObject,32000,0);
-       tree->Branch("object1." ,objectclass,&holder->fObject,32000,1);
-       tree->Branch("object2." ,objectclass,&holder->fObject,32000,2);
-       tree->Branch("object99.",objectclass,&holder->fObject,32000,99);
+       tree->Branch("object0." ,&(holder->fObjectPtr),32000,0);
+       tree->Branch("object1." ,&(holder->fObjectPtr),32000,1);
+       tree->Branch("object2." ,&(holder->fObjectPtr),32000,2);
+       tree->Branch("object99.",&(holder->fObjectPtr),32000,99);
      }
 
      TClass *cln = gROOT->GetClass(typeid(holder->fNested));
@@ -76,23 +75,22 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
         TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                   typeid(holder->fNested).name()));
      } else {     
-        TString nestedclass = cln?cln->GetName():typeid(holder->fNested).name();
-        tree->Branch("nested0." ,nestedclass,&holder->fNested,32000,0);
-        tree->Branch("nested1." ,nestedclass,&holder->fNested,32000,1);
-        tree->Branch("nested2." ,nestedclass,&holder->fNested,32000,2);
-        tree->Branch("nested99.",nestedclass,&holder->fNested,32000,99);
+        tree->Branch("nested0." ,&(holder->fNestedPtr),32000,0);
+        tree->Branch("nested1." ,&(holder->fNestedPtr),32000,1);
+        tree->Branch("nested2." ,&(holder->fNestedPtr),32000,2);
+        tree->Branch("nested99.",&(holder->fNestedPtr),32000,99);
      }
    }
    for(int i=0; i<nEntry; i++) {
       holder->Reset(i);
       tree->Fill();
    }
-
    file->Write();
    delete file;
 }
 
 template <class HolderClass> bool verifyBranch(const char *testname, TTree *chain, const char *bname, int type = 0) {
+   static HolderClass *gHolder = new HolderClass;
    HolderClass **add = 0;
    HolderClass *holder = 0;
 
@@ -116,16 +114,22 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
          TestError("treeReading",Form("Branch %s with add == 0!",bname));
          return false;
       }
-      holder = *add;
+      void **p;
+      switch (type) {
+         case 0: holder = *add; break;
+         case 1: p = (void**) &(gHolder->fScalarPtr); *p = ((TBranchElement*)branch)->GetObject(); break;
+         case 2: p = (void**) &(gHolder->fObjectPtr); *p = ((TBranchElement*)branch)->GetObject(); break;
+         case 3: p = (void**) &(gHolder->fNestedPtr); *p = ((TBranchElement*)branch)->GetObject(); break;
+      }
    }
    
    int splitlevel = branch->GetSplitLevel();
 
    switch (type) {
       case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
-      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
-      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
-      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 1: return gHolder->VerifyScalarPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 2: return gHolder->VerifyObjectPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 3: return gHolder->VerifyNestedPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
       default: 
          TestError("treeReading",Form("Unknown type %d in verifyBranch",type));
          return false;
@@ -135,7 +139,7 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
 template <class HolderClass> bool read(const char *dirname, const char *testname, int nEntry) {
    HolderClass *holder = 0;
    bool result = true;
-   bool testingTopLevelVectors = false; 
+   bool testingTopLevelVectors = true; 
 
    TString filename = gSystem->ConcatFileName(dirname, testname );
    filename += ".root";

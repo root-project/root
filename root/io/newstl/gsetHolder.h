@@ -27,6 +27,7 @@ public:
       ,fPtrObjectPtr(0)
       ,fTObjectPtr(0)
       ,fPtrTObjectPtr(0)
+      ,fNestedPtr(0)
       {
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
       }
@@ -39,6 +40,7 @@ public:
       ,fPtrObjectPtr(0)
       ,fTObjectPtr(0)
       ,fPtrTObjectPtr(0)
+      ,fNestedPtr(0)
       {
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
          Reset(entry);
@@ -102,10 +104,12 @@ public:
 
 #if defined(R__NO_NESTED_CONTAINER)
    std::TEST_SET<std::TEST_SET<Helper > > fNested;  //! this version of ROOT does not support nested container
+   std::TEST_SET<std::TEST_SET<Helper > >*fNestedPtr;//! this version of ROOT does not support nested container
    std::TEST_SET<std::vector<Helper > >   fNestedV; //!
    std::TEST_SET<std::deque<Helper > >    fNestedD; //!
 #else
    std::TEST_SET<std::TEST_SET<Helper > > fNested;  //
+   std::TEST_SET<std::TEST_SET<Helper > >*fNestedPtr;  //
    std::TEST_SET<std::vector<Helper > >   fNestedV; //
    std::TEST_SET<std::deque<Helper > >    fNestedD; //
 #endif
@@ -315,6 +319,15 @@ public:
    }
    VERIFY(Nested)
 
+   bool SetOrVerifyNestedPtr(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
+      if (!reset && gFile && !HasNestedContainer(gFile)) {
+         return true;
+      }
+      UInt_t seed = 1 * (entryNumber+1);
+      return utility::SetOrVerify("fNestedPtr",fNestedPtr,seed,entryNumber,reset,testname);
+   }
+   VERIFY(NestedPtr)
+
    bool SetOrVerifyNestedV(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       if (!reset && gFile && !HasNestedContainer(gFile)) {
          return true;
@@ -369,6 +382,7 @@ protected:
       result &= SetOrVerifyPtrConstTNamed  (entryNumber,reset,testname,splitlevel);
 
       result &= SetOrVerifyNested(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyNestedPtr(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedV(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedD(entryNumber,reset,testname,splitlevel);
       if (reset) Assert(result);

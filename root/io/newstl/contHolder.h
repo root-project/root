@@ -27,6 +27,7 @@ public:
       ,fPtrObjectPtr(0)
       ,fTObjectPtr(0)
       ,fPtrTObjectPtr(0)
+      ,fNestedPtr(0)
       {
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
       }
@@ -39,6 +40,7 @@ public:
       ,fPtrObjectPtr(0)
       ,fTObjectPtr(0)
       ,fPtrTObjectPtr(0)
+      ,fNestedPtr(0)
       {
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
          Reset(entry);
@@ -132,11 +134,13 @@ public:
    std::TEST_CONT<std::vector<Helper> >    fNestedV; //!
    std::TEST_CONT<std::list<Helper> >      fNestedL; //!
    std::TEST_CONT<std::deque<Helper> >     fNestedD; //!
+   std::TEST_CONT<std::TEST_CONT<Helper> >*fNestedPtr;//!
 #else
    std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //
    std::TEST_CONT<std::vector<Helper> >    fNestedV; //
    std::TEST_CONT<std::list<Helper> >      fNestedL; //
    std::TEST_CONT<std::deque<Helper> >     fNestedD; //
+   std::TEST_CONT<std::TEST_CONT<Helper> >*fNestedPtr;//
 #endif
 
    bool SetOrVerifyEnum(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
@@ -416,6 +420,15 @@ public:
    }
    VERIFY(NestedD)
 
+   bool SetOrVerifyNestedPtr(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
+      if (!reset && gFile && !HasNestedContainer(gFile)) {
+         return true;
+      }
+      UInt_t seed = 1 * (entryNumber+1);
+      return utility::SetOrVerify("fNestedPtr",fNestedPtr,seed,entryNumber,reset,testname);
+   }
+   VERIFY(NestedPtr)
+
 protected:
    bool SetOrVerify(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
       bool result = true;
@@ -463,6 +476,7 @@ protected:
       result &= SetOrVerifyNestedV(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedL(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedD(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyNestedPtr(entryNumber,reset,testname,splitlevel);
       if (reset) Assert(result);
       return result;
    }
