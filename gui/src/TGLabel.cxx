@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.7 2003/12/15 18:04:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.8 2004/01/05 17:44:09 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -152,26 +152,29 @@ void TGLabel::SetTextFont(FontStruct_t font, Bool_t global)
    // Changes text font.
    // If global is true font is changed globally.
 
-   if (font != fFontStruct) {
-      FontH_t v = gVirtualX->GetFontHandle(font);
-      if (!v) return;
+   FontH_t v = gVirtualX->GetFontHandle(font);
+   if (!v) return;
 
-      fFontStruct = font;
-      TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-      if (global) {
-         gc = new TGGC(*gc); // copy
-         fHasOwnFont = kTRUE;
-      }
-      gc->SetFont(v);
-      fNormGC = gc->GetGC();
+   fTextChanged = kTRUE;
 
-      int max_ascent, max_descent;
-
-      fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fTHeight = max_ascent + max_descent;
-      Resize(fTWidth, fTHeight + 1);
+   fFontStruct = font;
+   TGGC *gc = fClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+   if (global) {
+      gc = new TGGC(*gc); // copy
+      fHasOwnFont = kTRUE;
    }
+   gc->SetFont(v);
+   fNormGC = gc->GetGC();
+
+   int max_ascent, max_descent;
+
+   fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   fTHeight = max_ascent + max_descent;
+
+   // Resize is done when parent's is Layout() is called
+   //Resize(fTWidth, fTHeight + 1);
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -180,7 +183,7 @@ void TGLabel::SetTextFont(const char *fontName, Bool_t global)
    // Changes text font specified by name.
    // If global is true font is changed globally.
 
-   TGFont *font = gClient->GetFont(fontName);
+   TGFont *font = fClient->GetFont(fontName);
    if (font) {
       SetTextFont(font->GetFontStruct(), global);
    }
@@ -203,7 +206,7 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    // Changes text color.
    // If global is true color is changed globally
 
-   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+   TGGC *gc = fClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
 
    if (global) {
       gc = new TGGC(*gc); // copy
@@ -212,6 +215,8 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
 
    gc->SetForeground(color);
    fNormGC = gc->GetGC();
+
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -223,6 +228,19 @@ void TGLabel::SetTextColor(TColor *color, Bool_t global)
    if (color) {
       SetTextColor(color->GetPixel(), global);
    }
+}
+
+//______________________________________________________________________________
+void TGLabel::SetTextJustify(Int_t mode)
+{
+   // Set text justification. Mode is an OR of the bits:
+   // kTextTop, kTextLeft, kTextLeft, kTextRight, kTextCenterX and
+   // kTextCenterY.
+
+   fTextChanged = kTRUE;
+   fTMode = mode;
+
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -247,13 +265,13 @@ void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
-      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+      TGFont *ufont = fClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
       }
 
-      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      TGGC *userGC = fClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
