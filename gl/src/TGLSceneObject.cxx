@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.5 2004/09/15 14:26:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
@@ -82,19 +81,30 @@ static GLenum gLightNames[] = {GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
                                GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7};
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glname, TObject *obj)
-                   :fColor(), fGLName(glname), fNextT(0), fRealObject(obj)
+TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glName, TObject *obj)
+                   :fColor(), fGLName(glName), fNextT(0), fRealObject(obj)
 {
    if (color) {
-      fColor[0] = color[0];
-      fColor[1] = color[1];
-      fColor[2] = color[2];
+      //diffuse and specular
+      //red
+      color[0] > 0.8f ? fColor[0] = color[0] - 0.3f : fColor[0] = color[0];
+      //green
+      color[1] > 0.8f ? fColor[1] = color[1] - 0.3f : fColor[1] = color[1];
+      //blue
+      color[2] > 0.8f ? fColor[2] = color[2] - 0.3f : fColor[2] = color[2];
    } else {
-      fColor[0] =
-      fColor[1] =
-      fColor[2] = 1.f;
+      for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
    }
-   fColor[3] = 1.f;
+   //ambient
+   fColor[4] = fColor[5] = fColor[6] = 0.f;
+   //specular
+   fColor[8] = fColor[9] = fColor[10] = 0.7f;
+   //emission
+   fColor[12] = fColor[13] = fColor[14] = 0.f;
+   //alpha
+   fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
+   //shininess
+   fColor[16] = 10.f;
 }
 
 //______________________________________________________________________________
@@ -114,21 +124,10 @@ void TGLSceneObject::Shift(Double_t, Double_t, Double_t)
 }
 
 //______________________________________________________________________________
-void TGLSceneObject::GetColor(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const
+void TGLSceneObject::SetColor(const Float_t *newColor)
 {
-   r = Color_t(fColor[0] * 100.f);
-   g = Color_t(fColor[1] * 100.f);
-   b = Color_t(fColor[2] * 100.f);
-   a = Color_t(fColor[3] * 100.f);
-}
-
-//______________________________________________________________________________
-void TGLSceneObject::SetColor(Color_t r, Color_t g, Color_t b, Color_t a)
-{
-   fColor[0] = r / 100.f;
-   fColor[1] = g / 100.f;
-   fColor[2] = b / 100.f;
-   fColor[3] = a / 100.f;
+   for (Int_t i = 0; i < 17; ++i)
+      fColor[i] = newColor[i];
 }
 
 //______________________________________________________________________________
@@ -221,9 +220,12 @@ void TGLFaceSet::ResetTransparency(char newval)
 //______________________________________________________________________________
 void TGLFaceSet::GLDraw()const
 {
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor);
+   
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
+   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
 
    GLUtriangulatorObj *tessObj = GetTesselator();
    const Double_t *pnts = &fVertices[0];
@@ -262,20 +264,6 @@ void TGLFaceSet::GLDraw()const
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
-   }
-}
-
-//______________________________________________________________________________
-void TGLFaceSet::SetColor(const Float_t *newcolor)
-{
-   if (newcolor) {
-      fColor[0] = newcolor[0];
-      fColor[1] = newcolor[1];
-      fColor[2] = newcolor[2];
-   } else {
-      fColor[0] =
-      fColor[1] =
-      fColor[2] = 1.f;
    }
 }
 
@@ -443,20 +431,46 @@ void TGLPolyLine::GLDraw()const
 }
 
 //______________________________________________________________________________
-TGLSimpleLight::TGLSimpleLight(UInt_t glname, UInt_t lightname, const Float_t *pos, Bool_t dir)
-                   :TGLSceneObject(0, glname, 0), fLightName(lightname)
+TGLSimpleLight::TGLSimpleLight(UInt_t glName, UInt_t lightName, const Float_t *initColor, const Float_t *pos)
+                   :TGLSceneObject(0, glName, 0), fLightName(lightName)
 {
-   glEnable(gLightNames[lightname]);
-   fPosition[0] = pos[0];
-   fPosition[1] = pos[1];
-   fPosition[2] = pos[2];
-   dir ? fPosition[3] = 1.f : fPosition[3] = 0.f;
+   fColor[16] = -10.f; 
+   fColor[0] = initColor[0];
+   fColor[1] = initColor[1];
+   fColor[2] = initColor[2];
+   if (pos) {
+      fPosition[0] = pos[0];
+      fPosition[1] = pos[1];
+      fPosition[2] = pos[2];
+   } else {
+      fPosition[0] = 
+      fPosition[1] = 
+      fPosition[2] = 0.f;
+   }
+   fPosition[3] = 1.f;
+   fBulbRad = 10.f;
 }
 
 //______________________________________________________________________________
 void TGLSimpleLight::GLDraw()const
 {
+   const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, nullColor);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, nullColor);
+   glLightfv(gLightNames[fLightName], GL_DIFFUSE, fColor);
+   glLightfv(gLightNames[fLightName], GL_AMBIENT, fColor + 4);
+   glLightfv(gLightNames[fLightName], GL_SPECULAR, fColor + 8);
+   glLightfv(gLightNames[fLightName], GL_EMISSION, fColor);
    glLightfv(gLightNames[fLightName], GL_POSITION, fPosition);
+   //Draw light source as sphere
+   glLoadName(GetGLName());
+   glPushMatrix();
+   glTranslatef(fPosition[0], fPosition[1], fPosition[2]);
+   GLUquadric *quadObj = GetQuadric();
+   gluSphere(quadObj, fBulbRad, 10, 10);
+   glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -465,6 +479,17 @@ void TGLSimpleLight::Shift(Double_t x, Double_t y, Double_t z)
    fPosition[0] += x;
    fPosition[1] += y;
    fPosition[2] += z;
+}
+
+//______________________________________________________________________________
+void TGLSimpleLight::SetBulbRad(Float_t newRad)
+{
+   fBulbRad = newRad;
+}
+
+//______________________________________________________________________________
+TGLSelection::TGLSelection()
+{
 }
 
 //______________________________________________________________________________
@@ -481,6 +506,7 @@ void TGLSelection::GLDraw()const
    Double_t zmin = fZRange.first, zmax = fZRange.second;
 
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
    glBegin(GL_LINE_LOOP);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmin, ymax, zmin);
@@ -503,6 +529,16 @@ void TGLSelection::GLDraw()const
    glVertex3d(xmax, ymin, zmin);
    glVertex3d(xmax, ymin, zmax);
    glEnd();
+   Float_t nullEmission[] = {0.f, 0.f, 0.f, 0.f};
+   glMaterialfv(GL_FRONT, GL_EMISSION, nullEmission);
+}
+
+//______________________________________________________________________________
+void TGLSelection::SetBox(const PDD_t &x, const PDD_t &y, const PDD_t &z)
+{
+   fXRange.first = x.first, fXRange.second = x.second;
+   fYRange.first = y.first, fYRange.second = y.second;
+   fZRange.first = z.first, fZRange.second = z.second;
 }
 
 //______________________________________________________________________________
@@ -512,4 +548,3 @@ void TGLSelection::Shift(Double_t x, Double_t y, Double_t z)
    fYRange.first += y, fYRange.second += y;
    fZRange.first += z, fZRange.second += z;
 }
-

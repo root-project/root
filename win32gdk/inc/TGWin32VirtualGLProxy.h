@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.5 2004/09/03 12:52:42 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.6 2004/09/13 09:56:33 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -125,7 +125,7 @@ public:
    void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z);
    void EndMovement(TGLRender *render);
    void Invalidate(TGLRender *render);
-   void DrawSphere(Color_t *color);
+   void DrawSphere(const Float_t *color);
 
    static TVirtualGL *ProxyObject();
    static TVirtualGL *RealObject();

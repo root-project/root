@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.5 2004/09/17 19:33:31 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -359,7 +359,10 @@ void TToySolver::GetSolution(Double_t *sink)
 {
    for (UInt_t i = 0; i < 3; ++i) {
       for (UInt_t j = 0; j < 3; ++j) {
-         if (fMatrix[i][j] != 0.) AddNewBV(i, j);
+         if (fMatrix[i][j] > 1e-14 || fMatrix[i][j] < -1e-14) {
+            AddNewBV(i, j);
+            break;
+         }
       }   
    }
    

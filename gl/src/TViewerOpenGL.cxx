@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.22 2004/09/17 08:33:33 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.23 2004/09/17 19:33:31 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
 #include "TGSplitter.h"
+#include "TGShutter.h"
 #include "TVirtualX.h"
 #include "TBuffer3D.h"
 #include "TGLKernel.h"
@@ -84,12 +85,13 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
                   :TVirtualViewer3D(vp),
                    TGMainFrame(gClient->GetRoot(), 750, 600),
                    fCamera(), fViewVolume(), fZoom(),
-                   fActiveViewport(), fRGBA()
+                   fActiveViewport()
 {
    //good compiler (not VC 6.0) will initialize our
    //arrays in ctor-init-list with zeroes (default initialization)
-   fMainFrame = fEdFrame = 0;
-   fV1 = fV2 = 0;
+   fMainFrame = 0;
+   fV2 = 0;
+   fV1 = 0;
    fSplitter = 0;
    fEditor = 0;
    fCanvasWindow = 0;
@@ -166,20 +168,25 @@ void TViewerOpenGL::CreateViewer()
    // Frames creation
    fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);
    fV1 = new TGVerticalFrame(fMainFrame, 150, 10, kSunkenFrame | kFixedWidth);
-   fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
+   fShutter = new TGShutter(fV1, kSunkenFrame | kFixedWidth);
+   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Color prop."), 5001);
+   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Geometry prop."), 5002);
+   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Camera prop."), 5003);
+   fShutter->AddItem(fShutItem1);
+   fShutter->AddItem(fShutItem2);
+   fShutter->AddItem(fShutItem3);
+
+   TGCompositeFrame *shutCont = (TGCompositeFrame *)fShutItem1->GetContainer();
+   fEditor = new TGLEditor(shutCont, this);
+   fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 5, 1, 2);
+   shutCont->AddFrame(fEditor, fL4);
+   fV1->AddFrame(fShutter, fL4);
    fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
    fMainFrame->AddFrame(fV1, fL1);
-   fSplitter = new TGVSplitter(fMainFrame, 5);
-   fSplitter->SetFrame(fV1, kTRUE);
-   fL2 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0 ,0, 0);
-   fMainFrame->AddFrame(fSplitter, fL2);
+
+   fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
    fMainFrame->AddFrame(fV2, fL3);
-
-   fEditor = new TGLEditor(fV1, 25, 50, 75, 100);
-   fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 5, 1, 2);
-   fV1->AddFrame(fEditor, fL4);
-   fEditor->GetButton()->Connect("Pressed()", "TViewerOpenGL", this, "ModifySelected()");
 
    fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
    fCanvasContainer = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
@@ -272,24 +279,22 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          fPressed = kTRUE;
       } else {
          if ((fSelectedObj = TestSelection(event))) {
-            fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
-            fEditor->SetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+            fEditor->SetRGBA(fSelectedObj->GetColor());
             fPressed = kTRUE;
             fLastPos.fX = event->fX;
             fLastPos.fY = event->fY;
          } else {
-            fEditor->GetButton()->SetState(kButtonDisabled);
             fEditor->Stop();
          }
       }
    } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
       if ((fSelectedObj = TestSelection(event))) {
-         fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
-         fEditor->SetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
-         if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
-         fContextMenu->Popup(event->fXRoot, event->fYRoot, fSelectedObj->GetRealObject());
+         fEditor->SetRGBA(fSelectedObj->GetColor());
+         if (TObject *ro = fSelectedObj->GetRealObject()) {
+            if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
+            fContextMenu->Popup(event->fXRoot, event->fYRoot, ro);
+         }
       } else {
-         fEditor->GetButton()->SetState(kButtonDisabled);
          fEditor->Stop();
       }
    } else if (event->fType == kButtonRelease) {
@@ -300,9 +305,6 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             gVirtualGL->EndMovement(&fRender);
             DrawObjects();
          }
-      } else if(event->fCode == kButton3) {
-//         delete fContextMenu;
-//         fContextMenu = 0;
       }
    }
 
@@ -424,6 +426,16 @@ void TViewerOpenGL::CreateScene(Option_t *)
 {
    TBuffer3D * buff = fPad->GetBuffer3D();
    TObjLink * lnk = fPad->GetListOfPrimitives()->FirstLink();
+  
+   Float_t col1[] = {0.9f, 0.7f, 0.f};
+   Float_t col2[] = {0.f, 0.9f, 0.f};
+   TGLSimpleLight *newLight1 = new TGLSimpleLight(++fNbShapes, 2, col1);
+   TGLSimpleLight *newLight2 = new TGLSimpleLight(++fNbShapes, 3, col2);
+   TGLSelection *lightBox1 = new TGLSelection;
+   TGLSelection *lightBox2 = new TGLSelection;
+   fRender.AddNewObject(newLight1, lightBox1);
+   fRender.AddNewObject(newLight2, lightBox2);
+
    buff->fOption = TBuffer3D::kOGL;
    while (lnk) {
       TObject * obj  = lnk->GetObject();
@@ -434,6 +446,23 @@ void TViewerOpenGL::CreateScene(Option_t *)
 
    buff->fOption = TBuffer3D::kPAD;
    CalculateViewvolumes();
+   Double_t xdiff = fRangeX.second - fRangeX.first;
+   Double_t ydiff = fRangeY.second - fRangeY.first;
+   Double_t zdiff = fRangeZ.second - fRangeZ.first;
+   Double_t min = xdiff > ydiff ? ydiff > zdiff ? zdiff : ydiff : xdiff > zdiff ? zdiff : xdiff;
+   Double_t newRad = min / 20.;
+   
+   newLight1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
+   newLight1->SetBulbRad(newRad);
+   lightBox1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+                     std::make_pair(-newRad, newRad));
+   lightBox1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
+   newLight2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
+   newLight2->SetBulbRad(newRad);   
+   lightBox2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+                     std::make_pair(-newRad, newRad));
+   lightBox2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
+
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
@@ -521,7 +550,7 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
    gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
    gVirtualGL->PopGLMatrix();
-
+/*
    gVirtualGL->PushGLMatrix();
    gVirtualGL->TranslateGL(fRad + fXc, 0., -fRad - fZc);
    gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos);
@@ -531,7 +560,7 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->TranslateGL(-fRad - fXc, 0., -fRad - fZc);
    gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos);
    gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, lig_prop1);
-
+*/
    SwapBuffers();
 }
 
@@ -728,9 +757,8 @@ void TViewerOpenGL::CreateCameras()
 
 void TViewerOpenGL::ModifySelected()
 {
-   fEditor->GetButton()->SetState(kButtonDisabled);
-   fEditor->GetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
-   fSelectedObj->SetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+//   fEditor->GetButton()->SetState(kButtonDisabled);
+   fSelectedObj->SetColor(fEditor->GetRGBA());
 /*   if (TGeoVolume *holderV = dynamic_cast<TGeoVolume *>(fSelectedObj->GetRealObject())) {
       Float_t newColor[] = {fRGBA[0] / 100.f, fRGBA[1] / 100.f, fRGBA[2] / 100.f};
       Int_t newInd = TColor::GetColor(newColor[0], newColor[1], newColor[2]);

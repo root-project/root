@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.12 2004/09/03 12:52:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.13 2004/09/13 09:56:33 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -158,7 +158,7 @@ public:
    virtual void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z) = 0;
    virtual void EndMovement(TGLRender *render) = 0;
    virtual void Invalidate(TGLRender *render) = 0;
-   virtual void DrawSphere(Color_t *rgba) = 0;
+   virtual void DrawSphere(const Float_t *rgba) = 0;
 
    static TVirtualGL *&Instance();
 

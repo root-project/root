@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.12 2004/09/15 14:26:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.13 2004/09/17 19:33:31 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -30,6 +30,9 @@
 #include "TGLRender.h"
 #endif
 
+class TGTransientFrame;
+class TGShutterItem;
+class TGShutter;
 class TGLRenderArea;
 class TContextMenu;
 class TGLSelection;
@@ -45,12 +48,15 @@ class TArcBall;
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
 private:
    TGCompositeFrame  *fMainFrame;
-   TGVerticalFrame   *fV1, *fV2;
+   //TGTransientFrame  *fV1;
+   TGVerticalFrame   *fV1;
+   TGVerticalFrame   *fV2;
    TGVSplitter       *fSplitter;
-   TGCompositeFrame  *fEdFrame;
    TGLEditor         *fEditor;
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fCanvasContainer;
+   TGShutter         *fShutter;
+   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3;
 
    TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
    TGLayoutHints     *fCanvasLayout;
@@ -87,7 +93,6 @@ private:
 
    TContextMenu      *fContextMenu;
    TGLSceneObject    *fSelectedObj;
-   Color_t           fRGBA[4];
 
 public:
    TViewerOpenGL(TVirtualPad * pad);

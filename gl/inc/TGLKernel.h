@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.13 2004/09/03 14:35:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.14 2004/09/13 09:56:33 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -141,7 +141,7 @@ public:
    void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z);
    void EndMovement(TGLRender *render);
    void Invalidate(TGLRender *render);
-   void DrawSphere(Color_t *rgba);
+   void DrawSphere(const Float_t *rgba);
 
 private:
    void DrawStars(const Double_t * vertex, Style_t marker_style, UInt_t size);

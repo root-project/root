@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.5 2004/09/15 14:26:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -70,7 +70,7 @@ void TGLRender::Traverse()
       end = start + 1;
    }
 
-   for (;start < end; ++start) {
+   for (; start < end; ++start) {
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
 
@@ -103,7 +103,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
 {
    TGLCamera *actCam = (TGLCamera *)fGLCameras.At(cam);
    static std::vector<UInt_t>selectBuff(fGLObjects.GetEntriesFast() * 4);
-   std::vector<std::pair<Int_t, Int_t> >objNames;
+   std::vector<std::pair<UInt_t, Int_t> >objNames;
 
    glSelectBuffer(selectBuff.size(), &selectBuff[0]);
    glRenderMode(GL_SELECT);
@@ -180,6 +180,10 @@ void TGLRender::EndMovement()
 void TGLRender::BuildGLList(Bool_t exec)
 {
    glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
+   Bool_t isTr = kFALSE;
+   if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
+      fSelectedObj->GLDraw();
+   }
 
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
@@ -191,7 +195,7 @@ void TGLRender::BuildGLList(Bool_t exec)
       }
    }
 
-   if (fSelectedObj)
+   if (isTr)
       fSelectedObj->GLDraw();
 
    while (fFirstT) {

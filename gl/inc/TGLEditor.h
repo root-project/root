@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.2 2004/09/14 15:32:47 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -18,6 +18,9 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 
 
 class TGLayoutHints;
@@ -30,40 +33,46 @@ class TGLabel;
 class TGLEditor : public TGCompositeFrame {
    friend class TGLMatView;
 private:
+   TGLMatView    *fMatView;
+   TGGroupFrame  *fPartFrame;
+   TGLayoutHints *fFrameLayout;
+
+   enum ELightMode{kDiffuse, kAmbient, kSpecular, kEmission, kTot};
+   ELightMode    fLMode;
+   TGButton      *fLightTypes[kTot];
+
    TGHSlider     *fRedSlider;
    TGHSlider     *fGreenSlider;
    TGHSlider     *fBlueSlider;
    TGHSlider     *fAlphaSlider;
+   TGHSlider     *fShineSlider;
+
    TGButton      *fApplyButton;
-   TGLayoutHints *fLayout;
-   TGLayoutHints *fLabelLayout;
-   TGLayoutHints *fViewLayout;
-
-   TGCanvas      *fViewCanvas;
-   TGLMatView    *fMatView;
    Bool_t        fIsActive;
+   Bool_t        fIsLight;   
+   Float_t       fRGBA[17];
 
-   Color_t       fRGBA[4];
-   TGLabel       *fInfo[4];
    Window_t      fGLWin;
    ULong_t       fCtx;
-public:
-   TGLEditor(const TGWindow *parent, Int_t r = 100, Int_t g = 100, Int_t b = 100, Int_t a = 100);
-   ~TGLEditor();
-   void SetRGBA(Color_t r, Color_t g, Color_t b, Color_t a);
-   void GetRGBA(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const;
-   void DoSlider(Int_t val);
 
-   TGButton *GetButton()const
+   TList fTrash;
+public:
+   TGLEditor(const TGWindow *parent, TGWindow *main);
+   ~TGLEditor();
+   void SetRGBA(const Float_t *rgba);
+   const Float_t *GetRGBA()const
    {
-      return fApplyButton;
+      return fRGBA;
    }
-   void Stop()
-   {
-      fIsActive = kFALSE;
-   }
+   //slots
+   void DoSlider(Int_t val);
+   void DoButton();
+   void Stop();
 
 private:
+   void CreateRadioButtons();
+   void CreateSliders();
+   void SetSlidersPos();
    Bool_t HandleContainerNotify(Event_t *event);
    Bool_t HandleContainerExpose(Event_t *event);
    void DrawSphere()const;

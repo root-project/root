@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.21 2004/09/13 09:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.22 2004/09/14 15:37:34 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -43,6 +43,7 @@ TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0), fTessObj(0
 
    gVirtualGL = this;
    gROOT->GetListOfSpecials()->Add(this);
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 }
 
 //______________________________________________________________________________
@@ -1446,26 +1447,31 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
    }
 }
 
+//______________________________________________________________________________
 void TGLKernel::TraverseGraph(TGLRender *graph)
 {
    graph->Traverse();
 }
 
+//______________________________________________________________________________
 TGLSceneObject *TGLKernel::SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_t cam)
 {
    return graph->SelectObject(x, y, cam);
 }
 
+//______________________________________________________________________________
 void TGLKernel::MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z)
 {
    render->MoveSelected(x, y, z);
 }
 
+//______________________________________________________________________________
 void TGLKernel::EndMovement(TGLRender *render)
 {
    render->EndMovement();
 }
 
+//______________________________________________________________________________
 void TGLKernel::Invalidate(TGLRender *render)
 {
    render->Invalidate();
@@ -1496,12 +1502,32 @@ static GLUquadric *GetQuadric1()
    return singleton.fQuad;
 }
 
-void TGLKernel::DrawSphere(Color_t *rgba)
+//______________________________________________________________________________
+void TGLKernel::DrawSphere(const Float_t *rgba)
 {
-   Float_t mat[] = {rgba[0] / 100.f, rgba[1] / 100.f, rgba[2] / 100.f, rgba[3] / 100.f};
-   glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
-   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
+   const Float_t whiteColor[] = {1.f, 1.f, 1.f, 1.f};
+   const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
+   if (rgba[16] < 0.f) {
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, rgba);
+      
+      glLightfv(GL_LIGHT0, GL_AMBIENT, rgba + 4);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, rgba + 8);
+      glMaterialfv(GL_FRONT, GL_DIFFUSE, whiteColor);
+      glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
+      glMaterialfv(GL_FRONT, GL_SPECULAR, whiteColor);
+      glMaterialfv(GL_FRONT, GL_EMISSION, nullColor);
+      glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
+   } else {
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteColor);
+      glLightfv(GL_LIGHT0, GL_AMBIENT, nullColor);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, whiteColor);
+      glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
+      glMaterialfv(GL_FRONT, GL_AMBIENT, rgba + 4);
+      glMaterialfv(GL_FRONT, GL_SPECULAR, rgba + 8);
+      glMaterialfv(GL_FRONT, GL_EMISSION, rgba + 12);
+      glMaterialf(GL_FRONT, GL_SHININESS, rgba[16]);
+   }
+
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    GLUquadric * quad = GetQuadric1();
