@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.3 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.4 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -100,6 +100,7 @@ private:
    void  DisplayTotal(Int_t total, Int_t selected);
    void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
    void  SetSortMode(Int_t new_mode);
+   void  ToUpSystemDirectory();
 
 public:
    TRootBrowser(TBrowser *b, const char *title, UInt_t width, UInt_t height);
