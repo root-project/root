@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.30 2002/02/12 22:17:47 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.31 2002/02/23 02:14:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -21,9 +21,8 @@
 // of the index category
 //
 // Extended likelihood fitting is supported if all components support
-// extended likelihood mode. As for the returned probability density,
-// the expected number of events for the PDF associated with the current
-// state of the index category is returned.
+// extended likelihood mode. The expected number of events for all PDFs
+// are summed to give the simultaneous PDF's expected events.
 
 #include "TObjString.h"
 #include "RooFitCore/RooSimultaneous.hh"
@@ -184,16 +183,17 @@ Double_t RooSimultaneous::evaluate() const
 
 Double_t RooSimultaneous::expectedEvents() const 
 {
-  // Return the number of expected events:
-  // the number of expected events of the PDF associated with the current index category state
+  // Return the number of expected events summed over all states of the index category.
 
-  // Retrieve the proxy by index name
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
-  
-  assert(proxy!=0) ;
-
-  // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents() ;
+  Double_t expected(0);
+  const RooRealProxy *proxy(0);
+  TIterator *pdfIter= _pdfProxyList.MakeIterator();
+  while(0 != (proxy= (const RooRealProxy*)pdfIter->Next())) {
+    const RooAbsPdf *pdf= (const RooAbsPdf*)proxy->absArg();
+    expected+= pdf->expectedEvents();
+  }
+  delete pdfIter;
+  return expected;
 }
 
 
