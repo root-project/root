@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.5 2000/10/05 08:52:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.6 2000/10/26 15:32:04 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,38 +51,38 @@ friend class TCanvasImp;
 friend class TThread;
 
 protected:
+   TAttCanvas   fCatt;            //Canvas attributes
    TString      fDISPLAY;         //Name of destination screen
-   Int_t        fDoubleBuffer;    //Double buffer flag (0=off, 1=on)
-   Bool_t       fRetained;        //Retain structure flag
    Size_t       fXsizeUser;       //User specified size of canvas along X in CM
    Size_t       fYsizeUser;       //User specified size of canvas along Y in CM
    Size_t       fXsizeReal;       //Current size of canvas along X in CM
    Size_t       fYsizeReal;       //Current size of canvas along Y in CM
-   Int_t        fCanvasID;        //Canvas identifier
+   Color_t      fHighLightColor;  //Highlight color of active pad
+   Int_t        fDoubleBuffer;    //Double buffer flag (0=off, 1=on)
    Int_t        fWindowTopX;      //Top X position of window (in pixels)
    Int_t        fWindowTopY;      //Top Y position of window (in pixels)
    UInt_t       fWindowWidth;     //Width of window (including borders, etc.)
    UInt_t       fWindowHeight;    //Height of window (including menubar, borders, etc.)
    UInt_t       fCw;              //Width of the canvas along X (pixels)
    UInt_t       fCh;              //Height of the canvas along Y (pixels)
-   TAttCanvas   fCatt;            //Canvas attributes
-   TObject     *fSelected;        //Currently selected object
-   TString      fSelectedOpt;     //Drawing option of selected object
-   TPad        *fSelectedPad;     //Pad containing currently selected object
-   TPad        *fPadSave;         //Pointer to saved pad in HandleInput
-   Int_t        fEvent;           //Type of current or last handled event
-   Int_t        fEventX;          //Last X mouse position in canvas
-   Int_t        fEventY;          //Last Y mouse position in canvas
+   Int_t        fEvent;           //!Type of current or last handled event
+   Int_t        fEventX;          //!Last X mouse position in canvas
+   Int_t        fEventY;          //!Last Y mouse position in canvas
+   Int_t        fCanvasID;        //!Canvas identifier
+   TObject     *fSelected;        //!Currently selected object
+   TString      fSelectedOpt;     //!Drawing option of selected object
+   TPad        *fSelectedPad;     //!Pad containing currently selected object
+   TPad        *fPadSave;         //!Pointer to saved pad in HandleInput
+   TControlBar *fEditorBar;       //!Editor control bar
+   TCanvasImp  *fCanvasImp;       //!Window system specific canvas implementation
+   TContextMenu   *fContextMenu;  //!Context menu pointer
+   Bool_t       fBatch;           //!True when in batchmode
+   Bool_t       fRetained;        //Retain structure flag
    Bool_t       fShowEventStatus; //Show event status panel
    Bool_t       fAutoExec;        //To auto exec the list of pad TExecs
-   TControlBar *fEditorBar;       //Editor control bar
-   TCanvasImp  *fCanvasImp;       //Window system specific canvas implementation
    Bool_t       fMoveOpaque;      //Move objects in opaque mode
    Bool_t       fResizeOpaque;    //Resize objects in opaque mode
-   Color_t      fHighLightColor;  //Highlight color of active pad
-   Bool_t       fBatch;           //True when in batchmode
    Bool_t       fMenuBar;         //False if no menubar is displayed
-   TContextMenu   *fContextMenu;  //Context menu pointer
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone
@@ -166,8 +166,8 @@ public:
    virtual void      Paint(Option_t *option="");
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) { return TPad::Pick(px, py, pickobj); }
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
-   virtual void      Picked(TPad *selpad, TObject *selected, Int_t event); //*SIGNAL*
-   virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); //*SIGNAL*
+   virtual void      Picked(TPad *selpad, TObject *selected, Int_t event); // *SIGNAL*
+   virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
    void              SaveSource(const char *filename="", Option_t *option="");
