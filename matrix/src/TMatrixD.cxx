@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.76 2005/01/06 06:37:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.77 2005/03/28 20:38:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -3012,9 +3012,9 @@ void TMatrixD::Streamer(TBuffer &R__b)
     // in version <=2 , the matrix was stored column-wise
     if (R__v <= 2) {
       for (Int_t i = 0; i < fNrows; i++) {
-        const Int_t off_i = i*fNrows;
+        const Int_t off_i = i*fNcols;
         for (Int_t j = i+1; j < fNcols; j++) {
-          const Int_t off_j = j*fNcols;
+          const Int_t off_j = j*fNrows;
           const Double_t tmp = fElements[off_i+j];
           fElements[off_i+j] = fElements[off_j+i];
           fElements[off_j+i] = tmp;
