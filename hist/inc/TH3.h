@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.26 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.27 2003/11/07 08:59:12 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -33,6 +33,13 @@
 class TH3 : public TH1, public TAtt3D {
 
 protected:
+   Stat_t     fTsumwy;          //Total Sum of weight*Y
+   Stat_t     fTsumwy2;         //Total Sum of weight*Y*Y
+   Stat_t     fTsumwxy;         //Total Sum of weight*X*Y
+   Stat_t     fTsumwz;          //Total Sum of weight*Z
+   Stat_t     fTsumwz2;         //Total Sum of weight*Z*Z
+   Stat_t     fTsumwxz;         //Total Sum of weight*X*Z
+   Stat_t     fTsumwyz;         //Total Sum of weight*Y*Z
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t, Axis_t, Stat_t) {return -2;} //may not use
@@ -73,6 +80,8 @@ public:
    virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual void    FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
+   virtual Stat_t  GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
+   virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
    virtual void    GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z);
    virtual void    GetStats(Stat_t *stats) const;
    virtual Stat_t  Integral(Option_t *option="") const;
@@ -88,7 +97,7 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    Sizeof3D() const;
 
-   ClassDef(TH3,3)  //3-Dim histogram base class
+   ClassDef(TH3,4)  //3-Dim histogram base class
 };
 
 //________________________________________________________________________

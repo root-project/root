@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.42 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.43 2003/11/07 08:59:12 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -42,6 +42,8 @@ ClassImp(TH3)
 TH3::TH3()
 {
    fDimension   = 3;
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
 }
 
 //______________________________________________________________________________
@@ -60,6 +62,8 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
    fYaxis.Set(nbinsy,ylow,yup);
    fZaxis.Set(nbinsz,zlow,zup);
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
 }
 
 //______________________________________________________________________________
@@ -79,6 +83,8 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    if (zbins) fZaxis.Set(nbinsz,zbins);
    else       fZaxis.Set(nbinsz,0,1);
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
 }
 
 //______________________________________________________________________________
@@ -98,6 +104,8 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (zbins) fZaxis.Set(nbinsz,zbins);
    else       fZaxis.Set(nbinsz,0,1);
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
+   fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
 }
 
 //______________________________________________________________________________
@@ -117,6 +125,13 @@ TH3::~TH3()
 void TH3::Copy(TObject &obj) const
 {
    TH1::Copy(obj);
+   ((TH3&)obj).fTsumwy      = fTsumwy;
+   ((TH3&)obj).fTsumwy2     = fTsumwy2;
+   ((TH3&)obj).fTsumwxy     = fTsumwxy;
+   ((TH3&)obj).fTsumwz      = fTsumwz;
+   ((TH3&)obj).fTsumwz2     = fTsumwz2;
+   ((TH3&)obj).fTsumwxz     = fTsumwxz;
+   ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
       
 //______________________________________________________________________________
@@ -212,6 +227,17 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
+   ++fTsumw;
+   ++fTsumw2;
+   fTsumwx  += x;
+   fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
+   fTsumwxy += x*y;
+   fTsumwz  += z;
+   fTsumwz2 += z*z;
+   fTsumwxz += x*z;
+   fTsumwyz += y*z;
    return bin;
 }
 
@@ -246,6 +272,17 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
+   fTsumw   += w;
+   fTsumw2  += w*w;
+   fTsumwx  += w*x;
+   fTsumwx2 += w*x*x;
+   fTsumwy  += w*y;
+   fTsumwy2 += w*y*y;
+   fTsumwxy += w*x*y;
+   fTsumwz  += w*z;
+   fTsumwz2 += w*z*z;
+   fTsumwxz += w*x*z;
+   fTsumwyz += w*y*z;
    return bin;
 }
 
@@ -269,6 +306,21 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Stat_t 
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   Axis_t x = fXaxis.GetBinCenter(binx);
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   Axis_t z = fZaxis.GetBinCenter(binz);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -294,6 +346,20 @@ Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
       if (!fgStatOverflows) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   Axis_t x = fXaxis.GetBinCenter(binx);
+   Axis_t z = fZaxis.GetBinCenter(binz);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -319,6 +385,20 @@ Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
+   Axis_t x = fXaxis.GetBinCenter(binx);
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -344,6 +424,20 @@ Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   Axis_t z = fZaxis.GetBinCenter(binz);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -371,6 +465,19 @@ Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -398,6 +505,19 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w)
       if (!fgStatOverflows) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   Axis_t z = fZaxis.GetBinCenter(binz);
+   Stat_t v = (w > 0 ? w : -w);
+   fTsumw   += v;
+   fTsumw2  += v*v;
+   fTsumwx  += v*x;
+   fTsumwx2 += v*x*x;
+   fTsumwy  += v*y;
+   fTsumwy2 += v*y*y;
+   fTsumwxy += v*x*y;
+   fTsumwz  += v*z;
+   fTsumwz2 += v*z*z;
+   fTsumwxz += v*x*z;
+   fTsumwyz += v*y*z;
    return bin;
 }
 
@@ -611,6 +731,70 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 }
 
 //______________________________________________________________________________
+Stat_t TH3::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
+{
+//*-*-*-*-*-*-*-*Return correlation factor between axis1 and axis2*-*-*-*-*
+//*-*            ====================================================
+  if (axis1 < 1 || axis2 < 1 || axis1 > 3 || axis2 > 3) {
+     Error("GetCorrelationFactor","Wrong parameters");
+     return 0;
+  }
+  if (axis1 == axis2) return 1;
+  Stat_t rms1 = GetRMS(axis1);
+  if (rms1 == 0) return 0;
+  Stat_t rms2 = GetRMS(axis2);
+  if (rms2 == 0) return 0;
+  return GetCovariance(axis1,axis2)/rms1/rms2;
+}
+
+//______________________________________________________________________________
+Stat_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
+{
+//*-*-*-*-*-*-*-*Return covariance between axis1 and axis2*-*-*-*-*
+//*-*            ====================================================
+
+  if (axis1 < 1 || axis2 < 1 || axis1 > 3 || axis2 > 3) {
+     Error("GetCovariance","Wrong parameters");
+     return 0;
+  }
+  Stat_t stats[11];
+  GetStats(stats);
+  Stat_t sumw   = stats[0];
+  Stat_t sumw2  = stats[1];
+  Stat_t sumwx  = stats[2];
+  Stat_t sumwx2 = stats[3];
+  Stat_t sumwy  = stats[4];
+  Stat_t sumwy2 = stats[5];
+  Stat_t sumwxy = stats[6];
+  Stat_t sumwz  = stats[7];
+  Stat_t sumwz2 = stats[8];
+  Stat_t sumwxz = stats[9];
+  Stat_t sumwyz = stats[10];
+
+  if (sumw == 0) return 0;
+  if (axis1 == 1 && axis2 == 1) {
+     return TMath::Abs(sumwx2/sumw - sumwx*sumwx/sumw2);
+  }
+  if (axis1 == 2 && axis2 == 2) {
+     return TMath::Abs(sumwy2/sumw - sumwy*sumwy/sumw2);
+  }
+  if (axis1 == 3 && axis2 == 3) {
+     return TMath::Abs(sumwz2/sumw - sumwz*sumwz/sumw2);
+  }
+  if ((axis1 == 1 && axis2 == 2) || (axis1 == 2 && axis1 == 1)) {
+     return sumwxy/sumw - sumwx/sumw*sumwy/sumw;
+  }
+  if ((axis1 == 1 && axis2 == 3) || (axis1 == 3 && axis2 == 1)) {
+     return sumwxz/sumw - sumwx/sumw*sumwz/sumw;
+  }
+  if ((axis1 == 2 && axis2 == 3) || (axis1 == 3 && axis2 == 2)) {
+     return sumwyz/sumw - sumwy/sumw*sumwz/sumw;
+  }
+  return 0;
+}
+
+
+//______________________________________________________________________________
 void TH3::GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z)
 {
 // return 3 random numbers along axis x , y and z distributed according
@@ -653,32 +837,50 @@ void TH3::GetStats(Stat_t *stats) const
    // stats[6] = sumwxy
    // stats[7] = sumwz
    // stats[8] = sumwz2
+   // stats[9] = sumwxz
+   // stats[10]= sumwyz
 
    if (fBuffer) ((TH3*)this)->BufferEmpty();
    
    Int_t bin, binx, biny, binz;
    Stat_t w;
    Float_t x,y,z;
-   for (bin=0;bin<9;bin++) stats[bin] = 0;
-   for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
-      z = fZaxis.GetBinCenter(binz);
-      for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
-         y = fYaxis.GetBinCenter(biny);
-         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
-            bin = GetBin(binx,biny,binz);
-            x = fXaxis.GetBinCenter(binx);
-            w = TMath::Abs(GetBinContent(bin));
-            stats[0] += w;
-            stats[1] += w*w;
-            stats[2] += w*x;
-            stats[3] += w*x*x;
-            stats[4] += w*y;
-            stats[5] += w*y*y;
-            stats[6] += w*x*y;
-            stats[7] += w*z;
-            stats[8] += w*z*z;
+   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
+      for (bin=0;bin<9;bin++) stats[bin] = 0;
+      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
+         z = fZaxis.GetBinCenter(binz);
+         for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+            y = fYaxis.GetBinCenter(biny);
+            for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+               bin = GetBin(binx,biny,binz);
+               x = fXaxis.GetBinCenter(binx);
+               w = TMath::Abs(GetBinContent(bin));
+               stats[0] += w;
+               stats[1] += w*w;
+               stats[2] += w*x;
+               stats[3] += w*x*x;
+               stats[4] += w*y;
+               stats[5] += w*y*y;
+               stats[6] += w*x*y;
+               stats[7] += w*z;
+               stats[8] += w*z*z;
+               stats[9] += w*x*z;
+               stats[10]+= w*y*z;
+            }
          }
-      }
+	  }
+   } else {
+      stats[0] = fTsumw;
+      stats[1] = fTsumw2;
+      stats[2] = fTsumwx;
+      stats[3] = fTsumwx2;
+      stats[4] = fTsumwy;
+      stats[5] = fTsumwy2;
+      stats[6] = fTsumwxy;
+      stats[7] = fTsumwz;
+      stats[8] = fTsumwz2;
+      stats[9] = fTsumwxz;
+      stats[10]= fTsumwyz;
    }
 }
 
@@ -973,7 +1175,7 @@ Int_t TH3::Merge(TCollection *list)
    Int_t    nbiy  = fYaxis.GetNbins();
    Int_t    nbiz  = fZaxis.GetNbins();
 
-   const Int_t kNstat = 10;
+   const Int_t kNstat = 11;
    Stat_t stats[kNstat], totstats[kNstat];
    TH3 *h;
    Int_t i, nentries=(Int_t)fEntries;
@@ -1508,6 +1710,13 @@ void TH3::PutStats(Stat_t *stats)
    // Replace current statistics with the values in array stats
 
    TH1::PutStats(stats);
+   fTsumwy  = stats[4];
+   fTsumwy2 = stats[5];
+   fTsumwxy = stats[6];
+   fTsumwz  = stats[7];
+   fTsumwz2 = stats[8];
+   fTsumwxz = stats[9];
+   fTsumwyz = stats[10];
 }
 
 //______________________________________________________________________________
@@ -1517,7 +1726,13 @@ void TH3::Reset(Option_t *option)
 //*-*            ===========================================
 
    TH1::Reset(option);
-   // should also reset statistics once statistics are implemented for TH3
+   fTsumwy  = 0;
+   fTsumwy2 = 0;
+   fTsumwxy = 0;
+   fTsumwz  = 0;
+   fTsumwz2 = 0;
+   fTsumwxz = 0;
+   fTsumwyz = 0;
 }
 
 //______________________________________________________________________________
