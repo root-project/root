@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.10 2002/05/03 10:24:10 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -914,10 +914,10 @@ void test_matrix_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
-int main()
+int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
-   TApplication app("vmatrix", 0, 0);
+   TApplication app("vmatrix", &argc, argv, 0, 0);
 
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<

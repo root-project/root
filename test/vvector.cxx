@@ -556,7 +556,7 @@ void test_vector_io()
 int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
-   TApplication app("vvector", &argc, argv, 0, 0);
+   TApplication app("vvector", &argc, argv);
 
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
