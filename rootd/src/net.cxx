@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.4 2000/09/13 10:40:30 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.5 2000/10/02 11:10:51 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include <netdb.h>
 #include <errno.h>
 
-#if defined(__linux)
+#if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC

@@ -180,7 +180,7 @@
 #endif
   
 /* added by Fons Radamakers in 2000 Oct 2 */
-#if defined(__linux)
+#if defined(linux)
 #   include <features.h>
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define G__NONSCALARFPOS2

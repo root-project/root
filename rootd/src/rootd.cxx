@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.7 2000/09/13 10:38:15 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.8 2000/10/02 11:10:51 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -122,7 +122,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#if defined(__linux)
+#if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -138,7 +138,7 @@
 #define	F_ULOCK             LOCK_UN
 #endif
 
-#if defined(__linux) || defined(__linux__) || defined(__sun) || defined(__sgi) || \
+#if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__)
 #include <grp.h>
 #include <sys/types.h>
@@ -152,7 +152,7 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #endif
 

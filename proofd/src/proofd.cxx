@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.9 2000/11/21 12:27:09 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.10 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#if defined(__linux)
+#if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -52,7 +52,7 @@
 #   endif
 #endif
 
-#if defined(__linux) || defined(__linux__) || defined(__sun) || defined(__sgi) || defined(_AIX)
+#if defined(linux) || defined(__sun) || defined(__sgi) || defined(_AIX)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -65,7 +65,7 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #endif
 

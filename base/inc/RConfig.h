@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.7 2000/11/04 17:46:33 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.8 2000/11/21 12:20:28 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,7 +39,7 @@
 #   define NEED_STRCASECMP
 #endif
 
-#if defined(__alpha) && !defined(__linux)
+#if defined(__alpha) && !defined(linux)
 #   define R__ALPHA
 #   define ANSICPP
 #   ifndef __VMS
@@ -58,7 +58,7 @@
 #   endif
 #endif
 
-#if defined(__sun) && !defined(__linux)
+#if defined(__sun) && !defined(linux)
 #   ifdef __SVR4
 #      define R__SOLARIS
 #      define ANSICPP
@@ -81,7 +81,7 @@
 #   endif
 #endif
 
-#if defined(__sgi) && !defined(__linux)
+#if defined(__sgi) && !defined(linux)
 #   define R__SGI
 #   define R__UNIX
 #   define ANSICPP
@@ -92,7 +92,7 @@
 #   endif
 #endif
 
-#if defined(__linux)
+#if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -105,7 +105,7 @@
 #   endif
 #endif
 
-#if defined(__linux) && defined(__i386__)
+#if defined(linux) && defined(__i386__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -115,7 +115,7 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(__linux) && defined(__ia64__)
+#if defined(linux) && defined(__ia64__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -123,7 +123,7 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(__linux) && defined(__alpha__)
+#if defined(linux) && defined(__alpha__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -131,21 +131,21 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(__linux) && defined(__sun)
+#if defined(linux) && defined(__sun)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
 /*#   define R__B64 */     /* enable when 64 bit machine */
 #endif
 
-#if defined(__linux) && defined(__sgi)
+#if defined(linux) && defined(__sgi)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
 /*#   define R__B64 */     /* enable when 64 bit machine */
 #endif
 
-#if defined(__linux__) && defined(__powerpc__)
+#if defined(linux) && defined(__powerpc__)
 #   define R__MKLINUX
 #   define R__LINUX
 #   define R__UNIX
