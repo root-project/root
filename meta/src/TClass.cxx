@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.22 2000/12/20 17:36:18 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.23 2000/12/28 22:51:52 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1253,7 +1253,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(b, (char*)pointer);
+   sinfo->ReadBuffer(b, (char*)pointer,-1);
 
    //check that the buffer position correesponds to the byte count
    b.CheckByteCount(start,count,this);
@@ -1285,7 +1285,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(b, (char*)pointer);
+   sinfo->ReadBuffer(b, (char*)pointer,-1);
 
    //check that the buffer position correesponds to the byte count
    b.CheckByteCount(R__s, R__c,this);
@@ -1321,7 +1321,7 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
    UInt_t R__c = b.WriteVersion(this, kTRUE);
 
    //serialize the object
-   sinfo->WriteBuffer(b, (char*)pointer);
+   sinfo->WriteBuffer(b, (char*)pointer,-1);
 
    //write the byte count at the start of the buffer
    b.SetByteCount(R__c, kTRUE);
