@@ -26,7 +26,8 @@ void motorcycle()
    Double_t *y = new Double_t[133];
    Double_t vX, vY;
    Int_t vNData = 0;
-   ifstream vInput(vInFile, ios::in);
+   ifstream vInput;
+   vInput.open(vInFile);
    while (1) {
       vInput >> vX >> vY;
       if (!vInput.good()) break;
