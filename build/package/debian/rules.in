@@ -1,0 +1,235 @@
+#!/usr/bin/make -f
+# 
+# GNU copyright 1997 by Joey Hess.
+#
+# $Id$
+#
+# Rules file for ROOT packages for Debian GNU/Linux 
+#
+
+# Uncomment this to turn on verbose mode. 
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=2
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+#
+# Some utility variables 
+#
+# The packages:
+#
+# Order of the packages are important for when we move files around
+#
+BUILDPREFIX = $(shell pwd)/debian/tmp
+METAPKGS    = task-root
+FEATUREPKGS = root-daemon \
+	      root-ttf    \
+	      root-zebra  \
+	      root-opengl \
+	      root-mysql  \
+	      root-pythia \
+	      root-star   \
+	      root-shift
+CINTPKGS    = root-cint   
+BASEPKGS    = root-bin    \
+	      root-dev    \
+	      root-lib    
+#ALLPKGS     = $(METAPKGS) $(FEATUREPKGS) $(CINTPKGS) $(BASEPKGS)
+ALLPKGS	    = \
+@pkg@
+	task-root
+#
+# Some notes about this target:
+#
+# * We build the full ROOT system here. 
+# * See README.Debian for thoughts about the configure options. 
+# * I've got a dual-processor machine, so I use -j3 for make
+# * Uncomment the lines with "make changleog" to install the full
+#   upstream changelog. This is only possible if you have CVS access
+#   to the main repository at :pserver:cvs@root.cern.ch:/user/cvs 
+#   (password is "cvs")
+# 
+build: build-stamp
+build-stamp:
+	dh_testdir
+
+@configure@
+
+	$(MAKE) -j3
+	#
+	# If you have access to the CVS repository, you may want to 
+	# uncomment the next line to make an upstream changelog
+	#
+	#$(MAKE) changelog
+
+	touch build-stamp
+
+#
+# Some notes about this target:
+#
+# * We use the maintainer-clean target rather then the clean target,
+#   since this is much more thourogh, and we really need a clean
+#   source directory for the patches
+# * We remove the Changelog file if it was created
+#
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp 
+
+	-$(MAKE) distclean
+	rm -rf bin lib include system.rootrc config/Makefile.config \
+	   test/Makefile README/Changelog etc/system.rootrc
+
+	dh_clean
+
+#
+# Some notes about this target:
+#
+# * We use the DESTDIR mechanism to install into the default build
+#   directory debian/tmp 
+# * If the Changelog file was generated, we install that along with
+#   the rest of the documentation. This could be moved to main
+#   Makefile 
+# * We install INSTALL file along with the rest of the documentation,
+#   'cause it contains some useful infromation on third party
+#   software.  
+# * We remove all the sub-directories CVS from the build directory, so
+#   that we may have a clean installation. 
+# * Particular in the CINT sub-package there are some problems with
+#   file permissions, which we fix. This is things like header files
+#   being executable, scripts not executable, and so on
+# * A CINT source file has an interpretor line, puting to some
+#   directory on Masa's own machine. This is removed.
+# * Finally, we move the files into appropiate sub-package
+#   directories. The order in which the fiels are moved is very
+#   important, since in the base packages, we use wildcards and full
+#   directories. 
+#
+install: DH_OPTIONS=
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) install DESTDIR=$(BUILDPREFIX)
+
+	@if [ -f README/Changelog ] ; then \
+	   cp README/Changelog $(BUILDPREFIX)/usr/share/doc/root/ ; \
+	fi
+
+	cp README/INSTALL $(BUILDPREFIX)/usr/share/doc/root/
+
+	find debian/tmp -name "CVS" | xargs rm -fr 
+
+	sed 's|^#!.*||' \
+	  < $(BUILDPREFIX)/usr/share/root/cint/lib/snstream/length.cxx > foo
+	mv foo $(BUILDPREFIX)/usr/share/root/cint/lib/snstream/length.cxx
+
+	for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
+
+	mv debian/root-cint/usr/bin/cint \
+		debian/root-cint/usr/bin/cint.root
+	mv debian/root-cint/usr/bin/makecint \
+		debian/root-cint/usr/bin/makecint.root
+	mv debian/root-cint/usr/share/man/man1/cint.1 \
+		debian/root-cint/usr/share/man/man1/cint.root.1
+	mv debian/root-cint/usr/share/man/man1/makecint.1 \
+		debian/root-cint/usr/share/man/man1/makecint.root.1
+
+#	for i in $(METAPKGS) ;    do dh_movefiles -p $$i ; done
+#	for i in $(FEATUREPKGS) ; do dh_movefiles -p $$i ; done
+#	for i in $(CINTPKGS) ;    do dh_movefiles -p $$i ; done
+#	for i in $(BASEPKGS) ;    do dh_movefiles -p $$i ; done
+
+#
+# Some notes about this target:
+#
+# * Build architecture-independent files here.
+# * Pass -i to all debhelper commands in this target to reduce
+#   clutter. 
+# * Note that we really don't need that many things here. 
+#
+binary-indep: DH_OPTIONS=-i
+binary-indep: build install
+	# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testversion 1.1.17
+	dh_testdir
+	dh_testroot
+	dh_installdocs
+	# dh_installexamples
+	dh_installmenu
+	# dh_installemacsen
+	# dh_installpam
+	# dh_installinit
+	# dh_installmanpages
+	# dh_installinfo
+	# dh_undocumented
+	dh_installchangelogs 
+	dh_link
+	dh_compress
+	dh_fixperms
+	# You may want to make some executables suid here.
+	# dh_suidregister
+	dh_installdeb
+	# dh_perl
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+#
+# Some notes about this target:
+#
+# * Build architecture-dependent files here.
+# * Pass -a to all debhelper commands in this target to reduce
+#   clutter. 
+# * Please notice that we make the shared library dependency with the
+#   --exclude=bin/cint flag. This is because the root-cint package both
+#   provides and uses the libCint.so library. Hence, if we let the
+#   cint program from generating shared library dependencies we would
+#   end up with root-cint depending on it self, which ofcourse is bad. 
+#
+binary-arch: DH_OPTIONS=-a
+binary-arch: build install
+	# Need this version of debhelper for DH_OPTIONS to work.
+	dh_testversion 1.1.17
+	dh_testdir
+	dh_testroot
+	dh_installdocs
+	# dh_installexamples
+	dh_installmenu
+	# dh_installemacsen
+	# dh_installpam
+	# dh_installinit
+	# dh_installcron
+	# dh_installmanpages
+	# dh_installinfo
+	dh_undocumented
+	dh_installchangelogs 
+	dh_strip
+	dh_link
+	dh_compress
+	dh_fixperms
+	# You may want to make some executables suid here.
+	# dh_suidregister
+	dh_installdeb
+	dh_makeshlibs
+	# dh_perl
+	dh_shlibdeps --exclude=bin/cint 
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+#
+# Some notes about this target:
+#
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install
+
+#
+# $Log$
+#

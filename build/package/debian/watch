@@ -1,0 +1,5 @@
+# Example watch control file for uscan
+# Rename this file to "watch" and then you can run the "uscan" command
+# to check for upstream updates and more.
+# Site		Dir	Pattern				Version	Script
+root.cern.ch	/root	root-(.*)\.source\.tar\.gz	debian	uupdate

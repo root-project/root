@@ -1,0 +1,5 @@
+Package: libroot-dev
+Architecture: all
+Depends: libroot (= ${Source-Version}), libc6-dev, libstdc++-dev
+Description: @short@
+@long@

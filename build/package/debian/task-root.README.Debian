@@ -1,0 +1,18 @@
+The Debian Package task-root
+----------------------------
+
+This package is a meta-package, meaning that its purpose is to contain
+dependencies for a complete, Debian-based environment for ROOT (Root's
+Object Oriented Technologies), the analysis, development,
+etc. framework from the ROOT team. For more information on ROOT,
+please refer to the packages, and also to the master web site:
+
+       http://root.cern.ch 
+
+This package also carries optional 'Recommends' package suggestions.
+The packages listed are suggested for installation, but not required.
+
+Please file a wishlist bug against the package if you feel there are
+additional packages that ought to be included with this meta-package.
+
+Christian Holm <cholm@nbi.dk>, Sat, 16 Dec 2000 11:53:32 +0100
