@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.2 2000/06/13 10:34:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.3 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   18/05/95
 // ---------------------------------- haxis.C
 
@@ -135,6 +135,11 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
    if (ax == 1) theAxis = GetXaxis();
    if (ax == 2) theAxis = GetYaxis();
    if (ax == 3) theAxis = GetZaxis();
+   if (ax > fDimension) {
+      SetMinimum(xmin);
+      SetMaximum(xmax);
+      return;
+   }
    Int_t bin1 = theAxis->FindFixBin(xmin);
    Int_t bin2 = theAxis->FindFixBin(xmax);
    theAxis->SetRange(bin1, bin2);
