@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.55 2003/01/28 16:41:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.56 2003/02/27 21:51:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -852,6 +852,30 @@ TH1 *TF1::GetHistogram() const
 }
 
 //______________________________________________________________________________
+Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
+{
+// return the maximum value of the function
+// Method:
+//   the function is computed at fNpx points between xmin and xmax
+//   xxmax is the X value corresponding to the maximum function value
+//   An iterative procedure computes the maximum around xxmax
+//   until dx is less than 1e-9 *(fXmax-fXmin)
+      
+   Double_t x,y;
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   Double_t dx = (xmax-xmin)/fNpx;
+   Double_t xxmax = xmin;
+   Double_t yymax = ((TF1*)this)->Eval(xmin+dx);
+   for (Int_t i=0;i<fNpx;i++) {
+      x = xmin + (i+0.5)*dx;
+      y = ((TF1*)this)->Eval(x);
+      if (y > yymax) {xxmax = x; yymax = y;}
+   }
+   if (dx < 1.e-9*(fXmax-fXmin)) return yymax;
+   else return GetMaximum(TMath::Max(xmin,xxmax-dx), TMath::Min(xmax,xxmax+dx));
+}
+
+//______________________________________________________________________________
 Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
 {
 // return the X value corresponding to the maximum value of the function
@@ -873,6 +897,30 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    }
    if (dx < 1.e-9*(fXmax-fXmin)) return TMath::Min(xmax,xxmax);
    else return GetMaximumX(TMath::Max(xmin,xxmax-dx), TMath::Min(xmax,xxmax+dx));
+}
+
+//______________________________________________________________________________
+Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
+{
+// return the minimum value of the function
+// Method:
+//   the function is computed at fNpx points between xmin and xmax
+//   xxmax is the X value corresponding to the minimum function value
+//   An iterative procedure computes the minimum around xxmax
+//   until dx is less than 1e-9 *(fXmax-fXmin)
+      
+   Double_t x,y;
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   Double_t dx = (xmax-xmin)/fNpx;
+   Double_t xxmin = xmin;
+   Double_t yymin = ((TF1*)this)->Eval(xmin+dx);
+   for (Int_t i=0;i<fNpx;i++) {
+      x = xmin + (i+0.5)*dx;
+      y = ((TF1*)this)->Eval(x);
+      if (y < yymin) {xxmin = x; yymin = y;}
+   }
+   if (dx < 1.e-9*(fXmax-fXmin)) return yymin;
+   else return GetMinimum(TMath::Max(xmin,xxmin-dx), TMath::Min(xmax,xxmin+dx));
 }
 
 //______________________________________________________________________________

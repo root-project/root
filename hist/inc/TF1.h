@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.28 2003/01/28 16:41:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.29 2003/02/27 21:51:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -98,6 +98,8 @@ public:
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
+   virtual Double_t GetMaximum(Double_t xmin=0, Double_t xmax=0) const;
+   virtual Double_t GetMinimum(Double_t xmin=0, Double_t xmax=0) const;
    virtual Double_t GetMaximumX(Double_t xmin=0, Double_t xmax=0) const;
    virtual Double_t GetMinimumX(Double_t xmin=0, Double_t xmax=0) const;
    virtual Int_t    GetNDF() const;
