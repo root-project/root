@@ -343,7 +343,7 @@ guess_architecture () {
     # If a user really want a specifific compiler, s/he better use the
     # first argument to do so.
     arch=`uname -s | tr '[A-Z]' '[a-z]'`
-    chip=`uname -m`
+    chip=`uname -m | tr '[A-Z]' '[a-z]'`
     rele=`uname -r`
     case "$arch:$chip:$rele" in
         aix*)                  arch=aix5            ;;
@@ -360,15 +360,14 @@ guess_architecture () {
         linux:ppc*:*)          arch=linuxppcegcs    ;;
         linux:i*86:*)          arch=linux           ;;
         lynx:*:*)              arch=lynxos          ;;
-        darwin:Power*:*)       arch=macosx          ;;
-        darwin:powerpc:*)      arch=macosx          ;;
+        darwin:power*:*)       arch=macosx          ;;
         irix*:sgi*:*)          arch=sgicc           ;;
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
         sunos:sun*:4*)         arch=solaris         ;;
-        windows_*:*86:*)       arch=win32gdk        ;;
-        windows_*:pentium:*)   arch=win32gdk        ;;
-        windows_*:ia64)        arch=win32gdk        ;;
+        cygwin_*:*86:*)        arch=win32gdk        ;;
+        cygwin_*:pentium:*)    arch=win32gdk        ;;
+        cygwin_*:ia64)         arch=win32gdk        ;;
         *)
             echo "Attempts at guessing your architecture failed."
             echo "Please specify the architecture as the first argument."
