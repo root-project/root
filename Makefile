@@ -423,9 +423,11 @@ distclean:: clean
                .def
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
+	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	-@mv -f tutorials/galaxy.pal.roott tutorials/galaxy.pal.root
 	-@mv -f tutorials/galaxy.roott tutorials/galaxy.root
+	-@mv -f tutorials/mlpHiggs.roott tutorials/mlpHiggs.root
 	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
