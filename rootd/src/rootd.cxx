@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.76 2004/01/19 18:31:13 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.77 2004/01/19 22:42:07 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1491,7 +1491,7 @@ void RootdPutFile(const char *msg)
       struct statfs statfsbuf;
 #if defined(__sgi) || (defined(__sun) && !defined(linux))
       if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-         Long64_t space = (Long64_t)statfsbuf.f_bsize * (Long64_t))statfsbuf.f_bfree;
+         Long64_t space = (Long64_t)statfsbuf.f_bsize * (Long64_t)statfsbuf.f_bfree;
 #else
       if (fstatfs(fd, &statfsbuf) == 0) {
          Long64_t space = (Long64_t)statfsbuf.f_bsize * (Long64_t)statfsbuf.f_bavail;
