@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.124 2003/01/29 11:32:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.125 2003/01/29 21:58:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1795,6 +1795,24 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //       Double_t chi2 = myfunc->GetChisquare();
 //       Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //       Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+//
+//      Access to the fit covariance matrix
+//      ===================================
+//      Example1:
+//         TH1F h("h","test",100,-2,2);
+//         h.FillRandom("gaus",1000);
+//         h.Fit("gaus");
+//         Double_t matrix[3][3];
+//         gMinuit->mnemat(&matrix[0][0],3);
+//      Example2:
+//         TH1F h("h","test",100,-2,2);
+//         h.FillRandom("gaus",1000);
+//         h.Fit("gaus");
+//         TMatrixD matrix(npar,npar);
+//         gMinuit->mnemat(matrix.GetElements(),npar);
+//         matrix.Print();
+//         matrix.Draw("text");
+//
 //
 //      Changing the maximum number of parameters
 //      =========================================
