@@ -124,6 +124,7 @@ endif
 else
 CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
+endif
 ifeq ($(PLATFORM),vms)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
