@@ -46,7 +46,8 @@ extern int G__initval_eval;
 #define G__ASSIGN_VAR(SIZE,CASTTYPE,CONVFUNC)                             \
 switch(G__var_type) {                                                     \
 case 'v': /* int var[10]; *var=expr; assign to value */                   \
-        if(var->paran[ig15]==paran+1&&p_inc==0) { /*1070*/                \
+        if(var->paran[ig15]==paran+1&&p_inc==0  /* 1070 */                \
+           && islower(result.type)) { /* 1650 */                          \
           ++paran;                                                        \
 	}                                                                 \
 	else {                                                            \

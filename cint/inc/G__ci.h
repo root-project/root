@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015034
-#define G__CINTVERSIONSTR  "5.15.34, Mar 5 2002"
+#define G__CINTVERSION      5015035
+#define G__CINTVERSIONSTR  "5.15.35, Mar 25 2002"
 
 
 /**********************************************************************
@@ -1714,6 +1714,7 @@ extern G__EXPORT void G__reset_lasterror G__P(());
 #ifndef G__OLDIMPLEMENTATION1601
 extern G__EXPORT int G__gettempfilenum G__P(());
 #endif
+extern G__EXPORT void G__LockCpp G__P((void));
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 
@@ -1768,7 +1769,6 @@ extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
 extern G__EXPORT int  G__unloadfile G__P((G__CONST char* filename));
 extern G__EXPORT int G__init_cint G__P((G__CONST char* command));
-extern G__EXPORT void G__LockCpp G__P((void));
 extern G__EXPORT void G__scratch_all G__P((void));
 extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
