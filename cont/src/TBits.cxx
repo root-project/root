@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.4 2001/04/16 20:04:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.5 2001/12/06 15:27:34 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -125,9 +125,9 @@ UInt_t TBits::CountBits() const
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstBitNull() const
+UInt_t TBits::FirstNullBit() const
 {
-   // Return position of first bit=0
+   // Return position of first null bit
    
    const Int_t fbits[256] = {
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
@@ -154,9 +154,9 @@ UInt_t TBits::FirstBitNull() const
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstBitSet() const
+UInt_t TBits::FirstSetBit() const
 {
-   // Return position of first bit=1
+   // Return position of first non null bit
    
    const Int_t fbits[256] = {
              8,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,

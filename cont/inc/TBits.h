@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.3 2001/02/09 16:47:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.4 2001/12/06 15:27:33 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -60,8 +60,8 @@ public:
    //----- Utilities
    void    Compact();               // Reduce the space used.
    UInt_t  CountBits()     const ;  // return number of bits set to 1
-   UInt_t  FirstBitNull()  const;
-   UInt_t  FirstBitSet()   const;
+   UInt_t  FirstNullBit()  const;
+   UInt_t  FirstSetBit()   const;
    UInt_t  GetNbits()      const { return fNbits; }
    UInt_t  GetNbytes()     const { return fNbytes; }
 
