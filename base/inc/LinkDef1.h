@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.9 2001/11/05 17:31:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.10 2002/02/02 23:00:02 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,9 @@
 
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
+#pragma link C++ global kMaxInt;
+#pragma link C++ global kMaxShort;
+#pragma link C++ global kBitsPerByte;
 #pragma link C++ global kNPOS;
 #pragma link C++ global kInfo;
 #pragma link C++ global kWarning;
