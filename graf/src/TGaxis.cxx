@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.50 2003/05/15 13:31:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.51 2003/06/02 17:11:42 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -610,9 +610,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionTime) {
       if (IdF>=0) {
          Int_t LnF = fTimeFormat.Length();
-         TString stringtimeoffset = fTimeFormat(IdF+2,LnF);
-         TDatime da(stringtimeoffset);
-         timeoffset = da.Convert();
+         if (LnF > IdF+2) {
+            TString stringtimeoffset = fTimeFormat(IdF+2,LnF);
+            TDatime da(stringtimeoffset);
+            timeoffset = da.Convert();
+         }
       } else {
          timeoffset = gStyle->GetTimeOffset();
       }
@@ -1355,7 +1357,6 @@ L110:
                   strftime(LABEL,256,timeformattmp.Data(),utctis);
                   strcpy(CHTEMP,&LABEL[0]);
                   first = 0; last=strlen(LABEL)-1;
-
                   Wlabel = wTimeIni + (k+1)*DWlabel;
                }
 
@@ -1911,9 +1912,8 @@ void TGaxis::SetTimeOffset(Double_t toffset)
    TDatime TimeOffset((UInt_t)toffset);
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
-   // If the time offset not defined put the current one (in gStyle)
    fTimeFormat.Append("%F");
-   fTimeFormat.Append(TimeOffset.AsSQLString());
+   if (toffset != 0.) fTimeFormat.Append(TimeOffset.AsSQLString());
 }
 
 //______________________________________________________________________________
