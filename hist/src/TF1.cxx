@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.56 2003/02/27 21:51:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.57 2003/03/02 11:51:40 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -846,8 +846,9 @@ TH1 *TF1::GetHistogram() const
    if (fHistogram) return fHistogram;
 
    // may be function has not yet be painted. force a pad update
-   gPad->Modified();
-   gPad->Update();
+   //gPad->Modified();
+   //gPad->Update();
+   ((TF1*)this)->Paint();
    return fHistogram;
 }
 
@@ -1327,6 +1328,28 @@ Double_t TF1::GetSave(const Double_t *xx)
    Double_t yup  = fSave[bin+1];
    Double_t y    = ((xup*ylow-xlow*yup) + x*(yup-ylow))/dx;
    return y;
+}
+
+//______________________________________________________________________________
+TAxis *TF1::GetXaxis() const
+{
+   // Get x axis of the function.
+
+   //if (!gPad) return 0;
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
+}
+
+//______________________________________________________________________________
+TAxis *TF1::GetYaxis() const
+{
+   // Get y axis of the function.
+
+   //if (!gPad) return 0;
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
 }
 
 //______________________________________________________________________________
@@ -1819,11 +1842,11 @@ void TF1::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Double_t xmin, xmax, pmin, pmax;
-   pmin = gPad->PadtoX(gPad->GetUxmin());
-   pmax = gPad->PadtoX(gPad->GetUxmax());
-   xmin = fXmin;
-   xmax = fXmax;
+   Double_t xmin=fXmin, xmax=fXmax, pmin=fXmin, pmax=fXmax;
+   if (gPad) {
+      pmin = gPad->PadtoX(gPad->GetUxmin());
+      pmax = gPad->PadtoX(gPad->GetUxmax());
+   }
    if (opt.Contains("same")) {
       if (xmax < pmin) return;  // Otto: completely outside
       if (xmin > pmax) return;
@@ -1831,8 +1854,13 @@ void TF1::Paint(Option_t *option)
       if (xmax > pmax) xmax = pmax;
    }
 
-//*-*-  Create a temporary histogram and fill each channel with the function value
+//  Create a temporary histogram and fill each channel with the function value
+//  Preserve axis titles
+      TString xtitle = "";
+   TString ytitle = "";
    if (fHistogram) {
+      xtitle = fHistogram->GetXaxis()->GetTitle();
+      ytitle = fHistogram->GetYaxis()->GetTitle();
       if (!gPad->GetLogx()  &&  fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
       if ( gPad->GetLogx()  && !fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
    }
@@ -1843,7 +1871,7 @@ void TF1::Paint(Option_t *option)
    } else {
 //      if logx, we must bin in logx and not in x !!!
 //      otherwise if several decades, one gets crazy results
-      if (xmin > 0 && gPad->GetLogx()) {
+      if (xmin > 0 && gPad && gPad->GetLogx()) {
          Axis_t *xbins    = new Axis_t[fNpx+1];
          Double_t xlogmin = TMath::Log10(xmin);
          Double_t xlogmax = TMath::Log10(xmax);
@@ -1860,6 +1888,10 @@ void TF1::Paint(Option_t *option)
       if (!fHistogram) return;
       fHistogram->SetDirectory(0);
    }
+   //restore axis titles
+   fHistogram->GetXaxis()->SetTitle(xtitle.Data());
+   fHistogram->GetYaxis()->SetTitle(ytitle.Data());
+   
    InitArgs(xv,fParams);
    for (i=1;i<=fNpx;i++) {
       xv[0] = fHistogram->GetBinCenter(i);
@@ -1896,6 +1928,7 @@ void TF1::Paint(Option_t *option)
    fHistogram->SetMarkerSize(GetMarkerSize());
 
 //*-*-  Draw the histogram
+   if (!gPad) return;
    if (opt.Length() == 0)  fHistogram->Paint("lf");
    else if (opt == "same") fHistogram->Paint("lfsame");
    else                    fHistogram->Paint(option);

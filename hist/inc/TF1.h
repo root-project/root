@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.29 2003/02/27 21:51:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.30 2003/03/02 11:51:39 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 
 class TF1;
 class TH1;
+class TAxis;
 
 class TF1 : public TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -121,6 +122,8 @@ public:
    virtual Double_t GetSave(const Double_t *x);
    virtual Double_t GetXmin() const {return fXmin;}
    virtual Double_t GetXmax() const {return fXmax;}
+   TAxis           *GetXaxis() const ;
+   TAxis           *GetYaxis() const ;
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
