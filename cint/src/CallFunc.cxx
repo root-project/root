@@ -266,7 +266,9 @@ void G__CallFunc::Exec(void *pobject)
 #ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
 #endif
-  // Set object address
+#ifndef G__OLDIMPLEMENTATION1591
+  SetFuncType();
+#endif  // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
   // Call function
@@ -283,9 +285,6 @@ void G__CallFunc::Exec(void *pobject)
   if(0==ret) {
     /* error */
   }
-#ifndef G__OLDIMPLEMENTATION1591
-  else SetFuncType();
-#endif
 #ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
 #endif
@@ -298,6 +297,9 @@ long G__CallFunc::ExecInt(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
+#ifndef G__OLDIMPLEMENTATION1591
+  SetFuncType();
+#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -312,9 +314,6 @@ long G__CallFunc::ExecInt(void *pobject)
   if(0==ret) {
     /* error */
   }
-#ifndef G__OLDIMPLEMENTATION1591
-  else SetFuncType();
-#endif
   return(G__int(result));
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -325,6 +324,9 @@ double G__CallFunc::ExecDouble(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
+#ifndef G__OLDIMPLEMENTATION1591
+  SetFuncType();
+#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -339,9 +341,6 @@ double G__CallFunc::ExecDouble(void *pobject)
   if(0==ret) {
     /* error */
   }
-#ifndef G__OLDIMPLEMENTATION1591
-  else SetFuncType();
-#endif
   return(G__double(result));
 }
 ///////////////////////////////////////////////////////////////////////////

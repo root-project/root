@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.65 2001/09/19 05:51:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.66 2001/10/03 18:56:44 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -669,7 +669,7 @@ public:
       } else fMethod->Execute(thisobj);
 
       // Get rid of temporary return object.
-      gInterpreter->EndOfLineAction();
+      //gInterpreter->EndOfLineAction();
       return result;
    }
 };
