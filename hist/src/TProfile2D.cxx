@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.28 2005/01/20 21:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.29 2005/01/25 07:36:21 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -103,6 +103,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,A
 //   fix and variable bin size like in TH2D.
 
    BuildOptions(0,0,option);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -148,6 +149,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,A
 //
 
    BuildOptions(zlow,zup,option);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 
@@ -456,7 +458,7 @@ Int_t TProfile2D::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
          fBuffer = buffer;
       }
    }
-   if (nbentries >= fBufferSize) {
+   if (4*nbentries+4 >= fBufferSize) {
       BufferEmpty(1);
       return Fill(x,y,z,w);
    }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.55 2005/01/20 21:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.56 2005/01/25 07:36:21 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1906,6 +1906,8 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 //*-*              ==================================================
 
    TArrayC::Set(fNcells);
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2130,6 +2132,8 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
 //*-*              ==================================================
    TH3S::Set(fNcells);
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2354,6 +2358,8 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
 //*-*              ==================================================
    TH3I::Set(fNcells);
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2545,6 +2551,8 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
 //*-*              ==================================================
    TArrayF::Set(fNcells);
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2748,6 +2756,8 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
 //*-*              ==================================================
    TArrayD::Set(fNcells);
+
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
