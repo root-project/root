@@ -500,7 +500,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
          obj->Paint("ogl");
       lnk = lnk->Next();
    }
-
+   
    buff->fOption = TBuffer3D::kPAD;
    CalculateViewvolumes();
    //Calculate light sources positions and "bulb" radius
@@ -527,6 +527,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    box2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
    
    fRender.SetAxes(fRangeX, fRangeY, fRangeZ);
+   
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
@@ -571,18 +572,21 @@ void TViewerOpenGL::UpdateScene(Option_t *)
       switch (buff->fType) {
       case TBuffer3D::kLINE:
          addObj = new TGLPolyLine(*buff, colorRGB, fNbShapes, buff->fId);
-  	      break;
+         break;
       case TBuffer3D::kMARKER:
          addObj = new TGLPolyMarker(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       case TBuffer3D::kSPHE:
          addObj = new TGLSphere(*buff, colorRGB, fNbShapes, buff->fId);
          break;
+      case TBuffer3D::kTUBE:
+         addObj = new TGLTube(*buff, colorRGB, fNbShapes, buff->fId);
+         break;
       default:
          addObj = new TGLFaceSet(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       }
-
+      
       UpdateRange(addObj->GetBox());
       fRender.AddNewObject(addObj);
    }

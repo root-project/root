@@ -167,14 +167,36 @@ public:
 // Utility class to draw a Sphere using OpenGL Sphere primitive
 class TGLSphere : public TGLSceneObject {
 private:
-   Float_t fX;      // Sphere X center position
-   Float_t fY;      // Sphere Y center position
-   Float_t fZ;      // Sphere Z center position
-   Float_t fRadius; // Sphere radius
-   Int_t   fNdiv;   // Number of divisions
+   Double_t fX;      // Sphere X center position
+   Double_t fY;      // Sphere Y center position
+   Double_t fZ;      // Sphere Z center position
+   Double_t fRadius; // Sphere radius
+   Int_t    fNdiv;   // Number of divisions
 
 public:
    TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
+   void GLDraw()const;
+   void Shift(Double_t x, Double_t y, Double_t z);
+   Bool_t IsTransparent()const;
+};
+
+
+class TGLTube : public TGLSceneObject {
+private:
+   Double_t fX;
+   Double_t fY;
+   Double_t fZ;
+   Double_t fRmin1;
+   Double_t fRmax1;
+   Double_t fRmin2;
+   Double_t fRmax2;
+   Double_t fDz;
+   Int_t    fNdiv;
+   Double_t fRotM[16];
+   Bool_t   fInv;
+
+public:
+   TGLTube(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
    void GLDraw()const;
    void Shift(Double_t x, Double_t y, Double_t z);
    Bool_t IsTransparent()const;

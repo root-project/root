@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.35 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.36 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -619,14 +619,55 @@ void TGeoCone::Paint(Option_t *option)
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
    Int_t i, j, n = 20;
    if (gGeoManager) n = gGeoManager->GetNsegments();
+
+   // In case of OpenGL a tube can be drawn with specialized functions
+   TBuffer3D *buff = gPad->AllocateBuffer3D(24, 0, 0);
+   if (!buff) return;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   if (buff->fOption == TBuffer3D::kOGL) {
+      buff->fNbPnts  = 3;
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = vol->GetLineColor();
+      buff->fPnts[0] =      0; buff->fPnts[1] =      0; buff->fPnts[2] =    0;
+      buff->fPnts[3] =  fRmax2; buff->fPnts[4] =  fRmax2; buff->fPnts[5] =  fDz;
+      buff->fPnts[6] = -fRmax1; buff->fPnts[7] = -fRmax1; buff->fPnts[8] = -fDz;
+      buff->fPnts[9] = (Float_t)n;
+      buff->fPnts[10] = fRmin1;
+      buff->fPnts[11] = fRmax1;
+      buff->fPnts[12] = fRmin2;
+      buff->fPnts[13] = fRmax2;
+      buff->fPnts[14] = fDz;
+      TransformPoints(buff);
+      buff->fId   = vol;
+      buff->fType = TBuffer3D::kTUBE;
+
+      TGeoNodeCache *cn = gGeoManager->GetCache();
+      TGeoHMatrix *m = 0;
+      const Double_t *rotM = 0;
+
+      if (cn && (m = cn->GetCurrentMatrix()) && (rotM = m->GetRotationMatrix())) {
+         for (Int_t i = 15; i < 24; ++i) 
+            buff->fPnts[i] = rotM[i - 15];
+      } else {
+         //identity matrix
+         for (Int_t i = 15; i < 24; ++i) {
+            buff->fPnts[i] = 0.;
+         }
+         buff->fPnts[15] = buff->fPnts[19] = buff->fPnts[23] = 1.;
+      }
+
+      buff->Paint(option);
+      return;
+   }
+
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 8*n;
    Int_t NbPols = 4*n; 
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
    if (!buff) return;
 
-   buff->fType = TBuffer3D::kTUBE;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fType = TBuffer3D::kANY;
    buff->fId   = vol;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.15 2004/11/15 14:59:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -11,8 +11,6 @@
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
-
-#include <iostream>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -64,8 +62,7 @@ static GLUquadric *GetQuadric()
             Error("GetQuadric::Init", "could not create quadric object");
          } else {
             gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
-//            gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
-            gluQuadricNormals(fQuad, (GLenum)GLU_SMOOTH);
+            gluQuadricNormals(fQuad, GLU_SMOOTH);
          }
       }
       ~Init()
@@ -321,6 +318,7 @@ void TGLFaceSet::GLDraw()const
 
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
+      
       if (tessObj && npoints > 4) {
          gluBeginPolygon(tessObj);
          gluNextContour(tessObj, (GLenum)GLU_UNKNOWN);
@@ -340,6 +338,7 @@ void TGLFaceSet::GLDraw()const
          glEnd();
       }
    }
+
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
@@ -626,6 +625,105 @@ void TGLSphere::GLDraw()const
 
 //______________________________________________________________________________
 void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
+{
+   fX += x;
+   fY += y;
+   fZ += z;
+}
+
+//______________________________________________________________________________
+TGLTube::TGLTube(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
+            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
+{
+   fColor[3] = 1.f - b.fTransparency / 100.f;
+
+   fX = b.fPnts[0];
+   fY = b.fPnts[1];
+   fZ = b.fPnts[2];
+   fNdiv = (Int_t)b.fPnts[9];
+
+   fRmin1 = b.fPnts[10];
+   fRmax1 = b.fPnts[11];
+   fRmin2 = b.fPnts[12];
+   fRmax2 = b.fPnts[13];
+   fDz = b.fPnts[14];
+
+   const Double_t *p = b.fPnts;
+
+   fRotM[0] = p[15], fRotM[1] = p[18], fRotM[2] = p[21], fRotM[3] = 0.;
+   fRotM[4] = p[16], fRotM[5] = p[19], fRotM[6] = p[22], fRotM[7] = 0.;
+   fRotM[8] = p[17], fRotM[9] = p[20], fRotM[10] = p[23], fRotM[11] = 0.;
+   fRotM[12] = 0.,    fRotM[13] = 0.,    fRotM[14] = 0.,    fRotM[15] = 1.;
+   fInv = b.TestBit(TBuffer3D::kIsReflection);
+}
+
+//______________________________________________________________________________
+Bool_t TGLTube::IsTransparent()const
+{
+   return fColor[3] < 1.f;;
+}
+
+//______________________________________________________________________________
+void TGLTube::GLDraw()const
+{
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
+   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+
+   if (IsTransparent()) {
+      glEnable(GL_BLEND);
+      glDepthMask(GL_FALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+
+   if (GLUquadric *quadObj = GetQuadric()) {
+      glLoadName(GetGLName());
+      glPushMatrix();
+
+      glTranslated(fX, fY, fZ);
+      glMultMatrixd(fRotM);
+      glPushMatrix();
+      glTranslated(0., 0., -fDz);
+      //outer surface
+      if (fInv) {
+         glFrontFace(GL_CW);
+      }
+
+      gluCylinder(quadObj, fRmax1, fRmax2, 2 * fDz, fNdiv, 1);
+      //inner surface
+      gluQuadricOrientation(quadObj, GLU_INSIDE);
+      gluCylinder(quadObj, fRmin1, fRmin2, 2 * fDz, fNdiv, 1);
+      //return orientation back   
+      gluQuadricOrientation(quadObj, GLU_OUTSIDE);
+
+      glPopMatrix();
+
+      //capping
+      glPushMatrix();
+      glTranslated(0., 0., fDz);
+      gluDisk(quadObj, fRmin2, fRmax2, fNdiv, 1);
+      glRotated(180., 1., 0., 0.);
+      glTranslated(0., 0., 2 * fDz);
+      gluDisk(quadObj, fRmin1, fRmax1, fNdiv, 1);
+      glPopMatrix();
+
+      glPopMatrix();
+
+      if (fInv) {
+         glFrontFace(GL_CCW);
+      }
+   }
+
+   if (IsTransparent()) {
+      glDepthMask(GL_TRUE);
+      glDisable(GL_BLEND);
+   }
+}
+
+//______________________________________________________________________________
+void TGLTube::Shift(Double_t x, Double_t y, Double_t z)
 {
    fX += x;
    fY += y;
