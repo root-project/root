@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -21,8 +21,6 @@
 */
 //End_Html
 #include "TObjArray.h"
-#include "TPad.h"
-#include "TView.h"
 
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.5 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.6 2002/07/15 15:32:25 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -168,15 +168,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TStyle.h"
-#include "TPad.h"
-#include "TView.h"
-#include "TRandom3.h"
-#include "TNtuple.h"
-#include "TPolyMarker3D.h"
-#include "TStopwatch.h"
-#include "TDatime.h"
+#include "TVirtualPad.h"
 #include "TBrowser.h"
-
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
@@ -190,10 +183,7 @@
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
 #include "TGeoCompositeShape.h"
-#include "TGeoVolume.h"
-#include "TGeoNode.h"
 #include "TGeoFinder.h"
-#include "TGeoCache.h"
 #include "TVirtualGeoPainter.h"
 
 #include "TGeoManager.h"
