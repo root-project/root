@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.4 2004/08/09 23:45:26 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.5 2004/08/10 08:54:12 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,13 +8,14 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include <iostream>
 #include <vector>
 #include <memory>
 
 #include <TViewerOpenGL.h>
 #include <TVirtualPad.h>
 #include <TVirtualGL.h>
+#include <KeySymbols.h>
 #include <TVirtualX.h>
 #include <TBuffer3D.h>
 #include <TGLKernel.h>
@@ -58,9 +59,20 @@ static Float_t colors[] = {
    117.f / 255, 240.f / 255, 240.f / 255
 };
 
+class TGLPrimitive : public TObject{
+public:
+   virtual void GLDraw(GLUtesselator * t_obj = 0)const = 0;
+};
 
-class TGLFaceSet : public TObject {
+class TGLFaceSet : public TGLPrimitive {
 private:
+   std::vector<Double_t> fPnts;
+   std::vector<Double_t> fNormals;
+   std::vector<Int_t>    fPols;
+
+   Int_t fNbPols;
+   Int_t fColorInd;
+
    //non copyable class
    TGLFaceSet(const TGLFaceSet &);
    TGLFaceSet & operator = (const TGLFaceSet &);
@@ -72,13 +84,7 @@ private:
     }
 public:
    TGLFaceSet(const TBuffer3D & buf_initializer);
-
-   std::vector<Double_t> fPnts;
-   std::vector<Double_t> fNormals;
-   std::vector<Int_t>    fPols;
-
-   Int_t fNbPols;
-   Int_t fColorInd;
+   void GLDraw(GLUtesselator * t_obj)const;
 };
 
 //______________________________________________________________________________
@@ -173,6 +179,67 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t * dest) const
 
 //______________________________________________________________________________
 
+//______________________________________________________________________________
+void TGLFaceSet::GLDraw(GLUtesselator * t_obj)const
+{
+   //first, define the color :
+   Float_t rgb[] = {colors[fColorInd * 3], colors[fColorInd * 3 + 1], colors[fColorInd * 3 + 2]};
+
+   gVirtualGL->MaterialGL(kFRONT, rgb);
+   gVirtualGL->MaterialGL(kFRONT, 60.);
+ 
+
+   for(Int_t i = 0, j = 0; i < fNbPols; ++i){
+      Int_t npoints = fPols[j++];
+      if(t_obj && npoints > 4){
+         gVirtualGL->GLUTessCallback(t_obj);
+         gVirtualGL->GLUBeginPolygon(t_obj);
+         gVirtualGL->GLUNextContour(t_obj);
+         gVirtualGL->SetGLNormal(&fNormals[i * 3]);
+
+         for(Int_t k = 0; k < npoints; ++k, ++j)
+            gVirtualGL->GLUTessVertex(t_obj, &fPnts[fPols[j] * 3]);
+
+         gVirtualGL->GLUEndPolygon(t_obj);
+      }
+      else{
+         gVirtualGL->BeginGL();
+         gVirtualGL->SetGLNormal(&fNormals[i * 3]);
+
+         for(Int_t k = 0; k < npoints; ++k, ++j)
+            gVirtualGL->SetGLVertex(&fPnts[fPols[j] * 3]);
+         gVirtualGL->EndGL();
+      }
+   }
+}
+
+class TGLPolyLine : public TGLPrimitive{
+private:
+   std::vector<Double_t>fVertices;
+
+   TGLPolyLine(const TGLPolyLine &);
+   TGLPolyLine & operator = (const TGLPolyLine &);
+public:
+   TGLPolyLine(const TBuffer3D & init_buffer);
+   void GLDraw(GLUtesselator * t_obj)const;
+   void GLDrawMarker(const Double_t * vertex)const;
+};
+
+//______________________________________________________________________________
+TGLPolyLine::TGLPolyLine(const TBuffer3D & /*init_buffer*/)
+{
+}
+
+//______________________________________________________________________________
+void TGLPolyLine::GLDraw(GLUtesselator *)const
+{
+}
+
+//______________________________________________________________________________
+void TGLPolyLine::GLDrawMarker(const Double_t * /*vertex*/)const
+{
+} 
+
 class TGLWidget : public TGCompositeFrame {
 private:
    TViewerOpenGL  *fViewer;
@@ -232,7 +299,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
      fCanvasWindow(0), fCanvasContainer(0), fCanvasLayout(0),
      fXc(0.), fYc(0.), fZc(0.), fRad(0.),
      fCtx(0), fGLWin(0), fPressed(kFALSE),
-     fDList(1), fArcBall(0)
+     fDList(1), fArcBall(0), fFrP(), fZoom(0.9)
 {
    fGLObjects.SetOwner(kTRUE);
    CreateViewer();
@@ -344,12 +411,46 @@ Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t * event)
    gVirtualX->ResizeWindow(fGLWin, event->fWidth, event->fHeight);
    fArcBall->SetBounds(event->fWidth, event->fHeight);
    DrawObjects();
+   
    return kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TViewerOpenGL::HandleContainerKey(Event_t *)
+Bool_t TViewerOpenGL::HandleContainerKey(Event_t * event)
 {
+   char tmp[10] = {0};
+   UInt_t keysym = 0;
+   
+   gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   
+   switch(keysym){
+   case kKey_Plus:
+   case kKey_J:
+   case kKey_j:
+      fZoom /= 1.2;
+      DrawObjects();
+      break;
+   case kKey_Minus:
+   case kKey_K:
+   case kKey_k:
+      fZoom *= 1.2;
+      DrawObjects();
+      break;
+   case kKey_R:
+   case kKey_r: 
+      gVirtualGL->PolygonGLMode(kFRONT, kFILL);
+      gVirtualGL->EnableGL(kCULL_FACE);
+      gVirtualGL->SetGLLineWidth(1.f);
+      DrawObjects();
+      break;
+   case kKey_W:
+   case kKey_w:
+      gVirtualGL->DisableGL(kCULL_FACE);
+      gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE);
+      gVirtualGL->SetGLLineWidth(1.5f);
+      DrawObjects();
+   } 
+   
    return kTRUE;
 }
 
@@ -399,21 +500,20 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Double_t ydiff = fRangeY.second - fRangeY.first;
    Double_t zdiff = fRangeZ.second - fRangeZ.first;
    Double_t max = xdiff > ydiff ? xdiff > zdiff ? xdiff : zdiff : ydiff > zdiff ? ydiff : zdiff;
-   Double_t zfar = 3 * max;
-   Double_t znear = max * 0.707;
-   Double_t frp = max / 1.9;
+
    Float_t lmodel_amb[] = {0.5f, 0.5f, 1.f, 1.f};
 
    fRad = max * 1.7;
    fXc = fRangeX.first + xdiff / 2;
    fYc = fRangeY.first + ydiff / 2;
    fZc = fRangeZ.first + zdiff / 2;
+   fFrP[0] = max / 1.9;
+   fFrP[1] = max * 0.707;
+   fFrP[2] = 3 * max;
    MakeCurrent();
 
    gVirtualGL->ClearGLColor(1.f, 1.f, 1.f, 1.f);
    gVirtualGL->ClearGLDepth(1.f);
-   gVirtualGL->NewPRGL();
-   gVirtualGL->FrustumGL(-frp, frp, -frp, frp, znear, zfar);
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodel_amb);
    gVirtualGL->LightModel(kLIGHT_MODEL_TWO_SIDE, kFALSE);
    gVirtualGL->EnableGL(kLIGHTING);
@@ -421,6 +521,9 @@ void TViewerOpenGL::CreateScene(Option_t *)
    gVirtualGL->EnableGL(kDEPTH_TEST);
    gVirtualGL->EnableGL(kCULL_FACE);
    gVirtualGL->CullFaceGL(kBACK);
+ //  gVirtualGL->PolygonGLMode(kFRONT, kFILL);
+ //  gVirtualGL->DisableGL(kCULL_FACE);
+ //  gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE); 
    BuildGLList();
    DrawObjects();
 }
@@ -432,11 +535,19 @@ void TViewerOpenGL::UpdateScene(Option_t *)
 
    if(buff->fOption == buff->kOGL){
       UpdateRange(buff);
-
-      std::auto_ptr<TGLFaceSet>safe_ptr(new TGLFaceSet(*buff));
-
-      fGLObjects.AddLast(safe_ptr.get());
-      safe_ptr.release();
+      std::auto_ptr<TGLPrimitive>safe_ptr;
+      
+      switch(buff->fType)
+      {
+      case buff->kLINE:
+      case buff->kMARKER:
+         break;
+      default:
+         safe_ptr.reset(new TGLFaceSet(*buff));
+         fGLObjects.AddLast(safe_ptr.get());
+         safe_ptr.release();
+         break;
+      }
    }
 }
 
@@ -464,8 +575,11 @@ void TViewerOpenGL::DrawObjects()const
 
    Int_t cx = GetWidth() / 2, cy = GetHeight() / 2;
    Int_t d = TMath::Min(cx, cy);
+   Double_t frp = fFrP[0] * fZoom;
 
    gVirtualGL->ViewportGL(cx - d, cy - d, d * 2, d * 2);
+   gVirtualGL->NewPRGL();
+   gVirtualGL->FrustumGL(-frp, frp, -frp, frp, fFrP[1], fFrP[2]); 
    gVirtualGL->NewMVGL();
    gVirtualGL->PushGLMatrix();
    gVirtualGL->TranslateGL(0., 0., -fRad);
@@ -524,39 +638,9 @@ void TViewerOpenGL::BuildGLList()const
       Error("DrawObjects", "No tesselator :(( ");
 
    while(lnk){
-      TGLFaceSet * pobj = static_cast<TGLFaceSet *>(lnk->GetObject());
-      Int_t * pols = &pobj->fPols[0];
-      Double_t * pnts = &pobj->fPnts[0];
-      Double_t * normalvector = &pobj->fNormals[0];
-      //first, define the color :
-      Int_t ind = pobj->fColorInd;
-      Float_t rgb[] = {colors[ind * 3], colors[ind * 3 + 1], colors[ind * 3 + 2]};
-
-      gVirtualGL->MaterialGL(kFRONT, rgb);
-      gVirtualGL->MaterialGL(kFRONT, 60.);
-
-      for(Int_t i = 0, npols = pobj->fNbPols, j = 0; i < npols; ++i){
-         Int_t npoints = pols[j++];
-         if(t_obj && npoints > 4){
-            gVirtualGL->GLUTessCallback(t_obj);
-            gVirtualGL->GLUBeginPolygon(t_obj);
-            gVirtualGL->GLUNextContour(t_obj);
-            gVirtualGL->SetGLNormal(normalvector + i * 3);
-
-            for(Int_t k = 0; k < npoints; ++k, ++j)
-               gVirtualGL->GLUTessVertex(t_obj, pnts + pols[j] * 3);
-
-            gVirtualGL->GLUEndPolygon(t_obj);
-         }
-         else{
-            gVirtualGL->BeginGL();
-            gVirtualGL->SetGLNormal(normalvector + i * 3);
-
-            for(Int_t k = 0; k < npoints; ++k, ++j)
-               gVirtualGL->SetGLVertex(pnts + pols[j] * 3);
-            gVirtualGL->EndGL();
-         }
-      }
+      TGLPrimitive * pobj = static_cast<TGLPrimitive *>(lnk->GetObject());
+      
+      pobj->GLDraw(t_obj);
       lnk = lnk->Next();
    }
    gVirtualGL->GLUDeleteTess(t_obj);

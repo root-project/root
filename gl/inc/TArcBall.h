@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.2 2004/08/09 23:44:12 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,25 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-/** KempoApi: The Turloc Toolkit *****************************/
-/** *    *                                                  **/
-/** **  **  Filename: TArcBall.h                            **/
-/**   **    Version:  Common                                **/
-/**   **                                                    **/
-/**                                                         **/
-/**  TArcball class for mouse manipulation.                 **/
-/**                                                         **/
-/**                                                         **/
-/**                                                         **/
-/**                                                         **/
-/**                              (C) 1999-2003 Tatewake.com **/
-/**   History:                                              **/
-/**   08/17/2003 - (TJG) - Creation                         **/
-/**   09/23/2003 - (TJG) - Bug fix and optimization         **/
-/**   09/25/2003 - (TJG) - Version for NeHe Basecode users  **/
-/**                                                         **/
-/*************************************************************/
 
 #ifndef ROOT_TArcBall
 #define ROOT_TArcBall

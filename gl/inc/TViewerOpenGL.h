@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.3 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.4 2004/08/09 23:45:26 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -49,7 +49,10 @@ private:
    Bool_t         fPressed;
    mutable Int_t  fDList;
    TArcBall      *fArcBall;
-
+   
+   Double_t fFrP[3];
+   Double_t fZoom;
+   
    void CreateViewer();
    void InitGLWindow();
    void DrawObjects()const;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.2 2004/08/09 23:44:12 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,25 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-/** KempoApi: The Turloc Toolkit *****************************/
-/** *    *                                                  **/
-/** **  **  Filename: ArcBall.cpp                           **/
-/**   **    Version:  Common                                **/
-/**   **                                                    **/
-/**                                                         **/
-/**  Arcball class for mouse manipulation.                  **/
-/**                                                         **/
-/**                                                         **/
-/**                                                         **/
-/**                                                         **/
-/**                              (C) 1999-2003 Tatewake.com **/
-/**   History:                                              **/
-/**   08/17/2003 - (TJG) - Creation                         **/
-/**   09/23/2003 - (TJG) - Bug fix and optimization         **/
-/**   09/25/2003 - (TJG) - Version for NeHe Basecode users  **/
-/**                                                         **/
-/*************************************************************/
 
 #include "TArcBall.h"
 #include "TPoint.h"
@@ -282,8 +263,6 @@ void TArcBall::Drag(const TPoint & NewPt)
    Matrix3dSetRotationFromQuat4d(fThisRot, NewRot);
    Matrix3dMulMatrix3d(fThisRot, fLastRot);
    Matrix4dSetRotationFromMatrix3d(fTransform, fThisRot);
-
-//   std::cout<<"KyKy\n";
 }
 
 Double_t * TArcBall::GetRotMatrix()
