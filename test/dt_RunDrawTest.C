@@ -172,7 +172,7 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    // cerr << "Branch style is " << gBranchStyle << endl;
 
    if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
-   TDirectory* where = GenerateDrawHist(tree,2,gQuietLevel);
+   TDirectory* where = GenerateDrawHist(tree,gQuietLevel);
  
    if (gQuietLevel<2) cout << "Comparing histograms" << endl;
    if (Compare(where)>0) {

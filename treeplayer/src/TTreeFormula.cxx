@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.168 2005/03/07 17:00:17 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.169 2005/03/08 05:33:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -395,7 +395,8 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMult
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
+Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
+                                       Bool_t useCollectionObject) {
    // This method is used internally to decode the dimensions of the variables
 
    Int_t ndim, size, current, vardim;
@@ -428,7 +429,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       TStreamerElement* counter = cl->GetStreamerInfo()->GetStreamerElement(array->GetCountName(),offset);
       leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
 
-   } else if (elem->GetClassPointer() == TClonesArray::Class() ) {
+   } else if (!useCollectionObject && elem->GetClassPointer() == TClonesArray::Class() ) {
 
       ndim = 1;
       size = -1;
@@ -438,7 +439,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       TStreamerElement *counter = ClonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
       leafinfo->fCounter = new TFormLeafInfo(ClonesClass,c_offset,counter);
 
-   } else if (elem->GetClassPointer() && elem->GetClassPointer()->GetCollectionProxy() ) {
+   } else if (!useCollectionObject && elem->GetClassPointer() && elem->GetClassPointer()->GetCollectionProxy() ) {
 
       if ( typeid(*leafinfo) == typeid(TFormLeafInfoCollection) ) {
          ndim = 1;
@@ -647,8 +648,9 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
 //______________________________________________________________________________
 Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression, 
                                   Bool_t final, UInt_t paran_level,
-                                   TObjArray &castqueue, 
-                                   const char* fullExpression) 
+                                  TObjArray &castqueue, 
+                                  Bool_t useLeafCollectionObject,
+                                  const char* fullExpression) 
 {
    // Decompose 'expression' as pointing to something inside the leaf
    // Returns:
@@ -874,69 +876,87 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             unwindCollection = kTRUE;
          }
 
-      } else if (BranchEl->GetType()==3) {
+      } else if ( BranchEl->GetType()==3) {
+         TFormLeafInfo* clonesinfo;
+         if (useLeafCollectionObject) {
+            clonesinfo = new TFormLeafInfoCollectionObject(cl);
+         } else {
+            clonesinfo = new TFormLeafInfoClones(cl, 0, kTRUE);
+            // The dimension needs to be handled!
+            numberOfVarDim += RegisterDimensions(code,clonesinfo,useLeafCollectionObject);
 
-         TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, kTRUE);
-         // The dimension needs to be handled!
-         numberOfVarDim += RegisterDimensions(code,clonesinfo);
-
+         }
          maininfo = clonesinfo;
          previnfo = maininfo;
 
-      } else if (BranchEl->GetType()==4) {
+      } else if (!useLeafCollectionObject && BranchEl->GetType()==4) {
 
-         TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
-         // The dimension needs to be handled!
-         numberOfVarDim += RegisterDimensions(code,collectioninfo);
+         TFormLeafInfo* collectioninfo;
+         if (useLeafCollectionObject) {
+             collectioninfo = new TFormLeafInfoCollectionObject(cl);
+         } else {
+             collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
+             // The dimension needs to be handled!
+             numberOfVarDim += RegisterDimensions(code,collectioninfo,useLeafCollectionObject);
+         }
 
          maininfo = collectioninfo;
          previnfo = maininfo;
 
       } else if (BranchEl->GetStreamerType()==-1 && cl && cl->GetCollectionProxy()) {
 
-         TFormLeafInfo *collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
-         // The dimension needs to be handled!
-         numberOfVarDim += RegisterDimensions(code,collectioninfo);
+         if (useLeafCollectionObject) {
 
-         maininfo = collectioninfo;
-         previnfo = collectioninfo;
-         
-         if (cl->GetCollectionProxy()->GetValueClass()!=0 &&
-             cl->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()!=0) {
+            TFormLeafInfo *collectioninfo = new TFormLeafInfoCollectionObject(cl);
+            maininfo = collectioninfo;
+            previnfo = collectioninfo;
 
-            TFormLeafInfo *multi = new TFormLeafInfoMultiVarDimCollection(cl,0,
-               cl->GetCollectionProxy()->GetValueClass(),collectioninfo);
-
-            fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi);
-            previnfo->fNext = multi;
-            cl = cl->GetCollectionProxy()->GetValueClass();
-            multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
-            previnfo = multi->fNext;
-
-         } 
-         if (cl->GetCollectionProxy()->GetValueClass()==0 &&
-               cl->GetCollectionProxy()->GetType()>0) {
-
-            previnfo->fNext = 
-               new TFormLeafInfoNumerical(cl->GetCollectionProxy()->GetType());
-            previnfo = previnfo->fNext;
          } else {
-            // nothing to do
+            TFormLeafInfo *collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
+            // The dimension needs to be handled!
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,kFALSE);
+
+            maininfo = collectioninfo;
+            previnfo = collectioninfo;
+
+            if (cl->GetCollectionProxy()->GetValueClass()!=0 &&
+                cl->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()!=0) {
+
+               TFormLeafInfo *multi = new TFormLeafInfoMultiVarDimCollection(cl,0,
+                     cl->GetCollectionProxy()->GetValueClass(),collectioninfo);
+
+               fHasMultipleVarDim[code] = kTRUE;
+               numberOfVarDim += RegisterDimensions(code,multi, kFALSE);
+               previnfo->fNext = multi;
+               cl = cl->GetCollectionProxy()->GetValueClass();
+               multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
+               previnfo = multi->fNext;
+
+            } 
+            if (cl->GetCollectionProxy()->GetValueClass()==0 &&
+                cl->GetCollectionProxy()->GetType()>0) {
+
+               previnfo->fNext = 
+                        new TFormLeafInfoNumerical(cl->GetCollectionProxy()->GetType());
+               previnfo = previnfo->fNext;
+            } else {
+               // nothing to do
+            }
          }
 
       } else if (strlen(right)==0 && cl && element && final) {
 
          TClass *elemCl = element->GetClassPointer();
-         if (elemCl && elemCl->GetCollectionProxy()
-               && elemCl->GetCollectionProxy()->GetValueClass()
-               && elemCl->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()) {
+         if (!useLeafCollectionObject 
+             && elemCl && elemCl->GetCollectionProxy()
+             && elemCl->GetCollectionProxy()->GetValueClass()
+             && elemCl->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()) {
 
             TFormLeafInfo *collectioninfo = 
                new TFormLeafInfoCollection(cl, 0, elemCl);
 
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,kFALSE);
 
             maininfo = collectioninfo;
             previnfo = collectioninfo;
@@ -947,7 +967,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                                                       collectioninfo);
 
             fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi);
+            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
             previnfo->fNext = multi;
             cl = elemCl->GetCollectionProxy()->GetValueClass();
             multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
@@ -961,7 +981,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                previnfo = previnfo->fNext;
             } 
 
-         } else if (elemCl && elemCl->GetCollectionProxy()
+         } else if (!useLeafCollectionObject 
+               && elemCl && elemCl->GetCollectionProxy()
                && elemCl->GetCollectionProxy()->GetValueClass()==0
                && elemCl->GetCollectionProxy()->GetType()>0) {
 
@@ -974,7 +995,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                new TFormLeafInfoCollection(cl, 0, elemCl);
 
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
 
             collectioninfo->fNext = 
                new TFormLeafInfoNumerical(elemCl->GetCollectionProxy()->GetType());
@@ -1001,11 +1022,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          // directly a collection.
          Assert(numberOfVarDim==1 && maininfo);
 
-         if (cl && cl->GetCollectionProxy()) {
+         if (!useLeafCollectionObject && cl && cl->GetCollectionProxy()) {
             TFormLeafInfo *multi = 
                new TFormLeafInfoMultiVarDimCollection(cl, 0, cl, maininfo);
             fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi);
+            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
             previnfo->fNext = multi;
 
             multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
@@ -1057,6 +1078,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
       }
 
       Int_t i;
+      Bool_t prevUseCollectionObject = useLeafCollectionObject;
+      Bool_t useCollectionObject = useLeafCollectionObject;
       for (i=0, current = &(work[0]); i<=nchname;i++ ) {
          // We will treated the terminator as a token.
          if (right[i] == '(') {
@@ -1078,8 +1101,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
                return -2;
             }
-            if (cl == TClonesArray::Class()) {
-               // We are NEVER interested in the ClonesArray object but only
+            if (!useCollectionObject && cl == TClonesArray::Class()) {
+               // We are not interested in the ClonesArray object but only
                // in its contents.
                // We need to retrieve the class of its content.
 
@@ -1100,7 +1123,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0, top);
 
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,clonesinfo);
+                  numberOfVarDim += RegisterDimensions(code,clonesinfo, kFALSE);
 
                   previnfo = clonesinfo;
                   maininfo = clonesinfo;
@@ -1110,7 +1133,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                TClass * inside_cl = clones->GetClass();
                if (1 || inside_cl) cl = inside_cl;
 
-            } else if (cl && cl->GetCollectionProxy() ) {
+            } else if (!useCollectionObject && cl && cl->GetCollectionProxy() ) {
 
                // We are NEVER (for now!) interested in the ClonesArray object but only
                // in its contents.
@@ -1132,7 +1155,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* collectioninfo = 
                      new TFormLeafInfoCollection(mother_cl, 0,cl,top);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,collectioninfo);
+                  numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
 
                   previnfo = collectioninfo;
                   maininfo = collectioninfo;
@@ -1147,34 +1170,46 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                }
             }
 
-            TMethodCall *method;
-            if (cl->GetClassInfo()==0) {
+            TMethodCall *method  = 0;
+            if (cl==0) {
                Error("DefinedVariable",
-                     "Can not call method %s on class without dictionary (%s)!",
-                     right,cl->GetName());
+                     "Could not discover the TClass corresponding to (%s)!",
+                     right);
                return -2;
+            } else if (cl==TClonesArray::Class() && strcmp(work,"size")==0) {
+               method = new TMethodCall(cl, "GetEntriesFast", "");
+            } else if (cl->GetCollectionProxy() && strcmp(work,"size")==0) {
+               leafinfo = new TFormLeafInfoCollectionSize(cl);
+            } else {
+               if (cl->GetClassInfo()==0) {
+                  Error("DefinedVariable",
+                        "Can not call method %s on class without dictionary (%s)!",
+                        right,cl->GetName());
+                  return -2;
+               }
+               method = new TMethodCall(cl, work, params);
             }
-            method = new TMethodCall(cl, work, params);
-            if (!method->GetMethod()) {
-               Error("DefinedVariable","Unknown method:%s",right);
-               return -1;
-            }
-            switch(method->ReturnType()) {
-               case TMethodCall::kLong:
+            if (method) {
+               if (!method->GetMethod()) {
+                  Error("DefinedVariable","Unknown method:%s in %s",right,cl->GetName());
+                  return -1;
+               }
+               switch(method->ReturnType()) {
+                  case TMethodCall::kLong:
                      leafinfo = new TFormLeafInfoMethod(cl,method);
                      cl = 0;
                      break;
-               case TMethodCall::kDouble:
+                  case TMethodCall::kDouble:
                      leafinfo = new TFormLeafInfoMethod(cl,method);
                      cl = 0;
                      break;
-               case TMethodCall::kString:
+                  case TMethodCall::kString:
                      leafinfo = new TFormLeafInfoMethod(cl,method);
                      // 1 will be replaced by -1 when we know how to use strlen
                      numberOfVarDim += RegisterDimensions(code,1); //NOTE: changed from 0
                      cl = 0;
                      break;
-               case TMethodCall::kOther:
+                  case TMethodCall::kOther:
                      {
                         TString return_type = 
                            gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
@@ -1185,10 +1220,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                            cl = 0;
                         }
                      };    break;
-               default:
-               Error("DefineVariable","Method %s from %s has an impossible return type %d",
-                     work,cl->GetName(),method->ReturnType());
-               return -2;
+                  default:
+                     Error("DefineVariable","Method %s from %s has an impossible return type %d",
+                        work,cl->GetName(),method->ReturnType());
+                     return -2;
+               }
             }
             if (maininfo==0) {
                maininfo = leafinfo;
@@ -1202,6 +1238,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             leafinfo = 0;
             current = &(work[0]);
             *current = 0;
+            prevUseCollectionObject = kFALSE;
+            useCollectionObject = kFALSE;
             continue;
          } else if (right[i] == ')') {
             // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
@@ -1236,9 +1274,22 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             // skip it all if there is nothing to look at
             if (strlen(work)==0) continue;
 
+            prevUseCollectionObject = useCollectionObject;
+            if (work[0]=='@') {
+               useCollectionObject = kTRUE;
+               Int_t l = 0;
+               for(l=0;work[l+1]!=0;++l) work[l] = work[l+1];
+               work[l] = '\0';
+            } else if (work[strlen(work)-1]=='@') {
+               useCollectionObject = kTRUE;
+               work[strlen(work)-1] = '\0';
+            } else {
+               useCollectionObject = kFALSE;
+            }
+
             Bool_t mustderef = kFALSE;
-            if (cl == TClonesArray::Class()) {
-               // We are NEVER interested in the ClonesArray object but only
+            if (!prevUseCollectionObject && cl == TClonesArray::Class()) {
+               // We are not interested in the ClonesArray object but only
                // in its contents.
                // We need to retrieve the class of its content.
 
@@ -1261,7 +1312,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
                   TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,clonesinfo);
+                  numberOfVarDim += RegisterDimensions(code,clonesinfo, kFALSE);
 
                   mustderef = kTRUE;
                   previnfo = clonesinfo;
@@ -1292,7 +1343,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   // so let get the number of objects
                   //strcpy(work,"fLast");
                }
-            } else if (cl && cl->GetCollectionProxy() ) {
+            } else if (!prevUseCollectionObject && cl && cl->GetCollectionProxy() ) {
 
                // We are NEVER interested in the Collection object but only
                // in its contents.
@@ -1317,7 +1368,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* collectioninfo = 
                      new TFormLeafInfoCollection(mother_cl, 0, cl);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,collectioninfo);
+                  numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
 
                   mustderef = kTRUE;
                   previnfo = collectioninfo;
@@ -1343,7 +1394,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
             }
 
-            if (!element) {
+            if (!element && !prevUseCollectionObject) {
                // We allow for looking for a data member inside a class inside
                // a TClonesArray without mentioning the TClonesArrays variable name
                TIter next( cl->GetStreamerInfo()->GetElements() );
@@ -1366,12 +1417,12 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                      }
 
                      TClass *sub_cl = clones->GetClass();
-                     element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                     if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
                      delete clonesinfo;
 
                      if (element) {
                         leafinfo = new TFormLeafInfoClones(cl,clones_offset,curelem);
-                        numberOfVarDim += RegisterDimensions(code,leafinfo);
+                        numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
                         if (maininfo==0) maininfo = leafinfo;
                         if (previnfo==0) previnfo = leafinfo;
                         else {
@@ -1402,10 +1453,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                                                                      curelem,maininfo);
                            fHasMultipleVarDim[code] = kTRUE;
                            leafinfo->fNext = new TFormLeafInfoCollection(cl,coll_offset,curelem);
-                           numberOfVarDim += RegisterDimensions(code,leafinfo);
+                           numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
                         } else {
                            leafinfo = new TFormLeafInfoCollection(cl,coll_offset,curelem);
-                           numberOfVarDim += RegisterDimensions(code,leafinfo);
+                           numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
                         }
                         if (maininfo==0) maininfo = leafinfo;
                         if (previnfo==0) previnfo = leafinfo;
@@ -1497,12 +1548,12 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                      mustderef = kTRUE;
                   } else {
 
-                     if (element->GetClassPointer() ==  TClonesArray::Class()) {
+                     if (!useCollectionObject && element->GetClassPointer() ==  TClonesArray::Class()) {
 
                         leafinfo = new TFormLeafInfoClones(cl,offset,element);
                         mustderef = kTRUE;
 
-                     } else if (element->GetClassPointer() 
+                     } else if (!useCollectionObject &&  element->GetClassPointer() 
                         && element->GetClassPointer()->GetCollectionProxy()) {
 
                         mustderef = kTRUE;
@@ -1539,7 +1590,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
  
                            if (valueCl!=0 && valueCl->GetCollectionProxy()!=0) {
 
-                              numberOfVarDim += RegisterDimensions(code,leafinfo);
+                              numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
                               if (previnfo==0) previnfo = leafinfo;
                               else {
                                  previnfo->fNext = leafinfo;
@@ -1578,7 +1629,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                return -1;
             }
 
-            numberOfVarDim += RegisterDimensions(code,leafinfo);
+            numberOfVarDim += RegisterDimensions(code,leafinfo, useCollectionObject); // Note or useCollectionObject||prevUseColectionObject
             if (maininfo==0) {
                maininfo = leafinfo;
             }
@@ -1598,7 +1649,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             *current = 0;
 
             Assert(right[i] != '[');  // We are supposed to have removed all dimensions already!
-            
+
          } else
             *current++ = right[i];
       }
@@ -1656,7 +1707,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
                                           TLeaf *&leaf,
                                           TString &leftover, Bool_t &final, 
                                           UInt_t &paran_level, TObjArray &castqueue, 
-                                          std::vector<std::string>& aliasUsed, 
+                                          std::vector<std::string>& aliasUsed,
+                                          Bool_t &useLeafCollectionObject,
                                           const char *fullExpression)
 {
    // Look for the leaf corresponding to the start of expression.
@@ -1690,6 +1742,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
 
    Int_t nchname = strlen(cname);
    Int_t i;
+   Bool_t foundAtSign = kFALSE;
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
@@ -1789,6 +1842,21 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
          // so far does point to a leaf.
          *current = '\0';
 
+         if (work[0]=='@') {
+            foundAtSign = kTRUE;
+            Int_t l = 0;
+            for(l=0;work[l+1]!=0;++l) work[l] = work[l+1];
+            work[l] = '\0';
+            --current;
+         } else if (work[strlen(work)-2]=='@') {
+            foundAtSign = kTRUE;
+            work[strlen(work)-2] = cname[i];
+            work[strlen(work)-1] = '\0';
+            --current;
+         } else {
+            foundAtSign = kFALSE;
+         }
+
          if (left[0]==0) strcpy(left,work);
          if (!leaf && !branch) {
             // So far, we have not found a matching leaf or branch.
@@ -1803,7 +1871,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
             if (!branch) branch = fTree->FindBranch(first);
             if (!leaf) leaf = fTree->FindLeaf(first);
 
-            if (branch && cname[i] != 0) {
+            if (branch && (foundAtSign || cname[i] != 0)  ) {
                // Since we found a branch and there is more information in the name,
                // we do NOT look at the 'IsOnTerminalBranch' status of the leaf
                // we found ... yet!
@@ -1816,11 +1884,21 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
                      if ( type == 3 || type ==4) {
                         // We have a Collection branch.
                         leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+                        if (foundAtSign) {
+                           useLeafCollectionObject = foundAtSign;
+                           foundAtSign = kFALSE;
+                           current = &(work[0]);
+                           *current = 0;
+                           ++i;
+                           break;
+                        }
                      }
                   }
                }
 
                // we reset work
+               useLeafCollectionObject = foundAtSign;
+               foundAtSign = kFALSE;
                current = &(work[0]);
                *current = 0;
             } else if (leaf || branch) {
@@ -1851,6 +1929,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
                      final = kTRUE;
                      strcpy(right,first);
                      //We need to put the delimiter back!
+                     if (foundAtSign) strcat(right,"@");
                      if (cname[i]=='.') strcat(right,".");
 
                      // We reset work
@@ -1927,14 +2006,24 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
                if (second[0]) strcat(second,".");
                strcat(second,work);
                leaf = tmp_leaf;
+               useLeafCollectionObject = foundAtSign;
+               foundAtSign = kFALSE;
 
                // we reset work
                current = &(work[0]);
                *current = 0;
             } else {
                //We need to put the delimiter back!
-               if (strlen(work)) work[strlen(work)] = cname[i];
-               else --current;
+               if (strlen(work)) {
+                  if (foundAtSign) {
+                     Int_t where = strlen(work);
+                     work[where] = '@';
+                     work[where+1] = cname[i];
+                     ++current;
+                  } else {
+                     work[strlen(work)] = cname[i];
+                  }
+               } else --current;
             }
          }
       }
@@ -1987,7 +2076,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
          aliasUsed.push_back(left);
          TString newExpression = aliasValue;
          newExpression += (cname+strlen(left));
-         Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level, castqueue, aliasUsed, fullExpression);
+         Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level, 
+                                           castqueue, aliasUsed, useLeafCollectionObject, fullExpression);
          if (res<0) {
             Error("DefinedVariable",
                   "The substitution of the alias \"%s\" by \"%s\" failed.",left,aliasValue);
@@ -2125,11 +2215,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    }
    cname[k]='\0';
 
+   Bool_t useLeafCollectionObject = kFALSE;
    TString leftover;
    TLeaf *leaf = 0;
    {  
       std::vector<std::string> aliasSofar = fAliasesUsed;
-      res = FindLeafForExpression(cname, leaf, leftover, final, paran_level, castqueue, aliasSofar, name);
+      res = FindLeafForExpression(cname, leaf, leftover, final, paran_level, castqueue, aliasSofar, useLeafCollectionObject, name);
    }
    if (res<0) return res;
 
@@ -2230,7 +2321,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       // Now that we have clean-up the expression, let's compare it to the content
       // of the leaf!
 
-      Int_t res = ParseWithLeaf(leaf,leftover,final,paran_level,castqueue,name);
+      Int_t res = ParseWithLeaf(leaf,leftover,final,paran_level,castqueue,useLeafCollectionObject,name);
       if (res<0) return res;
       if (res>0) action = res;
       return code;

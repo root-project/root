@@ -117,6 +117,9 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
    TH1F *refAlt = RefClone(where,"hAlt");
 
+   TH1F *refSize  = RefClone(where,"hSize");
+   TH1F *refSize2 = RefClone(where,"hSize2");
+
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
@@ -193,6 +196,10 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       if (bits.TestBitNumber(10)) refFiltTriggerBits->Fill(nbits);
 
       ntracks = event->GetNtrack();
+      refSize->Fill(ntracks);
+      refSize->Fill(ntracks);
+      refSize2->Fill(ntracks);
+      refSize2->Fill(ntracks);
       if ( 5 < ntracks ) {
          t = (Track*)tracks->UncheckedAt(5);
          for(i0=0;i0<4;i0++) {

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.237 2005/03/07 18:08:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.238 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2219,6 +2219,26 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //    tree.Draw("sqrt(x)>>+hsqrt","y>0")
 //      will not reset hsqrt, but will continue filling.
 //  This works for 1-D, 2-D and 3-D histograms.
+//
+//     Accessing collection objects
+//     ============================
+//
+//  TTree::Draw default's handling of collections is to assume that any 
+//  request on a collection pertain to it content.  For example, if fTracks
+//  is a collection of Track objects, the following:
+//      tree->Draw("event.fTracks.fPx");
+//  will plot the value of fPx for each Track objects inside the collection.
+//  Also
+//     tree->Draw("event.fTracks.size()");
+//  would plot the result of the member function Track::size() for each
+//  Track object inside the collection.
+//  To access information about the collection itself, TTree::Draw support
+//  the '@' notation.  If a variable which points to a collection is prefixed
+//  or postfixed with '@', the next part of the expression will pertain to
+//  the collection object.  For example:
+//     tree->Draw("event.@fTracks.size()");
+//  will plot the size of the collection refered to by fTracks (i.e the number
+//  of Track objects).
 //
 //     Special functions and variables
 //     ===============================

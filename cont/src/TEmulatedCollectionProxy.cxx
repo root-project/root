@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.7 2005/01/19 18:30:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.8 2005/03/10 22:26:15 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -301,7 +301,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)   {
     if ( idx >= (s/fValDiff) )  {
       return 0;
     }
-    return idx<(c->size()/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
+    return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
   }
   Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
   return 0;

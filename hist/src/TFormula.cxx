@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.90 2005/03/04 18:38:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.91 2005/03/04 19:37:52 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -553,7 +553,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*    28  : strstr requires two arguments
 //*-*    29  : interpreted or compiled function have to return a numerical type
 //*-*    30  : Bad numerical expression
-//*-*    31  : Variable exist but is not accessible
+//*-*    31  : Part of the variable exist but some of it is not accessible or useable
 //*-*    40  : '(' is expected
 //*-*    41  : ')' is expected
 //*-*    42  : '[' is expected
@@ -1838,7 +1838,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
                       <<chaine_error<<endl; break;
         case 30 : cout<<" Bad numerical expression : \""<<(const char*)chaine_error<<"\""<<endl; break;
-        case 31 : cout<<" The Variable :  \""<<(const char*)chaine_error<<"\" exists but is not accessible"<<endl; break;
+        case 31 : cout<<" Part of the Variable :  \""<<(const char*)chaine_error<<"\" exists but some of it is not accessible or useable"<<endl; break;
         case 40 : cout<<" '(' is expected"<<endl; break;
         case 41 : cout<<" ')' is expected"<<endl; break;
         case 42 : cout<<" '[' is expected"<<endl; break;

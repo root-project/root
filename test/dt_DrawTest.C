@@ -56,7 +56,7 @@ void DrawMarks() {
 
 
 //_______________________________________________________________
-TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
+TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
 {
 // Test selections via TreeFormula
 // tree is a TTree when called by stress9
@@ -183,6 +183,12 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    DrawSkippable(tree,"fMatrix-Alt$(fClosestDistance,0)",
                  "",
                  "hAlt", level>1 && gBranchStyle!=0);
+
+   // Test on the @ notation to access the collection object itself
+   DrawSkippable(tree,"event.@fTracks.size()","","hSize",level>2 && !(gBranchStyle==0 && !gHasLibrary));
+   DrawSkippable(tree,"event.fTracks@.size()","","+hSize",level>2 && !(gBranchStyle==0 && !gHasLibrary));
+   DrawSkippable(tree,"@fTracks.size()","","hSize2",level>2 && gBranchStyle!=0);
+   DrawSkippable(tree,"fTracks@.size()","","+hSize2",level>2 && gBranchStyle!=0);
 
    if (quietLevel<2) gBenchmark->Show("DrawTest");   
    else gBenchmark->Stop("DrawTest");  

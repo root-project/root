@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.41 2005/02/18 09:15:08 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.42 2005/03/08 05:33:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -111,12 +111,12 @@ protected:
    Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
    Int_t       DefineAlternate(const char* expression);
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
-   Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, Bool_t &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>&, const char *fullExpression);
+   Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, Bool_t &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>& aliasUsed, Bool_t &useLeafCollectionObject, const char *fullExpression);
    TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
-   Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, const char *fullExpression);
+   Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, Bool_t useLeafCollectionObject, const char *fullExpression);
    Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
-   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info);
+   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, Bool_t useCollectionObject);
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 

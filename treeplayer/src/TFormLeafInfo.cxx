@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.14 2005/02/25 19:13:24 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.15 2005/02/25 21:49:04 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -875,16 +875,16 @@ Bool_t TFormLeafInfoNumerical::Update()
    return kFALSE;
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoClones is a small helper class to implement reading a data member
-// on a TClonesArray object stored in a TTree.
-
 namespace {
    static TStreamerElement gFakeClonesElem("begin","fake",0,
                                            TStreamerInfo::kAny,
                                            "TClonesArray");
 }
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoClones is a small helper class to implement reading a data member
+// on a TClonesArray object stored in a TTree.
 
 //______________________________________________________________________________
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Long_t offset) :
@@ -1030,6 +1030,86 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance) {
                                     sub_instance);
    }
    return clones;
+}
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoCollectionObject is a small helper class to implement reading a data member
+// on a TClonesArray object stored in a TTree.
+
+//______________________________________________________________________________
+TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr) :
+   TFormLeafInfo(classptr,0,&gFakeClonesElem)
+{
+}
+
+//______________________________________________________________________________
+Int_t TFormLeafInfoCollectionObject::GetCounterValue(TLeaf* leaf) 
+{
+   // Return the current size of the the TClonesArray
+
+   return 1;
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoCollectionObject::ReadValue(char *where, Int_t instance) 
+{
+   // Return the value of the underlying data member inside the
+   // clones array.
+
+   Assert(0);
+   return 0;
+}
+
+//______________________________________________________________________________
+void* TFormLeafInfoCollectionObject::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
+{
+   // Return the pointer to the clonesArray
+
+   void* collection;
+   if (leaf->InheritsFrom("TLeafObject") ) {
+      collection = ((TLeafObject*)leaf)->GetObject();
+   } else {
+      collection = ((TBranchElement*)leaf->GetBranch())->GetObject();
+   }
+   return collection;
+}
+
+//______________________________________________________________________________
+void* TFormLeafInfoCollectionObject::GetLocalValuePointer(char *where, Int_t instance) {
+   return TFormLeafInfo::GetLocalValuePointer(where,instance);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoCollectionObject::GetValue(TLeaf *leaf, Int_t instance) {
+   // Return the value of the underlying data member inside the
+   // clones array.
+
+   char * obj = (char*)GetLocalValuePointer(leaf);
+
+   if (fNext==0) return 0;
+   return fNext->ReadValue(obj,instance);
+}
+
+//______________________________________________________________________________
+void * TFormLeafInfoCollectionObject::GetValuePointer(TLeaf *leaf, Int_t instance) {
+   // Return the pointer to the clonesArray
+
+   void *collection = GetLocalValuePointer(leaf);
+   if (fNext) {
+      return fNext->GetValuePointer((char*)collection,instance);
+   }
+   return collection;
+}
+
+//______________________________________________________________________________
+void * TFormLeafInfoCollectionObject::GetValuePointer(char *where, Int_t instance) {
+   // Return the pointer to the clonesArray
+
+   if (fNext) {
+      return fNext->GetValuePointer(where,instance);
+   }
+   return where;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.2 2005/02/25 19:13:24 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -125,6 +125,29 @@ public:
    virtual TFormLeafInfo* DeepCopy() const;
    virtual ~TFormLeafInfoNumerical();
    virtual Bool_t    Update();
+};
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoCollectionObject
+// This class is used when we are interested by the collection it self and
+// it is split.
+
+class TFormLeafInfoCollectionObject : public TFormLeafInfo {
+public:
+   TFormLeafInfoCollectionObject(TClass* classptr = 0);
+
+   virtual TFormLeafInfo* DeepCopy() const {
+      return new TFormLeafInfoCollectionObject(*this);
+   }
+
+   virtual Int_t     GetCounterValue(TLeaf* leaf);
+   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
+   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
+   virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
 };
 
 //______________________________________________________________________________
