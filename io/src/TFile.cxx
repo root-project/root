@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.53 2002/02/11 09:08:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.54 2002/02/25 07:38:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -471,7 +471,6 @@ void TFile::Close(Option_t *)
    if (!IsOpen()) return;
 
    if (IsWritable()) {
-      TStreamerInfo::SetCurrentFile(this);
       WriteStreamerInfo();
    }
 
@@ -518,7 +517,6 @@ void TFile::Close(Option_t *)
       gFile      = 0;
       gDirectory = gROOT;
    }
-   TStreamerInfo::SetCurrentFile(gFile);
 
    //delete the TProcessIDs
    TIter next(fProcessIDs);
