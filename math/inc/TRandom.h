@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.5 2003/01/26 21:03:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.6 2003/11/23 16:13:08 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
    virtual  Double_t Rndm(Int_t i=0);
    virtual  void     RndmArray(Int_t n, Float_t *array);
    virtual  void     RndmArray(Int_t n, Double_t *array);
+   virtual  void     Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong);
    virtual  Double_t Uniform(Double_t x1=1);
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
    virtual  void     WriteRandom(const char *filename);
