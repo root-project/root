@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.5 2004/05/18 11:32:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.6 2004/05/30 23:14:18 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -44,6 +44,10 @@ class TSlaveStat;
 class TPacketizer2 : public TVirtualPacketizer {
 
 private:
+   class TFileNode;
+   class TFileStat;
+   class TSlaveStat;
+
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
    TProofStats   *fStat;         // PROOF runtime statistics
