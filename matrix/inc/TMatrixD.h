@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.13 2002/05/03 15:18:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.14 2002/07/05 22:25:20 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -164,11 +164,17 @@ public:
 
    TMatrixD EigenVectors(TVectorD &eigenValues);
 
+   TMatrixD &MakeSymmetric();
    TMatrixD &UnitMatrix();
    TMatrixD &HilbertMatrix();
 
    TMatrixD &operator*=(const TMatrixD &source);
    TMatrixD &operator*=(const TMatrixDDiag &diag);
+   TMatrixD &operator/=(const TMatrixDDiag &diag);
+   TMatrixD &operator*=(const TMatrixDRow &diag);
+   TMatrixD &operator/=(const TMatrixDRow &diag);
+   TMatrixD &operator*=(const TMatrixDColumn &diag);
+   TMatrixD &operator/=(const TMatrixDColumn &diag);
 
    void Mult(const TMatrixD &a, const TMatrixD &b);
 
@@ -177,6 +183,9 @@ public:
    Double_t ColNorm() const;
    Double_t Norm1() const { return ColNorm(); }
    Double_t E2Norm() const;
+   TMatrixD &NormByDiag(const TVectorD &v, Option_t *option="D");
+   TMatrixD &NormByColumn(const TVectorD &v, Option_t *option="D");
+   TMatrixD &NormByRow(const TVectorD &v, Option_t *option="D");
 
    Double_t Determinant() const;
 
