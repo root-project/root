@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.103 2002/10/23 06:26:58 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.104 2002/10/23 11:15:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1981,18 +1981,18 @@ void THistPainter::PaintContour(Option_t *option)
    ncontour  = fH->GetContour();
    if (!ncontour) {
       ncontour = 20;
-      fH->SetContour(ncontour);
    }
    if (ncontour > kMAXCONTOUR) {
       Warning("PaintContour", "maximum number of contours is %d, asked for %d",
               kMAXCONTOUR, ncontour);
       ncontour = kMAXCONTOUR-1;
-      fH->SetContour(ncontour);
    }
+   // Initialise contourlevels, possibly change to logarithmic
+   fH->SetContour(ncontour);
 
    for (i=0;i<ncontour;i++) levels[i] = fH->GetContourLevel(i);
-   //levels[ncontour] = fH->GetMaximum();
-   //ncontour++;
+   //for (i=0;i<ncontour;i++)
+   //   levels[i] = Hparam.zmin+(Hparam.zmax-Hparam.zmin)/ncontour*i;
    Int_t linesav   = fH->GetLineStyle();
    Int_t colorsav  = fH->GetLineColor();
    Int_t fillsav  = fH->GetFillColor();
@@ -2047,6 +2047,16 @@ void THistPainter::PaintContour(Option_t *option)
          zc[1] = fH->GetBinContent(i+1, j);
          zc[2] = fH->GetBinContent(i+1, j+1);
          zc[3] = fH->GetBinContent(i,   j+1);
+         if (Hoption.Logz) {
+            if (zc[0] > 0)   zc[0] = TMath::Log10(zc[0]);
+            else             zc[0] = Hparam.zmin;
+            if (zc[1] > 0)   zc[1] = TMath::Log10(zc[1]);
+            else             zc[1] = Hparam.zmin;
+            if (zc[2] > 0)   zc[2] = TMath::Log10(zc[2]);
+            else             zc[2] = Hparam.zmin;
+            if (zc[3] > 0)   zc[3] = TMath::Log10(zc[3]);
+            else             zc[3] = Hparam.zmin;
+        }
          for (k=0;k<4;k++) {
             ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
          }
@@ -2269,11 +2279,23 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
       pdif = diff/tdif;
       xlen = tlen*pdif;
       if (vert) {
-         xarr[i] = x1;
-         yarr[i] = y1 + xlen;
+         if (Hoption.Logx)
+           xarr[i] = TMath::Log10(x1);
+         else
+           xarr[i] = x1;
+         if (Hoption.Logy)
+           yarr[i] = TMath::Log10(y1 + xlen);
+         else
+           yarr[i] = y1 + xlen;
       } else {
-         xarr[i] = x1 + xlen;
-         yarr[i] = y1;
+         if (Hoption.Logx)
+           xarr[i] = TMath::Log10(x1 + xlen);
+         else
+           xarr[i] = x1 + xlen;
+         if (Hoption.Logy)
+           yarr[i] = TMath::Log10(y1);
+         else
+           yarr[i] = y1;
       }
       itarr[i] = n;
       icount++;
