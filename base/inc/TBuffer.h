@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.3 2000/07/12 16:32:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.4 2000/12/12 18:22:11 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -295,11 +295,11 @@ inline TBuffer &TBuffer::operator>>(Int_t &i)
 }
 
 //______________________________________________________________________________
-inline TBuffer &TBuffer::operator>>(Long_t &l)
-{
-   frombuf(fBufCur, &l);
-   return *this;
-}
+//inline TBuffer &TBuffer::operator>>(Long_t &l)
+//{
+//   frombuf(fBufCur, &l);
+//   return *this;
+//}
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(Float_t &f)

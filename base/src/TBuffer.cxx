@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.8 2001/03/09 08:45:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.10 2001/03/09 18:11:38 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "TFile.h"
 #include "TBuffer.h"
 #include "TExMap.h"
 #include "TObjPtr.h"
@@ -100,6 +101,49 @@ TBuffer::~TBuffer()
       delete fWriteMap;
 
    fReadMap = 0;
+}
+
+//______________________________________________________________________________
+void frombufOld(char *&buf, ULong_t *x)
+{
+// files written with versions older than 3.00/06 had a non-portable
+// implementation of Long_t/ULong_t. These types should not have been used at all.
+// However, because some users had already written many files with these types
+// we provide this dirty patch for "backward compatibility"
+   
+#ifdef R__BYTESWAP
+#ifdef R__B64
+   char *sw = (char *)x;
+   sw[0] = buf[7];
+   sw[1] = buf[6];
+   sw[2] = buf[5];
+   sw[3] = buf[4];
+   sw[4] = buf[3];
+   sw[5] = buf[2];
+   sw[6] = buf[1];
+   sw[7] = buf[0];
+#else
+   char *sw = (char *)x;
+   sw[0] = buf[3];
+   sw[1] = buf[2];
+   sw[2] = buf[1];
+   sw[3] = buf[0];
+#endif
+#else
+   memcpy(x, buf, sizeof(ULong_t));
+#endif
+   buf += sizeof(ULong_t);
+}
+
+//______________________________________________________________________________
+TBuffer &TBuffer::operator>>(Long_t &l)
+{
+   if (gFile->GetVersion() >= 30006) {
+      frombuf(fBufCur, &l);
+   } else {
+      frombufOld(fBufCur, &l);
+   }   
+   return *this;
 }
 
 //______________________________________________________________________________
