@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.36 2003/01/31 17:00:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.37 2003/02/15 05:41:04 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1834,12 +1834,12 @@ ofstream indexFile;
             indexFile << "\" href=\"";
             indexFile << htmlFile;
             indexFile << "\">";
-            indexFile << classNames[i];
+            ReplaceSpecialChars(indexFile, classNames[i]);
             indexFile << "</a> ";
             delete[]htmlFile;
             htmlFile = 0;
          } else
-	    indexFile << classNames[i];
+            ReplaceSpecialChars(indexFile, classNames[i]);
 
 
          // write title
@@ -2174,11 +2174,12 @@ void THtml::DerivedClasses(ofstream & out, TClass * classPtr)
                out << "<a href=\"";
                out << htmlFile;
                out << "\">";
-               out << derivedClassPtr->GetName() << "</a>";
+               ReplaceSpecialChars(out, derivedClassPtr->GetName());
+               out << "</a>";
                delete[]htmlFile;
                htmlFile = 0;
             } else
-               out << derivedClassPtr->GetName();
+               ReplaceSpecialChars(out, derivedClassPtr->GetName());
 
             if (first) {
                first = kFALSE;
