@@ -85,7 +85,8 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
   Double_t max = 0;
   Int_t iLower = 0;
 
-  for(Int_t i = 0; i <= nNuSteps; i++) {
+  Int_t i;
+  for(i = 0; i <= nNuSteps; i++) {
     mu = MUMIN + (Double_t)i*MUSTEP;
     Int_t goodChoice = FindLimitsFromTable( mu );
     if( goodChoice ) {
@@ -106,7 +107,7 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
   if (fQUICK)          quickJump = Nobserved-Nbackground-MUMIN;
   if (quickJump < 0.0) quickJump = 0.0;
 
-  for(Int_t i = iLower+1; i <= nNuSteps; i++) {
+  for(i = iLower+1; i <= nNuSteps; i++) {
     mu = MUMIN + (Double_t)i*MUSTEP + quickJump;
     Int_t goodChoice = FindLimitsFromTable( mu );
     if( !goodChoice ) {
@@ -138,7 +139,8 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
   Double_t ProbMuBest[NMAX];
 
   //calculate P(i | mu) and P(i | mu)/P(i | mubest)
-  for(Int_t i = 0; i < NMAX; i++) {
+  Int_t i;
+  for(i = 0; i < NMAX; i++) {
     MuBest[i] = (Double_t)(i - fNbackground);
     if(MuBest[i]<0.0) MuBest[i] = 0.0;
     ProbMuBest[i] = Prob(i, MuBest[i],  fNbackground);
@@ -154,7 +156,7 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
   Double_t sum = 0.0;
   Int_t iMax = rank[0];
   Int_t iMin = rank[0];
-  for(Int_t i = 0; i < NMAX; i++) {
+  for(i = 0; i < NMAX; i++) {
     sum += P[rank[i]];
     if(iMax < rank[i]) iMax = rank[i];
     if(iMin > rank[i]) iMin = rank[i];
