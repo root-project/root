@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.8 2000/11/22 15:47:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.9 2000/12/02 16:26:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -86,8 +86,6 @@ public:
    void           Draw(Option_t *option="");
    void          *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    char          *EscapeChars(char * text);
-   void           FillStreamerInfoList(TList *list);
-   void           PrintStreamerInfoList(TList *list);
    UInt_t         GetCheckSum() const;
    Version_t      GetClassVersion() const { return fClassVersion; }
    TDataMember   *GetDataMember(const char *datamember);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.15 2000/11/23 08:15:39 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.16 2000/12/02 16:26:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1085,107 +1085,6 @@ TStreamerInfo *TClass::SetStreamerInfo(Int_t version, const char *info)
    delete [] temp;
 */
    return 0;
-}
-
-//______________________________________________________________________________
-void TClass::FillStreamerInfoList(TList *list)
-{
-   // Fill a TList with all attributes names and types corresponding
-   // to this class, base classes, used classes, etc. The TList will contain
-   // a list of TNamed objects with attributeName and attributeType.
-   // Class names are recursively analyzed to end-up with basic types only.
-   // Other types are resolved to known basic types. The TList will own
-   // the TNamed objects in it.
-
-/*
-   if (list == 0) return;
-   if (list->FindObject(GetName())) return;
-   //discard some standard Root classes
-   if (InheritsFrom("TCollection")) return;
-   if (InheritsFrom("TClass")) return;
-   if (this == TString::Class()) return;
-
-   //build Streamer info
-   const char *infobase = GetStreamerInfo();
-
-   //add itself to the list
-   TNamed *named = new TNamed(GetName(),infobase);
-   named->SetUniqueID((UInt_t)fClassVersion);
-   list->Add(named);
-   list->IsOwner();
-
-   //loop on streamerinfo tokens separated by ";"
-   const char *info = infobase;
-   Int_t nch;
-   char *star;
-   while(1) {
-      Bool_t update = kTRUE;
-      char *colon = (char*)strchr(info,';');
-      if (colon == 0) break;
-      nch = (Int_t)(colon-info);
-      char *token = new char[nch+1];
-      strncpy(token,info,nch);
-      token[nch] = 0;
-      star = (char*)strchr(token,'*'); if (star) *star = 0;
-      star = (char*)strchr(token,'*'); if (star) *star = 0;
-      char *blank = (char*)strchr(token,' ');
-      if (blank) *blank=0;
-      //check if type is already in the list
-      if (!list->FindObject(token)) {
-         //Is it a class name?
-         TClass *cl = gROOT->GetClass(token,update);
-         update = kFALSE;
-         if (cl) {
-            cl->FillStreamerInfoList(list);
-         } else {
-            //it is a basic type. do not store standard Root basic types
-            if (!gROOT->GetListOfTypes()->FindObject(token)) {
-               TNamed *named = new TNamed(token,token);
-               list->Add(named);
-            }
-         }
-      }
-      delete [] token;
-      info += nch+1;
-   }
-*/
-}
-
-//______________________________________________________________________________
-void TClass::PrintStreamerInfoList(TList *list)
-{
-   // Print streamerInfo items in the list.
-   // If the list pointer is 0, print StreamerInfo for this class.
-
-/*
-   TList *l = list;
-   if (list == 0) {
-      l = new TList();
-      FillStreamerInfoList(l);
-   }
-   TIter next(l);
-   TNamed *named;
-   while ((named = (TNamed*)next())) {
-      if (named->GetUniqueID()) printf("%s;%d\n",named->GetName(),named->GetUniqueID());
-      else                      printf(" %s\n",named->GetName());
-      char *info = (char*)named->GetTitle();
-      while(1) {
-         Int_t len = strlen(info);
-         if (len < 50) {
-            printf("     %s\n",info);
-            break;
-         } else {
-            char *colon = strstr(&info[40],";");
-            *colon = 0;
-            printf("     %s;\n",info);
-            *colon = ';';
-            info = colon + 1;
-         }
-      }
-   }
-   if (list == 0)
-      delete l;
-*/
 }
 
 //______________________________________________________________________________
