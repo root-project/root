@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.19 2002/06/17 15:38:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.20 2002/07/23 11:11:26 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -231,6 +231,9 @@ public:
 
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
 #ifndef __CINT__
+   
+#include <typeinfo>
+   
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 {
    // Read TObject derived classes from a TBuffer. Need to provide
