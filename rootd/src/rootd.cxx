@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.77 2004/01/19 22:42:07 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.78 2004/01/24 11:20:41 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2044,9 +2044,6 @@ void RootdLoop()
 
    // CleanUp authentication table, if needed or required ...
    RpdCheckSession();
-
-   // Init Random machinery ...
-   RpdInitRand();
 
    // Get Host name
    const char *OpenHost = NetRemoteHost();

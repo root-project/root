@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.55 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.56 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -916,9 +916,6 @@ void ProofdExec()
    CheckGlobus(gRcFile);
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
-
-   // Init Random machinery ...
-   RpdInitRand();
 
    // Get Host name
    const char *OpenHost = NetRemoteHost();
