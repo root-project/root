@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.10 2000/12/15 19:41:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.11 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1033,10 +1033,6 @@ void TProofServ::Setup()
 
    // Send packages off immediately to reduce latency
    fSocket->SetOption(kNoDelay, 1);
-
-   // Use large buffers
-   fSocket->SetOption(kSendBuffer, 65536);
-   fSocket->SetOption(kRecvBuffer, 65536);
 
    // Check every two hours if client is still alive
    fSocket->SetOption(kKeepAlive, 1);
