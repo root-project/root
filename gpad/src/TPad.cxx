@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.127 2004/04/08 14:05:18 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.128 2004/04/30 13:28:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3562,7 +3562,10 @@ void TPad::Print(const char *filenam, Option_t *option)
 //
 //   if option  =  0   - as "ps"
 //               "ps"  - Postscript file is produced (see special cases below)
+//          "Portrait" - Postscript file is produced (Portrait)
+//         "Landscape" - Postscript file is produced (Landscape)
 //               "eps" - an Encapsulated Postscript file is produced
+//           "Preview" - an Encapsulated Postscript file with preview is produced.
 //               "pdf" - a PDF file is produced
 //               "svg" - a SVG file is produced
 //               "gif" - a GIF file is produced
@@ -3586,6 +3589,13 @@ void TPad::Print(const char *filenam, Option_t *option)
 //        gStyle->SetPaperSize(20,26);  same as kA4
 // or     gStyle->SetPaperSize(20,24);  same as kUSLetter
 //   The above numbers take into account some margins and are in centimeters.
+//
+//  The "Preview" option allows to generate a preview (in the TIFF format) within
+//  the Encapsulated Postscript file. This preview can be used by programs like
+//  MSWord to visualize the picture on screen. The "Preview" option relies on the 
+//  epstool command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+//  Example:
+//     canvas->Print("example.eps","Preview");
 //
 //  To generate a Postscript file containing more than one picture, see
 //  class TPostScript.
@@ -3749,6 +3759,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (strstr(opt,"Portrait"))  pstype = 111;
    if (strstr(opt,"Landscape")) pstype = 112;
    if (strstr(opt,"eps"))       pstype = 113;
+   if (strstr(opt,"Preview"))   pstype = 113;
    if (strstr(opt,"pdf"))       pstype = 111;
    TPad *padsav = (TPad*)gPad;
    cd();
@@ -3802,6 +3813,8 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS = 0;
       }
    }
+
+   if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname,psname));
 
    padsav->cd();
 }
