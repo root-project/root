@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.rdl,v 1.12 2001/11/14 18:42:36 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.13 2001/11/19 07:23:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -38,7 +38,7 @@ public:
   virtual void syncNormalization(const RooArgSet* nset) const ;
   virtual void normLeafServerList(RooArgSet& list) const ;
 
-  virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.64 2002/04/08 22:08:39 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.65 2002/04/17 20:08:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -744,7 +744,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   return generated;
 }
 
-Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars) const {
+Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars, Bool_t staticInitOK) const {
   // Load generatedVars with the subset of directVars that we can generate events for,
   // and return a code that specifies the generator algorithm we will use. A code of
   // zero indicates that we cannot generate any of the directVars (in this case, nothing

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.rdl,v 1.9 2001/11/05 18:50:50 verkerke Exp $
+ *    File: $Id: RooTruthModel.rdl,v 1.10 2002/03/25 22:09:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -37,7 +37,7 @@ public:
   
   virtual Int_t basisCode(const char* name) const ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.28 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.29 2002/05/15 01:40:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.28 2002/04/03 23:37:25 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.29 2002/05/15 01:40:16 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -111,9 +111,13 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     return;
   }
 
+  // If PDF depends on prototype data, direct generator cannot use static initialization
+  // in initGenerator()
+  Bool_t staticInitOK = !_pdfClone->dependsOn(_protoVars) ;
+  
   // Can the model generate any of the direct variables itself?
   RooArgSet generatedVars;
-  _code= _pdfClone->getGenerator(_directVars,generatedVars);
+  _code= _pdfClone->getGenerator(_directVars,generatedVars,staticInitOK);
 
   // Move variables which cannot be generated into the list to be generated with accept/reject
   _directVars.remove(generatedVars);

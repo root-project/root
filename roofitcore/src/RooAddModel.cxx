@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.25 2002/05/15 23:36:23 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.26 2002/05/16 00:20:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -646,7 +646,7 @@ Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 
 
 
-Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   // Ask all the components what they can generate
 
@@ -660,7 +660,7 @@ Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &generate
     model = (RooResolutionModel*) proxy->absArg() ;
 
     RooArgSet subGenVars ;
-    subcode[n] = model->getGenerator(directVars,subGenVars) ;
+    subcode[n] = model->getGenerator(directVars,subGenVars,staticInitOK) ;
     //cout << "component #" << n << " returns generator code " << subcode[n] << endl ;
 
     // For composite direct generation to work each component must be able to generate entire request
