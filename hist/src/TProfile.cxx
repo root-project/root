@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.48 2004/05/26 11:31:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.49 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1447,15 +1447,33 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
    // - variable bin size not implemented
    // - SetErrorOption not implemented
 
+   Bool_t nonEqiX = kFALSE;
+   Int_t i;
+   // Check if the profile has equidistant X bins or not.  If not, we
+   // create an array holding the bins.
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
+      nonEqiX = kTRUE;
+      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN
+ 	 << "] = {";
+      for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetXaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+   
    char quote = '"';
    out<<"   "<<endl;
    out<<"   "<<ClassName()<<" *";
 
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-                 <<","<<GetXaxis()->GetNbins()
-                 <<","<<GetXaxis()->GetXmin()
-                 <<","<<GetXaxis()->GetXmax()
-                 <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
+                 <<","<<GetXaxis()->GetNbins();
+   if (nonEqiX)
+      out << ", xAxis";
+   else
+      out << "," << GetXaxis()->GetXmin()
+	  << "," << GetXaxis()->GetXmax()
+          <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
 
    // save bin entries
    Int_t bin;
