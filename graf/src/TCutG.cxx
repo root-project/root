@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.2 2000/06/13 10:51:17 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -39,18 +39,17 @@
 //  The TTree expressions may or may not reference the same variables   //
 //  than in the fVarX, fVarY of the graphical cut.                      //
 //                                                                      //
-//  When the TCutG object is created via the graphics editor, it is     //
-//  added to the list of primitives in the pointed pad. To retrieve     //
-//  a pointer to this object from the code or command line, do:         //
-//      TCutG *mycutg = (TCutG*)gPad->GetPrimitive("CUTG");             //
+//  When the TCutG object is created, it is added to the list of special//
+//  objects in the main TROOT object pointed by gROOT. To retrieve a    //
+//  pointer to this object from the code or command line, do:           //
+//      TCutG *mycutg;                                                  //
+//      mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG") //
 //      mycutg->SetName("mycutg");                                      //
 //                                                                      //
 //  A Graphical cut may be drawn via TGraph::Draw.                      //
 //  It can be edited like a normal TGraph.                              //
 //                                                                      //
 //  A Graphical cut may be saved to a file via TCutG::Write.            //                                                                     //
-//                                                                      //
-//  A TCutG object is added in the gROOT->GetListOfSpecials             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
