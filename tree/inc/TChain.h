@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.9 2000/11/21 20:47:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.10 2000/12/13 15:13:54 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -46,7 +46,9 @@ public:
     TChain(const char *name, const char *title="");
     virtual ~TChain();
 
-    virtual void      Add(const char *name, Int_t nentries=-1);
+    virtual Int_t     Add(TChain *chain);
+    virtual Int_t     Add(const char *name, Int_t nentries=-1);
+    virtual Int_t     AddFile(const char *name, Int_t nentries);
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
@@ -54,6 +56,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Fill() {MayNotUse("TChain::Fill()"); return -1;}
     virtual TBranch  *GetBranch(const char *name);
     virtual Int_t     GetChainEntryNumber(Int_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}

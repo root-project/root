@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.11 2000/11/21 20:49:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.12 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "TChainElement.h"
+#include "TSystem.h"
+#include "TRegexp.h"
 
 #include <math.h>
 #include <float.h>
@@ -118,15 +120,99 @@ TChain::~TChain()
 
 
 //______________________________________________________________________________
-void TChain::Add(const char *name, Int_t nentries)
+Int_t TChain::Add(TChain *chain)
 {
-//       Add a new element to this chain.
-//       An element can be the name of another chain or the name of a file
-//       containing a tree.
+// Add all files referenced by the TChain chain to this chain.
+   
+   //Check enough space in fTreeOffset
+   if (fNtrees+chain->GetNtrees() >= fTreeOffsetLen) {
+      fTreeOffsetLen += 2*chain->GetNtrees();
+      Int_t *trees = new Int_t[fTreeOffsetLen];
+      for (Int_t i=0;i<=fNtrees;i++) trees[i] = fTreeOffset[i];
+      delete [] fTreeOffset;
+      fTreeOffset = trees;
+   }
+
+   TIter next(chain->GetListOfFiles());
+   TChainElement *element, *newelement;
+   Int_t nf = 0;
+   while ((element = (TChainElement*)next())) {
+      Int_t nentries = element->GetEntries();
+      fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+      fNtrees++;
+      fEntries += nentries;
+      newelement = new TChainElement(element->GetName(),element->GetTitle());
+      newelement->SetPacketSize(element->GetPacketSize());
+      newelement->SetNumberEntries(nentries);
+      fFiles->Add(newelement);
+      nf++;
+   }
+   return nf;
+}
+
+//______________________________________________________________________________
+Int_t TChain::Add(const char *name, Int_t nentries)
+{
+//       Add a new file to this chain.
 //    name may have the following format:
 //       //machine/file_name.root/subdir/tree_name
 //      machine, subdir and tree_name are optional. If tree_name is missing,
 //      the chain name will be assumed.
+//    name may use the wildcarding notation, eg "xxx*.root" means all files
+//    starting with xxx in the current file system directory.
+// 
+//    if nentries < 0, the file is connected and the tree header read in memory
+//    to get the number of entries.
+//    if (nentries >= 0, the file is not connected, nentries is assumed to be
+//    the number of entries in the file. In this case, no check is made that
+//    the file exists and the Tree existing in the file. This second mode
+//    is interesting in case the number of entries in the file is already stored
+//    in a run data base for example.
+//  NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
+
+   // case with one single file
+   if (strchr(name,'*') == 0) {
+      return AddFile(name,nentries);
+   }
+
+   // wildcarding used in name
+   Int_t nf = 0;
+   Int_t nch = strlen(name);
+   char *aname = new char[nch+1];
+   strcpy(aname,name);
+   char *dot = (char*)strstr(aname,".root");
+   if (dot) *dot = 0;
+   char *slash = strrchr(aname,'/');
+   if (slash) {
+      *slash = 0;
+      slash++;
+      strcat(slash,".root");
+   } else {
+      strcpy(aname,gSystem->WorkingDirectory());
+      slash = (char*)name;
+   }
+   
+   const char *file;
+   void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(aname));
+
+   if (dir) {
+      TRegexp re(slash,kTRUE);
+      while ((file = gSystem->GetDirEntry(dir))) {
+         if (!strcmp(file,".") || !strcmp(file,"..")) continue;
+         //if (IsDirectory(file)) continue;
+         TString s = file;
+         if (strcmp(slash,file) && s.Index(re) == kNPOS) continue;
+         nf += AddFile(Form("%s/%s",aname,file),-1);
+      }
+      gSystem->FreeDirectory(dir);
+   }   
+   return nf;
+}
+
+//______________________________________________________________________________
+Int_t TChain::AddFile(const char *name, Int_t nentries)
+{
+//       Add a new file to this chain.
 //
 //    if nentries < 0, the file is connected and the tree header read in memory
 //    to get the number of entries.
@@ -140,8 +226,8 @@ void TChain::Add(const char *name, Int_t nentries)
    char *treename = (char*)GetName();
    char *dot = (char*)strstr(name,".root");
    if (!dot) {
-      Error("Add","a chain element name must contain the string .root");
-      return;
+      Error("AddFile","a chain element name must contain the string .root");
+      return 0;
    }
 
    //Check enough space in fTreeOffset
@@ -174,7 +260,7 @@ void TChain::Add(const char *name, Int_t nentries)
       if (file->IsZombie()) {
          delete file;
          delete [] filename;
-         return;
+         return 0;
       }
 
    //Check that tree with the right name exists in the file
@@ -185,10 +271,10 @@ void TChain::Add(const char *name, Int_t nentries)
          obj = file->Get(treename);
       }
       if (!obj || !obj->InheritsFrom("TTree") ) {
-         Error("Add","cannot find tree with name %s", treename);
+         Error("AddFile","cannot find tree with name %s in file %s", treename,filename);
          delete file;
          delete [] filename;
-         return;
+         return 0;
       }
       TTree *tree = (TTree*)obj;
       nentries = (Int_t)tree->GetEntries();
@@ -208,6 +294,7 @@ void TChain::Add(const char *name, Int_t nentries)
 
    delete [] filename;
    if (cursav) cursav->cd();
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -478,7 +565,11 @@ void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 //______________________________________________________________________________
 void TChain::ls(Option_t *option) const
 {
-   fFiles->ls(option);
+   TIter next(fFiles);
+   TChainElement *file;
+   while ((file = (TChainElement*)next())) {
+      file->ls();
+   }
 }
 
 //______________________________________________________________________________
@@ -593,7 +684,16 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //______________________________________________________________________________
 void TChain::Print(Option_t *option) const
 {
-   fFiles->ls(option);
+   TIter next(fFiles);
+   TChainElement *element;
+   while ((element = (TChainElement*)next())) {
+      TFile *file = TFile::Open(element->GetTitle());
+      if (!file->IsZombie()) {
+         TTree *tree = (TTree*)file->Get(element->GetName());
+         tree->Print(option);
+      }
+      delete file;
+   }
 }
 
 //______________________________________________________________________________
