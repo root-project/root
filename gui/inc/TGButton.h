@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.20 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.21 2004/01/05 17:44:09 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -84,6 +84,7 @@ protected:
 
    virtual void   SetGroup(TGButtonGroup *group);
    virtual void   SetToggleButton(Bool_t) { }
+   virtual void   EmitSignals(Bool_t wasUp);
 
    static const TGGC *fgDefaultGC;
    static const TGGC *fgHibckgndGC;

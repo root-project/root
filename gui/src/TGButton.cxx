@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.30 2004/04/29 14:35:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.31 2004/04/30 14:57:15 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -197,18 +197,28 @@ Bool_t TGButton::HandleButton(Event_t *event)
    Bool_t now = !IsDown();          // kTRUE if button now is off
 
    if (in) { 
-      // emit signals
-      if (was && !now) {
-         Pressed();                 // emit Pressed  = was off , now on
-         if (fStayDown) Clicked();  // emit Clicked
-      }
-      if (!was && now) {
-         Released();                // emit Released = was on , now off
-         Clicked();                 // emit Clicked
-      }
-      if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
+      EmitSignals(was);
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGButton::EmitSignals(Bool_t was)
+{
+   //
+
+   Bool_t now = !IsDown();          // kTRUE if button now is off
+
+   // emit signals
+   if (was && !now) {
+      Pressed();                 // emit Pressed  = was off , now on
+      if (fStayDown) Clicked();  // emit Clicked
+   }
+   if (!was && now) {
+      Released();                // emit Released = was on , now off
+      Clicked();                 // emit Clicked
+   }
+   if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
 }
 
 //______________________________________________________________________________
@@ -230,11 +240,11 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
 
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
-   if (event->fType == kEnterNotify)
-      SetState(kButtonDown);
-   else
+   if (event->fType == kEnterNotify) {
+      SetState(kButtonDown); 
+   } else {
       SetState(kButtonUp);
-
+   }
    return kTRUE;
 }
 
@@ -444,11 +454,13 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
    // Handle key event. This function will be called when the hotkey is hit.
 
    Bool_t click = kFALSE;
+   Bool_t was = !IsDown();   // kTRUE if button was off
 
-   if (event->fType == kGKeyPress)
+   if (event->fType == kGKeyPress) {
       gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else
+   } else {
       gVirtualX->SetKeyAutoRepeat(kTRUE);
+   }
 
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
@@ -463,10 +475,11 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
    } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       if (fState == kButtonEngaged /*&& !allowRelease*/) return kTRUE;
       click = (fState == kButtonDown);
-      if (click && fStayDown)
+      if (click && fStayDown) {
          SetState(kButtonEngaged);
-      else
+      } else {
          SetState(kButtonUp);
+      }
    }
    if (click) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
@@ -474,6 +487,7 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
                            (Long_t) fUserData);
    }
+   EmitSignals(was);
 
    return kTRUE;
 }
