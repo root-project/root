@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.25 2000/12/18 09:15:56 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.26 2000/12/18 19:22:05 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1875,7 +1875,8 @@ int main(int argc, char **argv)
    while (cl.Next()) {
       int nxt = 0;
       // skip utility class defined in ClassImp
-      if (!strncmp(cl.Fullname(), "R__Init", 7))
+      if (!strncmp(cl.Fullname(), "R__Init", 7) ||
+           strstr(cl.Fullname(), "::R__Init"))
          continue;
       for (i = 0; i < ncls; i++)
          if (!strcmp(clProcessed[i], cl.Fullname())) {
