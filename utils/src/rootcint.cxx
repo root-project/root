@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.16 2000/11/24 14:37:07 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.17 2000/11/27 14:23:11 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -942,10 +942,8 @@ void WritePointersSTL(G__ClassInfo &cl)
    // Write interface function for STL members
 
    char a[80];
-   char clName[256];
-   sprintf(clName,"%s",cl.Name());
-   char *cc = clName;
-   while (*cc) { if (*cc == '<' || *cc == '>') *cc = '_'; cc++;}
+   char clName[G__LONGLINE]; 
+   sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version;
    sprintf(a, "%s::Class_Version()", cl.Fullname());
    version = (int)G__int(G__calc(a));
@@ -1055,10 +1053,8 @@ void WriteShowMembers(G__ClassInfo &cl)
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[12], cvar[64];
-   char clName[256];
-   sprintf(clName,"%s",cl.Name());
-   char *cc = clName;
-   while (*cc) { if (*cc == '<' || *cc == '>') *cc = '_'; cc++;}
+   char clName[G__LONGLINE];
+   sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    char a[80];
    int version;
    sprintf(a, "%s::Class_Version()", cl.Fullname());
@@ -1712,7 +1708,10 @@ int main(int argc, char **argv)
          // Create G__ClassInfo object for this class and process. Be
          // careful with the hardcoded string of trailing options in case
          // these change (STK)
-         char *request = strtok(0, " -!+;");
+         char *request = strtok(0, "-!+;");
+         // just in case remove trailing space and tab
+         int len = strlen(request)-1;
+         while( request[len]==' '||request[len]=='\t' ) request[len--] ='\0';
          G__ClassInfo cl(request);
          if (cl.IsValid())
             clProcessed[ncls] = StrDup(cl.Fullname());
