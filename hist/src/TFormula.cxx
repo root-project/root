@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.84 2005/02/18 09:15:08 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.85 2005/02/18 17:16:59 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -204,8 +204,8 @@ TFormula::TFormula(const char *name,const char *expression) :
    if (old) {
       gROOT->GetListOfFunctions()->Remove(old);
    }
-   if (strcmp(name,"x")==0 || strcmp(name,"y") || 
-       strcmp(name,"z")==0 || strcmp(name,"t") ) 
+   if (strcmp(name,"x")==0 || strcmp(name,"y")==0 || 
+       strcmp(name,"z")==0 || strcmp(name,"t")==0 ) 
    {
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
