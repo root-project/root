@@ -10,7 +10,7 @@
 #include "TBench.h"
 
 THit hit;
-char *demofile = "/tmp/bench.root";
+const char *demofile = "/tmp/bench.root";
 
 //-------------------------------------------------------------
 ClassImp(THit)
