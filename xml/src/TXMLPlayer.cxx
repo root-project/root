@@ -320,7 +320,8 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
               
    fs << tab2 << "if (obj==0) obj = new " << cl->GetName() << ";" << endl;
    
-   for (int n=0;n<=elements->GetLast();n++) {
+   int n;
+   for (n=0;n<=elements->GetLast();n++) {
        
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       if (el==0) continue; 
@@ -527,7 +528,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
    fs << tab2 << "buf.StartClassNode(\"" << cl->GetName() << "\", " 
               << info->GetClassVersion() << ");" << endl;
    
-   for (int n=0;n<=elements->GetLast();n++) {
+   for (n=0;n<=elements->GetLast();n++) {
        
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       if (el==0) continue; 
