@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TArrow::TArrow(): TLine(),TAttFill()
 }
 
 //______________________________________________________________________________
-TArrow::TArrow(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Float_t arrowsize ,Option_t *option)
        :TLine(x1,y1,x2,y2), TAttFill(0,1001)
 {
@@ -105,7 +105,7 @@ void TArrow::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TArrow::DrawArrow(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this arrow with new coordinates*-*-*-*-*-*-*-*-*-*
@@ -127,7 +127,7 @@ void TArrow::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TArrow::PaintArrow(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
+void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this arrow with new coordinates*-*-*-*-*-*-*-*-*-*
@@ -161,8 +161,8 @@ void TArrow::PaintArrow(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
    Float_t rSiz = arrowsize*gPad->GetAbsHNDC()*gPad->GetWh();
    Float_t dSiz = rSiz*TMath::Tan(3.141592*fAngle/360);
    if (lp <= 0) return;
-   Float_t ct = (px2-px1)/lp;
-   Float_t st = (py1-py2)/lp;
+   Double_t ct = (px2-px1)/lp;
+   Double_t st = (py1-py2)/lp;
    Int_t P2x,P2y,P3x,P3y,P0x,P0y;
    if (opt.Contains(">")) {
       P2x = px2 - Int_t(rSiz*ct+st*dSiz-0.5);
@@ -195,18 +195,18 @@ void TArrow::PaintArrow(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
       P0xL = px1;
       P0yL = py1;
    }
-   Float_t XP2  = gPad->AbsPixeltoX(P2x);
-   Float_t YP2  = gPad->AbsPixeltoY(P2y);
-   Float_t XP3  = gPad->AbsPixeltoX(P3x);
-   Float_t YP3  = gPad->AbsPixeltoY(P3y);
-   Float_t XP2L = gPad->AbsPixeltoX(P2xL);
-   Float_t YP2L = gPad->AbsPixeltoY(P2yL);
-   Float_t XP3L = gPad->AbsPixeltoX(P3xL);
-   Float_t YP3L = gPad->AbsPixeltoY(P3yL);
-   Float_t XP0;
-   Float_t YP0;
-   Float_t XP0L;
-   Float_t YP0L;
+   Double_t XP2  = gPad->AbsPixeltoX(P2x);
+   Double_t YP2  = gPad->AbsPixeltoY(P2y);
+   Double_t XP3  = gPad->AbsPixeltoX(P3x);
+   Double_t YP3  = gPad->AbsPixeltoY(P3y);
+   Double_t XP2L = gPad->AbsPixeltoX(P2xL);
+   Double_t YP2L = gPad->AbsPixeltoY(P2yL);
+   Double_t XP3L = gPad->AbsPixeltoX(P3xL);
+   Double_t YP3L = gPad->AbsPixeltoY(P3yL);
+   Double_t XP0;
+   Double_t YP0;
+   Double_t XP0L;
+   Double_t YP0L;
    if (opt.Contains("|")) {
       XP0  = gPad->AbsPixeltoX(P0x);
       YP0  = gPad->AbsPixeltoY(P0y);
@@ -222,7 +222,7 @@ void TArrow::PaintArrow(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
    gPad->PaintLine(XP0,YP0,XP0L,YP0L);
 
 //*-*- Convert points to pad reference system
-   Float_t xp1[4],yp1[4],xp2[4],yp2[4];
+   Double_t xp1[4],yp1[4],xp2[4],yp2[4];
 
    xp1[0] = XP2;    yp1[0] = YP2;
    xp1[1] = gPad->AbsPixeltoX(px2);     yp1[1] = gPad->AbsPixeltoY(py2);

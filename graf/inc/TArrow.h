@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -40,19 +40,19 @@ protected:
 
 public:
         TArrow();
-        TArrow(Float_t x1, Float_t y1,Float_t x2 ,Float_t y2
+        TArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                ,Float_t arrowsize=0.05 ,Option_t *option=">");
         TArrow(const TArrow &arrow);
         virtual ~TArrow();
                 void   Copy(TObject &arrow);
         virtual void   Draw(Option_t *option="");
-        virtual void   DrawArrow(Float_t x1, Float_t y1,Float_t x2 ,Float_t y2
+        virtual void   DrawArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                ,Float_t arrowsize=0.05 ,Option_t *option=">");
         Float_t        GetAngle() {return fAngle;}
         Float_t        GetArrowSize() {return fArrowSize;}
         Option_t      *GetOption() const { return fOption.Data();}
         virtual void   Paint(Option_t *option="");
-        virtual void   PaintArrow(Float_t x1, Float_t y1,Float_t x2 ,Float_t y2
+        virtual void   PaintArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                  ,Float_t arrowsize=0.05 ,Option_t *option=">");
         virtual void   SavePrimitive(ofstream &out, Option_t *option);
         virtual void   SetAngle(Float_t angle=60) {fAngle=angle;} // *MENU*
