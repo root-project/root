@@ -6564,10 +6564,10 @@ void TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t * points,
 }
 
 //______________________________________________________________________________
-void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
-                           Window_t & childw, Int_t & root_x,
-                           Int_t & root_y, Int_t & win_x, Int_t & win_y,
-                           UInt_t & mask)
+void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
+                           Window_t &childw, Int_t &root_x,
+                           Int_t &root_y, Int_t &win_x, Int_t &win_y,
+                           UInt_t &mask)
 {
    // Returns the root window the pointer is logically on and the pointer
    // coordinates relative to the root window's origin.
@@ -6582,19 +6582,18 @@ void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
    UInt_t umask = 0;
    BYTE kbd[256];
 
-   window = (HWND) GDK_DRAWABLE_XID((GdkWindow *)id);
+   window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    rootw = (Window_t)GDK_ROOT_PARENT();
    ::GetCursorPos(&currPt);
    chw = ::WindowFromPoint(currPt);
-   ::ClientToScreen(window, &mousePt);
-   root_x = mousePt.x;
-   root_y = mousePt.y;
-   sPt.x = mousePt.x;
-   sPt.y = mousePt.y;
-   ::ScreenToClient(window, &sPt);
-   win_x = sPt.x;
-   win_y = sPt.y;
    childw = (Window_t)gdk_xid_table_lookup(chw);
+   root_x = currPt.x;
+   root_y = currPt.y;
+
+   ::ClientToScreen(window, &currPt);
+   win_x = currPt.x;
+   win_y = currPt.y;
+
    ::GetKeyboardState (kbd);
 
    if (kbd[VK_SHIFT] & 0x80) {
