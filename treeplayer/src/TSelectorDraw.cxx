@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.31 2004/06/15 15:53:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.32 2004/06/19 09:18:07 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1221,9 +1221,19 @@ void TSelectorDraw::TakeEstimate()
       }
 
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         // we must draw a copy before filling this histogram
-	 TH1 *h2c = h2->DrawCopy(fOption.Data());
-	 h2c->SetStats(kFALSE);
+         if (!h2->TestBit(kCanDelete)) {
+            // case like: T.Draw("y:x>>myhist")
+            // we must draw a copy before filling the histogram h2=myhist
+            // because h2 will be filled below and we do not want to show
+            // the binned scatter-plot, the TGraph being better.
+	    TH1 *h2c = h2->DrawCopy(fOption.Data());
+	    h2c->SetStats(kFALSE);
+         } else {
+            // case like: T.Draw("y:x")
+            // h2 is a temporary histogram (htemp). This histogram
+            // will be automatically deleted by TPad::Clear
+            h2->Draw();
+         }
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill,fV2,fV1);
