@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.45 2004/07/29 10:54:55 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.46 2005/02/09 11:47:27 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1617,6 +1617,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kTE_ENTER:
                if ((Int_t)parm1 == kBarCommand) {
                   ExecuteCommand(fBarCommand->GetText());
+                  fBarCommand->Clear();
                }
                if ((Int_t)parm1 == kBarOption) {
                   fVarDraw = kFALSE;
