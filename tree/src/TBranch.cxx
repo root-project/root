@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.84 2005/03/06 08:43:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.85 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TVirtualPad.h"
 #include "TSystem.h"
 #include "TStreamerInfo.h"
+#include "TBranchBrowsable.h"
 
 TBranch *gBranch;
 
@@ -90,6 +91,7 @@ TBranch::TBranch(): TNamed(), TAttFill(0,1001)
    fDirectory      = 0;
    fSkipZip        = kFALSE;
    fFileName       = "";
+   fBrowsables     = 0;
    gBranch = this;
 }
 
@@ -161,6 +163,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fSplitLevel     = 0;
    fOffset         = 0;
    fNleaves        = 0;
+   fBrowsables     = 0;
    fSkipZip        = kFALSE;
    fAddress        = (char*)address;
    fNBasketRAM     = kMaxRAM+1;
@@ -278,6 +281,7 @@ TBranch::~TBranch()
 
    fLeaves.Delete();
    fBaskets.Delete();
+   delete fBrowsables;
    // Warning. Must use FindObject by name instead of fDirectory->GetFile()
    // because two branches<may point to the same file and the file
    // already deleted in the previous branch
@@ -711,6 +715,16 @@ Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
 }
 
 //______________________________________________________________________________
+TList *TBranch::GetBrowsables() {
+// Returns (and, if 0, creates) browsable objects for this branch
+// See TVirtualBranchBrowsable::FillListOfBrowsables.
+   if (fBrowsables) return fBrowsables;
+   fBrowsables=new TList();
+   TVirtualBranchBrowsable::FillListOfBrowsables(*fBrowsables, this);
+   return fBrowsables;
+}
+
+//______________________________________________________________________________
 const char *TBranch::GetIconName() const
 {
    // Return icon name depending on type of branch.
@@ -977,11 +991,11 @@ Bool_t TBranch::IsAutoDelete() const
 //______________________________________________________________________________
 Bool_t TBranch::IsFolder() const
 {
-//*-*-*-*-*Return TRUE if more than one leaf, FALSE otherwise*-*
-//*-*      ==================================================
-
+//*-*-*-*-*Return TRUE if more than one leaf or browsables, FALSE otherwise*-*
+//*-*      ================================================================
    if (fNleaves > 1) return kTRUE;
-   else              return kFALSE;
+   TList* browsables=const_cast<TBranch*>(this)->GetBrowsables();
+   return (browsables && browsables->GetSize());
 }
 
 //______________________________________________________________________________

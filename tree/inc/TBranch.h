@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.24 2004/11/24 14:11:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.25 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -90,6 +90,7 @@ protected:
     TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
     TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
     TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
+    TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
 
     Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
        void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
@@ -120,6 +121,7 @@ public:
             Int_t    *GetBasketBytes() const {return fBasketBytes;}
             Long64_t *GetBasketEntry() const {return fBasketEntry;}
     virtual Long64_t  GetBasketSeek(Int_t basket) const;
+    virtual TList    *GetBrowsables();
     TDirectory       *GetDirectory() const {return fDirectory;}
     virtual TFile    *GetFile(Int_t mode=0);
     const char       *GetFileName()    const {return fFileName.Data();}

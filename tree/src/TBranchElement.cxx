@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.162 2005/01/13 20:07:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.163 2005/01/19 18:30:58 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 #include "Api.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
-#include "TMethodBrowsable.h"
 
 const Int_t kMaxLen = 1024;
 R__EXTERN  TTree *gTree;
@@ -63,7 +62,6 @@ TBranchElement::TBranchElement(): TBranch()
    fSTLtype = TClassEdit::kNotSTL;
    fCollProxy = 0;
    fCheckSum = 0;
-   fBrowsableMethods = 0;
 }
 
 
@@ -98,7 +96,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchCount2 = 0;
    fObject       = 0;
    fBranchPointer= 0;
-   fBrowsableMethods = 0;
    fNdata        = 1;
    fSTLtype      = TClassEdit::kNotSTL;
    fClassVersion = cl->GetClassVersion();
@@ -347,7 +344,6 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBranchPointer= 0;
    fMaximum      = 0;
    fSTLtype      = TClassEdit::kNotSTL;
-   fBrowsableMethods = 0;
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -444,7 +440,6 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    fBranchPointer= 0;
    fMaximum      = 0;
    fSTLtype      = TClassEdit::kNotSTL;
-   fBrowsableMethods = 0;
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -525,7 +520,6 @@ TBranchElement::~TBranchElement()
    if (fType==4) delete fCollProxy;
    fCollProxy=0;
    fBranches.Delete();
-   delete fBrowsableMethods;
 
    //SetAddress may have allocated an object. Must delete it
    if (TestBit(kDeleteObject)) {
@@ -818,10 +812,13 @@ void TBranchElement::Browse(TBrowser *b)
       }
       persistentBranches.Browse(b);      
       // add all public const methods without params
-      if (GetBrowsableMethods())
-         GetBrowsableMethods()->Browse(b);
+      if (GetBrowsables() && GetBrowsables()->GetSize())
+         GetBrowsables()->Browse(b);
    } else {
-
+      if (GetBrowsables() && GetBrowsables()->GetSize()) {
+         GetBrowsables()->Browse(b);
+         return;
+      }
       // Get the name and strip any extra brackets
       // in order to get the full arrays.
       TString slash("/"), escapedSlash("\\/");
@@ -1070,44 +1067,6 @@ void TBranchElement::FillLeaves(TBuffer &b)
      }
   }
 }
-
-//______________________________________________________________________________
-TList *TBranchElement::GetBrowsableMethods() {
-// This function (sets up and) returns a list of methods
-// for the object contained in this TBranchElement, which can
-// be used by a TBrowser to draw.
-// These methods have to be const, may not have any parameter 
-// without default value, must be public, and must have a 
-// (non-void) return value.
-
-   if (fBrowsableMethods) return fBrowsableMethods;
-
-   TClass* cl=0;
-   if (strlen(GetClonesName()))
-      // this works both for top level branches and for sub-branches,
-      // as GetClonesName() is properly updated for sub-branches
-      cl=gROOT->GetClass(GetClonesName());
-   else {
-      cl=gROOT->GetClass(GetClassName());
-
-      // check if we're in a sub-branch of this class
-      // we can only find out asking the streamer given our ID
-      ULong_t *elems=0;
-      TStreamerElement *element=0;
-      TClass* clsub=0;
-      if (fID>=0 && GetInfo() 
-          && ((elems=GetInfo()->GetElems()))
-          && ((element=(TStreamerElement *)elems[fID]))
-          && ((clsub=element->GetClassPointer())))
-         cl=clsub;
-   }
-
-   if (cl && cl->GetCollectionProxy()) cl = cl->GetCollectionProxy()->GetValueClass();
-   if (!cl) return 0;
-   fBrowsableMethods=TMethodBrowsable::GetMethodBrowsables(this, cl);
-   return fBrowsableMethods;
-}
-
 
 //______________________________________________________________________________
 Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
@@ -1441,7 +1400,8 @@ Bool_t TBranchElement::IsFolder() const
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches >= 1) return kTRUE;
-   else                return kFALSE;
+   TList* browsables= const_cast<TBranchElement*>(this)->GetBrowsables();
+   return (browsables && browsables->GetSize());
 }
 
 //______________________________________________________________________________

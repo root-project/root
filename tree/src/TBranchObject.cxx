@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.29 2004/09/24 18:22:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.30 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -133,6 +133,8 @@ void TBranchObject::Browse(TBrowser *b)
    if (nbranches > 1) {
       fBranches.Browse( b );
    }
+   if (GetBrowsables() && GetBrowsables()->GetSize())
+      GetBrowsables()->Browse(b);
 }
 
 //______________________________________________________________________________
@@ -207,12 +209,13 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 //______________________________________________________________________________
 Bool_t TBranchObject::IsFolder() const
 {
-//*-*-*-*-*Return TRUE if more than one leaf, FALSE otherwise*-*
-//*-*      ==================================================
+//*-*-*-*-*Return TRUE if more than one leaf or if fBorwsables, FALSE otherwise*-*
+//*-*      ====================================================================
 
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (nbranches >= 1) return kTRUE; 
-   else                return kFALSE;
+   if (nbranches >= 1) return kTRUE;
+   TList* browsables=const_cast<TBranchObject*>(this)->GetBrowsables();
+   return (browsables && browsables->GetSize());
 }
 
 //______________________________________________________________________________
