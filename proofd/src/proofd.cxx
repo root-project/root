@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.26 2002/03/20 18:54:57 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.27 2002/03/25 18:18:05 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -242,7 +242,7 @@ krb5_context gKcontext;
 
 //--- Machine specific routines ------------------------------------------------
 
-#if !defined(__hpux)
+#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (setgid(r) == -1)
@@ -257,7 +257,12 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #endif
-
+#if defined(linux) && (__GLIBC__ <= 2 && __GLIBC_MINOR__ <= 2)
+extern "C" {
+   int setresgid(gid_t r, gid_t e, gid_t s);
+   int setresuid(uid_t r, uid_t e, uid_t s);
+}
+#endif
 
 //--- Proofd routines ----------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.46 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.47 2002/12/10 02:19:46 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -342,7 +342,7 @@ krb5_context gKcontext;
 
 //--- Machine specific routines ------------------------------------------------
 
-#if !defined(__hpux)
+#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (setgid(r) == -1)
@@ -357,7 +357,12 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #endif
-
+#if defined(linux) && (__GLIBC__ <= 2 && __GLIBC_MINOR__ <= 2)
+extern "C" {
+   int setresgid(gid_t r, gid_t e, gid_t s);
+   int setresuid(uid_t r, uid_t e, uid_t s);
+}
+#endif
 
 //--- Rootd routines -----------------------------------------------------------
 
