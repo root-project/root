@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.11 2003/03/18 14:29:58 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.1 2003/03/19 13:07:59 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -45,9 +45,6 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TCut
-#include "TCut.h"
-#endif
 
 
 // typedef can be removed as soon as Long64_t becomes real 64 bit type
@@ -56,6 +53,7 @@ typedef Long_t  Long64_t;
 class TList;
 class TDSet;
 class TEventList;
+class TCut;
 
 
 class TDSetElement : public TObject {
@@ -111,7 +109,7 @@ public:
    virtual Int_t         Draw(const char *varexp, const char *selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
-   virtual Int_t         Draw(const char *varexp, TCut selection,
+   virtual Int_t         Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
 

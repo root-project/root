@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.143 2003/01/15 18:43:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.144 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -293,6 +293,7 @@
 #include "TStreamerElement.h"
 #include "TFriendElement.h"
 #include "TVirtualFitter.h"
+#include "TCut.h"
 #include "Api.h"
 
 Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
@@ -1669,7 +1670,7 @@ void TTree::Delete(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Draw(const char *varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TTree::Draw(const char *varexp, const TCut &selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -1945,7 +1946,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
    if (fPlayer) return fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
    else return -1;
 }
-    
+
 
 //______________________________________________________________________________
 void TTree::DropBuffers(Int_t)
@@ -2717,7 +2718,7 @@ Int_t TTree::LoadTree(Int_t entry)
 
             }
          } else {
-            // we assume it is a simple tree so we have nothing to do.        
+            // we assume it is a simple tree so we have nothing to do.
             t->LoadTree(entry);
          }
       } // for each friend

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.28 2003/01/15 06:58:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.29 2003/03/14 19:21:18 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 class TFile;
 class TBrowser;
+class TCut;
 
 
 class TChain : public TTree {
@@ -66,7 +67,7 @@ public:
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
-    virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
                        ,Int_t nentries=kBigNumber, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*

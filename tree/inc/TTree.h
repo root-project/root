@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.44 2003/01/15 18:43:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.45 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -55,10 +55,6 @@
 #include "TBranch.h"
 #endif
 
-#ifndef ROOT_TCut
-#include "TCut.h"
-#endif
-
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
@@ -83,6 +79,8 @@ class TSQLResult;
 class TSelector;
 class TPrincipal;
 class TFriendElement;
+class TCut;
+
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -125,7 +123,7 @@ protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
-    
+
 public:
     // TTree status bits
     enum {
@@ -161,7 +159,7 @@ public:
     Int_t             Debug() const {return fDebug;}
     virtual void      Delete(Option_t *option=""); // *MENU*
     virtual void      Draw(Option_t *opt);
-    virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.62 2003/03/06 23:07:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.63 2003/03/14 19:21:19 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TROOT.h"
 #include "TChain.h"
 #include "TTree.h"
+#include "TCut.h"
 #include "TFile.h"
 #include "TSelector.h"
 #include "TBranch.h"
@@ -489,7 +490,7 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-Int_t TChain::Draw(const char *varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(const char *varexp, const TCut &selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
    // Draw expression varexp for selected entries.
    //

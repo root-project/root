@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.7 2003/01/30 06:40:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.8 2003/03/07 15:47:58 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TTreeFormulaManager.h"
 #include "TEnv.h"
 #include "TTree.h"
+#include "TCut.h"
 #include "TEventList.h"
 #include "THLimitsFinder.h"
 
@@ -905,11 +906,11 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
 
    // Grab the array size of the formulas for this entry
    Int_t ndata = fManager->GetNdata();
-   
+
    // No data at all, let's move on to the next entry.
    if (!ndata) return;
 
-   Int_t nfill0 = fNfill;   
+   Int_t nfill0 = fNfill;
    Double_t ww = 0;
 
    for (Int_t i=0;i<ndata;i++) {
@@ -931,7 +932,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
 
             TBits *bits = (TBits*)obj;
             Int_t nbits = bits->GetNbits();
-            
+
             Int_t nextbit = -1;
             while(1) {
                nextbit = bits->FirstSetBit(nextbit+1);
@@ -940,7 +941,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
                fW[fNfill] =  ww;
                fNfill++;
             }
-            
+
          } else {
 
            Warning("ProcessFillObject",

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.16 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.1 2003/03/19 13:07:59 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "Riostream.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TCut.h"
 #include "TKey.h"
 #include "TError.h"
 #include "TVirtualProof.h"
@@ -353,7 +354,7 @@ Int_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
 }
 
 //______________________________________________________________________________
-Int_t TDSet::Draw(const char *varexp, TCut selection, Option_t *option,
+Int_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
                   Long64_t nentries, Long64_t firstentry)
 {
    // Draw expression varexp for specified entries.
