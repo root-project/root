@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.8 2002/04/06 21:24:29 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -25,6 +25,7 @@
 #include <assert.h>
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TAxis3D.h"
 #include "TCanvas.h"
@@ -109,7 +110,7 @@ TAxis3D::TAxis3D() : TNamed(TAxis3D::rulerName,"ruler"){
   InitSet();
 }
 //______________________________________________________________________________
-TAxis3D::TAxis3D(Option_t *): TNamed(TAxis3D::rulerName,"ruler")
+TAxis3D::TAxis3D(Option_t *option): TNamed(TAxis3D::rulerName,"ruler")
 {
   fSelected = 0;
   InitSet();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.9 2002/02/02 11:56:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.10 2002/04/06 21:28:07 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -9,12 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TVirtualUtil3D.h"
 #include "TVirtualPad.h"
 #include "TView.h"
 #include "TVirtualX.h"
 #include "TROOT.h"
 #include "TList.h"
 #include "TFile.h"
+#include "TPluginManager.h"
 
 ClassImp(TView)
 
@@ -83,6 +85,16 @@ TView::TView(Int_t system)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Int_t irep;
 
+   //create the 3d utility manager (a plugin)
+   if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+      }
+   }
+         
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
@@ -129,6 +141,16 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
 
    Int_t irep;
 
+   //create the 3d utility manager (a plugin)
+   if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+      }
+   }
+
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
@@ -172,6 +194,16 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t irep;
+
+   //create the 3d utility manager (a plugin)
+   if (!gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D")) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtil3D"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+      }
+   }
 
    fSystem = system;
    fOutline = 0;
@@ -1067,9 +1099,8 @@ void TView::SetOutlineToCube()
       fDefaultOutline = kTRUE;
       fOutline = new TList();
    }
-   gROOT->ProcessLineFast(Form("TPolyLine3D::DrawOutlineCube((TList *)0x%lx,"
-                           "(Double_t*)0x%lx,(Double_t*)0x%lx);",
-                           (Long_t)fOutline,(Long_t)fRmin,(Long_t)fRmax));
+   TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
+   if (util) util->DrawOutlineCube((TList*)fOutline,fRmin,fRmax);
 }
 
 //______________________________________________________________________________
@@ -1283,8 +1314,8 @@ void TView::TopView(TVirtualPad *pad){
 void TView::ToggleRulers(TVirtualPad *pad)
 {
   // Turn on /off 3D axis
-  if (pad) gROOT->ProcessLine(Form("TAxis3D::ToggleRulers((TVirtualPad *)0x%lx);",(Long_t)pad));
-  else     gROOT->ProcessLine(Form("TAxis3D::ToggleRulers();"));
+   TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
+  if (util) util->ToggleRulers(pad);
 }
 
 //_______________________________________________________________________________________
@@ -1292,8 +1323,8 @@ void TView::ToggleZoom(TVirtualPad *pad)
 {
   // Turn on /off the interactive option to
   //  Zoom / Move / Change attributes of 3D axis correspond this view
-  if (pad) gROOT->ProcessLine(Form("TAxis3D::ToggleZoom((TVirtualPad *)0x%lx);",(Long_t)pad));
-  else     gROOT->ProcessLine(Form("TAxis3D::ToggleZoom();"));
+   TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
+  if (util) util->ToggleZoom(pad);
 }
 
 //_______________________________________________________________________________________
