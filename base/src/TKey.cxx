@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.29 2002/12/06 06:40:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.30 2003/02/04 22:04:17 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -70,6 +70,7 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 {
 //*-*-*-*-*-*-*-*-*-*-*TKey default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
+   fVersion    = TKey::Class_Version();
    fSeekKey    = 0;
    fNbytes     = 0;
    fBuffer     = 0;
@@ -89,6 +90,8 @@ TKey::TKey(Seek_t pointer, Int_t nbytes) : TNamed()
 //  Constructor called by TDirectory::ReadKeys and by TFile::TFile
 //  A TKey object is created to read the keys structure itself
 //
+   fVersion    = TKey::Class_Version();
+   if (pointer > TFile::kStartBigFile) fVersion += 1000;
    fSeekKey    = pointer;
    fNbytes     = nbytes;
    fBuffer     = new char[nbytes];
@@ -104,6 +107,8 @@ TKey::TKey(Seek_t pointer, Int_t nbytes) : TNamed()
 TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
+   fVersion    = TKey::Class_Version();
+   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    fClassName  = cl->GetName();
    fNbytes     = 0;
    fBuffer     = 0;
@@ -118,6 +123,8 @@ TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
 TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
+   fVersion    = TKey::Class_Version();
+   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    fClassName  = cl->GetName();
    fNbytes     = 0;
    fBuffer     = 0;
@@ -153,6 +160,9 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
    fSeekKey   = 0 ; // RDK: Must initialize before calling Streamer()
    fSeekPdir  = 0 ; // RDK: Must initialize before calling Streamer()
+   
+   fVersion = TKey::Class_Version();
+   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
@@ -347,15 +357,20 @@ void TKey::FillBuffer(char *&buffer)
 //*-*-*-*-*-*-*-*-*-*-*-*Encode key header into output buffer-*-*-*-*-*-*-*
 //*-*                    ====================================
   tobuf(buffer, fNbytes);
-  Version_t version = TKey::Class_Version();
+  Version_t version = fVersion;
   tobuf(buffer, version);
 
   tobuf(buffer, fObjlen);
   fDatime.FillBuffer(buffer);
   tobuf(buffer, fKeylen);
   tobuf(buffer, fCycle);
-  tobuf(buffer, fSeekKey);
-  tobuf(buffer, fSeekPdir);
+  if (fVersion > 1000) {
+     tobuf(buffer, (Long_t)fSeekKey);
+     tobuf(buffer, (Long_t)fSeekPdir);
+  } else {
+     tobuf(buffer, (Int_t)fSeekKey);
+     tobuf(buffer, (Int_t)fSeekPdir);
+  }
   fClassName.FillBuffer(buffer);
   fName.FillBuffer(buffer);
   fTitle.FillBuffer(buffer);
@@ -599,13 +614,20 @@ void TKey::ReadBuffer(char *&buffer)
    frombuf(buffer, &fNbytes);
    Version_t version;
    frombuf(buffer,&version);
-   fVersion = version;
+   fVersion = (Int_t)version;
    frombuf(buffer, &fObjlen);
    fDatime.ReadBuffer(buffer);
    frombuf(buffer, &fKeylen);
    frombuf(buffer, &fCycle);
-   frombuf(buffer, &fSeekKey);
-   frombuf(buffer, &fSeekPdir);
+   if (fVersion > 1000) {
+      Long_t seekkey,seekdir;
+      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
+      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+   } else {
+      Int_t seekkey,seekdir;
+      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
+      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+   }
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
@@ -648,14 +670,16 @@ Int_t TKey::Sizeof() const
 {
 //*-*-*-*-*-*-*-*Return the size in bytes of the key header structure*-*-*-*
 //*-*-*-*-*-*-*-*====================================================
-   Int_t nbytes = sizeof fNbytes;
-   nbytes      += sizeof(Version_t);
-   nbytes      += sizeof fObjlen;
+   //Int_t nbytes = sizeof fNbytes;      4
+   //            += sizeof(Version_t);   2
+   //            += sizeof fObjlen;      4
+   //            += sizeof fKeylen;      2
+   //            += sizeof fCycle;       2
+   //            += sizeof fSeekKey;     4 or 8
+   //            += sizeof fSeekPdir;    4 or 8
+   //             =                     22
+   Int_t nbytes = 22; if (fVersion > 1000) nbytes += 8;
    nbytes      += fDatime.Sizeof();
-   nbytes      += sizeof fKeylen;
-   nbytes      += sizeof fCycle;
-   nbytes      += sizeof fSeekKey;
-   nbytes      += sizeof fSeekPdir;
    nbytes      += fClassName.Sizeof();
    nbytes      += fName.Sizeof();
    nbytes      += fTitle.Sizeof();
@@ -668,28 +692,42 @@ void TKey::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   Version_t version;
    if (b.IsReading()) {
       b >> fNbytes;
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      b >> version; fVersion = (Int_t)version;
       b >> fObjlen;
       fDatime.Streamer(b);
       b >> fKeylen;
       b >> fCycle;
-      b >> fSeekKey;
-      b >> fSeekPdir;
+      if (fVersion > 1000) {
+         Long_t seekkey, seekdir;
+         b >> seekkey; fSeekKey = (Seek_t)seekkey;
+         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+      } else {
+         Int_t seekkey, seekdir;
+         b >> seekkey; fSeekKey = (Seek_t)seekkey;
+         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+      }
       fClassName.Streamer(b);
       fName.Streamer(b);
       fTitle.Streamer(b);
    } else {
       b << fNbytes;
-      b.WriteVersion(TKey::IsA());
+      version = (Version_t)fVersion;
+      b << version;
       b << fObjlen;
       if (fDatime.Get() == 0) fDatime.Set();
       fDatime.Streamer(b);
       b << fKeylen;
       b << fCycle;
-      b << fSeekKey;
-      b << fSeekPdir;
+      if (fVersion > 1000) {
+         b << (Long_t)fSeekKey;
+         b << (Long_t)fSeekPdir;
+      } else {
+         b << (Int_t)fSeekKey;
+         b << (Int_t)fSeekPdir;
+      }
       fClassName.Streamer(b);
       fName.Streamer(b);
       fTitle.Streamer(b);

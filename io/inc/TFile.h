@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.26 2003/01/16 18:49:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.27 2003/01/17 13:59:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -60,8 +60,6 @@ protected:
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
-   enum { kBegin = 64, kUnits = 4 };
-
    void Init(Bool_t create);
 
    // Interface to basic system I/O routines
@@ -80,10 +78,11 @@ private:
 public:
    // TFile status bits
    enum {
-      kRecovered       = BIT(10),
-      kHasReferences   = BIT(11),
-      kDevNull         = BIT(12),
-      kWriteError      = BIT(14) // BIT(13) is taken up by TObject
+      kStartBigFile  = 2000000000,
+      kRecovered     = BIT(10),
+      kHasReferences = BIT(11),
+      kDevNull       = BIT(12),
+      kWriteError    = BIT(14) // BIT(13) is taken up by TObject
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
 

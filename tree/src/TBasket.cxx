@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.17 2002/12/13 19:17:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.18 2002/12/16 20:52:29 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -64,7 +64,9 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
    fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
    if (branch->GetDirectory()) {
-      fBufferRef->SetParent(branch->GetFile());
+      TFile *file = branch->GetFile();
+      fBufferRef->SetParent(file);
+      if (file && file->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
@@ -207,6 +209,12 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    fEntryOffset = 0;
    fBufferRef->SetBufferOffset(fLast);
    fBufferRef->ReadArray(fEntryOffset);
+   if (!fEntryOffset) {
+      fEntryOffset = new Int_t[fNevBuf+1];
+      fEntryOffset[0] = fKeylen;
+      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d, but fEntryOffset=0, trying to repair",GetName(),fNevBuf);
+      return badread;
+   }
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != fBufferRef->BufferSize()) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.2 2000/11/21 16:15:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
         virtual void     ReadBuffer(char *&buffer);
                 void     SetFirst(Seek_t first) {fFirst=first;}
                 void     SetLast(Seek_t last) {fLast=last;}
-               Int_t     Sizeof() const {return sizeof(Version_t) + 2*sizeof(Seek_t);}
+               Int_t     Sizeof() const;
 
         ClassDef(TFree,1)  //Description of free segments on a file
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.2 2000/11/21 16:33:02 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TFree.h"
 #include "TList.h"
+#include "TFile.h"
 #include "Bytes.h"
 
 ClassImp(TFree)
@@ -104,9 +105,15 @@ void TFree::FillBuffer(char *&buffer)
 //*-*-*-*-*-*-*-*-*-*-*Encode FREE structure into output buffer*-*-*-*-*-*-*
 //*-*                  ========================================
    Version_t version = TFree::Class_Version();
+   if (fLast > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
-   tobuf(buffer, fFirst);
-   tobuf(buffer, fLast);
+   if (version > 1000) {
+      tobuf(buffer, (Long_t)fFirst);
+      tobuf(buffer, (Long_t)fLast);
+   } else {
+      tobuf(buffer, (Int_t)fFirst);
+      tobuf(buffer, (Int_t)fLast);
+   }
 }
 
 //______________________________________________________________________________
@@ -133,6 +140,23 @@ void TFree::ReadBuffer(char *&buffer)
 //*-*                    ===========================================
    Version_t version;
    frombuf(buffer, &version);
-   frombuf(buffer, &fFirst);
-   frombuf(buffer, &fLast);
+   if (version > 1000) {
+      Long_t first,last;
+      frombuf(buffer, &first);  fFirst = (Seek_t)first;
+      frombuf(buffer, &last);   fLast  = (Seek_t)last;
+   } else {
+      Int_t first,last;
+      frombuf(buffer, &first);  fFirst = (Seek_t)first;
+      frombuf(buffer, &last);   fLast  = (Seek_t)last;
+   }
 }
+
+//______________________________________________________________________________
+Int_t TFree::Sizeof() const
+{
+// return number of bytes occupied by this TFree on permanent storage
+
+      if (fLast > TFile::kStartBigFile) return 18;
+      else                              return 10;
+}
+   

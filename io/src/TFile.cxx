@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.83 2003/01/19 21:17:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.84 2003/02/24 20:34:01 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -46,6 +46,7 @@ TFile *gFile;                 //Pointer to current file
 Double_t TFile::fgBytesRead  = 0;
 Double_t TFile::fgBytesWrite = 0;
 
+const Int_t kBEGIN = 100;
 
 ClassImp(TFile)
 
@@ -143,8 +144,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //          ..->.. Title     = Title of the object
 //          -----> DATA      = Data bytes associated to the object
 //
-//  The first data record starts at byte fBEGIN (currently set to kBegin)
-//  Bytes 1->kBegin contain the file description:
+//  The first data record starts at byte fBEGIN (currently set to kBEGIN)
+//  Bytes 1->kBEGIN contain the file description:
 //       byte  1->4  "root"      = Root file identifier
 //             5->8  fVersion    = File format version
 //             9->12 fBEGIN      = Pointer to first data record
@@ -180,7 +181,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fFile       = this;
    fFree       = 0;
    fVersion    = gROOT->GetVersionInt();  //ROOT version in integer format
-   fUnits      = kUnits;
+   fUnits      = 4;
    fOption     = option;
    fCompress   = compress;
    fWritten    = 0;
@@ -337,8 +338,10 @@ void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
 
-   Int_t max_file_size = 2000000000;  // should rather check disk quota
+   Seek_t max_file_size = kStartBigFile;
+   if (sizeof(Seek_t) > 4) max_file_size *= 500;
    Int_t nfree;
+   fBEGIN  = (Seek_t)kBEGIN;    //First used word in file following the file header
 
    // make newly opened file the current file and directory
    cd();
@@ -346,7 +349,6 @@ void TFile::Init(Bool_t create)
 //*-*---------------NEW file
    if (create) {
       fFree        = new TList;
-      fBEGIN       = kBegin;    //First used word in file following the file header
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fFree, fBEGIN, max_file_size);  //Create new free list
 
@@ -367,9 +369,9 @@ void TFile::Init(Bool_t create)
    }
 //*-*----------------UPDATE
    else {
-      char *header = new char[kBegin];
+      char *header = new char[kBEGIN];
       Seek(0);
-      ReadBuffer(header,kBegin);
+      ReadBuffer(header,kBEGIN);
 
       // make sure this is a root file
       if (strncmp(header, "root", 4)) {
@@ -380,16 +382,31 @@ void TFile::Init(Bool_t create)
 
       char *buffer = header + 4;    // skip the "root" file identifier
       frombuf(buffer, &fVersion);
-      frombuf(buffer, &fBEGIN);
-      frombuf(buffer, &fEND);
-      frombuf(buffer, &fSeekFree);
-      frombuf(buffer, &fNbytesFree);
-      frombuf(buffer, &nfree);
-      frombuf(buffer, &fNbytesName);
-      frombuf(buffer, &fUnits );
-      frombuf(buffer, &fCompress);
-      frombuf(buffer, &fSeekInfo);
-      frombuf(buffer, &fNbytesInfo);
+      Int_t headerLength;
+      frombuf(buffer, &headerLength);
+      fBEGIN = (Seek_t)headerLength;
+      if (fVersion < 1000000) { //small file
+         frombuf(buffer, &fEND);
+         frombuf(buffer, &fSeekFree);
+         frombuf(buffer, &fNbytesFree);
+         frombuf(buffer, &nfree);
+         frombuf(buffer, &fNbytesName);
+         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fCompress);
+         frombuf(buffer, &fSeekInfo);
+         frombuf(buffer, &fNbytesInfo);
+      } else { // new format to support large files
+         Long_t send,sfree,sinfo;
+         frombuf(buffer, &send);         fEND     = (Seek_t)send;
+         frombuf(buffer, &sfree);        fSeekFree= (Seek_t)sfree;
+         frombuf(buffer, &fNbytesFree);
+         frombuf(buffer, &nfree);
+         frombuf(buffer, &fNbytesName);
+         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fCompress);
+         frombuf(buffer, &sinfo);        fSeekInfo = (Seek_t)sinfo;
+         frombuf(buffer, &fNbytesInfo);
+      }
       fSeekDir = fBEGIN;
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
@@ -408,20 +425,29 @@ void TFile::Init(Bool_t create)
       Seek(fBEGIN);
       ReadBuffer(buffer,nbytes);
       buffer = header+fNbytesName;
-      Version_t versiondir;
-      frombuf(buffer,&versiondir);
+      Version_t version,versiondir;
+      frombuf(buffer,&version); versiondir = version%1000;
       fDatimeC.ReadBuffer(buffer);
       fDatimeM.ReadBuffer(buffer);
       frombuf(buffer, &fNbytesKeys);
       frombuf(buffer, &fNbytesName);
-      frombuf(buffer, &fSeekDir);
-      frombuf(buffer, &fSeekParent);
-      frombuf(buffer, &fSeekKeys);
+      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
+                +2*sizeof(Seek_t);
+      if (version > 1000) {
+         nk += 12;
+         Long_t sdir,sparent,skeys;
+         frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
+         frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
+         frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+      } else {
+         Int_t sdir,sparent,skeys;
+         frombuf(buffer, &sdir);    fSeekDir    = (Seek_t)sdir;
+         frombuf(buffer, &sparent); fSeekParent = (Seek_t)sparent;
+         frombuf(buffer, &skeys);   fSeekKeys   = (Seek_t)skeys;
+      }
       if (versiondir > 1) fUUID.ReadBuffer(buffer);
 
 //*-*---------read TKey::FillBuffer info
-      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
-                +2*sizeof(Seek_t);
       buffer = header+nk;
       TString cname;
       cname.ReadBuffer(buffer);
@@ -671,7 +697,7 @@ Float_t TFile::GetCompressionFactor()
    Short_t  keylen;
    UInt_t   datime;
    Int_t    nbytes, objlen, nwh = 64;
-   char    *header = new char[kBegin];
+   char    *header = new char[fBEGIN];
    char    *buffer;
    Seek_t   idcur = fBEGIN;
    Float_t comp,uncomp;
@@ -926,7 +952,7 @@ void TFile::Map()
    nwheader = 64;
    Int_t nread = nwheader;
 
-   char header[kBegin];
+   char header[kBEGIN];
    char classname[512];
 
    while (idcur < fEND) {
@@ -951,8 +977,15 @@ void TFile::Map()
       frombuf(buffer, &datime);
       frombuf(buffer, &keylen);
       frombuf(buffer, &cycle);
-      frombuf(buffer, &seekkey);
-      frombuf(buffer, &seekpdir);
+      if (versionkey > 1000) {
+         Long_t skey,sdir;
+         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+      } else {
+         Int_t skey,sdir;
+         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+      }
       frombuf(buffer, &nwhc);
       int i;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
@@ -1101,8 +1134,15 @@ Int_t TFile::Recover()
       frombuf(buffer, &datime);
       frombuf(buffer, &keylen);
       frombuf(buffer, &cycle);
-      frombuf(buffer, &seekkey);
-      frombuf(buffer, &seekpdir);
+      if (versionkey > 1000) {
+         Long_t skey,sdir;
+         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+      } else {
+         Int_t skey,sdir;
+         frombuf(buffer, &skey);  seekkey  = (Seek_t)skey;
+         frombuf(buffer, &sdir);  seekpdir = (Seek_t)sdir;
+      }
       frombuf(buffer, &nwhc);
       char *classname = new char[nwhc+1];
       int i;
@@ -1126,7 +1166,9 @@ Int_t TFile::Recover()
       idcur += nbytes;
    }
    if (fWritable) {
-      new TFree(fFree,fEND,2000000000);
+      Seek_t max_file_size = kStartBigFile;
+      if (sizeof(Seek_t) > 4) max_file_size *= 500;
+      new TFree(fFree,fEND,max_file_size);
       if (nrecov) Write();
    }
    return nrecov;
@@ -1465,21 +1507,35 @@ void TFile::WriteHeader()
    TFree *lastfree = (TFree*)fFree->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
    const char *root = "root";
-   char *psave  = new char[kBegin];
+   char *psave  = new char[fBEGIN];
    char *buffer = psave;
    Int_t nfree  = fFree->GetSize();
    memcpy(buffer, root, 4); buffer += 4;
-   tobuf(buffer, fVersion);
-   tobuf(buffer, fBEGIN);
-   tobuf(buffer, fEND);
-   tobuf(buffer, fSeekFree);
-   tobuf(buffer, fNbytesFree);
-   tobuf(buffer, nfree);
-   tobuf(buffer, fNbytesName);
-   tobuf(buffer, fUnits);
-   tobuf(buffer, fCompress);
-   tobuf(buffer, fSeekInfo);
-   tobuf(buffer, fNbytesInfo);
+   Int_t version = fVersion;
+   if (fEND > kStartBigFile) version += 1000000;
+   tobuf(buffer, version);
+   tobuf(buffer, (Int_t)fBEGIN);
+   if (version < 1000000) {
+      tobuf(buffer, (Int_t)fEND);
+      tobuf(buffer, (Int_t)fSeekFree);
+      tobuf(buffer, fNbytesFree);
+      tobuf(buffer, nfree);
+      tobuf(buffer, fNbytesName);
+      tobuf(buffer, fUnits);
+      tobuf(buffer, fCompress);
+      tobuf(buffer, (Int_t)fSeekInfo);
+      tobuf(buffer, fNbytesInfo);
+   } else {
+      tobuf(buffer, (Long_t)fEND);
+      tobuf(buffer, (Long_t)fSeekFree);
+      tobuf(buffer, fNbytesFree);
+      tobuf(buffer, nfree);
+      tobuf(buffer, fNbytesName);
+      tobuf(buffer, fUnits);
+      tobuf(buffer, fCompress);
+      tobuf(buffer, (Long_t)fSeekInfo);
+      tobuf(buffer, fNbytesInfo);
+   }
    fUUID.FillBuffer(buffer);
    Int_t nbytes  = buffer - psave;
    Seek(0);
