@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.2 2000/06/13 09:49:54 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -710,7 +710,7 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
         if (leafcount->GetMaximum() <= 0) leafcount->SetMaximum(ielem);
      }
   }
-  Int_t cf,l,lint;
+  Int_t cf,l;
   for(i=1;i<=nentries;i++) {
      hgnt(id,i,ier);
      if (isabool) { // if column is boolean
@@ -718,8 +718,11 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
            cf = boolflag[j];
            if (cf >-1) {
               for (l=0;l<lenbool[j];l++) {
-                 lint = (Int_t)bigbuf[cf+4*l];
-                 boolarr[l] = (UChar_t)lint;
+#ifdef R__BYTESWAP
+                 boolarr[l] = (UChar_t)bigbuf[cf+4*l];
+#else
+                 boolarr[l] = (UChar_t)bigbuf[cf+4*l+3];
+#endif
               }
               memcpy(&bigbuf[cf],boolarr,lenbool[j]);
            }
