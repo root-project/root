@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.14 2002/11/11 16:23:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.15 2002/12/02 18:50:00 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -46,8 +46,14 @@ namespace ROOT {
 }
 
 // This is to provide a placement operator new on all platforms
-inline void *operator new(size_t /*size*/, ROOT::TOperatorNewHelper *p) {
+inline void *operator new(size_t /*size*/, ROOT::TOperatorNewHelper *p)
+{
    return((void*)p);
 }
+
+#ifdef R__PLACEMENTDELETE
+// this should never be used but help quiet down some compiler!
+inline void operator delete(void*, ROOT::TOperatorNewHelper*) { }
+#endif
 
 #endif

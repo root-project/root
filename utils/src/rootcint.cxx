@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.114 2002/12/08 09:18:55 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.115 2002/12/08 19:22:08 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1828,7 +1828,7 @@ const char *ShortTypeName(const char *typeDesc)
         s+=strlen(constwd)-1;
         continue;
      }
-     if (lev==0 && *s==' ' && !*(s+1)=='*') { p = t; continue;}
+     if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
      *p++ = *s;
   }
   p[0]=0;
@@ -2765,7 +2765,7 @@ void WriteShadowClass(G__ClassInfo &cl)
    AddShadowClassName(classname, cl);
    int closing_brackets = WriteNamespaceHeader(cl);
    if (closing_brackets) fprintf(fp,"\n");
-   if (cl.HasMethod("Class_Name")) {
+   if (cl.HasMethod("Class_Name") && !cl.IsTmplt()) {
 
       string fullname;
       GetFullyQualifiedName(cl,fullname);
@@ -2773,8 +2773,12 @@ void WriteShadowClass(G__ClassInfo &cl)
 
   } else {
 
-      Info(0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n",
-           cl.Fullname());
+      if (cl.HasMethod("Class_Name") && !cl.IsTmplt()) 
+         Info(0, "Class %s: Generating Shadow Class [*** templated instrumented class ***]\n",
+              cl.Fullname());
+      else 
+         Info(0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n",
+              cl.Fullname());
 
       fprintf(fp,"      #if !(defined(R__ACCESS_IN_SYMBOL) || defined(R__USE_SHADOW_CLASS))\n");
       string fullname;
