@@ -13,8 +13,13 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = c++
-CC            = cc
+# if you want to compile for 10.1 you just have to change those 
+# 3 variables to:
+# CXX           = c++
+# CC            = cc
+# LD            = c++
+CXX           = g++
+CC            = gcc
 CXXFLAGS      = -pipe -W -Wall -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
@@ -27,9 +32,9 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
 
 # Linker:
-LD            = c++
+LD            = g++
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load -flat_namespace
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
+SOFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -dynamiclib -flat_namespace -undefined suppress \
                 -install_name
 SOEXT         = dylib
 
@@ -50,3 +55,7 @@ INSTALLDATA  := cp -pPR
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lXmu -lXext -lX11
 X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11
+
+EXTRA_CXXFLAGS= -I./include -I/sw/include
+EXTRA_CFLAGS  = -I./include -I/sw/include
+EXTRA_LDFLAGS = -L/sw/lib
