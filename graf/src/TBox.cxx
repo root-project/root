@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.6 2001/06/05 14:51:07 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.7 2001/11/11 15:37:09 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,8 +116,9 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- Are we inside the box?
 //*-*  ======================
-   if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) {
-      if (GetFillStyle()) return 0;  //*-* if box is filled
+   if (GetFillStyle()) {
+      if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) return 0;
+      else return 9999;
    }
 
 //*-*- Are we on the edges?
