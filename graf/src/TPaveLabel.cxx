@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.13 2002/10/28 15:38:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -109,7 +109,7 @@ void TPaveLabel::Paint(Option_t *option)
 //*-* Convert from NDC to pad coordinates
    TPave::ConvertNDCtoPad();
 
-   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), option);
+   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), strlen(option)?option:GetOption());
 
 }
 
