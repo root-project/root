@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GLConstants.h,v 1.2 2000/09/14 19:31:18 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GLConstants.h,v 1.3 2004/08/16 10:00:45 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -113,7 +113,7 @@
                   ,abc_prefix##POLYGON
 
 #define GLConstants6(abc_prefix) \
-                  ,abc_prefix##DIFFUSE, abc_prefix##POSITION
+                  ,abc_prefix##DIFFUSE, abc_prefix##POSITION, abc_prefix##CLIP_PLANE0
 
 #define GLConstants(abc_prefix) \
                              GLConstants1(abc_prefix) \

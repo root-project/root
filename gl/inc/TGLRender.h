@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.3 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.4 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -30,12 +30,14 @@ private:
    Bool_t         fBoxInList;
    Int_t          fActiveCam;
    Int_t          fDList;
-   Int_t          fPlane;
    UInt_t         fSelected;
 
    TGLSceneObject *fFirstT;
    TGLSceneObject *fSelectedObj;
    TGLSelection   *fSelectionBox;
+   //clipping plane equation A*x+B*y+C*z+D=0
+   Double_t       fPlaneEqn[4];
+   Bool_t         fClipping;
 
 public:
    TGLRender();
@@ -50,10 +52,11 @@ public:
    void AddNewCamera(TGLCamera *newCamera);
    TGLSceneObject *SelectObject(Int_t x, Int_t y, Int_t);
    void MoveSelected(Double_t x, Double_t y, Double_t z);
-   void SetPlain(Int_t p)
+   Bool_t ResetPlane()
    {
-      fPlane = p;
+      return fClipping = !fClipping;
    }
+   void SetPlane(const Double_t *newEqn);
    Int_t GetSize()const
    {
       return fGLObjects.GetEntriesFast();

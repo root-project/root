@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.26 2004/10/04 08:11:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.27 2004/10/06 09:47:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
-
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
 #include "TVirtualPad.h"
@@ -57,7 +55,7 @@ const char gHelpViewerOpenGL[] = "\
      mouse click and move it with button pressed \n\
      (light source are pickable too).\n\n\
      VIEW\n\n\
-     You can select projection on different places\n\
+     You can select different plane projections\n\
      in \"View\" menu.\n\n\
      COLOR\n\n\
      After you selected an object or a light source,\n\
@@ -98,9 +96,13 @@ const char gHelpViewerOpenGL[] = "\
      \tWhen edit light source, you see this light reflected\n\
      \tby sphere whith DIFFUSE and SPECULAR components\n\
      \t(1., 1., 1.).\n\n\
-     GEOMETRY PROPERTIES\n\n\
+     OBJECT'S GEOMETRY\n\n\
      You can edit object's location and stretch it by entering\n\
-     desired values in respective number entry controls.";
+     desired values in respective number entry controls.\n\n"
+"    SCENE PROPERTIES\n\n\
+     You can add clipping plane by clicking the checkbox and\n\
+     specifying the plane's equation A*x+B*y+C*z+D=0.";
+
 
 const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., -1., 0.,
                                   0., 1., 0., 0., 0., 0., 0., 1.};
@@ -124,10 +126,15 @@ enum EGLViewerCommands {
 
 ClassImp(TViewerOpenGL)
 
+const Int_t TViewerOpenGL::fgInitX = 0;
+const Int_t TViewerOpenGL::fgInitY = 0;
+const Int_t TViewerOpenGL::fgInitW = 750;
+const Int_t TViewerOpenGL::fgInitH = 600;
+
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
                   :TVirtualViewer3D(vp),
-                   TGMainFrame(gClient->GetRoot(), 750, 600),
+                   TGMainFrame(gClient->GetRoot(), fgInitW, fgInitH),
                    fCamera(), fViewVolume(), fZoom(),
                    fActiveViewport()
 {
@@ -139,6 +146,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fSplitter = 0;
    fColorEditor = 0;
    fGeomEditor = 0;
+   fSceneEditor = 0;
    fCanvasWindow = 0;
    fCanvasContainer = 0;
    fL1 = fL2 = fL3 = fL4 = 0;
@@ -166,8 +174,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    }initGL;
 
    CreateViewer();
-   Resize(750, 600);
-   fArcBall = new TArcBall(600, 600);
+   fArcBall = new TArcBall(fgInitH, fgInitH);
    CalculateViewports();
 }
 
@@ -214,9 +221,9 @@ void TViewerOpenGL::CreateViewer()
    fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);
    fV1 = new TGVerticalFrame(fMainFrame, 150, 10, kSunkenFrame | kFixedWidth);
    fShutter = new TGShutter(fV1, kSunkenFrame | kFixedWidth);
-   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Color prop."), 5001);
-   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Geometry prop."), 5002);
-   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Camera prop."), 5003);
+   fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Color"), 5001);
+   fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Object's geometry"), 5002);
+   fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Scene"), 5003);
    fShutter->AddItem(fShutItem1);
    fShutter->AddItem(fShutItem2);
    fShutter->AddItem(fShutItem3);
@@ -229,10 +236,13 @@ void TViewerOpenGL::CreateViewer()
    fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
    fMainFrame->AddFrame(fV1, fL1);
 
-   TGCompositeFrame *shutCont1 = (TGCompositeFrame *)fShutItem2->GetContainer();
-   fGeomEditor = new TGLGeometryEditor(shutCont1, this);
-   shutCont1->AddFrame(fGeomEditor, fL4);
-   
+   shutCont = (TGCompositeFrame *)fShutItem2->GetContainer();
+   fGeomEditor = new TGLGeometryEditor(shutCont, this);
+   shutCont->AddFrame(fGeomEditor, fL4);
+
+   shutCont = (TGCompositeFrame *)fShutItem3->GetContainer();
+   fSceneEditor = new TGLSceneEditor(shutCont, this);
+   shutCont->AddFrame(fSceneEditor, fL4);
 
    fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
@@ -485,7 +495,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
   
    Float_t col1[] = {0.4f, 0.f, 0.f};
    Float_t col2[] = {0.f, 0.4f, 0.f};
-   const Double_t pos[3] = {0,0,0};
+   const Double_t pos[3] = {0., 0., 0.};
    TGLSimpleLight *light1 = new TGLSimpleLight(++fNbShapes, 2, col1, pos);
    TGLSelection *box1 = light1->GetBox();
    TGLSimpleLight *light2 = new TGLSimpleLight(++fNbShapes, 3, col2, pos);
@@ -523,7 +533,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
-   gVirtualGL->LightModel(kLIGHT_MODEL_TWO_SIDE, kFALSE);
+//   gVirtualGL->LightModel(kLIGHT_MODEL_TWO_SIDE, kTRUE);
    gVirtualGL->EnableGL(kLIGHTING);
    gVirtualGL->EnableGL(kLIGHT0);
    gVirtualGL->EnableGL(kLIGHT1);
@@ -536,8 +546,11 @@ void TViewerOpenGL::CreateScene(Option_t *)
    gVirtualGL->ClearGLColor(0.f, 0.f, 0.f, 1.f);
    gVirtualGL->ClearGLDepth(1.f);
 
+   MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+   SetWMPosition(fgInitX, fgInitY);
    CreateCameras();
    fRender.SetActive(kPERSP);
+
    DrawObjects();
 }
 
@@ -730,6 +743,7 @@ TGLSceneObject *TViewerOpenGL::TestSelection(Event_t *event)
    return obj;
 }
 
+//______________________________________________________________________________
 void TViewerOpenGL::CalculateViewports()
 {
    fActiveViewport[0] = 0;
@@ -738,6 +752,7 @@ void TViewerOpenGL::CalculateViewports()
    fActiveViewport[3] = fCanvasWindow->GetHeight();
 }
 
+//______________________________________________________________________________
 void TViewerOpenGL::CalculateViewvolumes()
 {
    if (fRender.GetSize()) {
@@ -767,6 +782,7 @@ void TViewerOpenGL::CalculateViewvolumes()
    }
 }
 
+//______________________________________________________________________________
 void TViewerOpenGL::CreateCameras()
 {
    if (!fRender.GetSize())
@@ -788,27 +804,38 @@ void TViewerOpenGL::CreateCameras()
    fRender.AddNewCamera(fCamera[kPERSP]);
 }
 
-void TViewerOpenGL::ModifySelected()
+//______________________________________________________________________________
+void TViewerOpenGL::ModifySelected(Int_t wid)
 {
-   TGButton *btn = (TGButton *)gTQSender;
-   Int_t id = btn->WidgetId();
-
-   switch (id) {
+   MakeCurrent();
+   switch (wid) {
    case kTBa:
       fSelectedObj->SetColor(fColorEditor->GetRGBA());
-      MakeCurrent();
       break;
    case kTBa1:
       {
          Double_t c[3] = {0.};
          Double_t s[] = {1., 1., 1.};
-         fGeomEditor->GetNewData(c, s);
+         fGeomEditor->GetObjectData(c, s);
          fSelectedObj->Stretch(s[0], s[1], s[2]);
          fSelectedObj->GetBox()->Shift(c[0], c[1], c[2]);
          fSelectedObj->Shift(c[0], c[1], c[2]);
       }
+      break;
+   case kTBcp:
+      if (fRender.ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
+      else gVirtualGL->DisableGL(kCLIP_PLANE0);
+   case kTBcpm:
+      {
+         Double_t eqn[4] = {0.};
+         fSceneEditor->GetPlaneEqn(eqn);
+         fRender.SetPlane(eqn);
+      }
    }
    
-   gVirtualGL->Invalidate(&fRender);
+   if (wid == kTBa || wid == kTBa1) {
+      gVirtualGL->Invalidate(&fRender);
+   }
+   
    DrawObjects();
 }

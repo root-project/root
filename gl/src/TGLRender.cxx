@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.6 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.7 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
@@ -26,6 +25,7 @@
 #include "TGLRender.h"
 #include "TGLCamera.h"
 
+//______________________________________________________________________________
 TGLRender::TGLRender()
 {
    fGLObjects.SetOwner(kTRUE);
@@ -36,7 +36,9 @@ TGLRender::TGLRender()
    fBoxInList = kFALSE;
    fActiveCam = 0;
    fDList = 0;
-   fPlane = 0;
+   fPlaneEqn[0] = 1.;
+   fPlaneEqn[1] = fPlaneEqn[2] = fPlaneEqn[3] = 0.;
+   fClipping = kFALSE;
    fSelected = 0;
 
    fFirstT = 0;
@@ -44,12 +46,14 @@ TGLRender::TGLRender()
    fSelectionBox = 0;
 }
 
+//______________________________________________________________________________
 TGLRender::~TGLRender()
 {
    if (fDList) 
       glDeleteLists(fDList, 1);
 }
 
+//______________________________________________________________________________
 void TGLRender::Traverse()
 {
    if (!fDList) {
@@ -61,7 +65,6 @@ void TGLRender::Traverse()
    }
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
 
    if (!fAllActive) {
@@ -73,30 +76,37 @@ void TGLRender::Traverse()
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
 
+      if (fClipping) {
+         glClipPlane(GL_CLIP_PLANE0, fPlaneEqn);
+      }
+
       if (fSelectionBox) {
          fSelectionBox->DrawBox();
       }
-
       RunGLList();
    }
 }
 
+//______________________________________________________________________________
 void TGLRender::SetActive(UInt_t ncam)
 {
    fActiveCam = ncam;
    fAllActive = kFALSE;
 }
 
+//______________________________________________________________________________
 void TGLRender::AddNewObject(TGLSceneObject *newobject)
 {
    fGLObjects.AddLast(newobject);
 }
 
+//______________________________________________________________________________
 void TGLRender::AddNewCamera(TGLCamera *newcamera)
 {
    fGLCameras.AddLast(newcamera);
 }
 
+//______________________________________________________________________________
 TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
 {
    TGLCamera *actCam = (TGLCamera *)fGLCameras.At(cam);
@@ -152,6 +162,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    return fSelectedObj;
 }
 
+//______________________________________________________________________________
 void TGLRender::MoveSelected(Double_t x, Double_t y, Double_t z)
 {
    if (!fIsPicking) {
@@ -161,6 +172,16 @@ void TGLRender::MoveSelected(Double_t x, Double_t y, Double_t z)
    fSelectionBox->Shift(x, y, z);
 }
 
+//______________________________________________________________________________
+void TGLRender::SetPlane(const Double_t *n)
+{
+   fPlaneEqn[0] = n[0];
+   fPlaneEqn[1] = n[1];
+   fPlaneEqn[2] = n[2];
+   fPlaneEqn[3] = n[3];   
+}
+
+//______________________________________________________________________________
 void TGLRender::EndMovement()
 {
    if (fIsPicking) {
@@ -175,6 +196,7 @@ void TGLRender::EndMovement()
    }
 }
 
+//______________________________________________________________________________
 void TGLRender::BuildGLList(Bool_t exec)
 {
    glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
@@ -182,7 +204,7 @@ void TGLRender::BuildGLList(Bool_t exec)
    if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
       fSelectedObj->GLDraw();
    }
-
+   
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
       if (currObj->IsTransparent() && currObj != fSelectedObj) {
@@ -204,11 +226,13 @@ void TGLRender::BuildGLList(Bool_t exec)
    glEndList();
 }
 
+//______________________________________________________________________________
 void TGLRender::RunGLList()
 {
    glCallList(fDList);
 }
 
+//______________________________________________________________________________
 void TGLRender::Invalidate()
 {
    if(fDList)

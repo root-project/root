@@ -19,6 +19,7 @@
 #pragma link C++ class TGLWindow;
 #pragma link C++ class TGLColorEditor;
 #pragma link C++ class TGLGeometryEditor;
+#pragma link C++ class TGLSceneEditor;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GL;

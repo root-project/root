@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.8 2004/10/04 07:43:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.9 2004/10/06 09:47:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -366,7 +366,6 @@ void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
    }
    Shift(fCenter[0], fCenter[1], fCenter[2]);
    CalculateNormals();
-   SetBox();
 }
 
 //______________________________________________________________________________
@@ -594,7 +593,6 @@ void TGLSimpleLight::GLDraw()const
    glLightfv(gLightNames[fLightName], GL_DIFFUSE, fColor);
    glLightfv(gLightNames[fLightName], GL_AMBIENT, fColor + 4);
    glLightfv(gLightNames[fLightName], GL_SPECULAR, fColor + 8);
-   glLightfv(gLightNames[fLightName], GL_EMISSION, fColor);
    glLightfv(gLightNames[fLightName], GL_POSITION, lightPos);
    //Draw light source as sphere
    glLoadName(GetGLName());

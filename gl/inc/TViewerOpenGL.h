@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.14 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.15 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TGLSelection;
 class TGVSplitter;
 class TGPopupMenu;
 class TGLColorEditor;
+class TGLSceneEditor;
 class TGLCamera;
 class TBuffer3D;
 class TGMenuBar;
@@ -53,6 +54,7 @@ private:
    TGVSplitter       *fSplitter;
    TGLColorEditor    *fColorEditor;
    TGLGeometryEditor *fGeomEditor;
+   TGLSceneEditor    *fSceneEditor;
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fCanvasContainer;
    TGShutter         *fShutter;
@@ -106,7 +108,7 @@ public:
    Bool_t HandleContainerKey(Event_t *ev);
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
-   void ModifySelected();
+   void ModifySelected(Int_t id);
 
 private:
    void CreateViewer();
@@ -122,6 +124,11 @@ private:
    // final overriders from TGMainFrame
    void CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+
+   static const Int_t fgInitX;
+   static const Int_t fgInitY;
+   static const Int_t fgInitW;
+   static const Int_t fgInitH;
    //non-copyable class
    TViewerOpenGL(const TViewerOpenGL &);
    TViewerOpenGL & operator = (const TViewerOpenGL &);

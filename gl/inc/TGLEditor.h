@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLColorEditor.h,v 1.3 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.4 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -22,7 +22,8 @@
 #include "TList.h"
 #endif
 
-
+class TGCheckButton;
+class TViewerOpenGL;
 class TGLayoutHints;
 class TGNumberEntry;
 class TGLMatView;
@@ -32,6 +33,8 @@ class TGCanvas;
 class TGLabel;
 
 enum EApplyButtonIds {
+   kTBcp,
+   kTBcpm,
    kTBa,
    kTBa1
 };
@@ -39,6 +42,7 @@ enum EApplyButtonIds {
 class TGLColorEditor : public TGCompositeFrame {
    friend class TGLMatView;
 private:
+   TViewerOpenGL *fViewer;
    TGLMatView    *fMatView;
    TGLayoutHints *fFrameLayout;
 
@@ -62,7 +66,7 @@ private:
 
    TList fTrash;
 public:
-   TGLColorEditor(const TGWindow *parent, TGWindow *main);
+   TGLColorEditor(const TGWindow *parent, TViewerOpenGL *viewer);
    ~TGLColorEditor();
    void SetRGBA(const Float_t *rgba);
    const Float_t *GetRGBA()const
@@ -98,34 +102,67 @@ private:
       kCenterZ, 
       kScaleX, 
       kScaleY, 
-      kScaleZ, 
+      kScaleZ,
       kTot
    };
 
-   TList         fTrash;
-   TGLayoutHints *fFrameLayout;
-   TGNumberEntry *fGeomData[kTot];
-   TGButton      *fApplyButton;
-
-   Bool_t fIsActive;
+   TViewerOpenGL  *fViewer;
+   TList          fTrash;
+   TGLayoutHints  *fL1, *fL2;
+   TGNumberEntry  *fGeomData[kTot];
+   TGButton       *fApplyButton;
+   Bool_t         fIsActive;
 
 public:
-   TGLGeometryEditor(const TGWindow *parent, TGWindow *main);
+   TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *viewer);
 
    void SetCenter(const Double_t *center);
    void Disable();
    void DoButton();
-   void GetNewData(Double_t *center, Double_t *scale);
-   void ValueSet(Long_t val);
+   void GetObjectData(Double_t *center, Double_t *scale);
+   void ValueSet(Long_t unusedVal);
 
 private:
-   void CreateCenterFrame();
-   void CreateScaleFrame();
+   void CreateCenterControls();
+   void CreateStretchControls();
 
    TGLGeometryEditor(const TGLGeometryEditor &);
    TGLGeometryEditor &operator = (const TGLGeometryEditor &);
 
    ClassDef(TGLGeometryEditor, 0)
+};
+
+class TGLSceneEditor : public TGCompositeFrame {
+private:
+   enum {
+      kPlaneA,
+      kPlaneB,
+      kPlaneC,
+      kPlaneD,
+      kTot
+   };
+
+   TViewerOpenGL  *fViewer;
+   TList          fTrash;
+   TGLayoutHints  *fL1, *fL2;
+   TGNumberEntry  *fGeomData[kTot];
+   TGButton       *fApplyButton;
+   TGCheckButton  *fClipActivate;
+
+public:
+   TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *viewer);   
+
+   void GetPlaneEqn(Double_t *eqn);
+   void DoButton();
+   void ValueSet(Long_t unusedVal);
+
+private:
+   void CreateControls();
+
+   TGLSceneEditor(const TGLSceneEditor &);
+   TGLSceneEditor &operator = (const TGLSceneEditor &);
+
+   ClassDef(TGLSceneEditor, 0);
 };
 
 #endif

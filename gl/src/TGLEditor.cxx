@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.6 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.7 2004/10/05 12:40:49 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
-
 #include "TVirtualGL.h"
 #include "TVirtualX.h"
 #include "TGCanvas.h"
@@ -56,37 +54,30 @@ Bool_t TGLMatView::HandleExpose(Event_t *event)
    return fOwner->HandleContainerExpose(event);
 }
 
-enum EGLEditorIdent{
+enum EGLEditorIdent {
    kCPa = kTBa + 1,
-   kCPd,
-   kCPs,
-   kCPe,
-   kHSr,
-   kHSg,
-   kHSb,
-   kHSa,
-   kHSs,
-   kHSe,
-   kNExc,
-   kNEyc,
-   kNEzc,
-   kNExs,
-   kNEys,
-   kNEzs
+   kCPd, kCPs, kCPe,
+   kHSr, kHSg, kHSb,
+   kHSa, kHSs, kHSe,
+   kNExc, kNEyc, kNEzc,
+   kNExs, kNEys, kNEzs,
+   kNExp, kNEyp, kNEzp,
+   kNEat
 };
 
 //______________________________________________________________________________
-TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGWindow *main)
+TGLColorEditor::TGLColorEditor(const TGWindow *parent, TViewerOpenGL *v)
                :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
-                fRedSlider(0), fGreenSlider(0), fBlueSlider(0), fAlphaSlider(0),
-                fApplyButton(0), fIsActive(kFALSE), fIsLight(kFALSE), fRGBA()
+                fViewer(v), fRedSlider(0), fGreenSlider(0), fBlueSlider(0), 
+                fAlphaSlider(0), fApplyButton(0), fIsActive(kFALSE), 
+                fIsLight(kFALSE), fRGBA()
 {
    fTrash.SetOwner(kTRUE);
 
    for (Int_t i = 0; i < 12; ++i) fRGBA[i] = 1.;
+
    fRGBA[12] = fRGBA[13] = fRGBA[14] = 0.f;
    fRGBA[15] = 1.f, fRGBA[16] = 60.f;
-
    //Small gl-window with sphere
    TGCanvas *viewCanvas = new TGCanvas(this, 120, 120, kSunkenFrame | kDoubleBorder);
    fTrash.Add(viewCanvas);
@@ -112,7 +103,6 @@ TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGWindow *main)
    fTrash.Add(fApplyButton);
    AddFrame(fApplyButton, widLayout);
    fApplyButton->SetState(kButtonDisabled);
-   fApplyButton->Connect("Pressed()", "TViewerOpenGL", (TViewerOpenGL *)main, "ModifySelected()");
    fApplyButton->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
 
    MakeCurrent();
@@ -222,6 +212,7 @@ void TGLColorEditor::DoButton()
       break;
    case kTBa:
       fApplyButton->SetState(kButtonDisabled);
+      fViewer->ModifySelected(kTBa);
       break;
    }
    DrawSphere();
@@ -379,22 +370,31 @@ void TGLColorEditor::SwapBuffers()const
 }
 
 //______________________________________________________________________________
-TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TGWindow *main)
-                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame)
+TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *v)
+                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+                      fViewer(v)
 {
    fTrash.SetOwner(kTRUE);
    fIsActive = kFALSE;
-   fFrameLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 1, 1, 1, 1);
-   fTrash.AddLast(fFrameLayout);
-   CreateCenterFrame();
-   CreateScaleFrame();
+   fL1 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
+   fTrash.AddLast(fL1);
+   fL2 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3);
+   fTrash.AddLast(fL2);
+   CreateCenterControls();
+   CreateStretchControls();
    //create button
-   fApplyButton = new TGTextButton(this, "Apply", kTBa1);
-   fTrash.Add(fApplyButton);
-   AddFrame(fApplyButton, fFrameLayout);
+   fApplyButton = new TGTextButton(this, "Modify object", kTBa1);
+   fTrash.AddLast(fApplyButton);
+   AddFrame(fApplyButton, fL1);
    fApplyButton->SetState(kButtonDisabled);
-   fApplyButton->Connect("Pressed()", "TViewerOpenGL", (TViewerOpenGL *)main, "ModifySelected()");
    fApplyButton->Connect("Pressed()", "TGLGeometryEditor", this, "DoButton()");
+   
+ //  CreatePlaneControls();
+/*   fApplyButton1 = new TGTextButton(this, "Move plane", kTBcpm);
+   fTrash.AddLast(fApplyButton1);
+   AddFrame(fApplyButton1, fL1);
+   fApplyButton1->SetState(kButtonDisabled);
+   fApplyButton1->Connect("Pressed()", "TGLGeometryEditor", this, "DoButton()");*/
 }
 
 //______________________________________________________________________________
@@ -415,19 +415,26 @@ void TGLGeometryEditor::Disable()
 {
    fIsActive = kFALSE;
    fApplyButton->SetState(kButtonDisabled);
+//   fApplyButton1->SetState(kButtonDisabled);
 }
 
 //______________________________________________________________________________
 void TGLGeometryEditor::DoButton()
 {
-   fApplyButton->SetState(kButtonDisabled);
-   fGeomData[kScaleX]->SetNumber(1.0);
-   fGeomData[kScaleY]->SetNumber(1.0);
-   fGeomData[kScaleZ]->SetNumber(1.0);
+   if (TGButton *btn = (TGButton *)gTQSender) {
+      Int_t wid = btn->WidgetId();
+      fViewer->ModifySelected(wid);
+      if (wid == kTBa1) {
+         fApplyButton->SetState(kButtonDisabled);
+         fGeomData[kScaleX]->SetNumber(1.0);
+         fGeomData[kScaleY]->SetNumber(1.0);
+         fGeomData[kScaleZ]->SetNumber(1.0);
+      } 
+   }
 }
 
 //______________________________________________________________________________
-void TGLGeometryEditor::GetNewData(Double_t *center, Double_t *scale)
+void TGLGeometryEditor::GetObjectData(Double_t *center, Double_t *scale)
 {
    center[0] = fGeomData[kCenterX]->GetNumber();
    center[1] = fGeomData[kCenterY]->GetNumber();
@@ -441,83 +448,166 @@ void TGLGeometryEditor::GetNewData(Double_t *center, Double_t *scale)
 //______________________________________________________________________________
 void TGLGeometryEditor::ValueSet(Long_t)
 {
-   if (!fIsActive) return;
-   if (fApplyButton->GetState() == kButtonDisabled) fApplyButton->SetState(kButtonUp);
+   if (!fIsActive)return;
+   fApplyButton->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
-void TGLGeometryEditor::CreateCenterFrame()
+void TGLGeometryEditor::CreateCenterControls()
 {
-   TGGroupFrame *groupFrame = new TGGroupFrame(this, "Object center", kLHintsTop | kLHintsCenterX);
-   groupFrame->SetTitlePos(TGGroupFrame::kLeft);
-   fTrash.AddLast(groupFrame);
-   AddFrame(groupFrame, fFrameLayout);
-   TGMatrixLayout *ml = new TGMatrixLayout(groupFrame, 0, 1, 10);
-   fTrash.AddLast(ml);
-   groupFrame->SetLayoutManager(ml);
-
-   TGLabel *label = new TGLabel(groupFrame, "X :");
+   TGLabel *label = new TGLabel(this, "Object's center, X:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kCenterX] = new TGNumberEntry(groupFrame, 0.0, 8, kNExc);
+   AddFrame(label, fL2);  
+   fGeomData[kCenterX] = new TGNumberEntry(this, 0.0, 8, kNExc);
    fTrash.AddLast(fGeomData[kCenterX]);
-   groupFrame->AddFrame(fGeomData[kCenterX]);
-   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kCenterX], fL1);
+   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                                this, "ValueSet(Long_t)");
 
-   label = new TGLabel(groupFrame, "Y :");
+   label = new TGLabel(this, "Object's center, Y:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kCenterY] = new TGNumberEntry(groupFrame, 0.0, 8, kNEyc);
+   AddFrame(label, fL2);  
+   fGeomData[kCenterY] = new TGNumberEntry(this, 0.0, 8, kNEyc);
    fTrash.AddLast(fGeomData[kCenterY]);
-   groupFrame->AddFrame(fGeomData[kCenterY]);
-   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kCenterY], fL1);
+   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                                this, "ValueSet(Long_t)");
 
-   label = new TGLabel(groupFrame, "Z :");
+   label = new TGLabel(this, "Object's center, Z:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kCenterZ] = new TGNumberEntry(groupFrame, 0.0, 8, kNEzc);
+   AddFrame(label, fL2);  
+   fGeomData[kCenterZ] = new TGNumberEntry(this, 0.0, 8, kNEzc);
    fTrash.AddLast(fGeomData[kCenterZ]);
-   groupFrame->AddFrame(fGeomData[kCenterZ]);
-   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kCenterZ], fL1);
+   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                                this, "ValueSet(Long_t)");
 }
 
 //______________________________________________________________________________
-void TGLGeometryEditor::CreateScaleFrame()
+void TGLGeometryEditor::CreateStretchControls()
 {
-   TGGroupFrame *groupFrame = new TGGroupFrame(this, "Stretch", kLHintsTop | kLHintsCenterX);
-   groupFrame->SetTitlePos(TGGroupFrame::kLeft);
-   fTrash.AddLast(groupFrame);
-   AddFrame(groupFrame, fFrameLayout);
-   TGMatrixLayout *ml = new TGMatrixLayout(groupFrame, 0, 1, 10);
-   fTrash.AddLast(ml);
-   groupFrame->SetLayoutManager(ml);
-
-   TGLabel *label = new TGLabel(groupFrame, "X :");
+   TGLabel *label = new TGLabel(this, "Object's scale, X:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kScaleX] = new TGNumberEntry(groupFrame, 1.0, 8, kNExs);
+   AddFrame(label, fL2);  
+   fGeomData[kScaleX] = new TGNumberEntry(this, 1.0, 8, kNExs);
    fTrash.AddLast(fGeomData[kScaleX]);
-   groupFrame->AddFrame(fGeomData[kScaleX]);
-   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kScaleX], fL1);
+   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                               this, "ValueSet(Long_t)");
 
-   label = new TGLabel(groupFrame, "Y :");
+   label = new TGLabel(this, "Object's scale, Y:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kScaleY] = new TGNumberEntry(groupFrame, 1.0, 8, kNEys);
+   AddFrame(label, fL2);  
+   fGeomData[kScaleY] = new TGNumberEntry(this, 1.0, 8, kNEys);
    fTrash.AddLast(fGeomData[kScaleY]);
-   groupFrame->AddFrame(fGeomData[kScaleY]);
-   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kScaleY], fL1);
+   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                               this, "ValueSet(Long_t)");
 
-   label = new TGLabel(groupFrame, "Z :");
+   label = new TGLabel(this, "Object's scale, Z:");
    fTrash.AddLast(label);
-   groupFrame->AddFrame(label);  
-   fGeomData[kScaleZ] = new TGNumberEntry(groupFrame, 1.0, 8, kNEzs);
+   AddFrame(label, fL2);  
+   fGeomData[kScaleZ] = new TGNumberEntry(this, 1.0, 8, kNEzs);
    fTrash.AddLast(fGeomData[kScaleZ]);
-   groupFrame->AddFrame(fGeomData[kScaleZ]);
-   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", this, "ValueSet(Long_t)");
+   AddFrame(fGeomData[kScaleZ], fL1);
+   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+                               this, "ValueSet(Long_t)");
 
    fGeomData[kScaleX]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    fGeomData[kScaleY]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    fGeomData[kScaleZ]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
 }
 
+//______________________________________________________________________________
+TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *v)
+                     :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+                      fViewer(v)
+{
+   fTrash.SetOwner(kTRUE);
+   fL1 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
+   fTrash.AddLast(fL1);
+   fL2 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3);
+   fTrash.AddLast(fL2);
+   CreateControls();
+   //create button
+   fApplyButton = new TGTextButton(this, "Modify scene", kTBcpm);
+   fTrash.AddLast(fApplyButton);
+   AddFrame(fApplyButton, fL1);
+   fApplyButton->SetState(kButtonDisabled);
+   fApplyButton->Connect("Pressed()", "TGLSceneEditor", this, "DoButton()");
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::CreateControls()
+{
+   fClipActivate = new TGCheckButton(this, "Clipping plane", kTBcp);
+   fTrash.AddLast(fClipActivate);
+   AddFrame(fClipActivate, fL1);
+   fClipActivate->Connect("Clicked()", "TGLSceneEditor", this, "DoButton()");
+   TGLabel *label = new TGLabel(this, "Ax+By+Cz+D=0");
+   fTrash.AddLast(label);
+   AddFrame(label, fL1);
+   
+   label = new TGLabel(this, "Plane's A:");
+   fTrash.AddLast(label);
+   fGeomData[kPlaneA] = new TGNumberEntry(this, 1., 6, kNExp);
+   fTrash.AddLast(fGeomData[kPlaneA]);
+   AddFrame(label, fL2);
+   AddFrame(fGeomData[kPlaneA], fL1);
+   fGeomData[kPlaneA]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                               this, "ValueSet(Long_t)");
+   
+   label = new TGLabel(this, "Plane's B:");
+   fTrash.AddLast(label);
+   fGeomData[kPlaneB] = new TGNumberEntry(this, 0., 6, kNEyp);
+   fTrash.AddLast(fGeomData[kPlaneB]);
+   AddFrame(label, fL2);
+   AddFrame(fGeomData[kPlaneB], fL1);
+   fGeomData[kPlaneB]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                               this, "ValueSet(Long_t)");
+   
+   label = new TGLabel(this, "Plane's C:");
+   fTrash.AddLast(label);
+   fGeomData[kPlaneC] = new TGNumberEntry(this, 0., 6, kNEzp);
+   fTrash.AddLast(fGeomData[kPlaneC]);
+   AddFrame(label, fL2);
+   AddFrame(fGeomData[kPlaneC], fL1);
+   fGeomData[kPlaneC]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                               this, "ValueSet(Long_t)");
+   
+   label = new TGLabel(this, "Plane's D:");
+   fTrash.AddLast(label);
+   fGeomData[kPlaneD] = new TGNumberEntry(this, 0., 6, kNEat);
+   fTrash.AddLast(fGeomData[kPlaneD]);
+   AddFrame(label, fL2);
+   AddFrame(fGeomData[kPlaneD], fL1);
+   fGeomData[kPlaneD]->Connect("ValueSet(Long_t)", "TGLSceneEditor", 
+                               this, "ValueSet(Long_t)");   
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::ValueSet(Long_t)
+{
+   fApplyButton->SetState(kButtonUp);   
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::DoButton()
+{
+   if (TGButton *btn = (TGButton *)gTQSender) {
+      Int_t wid = btn->WidgetId();
+      fViewer->ModifySelected(wid);
+      if (wid == kTBcpm) {
+         fApplyButton->SetState(kButtonDisabled);
+      } 
+   }
+}
+
+//______________________________________________________________________________
+void TGLSceneEditor::GetPlaneEqn(Double_t *eqn)
+{
+   eqn[0] = fGeomData[kPlaneA]->GetNumber();
+   eqn[1] = fGeomData[kPlaneB]->GetNumber();
+   eqn[2] = fGeomData[kPlaneC]->GetNumber();
+   eqn[3] = fGeomData[kPlaneD]->GetNumber();
+}
