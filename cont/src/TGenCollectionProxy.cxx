@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.5 2004/11/01 11:14:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.6 2004/11/01 12:26:07 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -71,8 +71,8 @@ public:
   /// Call to delete/destruct individual item
   virtual void DeleteItem(bool force, void* ptr)  const  {
     if ( force && ptr )  {
-      if ( fValue->fDelete )  {
-        (*fValue->fDelete)(ptr);
+      if ( fVal->fDelete )  {
+        (*fVal->fDelete)(ptr);
       }
       else if ( fVal->fType )  {
         fVal->fType->Destructor(ptr);
@@ -646,6 +646,10 @@ void TGenCollectionProxy::Commit(void* env)  {
           fFeed.invoke(e);
         }
         fDestruct.invoke(e);
+        if ( e->temp )   {
+          ::operator delete(e->temp);
+          e->temp = 0;
+        }
         e->start = 0;
         --e->refCount;
       }
@@ -705,7 +709,6 @@ void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
           char *addr = ((char*)ptr)+fValOffset;
           if (*(void**)addr) (*fVal->fDelete)(*(void**)addr);
         }
-        // (*fValue->fDtor)(ptr); No: pair must stay intact !
         break;
       default:
         if ( fVal->fCase&G__BIT_ISPOINTER )  {

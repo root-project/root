@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.34 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.35 2004/10/17 11:55:47 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -44,6 +44,7 @@ TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     Int_t               fType;          //branch type
     Int_t               fStreamerType;  //branch streamer type
     Int_t               fMaximum;       //Maximum entries for a TClonesArray or variable array
+    Int_t               fSTLtype;       //!STL container type
     Int_t               fNdata;         //!Number of data in this branch
     TBranchElement     *fBranchCount;   //pointer to primary branchcount branch
     TBranchElement     *fBranchCount2;  //pointer to secondary branchcount branch
@@ -51,6 +52,7 @@ TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
     TList              *fBrowsableMethods; //!Pointer to list of browsable methods for the object
+    
 private:
     Bool_t              IsMissingCollection() const; 
     TVirtualCollectionProxy *GetCollectionProxy();

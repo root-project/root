@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -72,7 +72,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
       break;
   }
   fEnv->start = itm;
-  switch( int(fValue->fKind) )   {
+  switch( int(fVal->fKind) )   {
     case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;
     case kShort_t:   b.ReadFastArray(&itm->s_short   , nElements); break;
     case kInt_t:     b.ReadFastArray(&itm->s_int     , nElements); break;
@@ -90,7 +90,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
     case kchar:
     case kNoType_t:
     case kOther_t:
-      Error("TGenCollectionStreamer","fType %d is not supported yet!\n",fValue->fKind);
+      Error("TGenCollectionStreamer","fType %d is not supported yet!\n",fVal->fKind);
   }
   if ( feed )  {    // need to feed in data...
     fEnv->start = fFeed.invoke(fEnv);
@@ -114,13 +114,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
     case TClassEdit::kVector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
       itm = (StreamHelper*)fResize.invoke(fEnv);
-      switch (fValue->fCase) {
+      switch (fVal->fCase) {
         case G__BIT_ISCLASS: 
-          DOLOOP( b.StreamObject(i,fValue->fType) );
+          DOLOOP( b.StreamObject(i,fVal->fType) );
         case R__BIT_ISSTRING:
           DOLOOP( i->read_std_string(b) );
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( i->set(b.ReadObjectAny(fValue->fType)) );
+          DOLOOP( i->set(b.ReadObjectAny(fVal->fType)) );
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
 #ifndef R__AIX
           DOLOOP( i->read_std_string_pointer(b) );
@@ -137,13 +137,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
     case TClassEdit::kDeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
       fResize.invoke(fEnv);
-      switch (fValue->fCase) {
+      switch (fVal->fCase) {
         case G__BIT_ISCLASS:
-          DOLOOP( b.StreamObject(i,fValue->fType) );
+          DOLOOP( b.StreamObject(i,fVal->fType) );
         case R__BIT_ISSTRING:
           DOLOOP( i->read_std_string(b) );
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( i->set( b.ReadObjectAny(fValue->fType) ) );
+          DOLOOP( i->set( b.ReadObjectAny(fVal->fType) ) );
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
 #ifndef R__AIX
           DOLOOP( i->read_std_string_pointer(b) );
@@ -161,9 +161,9 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
       fEnv->start = itm = (StreamHelper*)(len<sizeof(buffer) ? buffer : memory=::operator new(len));
       fConstruct.invoke(fEnv);
-      switch ( fValue->fCase ) {
+      switch ( fVal->fCase ) {
         case G__BIT_ISCLASS:
-          DOLOOP( b.StreamObject(i,fValue->fType) )
+          DOLOOP( b.StreamObject(i,fVal->fType) )
           fFeed.invoke(fEnv);
           fDestruct.invoke(fEnv);
           break;
@@ -173,7 +173,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)  {
           fDestruct.invoke(fEnv);
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( i->set(b.ReadObjectAny(fValue->fType)) );
+          DOLOOP( i->set(b.ReadObjectAny(fVal->fType)) );
           fFeed.invoke(fEnv);
           break;
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
@@ -287,7 +287,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
       fCollect.invoke(fEnv);
       break;
   }
-  switch( int(fValue->fKind) )   {
+  switch( int(fVal->fKind) )   {
     case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
     case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
     case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
@@ -305,7 +305,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
     case kchar:
     case kNoType_t:
     case kOther_t:
-      Error("TGenCollectionStreamer","fType %d is not supported yet!\n",fValue->fKind);
+      Error("TGenCollectionStreamer","fType %d is not supported yet!\n",fVal->fKind);
   }
   if ( memory )  {
     ::operator delete(memory);
@@ -320,15 +320,15 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)  {
     case TClassEdit::kVector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
       itm = (StreamHelper*)fFirst.invoke(fEnv);
-      switch (fValue->fCase) {
+      switch (fVal->fCase) {
         case G__BIT_ISCLASS: 
-          DOLOOP( b.StreamObject(i,fValue->fType));
+          DOLOOP( b.StreamObject(i,fVal->fType));
           break;
         case R__BIT_ISSTRING:
           DOLOOP( TString(i->c_str()).Streamer(b));
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( b.WriteObjectAny(i->ptr(),fValue->fType) );
+          DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
           break;
         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
 #ifndef R__AIX
@@ -349,13 +349,13 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)  {
     case TClassEdit::kMultiSet:
     case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
-      switch (fValue->fCase) {
+      switch (fVal->fCase) {
         case G__BIT_ISCLASS: 
-          DOLOOP( b.StreamObject(i,fValue->fType));
+          DOLOOP( b.StreamObject(i,fVal->fType));
         case R__BIT_ISSTRING:
           DOLOOP( TString(i->c_str()).Streamer(b));
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
-          DOLOOP( b.WriteObjectAny(i->ptr(),fValue->fType) );
+          DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
         case R__BIT_ISSTRING|G__BIT_ISPOINTER:
 #ifndef R__AIX
           DOLOOP( i->write_std_string_pointer(b));
@@ -443,7 +443,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b) {
         case TClassEdit::kDeque:
         case TClassEdit::kMultiSet:
         case TClassEdit::kSet:
-          switch (fValue->fCase) {
+          switch (fVal->fCase) {
             case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
             case G__BIT_ISENUM:
               ReadPrimitives(nElements, b); 
@@ -470,7 +470,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b) {
         case TClassEdit::kDeque:
         case TClassEdit::kMultiSet:
         case TClassEdit::kSet:
-          switch (fValue->fCase) {
+          switch (fVal->fCase) {
             case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
             case G__BIT_ISENUM:
               WritePrimitives(nElements, b);

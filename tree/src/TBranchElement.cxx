@@ -1,8 +1,8 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.150 2004/10/29 18:03:11 brun Exp $
-// Author: Rene Brun   14/01/2001
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.151 2004/11/02 16:24:42 brun Exp $
+// Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -60,6 +60,7 @@ TBranchElement::TBranchElement(): TBranch()
    fMaximum = 0;
    fBranchPointer = 0;
    fNdata = 1;
+   fSTLtype = TClassEdit::kNotSTL;
    fCollProxy = 0;
    fCheckSum = 0;
    fBrowsableMethods = 0;
@@ -99,6 +100,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchPointer= 0;
    fBrowsableMethods = 0;
    fNdata        = 1;
+   fSTLtype      = TClassEdit::kNotSTL;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    fMaximum      = 0;
@@ -176,7 +178,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
    if (splitlevel > 0) {
       const char* elem_type = element->GetTypeName();
-      int stl = TClassEdit::IsSTLCont(elem_type);
+      fSTLtype = TClassEdit::IsSTLCont(elem_type);
       TClass *clm;
       if (element->CannotSplit()) {
          //printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
@@ -243,18 +245,15 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          BuildTitle(name);
          return;
 
-      } else if ( (stl>= TClassEdit::kVector   && stl<= TClassEdit::kMultiSet) || 
-                  (stl>=-TClassEdit::kMultiSet && stl<=-TClassEdit::kVector) ) {
+      } else if ( (fSTLtype>= TClassEdit::kVector   && fSTLtype<= TClassEdit::kMultiSet) || 
+                  (fSTLtype>=-TClassEdit::kMultiSet && fSTLtype<=-TClassEdit::kVector) ) {
          // case of vector<>, list<> deque<>, set<>, multiset<>
-
          TClass *contCl = gROOT->GetClass(elem_type);
-
          fCollProxy = contCl->GetCollectionProxy()->Generate();
-
          clm = fCollProxy->GetValueClass();
 
          // See if we can split:
-         Bool_t cansplit = abs(stl)<=TClassEdit::kDeque;//kTRUE;
+         Bool_t cansplit = kTRUE;
          if (clm==0) {
             cansplit = kFALSE;
          } else if (clm==TString::Class() || clm==gROOT->GetClass("string")) {
@@ -347,6 +346,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fObject       = 0;
    fBranchPointer= 0;
    fMaximum      = 0;
+   fSTLtype      = TClassEdit::kNotSTL;
    fBrowsableMethods = 0;
 
    fTree       = gTree;
@@ -442,6 +442,7 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    fObject       = 0;
    fBranchPointer= 0;
    fMaximum      = 0;
+   fSTLtype      = TClassEdit::kNotSTL;
    fBrowsableMethods = 0;
 
    fTree       = gTree;
@@ -1162,13 +1163,24 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       //In the case when one reads consecutively twice the same entry,
       //the user may have cleared the TClonesArray between the 2 GetEntry
       if ( fType == 3 || fType == 4 )  {
+        fReadEntry = entry;
         nbytes += TBranch::GetEntry(entry, getall);
       }
-      for (Int_t i=0;i<nbranches;i++)  {
-        TBranch *branch = (TBranch*)fBranches[i];
-        Int_t    nb = branch->GetEntry(entry, getall);
-        if (nb < 0) return nb;
-        nbytes += nb;
+      Int_t i;
+      switch(fSTLtype)  {
+        case TClassEdit::kSet:
+        case TClassEdit::kMultiSet:
+        case TClassEdit::kMap:
+        case TClassEdit::kMultiMap:
+          break;
+        default:
+          for (i=0;i<nbranches;i++)  {
+            TBranch *branch = (TBranch*)fBranches[i];
+            Int_t    nb = branch->GetEntry(entry, getall);
+            if (nb < 0) return nb;
+            nbytes += nb;
+          }
+          break;
       }
    } else {
       //terminal branch
@@ -1529,6 +1541,34 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           }
        }
        fNdata = n[0];
+       if ( fType == 4)   {
+          // Note: Proxy-helper needs to "embrace" the entire
+          //       streaming of this STL container if the container
+          //       is a set/multiset/map/multimap (what we do not
+          //       know here).
+          //       For vector/list/deque Allocate == Resize
+          //                         and Commit   == noop.
+          // TODO: Exception safety a la TPushPop
+          TVirtualCollectionProxy* proxy = GetCollectionProxy();
+          TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
+          void* env = proxy->Allocate(fNdata,true);
+          Int_t i, nbranches = fBranches.GetEntriesFast();
+          switch(fSTLtype)  {
+            case TClassEdit::kSet:
+            case TClassEdit::kMultiSet:
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap:
+              for (i=0;i<nbranches;i++)  {
+                TBranch *branch = (TBranch*)fBranches[i];
+                Int_t    nb = branch->GetEntry(GetReadEntry(), 1);
+                if (nb < 0) break;
+              }
+              break;
+            default:
+              break;
+          }
+          proxy->Commit(env);
+       }
        return;
      } else if (fType == 31 || fType == 41) {    // sub branch of a TClonesArray
        fNdata = fBranchCount->GetNdata();
@@ -1676,12 +1716,38 @@ void TBranchElement::ReadLeaves(TBuffer &b)
         }
      }
      fNdata = n;
-     TVirtualCollectionProxy* proxy = GetCollectionProxy();
-     TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
-     void* env = proxy->Allocate(fNdata,true);
-     proxy->Commit(env);
      if (!fObject) return;
+     if ( fType == 4)   {
+        // Note: Proxy-helper needs to "embrace" the entire
+        //       streaming of this STL container if the container
+        //       is a set/multiset/map/multimap (what we do not
+        //       know here).
+        //       For vector/list/deque Allocate == Resize
+        //                         and Commit   == noop.
+        // TODO: Exception safety a la TPushPop
+        TVirtualCollectionProxy* proxy = GetCollectionProxy();
+        TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
+        void* env = proxy->Allocate(fNdata,true);
+        Int_t i, nbranches = fBranches.GetEntriesFast();
+        switch(fSTLtype)  {
+          case TClassEdit::kSet:
+          case TClassEdit::kMultiSet:
+          case TClassEdit::kMap:
+          case TClassEdit::kMultiMap:
+            for (i=0;i<nbranches;i++)  {
+              TBranch *branch = (TBranch*)fBranches[i];
+              Int_t    nb = branch->GetEntry(GetReadEntry(), 1);
+              if (nb < 0) break;
+            }
+            break;
+          default:
+            break;
+        }
+        proxy->Commit(env);
+      }
   } else if (fType == 41) {    // sub branch of an STL class
+     //Error("ReadLeaves","STL split mode not yet implemented (error 2)\n");
+     //char **ppointer = (char**)fAddress;
      fNdata = fBranchCount->GetNdata();
      if (!fObject) return;
      TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fObject);
@@ -2317,6 +2383,8 @@ TVirtualCollectionProxy *TBranchElement::GetCollectionProxy()
       const char *ty = ((TStreamerElement*)This->GetInfo()->GetElems()[fID])->GetTypeName();
       TClass *cl = gROOT->GetClass(ty);
       fCollProxy = cl->GetCollectionProxy()->Generate();
+      fSTLtype   = TClassEdit::IsSTLCont(ty);
+      if ( fSTLtype<0 ) fSTLtype = -fSTLtype;
    } else if(fType==41) {
       This->fCollProxy = fBranchCount->fCollProxy;
    }

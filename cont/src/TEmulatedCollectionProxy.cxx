@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.2 2004/11/01 12:26:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.3 2004/11/01 23:09:45 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -94,7 +94,6 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
           }
           break;
       }
-      fValue = new Value(*fVal);
       fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
       return this;
     }
@@ -145,23 +144,23 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
           for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* i = (StreamHelper*)addr;
-            void* ptr = i->ptr();
+            StreamHelper* h = (StreamHelper*)addr;
+            void* ptr = h->ptr();
             fKey->fType->Destructor(ptr);
-            i->set(0);
+            h->set(0);
           }
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = (StreamHelper*)addr;
-            delete (std::string*)i->ptr();
-            i->set(0);
+            StreamHelper* h = (StreamHelper*)addr;
+            delete (std::string*)h->ptr();
+            h->set(0);
           }
           break;
         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = (StreamHelper*)addr;
-            delete (TString*)i->ptr();
-            i->set(0);
+            StreamHelper* h = (StreamHelper*)addr;
+            delete (TString*)h->ptr();
+            h->set(0);
           }
           break;
       }
@@ -186,25 +185,25 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
           for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* i = (StreamHelper*)addr;
-            void* p = i->ptr();
+            StreamHelper* h = (StreamHelper*)addr;
+            void* p = h->ptr();
             if ( p )  {
               fVal->fType->Destructor(p);
             }
-            i->set(0);
+            h->set(0);
           }
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = (StreamHelper*)addr;
-            delete (std::string*)i->ptr();
-            i->set(0);
+            StreamHelper* h = (StreamHelper*)addr;
+            delete (std::string*)h->ptr();
+            h->set(0);
           }
           break;
         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = (StreamHelper*)addr;
-            delete (TString*)i->ptr();
-            i->set(0);
+            StreamHelper* h = (StreamHelper*)addr;
+            delete (TString*)h->ptr();
+            h->set(0);
           }
           break;
       }
@@ -294,6 +293,10 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)  {
 void* TEmulatedCollectionProxy::At(UInt_t idx)   {
   if ( fEnv && fEnv->object )   {
     PCont_t c = PCont_t(fEnv->object);
+    size_t  s = c->size();
+    if ( idx >= (s/fValDiff) )  {
+      return 0;
+    }
     return idx<(c->size()/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
   }
   Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
