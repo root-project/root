@@ -27,15 +27,27 @@
 // 
 //    ./pythiaExample -1
 // 
-// NOTE: To run this example, you must have a version of ROOT
+// NOTE: To run this example, you must have a version of ROOT 
 // compiled with the Pythia6 version enabled and have Pythia6 installed.
 // The statement gSystem->Load("libPythia6");  (see below)
 // assumes that the directory containing the Pythia6 library
-// is included in your LD_LIBRARY_PATH.
-
+// is somewhere where the dynamic loader can find it.  Locations
+// that can specify this, are: 
+// 
+//  Root.DynamicPath resource in your ROOT configuration file 
+//    (/etc/root/system.rootrc or ~/.rootrc). 
+//  Runtime load paths set on the executable (Using GNU ld,
+//    specified with flag `-rpath'). 
+//  Dynamic loader search path as specified in the loaders
+//    configuration file (On GNU/Linux this file is
+//    etc/ld.so.conf). 
+//  For Un*x: Any directory mentioned in LD_LIBRARY_PATH 
+//  For Windows: Any directory mentioned in PATH 
+// 
+//
 //____________________________________________________________________ 
 //  
-// $Id$ 
+// $Id: pythiaExample.C,v 1.1 2002/08/18 20:12:21 brun Exp $ 
 // Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
 // Update: 2002-08-16 16:40:27+0200
 // Copyright: 2002 (C) Christian Holm Christensen
