@@ -648,8 +648,20 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   else           ifunc = G__struct.memfunc[tagnum];
   funcname = (char*)fname;
   param = (char*)arg;
+#ifndef G__OLDIMPLEMENTATION2177
+  int convmode;
+  switch(mode) {
+  case ExactMatch:              convmode=0; break;
+  case ConversionMatch:         convmode=1; break;
+  case ConversionMatchBytecode: convmode=2; break;
+  }
+#else
+  int convmode = (mode==ConversionMatch)?1:0;
+#endif
   ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
-#ifndef G__OLDIMPLEMENTATION1989
+#if !defined(G__OLDIMPLEMENTATION2177)
+			      ,convmode
+#elif !defined(G__OLDIMPLEMENTATION1989)
 			      ,(mode==ConversionMatch)?1:0
 #endif
 			      ,(imode==WithInheritance)?1:0

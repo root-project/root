@@ -962,6 +962,13 @@ int start;
 
   baseclass = G__struct.baseclass[tagnum];
 
+#ifndef G__OLDIMPLEMENTATION2162
+  if(G__cintv6) {
+    if(G__more(fout,"Virtual table--------------------------------------------------------------\n")) return(1);
+    G__bc_disp_vtbl(fout,tagnum);
+  }
+#endif
+
   /* inheritance */
   if(baseclass) {
     if(G__more(fout,"List of base class--------------------------------------------------------\n")) return(1);
@@ -1841,7 +1848,7 @@ long offset;
 #endif
     sprintf(msg,"%s",addspace);
     if(G__more(fout,msg)) return(1);
-    sprintf(msg,"0x%-8lx ",var->p[imon1]);
+    sprintf(msg,"0x%-8lx ",addr);
     if(G__more(fout,msg)) return(1);
 
 #ifndef G__NEWINHERIT
@@ -2030,7 +2037,11 @@ long offset;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g': 
+#ifdef G__BOOL4BYTE
+	  sprintf(msg,"=%d",(*(int*)addr)?1:0); 
+#else
 	  sprintf(msg,"=%d",(*(unsigned char*)addr)?1:0); 
+#endif
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif

@@ -373,11 +373,15 @@ G__value *buf1,*buf2;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
-	  memcpy(
-	         (void *)(buf1->obj.i+var1->p[i])
+#ifdef G__BOOL4BYTE
+	  memcpy((void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
-		 ,G__CHARALLOC*(var1->varlabel[i][1]+1)
-		 );
+		 ,G__INTALLOC*(var1->varlabel[i][1]+1));
+#else
+	  memcpy((void *)(buf1->obj.i+var1->p[i])
+		 ,(void *)(buf2->obj.i+var2->p[i])
+		 ,G__CHARALLOC*(var1->varlabel[i][1]+1));
+#endif
 	  break;
 	  
 	case 'r':

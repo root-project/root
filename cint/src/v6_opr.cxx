@@ -1439,6 +1439,7 @@ int *ptagnum;
   
   G__fixedscope=1;
 
+  /* if scope operator found at the beginning of the name, global scope */
   /* if scope operator found at the beginning of the name, global scope 
    * or fully qualified scope!
    */
@@ -1447,7 +1448,7 @@ int *ptagnum;
     strcpy(temp,name+2);
     strcpy(name,temp);
     G__hash(name,(*phash),i)
-#ifndef G__OLDIMPLEMENTATIONxyz
+#ifndef G__OLDIMPLEMENTATION2179
     /* If we do no have anymore scope operator, we know the request of
        for the global name space */
     pc = G__find_first_scope_operator(name);
@@ -1455,7 +1456,6 @@ int *ptagnum;
 #else    
     return(G__GLOBALSCOPE);
 #endif
-
   }
 
 #ifndef G__STD_NAMESPACE /* ON667 */
@@ -1496,7 +1496,11 @@ int *ptagnum;
 #endif
     member=pc+2;
     *pc='\0';
+#ifndef G__OLDIMPLEMENTATION2181
+    scopetagnum=G__defined_tagname(scope,1);
+#else
     scopetagnum=G__defined_tagname(scope,0);
+#endif
 #ifndef G__OLDIMPLEMENTATION759
     G__tagdefining = save_tagdefining;
     G__def_tagnum = save_def_tagnum;

@@ -38,6 +38,26 @@ double value;
 }
 
 /****************************************************************
+* G__letbool(G__value buf,char type,int value)
+*   macro in G__ci.h
+****************************************************************/
+void G__letbool(buf,type,value)
+G__value *buf;
+int type;
+long value; /* used to be int */
+{
+	buf->type=type;
+	buf->obj.i=value?1:0;
+	/*
+	buf->tagnum = -1;
+	buf->typenum = -1;
+	*/
+#ifndef G__OLDIMPLEMENTATION456
+	buf->obj.reftype.reftype = G__PARANORMAL;
+#endif
+}
+
+/****************************************************************
 * G__letint(G__value buf,char type,int value)
 *   macro in G__ci.h
 ****************************************************************/
@@ -130,6 +150,22 @@ G__value buf;
 #endif
 	default:
 		return((double)buf.obj.i);
+	}
+}
+
+/****************************************************************
+* long G__bool(G__value buf)
+* 
+****************************************************************/
+long G__bool(buf) /* used to be int */
+G__value buf;
+{
+	switch(buf.type) {
+	case 'd':
+	case 'f':
+		return((long)(buf.obj.d?1:0));
+	default:
+		return(buf.obj.i?1:0);
 	}
 }
 

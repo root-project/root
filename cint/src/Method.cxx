@@ -577,6 +577,8 @@ long G__MethodInfo::FilePosition()
        ) {
 #if defined(G__NONSCALARFPOS2)
       return((long)ifunc->pentry[index]->pos.__pos);
+#elif defined(G__NONSCALARFPOS_QNX)      
+      return((long)ifunc->pentry[index]->pos._Off);
 #else
       return((long)ifunc->pentry[index]->pos);
 #endif

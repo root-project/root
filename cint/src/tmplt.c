@@ -7,7 +7,7 @@
  * Description:
  *  Class and member function template
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -515,9 +515,7 @@ char* source;
   struct G__Templatearg *targ=NULL;
   struct G__Templatearg *p=NULL;
   char type[G__MAXNAME];
-#ifdef G__OLDIMPLEMENTATION2149
   int c;
-#endif
 #ifndef G__OLDIMPLEMENTATION2149
   int i,j,nest;
 #endif
@@ -607,7 +605,7 @@ char* source;
 
     /*  template<T*,E,int> ...
      *              ^                  */
-#ifndef G__OLDIMPLEMENTATION2149
+#ifndef G__OLDIMPLEMENTATION2180
   } while (0) ;
 #else
   } while(','==c) ;
@@ -1164,9 +1162,16 @@ char *name;
   while(deftmplt->next) { /* BUG FIX */
     if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
       /* look for ordinary scope resolution */
-      if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
-			     env_tagnum==deftmplt->parent_tagnum))||
-	 scope_tagnum==deftmplt->parent_tagnum) {
+      if((-1==scope_tagnum &&
+#ifndef G__OLDIMPLEMENTATION2173
+	  -1==G__tagdefining &&
+#endif
+	  (-1==deftmplt->parent_tagnum||env_tagnum==deftmplt->parent_tagnum))
+	 || (scope_tagnum==deftmplt->parent_tagnum
+#ifndef G__OLDIMPLEMENTATION2173
+	     && (-1==G__tagdefining || G__tagdefining==deftmplt->parent_tagnum)
+#endif
+	     )) {
 	return(deftmplt);
       }
       else if(-1==scope_tagnum) {
@@ -1182,7 +1187,12 @@ char *name;
 	/* look for enclosing scope resolution */
 	while(-1!=env_parent_tagnum) {
 	  env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
-	  if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
+	  if(env_parent_tagnum==deftmplt->parent_tagnum
+#ifndef G__OLDIMPLEMENTATION2173
+	     && (-1==G__tagdefining || G__tagdefining==deftmplt->parent_tagnum)
+#endif
+	     ) 
+	    return(deftmplt);
 #ifndef G__OLDIMPLEMENTATION2091
           if(G__struct.baseclass[env_parent_tagnum]) {
             for(temp=0;temp<G__struct.baseclass[env_parent_tagnum]->basen;temp++) {
@@ -1279,42 +1289,42 @@ char *name;
   /* search for template name and scope match */
   deftmplt = &G__definedtemplateclass;
   while(deftmplt->next) { /* BUG FIX */
-     if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
-        /* look for ordinary scope resolution */
-        if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
-                               env_tagnum==deftmplt->parent_tagnum))||
-           scope_tagnum==deftmplt->parent_tagnum) {
-           return(deftmplt);
-        }
-        else if(-1==scope_tagnum) {
-           int env_parent_tagnum = env_tagnum;
-           if(baseclass) {
-              /* look for using directive scope resolution */
-              for(temp=0;temp<baseclass->basen;temp++) {
-                 if(baseclass->basetagnum[temp]==deftmplt->parent_tagnum) {
-                    return(deftmplt);
-                 }
-              }
-           }
-           /* look for enclosing scope resolution */
-           while(-1!=env_parent_tagnum) {
-              env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
-              if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
+    if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
+      /* look for ordinary scope resolution */
+      if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
+			     env_tagnum==deftmplt->parent_tagnum))||
+	 scope_tagnum==deftmplt->parent_tagnum) {
+	return(deftmplt);
+      }
+      else if(-1==scope_tagnum) {
+	int env_parent_tagnum = env_tagnum;
+	if(baseclass) {
+	  /* look for using directive scope resolution */
+	  for(temp=0;temp<baseclass->basen;temp++) {
+	    if(baseclass->basetagnum[temp]==deftmplt->parent_tagnum) {
+	      return(deftmplt);
+	    }
+	  }
+	}
+	/* look for enclosing scope resolution */
+	while(-1!=env_parent_tagnum) {
+	  env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
+	  if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
 #ifndef G__OLDIMPLEMENTATION2091
-              if(G__struct.baseclass[env_parent_tagnum]) {
-                 for(temp=0;temp<G__struct.baseclass[env_parent_tagnum]->basen;temp++) {
-                    if(G__struct.baseclass[env_parent_tagnum]->basetagnum[temp]==deftmplt->parent_tagnum) {
-                       return(deftmplt);
-                    }
-                 }
+          if(G__struct.baseclass[env_parent_tagnum]) {
+            for(temp=0;temp<G__struct.baseclass[env_parent_tagnum]->basen;temp++) {
+              if(G__struct.baseclass[env_parent_tagnum]->basetagnum[temp]==deftmplt->parent_tagnum) {
+                return(deftmplt);
               }
+            }
+          }
 #endif
-           }
+        }
 #ifndef G__OLDIMPLEMENTATION2091
-           /* look in global scope (handle for using declaration info */
-           for(temp=0;temp<G__globalusingnamespace.basen;temp++) {
-              if(G__globalusingnamespace.basetagnum[temp]==deftmplt->parent_tagnum) {
-                 return(deftmplt);
+        /* look in global scope (handle for using declaration info */
+        for(temp=0;temp<G__globalusingnamespace.basen;temp++) {
+          if(G__globalusingnamespace.basetagnum[temp]==deftmplt->parent_tagnum) {
+            return(deftmplt);
           }
 	}
 #endif
@@ -1639,10 +1649,12 @@ void G__declare_template()
           anything preceding combinations of *,& and const. */
 #ifndef G__OLDIMPLEMENTATION2157
        c = G__fgetname_template(temp2,"*&(;=");
-       if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
-          strcat(temp2,"=");
-          c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
-       }
+#ifndef G__OLDIMPLEMENTATION2178
+        if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
+           strcat(temp2,"=");
+           c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+        }
+#endif
 #else
        c = G__fgetname_template(temp2,"*&(;");
 #endif
@@ -2200,7 +2212,7 @@ int *pnpara;
   /**************************************************************
   * explicitly given template argument
   **************************************************************/
-#ifndef G__OLDIMPLEMENTATIONxyz
+#ifndef G__OLDIMPLEMENTATION2180
   if (paralist[0]=='>' && paralist[1]==0) 
      c='>';
   else
@@ -2218,53 +2230,63 @@ int *pnpara;
       switch(def_para->type) {
       case G__TMPLT_CLASSARG:
 #ifndef G__OLDIMPLEMENTATION608
-         strcpy(temp,string);
-         G__templatemaptypename(temp);
-         if(strcmp(temp,string)!=0) {
-            searchflag=1;
-            strcpy(string,temp);
-         }
-         break;
+	strcpy(temp,string);
+	G__templatemaptypename(temp);
+	if(strcmp(temp,string)!=0) {
+	  searchflag=1;
+	  strcpy(string,temp);
+	}
+	break;
 #endif
       case G__TMPLT_TMPLTARG:
 	break;
 #ifndef G__OLDIMPLEMENTATION818
       case G__TMPLT_POINTERARG3:
-         if(string[0] && '*'==string[strlen(string)-1])
-            string[strlen(string)-1]='\0';
-         else G__genericerror("Error: this template requests pointer arg 3");
-         case G__TMPLT_POINTERARG2:
-            if(string[0] && '*'==string[strlen(string)-1])
-               string[strlen(string)-1]='\0';
-            else G__genericerror("Error: this template requests pointer arg 2");
-         case G__TMPLT_POINTERARG1:
-            if(string[0] && '*'==string[strlen(string)-1])
-               string[strlen(string)-1]='\0';
-            else G__genericerror("Error: this template requests pointer arg 1");
-            break;
+	if(string[0] && '*'==string[strlen(string)-1])
+	  string[strlen(string)-1]='\0';
+	else G__genericerror("Error: this template requests pointer arg 3");
+      case G__TMPLT_POINTERARG2:
+	if(string[0] && '*'==string[strlen(string)-1])
+	  string[strlen(string)-1]='\0';
+	else G__genericerror("Error: this template requests pointer arg 2");
+      case G__TMPLT_POINTERARG1:
+	if(string[0] && '*'==string[strlen(string)-1])
+	  string[strlen(string)-1]='\0';
+	else G__genericerror("Error: this template requests pointer arg 1");
+	break;
 #endif
-         default:
+      default:
 #ifndef G__OLDIMPLEMENTATION1381
-         {
-            int store_memberfunc_tagnum = G__memberfunc_tagnum;
-            int store_exec_memberfunc = G__exec_memberfunc;
-            if(-1!=G__tagdefining) {
-               G__exec_memberfunc = 1;
-               G__memberfunc_tagnum = G__tagdefining;
-            }
-            buf = G__getexpr(string);
-            G__exec_memberfunc = store_exec_memberfunc;
-            G__memberfunc_tagnum = store_memberfunc_tagnum;
-         }
-#else
-         buf = G__getexpr(string);
+	{
+	  int store_memberfunc_tagnum = G__memberfunc_tagnum;
+	  int store_exec_memberfunc = G__exec_memberfunc;
+#ifndef G__OLDIMPLEMENTATION2161
+	  int store_no_exec_compile = G__no_exec_compile;
+	  int store_asm_noverflow = G__asm_noverflow;
+	  G__no_exec_compile=0;
+	  G__asm_noverflow=0;
 #endif
-         G__string(buf,temp);
-         if(strcmp(temp,string)!=0) {
-            searchflag=1;
-            strcpy(string,temp);
-         }
-         break;
+	  if(-1!=G__tagdefining) {
+	    G__exec_memberfunc = 1;
+	    G__memberfunc_tagnum = G__tagdefining;
+	  }
+	  buf = G__getexpr(string);
+#ifndef G__OLDIMPLEMENTATION2161
+	  G__no_exec_compile = store_no_exec_compile;
+	  G__asm_noverflow = store_asm_noverflow;
+#endif
+	  G__exec_memberfunc = store_exec_memberfunc;
+	  G__memberfunc_tagnum = store_memberfunc_tagnum;
+	}
+#else
+	buf = G__getexpr(string);
+#endif
+	G__string(buf,temp);
+	if(strcmp(temp,string)!=0) {
+	  searchflag=1;
+	  strcpy(string,temp);
+	}
+	break;
       }
       def_para = def_para->next;
     }
@@ -2290,53 +2312,53 @@ int *pnpara;
   store_tagdefining = G__tagdefining;
   store_def_tagnum = G__def_tagnum;
   if(-1!=parent_tagnum) {
-     G__tagdefining = parent_tagnum;
-     G__def_tagnum = parent_tagnum;
+    G__tagdefining = parent_tagnum;
+    G__def_tagnum = parent_tagnum;
   }
 #endif
   if(def_para) {
-     while(def_para) {
-        if(def_para->default_parameter) {
-           strcpy(string,def_para->default_parameter);
+    while(def_para) {
+      if(def_para->default_parameter) {
+	strcpy(string,def_para->default_parameter);
 #ifdef G__OLDIMPLEMENTATION773
-           G__templatemaptypename(string);
+	G__templatemaptypename(string);
 #endif
 #ifndef G__OLDIMPLEMENTATION664
-           charlist->string = G__expand_def_template_arg (string,def_para_in,
-                                                          charlist_in);
+        charlist->string = G__expand_def_template_arg (string,def_para_in,
+                                                       charlist_in);
 #ifndef G__OLDIMPLEMENTATION773
-           {
-              int len=strlen(charlist->string)*2;
+        {
+	  int len=strlen(charlist->string)*2;
 #ifndef G__OLDIMPLEMENTATION788
-              /* workaround, G__templatemaptemplatename() overrides malloced mem*/
-              if(len<G__LONGLINE) len=G__LONGLINE;
+	  /* workaround, G__templatemaptemplatename() overrides malloced mem*/
+	  if(len<G__LONGLINE) len=G__LONGLINE;
 #endif
-              charlist->string=realloc(charlist->string,len+1);
-              G__templatemaptypename(charlist->string);
-              G__ASSERT((int)strlen(charlist->string)<=(int)len);
-           }
+	  charlist->string=realloc(charlist->string,len+1);
+	  G__templatemaptypename(charlist->string);
+	  G__ASSERT((int)strlen(charlist->string)<=(int)len);
+        }
 #endif /* ON773 */
 #else /* ON664 */
-           charlist->string = malloc(strlen(string)+1);
-           strcpy(charlist->string,string);
+	charlist->string = malloc(strlen(string)+1);
+	strcpy(charlist->string,string);
 #endif /* ON664 */
-           charlist->next=(struct G__Charlist*)malloc(sizeof(struct G__Charlist));
-           charlist->next->next = (struct G__Charlist *)NULL;
-           charlist->next->string = (char *)NULL;
-           charlist = charlist->next;
+	charlist->next=(struct G__Charlist*)malloc(sizeof(struct G__Charlist));
+	charlist->next->next = (struct G__Charlist *)NULL;
+	charlist->next->string = (char *)NULL;
+	charlist = charlist->next;
 #ifndef G__OLDIMPLEMENTATION773
 #ifndef G__OLDIMPLEMENTATION1503
-           searchflag = 3;
+	searchflag = 3;
 #else
-           searchflag = 1;
+	searchflag = 1;
 #endif
 #endif
-        }
-        else {
-           G__genericerror("Error: Too few template arguments");
-        }
-        def_para=def_para->next;
-     }
+      }
+      else {
+	G__genericerror("Error: Too few template arguments");
+      }
+      def_para=def_para->next;
+    }
   }
 #ifndef G__OLDIMPLEMENTATION1800
   G__tagdefining = store_tagdefining;
@@ -2630,10 +2652,10 @@ char *tagnamein;
       G__newtype.tagnum[typenum] = tagnum;
 #ifndef G__OLDIMPLEMENTATION1712
       if(templatearg_enclosedscope) {
-         G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
+	G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
       }
       else {
-         G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+	G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
       }
 #else
       G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];

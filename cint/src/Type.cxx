@@ -97,7 +97,7 @@ int G__TypeInfo::operator!=(const G__TypeInfo& a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__TypeInfo::TrueName()
+const char* G__TypeInfo::TrueName() 
 {
 #if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,
@@ -110,7 +110,7 @@ const char* G__TypeInfo::TrueName()
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__TypeInfo::Name()
+const char* G__TypeInfo::Name() 
 {
 #if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
@@ -124,7 +124,7 @@ const char* G__TypeInfo::Name()
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TypeInfo::Size()
+int G__TypeInfo::Size() const
 {
   G__value buf;
   buf.type=(int)type;

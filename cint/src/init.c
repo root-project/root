@@ -762,9 +762,12 @@ char *argv[] ;
     switch(c) {
 
 #ifndef G__OLDIMPLEMENTATION2068
+#ifdef G__CINT_VER6
     case '@':
-      G__cintv6=1;
+      if(G__cintv6==0) G__cintv6=G__CINT_VER6;
+      else if(G__cintv6==G__CINT_VER6) G__cintv6|=G__BC_DEBUG;
       break;
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1725

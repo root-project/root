@@ -742,7 +742,11 @@ G__value result3;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
+#ifdef G__BOOL4BYTE
+    G__letint(&result3,type ,(int)(G__int(result3)?1:0));
+#else
     G__letint(&result3,type ,(unsigned char)(G__int(result3)?1:0));
+#endif
     break;
 #endif
   default:

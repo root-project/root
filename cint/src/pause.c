@@ -3444,7 +3444,13 @@ G__value *rslt;
 #ifndef G__FONS23
       else if('G'==command[0]) G__varmonitor(G__sout,&G__global,command+index,"",0);
 #endif
-      else                G__varmonitor(G__sout,G__p_local,command+index,"",0);
+#ifndef G__OLDIMPLEMENTATION2159
+      else if(G__cintv6) {
+        if(G__bc_setdebugview(temp1,&view)) 
+	  G__varmonitor(G__sout,view.var_local,command+index,"",view.localmem);
+      }
+#endif
+      else G__varmonitor(G__sout,G__p_local,command+index,"",0);
       G__RESET_TEMPENV;
 
 #ifdef G__ASM

@@ -901,6 +901,9 @@ void G__bc_struct G__P((int tagnum)) ;
 #ifndef G__OLDIMPLEMENTATION2084
 void G__bc_delete_vtbl G__P((int tagnum)) ;
 #endif
+#ifndef G__OLDIMPLEMENTATION2162
+void G__bc_disp_vtbl G__P((FILE* fp,int tagnum)) ;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION2087
 G__value G__bc_new_operator G__P((const char *expression)) ;
@@ -912,6 +915,14 @@ int G__bc_exec_try_bytecode G__P((int start,int stack,G__value *presult,long loc
 int G__bc_exec_throw_bytecode G__P((G__value* pval));
 int G__bc_exec_typematch_bytecode G__P((G__value* catchtype,G__value* excptobj));
 int G__Isvalidassignment_val G__P((G__value* ltype,int varparan,int lparan,int lvar_type,G__value* rtype));
+int G__bc_conversion G__P((G__value *result,struct G__var_array* var,int ig15
+			   ,int var_type,int paran)) ;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2182
+int G__bc_assignment G__P((struct G__var_array *var,int ig15,int paran
+			   ,int var_type,G__value *prresult
+			   ,long struct_offset,long store_struct_offset));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2136
@@ -933,9 +944,16 @@ void G__bc_cancel_VIRTUALADDSTROS();
 void G__bc_REWINDSTACK G__P((int n)) ;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2160
+int G__bc_casejump G__P((void* p,int val)) ;
+#endif
+
 G__value G__alloc_exceptionbuffer G__P((int tagnum));
 
 void G__argtype2param G__P((char *argtype,struct G__param *libp));
+
+void G__letbool G__P((G__value *buf,int type,long value));
+long G__bool G__P((G__value buf));
 
 #ifdef __cplusplus
 }

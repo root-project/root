@@ -89,7 +89,11 @@ G__value *object;
     return(G__P2MFALLOC);
 #ifndef G__OLDIMPLEMENTATION1604
   case 'G': /* bool */
+#ifdef G__BOOL4BYTE
+    return(G__INTALLOC);
+#else
     return(G__CHARALLOC);
+#endif
 #endif
   }
   return(1);
@@ -187,11 +191,15 @@ char *typename;
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {
     switch(G__newtype.type[typenum]) {
-    case 'b':
-    case 'c':
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g':
+#ifdef G__BOOL4BYTE
+      result = sizeof(int);
+      break;
 #endif
+#endif
+    case 'b':
+    case 'c':
       result = sizeof(char);
       break;
     case 'h':
@@ -294,7 +302,11 @@ char *typename;
   if(strcmp(typename,"FILE")==0)
     return(sizeof(FILE));
 #ifndef G__OLDIMPLEMENTATION1604
+#ifdef G__BOOL4BYTE
+  if(strcmp(typename,"bool")==0) return(sizeof(int));
+#else
   if(strcmp(typename,"bool")==0) return(sizeof(unsigned char));
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION406
@@ -473,11 +485,15 @@ char *typenamein;
     }
     else {
       switch(tolower(type)) {
-      case 'b':
-      case 'c':
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
+#ifdef G__BOOL4BYTE
+	size = G__INTALLOC;
+	break;
 #endif
+#endif
+      case 'b':
+      case 'c':
 	size = G__CHARALLOC;
 	break;
       case 'r':
@@ -1269,11 +1285,15 @@ int objsize;
 #endif
 #endif
   switch(t) {
-  case 'c':
-  case 'b':
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
+#ifdef G__BOOL4BYTE
+    *(int*)(p) = (int)G__int(*pval);
+    break;
 #endif
+#endif
+  case 'c':
+  case 'b':
 #if defined(__GNUC__)
     *(int*)(p) = (int)G__int(*pval);
 #else

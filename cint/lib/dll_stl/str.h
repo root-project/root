@@ -1,5 +1,12 @@
 // lib/dll_stl/str.h
 
+#include <iostream>
+#ifdef __MAKECINT__
+#pragma link off all classes;
+#pragma link off all functions;
+#pragma link off all globals;
+#endif
+
 #include <string>
 
 #ifndef __hpux
@@ -70,6 +77,9 @@ using namespace std;
 #pragma link C++ function operator<=(const string&,const char*);
 #pragma link C++ function operator>=(const string&,const char*);
 #pragma link C++ function operator+(const string&,const char*);
+
+#pragma link C++ function swap(string& lhs,string& rhs);
+#pragma link C++ function getline;
 //#endif // G__ROOT
 
 #endif // __MAKECINT__

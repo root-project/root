@@ -317,7 +317,11 @@ char *temp;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
+#ifdef G__BOOL4BYTE
+    sprintf(temp,"(bool)%d",(int)buf.obj.i?1:0);
+#else
     sprintf(temp,"(bool)%d",(unsigned char)buf.obj.i?1:0);
+#endif
     break;
 #endif
   case 'k':

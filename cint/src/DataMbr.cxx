@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  ************************************************************************
  * Author                  Masaharu Goto
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -316,9 +316,14 @@ int G__DataMemberInfo::Next()
 }
 ///////////////////////////////////////////////////////////////////////////
 #include <vector>
+#ifndef G__OLDIMPLEMENTATION2168
 namespace std { }
 using namespace std;
-
+#else
+#ifndef __hpux
+using namespace std;
+#endif
+#endif
 int G__DataMemberInfo::Prev()
 {
   struct G__var_array *var;

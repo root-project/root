@@ -7,7 +7,7 @@
  * Description:
  *  Struct, class, enum, union handling
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -124,6 +124,7 @@ int G__using_namespace()
        * 1. global scope has baseclass information
        * 2. G__searchvariable() looks for global scope baseclass
        */
+#ifndef G__OLDIMPLEMENTATION2167
        /* first check whether we already have this directive in 
           memory */
        int j;
@@ -158,6 +159,28 @@ int G__using_namespace()
 #endif
        }
        result=1;
+#else /* 2167 */
+#ifndef G__OLDIMPLEMENTATION686
+      if(G__globalusingnamespace.basen<G__MAXBASE) {
+        struct G__inheritance *base = &G__globalusingnamespace;
+        int* pbasen = &base->basen;
+	base->basetagnum[*pbasen]=basetagnum;
+	base->baseoffset[*pbasen]=0;
+	base->baseaccess[*pbasen]=G__PUBLIC;
+	++(*pbasen);
+#ifdef G__OLDIMPLEMENTATION1060
+	G__fprinterr(G__serr,"Warning: using directive in global scope, not completely supported");
+	G__printlinenum();
+#endif
+      }
+      else {
+	G__genericerror("Limitation: too many using directives in global scope");
+      }
+#else
+      G__genericerror("Limitation: using directive can be only used in template/class/struct scope");
+#endif
+      result=1;
+#endif /* 2167 */
     }
   }
 

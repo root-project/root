@@ -562,6 +562,9 @@ int *done;
 #elif defined(G__NONSCALARFPOS2)
     if(call_pos.__pos == callfuncmacro->call_pos.__pos &&
        G__ifile.filenum == callfuncmacro->call_filenum) {
+#elif defined(G__NONSCALARFPOS_QNX)
+    if(call_pos._Off == callfuncmacro->call_pos._Off &&
+       G__ifile.filenum == callfuncmacro->call_filenum) {
 #else
     if(call_pos == callfuncmacro->call_pos &&
        G__ifile.filenum == callfuncmacro->call_filenum) {
@@ -972,6 +975,9 @@ int G__execfuncmacro_noexec (char* macroname)
 #elif defined(G__NONSCALARFPOS2)
     if(call_pos.__pos == callfuncmacro->call_pos.__pos &&
        G__ifile.filenum == callfuncmacro->call_filenum)
+#elif defined(G__NONSCALARFPOS_QNX)
+    if(call_pos._Off == callfuncmacro->call_pos._Off &&
+       G__ifile.filenum == callfuncmacro->call_filenum)       
 #else
     if(call_pos == callfuncmacro->call_pos &&
        G__ifile.filenum == callfuncmacro->call_filenum)

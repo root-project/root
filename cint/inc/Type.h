@@ -50,6 +50,7 @@ G__TypeInfo : public G__ClassInfo  {
     tagnum  = buf.tagnum;
 #ifndef G__OLDIMPLEMENTATION2063
     if(type!='d' && type!='f') reftype=buf.obj.reftype.reftype;
+    else              reftype=0;
     isconst = buf.isconst;
 #else
     if(isupper((int)type)) reftype=buf.obj.reftype.reftype;
@@ -67,17 +68,17 @@ G__TypeInfo : public G__ClassInfo  {
 #endif
   int operator==(const G__TypeInfo& a);
   int operator!=(const G__TypeInfo& a);
-  const char *Name();
-  const char *TrueName();
-  int Size(); 
+  const char *Name() ;
+  const char *TrueName() ;
+  int Size() const; 
   long Property();
   int IsValid();
   void *New();
 
-  int Typenum() { return(typenum); }
-  int Type() { return(type); }
-  int Reftype() { return(reftype); }
-  int Isconst() { return(isconst); }
+  int Typenum() const { return(typenum); }
+  int Type() const { return(type); }
+  int Reftype() const { return(reftype); }
+  int Isconst() const { return(isconst); }
 
   G__value Value() const {
     G__value buf;

@@ -61,7 +61,7 @@ G__ClassInfo {
   int NMethods();
   long IsBase(const char *classname);
   long IsBase(G__ClassInfo& a);
-  long Tagnum() { return(tagnum); }
+  long Tagnum() const { return(tagnum); }
   G__ClassInfo EnclosingClass() ;
   G__ClassInfo EnclosingSpace() ;
 #ifndef G__OLDIMPLEMENTATION1020
@@ -125,7 +125,7 @@ G__ClassInfo {
   void ResetHeapInstanceCount();
   int RootFlag();
   //void SetDefaultConstructor(void* p2f);
-  enum MatchMode { ExactMatch=0, ConversionMatch=1 };
+  enum MatchMode { ExactMatch=0, ConversionMatch=1, ConversionMatchBytecode=2};
   enum InheritanceMode { InThisScope=0, WithInheritance=1 };
   G__InterfaceMethod GetInterfaceMethod(const char *fname,const char *arg
 					,long* poffset

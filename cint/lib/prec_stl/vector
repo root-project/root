@@ -202,6 +202,9 @@ class vector {
       iterator& operator-=(const difference_type& __n);
       iterator operator-(const difference_type& __n) const;
       const pointer& base() const ;
+#ifndef G__OLDIMPLEMENTATION2165
+      iterator operator=(const iterator& x) ;
+#endif
   };
 
   friend bool operator==(const vector::iterator& x,const vector::iterator& y)const;

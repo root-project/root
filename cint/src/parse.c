@@ -336,6 +336,8 @@ int G__ignore_catch()
     G__asm_inst[G__asm_cp+2]=G__ifile.line_number;
 #if defined(G__NONSCALARFPOS2)
     G__asm_inst[G__asm_cp+3]=(long)fpos1.__pos;
+#elif defined(G__NONSCALARFPOS_QNX)
+    G__asm_inst[G__asm_cp+3]=(long)fpos1._Off;
 #else
     G__asm_inst[G__asm_cp+3]=(long)fpos1;
 #endif

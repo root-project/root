@@ -94,7 +94,11 @@ struct G__param *libp;
 	break;
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
+#ifdef G__BOOL4BYTE
+	libp->para[itemp].ref = (long)G__Intref(&libp->para[itemp]);
+#else
 	libp->para[itemp].ref = (long)G__UCharref(&libp->para[itemp]);
+#endif
 	break;
 #endif
       }
@@ -394,7 +398,11 @@ int hash; /* not used */
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
+#ifdef G__BOOL4BYTE
+	  G__asm_stack[j].ref=(long)G__Intref(&libp->para[i]);
+#else
 	  G__asm_stack[j].ref=(long)G__UCharref(&libp->para[i]);
+#endif
 	  break;
 #endif
 	default:
@@ -6511,9 +6519,11 @@ int memfunc_flag;
   }
 #endif
 
-
 asm_ifunc_start:   /* loop compilation execution label */
 
+#ifndef G__OLDIMPLEMENTATION2164
+  if(0==p_ifunc->hash[ifn]) return(0);
+#endif
 
   /******************************************************************
    * Constructor or destructor call in G__make_ifunctable() parameter
@@ -6555,7 +6565,11 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifdef G__ASM_WHOLEFUNC
   if((FILE*)NULL==(FILE*)p_ifunc->pentry[ifn]->p 
      && 0==p_ifunc->ispurevirtual[ifn] 
-     && G__ASM_FUNC_NOP==G__asm_wholefunction) {
+     && G__ASM_FUNC_NOP==G__asm_wholefunction
+#ifndef G__OLDIMPLEMENTATION2164
+     && p_ifunc->hash[ifn]
+#endif
+     ) {
 #else
   if((FILE*)NULL==(FILE*)p_ifunc->pentry[ifn]->p 
      && 0==p_ifunc->ispurevirtual[ifn]) {
@@ -6582,6 +6596,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
     }
   }
+
   
   /******************************************************************
    * function was found in interpreted function list
@@ -7412,8 +7427,13 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1604
 	  case 'g':
 #endif
+#ifdef G__BOOL4BYTE
+	    G__Mint(libp->para[ipara]);
+	    G__ansipara.ref = (long)(&libp->para[ipara].obj.i);
+#else
 	    G__Muchar(libp->para[ipara]);
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.uch);
+#endif
 	    break;
 	  case 'r':
 	    G__Mushort(libp->para[ipara]);
@@ -8806,8 +8826,14 @@ int withInheritance;
    if(-1!=tagnum) G__incsetup_memfunc(tagnum);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2177
+   ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
+			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0
+			     ,(withConversion&0x2)?1:0) ;
+#else
    ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
 			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+#endif
    *poffset = 0;
    *pifn = ifn;
 #ifndef G__OLDIMPLEMENTATION2079

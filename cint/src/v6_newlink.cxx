@@ -5204,8 +5204,13 @@ int k;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
+#ifdef G__BOOL4BYTE
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
+		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+#else
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Muchar(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+#endif
 	  break;
 #endif
         case 'f':
@@ -10573,11 +10578,20 @@ G__value *buf;
 
 #ifndef G__OLDIMPLEMENTATION2047
 /**************************************************************************
-* G__UBoolref()
+* G__Boolref()
 **************************************************************************/
 unsigned char* G__Boolref(buf)
 G__value *buf;
 {
+#ifdef G__BOOL4BYTE
+  if('g'==buf->type && buf->ref) 
+    return((int*)buf->ref);
+  else if('d'==buf->type || 'f'==buf->type) 
+    buf->obj.i = (i)buf->obj.d;
+  else 
+    buf->obj.i = (int)buf->obj.i; 
+  return(&buf->obj.i);
+#else
   if('g'==buf->type && buf->ref) 
     return((unsigned char*)buf->ref);
   else if('d'==buf->type || 'f'==buf->type) 
@@ -10585,6 +10599,7 @@ G__value *buf;
   else 
     buf->obj.uch = (unsigned char)buf->obj.i; 
   return(&buf->obj.uch);
+#endif
 }
 #endif
 

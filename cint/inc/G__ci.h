@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000020
-#define G__CINTVERSIONSTR  "6.0.20, Oct 20 2004"
+#define G__CINTVERSION      6000023
+#define G__CINTVERSIONSTR  "6.0.23, Nov 14 2004"
 #else
-#define G__CINTVERSION      50150156
-#define G__CINTVERSIONSTR  "5.15.156, Oct 20 2004"
+#define G__CINTVERSION      50150159
+#define G__CINTVERSIONSTR  "5.15.159, Nov 14 2004"
 #endif
 
 #define G__ALWAYS
@@ -35,9 +35,22 @@
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
-#define G__OLDIMPLEMENTATION2156
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2187
+#define G__OLDIMPLEMENTATION2184
+#define G__OLDIMPLEMENTATION2182
+#define G__OLDIMPLEMENTATION2177
+#define G__OLDIMPLEMENTATION2172
+#define G__OLDIMPLEMENTATION2171
+#define G__OLDIMPLEMENTATION2170
+#define G__OLDIMPLEMENTATION2169
+#define G__OLDIMPLEMENTATION2163
+#define G__OLDIMPLEMENTATION2162
+#define G__OLDIMPLEMENTATION2161
+#define G__OLDIMPLEMENTATION2160
+#define G__OLDIMPLEMENTATION2159
+#define G__OLDIMPLEMENTATION2156
 #define G__OLDIMPLEMENTATION2155
 #define G__OLDIMPLEMENTATION2154
 #define G__OLDIMPLEMENTATION2153
@@ -138,9 +151,17 @@
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
+#ifndef G__OLDIMPLEMENTATION2186
 #if defined(__APPLE__)
-#define G__UNADDRESSABLEBOOL
+/* Fons, if you find problems, comment out G__BOOL4BYTE and uncomment
+ * G__UNADDRESSABLEBOOL. Thanks */
+#define G__BOOL4BYTE
+/* #define G__UNADDRESSABLEBOOL */
 #endif
+#else /* 2186 */
+#define G__BOOL1BYTE
+/* #define G__UNADDRESSABLEBOOL */ /* ??? Philippe propose this change */
+#endif /* 2186 */
 #endif
 
 /* Speed up G__strip_quotation */
@@ -373,6 +394,11 @@
 #ifndef G__ERRORCALLBACK
 #define G__OLDIMPLEMENTATION1485
 #define G__OLDIMPLEMENTATION2000
+#endif
+
+/* temporary file generation */
+#if defined(G__WIN32) 
+#define G__TMPFILE
 #endif
 
 
@@ -1351,7 +1377,7 @@ struct G__param {
 extern "C" {   /* extern C 2 */
 #endif
 
-#ifdef G__ANSIHEADER
+#if defined(G__ANSIHEADER) || defined(G__ANSI)
 typedef int (*G__InterfaceMethod)(G__value*,G__CONST char*,struct G__param*,int);
 #else
 typedef int (*G__InterfaceMethod)();
@@ -1811,7 +1837,7 @@ typedef struct {
 /* #define G__VAARG_NOSUPPORT */
 
 #ifndef G__OLDIMPLEMENTATION1696
-#ifdef __ia64__ 
+#ifdef __ia64__
 #define G__VAARG_INC_COPY_N 8
 #else
 #define G__VAARG_INC_COPY_N 4

@@ -824,7 +824,11 @@ int *known3;
   int store_typenum = G__typenum;
   long store_struct_offset = G__store_struct_offset;
 
+#ifndef G__OLDIMPLEMENTATION2166
+  result3 = G__getexpr(item);
+#else
   result3 = G__getitem(item);
+#endif
   if(0==result3.type) return(G__null);
   *known3 = 1;
 
@@ -6192,9 +6196,11 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
-#ifndef G__OLDIMPLEMENTATION2083
-       ++usedpara;
+#if !defined(G__OLDIMPLEMENTATION2175)
+	    ++usedpara;
 	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++; 
+#elif !defined(G__OLDIMPLEMENTATION2083)
+	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
 #else
 	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
 #endif
@@ -6252,9 +6258,11 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
-#ifndef G__OLDIMPLEMENTATION2083
-       ++usedpara; 
-       sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++; 
+#if !defined(G__OLDIMPLEMENTATION2175)
+	    ++usedpara;
+	    sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++;
+#elif !defined(G__OLDIMPLEMENTATION2083)
+	    sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++;
 #else
 	    sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
 #endif
@@ -6318,8 +6326,10 @@ char *result;
 #ifndef G__OLDIMPLEMENTATION1237
     case '*': /* printf("%*s",4,"*"); */
       if(fmtflag==1) {
-#ifndef G__OLDIMPLEMENTATION2083
-   sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++; usedpara++;
+#if !defined(G__OLDIMPLEMENTATION2175)
+	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++; usedpara++;
+#elif !defined(G__OLDIMPLEMENTATION2083)
+	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++;
 #else
 	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[ipara++]));
 #endif
