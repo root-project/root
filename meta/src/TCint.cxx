@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.2 2000/06/16 15:10:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.3 2000/06/19 23:36:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -394,7 +394,7 @@ void TCint::UpdateListOfGlobalFunctions()
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
         // first remove if already in list
-         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(a->Name());
+         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
          if (f) {
             gROOT->fGlobalFunctions->Remove(f);
             delete f;
