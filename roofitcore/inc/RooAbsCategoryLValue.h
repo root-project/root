@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.9 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.10 2001/11/19 07:23:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,7 +40,7 @@ public:
   virtual Double_t getFitBinWidth() const { return 1.0 ; }
   virtual RooAbsBinIter* createFitBinIterator() const ;
 
-  void randomize();
+  virtual void randomize();
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
   
   inline virtual Bool_t isLValue() const { return kTRUE; }

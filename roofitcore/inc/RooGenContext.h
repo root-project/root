@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.rdl,v 1.8 2001/10/17 05:03:59 verkerke Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.9 2001/11/05 18:50:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,6 +42,7 @@ protected:
   RooRealIntegral *_acceptRejectFunc;
   RooAcceptReject *_generator;
   RooAbsReal *_maxVar ;
+  TIterator *_uniIter ;
 
   ClassDef(RooGenContext,0) // Context for generating a dataset from a PDF
 };

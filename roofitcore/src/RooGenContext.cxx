@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.24 2001/11/05 18:50:49 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.25 2001/11/14 18:42:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooAcceptReject.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooDataHist.hh"
+#include "RooFitCore/RooErrorHandler.hh"
 
 #include "TString.h"
 #include "TIterator.h"
@@ -30,14 +31,14 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.24 2001/11/05 18:50:49 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.25 2001/11/14 18:42:37 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
 			     const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,verbose),
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
-  _maxVar(0)
+  _maxVar(0), _uniIter(0) 
 {
   // Initialize a new context for generating events with the specified
   // variables, using the specified PDF model. A prototype dataset (if provided)
@@ -152,7 +153,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _otherVars.add(_uniformVars);
 }
 
-RooGenContext::~RooGenContext() {
+RooGenContext::~RooGenContext() 
+{
   // Destructor.
 
   // Clean up the cloned objects used in this context.
@@ -161,6 +163,7 @@ RooGenContext::~RooGenContext() {
   delete _generator;
   delete _acceptRejectFunc;
   if (_maxVar) delete _maxVar ;
+  if (_uniIter) delete _uniIter ;
 }
 
 void RooGenContext::initGenerator(const RooArgSet &theEvent) {
@@ -177,6 +180,11 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent) {
   // Initialize the PDFs internal generator
   if (_directVars.getSize()>0) {
     _pdfClone->initGenerator(_code) ;
+  }
+
+  // Create iterator for uniform vars (if any)
+  if (_uniformVars.getSize()>0) {
+    _uniIter = _uniformVars.createIterator() ;
   }
 }
 
@@ -197,6 +205,22 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
   // The generator writes directly into our local 'event' since we attached it above.
   if(_directVars.getSize() > 0) {
     _pdfClone->generateEvent(_code);
+  }
+
+  // Generate uniform variables (non-dependents)  
+  if (_uniIter) {
+    _uniIter->Reset() ;
+    RooAbsArg* uniVar ;
+    while(uniVar=(RooAbsArg*)_uniIter->Next()) {
+      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(uniVar) ;
+      if (!arglv) {
+	cout << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " 
+	     << uniVar->GetName() << " is not an lvalue" << endl ;
+	RooErrorHandler::softAbort() ;
+      }
+      arglv->randomize() ;
+    }
+    theEvent = _uniformVars ;
   }
 }
 
