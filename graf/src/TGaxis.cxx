@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.72 2004/06/16 08:51:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.73 2004/07/23 09:36:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -457,6 +457,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 // --------------
 //
 //       chopt='W': cross-Wire
+//   In case of a log axis, the grid is only drawn for the primary tick marks
+//   if the number of secondary and tertiary divisions is 0.
 //
 // Axis bining optimization.
 // -------------------------
@@ -1744,7 +1746,7 @@ L160:
                }
 
 //*-*- Draw the intermediate LOG grid if only three decades are requested
-               if (OptionGrid && NBININ <= 5) {
+               if (OptionGrid && NBININ <= 5 && ndiv > 100) {
                   Rotate(Xone,0,cosphi,sinphi,X0,Y0,xpl2, ypl2);
                   Rotate(Xone,grid_side*gridlength,cosphi,sinphi,X0,Y0, xpl1,ypl1);
                   linegrid->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
