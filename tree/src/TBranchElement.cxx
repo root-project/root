@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.24 2001/04/21 12:08:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.25 2001/04/23 14:03:04 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -64,6 +64,10 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 //printf("BranchElement, bname=%s, sinfo=%s, id=%d, splitlevel=%d\n",bname,sinfo->GetName(),id,splitlevel);
    char name[kMaxLen];
    strcpy(name,bname);
+           
+   SetName(name);
+   SetTitle(name);
+   
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
    fID           = id;
@@ -94,13 +98,13 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          else countname[0] = 0;
          strcat(countname,bp->GetCountName());
          brcount = (TBranchElement *)fTree->GetBranch(countname);
+         sprintf(countname,"%s[%s]",name,bp->GetCountName());
+         printf("found bcount:%s\n",countname);
+         SetTitle(countname);
       }
    } else {
       if (cl->InheritsFrom(TObject::Class())) SetBit(kBranchObject);
    }
-           
-   SetName(name);
-   SetTitle(name);
 
    // Set the bit kAutoDelete to specify that when reading
    // the object should be deleted before calling Streamer.
@@ -249,6 +253,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    }
 
    TLeaf *leaf     = new TLeafElement(GetTitle(),fID, fStreamerType);
+   leaf->SetTitle(GetTitle());
    leaf->SetBranch(this);
    fNleaves = 1;
    fLeaves.Add(leaf);
@@ -394,6 +399,10 @@ Int_t TBranchElement::Fill()
    Int_t nbranches = fBranches.GetEntriesFast();
    // update addresses if top level branch
    if (fID < 0) {
+      if (!fAddress) {
+         Error("Fill","Attempt to fill branch:%s and addresss is not set",GetName());
+         return 0;
+      }
       if (fObject != (char*)*fAddress) SetAddress(fAddress);
    }
    if (fType == 3)  nbytes += TBranch::Fill();  //TClonesArray counter
@@ -419,6 +428,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
 {
 //  Fill buffers of this branch
          
+  if (!fObject) return;
   if (TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
   
   if (fType == 4) {           // STL vector/list of objects
