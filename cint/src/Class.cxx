@@ -644,6 +644,16 @@ G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
   return(datamember);
 }
 ///////////////////////////////////////////////////////////////////////////
+int G__ClassInfo::HasDefaultConstructor()
+{
+  if(IsValid()) {
+     CheckValidRootInfo();
+     return(G__struct.rootspecial[tagnum]->defaultconstructor!=0);
+  } else {
+     return 0;
+  }
+}
+///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::HasMethod(const char *fname)
 {
   struct G__ifunc_table *ifunc;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.120 2003/06/25 15:35:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.121 2003/06/25 18:07:00 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2222,14 +2222,7 @@ Bool_t TClass::HasDefaultConstructor() const
 
    if (!GetClassInfo()) return kFALSE;
 
-   // Insure the existence of G__struct.rootspecial[GetClassInfo()->Tagnum()]
-   if (GetClassInfo()->Version()) { }
-   Assert(G__struct.rootspecial[GetClassInfo()->Tagnum()]!=0);
-
-   if (G__struct.rootspecial[GetClassInfo()->Tagnum()]->defaultconstructor != 0)
-      return kTRUE;
-
-   return kFALSE;
+   return GetClassInfo()->HasDefaultConstructor();
 }
 
 //______________________________________________________________________________

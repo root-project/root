@@ -127,6 +127,7 @@ G__ClassInfo {
   G__DataMemberInfo GetDataMember(const char *name,long* poffset);
   int HasMethod(const char *fname);
   int HasDataMember(const char *name);
+  int HasDefaultConstructor();
 
  private:
   void CheckValidRootInfo();
