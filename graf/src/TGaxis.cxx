@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.76 2004/08/23 15:09:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.77 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -829,7 +829,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    TLatex *textaxis = new TLatex();
    lineaxis->SetLineColor(GetLineColor());
    lineaxis->SetLineStyle(1);
-   lineaxis->SetLineWidth(gStyle->GetLineWidth());
+   lineaxis->SetLineWidth(GetLineWidth());
    textaxis->SetTextColor(GetTextColor());
    textaxis->SetTextFont(GetTextFont());
 
