@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.8 2003/01/07 17:31:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.9 2003/10/22 17:20:50 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
 
    int             Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
-   char           *Argv(int index) const { return fArgv[index]; }
+   char           *Argv(int index) const { return fArgv ? fArgv[index] : 0; }
    Bool_t          NoLogOpt() const { return fNoLog; }
    Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
