@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.8 2001/12/17 17:06:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.9 2002/01/07 09:08:10 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -137,6 +137,7 @@ private:
         TString       fHeaderPS;          //User defined additional Postscript header
         TString       fTitlePS;           //User defined Postscript file title
         TString       fFitFormat;         //Printing format for fit parameters
+        TString       fPaintTextFormat;   //Printing format for TH2::PaintText
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
         Double_t      fTimeOffset;        //Time offset to the beginning of an axis
 
@@ -222,6 +223,7 @@ public:
         Int_t            GetOptLogx() const {return fOptLogx;}
         Int_t            GetOptLogy() const {return fOptLogy;}
         Int_t            GetOptLogz() const {return fOptLogz;}
+        const char      *GetPaintTextFormat() const {return fPaintTextFormat.Data();}
         void             GetPaperSize(Float_t &xsize, Float_t &ysize);
         Int_t            GetShowEventStatus() const {return fShowEventStatus;}
         Float_t          GetScreenFactor() const {return fScreenFactor;}
@@ -326,6 +328,7 @@ public:
         void             SetHistFillStyle(Style_t styl=0)  {fHistFillStyle = styl;}
         void             SetHistLineStyle(Style_t styl=0)  {fHistLineStyle = styl;}
         void             SetHistLineWidth(Width_t width=1) {fHistLineWidth = width;}
+        void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
         void             SetPaperSize(EPaperSize size);
         void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);
         void             SetStatColor(Int_t color=19) {fStatColor=color;}
@@ -358,7 +361,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,6)  //A collection of all graphics attributes
+        ClassDef(TStyle,7)  //A collection of all graphics attributes
 };
 
 
