@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.32 2001/05/11 17:06:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.33 2001/05/11 20:42:50 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -203,13 +203,17 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             TBranchElement *bre = (TBranchElement*)fBranches.At(i);
             const char *fin = strrchr(bre->GetTitle(),'.');
             if (fin == 0) continue;
-            TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
-            sprintf(branchname,"%s[%s_]",fin+1,name);
             bre->SetBranchCount(this); //primary branchcount
-            char *dim = strstr(branchname,"][");
+            TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
+            //if branch name is of the form fTracks.fCovar[3][4]
+            //set the title to fCovar[fTracks_][3][4]
+            char *dim = strstr(fin+1,"[");
             if (dim) {
-               char *bracket = strstr(branchname,"[");
-               if (bracket < dim) strcpy(bracket+1,dim+2);
+               Int_t nch = dim-fin-1;
+               strncpy(branchname,fin+1,nch);
+               sprintf(branchname+nch,"[%s_]%s",name,dim);
+            } else {
+               sprintf(branchname,"%s[%s_]",fin+1,name);
             }
             bre->SetTitle(branchname);
             lf->SetTitle(branchname);
