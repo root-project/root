@@ -1,0 +1,12 @@
+
+Processing runnamespace.C...
+OBJ: TClass	MySpace::MyClass	
+OBJ: TClass	MySpace::MyClass	
+
+StreamerInfo for class: MySpace::MyClass, version=1
+  int            a               offset=  0 type= 3                     
+   i= 0, a               type=  3, offset=  0, len=1, method=0
+
+StreamerInfo for class: MySpace::MyClass, version=1
+  int            a               offset=  0 type= 3                     
+   i= 0, a               type=  3, offset=  0, len=1, method=0

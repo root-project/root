@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += autoload mytest
+TEST_TARGETS += nospace namespace autoload mytest drawing
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -66,3 +66,17 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 autoload: autoload.log
 	$(TestDiff)
+
+namespace.log: fornamespace_C.$(DllSuf)
+
+namespace: namespace.log
+	$(TestDiff)
+
+nospace.log: WrapSimple_h.$(DllSuf)
+
+nospace: nospace.log
+	$(TestDiff)
+
+drawing:
+	$(CMDECHO) ./DrawTest.sh
+	
