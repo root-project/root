@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.8 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.9 2002/07/17 15:06:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -220,9 +220,11 @@
 //______________________________________________________________________________
 //
 //
+//Begin_Html
 /*
 <img src="gif/t_root.jpg">
 */
+//End_Html
 //
 //
 // TGeoManager - the manager class for the geometry package.
@@ -317,9 +319,11 @@
 //    should be handled with care for expensive geometries. In future there will be 
 //    a limitation on the maximum number of nodes to be visualized.
 //
+//Begin_Html
 /*
 <img src="gif/t_frame1.jpg">
 */
+//End_Html
 //
 // opt=2 - only the clicked volume is visualized. This is automatically set by
 //    TGeoVolume::DrawOnly() method
@@ -335,9 +339,11 @@
 // - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
 //        are considered
 //
+//Begin_Html
 /*
 <img src="gif/t_frameexp.jpg">
 */
+//End_Html
 //
 // - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
 //
@@ -360,9 +366,11 @@
 // It also computes the closest distance to any boundary. The point will be drawn
 // in red.
 //
+//Begin_Html
 /*
 <img src="gif/t_checkpoint.jpg">
 */
+//End_Html
 //
 //  2. Shooting random points.
 //   Can be called from TGeoVolume::RandomPoints() (context menu function) and 
@@ -371,9 +379,11 @@
 // classified and drawn with the color of their deepest container. Only points
 // in visible nodes will be drawn.
 //
+//Begin_Html
 /*
 <img src="gif/t_random1.jpg">
 */
+//End_Html
 //
 //
 //  3. Raytracing.
@@ -383,9 +393,11 @@
 // having the color of the touched node. Drawn geometry will be then made invisible
 // in order to enhance rays.
 //
+//Begin_Html
 /*
 <img src="gif/t_random2.jpg">
 */
+//End_Html
 
 #include "Riostream.h"
 
