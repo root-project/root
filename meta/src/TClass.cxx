@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.53 2001/07/05 20:17:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.54 2001/07/09 00:57:25 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -440,8 +440,8 @@ void TClass::BuildRealData(void *pointer)
    // in all base classes. For each persistent data member, inserts a
    // TRealData object in the list fRealData.
    //
-   // if pointer is NULL, uses the object at pointer
-   // otherwise creates a temporary object object of this class
+   // If pointer is not 0, uses the object at pointer
+   // otherwise creates a temporary object of this class.
 
    if (fRealData) return;
    if (!fClassInfo) return;
