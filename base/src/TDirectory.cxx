@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.4 2000/08/27 20:02:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.5 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -803,8 +803,6 @@ const char *TDirectory::GetPath() const
 TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
    // Create a sub-directory and return a pointer to the created directory.
-   // The new directory is created inside the current directory, not
-   // inside "this" directory.
    // Returns 0 in case of error.
    // Note that the directory name cannot contain slashes.
 
@@ -815,7 +813,13 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       return 0;
    }
 
-   return new TDirectory(name, title);
+   TDirectory *cursav = gDirectory;
+   cd();
+
+   TDirectory *newdir = new TDirectory(name, title);
+
+   cursav->cd();
+   return newdir;
 }
 
 //______________________________________________________________________________
@@ -1148,7 +1152,7 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    TObject *obj;
    Int_t nbytes = 0;
    while ((obj=next())) {
-      nbytes += obj->TObject::Write(0,opt,bufsiz);
+      nbytes += obj->Write(0,opt,bufsiz);
    }
    SaveSelf(kTRUE);   // force save itself
 
