@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.20 2000/08/18 20:10:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.21 2000/08/23 08:14:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -673,8 +673,6 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    Draw(varexp,select,"goff");
 
-   if (n > oldEstimate) SetEstimate(oldEstimate);
-
    // Sort array fW (contains  majorname +minorname*1e-9) into fIndex
    Double_t *w = GetPlayer()->GetW();
    Int_t *ind = new Int_t[n];
@@ -685,6 +683,7 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
       fIndexValues.fArray[i] = w[ind[i]];
       fIndex.fArray[i] = ind[i];
    }
+   if (n > oldEstimate) SetEstimate(oldEstimate);
 
    // clean up
    delete [] ind;
