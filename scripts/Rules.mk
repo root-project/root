@@ -17,7 +17,7 @@ test: tests ;
 
 SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
-TEST_TARGETS_DIR = $(SUBDIRS:%=%.test) 
+TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR)
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
@@ -34,11 +34,11 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk
 
-.PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
+.PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
 
-$(TEST_TARGETS_DIR): %.test:
+$(TEST_TARGETS_DIR): %.test: 
 	@(echo Running test in $(CALLDIR)/$*)
 	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory test; \
      result=$$?; \
@@ -228,10 +228,12 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
 UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
 
-ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
+override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
 $(ROOTMAP): 
 	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; $(MAKE) map)'
+
+check: $(ROOT_LOC)/lib/libCore.$(DllSuf)
 
 UTILS_PREREQ =  $(UTILS_LIBS) $(ROOTMAP)
 

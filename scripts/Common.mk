@@ -18,7 +18,7 @@ SUCCESS_FILE = .success.log
 # Force the removal of the sucess file ANY time the make is run
 REMOVE_SUCCESS := $(shell rm  -f $(SUCCESS_FILE) )
 
-$(SUCCESS_FILE): $(TEST_TARGETS)
+$(SUCCESS_FILE): check $(TEST_TARGETS)
 	@touch $(SUCCESS_FILE)
 
 tests: $(SUCCESS_FILE) 
