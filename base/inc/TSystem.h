@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.27 2003/06/25 05:49:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.28 2003/06/29 22:42:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -98,6 +98,15 @@ enum EFpeMask {
    kAllMask          = 0x1F
 };
 
+struct UserGroup_t {
+   Int_t    fUid;          // user id
+   Int_t    fGid;          // group id
+   TString  fUser;         // user name
+   TString  fGroup;        // group name
+   TString  fPasswd;       // password
+   TString  fRealName;     // user full name
+   TString  fShell;        // user preferred shell
+};
 
 typedef void* Func_t;
 
@@ -276,7 +285,7 @@ public:
    virtual const char     *DirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
-   virtual Bool_t          ExpandPathName(TString &path); // expand the metacharacters in buf as in the shell
+   virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
    virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);
    virtual int             CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
@@ -291,9 +300,17 @@ public:
    virtual const char     *UnixPathName(const char *unixpathname);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 
+   //---- Users & Groups
+   virtual Int_t           GetUid(const char *user = 0);
+   virtual Int_t           GetGid(const char *group = 0);
+   virtual UserGroup_t    *GetUserInfo(Int_t uid);
+   virtual UserGroup_t    *GetUserInfo(const char *user = 0);
+   virtual UserGroup_t    *GetGroupInfo(Int_t gid);
+   virtual UserGroup_t    *GetGroupInfo(const char *group = 0);
+
    //---- Environment Manipulation
-   virtual void            Setenv(const char *name, const char *value); // set environment variable name to value
-   virtual void            Unsetenv(const char *name);  // remove environment variable
+   virtual void            Setenv(const char *name, const char *value);
+   virtual void            Unsetenv(const char *name);
    virtual const char     *Getenv(const char *env);
 
    //---- System Logging

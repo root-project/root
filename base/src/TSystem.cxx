@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.68 2003/08/04 20:31:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.69 2003/08/13 16:17:25 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -743,7 +743,6 @@ char *TSystem::ConcatFileName(const char *, const char *)
 
 //---- Paths & Files -----------------------------------------------------------
 
-
 //______________________________________________________________________________
 const char *TSystem::ExpandFileName(const char *fname)
 {
@@ -960,6 +959,73 @@ char *TSystem::Which(const char *, const char *, EAccessMode)
    // Returns 0 in case file is not found.
 
    AbstractMethod("Which");
+   return 0;
+}
+
+//---- Users & Groups ----------------------------------------------------------
+
+//______________________________________________________________________________
+Int_t TSystem::GetUid(const char * /*user*/)
+{
+   // Returns the user's id. If user = 0, returns current user's id.
+
+   AbstractMethod("GetUid");
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSystem::GetGid(const char * /*group*/)
+{
+   // Returns the group's id. If group = 0, returns current user's group.
+
+   AbstractMethod("GetGid");
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
+{
+   // Returns all user info in the UserGroup_t structure. The returned
+   // structure must be deleted by the user. In case of error 0 is returned.
+
+   AbstractMethod("GetUserInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TSystem::GetUserInfo(const char */*user*/)
+{
+   // Returns all user info in the UserGroup_t structure. If user = 0, returns
+   // current user's id info. The returned structure must be deleted by the
+   // user. In case of error 0 is returned.
+
+   AbstractMethod("GetUserInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // The returned structure must be deleted by the user. In case of
+   // error 0 is returned.
+
+   AbstractMethod("GetGroupInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TSystem::GetGroupInfo(const char */*group*/)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // If group = 0, returns current user's group. The returned structure
+   // must be deleted by the user. In case of error 0 is returned.
+
+   AbstractMethod("GetGroupInfo");
    return 0;
 }
 
@@ -1438,7 +1504,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // (the ... have to be replaced by the actual values and are here only to
    // shorten this comment).
    //
-   
+
    // ======= Analyze the options
    Bool_t keep = kFALSE;
    Bool_t recompile = kFALSE;

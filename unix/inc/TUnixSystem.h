@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.10 2003/02/27 18:48:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.11 2003/06/17 15:19:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -123,10 +123,6 @@ public:
    int               GetPid();
    void              StackTrace();
 
-   //---- Environment Manipulation -----------------------------
-   const char       *Getenv(const char *name);
-   void              Setenv(const char *name, const char *value);
-
    //---- Directories ------------------------------------------
    int               MakeDirectory(const char *name);
    void             *OpenDirectory(const char *name);
@@ -153,6 +149,18 @@ public:
    int               Umask(Int_t mask);
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
+
+   //---- Users & Groups
+   Int_t             GetUid(const char *user = 0);
+   Int_t             GetGid(const char *group = 0);
+   UserGroup_t      *GetUserInfo(Int_t uid);
+   UserGroup_t      *GetUserInfo(const char *user = 0);
+   UserGroup_t      *GetGroupInfo(Int_t gid);
+   UserGroup_t      *GetGroupInfo(const char *group = 0);
+
+   //---- Environment Manipulation -----------------------------
+   const char       *Getenv(const char *name);
+   void              Setenv(const char *name, const char *value);
 
    //---- System Logging ---------------------------------------
    void              Openlog(const char *name, Int_t options, ELogFacility facility);

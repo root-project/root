@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.22 2003/03/19 13:07:58 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.23 2003/06/17 15:19:55 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,6 +48,8 @@
 #pragma link C++ function operator!=(const TRef&,const TRef&);
 
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
+
+#pragma link C++ struct UserGroup_t;
 
 #pragma link C++ class TMath;
 #pragma link C++ class TExec+;

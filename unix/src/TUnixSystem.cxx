@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.66 2003/07/23 16:32:02 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.67 2003/08/15 14:37:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -92,6 +92,7 @@
 #include <signal.h>
 #include <sys/param.h>
 #include <pwd.h>
+#include <grp.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -1310,6 +1311,103 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
    if (gEnv->GetValue("Root.ShowPath", 0))
       Printf("Which: %s = <not found>", wfil);
    return 0;
+}
+
+//---- Users & Groups ----------------------------------------------------------
+
+//______________________________________________________________________________
+Int_t TUnixSystem::GetUid(const char *user)
+{
+   // Returns the user's id. If user = 0, returns current user's id.
+
+   if (!user || !user[0])
+      return getuid();
+   else {
+      struct passwd *pwd = getpwnam(user);
+      if (pwd)
+         return pwd->pw_uid;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::GetGid(const char *group)
+{
+   // Returns the group's id. If group = 0, returns current user's group.
+
+   if (!group || !group[0])
+      return getgid();
+   else {
+      struct group *grp = getgrnam(group);
+      if (grp)
+         return grp->gr_gid;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
+{
+   // Returns all user info in the UserGroup_t structure. The returned
+   // structure must be deleted by the user. In case of error 0 is returned.
+
+   struct passwd *pwd = getpwuid(uid);
+   if (pwd) {
+      UserGroup_t *ug = new UserGroup_t;
+      ug->fUid      = pwd->pw_uid;
+      ug->fGid      = pwd->pw_gid;
+      ug->fUser     = pwd->pw_name;
+      ug->fPasswd   = pwd->pw_passwd;
+      ug->fRealName = pwd->pw_gecos;
+      ug->fShell    = pwd->pw_shell;
+      UserGroup_t *gr = GetGroupInfo(pwd->pw_gid);
+      ug->fGroup    = gr->fGroup;
+      delete gr;
+      return ug;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TUnixSystem::GetUserInfo(const char *user)
+{
+   // Returns all user info in the UserGroup_t structure. If user = 0, returns
+   // current user's id info. The returned structure must be deleted by the
+   // user. In case of error 0 is returned.
+
+   return GetUserInfo(GetUid(user));
+}
+
+//______________________________________________________________________________
+UserGroup_t *TUnixSystem::GetGroupInfo(Int_t gid)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // The returned structure must be deleted by the user. In case of
+   // error 0 is returned.
+
+   struct group *grp = getgrgid(gid);
+   if (grp) {
+      UserGroup_t *gr = new UserGroup_t;
+      gr->fUid   = 0;
+      gr->fGid   = grp->gr_gid;
+      gr->fGroup = grp->gr_name;
+      return gr;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TUnixSystem::GetGroupInfo(const char *group)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // If group = 0, returns current user's group. The returned structure
+   // must be deleted by the user. In case of error 0 is returned.
+
+   return GetGroupInfo(GetGid(group));
 }
 
 //---- environment manipulation ------------------------------------------------
