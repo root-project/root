@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.11 2001/03/15 17:53:02 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.12 2001/05/17 06:45:55 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -179,10 +179,12 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 
   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
-   TIter next(fParticleList);
    TParticlePDG *p;
-   while ((p = (TParticlePDG *)next())) {
+   TObjLink *lnk = fParticleList->FirstLink();
+   while (lnk) {
+      p = (TParticlePDG*)lnk->GetObject();
       if (p->PdgCode() == PDGcode) return p;
+      lnk = lnk->Next();
    }
    //   Error("GetParticle","No match for PDG code %d exists!",PDGcode);
    return 0;
