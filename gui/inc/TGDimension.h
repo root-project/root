@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.3 2004/07/14 11:46:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.4 2004/09/01 14:34:58 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -123,7 +123,7 @@ public:
                 { fX = rx; fY = ry; fW = rw; fH = rh; }
    TGRectangle(const TGPosition &p, const TGDimension &d)
                 { fX = p.fX; fY = p.fY; fW = d.fWidth; fH = d.fHeight; }
-   TGRectangle(const TGRectangle &r)
+   TGRectangle(const TGRectangle &r) : TObject(r)
                 { fX = r.fX; fY = r.fY; fW = r.fW; fH = r.fH; }
 
    // methods
