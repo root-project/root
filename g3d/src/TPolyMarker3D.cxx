@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.2 2000/06/13 12:22:49 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -364,6 +364,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
 {
 //     Paint 3-d histogram h with 3d polymarkers
 
+   const Int_t kMaxEntry = 100000;
    Int_t in, bin, binx, biny, binz;
 
    TAxis *xaxis = h->GetXaxis();
@@ -381,6 +382,12 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
       }
    }
 
+   // if histogram has too many entries, rescale it
+   // never draw more than kMaxEntry markers, otherwise this kills
+   // the X server
+   Double_t scale = 1.;
+   if (entry > kMaxEntry) scale = kMaxEntry/Double_t(entry);
+   
    //Create or modify 3-d view object
    TView *view = gPad->GetView();
    if (!view) {
@@ -395,7 +402,8 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
                   zaxis->GetBinUpEdge(zaxis->GetLast()));
 
    if (entry == 0) return;
-   TPolyMarker3D *pm3d    = new TPolyMarker3D(entry);
+   Int_t nmk = TMath::Min(kMaxEntry,entry);
+   TPolyMarker3D *pm3d    = new TPolyMarker3D(nmk);
    pm3d->SetMarkerStyle(h->GetMarkerStyle());
    pm3d->SetMarkerColor(h->GetMarkerColor());
    pm3d->SetMarkerSize(h->GetMarkerSize());
@@ -403,6 +411,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
 
    entry = 0;
    Double_t x,y,z,xw,yw,zw,xp,yp,zp;
+   Int_t ncounts;
    for (binz=zaxis->GetFirst();binz<=zaxis->GetLast();binz++) {
       z  = zaxis->GetBinLowEdge(binz);
       zw = zaxis->GetBinWidth(binz);
@@ -413,7 +422,8 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
             x  = xaxis->GetBinLowEdge(binx);
             xw = xaxis->GetBinWidth(binx);
             bin = h->GetBin(binx,biny,binz);
-            for (in=0;in<h->GetBinContent(bin);in++) {
+            ncounts = Int_t(h->GetBinContent(bin)*scale+0.5);
+            for (in=0;in<ncounts;in++) {
                xp = x + xw*gRandom->Rndm(in);
                yp = y + yw*gRandom->Rndm(in);
                zp = z + zw*gRandom->Rndm(in);

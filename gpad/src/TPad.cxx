@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.5 2000/06/14 13:12:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.6 2000/06/27 08:44:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2843,7 +2843,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
    if (n < 2) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
-      if (n >= kPXY) pxy = new TPoint[n+1];
+      if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
@@ -2899,7 +2899,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *)
    if (n < 2) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
-      if (n >= kPXY) pxy = new TPoint[n+1];
+      if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
@@ -2959,7 +2959,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 
    if (!gPad->IsBatch()) {
       if (n <kPXY) pxy = &gPXY[0];
-      else         pxy = new TPoint[n+1];
+      else         pxy = new TPoint[n+1]; if (!pxy) return;
 //*-*- convert points from world to pixel coordinates
       for (Int_t i=0;i<n;i++) {
          pxy[i].fX = UtoPixel(x[i]);
@@ -3004,7 +3004,7 @@ void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
    if (n < 0) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
-      if (n >= kPXY) pxy = new TPoint[n+1];
+      if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
@@ -3048,7 +3048,7 @@ void TPad::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
    if (n < 0) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
-      if (n >= kPXY) pxy = new TPoint[n+1];
+      if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
