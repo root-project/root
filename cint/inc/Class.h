@@ -113,8 +113,10 @@ G__ClassInfo {
   void *New();
   void *New(int n);
   void *New(void *arena);
-  void  Delete(void *p) const;
-  void  Destruct(void *p) const;
+#ifndef G__OLDIMPLEMENTATION2043
+  void Delete(void* p) const ;
+  void Destruct(void* p) const ;
+#endif
   int InstanceCount(); 
   void ResetInstanceCount();
   void IncInstanceCount();

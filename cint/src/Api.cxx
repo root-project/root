@@ -619,6 +619,7 @@ using namespace std;
 /******************************************************************
 *  map<string,string> &G_get_symbolmacro()
 ******************************************************************/
+//map<string,string> G__symbolmacro;
 map<string,string> &G__get_symbolmacro()
 {  
   static map<string,string> G__symbolmacro;
@@ -659,7 +660,7 @@ extern "C" void G__add_replacesymbol(const char* s1,const char* s2) {
 const char* G__replacesymbol_body(const char* s) {
   map<string,string>::iterator pos = G__get_symbolmacro().find(s);
   if(pos!=G__get_symbolmacro().end()) return((*pos).second.c_str());
-  else                                return(s);
+  else                          return(s);
 }
 
 /******************************************************************

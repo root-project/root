@@ -442,6 +442,11 @@
 #define G__RESETARYINDEX      0x0045
 #define G__GETARYINDEX        0x0046
 
+#ifndef G__OLDIMPLEMENTATION2042
+#define G__ENTERSCOPE         0x0047
+#define G__EXITSCOPE          0x0048
+#endif
+
 #define G__NOP                0xffff
 
 struct G__breakcontinue_list {

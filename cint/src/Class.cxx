@@ -7,10 +7,10 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Author                  Masaharu Goto
- * Copyright(c) 1995~2004  Masaharu Goto
+ * Author                  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
- * Permission to use, copy, modify and distribute this software and its
+ * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -94,7 +94,7 @@ const char* G__ClassInfo::Fullname()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::Title()
+const char* G__ClassInfo::Title() 
 {
   static char buf[G__INFO_TITLELEN];
   buf[0]='\0';
@@ -107,7 +107,7 @@ const char* G__ClassInfo::Title()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::Size()
+int G__ClassInfo::Size() 
 {
   if(IsValid()) {
     return(G__struct.size[tagnum]);
@@ -210,9 +210,9 @@ long G__ClassInfo::IsBase(G__ClassInfo& a)
 	case G__PRIVATE: isbase = G__BIT_ISPRIVATE; break;
 	default: isbase = 0; break;
 	}
-	if(baseclass->property[i]&G__ISDIRECTINHERIT)
+	if(baseclass->property[i]&G__ISDIRECTINHERIT) 
 	  isbase |= G__BIT_ISDIRECTINHERIT;
-	if(baseclass->property[i]&G__ISVIRTUALBASE)
+	if(baseclass->property[i]&G__ISVIRTUALBASE) 
 	  isbase |= G__BIT_ISVIRTUALBASE;
 	return(isbase);
       }
@@ -282,7 +282,7 @@ int G__ClassInfo::IsValid()
 ///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::IsLoaded()
 {
-  if(IsValid() &&
+  if(IsValid() && 
      (G__NOLINK!=G__struct.iscpplink[tagnum]||-1!=G__struct.filenum[tagnum])) {
     return(1);
   }
@@ -413,7 +413,7 @@ const char* G__ClassInfo::TmpltArg()
     if(p) {
       strcpy(buf,p+1);
       p=strrchr(buf,'>');
-      if(p) {
+      if(p) { 
 	*p=0;
         while(isspace(*(--p))) *p=0;
       }
@@ -529,7 +529,7 @@ int G__ClassInfo::Version()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::InstanceCount()
+int G__ClassInfo::InstanceCount() 
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -556,7 +556,7 @@ void G__ClassInfo::IncInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::HeapInstanceCount()
+int G__ClassInfo::HeapInstanceCount() 
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -660,7 +660,7 @@ G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
   int ig15;
   struct G__var_array *var;
   int store_tagnum;
-
+  
   /* search for variable */
   G__hash(name,hash,temp);
   varname=(char*)name;
@@ -959,28 +959,18 @@ void* G__ClassInfo::New(void *arena)
     return((void*)NULL);
   }
 }
-
+#ifndef G__OLDIMPLEMENTATION2043
 ///////////////////////////////////////////////////////////////////////////
-void  G__ClassInfo::Delete(void *p) const {
-   // Call the appropriate delete p;
-   G__calldtor(p,tagnum,1);
-}
-
+void G__ClassInfo::Delete(void* p) const { G__calldtor(p,tagnum,1); }
 ///////////////////////////////////////////////////////////////////////////
-void  G__ClassInfo::Destruct(void *p) const {
-   // Call the appropriate destructor.
-   // Assume that the memory will be 'freed' by the user.
-
-   G__calldtor(p,tagnum,0);
-}
-
-
+void G__ClassInfo::Destruct(void* p) const { G__calldtor(p,tagnum,0); }
+#endif
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::CheckValidRootInfo()
 {
   long offset;
   if(G__struct.rootspecial[tagnum]) return;
-
+  
   G__struct.rootspecial[tagnum]
     =(struct G__RootSpecial*)malloc(sizeof(struct G__RootSpecial));
   G__struct.rootspecial[tagnum]->deffile=(char*)NULL;
@@ -1019,7 +1009,7 @@ static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
       }
       if(ifunc->isvirtual[ifn]) {
 	property|=G__CLS_HASVIRTUAL;
-	if((property&G__CLS_HASEXPLICITCTOR)==0)
+	if((property&G__CLS_HASEXPLICITCTOR)==0) 
 	  property |= G__CLS_HASIMPLICITCTOR;
       }
     }
@@ -1069,11 +1059,11 @@ long G__ClassInfo::ClassProperty()
   long property=0;
   if(IsValid()) {
     switch(G__struct.type[tagnum]) {
-    case 'e':
-    case 'u':
+    case 'e': 
+    case 'u': 
       return(property);
-    case 'c':
-    case 's':
+    case 'c': 
+    case 's': 
       property |= G__CLS_VALID;
     }
     if(G__struct.isabstract[tagnum]) property |= G__CLS_ISABSTRACT;
@@ -1087,7 +1077,7 @@ long G__ClassInfo::ClassProperty()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-struct G__friendtag* G__ClassInfo::GetFriendInfo() {
+struct G__friendtag* G__ClassInfo::GetFriendInfo() { 
   if(IsValid()) return(G__struct.friendtag[tagnum]);
   else return 0;
 }

@@ -2174,7 +2174,7 @@ char type;
 
 #ifndef G__OLDIMPLEMENTATION2030
 /******************************************************************
- * G__callanyfunc()
+ * G__callfunc0()
  ******************************************************************/
 int G__callfunc0(result,ifunc,ifn,libp,p)
 G__value *result;

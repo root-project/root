@@ -2699,6 +2699,41 @@ long localmem;
 
 #endif /* 1437 */
 
+#define G__OLDIMPLEMENTATION2042 /* need newsrc/autoobj.h/.cxx */
+#ifndef G__OLDIMPLEMENTATION2042
+    case G__ENTERSCOPE:
+      /***************************************
+      * inst
+      * 0 ENTERSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ENTERSCOPE\n",pc,sp);
+#endif
+      ++G__scopelevel;
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__EXITSCOPE:
+      /***************************************
+      * inst
+      * 0 EXITSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: EXITSCOPE\n",pc,sp);
+#endif
+      G__delete_autoobjectstack(--G__scopelevel);
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif /* 2042 */
+
 #ifdef G__NEVER_BUT_KEEP
     case G__NOP:
       /***************************************
@@ -10394,6 +10429,32 @@ int *start;
       break;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2042
+    case G__ENTERSCOPE:
+      /***************************************
+      * inst
+      * 0 ENTERSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ENTERSCOPE\n",pc,sp);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+
+    case G__EXITSCOPE:
+      /***************************************
+      * inst
+      * 0 EXITSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: EXITSCOPE\n",pc,sp);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif /* 2042 */
+
     case G__NOP:
       /***************************************
       * 0 NOP
@@ -11597,6 +11658,32 @@ int isthrow;
       ++pc;
       break;
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2042
+    case G__ENTERSCOPE:
+      /***************************************
+      * inst
+      * 0 ENTERSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) G__fprinterr(G__serr,"%3x,%d: ENTERSCOPE\n",pc,sp);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+
+    case G__EXITSCOPE:
+      /***************************************
+      * inst
+      * 0 EXITSCOPE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) G__fprinterr(G__serr,"%3x,%d: EXITSCOPE\n",pc,sp);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif /* 2042 */
 
     case G__NOP:
       /***************************************
