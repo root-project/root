@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.50 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.51 2004/07/20 12:30:54 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1768,7 +1768,9 @@ void TVectorD::Streamer(TBuffer &R__b)
       memcpy(fDataStack,fElements,fNrows*sizeof(Double_t));
       delete [] fElements;
       fElements = fDataStack;
-    }
+    } else if (fNrows < 0)
+      Invalidate();
+
     if (R__v < 3)
       MakeValid();
   } else {
