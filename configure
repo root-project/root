@@ -19,6 +19,7 @@ found_dir=no
 found_hdr=no
 show_pkglist=no
 noact="no"
+nohowto="no"
 
 options="                 \
    enable_afs             \
@@ -104,6 +105,8 @@ for c in $envvars ; do
 done
 
 configargs="$*"
+# don't write --nohowto to config.h
+configargs=`echo $configargs|sed 's, *--nohowto,,g'`
 
 configoptions=
 if test ! "x$configenvvars" = "x" ; then
@@ -689,6 +692,7 @@ if test $# -gt 0 ; then
       # With options to specifiy third part software
       #
       --no-create)             noact="yes"           ;;
+      --nohowto)               nohowto="yes"         ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
@@ -2555,6 +2559,17 @@ sed -e "s|@bindir@|$bindir|"           \
     < config/root-help.el.in > build/misc/root-help.el
 echo "done"
 
+#---------------------------------------------------------------------
+# config.status
+#
+message "Writing config.status"
+echo $configargs > config.status
+echo done
+
+#---------------------------------------------------------------------
+# for reconfigure
+#
+touch Makefile
 
 ######################################################################
 #
@@ -2593,6 +2608,10 @@ fi
 #
 # List the possible Makefiles
 #
+if [ "x$nohowto" == "xyes" ]; then
+    exit 0
+fi
+
 echo "To build ROOT type:"
 echo ""
 if test "x$platform" = "xwin32" || test "x$platform" = "xwin32gcc" ; then

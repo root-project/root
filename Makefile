@@ -39,7 +39,6 @@ endif
 
 ##### Modules to build #####
 
-
 MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 newdelete hist tree freetype graf g3d gpad gui minuit \
                 histpainter treeplayer treeviewer proof physics postscript \
@@ -203,7 +202,7 @@ F77LDFLAGS   += -lfrtbegin
 endif
 endif
 
-##### utilities #####
+##### Utilities #####
 
 MAKEDEP       = build/unix/depend.sh
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
@@ -218,6 +217,7 @@ MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
 MAKESTATIC    = build/unix/makestatic.sh
+RECONFIGURE   = build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
@@ -225,7 +225,7 @@ MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
-##### compiler directives and run-control file #####
+##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
 MAKEINFO      = cint/MAKEINFO
@@ -241,7 +241,7 @@ COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
-##### if shared libs need to resolve all symbols (e.g.: aix, win32) #####
+##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
@@ -327,9 +327,21 @@ config config/Makefile.:
 	   exit 1; \
 	fi)
 
-$(ROOTRC): config/rootrc.in
-	@(echo ""; echo "Please, run ./configure again to bring $@ up to date"; \
-	  echo ""; exit 1)
+# Target Makefile is synonym for "run (re-)configure"
+# Makefile is target as we need to re-parse dependencies after
+# configure is run (as config.h changed etc)
+config/Makefile.config include/config.h etc/system.rootauthrc \
+  etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) bin/root-config: Makefile
+
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
+Makefile: configure config/rootrc.in config/config.in config/Makefile.in \
+  config/root-config.in config/rootauthrc.in config/rootdaemonrc.in \
+  config/mimes.unix.in config/mimes.win32.in
+	@(if [ ! -x $(RECONFIGURE) ] || ! $(RECONFIGURE) "$?"; then \
+	   echo ""; echo "Please, run ./configure again as config option files ($?) have changed."; \
+	   echo ""; exit 1; \
+	 fi)
+endif
 
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
@@ -341,7 +353,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
-build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
