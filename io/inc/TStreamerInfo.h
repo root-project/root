@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.47 2004/01/27 19:52:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.48 2004/05/04 15:57:24 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -150,6 +150,7 @@ public:
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
+   TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;

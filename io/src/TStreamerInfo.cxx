@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.196 2004/02/03 23:15:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.197 2004/02/13 07:12:57 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1322,6 +1322,29 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
             }
          }
       }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
+{
+   //  if i is the index in the compressed array fElems and 
+   //  ise the corresponding serial number in the uncompressed array fElements
+   //  the function returns the TStreamerElement corresponding to "ise+j"
+   //  in fElements.
+   //  This function is typically called from Tbuffer, TXmlBuffer
+   
+   if (i < 0 || i >= fNdata) return 0;
+   if (j < 0) return 0;
+   if (!fElements) return 0;
+   TStreamerElement *se = (TStreamerElement*)fElem[i];
+   if (!se) return 0;
+   Int_t nelems = fElements->GetEntriesFast();
+   for (Int_t ise=0;ise<fNdata;ise++) {
+      if (se != (TStreamerElement*)fElements->UncheckedAt(ise)) continue;   
+      if (ise+j >= nelems) return 0;
+      return (TStreamerElement*)fElements->UncheckedAt(ise+j);   
    }
    return 0;
 }
