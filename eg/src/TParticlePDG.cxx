@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.3 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.4 2001/03/05 11:37:31 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -10,7 +10,8 @@ ClassImp(TParticlePDG)
 //______________________________________________________________________________
 TParticlePDG::TParticlePDG()
 {
-  fDecayList  = NULL;
+  fDecayList    = 0;
+  fAntiParticle = 0;
 }
 
 //______________________________________________________________________________
@@ -18,7 +19,8 @@ TParticlePDG::TParticlePDG(Int_t )
 {
   // empty for the time  being
 
-  fDecayList  = NULL;
+  fDecayList    = 0;
+  fAntiParticle = 0;
 }
 
 //______________________________________________________________________________
