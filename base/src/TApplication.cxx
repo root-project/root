@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.59 2004/07/08 11:50:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.60 2004/07/14 11:43:50 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -834,7 +834,7 @@ void TApplication::RemoveIdleTimer()
 //______________________________________________________________________________
 void TApplication::StartIdleing()
 {
-   // Call when system starts idleing.
+   // Called when system starts idleing.
 
    if (fIdleTimer) {
       fIdleTimer->Reset();
@@ -845,7 +845,7 @@ void TApplication::StartIdleing()
 //______________________________________________________________________________
 void TApplication::StopIdleing()
 {
-   // Call when system stops idleing.
+   // Called when system stops idleing.
 
    if (fIdleTimer)
       gSystem->RemoveTimer(fIdleTimer);
