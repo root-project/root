@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.7 2002/03/08 18:44:17 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -32,7 +32,8 @@ protected:
    Int_t         fOptStat;           //option Stat
    TString       fFitFormat;         //Printing format for fit parameters
    TString       fStatFormat;        //Printing format for stats
-
+   TObject      *fParent;            //owner of this TPaveStats
+      
 public:
    TPaveStats();
    TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
@@ -45,11 +46,13 @@ public:
    virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
    Int_t            GetOptFit() const {return fOptFit;}
    Int_t            GetOptStat() const {return fOptStat;}
+   TObject         *GetParent() const {return fParent;}
    virtual void     Paint(Option_t *option="");
    virtual void     InsertText(const char *) {;}
    virtual void     InsertLine() {;}
    virtual void     SetLabel(const char *label) {;}
    virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SaveStyle(); // *MENU*
    virtual void     SetAllWith(const char *, Option_t *, Double_t) {;}
    virtual void     SetMargin(Float_t) {;}
@@ -57,8 +60,9 @@ public:
    virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
    void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
    void             SetOptStat(Int_t stat=1) {fOptStat = stat;} // *MENU*
-
-   ClassDef(TPaveStats,3)  //A special TPaveText to draw histogram statistics.
+   void             SetParent(TObject*obj) {fParent = obj;}
+   
+   ClassDef(TPaveStats,4)  //A special TPaveText to draw histogram statistics.
 };
 
 #endif
