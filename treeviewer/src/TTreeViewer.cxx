@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.30 2003/04/09 14:30:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.31 2003/05/16 07:32:04 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2237,6 +2237,7 @@ void TTreeViewer::NewExpression()
    if (fMappedTree) MapTree(fTree);
    if (fMappedBranch) MapBranch(fMappedBranch);
    fListView->Layout();
+   fNexpressions++;
 }
 
 //______________________________________________________________________________
