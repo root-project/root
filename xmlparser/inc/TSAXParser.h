@@ -1,8 +1,8 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.1 2005/03/14 15:33:43 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.2 2005/03/14 17:22:38 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
