@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.83 2004/05/03 15:33:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.84 2004/05/13 11:41:14 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -101,6 +101,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 
    fMore      = 0;
    fPrompt[0] = 0;
+   fMapfile   = 0;
 
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
@@ -132,6 +133,9 @@ TCint::~TCint()
      // G__scratch_all();
      G__close_inputfiles();
    }
+
+   delete fMapfile;
+
    //G__scratch_all();
 }
 
@@ -951,19 +955,22 @@ Int_t TCint::LoadLibraryMap()
    // See also the AutoLoadCallback() method below.
 
    // open the [system].rootmap files
-   static TEnv *mapfile = 0;
-   if (!mapfile)
-      mapfile = new TEnv(".rootmap");
+   if (!fMapfile)
+      fMapfile = new TEnv(".rootmap");
 
    TEnvRec *rec;
-   TIter next(mapfile->GetTable());
+   TIter next(fMapfile->GetTable());
 
    while ((rec = (TEnvRec*) next())) {
       const char *cls = rec->GetName();
       if (!strncmp(cls, "Library.", 8) && strlen(cls) > 8) {
+         // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
+         // convert back from "@@" to "::", we used "@@" because TEnv
+         // considers "::" a terminator
+         ((TObjString*)tokens->At(0))->String().ReplaceAll("@@", "::");
          char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
          G__set_class_autoloading_table((char*)(cls+8), lib);
          if (gDebug > 0)
@@ -981,12 +988,25 @@ int TCint::AutoLoadCallback(const char *cls, const char *lib)
    // Load library containing specified class. Returns 0 in case of error
    // and 1 in case if success.
 
-   if (!gROOT) return 0;
+   if (!gROOT || !gInterpreter) return 0;
 
    // calls to load libCore might come in the very beginning when libCore
    // dictionary is not fully loaded yet, ignore it since libCore is always
    // loaded
    if (strstr(lib, "libCore")) return 1;
+
+   // lookup class to find list of dependent libraries
+   TEnv *mapfile = ((TCint*)gInterpreter)->fMapfile;
+   if (mapfile) {
+      TString c = TString("Library.") + cls;
+      c.ReplaceAll("::", "@@");
+      TString deplibs = mapfile->GetValue(c, "");
+      TString delim(" ");
+      TObjArray *tokens = deplibs.Tokenize(delim);
+      for (Int_t i = tokens->GetEntries()-1; i > 0; i--)
+         gROOT->LoadClass(cls, ((TObjString*)tokens->At(i))->GetName());
+      delete tokens;
+   }
 
    if (gROOT->LoadClass(cls, lib) == 0) {
       if (gDebug > 0)

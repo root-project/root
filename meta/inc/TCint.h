@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.16 2004/02/25 08:45:30 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.17 2004/04/27 13:15:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -44,6 +44,7 @@ struct G__dictposition;
 class G__ClassInfo;
 class TMethod;
 class TObjArray;
+class TEnv;
 
 class TCint : public TInterpreter {
 
@@ -53,10 +54,11 @@ private:
    char            fPrompt[64];     //proposed prompt string
    G__dictposition fDictPos;        //CINT dictionary context after init
    G__dictposition fDictPosGlobals; //CINT dictionary context after ResetGlobals()
-   TString         fSharedLibs;     //Hold a list of lib loaded by G__loadfile
-   TString         fIncludePath;    //Hold a list of lib include path
+   TString         fSharedLibs;     //hold a list of lib loaded by G__loadfile
+   TString         fIncludePath;    //hold a list of lib include path
+   TEnv           *fMapfile;        //map of classes and libraries
 
-   TCint() : fMore(-1) { }  //for Dictionary() only
+   TCint() : fMore(-1), fMapfile(0) { }  //for Dictionary() only
    virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:
