@@ -70,7 +70,7 @@ ifneq ($(SRPDIR),)
 MODULES      += srputils
 endif
 
-ifneq ($(findstring $(MAKECMDGOALS),distclean),)
+ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
                 venus star mysql srputils x3d rootx rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
@@ -114,7 +114,7 @@ endif
 ##### utilities #####
 
 MAKEDEP       = build/unix/depend.sh
-MAKELIB       = build/unix/makelib.sh
+MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
 MAKEDISTSRC   = build/unix/makedistsrc.sh
 MAKEVERSION   = build/unix/makeversion.sh
@@ -189,8 +189,9 @@ endif
 ##### TARGETS #####
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean compiledata importcint version html \
-                changelog install showbuild cintdlls \
+                clean distclean maintainer-clean compiledata importcint \
+                version html changelog install showbuild cintdlls \
+                debian redhat \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -203,8 +204,9 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 
 -include MyRules.mk            # allow local rules
 
-ifeq ($(findstring $(MAKECMDGOALS),clean distclean dist distsrc version \
-      importcint install showbuild changelog html),)
+ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
+      distsrc version importcint install showbuild changelog html \
+      debian redhat),)
 ifeq ($(findstring $(MAKECMDGOALS),fast),)
 include $(INCLUDEFILES)
 endif
@@ -257,6 +259,18 @@ dist:
 distsrc:
 	@$(MAKEDISTSRC)
 
+debian:
+	@if [ ! -f /usr/bin/debuild -o ! -f /usr/bin/dh_testdir ]; then \
+	   echo "You must have debuild and debhelper installed to"; \
+	   echo "make the Debian GNU/Linux package"; exit 1; fi
+	@echo "Nothing yet - sorry"
+
+redhat:
+	@if [ ! -f /bin/rpm ]; then \
+	   echo "You must have rpm installed to make the Redhat package"; \
+	   exit 1; fi
+	@echo "Nothing yet - sorry"
+
 clean::
 	@rm -f __compiledata __makeinfo *~ core
 
@@ -279,6 +293,10 @@ distclean:: clean
 	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
 	@cd test && $(MAKE) distclean
+
+maintainer-clean:: distclean
+	@rm -rf bin lib include system.rootrc config/Makefile.config \
+	   test/Makefile
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
@@ -321,8 +339,9 @@ install:
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
 	   chmod u+w                            $(DESTDIR)$(LIBDIR)/*; \
 	   echo "[possible error from chmod is ok]"; \
-	   $(INSTALL) $(ALLLIBS)                $(DESTDIR)$(LIBDIR); \
-	   $(INSTALL) $(CINTLIB)                $(DESTDIR)$(LIBDIR); \
+	   for lib in $(ALLLIBS) $(CINTLIB); do \
+	      $(INSTALL) $$lib*                 $(DESTDIR)$(LIBDIR); \
+	   done ; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*.h           $(DESTDIR)$(INCDIR); \
@@ -366,7 +385,7 @@ install:
 	   $(INSTALLDATA) system.rootrc         $(DESTDIR)$(ETCDIR); \
 	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
-	   $(INSTALLDATA) utils/misc/*          $(DESTDIR)$(DATADIR); \
+	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
 	   if [ "$(USECONFIG)" = "TRUE" ]; then \
 	      echo "Installing root.mimes in $(DESTDIR)$(ETCDIR)"; \
 	      $(INSTALLDATA) icons/root.mimes   $(DESTDIR)$(ETCDIR); \
