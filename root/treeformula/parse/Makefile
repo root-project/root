@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testStringFormula testBoolOpt expotest NonFormulaMean
+TEST_TARGETS += BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -42,3 +42,6 @@ ifeq ($(FAIL),)
 endif
 
 
+
+BoolOrder: BoolOrder.log
+	$(TestDiff)
