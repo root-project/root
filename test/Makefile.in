@@ -196,9 +196,9 @@ endif
 
 ifeq ($(ARCH),sgikcc)
 # SGI with KCC
-CXX           = KCC -n32 --no_exceptions --one_instantiation_per_object
+CXX           = KCC -n32 --one_instantiation_per_object
 CXXFLAGS      = -O
-LD            = KCC -n32 --no_exceptions
+LD            = KCC -n32
 LDFLAGS       = -O
 SOFLAGS       =
 endif

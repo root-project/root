@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for Solaris with KCC
 
 PLATFORM      = solaris
@@ -14,7 +14,7 @@ CXXOPT        = +K1
 NOOPT         =
 endif
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq (EXCEPTIONS,yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions

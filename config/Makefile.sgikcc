@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for SGI IRIX 6.x with KCC compiler
 
 # You can steer the build with the variable ROOTBUILD
@@ -20,7 +20,7 @@ OPT           = -O2
 NOOPT         =
 endif
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq (EXCEPTIONS,yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions

@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for Linux with glibc and KCC compiler
 
 # When changing OPT to -O you can also change +K0 to +K1
@@ -20,7 +20,7 @@ CXXOPT        = +K3 --backend -m486 --backend -malign-loops=4 --backend \
 NOOPT         =
 endif
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq (EXCEPTIONS,yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions

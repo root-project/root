@@ -30,6 +30,8 @@ ACLOCALDIR     := @aclocaldir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
 
+EXCEPTIONS     := @exceptions@
+
 OSTHREADLIBDIR := @threadlibdir@
 OSTHREADLIB    := @threadlib@
 

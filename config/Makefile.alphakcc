@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for DEC OSF1 with KCC compiler
 
 PLATFORM      = alpha
@@ -16,7 +16,7 @@ CXXOPT        = +K3
 NOOPT         =
 endif
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq (EXCEPTIONS,yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions
