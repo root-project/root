@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.4 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.5 2001/05/07 18:41:49 rdm Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1845,12 +1845,6 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 
   fgInstance = this;
 
-  // remove any previous object named "multidimfit" in the list of
-  // special objects
-  TObject *obj = gROOT->GetListOfSpecials()->FindObject(GetName());
-  if (obj) delete obj;
-  gROOT->GetListOfSpecials()->Add(this);
-
   fMeanQuantity           = 0;
   fMaxQuantity            = 0;
   fMinQuantity            = 0;
@@ -1898,9 +1892,6 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 TMultiDimFit::~TMultiDimFit()
 {
   // DTOR
-  TObject *obj = gROOT->GetListOfSpecials()->FindObject(GetName());
-  if(obj)
-    gROOT->GetListOfSpecials()->Remove(this);
   delete [] fPowers;
   delete [] fMaxPowers;
   delete [] fMaxPowersFinal;
