@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.5 2000/08/21 10:33:57 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.6 2000/09/07 00:26:06 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -535,7 +535,7 @@ void TGX11::MapGCValues(GCValues_t &gval,
       }
       if ((mask & kGCDashList)) {
          xmask |= GCDashList;
-         xgval.dashes = gval.fDashes;
+         xgval.dashes = gval.fDashes[0];
       }
       if ((mask & kGCArcMode)) {
          xmask |= GCArcMode;
@@ -632,7 +632,8 @@ void TGX11::MapGCValues(GCValues_t &gval,
       }
       if ((xmask & GCDashList)) {
          mask |= kGCDashList;
-         gval.fDashes = xgval.dashes;
+         gval.fDashes[0] = xgval.dashes;
+         gval.fDashLen   = 1;
       }
       if ((xmask & GCArcMode)) {
          mask |= kGCArcMode;
@@ -834,7 +835,8 @@ void TGX11::ChangeGC(GContext_t gc, GCValues_t *gval)
 void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 {
    // Copies graphics context from org to dest. Only the values specified
-   // in mask are copied. Both org and dest must exist.
+   // in mask are copied. If mask = 0 then copy all fields. Both org and
+   // dest must exist.
 
    GCValues_t gval;
    XGCValues  xgval;
@@ -842,7 +844,7 @@ void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 
    if (!mask) {
       // in this case copy all fields
-      mask = (Mask_t)-1;
+      mask = ~0;
    }
 
    gval.fMask = mask;  // only set fMask used to convert to xmask
@@ -1795,10 +1797,16 @@ void TGX11::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_d
 void TGX11::GetGCValues(GContext_t gc, GCValues_t &gval)
 {
    // Get current values from graphics context gc. Which values of the
-   // context to get is encoded in the GCValues::fMask member.
+   // context to get is encoded in the GCValues::fMask member. If fMask = 0
+   // then copy all fields.
 
    XGCValues xgval;
    ULong_t   xmask;
+
+   if (!gval.fMask) {
+      // in this case copy all fields
+      gval.fMask = ~0;
+   }
 
    MapGCValues(gval, xmask, xgval);
 
