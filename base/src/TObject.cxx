@@ -1,4 +1,4 @@
-;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.53 2003/05/15 19:18:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.54 2003/05/19 13:40:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
