@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.6 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.7 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -17,8 +17,9 @@
 #include "TMaterial.h"
 #include "TFile.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
-#include <assert.h> // Is there a ROOT equiv?
+#include <assert.h>
 
 ClassImp(TShape)
 
@@ -108,15 +109,16 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-/*void TShape::Paint(Option_t *)
+void TShape::Paint(Option_t *)
 {
    AbstractMethod("TShape::Paint(Option_t *)");
-}*/
+}
 
 
 //______________________________________________________________________________
-void TShape::SetPoints(Double_t *)  const {
-   AbstractMethod("SetPoints(Double_t *buffer)  const");
+void TShape::SetPoints(Double_t *) const 
+{
+   AbstractMethod("SetPoints(Double_t *buffer) const");
 }
 
 
@@ -173,6 +175,7 @@ void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
    }
 }
 
+//_____________________________________________________________________________
 void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 {
    // We have to set kRawSize (unless already done) to allocate buffer space 
@@ -199,6 +202,7 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
    }
 }
 
+//_____________________________________________________________________________
 Int_t TShape::GetBasicColor() const
 {
    Int_t basicColor = ((GetLineColor() %8) -1) * 4;
@@ -207,3 +211,11 @@ Int_t TShape::GetBasicColor() const
    return basicColor;
 }
 
+//_____________________________________________________________________________
+const TBuffer3D &TShape::GetBuffer3D(Int_t /* reqSections */ ) const
+{
+   // Stub to avoid forcing implementation at this stage
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   Warning("GetBuffer3D", "this must be implemented for shapes in a TNode::Paint hierarchy. This will become a pure virtual fn eventually.");
+   return buffer;
+}

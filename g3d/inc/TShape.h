@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.4 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.5 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -55,18 +55,19 @@ protected:
            Int_t   GetBasicColor() const;
 
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
-   virtual void    SetPoints(Double_t *points) const = 0;
-           void    TransformPoints(Double_t *points, UInt_t NbPnts) const;
 public:
                    TShape();
                    TShape(const char *name, const char *title, const char *material);
    virtual         ~TShape();
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const = 0;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
    TMaterial       *GetMaterial()  const {return fMaterial;}
    virtual Int_t   GetNumber()     const {return fNumber;}
            Int_t   GetVisibility() const {return fVisibility;}
+   virtual void    Paint(Option_t *option="");
    virtual void    SetName(const char *name);
+   virtual void    SetPoints(Double_t *points) const ;
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
+           void    TransformPoints(Double_t *points, UInt_t NbPnts) const;
 
    ClassDef(TShape,2)  //Basic shape
 };
