@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.164 2004/08/03 05:25:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.165 2004/08/12 04:33:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -351,11 +351,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
    if (tree == 0) return 0;
 
    Long64_t entry,entryNumber;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntriesFast()-1) {
-      lastentry  = fTree->GetEntriesFast() -1;
-      nentries   = lastentry - firstentry + 1;
-   }
+   nentries = GetEntriesToProcess(firstentry, nentries);
 
    // Compile selection expression if there is one
    TTreeFormula *select = 0; // no need to interfer with fSelect since we
@@ -968,6 +964,23 @@ Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *s
       fHistogram->Fit(formula,option,goption);
    }
    return nsel;
+}
+
+//______________________________________________________________________________
+Long64_t TTreePlayer::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const
+{
+   // return the number of entries to be processed
+   // this function checks that nentries is not bigger than the number
+   // of entries in the Tree or in the associated TEventlist
+
+   Long64_t lastentry = firstentry + nentries - 1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry  = fTree->GetEntriesFriend() - 1;
+      nentries   = lastentry - firstentry + 1;
+   }
+   TEventList *elist = fTree->GetEventList();
+   if (elist && elist->GetN() < nentries) nentries = elist->GetN();
+   return nentries;
 }
 
 //______________________________________________________________________________
@@ -2062,11 +2075,8 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = fTree->GetEntriesFriend() -1;
-      nentries   = lastentry - firstentry + 1;
-   }
+   
+   nentries = GetEntriesToProcess(firstentry, nentries);
 
 //*-*- Compile selection expression if there is one
    TTreeFormula *select = 0;
@@ -2268,13 +2278,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 //  of the EventList, starting at firstentry, otherwise the loop is on the
 //  specified Tree entries.
 
-   Long64_t lastentry = firstentry + nentries - 1;
-   if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = fTree->GetEntriesFriend() - 1;
-      nentries   = lastentry - firstentry + 1;
-   }
-   TEventList *elist = fTree->GetEventList();
-   if (elist) nentries = elist->GetN();
+   nentries = GetEntriesToProcess(firstentry, nentries);
 
    TDirectory *cursav = gDirectory;
 
@@ -2487,11 +2491,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = fTree->GetEntriesFriend() -1;
-      nentries   = lastentry - firstentry + 1;
-   }
+   
+   nentries = GetEntriesToProcess(firstentry, nentries);
 
    UInt_t ui;
    for(ui=colFormats.size();ui<ncols;++ui) {
@@ -2733,12 +2734,9 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntriesFriend()-1) {
-      lastentry  = fTree->GetEntriesFriend() -1;
-      nentries   = lastentry - firstentry + 1;
-   }
 
+   nentries = GetEntriesToProcess(firstentry, nentries);
+  
    // compile selection expression if there is one
    TTreeFormula *select = 0;
    if (strlen(selection)) {
