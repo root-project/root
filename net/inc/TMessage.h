@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.4 2001/01/29 00:04:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.5 2002/03/19 10:57:24 brun Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -43,6 +43,7 @@ private:
    TMessage(const TMessage &);           // not implemented
    void operator=(const TMessage &);     // not implemented
 
+protected:
    TMessage(void *buf, Int_t bufsize);   // only called by T(P)Socket::Recv()
    void SetLength() const;               // only called by T(P)Socket::Send()
 
