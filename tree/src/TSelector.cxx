@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.1 2000/07/06 16:53:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.2 2000/07/10 06:12:15 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -9,27 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TSelector object is used by the TTree::Draw, TTree::Scan,          //
-//  TTree::Loop, TTree::Process to navigate in a TTree and make         //
-//  selections.                                                         //
-//                                                                      //
-//  The following members functions are called by the TTree functions.  //
-//    Begin:     called everytime a loop on the tree starts.            //
-//               a convenient place to create your histograms.          //
-//    Finish:    called at the end of a loop on a TTree.                //
-//               a convenient place to draw/fit your histograms.        //
-//    Select:    called at the beginning of each entry to return a flag //
-//               true if the entry must be analyzed.                    //
-//               a convenient place to draw/fit your histograms.        //
-//    Analyze:   called in the entry loop for all entries accepted      //
-//               by Select.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// A TSelector object is used by the TTree::Draw, TTree::Scan,            //
+//  TTree::Loop, TTree::Process to navigate in a TTree and make           //
+//  selections.                                                           //
+//                                                                        //
+//  The following members functions are called by the TTree functions.    //
+//    Begin:       called everytime a loop on the tree starts.            //
+//                 a convenient place to create your histograms.          //
+//    ProcessCut:  called at the beginning of each entry to return a flag //
+//                 true if the entry must be analyzed.                    //
+//                 a convenient place to draw/fit your histograms.        //
+//    ProcessFill: called in the entry loop for all entries accepted      //
+//                 by Select.                                             //
+//    Terminate:   called at the end of a loop on a TTree.                //
+//                 a convenient place to draw/fit your histograms.        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
-#include "TSelector.h"
+#include "TTree.h"
+#include "TSelectorCint.h"
 #include "Api.h"
 
 ClassImp(TSelector)
@@ -38,98 +39,47 @@ ClassImp(TSelector)
 TSelector::TSelector(): TObject()
 {
    // Default constructor for a Selector.
-
-   fFuncBegin   = 0;
-   fFuncFinish  = 0;
-   fFuncSelect  = 0;
-   fFuncAnal    = 0;
-   fIsCompiled  = kTRUE;
-   fIntSelector = 0;
-   
 }
 
 //______________________________________________________________________________
 TSelector::~TSelector()
 {
    // destructor for a Selector.
-
-   delete fFuncBegin;
-   delete fFuncFinish;
-   delete fFuncSelect;
-   delete fFuncAnal;
 }
 
 //______________________________________________________________________________
-void TSelector::Build(TSelector *iselector, G__ClassInfo *cl)
+void TSelector::ExecuteProcessFill(Int_t entry)
 {
-   // Initialize the CallFunc objects when selector is interpreted
+   // Invoke the ProcessFill function via the compiler
 
-   fIsCompiled  = kFALSE;
-   fIntSelector = iselector;
-   fFuncBegin   = new G__CallFunc();
-   fFuncFinish  = new G__CallFunc();
-   fFuncSelect  = new G__CallFunc();
-   fFuncAnal    = new G__CallFunc();
-   Long_t offset = 0;
-   fFuncBegin->SetFuncProto(cl,"Begin","",&offset);
-   fFuncFinish->SetFuncProto(cl,"Finish","",&offset);
-   fFuncSelect->SetFuncProto(cl,"Select","int",&offset);
-   fFuncAnal->SetFuncProto(cl,"Analyze","int",&offset);
+   ProcessFill(entry);
 }
 
 
 //______________________________________________________________________________
-void TSelector::ExecuteAnalyze(Int_t entry)
+void TSelector::ExecuteBegin(TTree *tree)
 {
-   // Invoke the Analyze function via the compiler or the interpreter
+   // Invoke the Begin function via the compiler
 
-   if (fIsCompiled) {
-      Analyze(entry);
-   } else {
-      fFuncAnal->SetArgArray((Long_t*)&entry);
-      fFuncAnal->Exec(fIntSelector);
-   }
+   Begin(tree);
 }
 
 
 //______________________________________________________________________________
-void TSelector::ExecuteBegin()
+void TSelector::ExecuteTerminate()
 {
-   // Invoke the Begin function via the compiler or the interpreter
+   // Invoke the Terminate function via the compiler
 
-   if (fIsCompiled) {
-      Begin();
-   } else {
-      fFuncBegin->Exec(fIntSelector);
-   }
+   Terminate();
 }
 
 
 //______________________________________________________________________________
-void TSelector::ExecuteFinish()
+Bool_t TSelector::ExecuteProcessCut(Int_t entry)
 {
-   // Invoke the Finish function via the compiler or the interpreter
+   // Invoke the ProcessCut function via the compiler
 
-   if (fIsCompiled) {
-      Finish();
-   } else {
-      fFuncFinish->Exec(fIntSelector);
-   }
-}
-
-
-//______________________________________________________________________________
-Bool_t TSelector::ExecuteSelect(Int_t entry)
-{
-   // Invoke the Select function via the compiler or the interpreter
-
-   if (fIsCompiled) {
-      return Select(entry);
-   } else {
-      fFuncSelect->SetArgArray((Long_t*)&entry);
-      Int_t sel = fFuncSelect->ExecInt(fIntSelector);
-      return (Bool_t)sel;
-   }
+   return ProcessCut(entry);
 }
 
 
@@ -139,17 +89,18 @@ TSelector *TSelector::GetSelector(const char *filename)
 //   The code in filename is loaded (interpreted or compiled , see below)
 //   filename must contain a valid class implementation derived from TSelector.
 //   where TSelector has the following member functions:
+//
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //   
-//     Bool_t TSelector::Select(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TSelector::Analyze(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
-//     void TSelector::Finish(). This function is called at the end of
+//     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events. 
 //
 //   if filename is of the form file.C, the file will be interpreted.
@@ -193,7 +144,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    if (!selector || IsCompiled) return selector;
    //interpreted selector: cannot be used as such
    //create a fake selector
-   TSelector *select = new TSelector();
+   TSelectorCint *select = new TSelectorCint();
    select->Build(selector,&cl);
    
    return select;

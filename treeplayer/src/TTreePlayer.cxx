@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.9 2000/07/06 17:20:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.10 2000/07/10 06:17:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2000,18 +2000,21 @@ Int_t TTreePlayer::Process(const char *filename, Int_t nentries, Int_t firstentr
 //   The code in filename is loaded (interpreted or compiled , see below)
 //   filename must contain a valid class implementation derived from TSelector.
 //   where TSelector has the following member functions:
+//
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //   
-//     Bool_t TSelector::Select(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TSelector::Analyze(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
-//     void TSelector::Finish(). This function is called at the end of
+//     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events. 
+//     void TTreeProcess::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
 //
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
@@ -2040,21 +2043,25 @@ Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry
 //*-*              ================================================
 //
 //   The TSelector class has the following member functions:
+//
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
 //   
-//     Bool_t TSelector::Select(Int_t entry). This function is called
+//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
 //          kFALSE otherwise.
-//     void TSelector::Analyze(Int_t entry). This function is called for
+//     void TSelector::ProcessFill(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
-//     void TSelector::Finish(). This function is called at the end of
+//     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events. 
+//     void TTreeProcess::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
 //
 //  If the Tree (Chain) has an associated EventList, the loop is on all
 //  entries of the EventList, otherwise the loop is on the specified Tree entries.   
+
    Long_t i, entry, entryNumber;
    fSelectedRows = 0;
    Int_t lastentry = firstentry + nentries -1;
@@ -2063,7 +2070,7 @@ Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry
       nentries   = lastentry - firstentry + 1;
    }
 
-   selector->ExecuteBegin(); //<===call user initialisation function
+   selector->ExecuteBegin(fTree); //<===call user initialisation function
 
    //Create a timer to get control in the entry loop(s)
    TProcessEventTimer *timer = 0;
@@ -2079,8 +2086,8 @@ Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry
          entryNumber = fTree->LoadTree(elist->GetEntry(i));    //entryNumber is the entry number in the current Tree
          if (timer && timer->ProcessEvents()) break;
          if (gROOT->IsInterrupted()) break;
-         if (!selector->ExecuteSelect(entryNumber)) continue; //<==call user selection function
-         selector->ExecuteAnalyze(entryNumber); //<==call user analysis function
+         if (!selector->ExecuteProcessCut(entryNumber)) continue; //<==call user selection function
+         selector->ExecuteProcessFill(entryNumber); //<==call user analysis function
       }
    //loop case B: loop on all entries
    } else {
@@ -2090,11 +2097,11 @@ Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry
          if (timer && timer->ProcessEvents()) break;
          if (gROOT->IsInterrupted()) break;
          fTree->LoadTree(entryNumber);
-         if (!selector->ExecuteSelect(entryNumber)) continue; //<==call user selection function
-         selector->ExecuteAnalyze(entryNumber); //<==call user analysis function
+         if (!selector->ExecuteProcessCut(entryNumber)) continue; //<==call user selection function
+         selector->ExecuteProcessFill(entryNumber); //<==call user analysis function
       }
    }
-   selector->ExecuteFinish();  //<==call user termination function
+   selector->ExecuteTerminate();  //<==call user termination function
       
    return fSelectedRows;
 }
