@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.31 2001/04/28 08:52:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.32 2001/05/04 13:18:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -377,12 +377,8 @@ void TPad::Clear(Option_t *option)
 //*-*-*-*-*-*-*-*-*Delete all pad primitives*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
 
-
-//*-*- Do not delete editor pads when in editor mode
-
-   SafeDelete(fView);
-
    if (!fPadPaint) {
+      SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
    }
@@ -2155,7 +2151,7 @@ void TPad::HideToolTip(Int_t event)
 }
 
 //______________________________________________________________________________
-Bool_t TPad::IsBatch() const 
+Bool_t TPad::IsBatch() const
 {
    return fCanvas->IsBatch();
 }
@@ -2579,10 +2575,10 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       Int_t px2 = XtoPixel(x2);
       Int_t py1 = YtoPixel(y1);
       Int_t py2 = YtoPixel(y2);
-      //box width must be at least one pixel 
-      if (TMath::Abs(px2-px1) < 1) px2 = px1+1; 
+      //box width must be at least one pixel
+      if (TMath::Abs(px2-px1) < 1) px2 = px1+1;
       if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
-      
+
       Int_t style = gVirtualX->GetFillStyle();
       if (style) {
          if (style > 3000 && style < 4000) {
@@ -4087,7 +4083,7 @@ void TPad::Streamer(TBuffer &b)
          fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
          readLevel++;
          gROOT->SetReadingObject(kTRUE);
-         
+
          TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
          fModified = kTRUE;
@@ -4097,7 +4093,7 @@ void TPad::Streamer(TBuffer &b)
          gROOT->SetReadingObject(kFALSE);
          return;
       }
-      
+
       //====process old versions before automatic schema evolution
       if (v < 5) {   //old TPad in single precision
          if (v < 3) {   //old TPad derived from TWbox
@@ -4261,7 +4257,7 @@ void TPad::Streamer(TBuffer &b)
       if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
       b.CheckByteCount(R__s, R__c, TPad::IsA());
       //====end of old versions
-      
+
    } else {
       TPad::Class()->WriteBuffer(b,this);
    }
@@ -4287,7 +4283,7 @@ void TPad::UseCurrentStyle()
    fLogx  = gStyle->GetOptLogx();
    fLogy  = gStyle->GetOptLogy();
    fLogz  = gStyle->GetOptLogz();
-   
+
    TIter next(GetListOfPrimitives());
    TObject *obj;
 
