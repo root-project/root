@@ -8,7 +8,7 @@
 
 #include "iostream.h"
 
-#include "DrawTest.C"
+#include "dt_DrawTest.C"
 
 Bool_t gInteractiveTest = kTRUE;
 Bool_t gQuietLevel = 0;
@@ -42,7 +42,7 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
 }
 
 Int_t Compare(TDirectory* from) {
-   TFile * reffile = new TFile("draw_test_ref.root");
+   TFile * reffile = new TFile("dt_reference.root");
    
    TIter next(reffile->GetListOfKeys());
    TH1 *ref, *draw;
@@ -101,7 +101,7 @@ void SetVerboseLevel(Int_t verboseLevel) {
    }
 }
 
-void RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
+void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
   // This launch a test a TTree::Draw.
   // The mode currently available are:
   //    0: Do not load the shared library

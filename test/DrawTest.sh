@@ -1,7 +1,7 @@
 #! /bin/sh
 
-MakeFiles.sh
-root -b -q 'MakeRef.C("Event.new.split9.root");'
-RunDrawTest.sh
+dt_MakeFiles.sh
+root -b -q 'dt_MakeRef.C("Event.new.split9.root");'
+dt_RunDrawTest.sh
 
 

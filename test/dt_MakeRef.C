@@ -1,4 +1,4 @@
-#include "RunDrawTest.C"
+#include "dt_RunDrawTest.C"
 
 #include "TClassTable.h"
 #include "TDirectory.h"
@@ -221,7 +221,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
 }
 
-void MakeRef(const char* from) {
+void dt_MakeRef(const char* from) {
    if (!TClassTable::GetDict("Event")) {
       gSystem->Load("libEvent");
       gHasLibrary = kTRUE;
@@ -232,7 +232,7 @@ void MakeRef(const char* from) {
    TFile *hfile = new TFile(from);
    TTree *tree = (TTree*)hfile->Get("T");
    
-   TFile* f= new TFile("draw_test_ref.root","recreate");
+   TFile* f= new TFile("dt_reference.root","recreate");
    MakeHisto(tree,f);
    f->Write();
    delete f;

@@ -21,4 +21,4 @@ mv Event.root Event.old.streamed.root
 mv Event.root Event.old.split.root
 
 # Next step is to do something like
-# root -q 'MakeRef.C("Event.old.split.root");'
+# root -q 'dt_MakeRef.C("Event.old.split.root");'
