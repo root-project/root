@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.3 2001/01/20 21:12:55 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -37,9 +37,10 @@ protected:
 
 public:
    enum {
-      kForgetBits    = BIT(0),        // Do not create branches for fBits, fUniqueID
-      kNoSplit       = BIT(1)         // array not split by TTree::Branch
-   };
+      kForgetBits     = BIT(0),        // Do not create branches for fBits, fUniqueID
+      kNoSplit        = BIT(1),        // array not split by TTree::Branch
+      kBypassStreamer = BIT(14)};      // class Streamer not called (default)
+      
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    virtual         ~TClonesArray();
@@ -58,6 +59,8 @@ public:
    Int_t            AddAtFree(TObject *) { MayNotUse("AddAtFree"); return 0; }
    void             AddAfter(TObject *, TObject *) { MayNotUse("AddAfter"); }
    void             AddBefore(TObject *, TObject *) { MayNotUse("AddBefore"); }
+   void             BypassStreamer(Bool_t Bypass=kTRUE);
+   Bool_t           CanBypassStreamer() { return TestBit(kBypassStreamer);}
 
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);

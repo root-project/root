@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.7 2001/02/15 16:14:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.8 2001/02/19 07:13:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -99,6 +99,8 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       return;
    }
    fKeep = new TObjArray(s);
+   
+   BypassStreamer(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -116,6 +118,17 @@ TClonesArray::~TClonesArray()
    }
    SafeDelete(fKeep);
 }
+
+//______________________________________________________________________________
+void TClonesArray::BypassStreamer(Bool_t Bypass)
+{
+//  When the kBypassStreamer bit is set, the automatically
+//  generated Streamer cannot call directly TClass::WriteBuffer
+
+   if (Bypass) SetBit(kBypassStreamer);
+   else        ResetBit(kBypassStreamer);
+}
+
 
 //______________________________________________________________________________
 void TClonesArray::Compress()
@@ -399,7 +412,7 @@ void TClonesArray::Streamer(TBuffer &b)
 
       TStreamerInfo *sinfo = fClass->GetStreamerInfo();
       //must test on sinfo and not on fClass (OK when writing)
-      if (sinfo->CanBypassStreamer()) {
+      if (CanBypassStreamer()) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
@@ -437,8 +450,9 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      if (fClass->CanBypassStreamer()) {
-         TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      sinfo->ForceWriteInfo();
+      if (CanBypassStreamer()) {
          sinfo->WriteBufferClones(b,this,nobjects,-1);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
