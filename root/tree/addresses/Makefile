@@ -74,6 +74,7 @@ ifeq ($(FAIL),)
 endif
 
 
+merging.log: merging.C
 
 merging: merging.log
 	$(TestDiff)

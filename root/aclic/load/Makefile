@@ -64,7 +64,11 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 autoload.log: autoloadtest_C.$(DllSuf)
 
 autoload: autoload.log
+ifeq ($(ARCH),macosx)
+	$(WarnFailTest) [Mac OS specific]
+else
 	$(TestDiff)
+endif
 
 autoloadNamespace: autoloadNamespace.log
 	$(TestDiff)

@@ -34,7 +34,7 @@ endif
 $(ROOTFILE): $(ROOTSYS)/test/Event.h
 	$(CMDECHO) ( \
 		cd $(ROOTDIR)/test; \
-		gmake Event$(ExeSuf); \
+		$(MAKE) Event$(ExeSuf); \
 		./Event 10 1 9 1; \
 	) 2>&1 > createfile.out
 

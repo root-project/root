@@ -14,6 +14,9 @@ LIBS = $(ROOTLIBS)
 #all:	Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf)
 #test: check
 
+#Foo.$(DllSuf): Foo.$(ObjSuf)
+#	$(BuildFromObjs)
+
 Foo.$(DllSuf): Foo.h Foo.cxx
 	$(CMDECHO) rootcint -f FooDict.cxx -c Foo.h+
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c Foo.cxx 
@@ -26,8 +29,8 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-                $(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-                $(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+	$(CMDECHO) $(LD) $(SOFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt)  $(subst .$(DllSuf),.dylib,$@)
+	$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS)  Foo.$(ObjSuf) FooDict.$(ObjSuf)  \
                    $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
@@ -59,7 +62,11 @@ writer$(ExeSuf):writer.C Foo.$(DllSuf)
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
 else
+ifeq ($(PLATFORM),macosx)
+	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.dylib $(OutPutOpt)$@
+else
 	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
+endif
 endif
 
 #	g++ -o $@ writer.$(ObjSuf) Foo.$(DllSuf) `root-config --libs` \

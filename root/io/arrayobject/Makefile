@@ -15,7 +15,7 @@ endif
 # we expect the test to fail!
 ArraySave: 
 ifeq ($(FAIL),)
-	@echo WARNING `pwd` has failing test, run gmake RealArraySave to see it.
+	@echo WARNING `pwd` has failing test, run make RealArraySave to see it.
 endif
 
 RealArraySave: RealArraySave.log

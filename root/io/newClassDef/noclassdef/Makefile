@@ -86,7 +86,7 @@ shared: libIotest.$(DllSuf)
 
 noclassdef:   driver$(ExeSuf)
 	$(CMDECHO)rm -f driver.output
-	$(CMDECHO)./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at: 0x[0-9a-f]*,/Dumping object,/' > driver.output 
+	$(CMDECHO)./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at: 0x[0-9a-f]*,/Dumping object,/' -e 's/TStreamerInfo:://' > driver.output 
 	$(CMDECHO)diff -bw good.linux.output driver.output
 #	@echo "All test succeeded in `pwd`"
 

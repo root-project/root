@@ -9,13 +9,13 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 $(ROOTSYS)/test/Event$(ExeSuf):
-	(cd $(ROOTSYS)/test; gmake Event$(ExeSuf))
+	(cd $(ROOTSYS)/test; $(MAKE) Event$(ExeSuf))
 
 libEvent.$(DllSuf): $(ROOTSYS)/test/libEvent.$(DllSuf)
-	$(CMDECHO) cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.$(DllSuf) $(ROOTSYS)/test/Event.h .
+	$(CMDECHO) cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.* $(ROOTSYS)/test/Event.h .
 
 Event$(ExeSuf): $(ROOTSYS)/test/Event$(ExeSuf)
-	$(CMDECHO)cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.$(DllSuf) $(ROOTSYS)/test/Event.h .
+	$(CMDECHO)cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.* $(ROOTSYS)/test/Event.h .
 
 Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out

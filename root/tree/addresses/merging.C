@@ -8,17 +8,17 @@ using namespace std;
 
 int merging() 
 {
- ULong64_t NUMBER_OF_ENTRIES = 100;
+ Long_t NUMBER_OF_ENTRIES = 100;
 
  TTree* newResult = new TTree("xxx", "Argument");
  static Double_t x, y;
  newResult->Branch("x", &x, "x/D");
  newResult->Branch("y", &y, "y/D");
- for(Long_t i=0; i<NUMBER_OF_ENTRIES; i++)
+ for(Long_t i=0; i<NUMBER_OF_ENTRIES; ++i)
  {
       x = i;
       y = i*i;
-//       fprintf(stderr,"res %lf %lf\n",x,y);
+      //fprintf(stderr,"res %lf %lf %d\n",x,y,i<NUMBER_OF_ENTRIES);
       newResult->Fill();
  }// end of for
 //  newResult->Scan("x:y");

@@ -11,7 +11,7 @@ SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 $(ROOTSYS)/test/Event:
-	(cd $ROOTSYS/test; gmake Event)
+	(cd $ROOTSYS/test; $(MAKE) Event)
 
 Event: $(ROOTSYS)/test/Event
 	$(CMDECHO) cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .

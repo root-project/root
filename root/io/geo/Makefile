@@ -86,7 +86,7 @@ rootfiles: ams.root aleph.root  brahms.root  btev.root cdf.root d0.root  \
 	e907.root gem.root phenix.root phobos.root star.root tesla.root
 
 unpack.last: geometries.tar.gz
-	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && (gmake rootfiles) && touch unpack.last
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && ($(MAKE) rootfiles) && touch unpack.last
 
 readGeo.log: unpack.last ams.root brahms.root btev.root d0.root e907.root gem.root phenix.root phobos.root tesla.root
 

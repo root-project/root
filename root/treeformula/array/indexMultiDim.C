@@ -75,7 +75,7 @@ if (1) {
 }
 if (1) {
    f = new TFile("shorttrack.root");
-   t2 = (TTree*)f->Get("T");
+   TTree *t2; f->GetObject("T",t2);
    int v11 = (int)t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[]","","",1,0);
    int v12 = (int)t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[fMeasures]","","",1,0);
    if (v11!=1||v12!=1) {

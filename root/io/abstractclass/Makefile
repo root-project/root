@@ -17,7 +17,7 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-include $(ROOTSYS)/test/Makefile.arch
+#include $(ROOTSYS)/test/Makefile.arch
 
 FORT     := g77
 FORTOPTS := $(FFLAGS) -g -c -O -DLINUX $(F77INCS) -fno-second-underscore
@@ -75,10 +75,11 @@ DataBlock2.$(ObjSuf) : DataBlock2.cxx DataBlock2.h PureAbstractInterface.h
 lib: FORCE $(CXXSO)
 
 $(CXXSO): $(CXXOBJS)
-	$(CMDECHO)$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt)$(CXXSO) $(EXPLLINKLIBS)
+	$(BuildFromObjs)
+#	$(CMDECHO)$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt)$(CXXSO) $(EXPLLINKLIBS)
 
 depend: FORCE
-	$(CMDECHO)makedepend -f Makefile $(INCLUDES) $(CXXSOURCE)
+	$(CMDECHO)rmkdepend -f Makefile $(INCLUDES) $(CXXSOURCE)
 
 tar: FORCE
 	tar cvf badio.tar Makefile LinkDef.h $(CINTLIST) $(CXXSOURCES) *.C *.root

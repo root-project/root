@@ -50,35 +50,11 @@ $(DICTS) : %dict.C : %.h %linkdef.h
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
-	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
+	$(BuildFromObjs)
 
-#ifeq ($(ARCH),aix)
-#		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-#else
-#ifeq ($(ARCH),aix5)
-#		@/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-#else
-#ifeq ($(ARCH),macosx)
-## We need to make both the .dylib and the .so
-#		@$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-#		@$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-#		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-#else
-#ifeq ($(PLATFORM),win32)
-#		@bindexplib $* $^ > $*.def
-#		@lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-#	#	   $(OutPutOpt)$(subst dll,lib,$@)
-#	#	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
-#		   $(OutPutOpt)$@
-#else
-#		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt) $@
-#endif
-#endif
-#endif
-#endif
+#	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+#		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
 
-#		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt)$@
 
 local_clean:
 	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files

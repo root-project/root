@@ -21,8 +21,8 @@ clean: $(CLEAN_TARGETS)
 
 
 $(TEST_TARGETS): %.test:
-	@(cd $*; gmake --no-print-directory test)
+	@(cd $*; $(MAKE) --no-print-directory test)
 
 $(CLEAN_TARGETS): %.clean:
-	@(cd $*; gmake --no-print-directory clean)
+	@(cd $*; $(MAKE) --no-print-directory clean)
 

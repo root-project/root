@@ -6,6 +6,9 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+enum.log: Enum_C.$(DllSuf)
+
 include $(ROOTTEST_HOME)/scripts/Event.mk
 
 .SUFFIXES: .cxx .o .so
@@ -18,8 +21,6 @@ Event.new.split0.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO)./Event 10 1 0 1 >/dev/null 2>&1  && cp Event.root Event.new.split0.root 
 
 local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.root result $(ALL_LIBRARIES)
-
-enum.log: Enum_C.$(DllSuf)
 
 enum: enum.log
 	$(TestDiff)
