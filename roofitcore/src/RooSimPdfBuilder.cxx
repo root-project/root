@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.10 2002/01/30 00:32:28 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.11 2002/01/30 23:27:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -372,7 +372,7 @@
 //  
 //  <h4>Multiple connected builds</h4>
 //  <p>
-//    Sometimes you want to build multiple PDFs for completely consecutive fits 
+//    Sometimes you want to build multiple PDFs for independent consecutive fits 
 //    that share some of their parameters. For example, we have two prototype PDFs 
 //    <tt>pdfA(x;p,q)</tt> and <tt>pdfB(x;p,r)</tt> that have a common parameter <tt>p</tt>. 
 //    We want to build a <tt>RooSimultaneous</tt> for both <tt>pdfA</tt> and <tt>B</tt>, 

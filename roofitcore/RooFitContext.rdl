@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.15 2001/11/27 23:19:05 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.16 2001/12/01 08:12:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -69,7 +69,7 @@ protected:
   
   
   // Prefit optimizer
-  Bool_t findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset, RooArgSet& cacheList) ;
+  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList) ;
   void findUnusedDataVariables(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& pruneList) ;
   void findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.46 2001/12/13 22:05:18 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.47 2002/01/09 23:00:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -336,10 +336,9 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       //         Forces actual calculation of normalization of cached 
       //         variables while this is still posible
       TIterator* pcIter = _pdfCompList->createIterator() ;
-      while(arg=(RooAbsArg*)pcIter->Next()){
-	if (arg->IsA()->InheritsFrom(RooAbsPdf::Class())) {	  
-	  ((RooAbsPdf*)arg)->getVal(_normSet) ; 
-	}
+      while(arg=(RooAbsArg*)pcIter->Next()) {
+	RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+	if (pdf) pdf->getVal(_normSet) ; 
       }
       delete pcIter ;
       //----------------------------------------------------------------------
@@ -354,7 +353,8 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 	TIterator* cIter = cacheList.createIterator() ;
 	RooAbsArg *cacheArg ;
 	while(cacheArg=(RooAbsArg*)cIter->Next()){
-	  ((RooAbsReal*)cacheArg)->getVal(_normSet) ;
+	  RooAbsReal* realArg = dynamic_cast<RooAbsReal*>(cacheArg) ;
+	  if (realArg) realArg->getVal(_normSet) ;
 	}
 	delete cIter ;
 
@@ -367,8 +367,6 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 	  depArg->setOperMode(RooAbsArg::ADirty) ;
 	}
 	delete dIter ;
-	
-	//_dataClone->setDirtyProp(kFALSE) ;
       }    
 
     }
@@ -392,16 +390,17 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
 
 
-Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset, 
+// WVE needs fixing
+Bool_t RooFitContext::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, 
 					    RooArgSet& cacheList) 
 {
   // Find branch PDFs with all-constant parameters, and add them
   // to the dataset cache list
 
-  TIterator* sIter = pdf->serverIterator() ;
-  RooAbsPdf* server ;
+  TIterator* sIter = arg->serverIterator() ;
+  RooAbsArg* server ;
 
-  while(server=(RooAbsPdf*)sIter->Next()) {
+  while(server=(RooAbsArg*)sIter->Next()) {
     if (server->isDerived()) {
       // Check if this branch node is eligible for precalculation
       Bool_t canOpt(kTRUE) ;
@@ -416,7 +415,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset,
       delete branchParamList ;
 
       if (canOpt) {
-	cout << "RooFitContext::optimizePDF: component PDF " 
+	cout << "RooFitContext::optimize: component " 
 	     << server->GetName() << " will be cached" << endl ;
 
 	// Add to cache list
