@@ -60,8 +60,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-SYSXLIBS      = -lX11 -lm -lPW
-XLIBS         = -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd
 CRYPTLIBS     = -lcrypt
 

@@ -59,8 +59,8 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = -L/usr/X11R6/lib -lXpm -lX11
-CILIBS        = -lm -ltermcap -lbsd -ldl
+XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
