@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.52 2005/01/20 21:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.53 2005/01/25 07:36:21 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1319,8 +1319,9 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 //   The projection is always of the type TH1D.
 //
 //   if option "E" is specified, the errors are computed. (default)
-//
-//
+//   if option "B" is specified, the content of bin of the returned histogram
+//      will be equal to the GetBinEntries(bin) of the profile,
+//      otherwise (default) it will be equal to GetBinContent(bin)
 
   TString opt = option;
   opt.ToLower();
@@ -1341,13 +1342,15 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
      h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
   }
   Bool_t computeErrors = kFALSE;
+  Bool_t binEntries    = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
   Double_t cont,err;
   for (Int_t binx =0;binx<=nx+1;binx++) {
-     cont  = GetBinContent(binx);
+     if (binEntries) cont  = GetBinEntries(binx);
+     else            cont  = GetBinContent(binx);
      err   = GetBinError(binx);
      if (cont)          h1->Fill(fXaxis.GetBinCenter(binx), cont);
      if (computeErrors) h1->SetBinError(binx,err);
