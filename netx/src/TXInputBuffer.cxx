@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.2 2004/12/16 19:23:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.3 2005/01/05 01:20:11 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -76,9 +76,9 @@ TXInputBuffer::TXInputBuffer()
    // Constructor
 
    // Initialization of data structures mutex
-   if (!(fMutex = new TMutex(kTRUE))) 
+   if (!(fMutex = new TMutex(kTRUE)))
       Error("TXInputBuffer", "can't create mutex for data"
-                               " structures: out of system resources"); 
+                               " structures: out of system resources");
    // Reset queue
    fMsgQue.clear();
 }
@@ -153,17 +153,17 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
 
             // Check whether any message arrived in the meantime.
             res = RetrieveMsg(streamid);
-            // If not, wait for the next (remember: the mtx is 
+            // If not, wait for the next (remember: the mtx is
             // unlocked internally).
             if (!res) {
-               cr = cv->TimedWait(2);
+               cr = cv->TimedWaitRelative(2);
             }
          }
 
          // If we found something we are done
          if (res) break;
 
-         // If we have been awakened, there might be something 
+         // If we have been awakened, there might be something
          if (!cr)
             res = RetrieveMsg(streamid);
 

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.4 2004/12/15 12:33:40 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
 
    Int_t   Wait();
    Int_t   TimedWait(ULong_t secs, ULong_t nanoSecs);
-   Int_t   TimedWait(ULong_t ms);
+   Int_t   TimedWaitRelative(ULong_t ms);
    Int_t   Signal() { if (fConditionImp) return fConditionImp->Signal(); return -1; }
    Int_t   Broadcast() { if (fConditionImp) return fConditionImp->Broadcast(); return -1; }
 

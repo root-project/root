@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.4 2004/12/14 15:06:18 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.5 2004/12/15 12:33:40 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -90,7 +90,7 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    // This method is given an absolute time since the beginning of
    // the EPOCH (use TThread::GetTime() to get this absolute time).
    // To wait for a relative time from now, use
-   // TCondition::TimedWait(ULong_t ms).
+   // TCondition::TimedWaitRelative(ULong_t ms).
    // Returns 0 if successfully signalled, 1 if time expired and -1 in
    // case of error.
 
@@ -105,7 +105,7 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
 }
 
 //______________________________________________________________________________
-Int_t TCondition::TimedWait(ULong_t ms)
+Int_t TCondition::TimedWaitRelative(ULong_t ms)
 {
    // Wait to be signaled or till the timer times out.
    // This method is given a relative time from now.

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.4 2004/12/16 19:23:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.5 2005/01/05 01:20:11 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -193,7 +193,7 @@ void TXPhyConnection::StartReader()
             if (!running) {
                if (DebugLevel() >= kHIDEBUG)
                   Info("StartReader","Waiting a little bit ...");
-               fReaderCV->TimedWait(100);
+               fReaderCV->TimedWaitRelative(100);
             }
          } while (!running);
       }
@@ -203,8 +203,8 @@ void TXPhyConnection::StartReader()
 //____________________________________________________________________________
 void TXPhyConnection::ReaderStarted()
 {
-   // Called inside SocketReaderThread to flag the running status 
-   // of the thread   
+   // Called inside SocketReaderThread to flag the running status
+   // of the thread
 
    R__LOCKGUARD(fMutex);
    fReaderthreadrunning = kTRUE;
@@ -408,7 +408,7 @@ void TXPhyConnection::CheckAutoTerm()
       // If we are going async, we might be willing to term ourself
       if (!IsValid() && gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC)) {
          if (TThread::SelfId() == fReaderthreadhandler->GetId()) {
-            // Notify termination, if requested 
+            // Notify termination, if requested
             if (DebugLevel() >= kHIDEBUG)
                Info("CheckAutoTerm", "self-Cancelling reader thread.");
             // Reset thread handlers (real termination will be done

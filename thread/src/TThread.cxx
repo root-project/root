@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.30 2004/12/15 12:33:40 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.31 2004/12/15 13:15:14 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -108,7 +108,7 @@ Int_t TJoinHelper::Join()
    ULong_t absSec, absNanoSec;
 
    while (kTRUE) {
-      int r = fC->TimedWait(100);  // 100 ms
+      int r = fC->TimedWaitRelative(100);  // 100 ms
 
       if (r == 0) break;
 
