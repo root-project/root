@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.1 2001/01/15 01:20:31 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -53,7 +53,14 @@ TCache::TCache(Int_t maxCacheSize, TFile *file, Int_t pageSize)
    // The maxCacheSize is in MBytes and the pageSize is in bytes (default
    // being kDfltPageSize).
 
+   if (!file) {
+      Error("TCache", "no file specified");
+      MakeZombie();
+      return;
+   }
+
    fFile      = file;
+   fEOF       = fFile->GetEND();
    fHighWater = maxCacheSize * 1024 * 1024;
    fLowWater  = ULong_t(fHighWater * kDfltLowWater / 100);
    fRecursive = kFALSE;
@@ -105,8 +112,7 @@ TCache::TPage *TCache::ReadPage(Seek_t offset)
    if (fFree->GetSize() > 0) {
       TPage *p = (TPage*) fFree->First();
       fFile->Seek(offset);
-      Int_t len = offset + fPageSize > fFile->GetEND() ?
-                  Int_t(fFile->GetEND() - offset) : fPageSize;
+      Int_t len = offset + fPageSize > fEOF ? Int_t(fEOF - offset) : fPageSize;
       if (len < 0) len = 0;
       if (len && fFile->ReadBuffer(p->Data(), len)) {
          fRecursive = kFALSE;
@@ -124,8 +130,7 @@ TCache::TPage *TCache::ReadPage(Seek_t offset)
    if (ULong_t(fCache->GetSize() * fPageSize) < fHighWater) {
       char *data = new char[fPageSize];
       fFile->Seek(offset);
-      Int_t len = offset + fPageSize > fFile->GetEND() ?
-                  Int_t(fFile->GetEND() - offset) : fPageSize;
+      Int_t len = offset + fPageSize > fEOF ? Int_t(fEOF - offset) : fPageSize;
       if (len < 0) len = 0;
       if (len && fFile->ReadBuffer(data, len)) {
          fRecursive = kFALSE;
@@ -201,6 +206,9 @@ Int_t TCache::WritePage(TPage *page)
       fRecursive = kFALSE;
       return -1;
    }
+
+   if (page->Offset() + page->Size() > fEOF)
+      fEOF = page->Offset() + page->Size();
 
    page->ResetBit(TPage::kDirty);
    page->ResetBit(TPage::kLocked);

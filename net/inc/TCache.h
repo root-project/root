@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.1 2001/01/15 01:20:31 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -87,6 +87,7 @@ private:
    TSortedList *fNew;           // list constaining new pages that have to be written to disk
    TList       *fFree;          // list containing unused pages
    TFile       *fFile;          // file for which pages are being cached
+   Seek_t       fEOF;           // end of file
    ULong_t      fHighWater;     // high water mark (i.e. maximum cache size in bytes)
    ULong_t      fLowWater;      // low water mark (free pages till low water mark is reached)
    Int_t        fPageSize;      // size of cached pages
