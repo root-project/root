@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.53 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.54 2003/10/24 00:40:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4))
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
 #define F_LOCK             (LOCK_EX | LOCK_NB)
