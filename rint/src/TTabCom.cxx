@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.13 2002/07/19 08:29:00 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.14 2002/07/29 09:20:26 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -367,11 +367,10 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
 {
    if (!fpClasses) {
       // generate a text list of classes on disk
-     const char *tmpfilename = tmpnam(0);
-     TString cmd(".class >");
-     cmd += tmpfilename; cmd += "\n";
-     gROOT->ProcessLineSync(cmd.Data());
-
+      const char *tmpfilename = tmpnam(0);
+      TString cmd(".class >");
+      cmd += tmpfilename; cmd += "\n";
+      gROOT->ProcessLineSync(cmd.Data());
 
       // open the file
       ifstream file1(tmpfilename);
@@ -478,7 +477,7 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
       cmd = "set > ";
 #endif
       cmd += tmpfilename; cmd += "\n";
-      gSystem->Exec(cmd.Data()); 
+      gSystem->Exec(cmd.Data());
 
       // open the file
       ifstream file1(tmpfilename);
@@ -797,7 +796,7 @@ TString TTabCom::DetermineClass(const char varName[])
    cmd += "\"); > ";
    cmd += tmpfile; cmd +=  "\n";
 
-   gROOT->ProcessLineSync(cmd.Data());	
+   gROOT->ProcessLineSync(cmd.Data());
    // the type of the variable whose name is "varName"
    // should now be stored on disk in the file "tmpfile"
 
