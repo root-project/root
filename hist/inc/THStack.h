@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.3 2001/12/21 13:41:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.4 2002/06/21 06:57:27 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
 
         THStack();
         THStack(const char *name, const char *title);
+        THStack(const THStack &hstack);
         virtual ~THStack();
         virtual void     Add(TH1 *h);
         virtual void     Browse(TBrowser *b);
