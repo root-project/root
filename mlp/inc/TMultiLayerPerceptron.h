@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.4 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.5 2004/05/03 16:30:12 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TMultiLayerPerceptron
@@ -99,6 +99,7 @@ class TMultiLayerPerceptron : public TObject {
    virtual void Draw(const Option_t*);
    
  protected:
+   void AttachData();
    void BuildNetwork();
    void GetEntry(Int_t) const;
    // it's a choice not to force learning function being const, even if possible

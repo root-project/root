@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.9 2003/12/30 21:34:49 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.10 2004/05/04 07:59:33 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -827,10 +827,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    if (fFormula) delete fFormula;
    fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
-//   gROOT->SetBatch(1);
-//   TCanvas tmpCanvas;
    input->Draw(Form("%s>>tmpb",formula),"","goff");
-//   gROOT->SetBatch(0);
    fNorm[0] = tmp.GetRMS();
    fNorm[1] = tmp.GetMean();
    return fFormula;

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.15 2004/05/03 16:30:12 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.16 2004/05/03 19:56:11 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -306,8 +306,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fTest = test;
    fTestOwner = false;
    fWeight = "1";
+   BuildNetwork();
    if (data)
-      BuildNetwork();
+      AttachData();
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -350,8 +351,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    fTest = test;
    fTestOwner = false;
    fWeight = weight;
+   BuildNetwork();
    if (data)
-      BuildNetwork();
+      AttachData();
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -397,10 +399,11 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fWeight = "1";
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
+   BuildNetwork();
    if (data) {
       data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
       data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
-      BuildNetwork();
+      AttachData();
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -449,10 +452,11 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    fWeight = weight;
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
+      BuildNetwork();
    if (data) {
       data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
       data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
-      BuildNetwork();
+      AttachData();
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -483,7 +487,7 @@ void TMultiLayerPerceptron::SetData(TTree * data)
    }
    fData = data;
    if (data)
-      BuildNetwork();
+      AttachData();
 }
 
 //______________________________________________________________________________
@@ -1034,10 +1038,62 @@ void TMultiLayerPerceptron::Randomize() const
 }
 
 //______________________________________________________________________________
+void TMultiLayerPerceptron::AttachData()
+{
+   // Connects the TTree to Neurons in input and output 
+   // layers. The formulas associated to each neuron are created
+   // and reported to the network formula manager.
+   // By default, the branch is not normalised since this would degrade 
+   // performance for classification jobs.
+   // Normalisation can be requested by putting '@' in front of the formula.
+   Int_t j = 0;
+   Int_t beg = 0;
+   TString brName;
+   TNeuron *neuron = NULL;
+   Bool_t normalize = false;
+   fManager = new TTreeFormulaManager;
+   //first layer
+   TString input  = TString(fStructure(0, fStructure.First(':')));
+   Int_t end = input.Index(",", beg + 1);
+   Int_t nentries = fFirstLayer.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      end = (end == -1 ? input.Length() : end);
+      brName = TString(input(beg, end - beg));
+      neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
+      fManager->Add(neuron->UseBranch(fData,brName.Data()));
+      beg = end + 1;
+      end = input.Index(",", beg + 1);
+   }
+   // last layer
+   TString output = TString(
+           fStructure(fStructure.Last(':') + 1,
+                      fStructure.Length() - fStructure.Last(':')));
+   j = 0;
+   beg = 0;
+   end = output.Index(",", beg + 1);
+   nentries = fLastLayer.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      end = (end == -1 ? output.Length() : end);
+      normalize = false;
+      brName = TString(output(beg, end - beg));
+      neuron = (TNeuron *) fLastLayer.UncheckedAt(j);
+      if (brName[0]=='@')
+         normalize = true;
+      fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
+      if(!normalize) neuron->SetNormalisation(0., 1.);
+      beg = end + 1;
+      end = output.Index(",", beg + 1);
+   }
+   if(fManager->GetMultiplicity()>1)
+      Warning("BuildNetwork()","all indices in arrays must be specified.\nFirst element will be assumed.");
+   fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
+   fManager->Sync();
+}
+
+//______________________________________________________________________________
 void TMultiLayerPerceptron::BuildNetwork()
 {
    // Instanciates the network from the description
-   fManager = new TTreeFormulaManager;
    TString input  = TString(fStructure(0, fStructure.First(':')));
    TString hidden = TString(
            fStructure(fStructure.First(':') + 1,
@@ -1059,10 +1115,6 @@ void TMultiLayerPerceptron::BuildNetwork()
    BuildFirstLayer(input);
    BuildHiddenLayers(hidden);
    BuildLastLayer(output, bll);
-   if(fManager->GetMultiplicity()>1)
-      Warning("BuildNetwork()","all indices in arrays must be specified.\nFirst element will be assumed.");
-   fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
-   fManager->Sync();
 }
 
 //______________________________________________________________________________
@@ -1071,25 +1123,15 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
    // Instanciates the neurons in input
    // Inputs are normalised and the type is set to kOff 
    // (simple forward of the formula value)
-   
-   Int_t beg = 0;
-   Int_t end = input.Index(",", beg + 1);
-   TString brName;
+ 
+   Int_t nneurons = input.CountChar(',')+1;
    TNeuron *neuron = NULL;
-   while (end != -1) {
-      brName = TString(input(beg, end - beg));
+   Int_t i = 0;
+   for (i = 0; i<nneurons; i++) {
       neuron = new TNeuron(TNeuron::kOff);
-      fManager->Add(neuron->UseBranch(fData,brName.Data()));
       fFirstLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
-      beg = end + 1;
-      end = input.Index(",", beg + 1);
    }
-   brName = TString(input(beg, input.Length() - beg));
-   neuron = new TNeuron(TNeuron::kOff);
-   fManager->Add(neuron->UseBranch(fData,brName.Data()));
-   fFirstLayer.AddLast(neuron);
-   fNetwork.AddLast(neuron);
 }
 
 //______________________________________________________________________________
@@ -1135,47 +1177,21 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
 {
    // Builds the output layer
    // Neurons are linear combinations of input.
-   // By default, the branch is not normalised since this would degrade 
-   // performance for classification jobs.
-   // Normalisation can be requested by putting '@' in front of the formula.
-   Int_t beg = 0;
-   Int_t end = output.Index(",", beg + 1);
+   Int_t nneurons = output.CountChar(',')+1;
    Int_t prevStop = fNetwork.GetEntriesFast();
    Int_t prevStart = prevStop - prev;
-   TString brName;
    TNeuron *neuron;
    TSynapse *synapse;
-   Int_t j;
-   while (end != -1) {
-      Bool_t normalize = false;
-      brName = TString(output(beg, end - beg));
-      if (brName[0]=='@')
-         normalize = true;
+   Int_t i,j;
+   for (i = 0; i<nneurons; i++) {
       neuron = new TNeuron(TNeuron::kLinear);
-      fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
-      if(!normalize) neuron->SetNormalisation(0., 1.);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
          fSynapses.AddLast(synapse);
       }
       fLastLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
-      beg = end + 1;
-      end = output.Index(",", beg + 1);
    }
-   Bool_t normalize = false;
-   brName = TString(output(beg, output.Length() - beg));
-   if (brName[0]=='@')
-      normalize = true;
-   neuron = new TNeuron(TNeuron::kLinear);
-   fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
-   if(!normalize) neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
-   for (j = prevStart; j < prevStop; j++) {
-      synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
-      fSynapses.AddLast(synapse);
-   }
-   fLastLayer.AddLast(neuron);
-   fNetwork.AddLast(neuron);
 }
 
 //______________________________________________________________________________
