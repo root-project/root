@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.112 2004/10/11 14:35:02 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.113 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3060,13 +3060,16 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
 
    int retcode;
 
+   fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
+   fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
+
    if (timeout >= 0) {
       struct timeval tv;
       tv.tv_sec  = Int_t(timeout / 1000);
       tv.tv_usec = (timeout % 1000) * 1000;
-      retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, &tv);
+      retcode = select(nfds, rd, wr, 0, &tv);
    } else {
-      retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, 0);
+      retcode = select(nfds, rd, wr, 0, 0);
    }
    if (retcode == -1) {
       if (GetErrno() == EINTR) {
@@ -3077,6 +3080,7 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
          return -3;
       return -1;
    }
+
    return retcode;
 }
 
