@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.67 2002/01/25 16:34:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.68 2002/01/29 07:44:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1609,7 +1609,8 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    UInt_t R__s, R__c;
    Version_t version = b.ReadVersion(&R__s, &R__c);
 
-   if (gFile && gFile->GetVersion() < 30000) version = -1; //This is old file
+   TFile *file = (TFile*)b.GetParent();
+   if (file && file->GetVersion() < 30000) version = -1; //This is old file
 
    //the StreamerInfo should exist at this point
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);

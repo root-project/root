@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.16 2002/01/20 10:21:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.17 2002/02/01 11:03:03 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1584,7 +1584,8 @@ void TH3C::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (gFile && gFile->GetVersion() < 22300) return;
+      TFile *file = (TFile*)R__b.GetParent();
+      if (file && file->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -1785,7 +1786,8 @@ void TH3S::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (gFile && gFile->GetVersion() < 22300) return;
+      TFile *file = (TFile*)R__b.GetParent();
+      if (file && file->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -1965,7 +1967,8 @@ void TH3F::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (gFile && gFile->GetVersion() < 22300) return;
+      TFile *file = (TFile*)R__b.GetParent();
+      if (file && file->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -2145,7 +2148,8 @@ void TH3D::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (gFile && gFile->GetVersion() < 22300) return;
+      TFile *file = (TFile*)R__b.GetParent();
+      if (file && file->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -511,8 +511,9 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      if (gFile) {
-         if (gFile->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      TFile *file = (TFile*)R__b.GetParent();
+      if (file) {
+         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
        }

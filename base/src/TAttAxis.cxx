@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -253,8 +253,9 @@ void TAttAxis::Streamer(TBuffer &R__b)
       R__b >> fLabelSize;
       R__b >> fTickLength;
       R__b >> fTitleOffset;
-      // !gFile is the case of only TMapFile
-      if (R__v > 1 && (!gFile || (gFile && gFile->GetVersion() > 900)))
+      // !file is the case of only TMapFile
+      TFile *file = (TFile*)R__b.GetParent();
+      if (R__v > 1 && (!file || (file && file->GetVersion() > 900)))
          R__b >> fTitleSize;
       else
          fTitleSize = fLabelSize;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -121,7 +121,8 @@ void TPaveStats::Streamer(TBuffer &R__b)
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
-      if (R__v > 1 || (gFile && gFile->GetVersion() == 22304)) {
+      TFile *file = (TFile*)R__b.GetParent();
+      if (R__v > 1 || (file && file->GetVersion() == 22304)) {
          fFitFormat.Streamer(R__b);
          fStatFormat.Streamer(R__b);
       } else {
