@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.12 2004/06/25 18:42:19 brun Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.16 2004/07/20 09:40:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,6 +42,7 @@
 #pragma link C++ class ROOT::TImpProxy<Long_t>+;
 #pragma link C++ class ROOT::TImpProxy<Short_t>+;
 #pragma link C++ class ROOT::TImpProxy<Char_t>+;
+#pragma link C++ class ROOT::TImpProxy<Bool_t>+;
 
 #pragma link C++ class ROOT::TArrayProxy<Double_t>+;
 #pragma link C++ class ROOT::TArrayProxy<Float_t>+;
@@ -52,6 +53,8 @@
 #pragma link C++ class ROOT::TArrayProxy<Int_t>+;
 #pragma link C++ class ROOT::TArrayProxy<Long_t>+;
 #pragma link C++ class ROOT::TArrayProxy<Short_t>+;
+#pragma link C++ class ROOT::TArrayProxy<Char_t>+;
+#pragma link C++ class ROOT::TArrayProxy<Bool_t>+;
    //specialized ! typedef TArrayProxy<Char_t>+;
 
 #pragma link C++ class ROOT::TClaImpProxy<Double_t>+;
@@ -64,6 +67,7 @@
 #pragma link C++ class ROOT::TClaImpProxy<Long_t>+;
 #pragma link C++ class ROOT::TClaImpProxy<Short_t>+;
 #pragma link C++ class ROOT::TClaImpProxy<Char_t>+;
+#pragma link C++ class ROOT::TClaImpProxy<Bool_t>+;
 
 #pragma link C++ class ROOT::TClaArrayProxy<Double_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Float_t>+;
@@ -74,6 +78,8 @@
 #pragma link C++ class ROOT::TClaArrayProxy<Int_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Long_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Short_t>+;
+#pragma link C++ class ROOT::TClaArrayProxy<Char_t>+;
+#pragma link C++ class ROOT::TClaArrayProxy<Bool_t>+;
 
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)

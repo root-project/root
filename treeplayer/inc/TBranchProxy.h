@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.5 2004/10/18 21:07:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.6 2005/01/19 18:30:58 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -620,6 +620,7 @@ namespace ROOT {
    typedef TClaArrayProxy<Long_t>      TClaArrayLongProxy;
    typedef TClaArrayProxy<Long64_t>    TClaArrayLong64Proxy;
    typedef TClaArrayProxy<UShort_t>    TClaArrayShortProxy;
+   typedef TClaArrayProxy<Char_t>      TClaArrayCharProxy;
    typedef TClaArrayProxy<Bool_t>      TClaArrayBoolProxy;
    //specialized ! typedef TClaArrayProxy<Char_t>  TClaArrayCharProxy;
 

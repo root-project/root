@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.11 2005/01/19 18:30:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.12 2005/01/22 09:29:37 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1162,8 +1162,21 @@ namespace ROOT {
                            "Introspection of TClonesArray in older file not implemented yet.");
                   }
                } else {
-                  Error("AnalyzeTree",
-                        "Introspection of TClonesArray in older file not implemented yet.");
+                  TClonesArray **ptr = (TClonesArray**)branch->GetAddress();
+                  TClonesArray *clones = 0;
+                  if (ptr==0) {
+                     clones = new TClonesArray;
+                     branch->SetAddress(&clones);
+                     ptr = &clones;
+                  }
+                  branch->GetEntry(0);
+                  TClass *ncl = *ptr ? (*ptr)->GetClass() : 0;
+                  if (ncl) {
+                     cl = ncl;
+                  } else {
+                     Error("AnalyzeTree",
+                           "Introspection of TClonesArray for %s failed.",branch->GetName());
+                  }
                }
 
             }
@@ -1182,20 +1195,24 @@ namespace ROOT {
             if (cl) {
                // We have a non-splitted object!
 
-               TStreamerInfo *info = cl->GetStreamerInfo();
-               TStreamerElement *elem = 0;
+               if (desc) {
+                  TStreamerInfo *info = cl->GetStreamerInfo();
+                  TStreamerElement *elem = 0;
 
-               TIter next(info->GetElements());
-               while( (elem = (TStreamerElement*)next()) ) {
-                  AnalyzeElement(branch,elem,1,desc,"");
+                  TIter next(info->GetElements());
+                  while( (elem = (TStreamerElement*)next()) ) {
+                     AnalyzeElement(branch,elem,1,desc,"");
+                  }
+                  
+                  desc = AddClass(desc);
+                  if (desc) {
+                     type = desc->GetName();
+                     
+                     TString dataMemberName = branchname;
+                     
+                     AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
+                  }
                }
-
-               desc = AddClass(desc);
-               type = desc->GetName();
-
-               TString dataMemberName = branchname;
-
-               AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
             } else {
 
                // We have a top level raw type.
@@ -1353,6 +1370,7 @@ namespace ROOT {
          case TStreamerInfo::kTNamed:
          case TStreamerInfo::kTObject:
          case TStreamerInfo::kAny:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAny:
          case TStreamerInfo::kBase: {
             TClass *cl = element->GetClassPointer();
             if (cl) {
@@ -1409,7 +1427,7 @@ namespace ROOT {
             AddHeader(cl);
             break;
          }
-
+         
          default:
             Error("AnalyzeTree",
                   "Unsupported type for %s %s %d",
@@ -1425,7 +1443,7 @@ namespace ROOT {
          TBranchProxyClassDescriptor *cldesc;
 
          TClass *cl = gROOT->GetClass(cname);
-         if (cl) {
+         if (cl && cl->CanSplit()) {
             cldesc = new TBranchProxyClassDescriptor(cl->GetName(), cl->GetStreamerInfo(),
                                                      branch->GetName(),
                                                      isclones, 0 /* non-split object */);
@@ -1632,7 +1650,12 @@ namespace ROOT {
       TIter next( &fListOfForwards );
       TObject *current;
       while ( (current=next()) ) {
-         fprintf(hf,current->GetTitle());
+         if (strstr(current->GetTitle(),"::")==0) {
+            // We can not forward declared nested classes (well we might be able to do so for
+            // the one nested in a namespace but it is not clear yet if we can really reliably
+            // find this information)
+            fprintf(hf,current->GetTitle());
+         }
       }
 
       fprintf(hf,"\n\n");
