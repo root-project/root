@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.137 2004/09/06 06:54:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.138 2004/09/10 07:34:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -988,8 +988,8 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (MIDDLE) {
          for(i=0;i<fNpoints;i++) {
             if (BADCASE) continue;  //do not update if big zoom and points moved
-            fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-            fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+            if (x) fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+            if (y) fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
       } else {
          fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
