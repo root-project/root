@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.166 2004/08/13 09:44:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.167 2004/08/20 21:02:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2888,9 +2888,9 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
     x[0] = data1[i];
     if (data2) x[1] = data2[i];
     if (data3) x[2] = data3[i];
-    prob = fitfunc->EvalPar(x,par) * weight[i]/sum;
-    if(prob > 0) logL += TMath::Log(prob);
-    else         logL += logEpsilon;
+    prob = fitfunc->EvalPar(x,par);
+    if(prob > 0) logL += TMath::Log(prob) * weight[i]/sum;
+    else         logL += logEpsilon * weight[i]/sum;
   }
 
   r = -2*logL;
