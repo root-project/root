@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.9 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.10 2004/12/09 07:22:40 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1515,6 +1515,32 @@ Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d)
 }
 
 
+#define TXMLBuffer_ReadFastArrayOld(vname) \
+{ \
+   BeforeIOoperation(); \
+   if (n<=0) return; \
+   if (fExpectedChain) { \
+      fExpectedChain = kFALSE; \
+      TStreamerInfo* info = Stack(1)->fInfo; \
+      Int_t startnumber = Stack(0)->fElemNumber; \
+      fCanUseCompact = kTRUE; \
+      XmlReadBasic(vname[0]); \
+      for(Int_t indx=1;indx<n; indx++) { \
+          PopStack(); \
+          ShiftStack("chainreader"); \
+          TStreamerElement* elem = info->GetStreamerElementReal(startnumber, indx); \
+          fCanUseCompact = kTRUE; \
+          VerifyElemNode(elem); \
+          XmlReadBasic(vname[indx]); \
+      } \
+   } else { \
+      if (!VerifyItemNode(xmlNames_Array,"ReadFastArray")) return; \
+      PushStack(StackNode()); \
+      TXMLReadArrayContent(vname, n); \
+      PopStack(); \
+      ShiftStack("readfastarr"); \
+   } \
+}
 
 // macro to read content of array, which not include size of array
 // macro also treat situation, when instead of one single array chain of several elements should be produced
@@ -1522,14 +1548,14 @@ Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d)
 {                                                                         \
    BeforeIOoperation();                                                   \
    if (n<=0) return;                                                      \
-   TStreamerInfo* info = Stack(1)->fInfo;                                 \
-   Int_t startnumber = Stack(0)->fElemNumber;                             \
-   TStreamerElement* elem = info->GetStreamerElementReal(startnumber, 0); \
-   if ((elem->GetType()>TStreamerInfo::kOffsetL) &&                       \
+   TStreamerElement* elem = Stack(0)->fElem;                              \
+   if ((elem!=0) && (elem->GetType()>TStreamerInfo::kOffsetL) &&          \
        (elem->GetType()<TStreamerInfo::kOffsetP) &&                       \
        (elem->GetArrayLength()!=n)) fExpectedChain = kTRUE;               \
    if (fExpectedChain) {                                                  \
       fExpectedChain = kFALSE;                                            \
+      Int_t startnumber = Stack(0)->fElemNumber;                          \
+      TStreamerInfo* info = Stack(1)->fInfo;                              \
       Int_t number = 0;                                                   \
       Int_t index = 0;                                                    \
       while (index<n) {                                                   \
@@ -1846,19 +1872,44 @@ void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n)
    TXMLBuffer_WriteArray(d);
 }
 
+#define TXMLBuffer_WriteFastArrayOld(vname) \
+{ \
+   BeforeIOoperation(); \
+   if (n<=0) return; \
+   if (fExpectedChain) { \
+      fExpectedChain = kFALSE; \
+      TStreamerInfo* info = Stack(1)->fInfo; \
+      Int_t startnumber = Stack(0)->fElemNumber; \
+      fCanUseCompact = kTRUE; \
+      XmlWriteBasic(vname[0]); \
+      for(Int_t indx=1;indx<n; indx++) { \
+          PopStack(); \
+          TStreamerElement* elem = info->GetStreamerElementReal(startnumber, indx); \
+          CreateElemNode(elem); \
+          fCanUseCompact = kTRUE; \
+          XmlWriteBasic(vname[indx]); \
+      } \
+   } else {\
+      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
+      PushStack(arrnode); \
+      TXMLWriteArrayContent(vname, n); \
+      PopStack(); \
+   } \
+}
+
 // write array without size attribute
 // macro also treat situation, when instead of one single array chain of several elements should be produced
 #define TXMLBuffer_WriteFastArray(vname)                                  \
 {                                                                         \
    BeforeIOoperation();                                                   \
    if (n<=0) return;                                                      \
-   TStreamerInfo* info = Stack(1)->fInfo;                                 \
-   Int_t startnumber = Stack(0)->fElemNumber;                             \
-   TStreamerElement* elem = info->GetStreamerElementReal(startnumber, 0); \
-   if ((elem->GetType()>TStreamerInfo::kOffsetL) &&                       \
+   TStreamerElement* elem = Stack(0)->fElem;                              \
+   if ((elem!=0) && (elem->GetType()>TStreamerInfo::kOffsetL) &&          \
        (elem->GetType()<TStreamerInfo::kOffsetP) &&                       \
        (elem->GetArrayLength()!=n)) fExpectedChain = kTRUE;               \
    if (fExpectedChain) {                                                  \
+      TStreamerInfo* info = Stack(1)->fInfo;                              \
+      Int_t startnumber = Stack(0)->fElemNumber;                          \
       fExpectedChain = kFALSE;                                            \
       Int_t number = 0;                                                   \
       Int_t index = 0;                                                    \
