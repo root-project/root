@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.12 2002/08/07 17:14:47 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.13 2002/12/02 18:50:01 rdm Exp $ */
 /* Author: */
 
 /*
@@ -556,6 +556,7 @@ int pause_()
 }
 #endif
 
+
 static int
 gl_getc()
 /* get a character without echoing it to screen */
@@ -598,6 +599,7 @@ gl_getc()
     while ((c = (read(0, &ch, 1) > 0) ? ch : -1) == -1 && errno == EINTR)
        errno = 0;
 #endif
+
 
 #if defined(R__MWERKS)
     c = getchar();
@@ -771,7 +773,7 @@ char *
 Getlinem(int mode, const char *prompt)
 {
     int             c, loc, tmp;
-    int             sig;
+    int             sig;   
 
     if (mode == 2) {
        gl_cleanup();
@@ -925,6 +927,7 @@ Getlinem(int mode, const char *prompt)
                       switch(c = gl_getc())
                       {
                       case 'A':                           /* up */
+ 
                            strcpy(gl_buf, hist_prev());
                            if (Gl_in_hook)
                                 Gl_in_hook(gl_buf);
@@ -1173,7 +1176,7 @@ gl_fixup(const char *prompt, int change, int cursor)
     static int   gl_shift;      /* index of first on screen character */
     static int   off_right;     /* true if more text right of screen */
     static int   off_left;      /* true if more text left of screen */
-    static char  last_prompt[80] = "";
+    static char  last_prompt[BUF_SIZE] = "";
     int          left = 0, right = -1;          /* bounds for redraw */
     int          padl;          /* how much to erase at end of line */
     int          backup;        /* how far to backup before fixing */
@@ -1188,14 +1191,22 @@ gl_fixup(const char *prompt, int change, int cursor)
         gl_passwd = 0;
         gl_puts(prompt);
         gl_passwd = gl_no_echo;
-        strcpy(last_prompt, prompt);
+        if (strlen(prompt) > (BUF_SIZE-1)) {
+            strncpy(last_prompt, prompt, BUF_SIZE-1);
+            last_prompt[BUF_SIZE-1] = '\0';
+        } else
+            strcpy(last_prompt, prompt);
         change = 0;
         gl_width = gl_termw - strlen(prompt);
     } else if (strcmp(prompt, last_prompt) != 0) {
         l1 = strlen(last_prompt);
         l2 = strlen(prompt);
         gl_cnt = gl_cnt + l1 - l2;
-        strcpy(last_prompt, prompt);
+        if (strlen(prompt) > (BUF_SIZE-1)) {
+            strncpy(last_prompt, prompt, BUF_SIZE-1);
+            last_prompt[BUF_SIZE-1] = '\0';
+        } else
+            strcpy(last_prompt, prompt);
         backup = gl_pos - gl_shift + l1;
         for (i=0; i < backup; i++)
             gl_putc('\b');
