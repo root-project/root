@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.29 2002/12/10 12:11:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.30 2003/01/17 10:35:39 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -100,7 +100,8 @@ const char *gRootdErrStr[] = {
 
 // Protocol changes:
 // 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
-Int_t TNetFile::fgClientProtocol = 7;  // increase when client protocol changes
+// 7 -> 8: added support for update being a create (open stat = 2 and not 1)
+Int_t TNetFile::fgClientProtocol = 8;  // increase when client protocol changes
 
 
 ClassImp(TNetFile)
@@ -259,6 +260,18 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    if (kind == kROOTD_ERR) {
       PrintError("TNetFile", stat);
       goto zombie;
+   }
+
+   if (recreate) {
+      recreate = kFALSE;
+      create   = kTRUE;
+      fOption  = "CREATE";
+   }
+
+   if (update && stat > 1) {
+      update = kFALSE;
+      create = kTRUE;
+      stat   = 1;
    }
 
    if (stat == 1)

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.48 2003/01/13 01:33:52 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.49 2003/01/22 11:23:04 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1343,10 +1343,16 @@ void RootdOpen(const char *msg)
    if (create && !access(gFile, F_OK))
       ErrorFatal(kErrFileExists, "RootdOpen: file %s already exists", gFile);
 
+   // via ucreate we pass info back that update is actually a create
+   // instead of an update of an existing file, in that case return stat=2
+   // (only if the client supports it, i.e. gClientProtocol >= 8)
+   int ucreate = 0;
    if (update) {
       if (access(gFile, F_OK)) {
-         update = 0;
-         create = 1;
+         update  = 0;
+         create  = 1;
+         if (gClientProtocol >= 8)
+            ucreate = 1;
       }
       if (update && access(gFile, W_OK))
          ErrorFatal(kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
@@ -1405,7 +1411,7 @@ void RootdOpen(const char *msg)
 
    }
 
-   NetSend(gWritable, kROOTD_OPEN);
+   NetSend(gWritable+ucreate, kROOTD_OPEN);
 
    if (gDebug > 0)
       ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
