@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.126 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.127 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1185,7 +1185,7 @@ const char *TBranchElement::GetTypeName() const
    }
    if (fStreamerType <=0 || fStreamerType >= 60) return fClassName.Data();
    const char *types[16] = {"","Char_t","Short_t","Int_t","Long_t","Float_t",
-      "Int_t","","Double_t","","","UChar_t","UShort_t","UInt_t","ULong_t","UInt_t"};
+      "Int_t","","Double_t","Double32_t","","UChar_t","UShort_t","UInt_t","ULong_t","UInt_t"};
    Int_t itype = fStreamerType%20;
    return types[itype];
 }
