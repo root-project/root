@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.44 2003/12/05 23:43:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.42 2003/10/28 16:36:40 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -236,7 +236,7 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
 
 
 //______________________________________________________________________________
-void TProfile::Add(TF1 *, Double_t, Option_t * )
+void TProfile::Add(TF1 *, Double_t )
 {
    // Performs the operation: this = this + c1*f1
 
@@ -1147,7 +1147,7 @@ Int_t TProfile::Merge(TCollection *list)
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > fXaxis.GetNbins()) nbix /= 2;
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
       SetBins(nbix,xmin,xmax);
    }
 

@@ -8,7 +8,7 @@
  *  CINT IOMANIP header file
  ************************************************************************
  * Author                  Masaharu Goto 
- * Copyright(c) 1995~1999  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.18 2003/10/29 10:57:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.17 2003/08/20 07:59:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
                                 ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
     TProfile2D(const TProfile2D &profile);
     virtual ~TProfile2D();
-    virtual void    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
+    virtual void    Add(TF1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     static  void    Approximate(Bool_t approx=kTRUE);

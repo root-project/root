@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.21 2003/12/11 17:14:17 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.17 2003/11/20 15:09:21 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fCleanElist = kFALSE;
    fTreeElist = inElist;
    if ( inElist && inElist->GetReapplyCut() ) {
-      realSelection *= inElist->GetTitle();
+      realSelection = realSelection && inElist->GetTitle();
    }
 
    // what each variable should contain:
@@ -735,22 +735,9 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return kFALSE; }
    }
-
    // if varexp is empty, take first column by default
    nch = strlen(varexp);
-   if (nch == 0) {
-      fDimension = 0;
-      fManager = new TTreeFormulaManager();
-      if (fSelect) fManager->Add(fSelect);
-      fTree->ResetBit(TTree::kForceRead);
-
-      fManager->Sync();
-
-      if (fManager->GetMultiplicity()==-1) fTree->SetBit(TTree::kForceRead);
-      if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
-
-      return kTRUE;
-   }
+   if (nch == 0) {fDimension = 0; return kTRUE;}
    title = varexp;
 
    // otherwise select only the specified columns
@@ -908,9 +895,6 @@ void TSelectorDraw::ProcessFillMultiple(Int_t /*entry*/)
       fW[fNfill] = fWeight*fSelect->EvalInstance(0);
       if (!fW[fNfill] && !fSelectMultiple) return;
    } else fW[fNfill] = fWeight;
-
-   // Always call EvalInstance(0) to insure the loading
-   // of the branches.
    if (fVar1) {
       fV1[fNfill] = fVar1->EvalInstance(0);
       if (fVar2) {
@@ -1010,7 +994,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
             }
 
          } else {
-
+            
             if (!TestBit(kWarn)) {
                Warning("ProcessFillObject",
                        "Not implemented for %s",
@@ -1064,7 +1048,6 @@ void TSelectorDraw::TakeAction()
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
       TGraph *pm = new TGraph(fNfill);
-	  pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
@@ -1131,7 +1114,7 @@ void TSelectorDraw::TakeAction()
             pms->AddAt(pm3d,col);
          }
       }
-      for (i=0;i<fNfill;i++) {
+      for (i=0;i<fNfill;i++) { 
          col = Int_t(fV4[i]);
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
@@ -1223,7 +1206,6 @@ void TSelectorDraw::TakeEstimate()
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill);
-	  pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.10 2003/12/11 16:26:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -487,17 +487,16 @@ void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
    if (fMarkEnds) {
       switch (fReversedScale) {
          case kTRUE:
-            out << ",kTRUE,kTRUE);" << endl;
+            out << ",kTRUE,kTRUE);";
             break;
          case kFALSE:
-            out << ",kFALSE,kTRUE);" << endl;
+            out << ",kFALSE,kTRUE);";
             break;
       }
    } else if (fReversedScale) {
-      out << ",kTRUE);" << endl;
-   } else {
-      out << ");" << endl;
+      out << ",kTRUE);";
    }
+   out <<");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
       out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
@@ -516,7 +515,7 @@ void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
 void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
-   
+
    SaveUserColor(out, option);
 
    out<<"   TGDoubleVSlider *";
@@ -527,17 +526,16 @@ void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
    if (fMarkEnds) {
       switch (fReversedScale) {
          case kTRUE:
-            out << ",kTRUE,kTRUE);" << endl;
+            out << ",kTRUE,kTRUE);";
             break;
          case kFALSE:
-            out << ",kFALSE,kTRUE);" << endl;
+            out << ",kFALSE,kTRUE);";
             break;
       }
    } else if (fReversedScale) {
-      out << ",kTRUE);" << endl;
-   } else {
-      out << ");" << endl;
+      out << ",kTRUE);";
    }
+   out <<");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax

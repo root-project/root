@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.21 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.20 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -105,8 +105,8 @@ void TGeoSphere::ComputeBBox()
          return;
       }
    }   
-   Double_t st1 = TMath::Sin(fTheta1*TMath::DegToRad());
-   Double_t st2 = TMath::Sin(fTheta2*TMath::DegToRad());
+   Double_t st1 = TMath::Sin(fTheta1*kDegRad);
+   Double_t st2 = TMath::Sin(fTheta2*kDegRad);
    Double_t r1min, r1max, r2min, r2max, rmin, rmax;
    r1min = TMath::Min(fRmax*st1, fRmax*st2);
    r1max = TMath::Max(fRmax*st1, fRmax*st2);
@@ -121,14 +121,14 @@ void TGeoSphere::ComputeBBox()
 
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = rmax*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[0] = rmax*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[1] = rmax*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[1] = rmax*TMath::Sin(fPhi2*TMath::DegToRad());
-   xc[2] = rmin*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[2] = rmin*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[3] = rmin*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[3] = rmin*TMath::Sin(fPhi2*TMath::DegToRad());
+   xc[0] = rmax*TMath::Cos(fPhi1*kDegRad);
+   yc[0] = rmax*TMath::Sin(fPhi1*kDegRad);
+   xc[1] = rmax*TMath::Cos(fPhi2*kDegRad);
+   yc[1] = rmax*TMath::Sin(fPhi2*kDegRad);
+   xc[2] = rmin*TMath::Cos(fPhi1*kDegRad);
+   yc[2] = rmin*TMath::Sin(fPhi1*kDegRad);
+   xc[3] = rmin*TMath::Cos(fPhi2*kDegRad);
+   yc[3] = rmin*TMath::Sin(fPhi2*kDegRad);
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
@@ -152,10 +152,10 @@ void TGeoSphere::ComputeBBox()
    if (ddp<0) ddp+= 360;
    if (ddp>360) ddp-=360;
    if (ddp<=dp) ymin = -rmax;
-   xc[0] = fRmax*TMath::Cos(fTheta1*TMath::DegToRad());  
-   xc[1] = fRmax*TMath::Cos(fTheta2*TMath::DegToRad());  
-   xc[2] = fRmin*TMath::Cos(fTheta1*TMath::DegToRad());  
-   xc[3] = fRmin*TMath::Cos(fTheta2*TMath::DegToRad());  
+   xc[0] = fRmax*TMath::Cos(fTheta1*kDegRad);  
+   xc[1] = fRmax*TMath::Cos(fTheta2*kDegRad);  
+   xc[2] = fRmin*TMath::Cos(fTheta1*kDegRad);  
+   xc[3] = fRmin*TMath::Cos(fTheta2*kDegRad);  
    Double_t zmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t zmax = xc[TMath::LocMax(4, &xc[0])]; 
 
@@ -186,23 +186,23 @@ void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    phi=TMath::ATan2(point[1], point[0]);
 
    Double_t saf[4];
-   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():TMath::Abs(r-fRmin);
+   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?kBig:TMath::Abs(r-fRmin);
    saf[1]=TMath::Abs(fRmax-r);
-   saf[2]=saf[3]= TGeoShape::Big();
+   saf[2]=saf[3]= kBig;
    if (TestShapeBit(kGeoThetaSeg)) {
       if (fTheta1>0) {
-         saf[2] = r*TMath::Abs(TMath::Sin(th-fTheta1*TMath::DegToRad()));
+         saf[2] = r*TMath::Abs(TMath::Sin(th-fTheta1*kDegRad));
       }
 	    if (fTheta2<180) {
-         saf[3] = r*TMath::Abs(TMath::Sin(fTheta2*TMath::DegToRad()-th));
+         saf[3] = r*TMath::Abs(TMath::Sin(fTheta2*kDegRad-th));
 	    }    
    }
    Int_t i = TMath::LocMin(4,saf);
    if (TestShapeBit(kGeoPhiSeg)) {
-      Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-      Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-      Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
-      Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);
       if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
          TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
          return;
@@ -211,7 +211,7 @@ void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    if (i>1) {
       if (i==2) th=(fTheta1<90)?(fTheta1+90):(fTheta1-90);
       else      th=(fTheta2<90)?(fTheta2+90):(fTheta2-90);
-      th *= TMath::DegToRad();
+      th *= kDegRad;
    }
       
    norm[0] = TMath::Sin(th)*TMath::Cos(phi);
@@ -234,7 +234,7 @@ Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh,
    }
    if (r2<1E-20) return kTRUE;
    if (checkPh && TestShapeBit(kGeoPhiSeg)) {
-      Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
+      Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
       while (phi < fPhi1) phi+=360.;
       Double_t dphi = fPhi2 -fPhi1;
       Double_t ddp = phi - fPhi1;
@@ -243,7 +243,7 @@ Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh,
    if (checkTh && TestShapeBit(kGeoThetaSeg)) {
       r2=TMath::Sqrt(r2);
       // check theta range
-      Double_t theta = TMath::ACos(point[2]/r2)*TMath::RadToDeg();
+      Double_t theta = TMath::ACos(point[2]/r2)*kRadDeg;
       if ((theta<fTheta1) || (theta>fTheta2)) return kFALSE;
    }      
    return kTRUE;
@@ -260,7 +260,7 @@ Bool_t TGeoSphere::Contains(Double_t *point) const
    if (r2<1E-20) return kTRUE;
    // check phi range
    if (TestShapeBit(kGeoPhiSeg)) {
-      Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
+      Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
       if (phi < 0 ) phi+=360.;
       Double_t dphi = fPhi2 -fPhi1;
       if (dphi < 0) dphi+=360.;
@@ -271,7 +271,7 @@ Bool_t TGeoSphere::Contains(Double_t *point) const
    if (TestShapeBit(kGeoThetaSeg)) {
       r2=TMath::Sqrt(r2);
       // check theta range
-      Double_t theta = TMath::ACos(point[2]/r2)*TMath::RadToDeg();
+      Double_t theta = TMath::ACos(point[2]/r2)*kRadDeg;
       if ((theta<fTheta1) || (theta>fTheta2)) return kFALSE;
    }      
    return kTRUE;
@@ -302,45 +302,45 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
    //localize theta
    Double_t th=0.;
    if (TestShapeBit(kGeoThetaSeg) && (!rzero)) {
-      th = TMath::ACos(point[2]/r)*TMath::RadToDeg();
+      th = TMath::ACos(point[2]/r)*kRadDeg;
    }
    //localize phi
    if (TestShapeBit(kGeoPhiSeg)) {
-      phi=TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
+      phi=TMath::ATan2(point[1], point[0])*kRadDeg;
       if (phi<0) phi+=360.;
    }   
    if (iact<3 && safe) {
-      saf[0]=(r<fRmin)?fRmin-r:TGeoShape::Big();
-      saf[1]=(r>fRmax)?(r-fRmax):TGeoShape::Big();
-      saf[2]=saf[3]=saf[4]=saf[5]= TGeoShape::Big();
+      saf[0]=(r<fRmin)?fRmin-r:kBig;
+      saf[1]=(r>fRmax)?(r-fRmax):kBig;
+      saf[2]=saf[3]=saf[4]=saf[5]= kBig;
       if (TestShapeBit(kGeoThetaSeg)) {
          if (th < fTheta1) {
-            saf[2] = r*TMath::Sin((fTheta1-th)*TMath::DegToRad());
+            saf[2] = r*TMath::Sin((fTheta1-th)*kDegRad);
           }    
          if (th > fTheta2) {
-            saf[3] = r*TMath::Sin((th-fTheta2)*TMath::DegToRad());
+            saf[3] = r*TMath::Sin((th-fTheta2)*kDegRad);
          }
       }
       if (TestShapeBit(kGeoPhiSeg)) {
          Double_t dph1=phi-fPhi1;
          if (dph1<0) dph1+=360.;
-         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*TMath::DegToRad());
+         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
          Double_t dph2=fPhi2-phi;
 	 if (dph2<0) dph2+=360.;
-         if (dph2>90.) saf[5]=rxy*TMath::Sin(dph2*TMath::DegToRad());
+         if (dph2>90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
       }
       *safe = saf[TMath::LocMin(6, &saf[0])];
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
    }
    // compute distance to shape
-   Double_t snxt = TGeoShape::Big();
+   Double_t snxt = kBig;
    // first check if any crossing at all
    if (r>fRmax) {
       Double_t b = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
       Double_t c = r2-fRmax*fRmax;
       Double_t d=b*b-c;
-      if (d<0) return TGeoShape::Big();
+      if (d<0) return kBig;
    }
    // do rmin, rmax,  checking phi and theta ranges
    if (r<fRmin) {
@@ -374,7 +374,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
    // check theta conical surfaces
    Double_t ptnew[3];
    Double_t b,delta, znew;
-   Double_t st1=TGeoShape::Big(), st2=TGeoShape::Big();
+   Double_t st1=kBig, st2=kBig;
    if (TestShapeBit(kGeoThetaSeg)) {
       if (fTheta1>0) {
          if (fTheta1==90) {
@@ -389,8 +389,8 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
 	          }   	  	  
 	       } else {
 	          Double_t r1,r2,z1,z2;
-	          Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
-	          Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
+	          Double_t si = TMath::Sin(fTheta1*kDegRad);
+	          Double_t ci = TMath::Cos(fTheta1*kDegRad);
 	          if (ci>0) {
 	             r1 = fRmin*si;
 	             z1 = fRmin*ci;
@@ -412,7 +412,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
                   if (st1<0 || (z1-znew)*(z2-znew)>=0) {
                      st1 = -b+delta; 
                      znew = point[2]+st1*dir[2];
-                     if (st1<0 || (z1-znew)*(z2-znew)>=0) st1=TGeoShape::Big();
+                     if (st1<0 || (z1-znew)*(z2-znew)>=0) st1=kBig;
                   } 
                }     
 	          }
@@ -432,8 +432,8 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
             }   	  	  
          } else {
             Double_t r1,r2,z1,z2;
-            Double_t si = TMath::Sin(fTheta2*TMath::DegToRad());
-            Double_t ci = TMath::Cos(fTheta2*TMath::DegToRad());
+            Double_t si = TMath::Sin(fTheta2*kDegRad);
+            Double_t ci = TMath::Cos(fTheta2*kDegRad);
             if (ci>0) {
                r1 = fRmin*si;
                z1 = fRmin*ci;
@@ -455,7 +455,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
                   if (st2<0 || (z1-znew)*(z2-znew)>=0) {
                      st2 = -b+delta; 
                      znew = point[2]+st2*dir[2];
-                     if (st2<0 || (z1-znew)*(z2-znew)>=0) st2=TGeoShape::Big();
+                     if (st2<0 || (z1-znew)*(z2-znew)>=0) st2=kBig;
                   }   
                }    
             }
@@ -465,15 +465,15 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
    snxt = TMath::Min(st1, st2);
 //   if (snxt<1E20) return snxt;      	 
    if (TestShapeBit(kGeoPhiSeg)) {
-      Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-      Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-      Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());
-      Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
       Double_t phim = 0.5*(fPhi1+fPhi2);
-      Double_t sm = TMath::Sin(phim*TMath::DegToRad());
-      Double_t cm = TMath::Cos(phim*TMath::DegToRad());
-      Double_t sfi1=TGeoShape::Big();
-      Double_t sfi2=TGeoShape::Big();
+      Double_t sm = TMath::Sin(phim*kDegRad);
+      Double_t cm = TMath::Cos(phim*kDegRad);
+      Double_t sfi1=kBig;
+      Double_t sfi2=kBig;
       Double_t s=0;
       Double_t safety, un;
       safety = point[0]*s1-point[1]*c1;
@@ -523,39 +523,39 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    Double_t phi=0;;
    Double_t th=0.;
    if (TestShapeBit(kGeoThetaSeg) && (!rzero)) {
-      th = TMath::ACos(point[2]/r)*TMath::RadToDeg();
+      th = TMath::ACos(point[2]/r)*kRadDeg;
    }
    //localize phi
    if (TestShapeBit(kGeoPhiSeg)) {
-      phi=TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
+      phi=TMath::ATan2(point[1], point[0])*kRadDeg;
       if (phi<0) phi+=360.;
    }   
    if (iact<3 && safe) {
-      saf[0]=(fRmin==0)?TGeoShape::Big():r-fRmin;
+      saf[0]=(fRmin==0)?kBig:r-fRmin;
       saf[1]=fRmax-r;
-      saf[2]=saf[3]=saf[4]=saf[5]= TGeoShape::Big();
+      saf[2]=saf[3]=saf[4]=saf[5]= kBig;
       if (TestShapeBit(kGeoThetaSeg)) {
          if (fTheta1>0) {
-            saf[2] = r*TMath::Sin((th-fTheta1)*TMath::DegToRad());
+            saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
          }
 	 if (fTheta2<180) {
-            saf[3] = r*TMath::Sin((fTheta2-th)*TMath::DegToRad());
+            saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
 	 }    
       }
       if (TestShapeBit(kGeoPhiSeg)) {
          Double_t dph1=phi-fPhi1;
 	 if (dph1<0) dph1+=360.;
-         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*TMath::DegToRad());
+         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
          Double_t dph2=fPhi2-phi;
 	 if (dph2<0) dph2+=360.;
-         if (dph2<=90.) saf[5]=rxy*TMath::Sin(dph2*TMath::DegToRad());
+         if (dph2<=90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
       }
       *safe = saf[TMath::LocMin(6, &saf[0])];
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
    }
    // compute distance to shape
-   Double_t snxt = TGeoShape::Big();
+   Double_t snxt = kBig;
    if (rzero) {
 //      gGeoManager->SetNormalChecked(1.);
       return fRmax;
@@ -566,8 +566,8 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    Double_t sn2 = DistToSphere(point, dir, fRmax, kFALSE);
    Double_t sr = TMath::Min(sn1, sn2);
    // check theta conical surfaces
-   sn1 = TGeoShape::Big();
-   sn2 = TGeoShape::Big();
+   sn1 = kBig;
+   sn2 = kBig;
    if (TestShapeBit(kGeoThetaSeg)) {
       if (fTheta1==90) {
       // surface is a plane
@@ -575,8 +575,8 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
       } else {
          if (fTheta1>0) {
 	          Double_t r1,r2,z1,z2;
-	          Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
-	          Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
+	          Double_t si = TMath::Sin(fTheta1*kDegRad);
+	          Double_t ci = TMath::Cos(fTheta1*kDegRad);
 	          if (ci>0) {
 	             r1 = fRmin*si;
 	             z1 = fRmin*ci;
@@ -598,7 +598,7 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
                   if (sn1<0 || (z1-znew)*(z2-znew)>=0) {
                      sn1 = -b+delta; 
                      znew = point[2]+sn1*dir[2];
-                     if (sn1<0 || (z1-znew)*(z2-znew)>=0) sn1=TGeoShape::Big();
+                     if (sn1<0 || (z1-znew)*(z2-znew)>=0) sn1=kBig;
                   } 
                }     
 	          }
@@ -610,8 +610,8 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
       } else {
          if (fTheta2<180) {
 	          Double_t r1,r2,z1,z2;
-	          Double_t si = TMath::Sin(fTheta2*TMath::DegToRad());
-	          Double_t ci = TMath::Cos(fTheta2*TMath::DegToRad());
+	          Double_t si = TMath::Sin(fTheta2*kDegRad);
+	          Double_t ci = TMath::Cos(fTheta2*kDegRad);
 	          if (ci>0) {
 	             r1 = fRmin*si;
 	             z1 = fRmin*ci;
@@ -633,7 +633,7 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
                   if (sn2<0 || (z1-znew)*(z2-znew)>=0) {
                      sn2 = -b+delta; 
                      znew = point[2]+sn2*dir[2];
-                     if (sn2<0 || (z1-znew)*(z2-znew)>=0) sn2=TGeoShape::Big();
+                     if (sn2<0 || (z1-znew)*(z2-znew)>=0) sn2=kBig;
                   } 
                }     
 	          }
@@ -641,15 +641,15 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
       }
    }
    Double_t st = TMath::Min(sn1,sn2);      	 
-   Double_t sp = TGeoShape::Big();
+   Double_t sp = kBig;
    if (TestShapeBit(kGeoPhiSeg)) {
-      Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-      Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-      Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());
-      Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
       Double_t phim = 0.5*(fPhi1+fPhi2);
-      Double_t sm = TMath::Sin(phim*TMath::DegToRad());
-      Double_t cm = TMath::Cos(phim*TMath::DegToRad());
+      Double_t sm = TMath::Sin(phim*kDegRad);
+      Double_t cm = TMath::Cos(phim*kDegRad);
       sp = TGeoConeSeg::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
    }      
    snxt = TMath::Min(sr, st);
@@ -661,8 +661,8 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
 Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check, Bool_t firstcross) const
 {
 // compute distance to sphere of radius rsph. Direction has to be a unit vector
-   if (rsph<=0) return TGeoShape::Big();
-   Double_t s=TGeoShape::Big();
+   if (rsph<=0) return kBig;
+   Double_t s=kBig;
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
    Double_t b = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
    Double_t c = r2-rsph*rsph;
@@ -670,7 +670,7 @@ Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph,
    Double_t d;
    
    d=b*b-c;
-   if (d<0) return TGeoShape::Big();
+   if (d<0) return kBig;
    Double_t pt[3];
    Int_t i;
    d = TMath::Sqrt(d);
@@ -679,12 +679,12 @@ Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph,
    } else {
       s = (firstcross)?(-b-d):(-b+d);
    }            
-   if (s<0) return TGeoShape::Big();
+   if (s<0) return kBig;
    if (!check) return s;
    for (i=0; i<3; i++) pt[i]=point[i]+s*dir[i];
    // check theta and phi ranges
    if (IsPointInside(&pt[0], kFALSE)) return s;
-   return TGeoShape::Big();
+   return kBig;
 }
 
 //_____________________________________________________________________________
@@ -744,8 +744,8 @@ void TGeoSphere::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
-   Double_t smin = TMath::Sin(fTheta1*TMath::DegToRad());
-   Double_t smax = TMath::Sin(fTheta2*TMath::DegToRad());
+   Double_t smin = TMath::Sin(fTheta1*kDegRad);
+   Double_t smax = TMath::Sin(fTheta2*kDegRad);
    if (smin>smax) {
       Double_t a = smin;
       smin = smax;
@@ -819,18 +819,18 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
    //localize theta
    Double_t th=0.;
    if (TestShapeBit(kGeoThetaSeg) && (!rzero)) {
-      th = TMath::ACos(point[2]/r)*TMath::RadToDeg();
+      th = TMath::ACos(point[2]/r)*kRadDeg;
    }
    Double_t saf[4];
-   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():r-fRmin;
+   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?kBig:r-fRmin;
    saf[1]=fRmax-r;
-   saf[2]=saf[3]= TGeoShape::Big();
+   saf[2]=saf[3]= kBig;
    if (TestShapeBit(kGeoThetaSeg)) {
-      if (fTheta1>0)    saf[2] = r*TMath::Sin((th-fTheta1)*TMath::DegToRad());
-	   if (fTheta2<180)  saf[3] = r*TMath::Sin((fTheta2-th)*TMath::DegToRad());
+      if (fTheta1>0)    saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
+	   if (fTheta2<180)  saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
    }
-   Double_t safphi = TGeoShape::Big();
-   Double_t safe = TGeoShape::Big();
+   Double_t safphi = kBig;
+   Double_t safe = kBig;
    if (TestShapeBit(kGeoPhiSeg)) safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
    if (in) {
       safe = saf[TMath::LocMin(4,saf)];
@@ -910,12 +910,12 @@ void TGeoSphere::SetPoints(Double_t *buff) const
         Int_t indx=0;
         for (i = 0; i < fNz+1; i++)
         {
-            theta = (fTheta1+i*dtheta)*TMath::DegToRad();
+            theta = (fTheta1+i*dtheta)*kDegRad;
             z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
             Double_t zi = fRmin*TMath::Sin(theta);
 //            printf("plane %i nseg=%i z=%f:\n", i,n,z);
             for (j = 0; j < n; j++) {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
+                phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
                 buff[indx++] = zi * cphi;
@@ -927,7 +927,7 @@ void TGeoSphere::SetPoints(Double_t *buff) const
             zi = fRmax* TMath::Sin(theta);
 //            printf("outer points for plane %i:\n", i);
             for (j = 0; j < n; j++) {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
+                phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
                 buff[indx++] = zi * cphi;
@@ -956,13 +956,13 @@ void TGeoSphere::SetPoints(Float_t *buff) const
         Int_t indx=0;
         for (i = 0; i < fNz+1; i++)
         {
-            theta = (fTheta1+i*dtheta)*TMath::DegToRad();
+            theta = (fTheta1+i*dtheta)*kDegRad;
             z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
             Double_t zi = fRmin*TMath::Sin(theta);
 //            printf("plane %i nseg=%i z=%f:\n", i,n,z);
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
+                phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
                 buff[indx++] = zi * cphi;
@@ -975,7 +975,7 @@ void TGeoSphere::SetPoints(Float_t *buff) const
 //            printf("outer points for plane %i:\n", i);
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*TMath::DegToRad();
+                phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
                 buff[indx++] = zi * cphi;

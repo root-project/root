@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.8 2003/10/20 08:46:33 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.7 2003/09/23 10:33:15 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -165,8 +165,8 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
    Double_t pt[3];
    Int_t i;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
-   xmin = ymin = zmin = TGeoShape::Big();
-   xmax = ymax = zmax = -TGeoShape::Big();
+   xmin = ymin = zmin = TGeoShape::kBig;
+   xmax = ymax = zmax = -TGeoShape::kBig;
    ((TGeoBBox*)fLeft)->SetBoxPoints(&vert[0]);
    ((TGeoBBox*)fRight)->SetBoxPoints(&vert[24]);
    for (i=0; i<8; i++) {
@@ -257,8 +257,8 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
 
    Double_t local[3], master[3], ldir[3], rdir[3];
@@ -301,8 +301,8 @@ Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt;
@@ -386,8 +386,8 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
    Double_t pt[3];
    Int_t i;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
-   xmin = ymin = zmin = TGeoShape::Big();
-   xmax = ymax = zmax = -TGeoShape::Big();
+   xmin = ymin = zmin = TGeoShape::kBig;
+   xmax = ymax = zmax = -TGeoShape::kBig;
    box->SetBoxPoints(&vert[0]);
    for (i=0; i<8; i++) {
       fLeftMat->LocalToMaster(&vert[3*i], &pt[0]);
@@ -465,8 +465,8 @@ Double_t TGeoSubtraction::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt=0.;
@@ -487,8 +487,8 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(&master[0], point, 3*sizeof(Double_t));
@@ -514,7 +514,7 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-      if (d2>1E20) return TGeoShape::Big();
+      if (d2>1E20) return TGeoShape::kBig;
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
       if (d2<d1) {
@@ -601,8 +601,8 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
    Int_t i;
    Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
    Double_t xmin2, xmax2, ymin2, ymax2, zmin2, zmax2;
-   xmin1 = ymin1 = zmin1 = xmin2 = ymin2 = zmin2 = TGeoShape::Big();
-   xmax1 = ymax1 = zmax1 = xmax2 = ymax2 = zmax2 =  -TGeoShape::Big();
+   xmin1 = ymin1 = zmin1 = xmin2 = ymin2 = zmin2 = TGeoShape::kBig;
+   xmax1 = ymax1 = zmax1 = xmax2 = ymax2 = zmax2 =  -TGeoShape::kBig;
    ((TGeoBBox*)fLeft)->SetBoxPoints(&vert[0]);
    ((TGeoBBox*)fRight)->SetBoxPoints(&vert[24]);
    for (i=0; i<8; i++) {
@@ -725,8 +725,8 @@ Double_t TGeoIntersection::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kTRUE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt=0.;
@@ -747,8 +747,8 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
    Double_t lpt[3], rpt[3], master[3], ldir[3], rdir[3];
    memcpy(master, point, 3*sizeof(Double_t));
@@ -764,11 +764,11 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    if (inleft && inright) return 0.;
    if (!inleft)  {
       d1 = fLeft->DistToIn(lpt,ldir,iact,step,safe);
-      if (d1 > 1E20) return TGeoShape::Big();
+      if (d1 > 1E20) return TGeoShape::kBig;
    }   
    if (!inright) {
       d2 = fRight->DistToIn(rpt,rdir,iact,step,safe);
-      if (d2>1E20) return TGeoShape::Big();
+      if (d2>1E20) return TGeoShape::kBig;
    }
    Double_t snext = TMath::Max(d1,d2);   
    for (i=0; i<3; i++) master[i] += (snext+1E-6)*dir[i];

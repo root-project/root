@@ -103,7 +103,7 @@ check_library() {
     # directory [$3] or in a default path [$*].  If the second argument
     # [$2] is not "no", then shared libraries are favoured.
     # The result of the search is stored in found_lib and found_dir,
-    # which should be immediately copied, since the variables value will
+    # which  should be immediately copied, since the variables value will
     # be overwritten at next invocation of this function.
 
     # Assert that we got enough arguments
@@ -138,16 +138,14 @@ check_library() {
 	    libs="$libs $i$ext"
 	done
     done
-    slibs=""
-    for i in $lib ; do
-        for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
-            slibs="$slibs $i$ext"
-        done
-    done
     if test ! "x$shared" = "xno" ; then
+	slibs=""
+	for i in $lib ; do
+	    for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
+		slibs="$slibs $i$ext"
+	    done
+	done
 	libs="$slibs $libs"
-    else
-        libs="$libs $slibs"
     fi
 
     # Loop over the list of possible directories, and see if we can
@@ -200,7 +198,8 @@ check_library() {
 		fi
 	    done
 	done
-	if test "x$found_lib" = "x$flib" ; then
+	if test "x$shared" = "xno" || \
+	   test "x$found_lib" = "x$flib" ; then
 	    found_lib=${found_dir}/${found_lib}
 	    found_dir=""
 	else

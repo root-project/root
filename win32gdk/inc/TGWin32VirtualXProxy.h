@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.1 2003/11/24 10:51:55 brun Exp $
+// $Id$
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -37,7 +37,7 @@ protected:
    static TVirtualX *fgRealObject;    // TGWin32 object
 
 public:
-   TGWin32VirtualXProxy() { fMaxResponseTime = 1000; }
+   TGWin32VirtualXProxy() {}
    TGWin32VirtualXProxy(const char *name, const char *title) {}
    virtual   ~TGWin32VirtualXProxy() {}
 

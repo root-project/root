@@ -7,7 +7,7 @@
  * Description:
  *  Parse C/C++ expression
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -527,8 +527,8 @@ int lenbuf;
 #define G__ASSIGN_CNDJMP
 #endif
 
-
-#ifndef G__OLDIMPLEMENTATION1942
+#define G__OLDIMPLEMENTATION1910
+#ifndef G__OLDIMPLEMENTATION1910
 /******************************************************************
 * G__exec_evalall
 *
@@ -626,7 +626,7 @@ int lenbuf;
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
 
-#else /* 1942 */
+#else /* 1910 */
 /******************************************************************
 * G__exec_evalall
 *
@@ -707,7 +707,7 @@ int lenbuf;
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
-#endif /* 1942 */
+#endif /* 1910 */
 
 
 /******************************************************************

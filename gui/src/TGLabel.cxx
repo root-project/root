@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.6 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -33,8 +33,6 @@
 #include "TGString.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
-#include "TColor.h"
-
 
 const TGFont *TGLabel::fgDefaultFont = 0;
 const TGGC   *TGLabel::fgDefaultGC = 0;
@@ -52,9 +50,8 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fText        = text;
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
-   fFontStruct  = font;
-   fNormGC      = norm;
-   fIsOwnFont   = kFALSE;
+   fFontStruct = font;
+   fNormGC = norm;
 
    int max_ascent, max_descent;
 
@@ -76,7 +73,6 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fTextChanged = kTRUE;
    fFontStruct  = font;
    fNormGC      = norm;
-   fIsOwnFont   = kFALSE;
 
    int max_ascent, max_descent;
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
@@ -163,94 +159,6 @@ const TGGC &TGLabel::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGLabel::SetTextFont(FontStruct_t font, Option_t *opt)
-{
-   // Changes text font
-   // if opt is non-zero font is changed globally
-
-   if (font != fFontStruct) {
-      FontH_t v = gVirtualX->GetFontHandle(font);
-      if (!v) return;
-
-      fFontStruct = font;
-      TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-      if (!opt) {
-         gc = new TGGC(*gc); // copy
-         fIsOwnFont = kTRUE;
-      }
-      gc->SetFont(v);
-      fNormGC = gc->GetGC();
-   
-      int max_ascent, max_descent;
-
-      fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fTHeight = max_ascent + max_descent;
-      Resize(fTWidth, fTHeight + 1);
-   }
-}
-
-//______________________________________________________________________________
-void TGLabel::SetTextFont(const char *fontName, Option_t *opt)
-{
-   // Changes text font specified by name
-   // if opt is non-zero font is changed globally
-
-   TGFont *font = gClient->GetFont(fontName);
-   if (font) {
-      SetTextFont(font->GetFontStruct(), opt);
-   }
-}
-
-//______________________________________________________________________________
-void TGLabel::SetTextFont(TGFont *font, Option_t *opt)
-{
-   // Changes text font specified bypointer to TGFont object
-   // if opt is non-zero font is changed globally
-
-   if (font) {
-      SetTextFont(font->GetFontStruct(), opt);
-   }
-}
-
-//______________________________________________________________________________
-void TGLabel::SetTextColor(Pixel_t color, Option_t *opt)
-{
-   // Changes text color
-   // if opt is non-zero color is changed globally
-
-   TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-
-   if (!opt) {
-      gc = new TGGC(*gc); // copy
-      fIsOwnFont = kTRUE;
-   }
-
-   gc->SetForeground(color);
-   fNormGC = gc->GetGC();
-}
-
-//______________________________________________________________________________
-void TGLabel::SetTextColor(TColor *color, Option_t *opt)
-{
-   // Changes text color
-   // if opt is non-zero color is changed globally
-
-   if (color) {
-      SetTextColor(color->GetPixel(), opt);
-   }
-}
-
-//______________________________________________________________________________
-Bool_t TGLabel::IsOwnTextFont() const
-{
-   // returns kTRUE if text attributes are unique
-   // returns kFALSE if text attributes are shared (global)
-
-   return fIsOwnFont;
-}
-
-//______________________________________________________________________________
 void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a label widget as a C++ statement(s) on output stream out
@@ -260,20 +168,22 @@ void TGLabel::SavePrimitive(ofstream &out, Option_t *option)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

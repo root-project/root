@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.150 2003/12/16 22:42:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.143 2003/11/22 22:02:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,7 +262,6 @@
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
 #include "TPluginManager.h"
-#include "TObjString.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -976,34 +975,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    Int_t len, lenb,l;
    char blen[128];
    char *bname;
-   Int_t *leaflen = new Int_t[nleaves];
-   TObjArray *leafs = new TObjArray(nleaves);
-   for (l=0;l<nleaves;l++) {
-	   TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-	   leafs->AddAt(new TObjString(leaf->GetName()),l);
-	   leaflen[l] = leaf->GetMaximum();
-	}
-   if (ischain) {
-      // In case of a chain, one must find the maximum dimension of each leaf
-      // One must be careful and not assume that all Trees in the chain
-      // have the same leaves and in the same order!
-	   TChain *chain = (TChain*)fTree;
-	   Int_t ntrees = chain->GetNtrees();
-	   for (Int_t file=0;file<ntrees;file++) {
-		   Int_t first = chain->GetTreeOffset()[file];
-		   chain->LoadTree(first);
-		   for (l=0;l<nleaves;l++) {
-			   TObjString *obj = (TObjString*)leafs->At(l);
-			   TLeaf *leaf = chain->GetLeaf(obj->GetName());
-			   if (leaf) {
-				   leaflen[l] = TMath::Max(leaflen[l],leaf->GetMaximum());
-				}
-			}
-		}
-		chain->LoadTree(0);
-	}
-			   
-   leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       strcpy(blen,leaf->GetName());
@@ -1012,14 +983,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       lenb = strlen(blen);
       if (blen[lenb-1] == '_') {
          blen[lenb-1] = 0;
-         len = leaflen[l];
+         len = leaf->GetMaximum();
          if (len <= 0) len = 1;
          fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
       }
    }
-   delete [] leaflen;
-   leafs->Delete();
-   delete leafs;
+
 
 // second loop on all leaves to generate type declarations
    fprintf(fp,"\n");
@@ -1944,17 +1913,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       fFormulaList->Add(var[i]);
    }
 
-//*-*- Create a TreeFormulaManager to coordinate the formulas
-   TTreeFormulaManager *manager=0;
-   if (fFormulaList->LastIndex()>=0) {
-      manager = new TTreeFormulaManager;
-      for(i=0;i<=fFormulaList->LastIndex();i++) {
-         manager->Add((TTreeFormula*)fFormulaList->At(i));
-      }
-      manager->Sync();
-   }
-
-//*-* Build the TPrincipal object
+   //*-* Build the TPrincipal object
    if (opt.Contains("n")) principal = new TPrincipal(ncols, "n");
    else                   principal = new TPrincipal(ncols);
 
@@ -1968,36 +1927,17 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
-         if (manager) manager->UpdateFormulaLeaves();
+         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
       }
-      int ndata = 1;
-      if (manager && manager->GetMultiplicity()) {
-         ndata = manager->GetNdata();
+      if (select) {
+         select->GetNdata();
+         if (select->EvalInstance(0) == 0) continue;
       }
-
-      for(int inst=0;inst<ndata;inst++) {
-         Bool_t loaded = kFALSE;
-         if (select) {
-            if (select->EvalInstance(inst) == 0) {
-               continue;
-            }
-         } 
-      
-         if (inst==0) loaded = kTRUE;
-         else if (!loaded) {
-            // EvalInstance(0) always needs to be called so that
-            // the proper branches are loaded.
-            for (i=0;i<ncols;i++) {
-               var[i]->EvalInstance(0);
-            }
-            loaded = kTRUE;
-         }
-
-         for (i=0;i<ncols;i++) {
-            xvars[i] = var[i]->EvalInstance(inst);
-         }
-         principal->AddRow(xvars);
+      onerow = Form("* %8d ",entryNumber);
+      for (i=0;i<ncols;i++) {
+         xvars[i] = var[i]->EvalInstance(0);
       }
+      principal->AddRow(xvars);
    }
 
 //*-* some actions with principal ?
@@ -2164,53 +2104,12 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Scan(const char *varexp, const char *selection, 
-                        Option_t * option,
+Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
                        Int_t nentries, Int_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
-   //
-   // Arrays (within an entry) are printed in their linear forms.
-   // If several arrays with multiple dimensions are printed together,
-   // they will NOT be synchronized.  For example print 
-   //   arr1[4][2] and arr2[2][3] will results in a printing similar to:
-   // ***********************************************
-   // *    Row   * Instance *      arr1 *      arr2 *
-   // ***********************************************
-   // *        x *        0 * arr1[0][0]* arr2[0][0]*
-   // *        x *        1 * arr1[0][1]* arr2[0][1]*
-   // *        x *        2 * arr1[1][0]* arr2[0][2]*
-   // *        x *        3 * arr1[1][1]* arr2[1][0]*
-   // *        x *        4 * arr1[2][0]* arr2[1][1]*
-   // *        x *        5 * arr1[2][1]* arr2[1][2]*
-   // *        x *        6 * arr1[3][0]*           *
-   // *        x *        7 * arr1[3][1]*           *
-   //
-   // However, if there is a selection criterium which is an array, then
-   // all the formulas will be synchronized with the selection criterium
-   // (see TTreePlayer::DrawSelect for more information).
-   //
-   // If option contains 
-   //    lenmax=dd
-   // Where 'dd' is the maximum number of elements per array that should
-   // be printed.  If 'dd' is 0, all elements are printed (this is the default)
-   
-   TString opt = option;
-   opt.ToLower();
-   UInt_t lenmax = 0;
-   if (opt.Contains("lenmax=")) {
-      int start = opt.Index("lenmax=");
-      int numpos = start + strlen("lenmax=");
-      int numlen = 0;
-      int len = opt.Length();
-      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
-      TString num = opt(numpos,numlen);
-      opt.Remove(start,strlen("lenmax")+numlen);
-      
-      lenmax = atoi(num.Data());
-   }
 
    TTreeFormula **var;
    TString *cnames;
@@ -2250,7 +2149,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
 
 //*-*- Compile selection expression if there is one
-   TTreeFormula        *select  = 0;
+   TTreeFormula *select = 0;
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return -1;
@@ -2289,40 +2188,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
       fFormulaList->Add(var[i]);
    }
-
-//*-*- Create a TreeFormulaManager to coordinate the formulas
-   TTreeFormulaManager *manager=0;
-   Bool_t hasArray = kFALSE;
-   Bool_t forceDim = kFALSE;
-   if (fFormulaList->LastIndex()>=0) {
-      if (select) {
-         if (select->GetManager()->GetMultiplicity() > 0 ) {
-            manager = new TTreeFormulaManager;
-            for(i=0;i<=fFormulaList->LastIndex();i++) {
-               manager->Add((TTreeFormula*)fFormulaList->At(i));
-            }
-            manager->Sync();
-         }
-      }
-      for(i=0;i<=fFormulaList->LastIndex();i++) {
-         TTreeFormula *form = ((TTreeFormula*)fFormulaList->At(i));
-         switch( form->GetManager()->GetMultiplicity() ) {
-            case  1:
-            case  2:
-               hasArray = kTRUE;
-            case -1:
-               forceDim = kTRUE;
-               break;
-            case  0:
-               break;
-         }
-         
-      }
-   }
-
 //*-*- Print header
    onerow = "***********";
-   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2331,7 +2198,6 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    else
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
-   if (hasArray) onerow += "* Instance ";
    for (i=0;i<ncols;i++) {
       onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
    }
@@ -2340,7 +2206,6 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    else
       printf("%s*\n",onerow.Data());
    onerow = "***********";
-   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2351,90 +2216,41 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
 //*-*- loop on all selected entries
    fSelectedRows = 0;
    Int_t tnumber = -1;
-   Bool_t exitloop = kFALSE;
-   for (entry=firstentry;
-        entry<(firstentry+nentries) && !exitloop;
-        entry++) {
+   for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Int_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
-         if (manager) manager->UpdateFormulaLeaves();
-         else {
-            for(i=0;i<=fFormulaList->LastIndex();i++) {
-               ((TTreeFormula*)fFormulaList->At(i))->UpdateFormulaLeaves();
-            }
-         }
+         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+          if (select) select->UpdateFormulaLeaves();
       }
-
-      int ndata = 1;
-      if (forceDim) { 
-
-         if (manager) {
-
-            ndata = manager->GetNdata(kTRUE);
-
-         } else {
-
-            // let's print the max number of column
-            for (i=0;i<ncols;i++) {
-               if (ndata < var[i]->GetNdata() ) {
-                  ndata = var[i]->GetNdata();
-               }
-            }
-            if (select && select->GetNdata()==0) ndata = 0;
-         }
-         
+      if (select) {
+         select->GetNdata();
+         if (select->EvalInstance(0) == 0) continue;
       }
-
-      if (lenmax && ndata>(int)lenmax) ndata = lenmax;
-      for(int inst=0;inst<ndata;inst++) {
-         Bool_t loaded = kFALSE;
-         if (select) {
-            if (select->EvalInstance(inst) == 0) {
-               continue;
-            }
-         } 
-         if (inst==0) loaded = kTRUE;
-         else if (!loaded) {
-            // EvalInstance(0) always needs to be called so that
-            // the proper branches are loaded.
-            for (i=0;i<ncols;i++) {
-               var[i]->EvalInstance(0);
-            }
-            loaded = kTRUE;
-         }
-         onerow = Form("* %8d ",entryNumber);
-         if (hasArray) {
-            onerow += Form("* %8d ",inst);
-         }
-         for (i=0;i<ncols;i++) {
-            onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
-         }
-         fSelectedRows++;
-         if (fScanRedirect)
-            out<<onerow.Data()<<"*"<<endl;
-         else
-            printf("%s*\n",onerow.Data());
-         if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
-            if (fSelectedRows%fTree->GetScanField() == 0) {
-               fprintf(stderr,"Type <CR> to continue or q to quit ==> ");
-               int answer, readch;
-               readch = getchar();
-               answer = readch;
-               while (readch != '\n' && readch != EOF) readch = getchar();
-               if (answer == 'q' || answer == 'Q') {
-                  exitloop = kTRUE;
-                  break;
-               }
-            }
+      onerow = Form("* %8d ",entryNumber);
+      for (i=0;i<ncols;i++) {
+         onerow += Form("* %9.9s ",var[i]->PrintValue(0));
+      }
+      fSelectedRows++;
+   if (fScanRedirect)
+      out<<onerow.Data()<<"*"<<endl;
+   else
+      printf("%s*\n",onerow.Data());
+      if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
+         if (fSelectedRows%fTree->GetScanField() == 0) {
+            fprintf(stderr,"Type <CR> to continue or q to quit ==> ");
+            int answer, readch;
+            readch = getchar();
+            answer = readch;
+            while (readch != '\n' && readch != EOF) readch = getchar();
+            if (answer == 'q' || answer == 'Q') break;
          }
       }
    }
    onerow = "***********";
-   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2448,7 +2264,6 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
 //*-*- delete temporary objects
    fFormulaList->Clear();
-   // The TTreeFormulaManager is deleted by the last TTreeFormula.
    delete [] var;
    delete [] cnames;
    delete [] index;
@@ -2678,7 +2493,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //   settings.  Otherwise the fit will effectively just maximize the
 //   area.
 //
-//   It is mandatory to have a normalization variable
+//   In practice it is convenient to have a normalization variable
 //   which is fixed for the fit.  e.g.
 //
 //     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
@@ -2754,17 +2569,14 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   Double_t min, max;
   for(i = 0; i < npar; i++) {
     fitfunc->GetParLimits(i, min, max);
-    Double_t we = 0.1*TMath::Abs(max-min);
-    if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
-    if (we == 0) we = 1;
     if(min < max) {
       tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
-                               we, min, max);
+                               fitfunc->GetParameter(i)/100.0, min, max);
     } else {
       tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
-                               we, 0, 0);
+                               fitfunc->GetParameter(i)/100.0, 0, 0);
     }
 
 

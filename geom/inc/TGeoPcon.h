@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.12 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.10 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -51,9 +51,9 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    Double_t              DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1,
                                     Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -85,7 +85,7 @@ public:
    Double_t             &Rmax(Int_t ipl) {return fRmax[ipl];}
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in=kTRUE, Double_t safmin=TGeoShape::Big()) const;
+   Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in=kTRUE, Double_t safmin=kBig) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

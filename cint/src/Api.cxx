@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -496,12 +496,6 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
   }
 #endif /* 1791 */
   catch(...) {
-#ifndef G__OLDIMPLEMENTATION1947
-    if(2==G__catchexception) {
-      G__fprinterr(G__serr,"Error: Exception caught in compiled code\n");
-      exit(EXIT_FAILURE);
-    }
-#endif
     G__genericerror("Error: C++ exception caught");
   }
   return 0;

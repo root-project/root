@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.59 2003/11/25 17:07:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.58 2003/11/22 14:50:26 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -433,35 +433,25 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     !=(string)  77                  |            79
 //*-*     <<(shift)   80                  >>(shift)    81
 //*-*
-//*-*   * constants (kConstants) : 
+//*-*   * constants :
 //*-*
 //*-*    c0  50000      c1  50001  etc..
 //*-*
-//*-*   * strings (kStrings) :
+//*-*   * strings :
 //*-*
-//*-*    sX  80000      (80001 to 99999) 
+//*-*    sX  80000      (80001 to 99999) to not used yet
 //*-*
-//*-*   * variables (kFormulaVar) :
+//*-*   * variables :
 //*-*
-//*-*     x    110000     y    110001     z    110002     t    110003
+//*-*     x    100000     y    100001     z    100002     t    100003
 //*-*
 //*-*   * parameters :
 //*-*
 //*-*     [1]        101
 //*-*     [2]        102
 //*-*     etc.
-//*-*  
-//*-*   * boolean optimization (kBoolOptmize) :
 //*-*
-//*-*     Those pseudo operation are used to implement lazy evaluation of
-//*-*     && and ||.  When the left hand of the expression if false 
-//*-*     (respectively true), the evaluation of the right is entirely skipped
-//*-*     (since it would not change the value of the expreession).
-//*-*
-//*-*     &&   120011 (one operation on right) 120021 (2 operations on right)
-//*-*     ||   120012 (one operation on right) 120022 (2 operations on right)
-//*-*  
-//*-*   * functions calls (kFunctionCall) :
+//*-*   * functions calls
 //*-*
 //*-*    f0 200000  f1 200001  etc..
 //*-*
@@ -655,17 +645,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
       else {
         ctemp = chaine(0,ou-1);
         Analyze(ctemp.Data(),err,offset);
-
-        fExpr[fNoper] = "|| opt";
-        fOper[fNoper] = kBoolOptimize+2;
-        Int_t optloc = fNoper++;
-
         ctemp = chaine(ou+1,lchain-ou-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "||";
         fOper[fNoper] = 61;
-
-        fOper[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (et!=0) {
@@ -676,17 +659,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
       else {
         ctemp = chaine(0,et-1);
         Analyze(ctemp.Data(),err,offset);
-
-        fExpr[fNoper] = "&& opt";
-        fOper[fNoper] = kBoolOptimize+1;
-        Int_t optloc = fNoper++;
-
         ctemp = chaine(et+1,lchain-et-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "&&";
         fOper[fNoper] = 60;
-
-        fOper[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (oux!=0) {
@@ -987,7 +963,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (vafConst == fConst[j] ) k= j;
                      }
                      if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
-                     fOper[fNoper] = kConstants + k;
+                     fOper[fNoper] = 50000 + k;
                      fNoper++;
                   }
                   if (err==30) err=0;
@@ -1020,12 +996,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 k = DefinedVariable(ctemp);
                 if (k >= 5000 && k < 10000) {
                   fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
+                  fOper[fNoper] = 100000 + k;
                   fNstring++;
                   fNoper++;
                 } else if ( k >= 0 ) {
                   fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
+                  fOper[fNoper] = 100000 + k;
                   if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
                      fAlreadyFound.SetBitNumber(k);
                      fNval++;
@@ -2163,39 +2139,9 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 
        continue;
     }
-//*-*- boolean operation optimizer
-    if (action >= kBoolOptimize) {
-       Bool_t skip = kFALSE;
-       int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
-       
-       if (op == 1 && (!tab[pos-1]) ) { 
-          // &&: skip the right part if the left part is already false
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a&&b is
-          // either 0 or 1)
-          tab[pos-1] = 0;
-          
-       } else if (op == 2 && tab[pos-1] ) {  
-          // ||: skip the right part if the left part is already true
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a||b is
-          // either 0 or 1)
-          tab[pos-1] = 1;
-       }
-       
-       if (skip) {
-          int toskip = (action-kBoolOptimize) / 10;
-          i += toskip;
-       }
-       continue;
-    }
 //*-*- a variable
-    if (action >= kFormulaVar) {
-       pos++; tab[pos-1] = x[action-kFormulaVar];
+    if (action >= 110000) {
+       pos++; tab[pos-1] = x[action-110000];
        continue;
     }
 //*-*- a tree string
@@ -2208,12 +2154,12 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
        continue;
     }
 //*-*- a tree variable
-    if (action >= kVariable) {
+    if (action >= 100000) {
        if (!precalculated) {
           precalculated = 1;
           for(j=0;j<fNval;j++) param_calc[j]=DefinedValue(j);
        }
-       pos++; tab[pos-1] = param_calc[action-kVariable];
+       pos++; tab[pos-1] = param_calc[action-100000];
        continue;
     }
 //*-*- String
@@ -2222,8 +2168,8 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
        continue;
     }
 //*-*- numerical value
-    if (action >= kConstants) {
-       pos++; tab[pos-1] = fConst[action-kConstants];
+    if (action >= 50000) {
+       pos++; tab[pos-1] = fConst[action-50000];
        continue;
     }
     if (action == 0) {
@@ -2318,7 +2264,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           pos++;
           tab[pos-1] = fParams[action - 101];
 //*-*- Polynomial
-    } else if (action > 10000 && action < kConstants) {
+    } else if (action > 10000 && action < 50000) {
           pos++;
           tab[pos-1] = 0;intermede = 1;
           inter2= action/10000; //arrondit
@@ -2461,7 +2407,7 @@ Int_t TFormula::GetOperType(Int_t oper) const
 {
   if(oper==0) return -100;        //Sign inversion
 
-  if(oper>999 && oper<kConstants) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
+  if(oper>999 && oper<50000) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
 
   if((oper>0 && oper<6) ||
      oper==20 ||

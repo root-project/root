@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.16 2003/12/10 17:09:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.14 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -149,6 +149,11 @@
 #include "TGeoShape.h"
 #include "TVirtualGeoPainter.h"
 
+
+const Double_t TGeoShape::kRadDeg = 180./TMath::Pi();
+const Double_t TGeoShape::kDegRad = TMath::Pi()/180.;
+const Double_t TGeoShape::kBig = 1E30;
+
 ClassImp(TGeoShape)
 
 //_____________________________________________________________________________
@@ -208,10 +213,10 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
-   Double_t saf1 = TGeoShape::Big();
-   Double_t saf2 = TGeoShape::Big();
+   Double_t saf1 = kBig;
+   Double_t saf2 = kBig;
    if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
-   if (point[0]*c2+point[1]*s2 >= 0) saf2 = TMath::Abs(point[0]*s2 - point[1]*c2);
+   if (point[0]*c2+point[1]*s2 >= 0) saf2 =  TMath::Abs(point[0]*s2 - point[1]*c2);
    Double_t saf = TMath::Min(saf1,saf2);
    if (saf<epsil) return kTRUE;
    return kFALSE;
@@ -221,7 +226,7 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Dou
 Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
 {
 // Static method to check if a point is in the phi range (phi1, phi2) [degrees]
-   Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
+   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
    while (phi<phi1) phi+=360.;
    Double_t ddp = phi-phi1;
    if (ddp>phi2-phi1) return kFALSE;
@@ -234,7 +239,7 @@ Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t c
 // Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
 // also radius at crossing point. This might be negative in case the crossing is
 // on the other side of the semiplane.
-   snext = rxy = TGeoShape::Big();
+   snext = rxy = kBig;
    Double_t ndot = dir[1]*cphi-dir[0]*sphi;
    if (TMath::Abs(ndot)<1E-10) return kFALSE;
    Double_t ndinv = 1./ndot;
@@ -249,8 +254,8 @@ Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t c
 void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // Static method to compute normal to phi planes.
-   Double_t saf1 = TGeoShape::Big();
-   Double_t saf2 = TGeoShape::Big();
+   Double_t saf1 = kBig;
+   Double_t saf2 = kBig;
    if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
    if (point[0]*c2+point[1]*s2 >= 0) saf2 =  TMath::Abs(point[0]*s2 - point[1]*c2);
    Double_t c,s;
@@ -276,9 +281,9 @@ Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines
 // of the angles phi1, phi2.
    Bool_t inphi = TGeoShape::IsInPhiRange(point, phi1, phi2);
-   if (inphi && !in) return -TGeoShape::Big(); 
-   phi1 *= TMath::DegToRad();
-   phi2 *= TMath::DegToRad();  
+   if (inphi && !in) return -kBig; 
+   phi1 *= kDegRad;
+   phi2 *= kDegRad;  
    Double_t c1 = TMath::Cos(phi1);
    Double_t s1 = TMath::Sin(phi1);
    Double_t c2 = TMath::Cos(phi2);
@@ -287,15 +292,15 @@ Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_
    Double_t rproj = point[0]*c1+point[1]*s1;
    Double_t safsq = rsq-rproj*rproj;
    if (safsq<0) return 0.;
-   Double_t saf1 = (rproj<0)?TGeoShape::Big():TMath::Sqrt(safsq);
+   Double_t saf1 = (rproj<0)?kBig:TMath::Sqrt(safsq);
    rproj = point[0]*c2+point[1]*s2;
    safsq = rsq-rproj*rproj;
    if (safsq<0) return 0.;   
-   Double_t saf2 = (rproj<0)?TGeoShape::Big():TMath::Sqrt(safsq);
+   Double_t saf2 = (rproj<0)?kBig:TMath::Sqrt(safsq);
    Double_t safe = TMath::Min(saf1, saf2); // >0
    if (safe>1E10) {
-      if (in) return TGeoShape::Big();
-      return -TGeoShape::Big();
+      if (in) return kBig;
+      return -kBig;
    }
    return safe;   
 }        

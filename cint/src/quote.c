@@ -7,7 +7,7 @@
  * Description:
  *  Strip and add quotation
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -96,12 +96,7 @@ G__value G__strip_quotation(string)
 char *string;
 {
   int itemp,itemp2=0,hash;
-#ifndef G__OLDIMPLEMENTATION1943
-  int templen = G__LONGLINE;
-  char *temp = (char*)malloc(G__LONGLINE);
-#else
   char temp[G__LONGLINE];
-#endif
   G__value result;
 #ifdef G__OLDIMPLEMENTATION1636
   struct G__ConstStringList *pconststring;
@@ -124,12 +119,6 @@ char *string;
       /*
       temp[itemp2++] = string[itemp];
       */
-#ifndef G__OLDIMPLEMENTATION1943
-      if(itemp2+1>templen) {
-        temp = (char*)realloc(temp,2*templen);
-        templen = 2*templen;
-      }
-#endif
       switch(string[itemp]) {
       case '\\' :
 	switch(string[++itemp]) {
@@ -262,9 +251,6 @@ char *string;
     if(G__isvalue(string)) {
       /* string is a pointer */
       G__letint(&result,'C',atol(string));
-#ifndef G__OLDIMPLEMENTATION1943
-      free((void*)temp);
-#endif
       return(result);
     }
     else {
@@ -283,9 +269,6 @@ char *string;
   while(pconststring) {
     if(hash==pconststring->hash && strcmp(temp,pconststring->string)==0) {
       G__letint(&result,'C',(long)pconststring->string);
-#ifndef G__OLDIMPLEMENTATION1943
-      free((void*)temp);
-#endif
       return(result);
     }
     pconststring = pconststring->prev;
@@ -306,9 +289,6 @@ char *string;
   G__letint(&result,'C',(long)pconststring->string);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1943
-  free((void*)temp);
-#endif
   return(result);
 }
 

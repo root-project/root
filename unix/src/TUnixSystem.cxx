@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.80 2003/12/11 16:35:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.76 2003/11/20 23:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -242,7 +242,7 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if (defined(__ppc__) && defined(__APPLE__))
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -534,7 +534,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -576,7 +576,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;
@@ -1379,15 +1379,6 @@ Int_t TUnixSystem::GetUid(const char *user)
 }
 
 //______________________________________________________________________________
-Int_t TUnixSystem::GetEffectiveUid()
-{
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
-   return geteuid();
-}
-
-//______________________________________________________________________________
 Int_t TUnixSystem::GetGid(const char *group)
 {
    // Returns the group's id. If group = 0, returns current user's group.
@@ -1400,15 +1391,6 @@ Int_t TUnixSystem::GetGid(const char *group)
          return grp->gr_gid;
    }
    return 0;
-}
-
-//______________________________________________________________________________
-Int_t TUnixSystem::GetEffectiveGid()
-{
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
-   return getegid();
 }
 
 //______________________________________________________________________________
@@ -3045,7 +3027,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    // Create socket
    int sock;
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "socket");
+      ::SysError("TUnixSystem::UnixConnectTcp", "socket");
       return -1;
    }
 
@@ -3055,7 +3037,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "connect");
+      //::SysError("TUnixSystem::UnixConnectTcp", "connect");
       close(sock);
       return -1;
    }
@@ -3083,7 +3065,7 @@ int TUnixSystem::UnixUnixConnect(int port)
    }
 
    if (connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) < 0) {
-      ::SysError("TUnixSystem::UnixUnixConnect", "connect");
+      // ::SysError("TUnixSystem::UnixUnixConnect", "connect");
       close(sock);
       return -1;
    }

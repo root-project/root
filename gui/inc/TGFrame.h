@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.31 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.30 2003/11/07 13:25:56 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -263,8 +263,10 @@ public:
 
 class TGCompositeFrame : public TGFrame {
 
-protected:
+private:
    TGLayoutManager *fLayoutManager;   // layout manager
+
+protected:
    TList           *fList;            // container of frame elements
 
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 #include "TGString.h"
 #endif
 
-class TColor;
+
 
 class TGLabel : public TGFrame {
 
@@ -43,7 +43,6 @@ protected:
    Bool_t         fTextChanged;  // has text changed
    GContext_t     fNormGC;       // graphics context used for drawing label
    FontStruct_t   fFontStruct;   // font to draw label
-   Bool_t         fIsOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
 
    virtual void DoRedraw();
 
@@ -72,13 +71,6 @@ public:
    void SetText(const char *newText) { SetText(new TGString(newText)); }
    void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode) { fTMode = tmode; }
-   virtual void SetTextFont(TGFont *font, Option_t *opt = 0);
-   virtual void SetTextFont(FontStruct_t font, Option_t *opt = 0);
-   virtual void SetTextFont(const char *fontName, Option_t *opt = 0);
-   virtual void SetTextColor(Pixel_t color, Option_t *opt = 0);
-   virtual void SetTextColor(TColor *color, Option_t *opt = 0);
-   Bool_t IsOwnTextFont() const;
-
    virtual void SavePrimitive(ofstream &out, Option_t *option);   
 
    ClassDef(TGLabel,0)  // A label GUI element

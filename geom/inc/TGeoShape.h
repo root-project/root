@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.19 2003/12/10 17:09:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.16 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -64,7 +64,9 @@ enum EShapeType {
    kGeoComb    = BIT(25),
    kGeoClosedShape = BIT(26)
 };
-
+static const Double_t kRadDeg;   // conversion factor rad->deg
+static const Double_t kDegRad;   // conversion factor deg->rad
+static const Double_t kBig;      // infinity
 protected :
 // data members
    Int_t                 fShapeId;   // shape id
@@ -79,16 +81,15 @@ public:
    virtual ~TGeoShape();
    // methods
 
-   static Double_t       Big() {return 1.E30;}
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t        Contains(Double_t *point) const         = 0;
    virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
+                                   Double_t step=0, Double_t *safe=0) const = 0;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
+                                   Double_t step=0, Double_t *safe=0) const = 0;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;

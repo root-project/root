@@ -7,7 +7,7 @@
  * Description:
  *  Interactive interface frontend
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -38,7 +38,7 @@ int s;
     G__history_size_max = s+20;
   }
   else {
-    G__fprinterr(G__serr,"!!! %d ignored. You must set positive number\n",s);
+    G__fprinterr(G__serr,"!!! %s ignored. You must set positive number\n",s);
   }
 }
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.38 2003/12/15 16:37:49 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.30 2003/11/07 21:01:12 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -602,8 +602,6 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
                        int format, int mode, const unsigned char *data,
                        int nelements)
 {
-   //
-
    char *atomName;
    char buffer[256];
    char *p, *s;
@@ -634,7 +632,7 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 
    char *atomName;
    char *data, *destPtr;
-   char propName[32];
+   char propName[8];
    HGLOBAL handle;
    HGLOBAL hMem;
    HWND w;
@@ -735,12 +733,11 @@ LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
-   // thread for processing windows messages (aka Main, Server thread)
+   // thread for processing windows messages
 
    MSG msg;
    Int_t erret;
    Bool_t endLoop = kFALSE;
-   Int_t last_message = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -756,21 +753,12 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
          } else {
             endLoop = kTRUE;
          }
-      } else if (msg.message==TGWin32ProxyBase::fgPingMessageId) {
-         TGWin32ProxyBase::GlobalUnlock();
-         continue;
       } else {
-         if ( (msg.message>WM_NCMOUSEMOVE) && 
-              (msg.message<=WM_NCMBUTTONDBLCLK) ) {
-            TGWin32ProxyBase::GlobalLock();
-         }
-
          TGWin32MainThread::LockMSG();
          TranslateMessage (&msg);
          DispatchMessage (&msg);
          TGWin32MainThread::UnlockMSG();
       }
-      last_message = msg.message;
    }
 
    if (TGWin32::Instance()) TGWin32::Instance()->CloseDisplay();
@@ -900,7 +888,7 @@ TGWin32::~TGWin32()
 //______________________________________________________________________________
 void TGWin32::CloseDisplay()
 {
-   // close display (terminate server/gMainThread )
+   //
 
    if (gSplash) {
       delete gSplash;
@@ -4144,7 +4132,7 @@ Int_t TGWin32::WriteGIF(char *name)
 //______________________________________________________________________________
 void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
                        int ny, int xmin, int ymin, int xmax, int ymax,
-                       unsigned char *image, Drawable_t wid)
+                       unsigned char *image)
 {
    // Draw image.
 
@@ -4153,13 +4141,6 @@ void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
    unsigned char *jimg, *jbase, icol;
    int nlines[256];
    GdkSegment lines[256][MAX_SEGMENT];
-   GdkDrawable *id;
-
-   if (wid) {
-      id = (GdkDrawable*)wid;
-   } else {
-      id = gCws->drawing;
-   }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
 
@@ -4182,7 +4163,7 @@ void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
                lines[icol][n].y2 = y;
                if (nlines[icol] == MAX_SEGMENT) {
                   SetColor(gGCline, (int) icol + offset);                 
-                  gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+                  gdk_win32_draw_segments(gCws->drawing, (GdkGC *) gGCline,
                                        (GdkSegment *) &lines[icol][0], MAX_SEGMENT);
                   nlines[icol] = 0;
                }
@@ -4199,7 +4180,7 @@ void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
          lines[icol][n].y2 = y;
          if (nlines[icol] == MAX_SEGMENT) {
             SetColor(gGCline, (int) icol + offset);
-            gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+            gdk_win32_draw_segments((GdkDrawable *) gCws->drawing, (GdkGC *) gGCline,
                               (GdkSegment *)&lines[icol][0], MAX_SEGMENT);
             nlines[icol] = 0;
          }
@@ -4209,29 +4190,27 @@ void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
          SetColor(gGCline, i + offset);
-         gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+         gdk_win32_draw_segments(gCws->drawing, (GdkGC *) gGCline,
                            (GdkSegment *)&lines[icol][0], nlines[i]);
       }
    }  
 }
 
 //______________________________________________________________________________
-Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
+void TGWin32::ReadGIF(int x0, int y0, const char *file)
 {
-   // If id is NULL - loads the specified gif file at position [x0,y0] in the 
-   // current window. Otherwise creates pixmap from gif file 
+   // Load the gif a file in the current active window.
 
    FILE *fd;
    Seek_t filesize;
    unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
    int i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
-   Pixmap_t pic = 0;
 
-   fd = fopen(file, "r+b");
+   fd = fopen(file, "r");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
-      return pic;
+      return;
    }
 
    fseek(fd, 0L, 2);
@@ -4240,27 +4219,27 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
 
    if (!(GIFarr = (unsigned char *) calloc(filesize + 256, 1))) {
       Error("ReadGIF", "unable to allocate array for gif");
-      return pic;
+      return;
    }
 
    if (fread(GIFarr, filesize, 1, fd) != 1) {
       Error("ReadGIF", "GIF file read failed");
-      return pic;
+      return;
    }
 
    irep = GIFinfo(GIFarr, &width, &height, &ncolor);
    if (irep != 0) {
-      return pic;
+      return;
    }
 
    if (!(PIXarr = (unsigned char *) calloc((width * height), 1))) {
       Error("ReadGIF", "unable to allocate array for image");
-      return pic;
+      return;
    }
 
    irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
    if (irep != 0) {  
-      return pic;
+      return;
    }
    // S E T   P A L E T T E
 
@@ -4285,13 +4264,7 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
          *j2++ = icol;
       }
    }
-
-   if (id) pic = CreatePixmap(id, width, height);
-   PutImage(offset, -1, x0, y0, width, height, 0, 0, width-1, height-1, PIXarr, pic);
-
-   if (pic) return pic;
-   else if (gCws->drawing) return  (Pixmap_t)gCws->drawing;
-   else return 0;
+   PutImage(offset, -1, x0, y0, width, height, 0, 0, width-1, height-1, PIXarr);  
 }
 
 //////////////////////////// GWin32Gui //////////////////////////////////////////
@@ -5179,16 +5152,10 @@ Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
    // kFALSE otherwise. If mask does not exist it is set to kNone.
 
    GdkBitmap *gdk_pixmap_mask;
-   if (strstr(filename, ".xpm") || strstr(filename, ".XPM")) {
-      pict = (Pixmap_t) gdk_pixmap_create_from_xpm((GdkWindow *) id,
+   pict = (Pixmap_t) gdk_pixmap_create_from_xpm((GdkWindow *) id,
                                                 &gdk_pixmap_mask, 0,
                                                 filename);
-      pict_mask = (Pixmap_t) gdk_pixmap_mask;
-   } else if (strstr(filename, ".gif") || strstr(filename, ".GIF")) {
-      pict = ReadGIF(0, 0, filename, id);
-      pict_mask = kNone;
-   }
-  
+   pict_mask = (Pixmap_t) gdk_pixmap_mask;
    gdk_drawable_get_size((GdkPixmap *) pict, (int *) &attr.fWidth,
                          (int *) &attr.fHeight);
    if (pict) {

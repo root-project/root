@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.61 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.60 2003/11/10 14:05:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -573,8 +573,7 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_PRINT:
-         mess->ReadString(str, sizeof(str));
-         Print(str);
+         Print();
          SendLogFile();
          break;
 
@@ -1236,12 +1235,12 @@ Int_t TProofServ::UnlockDir(const TString &lock)
 }
 
 //______________________________________________________________________________
-void TProofServ::Print(Option_t *option) const
+void TProofServ::Print(Option_t *) const
 {
    // Print status of slave server.
 
    if (IsMaster())
-      fProof->Print(option);
+      fProof->Print();
    else
       Printf("This is slave %s", gSystem->HostName());
 }

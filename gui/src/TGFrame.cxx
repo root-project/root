@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.38 2003/12/09 09:06:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.36 2003/11/25 15:57:34 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1471,12 +1471,12 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
    }
    ULong_t ucolor = GetBackground();
-   if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
+   if (ucolor != fgUserColor) {
       const char *ucolorname = TColor::PixelAsHexString(ucolor);
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
           << ",ucolor);" << endl;
       fgUserColor = ucolor;
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -2042,21 +2042,22 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      } else {
+         sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      } else {
+         sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

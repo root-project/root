@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.62 2003/11/12 09:06:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.61 2003/11/12 07:23:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -164,7 +164,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketSeek     = new Seek_t[fMaxBaskets];
-
+   fBasketEntry[0] = fEntryNumber;
    for (i=0;i<fMaxBaskets;i++) {
       fBasketBytes[i] = 0;
       fBasketEntry[i] = 0;
@@ -505,13 +505,9 @@ Int_t TBranch::Fill()
 #endif
          fMaxBaskets   = newsize;
       }
-
-      for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-         fBasketBytes[i] = 0;
-         fBasketEntry[i] = 0;
-         fBasketSeek[i]  = 0;
-      }
       fBasketEntry[fWriteBasket] = fEntryNumber;
+      fBasketBytes[fWriteBasket] = 0;
+      fBasketSeek[fWriteBasket]  = 0;
    }
    return nbytes;
 }
@@ -1391,12 +1387,8 @@ void TBranch::WriteBasket(TBasket* basket)
 #endif
       fMaxBaskets   = newsize;
    }
-
-   for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
-   }
    fBasketEntry[fWriteBasket] = fEntryNumber;
+   fBasketBytes[fWriteBasket] = 0;
+   fBasketSeek[fWriteBasket]  = 0;
 }
 

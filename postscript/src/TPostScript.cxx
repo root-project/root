@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.43 2003/11/18 15:36:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.42 2003/09/08 14:54:13 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -2259,7 +2259,6 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t x = xx;
    Double_t y = yy;
    lunps   = &klunps[0];
-   if (!gPad) return;
    Int_t nold = strlen(chars);
    if (nold == 0) return;
    if (nold > 512) nold = 512;

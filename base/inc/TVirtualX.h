@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.23 2003/11/25 15:51:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.22 2003/11/14 17:34:55 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -112,7 +112,7 @@ public:
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy);
-   virtual Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0);
+   virtual void      ReadGIF(Int_t x0, Int_t y0, const char *file);
    virtual Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    virtual Int_t     RequestString(Int_t x, Int_t y, char *text);
    virtual void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h);

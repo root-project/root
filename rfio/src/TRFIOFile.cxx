@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.26 2003/11/13 14:37:29 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.25 2003/07/03 12:59:35 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -234,7 +234,7 @@ TRFIOFile::~TRFIOFile()
 //______________________________________________________________________________
 Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open.
+   // Interface to system open. All arguments like in "man 2 open".
 
    Int_t ret = ::rfio_open((char *)pathname, flags, (Int_t) mode);
    if (ret < 0)
@@ -245,7 +245,7 @@ Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 //______________________________________________________________________________
 Int_t TRFIOFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close.
+   // Interface to system close. All arguments like in "man 2 close".
 
    Int_t ret = ::rfio_close(fd);
    if (ret < 0)
@@ -256,7 +256,7 @@ Int_t TRFIOFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TRFIOFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read.
+   // Interface to system read. All arguments like in "man 2 read".
 
    fOffset += len;
    Int_t ret = ::rfio_read(fd, (char *)buf, len);
@@ -268,7 +268,7 @@ Int_t TRFIOFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write.
+   // Interface to system write. All arguments like in "man 2 write".
 
    fOffset += len;
    Int_t ret = ::rfio_write(fd, (char *)buf, len);
@@ -280,7 +280,7 @@ Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek
+   // Interface to system lseek. All arguments like in "man 2 lseek"
    // except that the offset and return value are Long_t to be able to
    // handle 64 bit file systems.
 

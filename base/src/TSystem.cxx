@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.75 2003/11/18 19:04:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.74 2003/09/27 18:00:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1002,31 +1002,11 @@ Int_t TSystem::GetUid(const char * /*user*/)
 }
 
 //______________________________________________________________________________
-Int_t TSystem::GetEffectiveUid()
-{
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
-   AbstractMethod("GetEffectiveUid");
-   return 0;
-}
-
-//______________________________________________________________________________
 Int_t TSystem::GetGid(const char * /*group*/)
 {
    // Returns the group's id. If group = 0, returns current user's group.
 
    AbstractMethod("GetGid");
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TSystem::GetEffectiveGid()
-{
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
-   AbstractMethod("GetEffectiveGid");
    return 0;
 }
 

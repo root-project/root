@@ -33,12 +33,6 @@ typedef double DWORDLONG;
 #define WINGDIAPI
 #define APIENTRY
 
-/* VC++7.0 */
-#if defined(_MSC_VER) && (_MSC_VER>=1300) /* block for VC7, more refinment? */
-typedef DWORDLONG __w64;
-typedef unsigned int UINT_PTR;
-#endif
-
 /* VC++5.0 */
 #if defined(_MSC_VER) && (_MSC_VER<1300) /* block for VC7, more refinment? */
 #define MIDL_PASS

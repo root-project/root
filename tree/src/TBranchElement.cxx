@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.122 2003/11/20 17:25:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.121 2003/11/14 11:11:21 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -148,11 +148,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketSeek     = new Seek_t[fMaxBaskets];
 
-   for (Int_t i=0;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
-   }
+   fBasketEntry[0] = fEntryNumber;
+   fBasketBytes[0] = 0;
 
    // Create a basket for the terminal branch
    TBasket *basket = new TBasket(name,fTree->GetName(),this);
@@ -323,11 +320,8 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketSeek     = new Seek_t[fMaxBaskets];
 
-   for (Int_t i=0;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
-   }
+   fBasketEntry[0] = fEntryNumber;
+   fBasketBytes[0] = 0;
 
    // Create a basket for the terminal branch
    TBasket *basket = new TBasket(name,fTree->GetName(),this);

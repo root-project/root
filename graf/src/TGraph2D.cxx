@@ -66,16 +66,11 @@ ClassImp(TGraph2D)
 // current size of the internal arrays, they are automatically extended.
 //
 // Specific drawing options can be used to paint a TGraph2D:
-//   "TRI"  : The Delaunay triangles are drawn using filled area. 
-//            An hidden surface drawing technique is used. The surface is
-//            painted with the current fill area color. The edges of each 
-//            triangles are painted with the current line color. 
-//   "TRIW" : The Delaunay triangles are drawn as wire frame
-//   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-//            of each triangles are painted with the current line color.
-//   "TRI2" : the Delaunay triangles are painted with color levels.
-//   "P"    : Draw a marker at each vertex
-//   "P0"   : Draw a circle at each vertex. Each circle background is white.
+//   "TRI"  : the Delaunay triangles are drawn using filled area. 
+//            An hidden surface drawing technique is used
+//   "TRIW" : the Delaunay triangles are drawn as wire frame
+//   "P"    : draw a marker at each vertex
+//   "P0"   : draw a circle at each vertex. Each circle background is white.
 //
 // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
 //
@@ -354,61 +349,6 @@ TGraph2D TGraph2D::operator=(const TGraph2D &g)
    return g;
 }
 
-
-//______________________________________________________________________________
-void TGraph2D::Build(Int_t n)
-{
-   // Creates the 2D graph basic data structure
-
-   if (n <= 0) {
-      Error("TGraph2D", "Invalid number of points (%d)", n);
-      return;
-   }
-
-   fSize       = n,
-   fTriedSize  = 0;
-   fMargin     = 0.;
-   fNpx        = 40;
-   fNpy        = 40;
-   fZout       = 0.;
-   fNdt        = 0;
-   fNhull      = 0;
-   fDirectory  = 0;
-   fFunctions  = 0;
-   fHistogram  = 0;
-   fMaximum    = -1111;
-   fMinimum    = -1111;
-   fHullPoints = 0;
-   fXN         = 0;
-   fYN         = 0;
-   fOrder      = 0;
-   fDist       = 0;
-   fPTried     = 0;
-   fNTried     = 0;
-   fMTried     = 0;
-   fGridLevels = 0;
-   fNbLevels   = 0;
-   fView       = 0;
-
-   SetMaxIter();
-
-   fX = new Double_t[fSize];
-   fY = new Double_t[fSize];
-   fZ = new Double_t[fSize];
-
-   fFunctions = new TList;
-
-   Bool_t add = TH1::AddDirectoryStatus();
-   if (add && gDirectory) {
-      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
-      if (old) {
-         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
-         gDirectory->GetList()->Remove(old);
-      }
-      gDirectory->Append(this);
-      fDirectory = gDirectory;
-   }
-}
 
 //______________________________________________________________________________
 Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
@@ -741,7 +681,7 @@ L90:
 void TGraph2D::DefineGridLevels()
 {
    // Define the grid levels drawn on the triangles.
-   // The grid levels are aligned on the Z axis' main tick marks.
+   // The grid levels are aligned on the  Z axis' main tick marks.
    // The function assumes that fView has been defined.
 
    Int_t i, nbins;
@@ -778,40 +718,6 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
    return distance;
 }
 
-//______________________________________________________________________________
-void TGraph2D::Draw(Option_t *option)
-{
-// Specific drawing options can be used to paint a TGraph2D:
-//   "TRI"  : The Delaunay triangles are drawn using filled area. 
-//            An hidden surface drawing technique is used. The surface is
-//            painted with the current fill area color. The edges of each 
-//            triangles are painted with the current line color. 
-//   "TRIW" : The Delaunay triangles are drawn as wire frame
-//   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-//            of each triangles are painted with the current line color.
-//   "TRI2" : the Delaunay triangles are painted with color levels.
-//   "P"    : Draw a marker at each vertex
-//   "P0"   : Draw a circle at each vertex. Each circle background is white.
-//
-// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
-//
-// When a TGraph2D is drawn with one of the 2D histogram drawing option,
-// a intermediate 2D histogram is filled using the Delaunay triangles 
-// technique to interpolate the data set. 
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
-      if (!opt.Contains("same")) {
-         //the following statement is necessary in case one attempts to draw
-         //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
-         gPad->Clear();
-      }
-   }
-   AppendPad(opt.Data());
-}
 
 //______________________________________________________________________________
 Bool_t TGraph2D::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const
@@ -1207,6 +1113,63 @@ L10:
 L999:
    return DTinhull;
 }
+
+
+//______________________________________________________________________________
+void TGraph2D::Build(Int_t n)
+{
+   // Creates the 2D graph basic data structure
+
+   if (n <= 0) {
+      Error("TGraph2D", "Invalid number of points (%d)", n);
+      return;
+   }
+
+   fSize       = n,
+   fTriedSize  = 0;
+   fMargin     = 0.;
+   fNpx        = 40;
+   fNpy        = 40;
+   fZout       = 0.;
+   fNdt        = 0;
+   fNhull      = 0;
+   fDirectory  = 0;
+   fFunctions  = 0;
+   fHistogram  = 0;
+   fMaximum    = -1111;
+   fMinimum    = -1111;
+   fHullPoints = 0;
+   fXN         = 0;
+   fYN         = 0;
+   fOrder      = 0;
+   fDist       = 0;
+   fPTried     = 0;
+   fNTried     = 0;
+   fMTried     = 0;
+   fGridLevels = 0;
+   fNbLevels   = 0;
+   fView       = 0;
+
+   SetMaxIter();
+
+   fX = new Double_t[fSize];
+   fY = new Double_t[fSize];
+   fZ = new Double_t[fSize];
+
+   fFunctions = new TList;
+
+   Bool_t add = TH1::AddDirectoryStatus();
+   if (add && gDirectory) {
+      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
+      if (old) {
+         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
+         gDirectory->GetList()->Remove(old);
+      }
+      gDirectory->Append(this);
+      fDirectory = gDirectory;
+   }
+}
+
 
 //______________________________________________________________________________
 Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
@@ -1860,17 +1823,11 @@ void TGraph2D::Paint(Option_t *option)
    }
 }
 
-
 //______________________________________________________________________________
-void TGraph2D::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
-                           Double_t zmin, Double_t zmax, Int_t grid)
+void TGraph2D::PaintOneTriangle(Int_t *T,Double_t *x, Double_t *y)
 {
-   // Paints one triangle according to the "grid" value.
-   // grid = 0 : paint the color levels
-   // grid = 1 : paint the grid
+   // Paints one triangle
 
-   Int_t i, FC, ncolors, theColor0, theColor2;
-   
    Int_t P0=T[0]-1;
    Int_t P1=T[1]-1;
    Int_t P2=T[2]-1;
@@ -1879,181 +1836,46 @@ void TGraph2D::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
    Double_t X0 = x[0]  , X2 = x[0];
    Double_t Y0 = y[0]  , Y2 = y[0];
    Double_t Z0 = fZ[P0], Z2 = fZ[P0];
+   Int_t I0=0;
+   Int_t I1=0;
+   Int_t I2=0;
 
-   // Order along Z axis the points (Xi,Yi,Zi) where "i" belongs to {0,1,2}
-   // After this Z0 < Z1 < Z2
-   Int_t I0=0, I1=0, I2=0;
-   if (fZ[P1]<=Z0) {Z0=fZ[P1]; X0=x[1]; Y0=y[1]; I0=1;}
-   if (fZ[P1]>Z2)  {Z2=fZ[P1]; X2=x[1]; Y2=y[1]; I2=1;}
-   if (fZ[P2]<=Z0) {Z0=fZ[P2]; X0=x[2]; Y0=y[2]; I0=2;}
-   if (fZ[P2]>Z2)  {Z2=fZ[P2]; X2=x[2]; Y2=y[2]; I2=2;}
+   if(fZ[P1]<Z0){Z0=fZ[P1];X0=x[1];Y0=y[1];I0=1;}
+   if(fZ[P2]<Z0){Z0=fZ[P2];X0=x[2];Y0=y[2];I0=2;}
+   if(fZ[P1]>Z2){Z2=fZ[P1];X2=x[1];Y2=y[1];I2=1;}
+   if(fZ[P2]>Z2){Z2=fZ[P2];X2=x[2];Y2=y[2];I2=2;}
+
    I1 = 3-I2-I0;
    Double_t X1 = x[I1];
    Double_t Y1 = y[I1];
    Double_t Z1 = fZ[T[I1]-1];
-   Double_t Zi=0, Zip=0;
 
-   switch (grid) {
+   SetLineStyle(3);
+   TAttLine::Modify();
 
-      case 0:
-         // Paint the colors levels
-
-         // Compute the color associated to Z0 (theColor0) and Z2 (theColor2)
-         ncolors   = gStyle->GetNumberOfColors();
-         theColor0 = (Int_t)( ((Z0-zmin)/(zmax-zmin))*(ncolors-1) );
-         theColor2 = (Int_t)( ((Z2-zmin)/(zmax-zmin))*(ncolors-1) );
-
-         // The stripes drawn to fill the triangles may have up to 5 points
-         Double_t xp[5], yp[5];
-
-         // Rl = Ratio between Z0 and Z2 (long) 
-         // Rs = Ratio between Z0 and Z1 or Z1 and Z2 (short) 
-         Double_t Rl,Rs;
-
-         // Zi  = Z values of the stripe number i
-         // Zip = Previous Zi 
-
-         // Ci = Color of the stripe number i
-         // npf = number of point needed to draw the current stripe
-         Int_t Ci,npf;
-
-         FC = GetFillColor();
-
-         // If the Z0's color and Z2's colors are the same, the whole triangle
-         // can be painted in one go.
-         if(theColor0 == theColor2) {
-            SetFillColor(gStyle->GetColorPalette(theColor0));
-            TAttFill::Modify();
-            gPad->PaintFillArea(3,x,y);
-
-         // The triangle must be painted with several colors
+   for(Int_t i=0; i<fNbLevels; i++){
+      Zl=fGridLevels[i];
+      if(Zl >= Z0 && Zl <=Z2) {
+         R21=(Zl-Z1)/(Z2-Z1);
+         R20=(Zl-Z0)/(Z2-Z0);
+         R10=(Zl-Z0)/(Z1-Z0);
+         xl[0]=R20*(X2-X0)+X0;
+         yl[0]=R20*(Y2-Y0)+Y0;
+         if(Zl >= Z1 && Zl <=Z2) {
+            xl[1]=R21*(X2-X1)+X1;
+            yl[1]=R21*(Y2-Y1)+Y1;
          } else {
-            for(Ci=theColor0; Ci<=theColor2; Ci++) {
-               SetFillColor(gStyle->GetColorPalette(Ci));
-               TAttFill::Modify();
-               if (Ci==theColor0) {
-                  Zi    = (((Ci+1)*(zmax-zmin))/(ncolors-1))+zmin;
-                  xp[0] = X0;
-                  yp[0] = Y0;
-                  Rl    = (Zi-Z0)/(Z2-Z0);
-                  xp[1] = Rl*(X2-X0)+X0;
-                  yp[1] = Rl*(Y2-Y0)+Y0;
-                  if (Zi>=Z1 || Z0==Z1) {
-                     Rs    = (Zi-Z1)/(Z2-Z1);
-                     xp[2] = Rs*(X2-X1)+X1;
-                     yp[2] = Rs*(Y2-Y1)+Y1;
-                     xp[3] = X1;
-                     yp[3] = Y1;
-                     npf   = 4;
-                   } else {
-                     Rs    = (Zi-Z0)/(Z1-Z0);
-                     xp[2] = Rs*(X1-X0)+X0;
-                     yp[2] = Rs*(Y1-Y0)+Y0;
-                     npf   = 3;
-                  }
-               } else if (Ci==theColor2) {
-                  xp[0] = xp[1];
-                  yp[0] = yp[1];
-                  xp[1] = X2;
-                  yp[1] = Y2;
-                  if (Zi<Z1 || Z2==Z1) {
-                     xp[3] = xp[2];
-                     yp[3] = yp[2];
-                     xp[2] = X1;
-                     yp[2] = Y1;
-                     npf   = 4;
-                  } else {
-                     npf   = 3;
-                  }
-               } else {
-                  Zi    = (((Ci+1)*(zmax-zmin))/(ncolors-1))+zmin;
-                  xp[0] = xp[1];
-                  yp[0] = yp[1];
-                  Rl    = (Zi-Z0)/(Z2-Z0);
-                  xp[1] = Rl*(X2-X0)+X0;
-                  yp[1] = Rl*(Y2-Y0)+Y0;
-                  if ( Zi>=Z1 && Zip<=Z1) {
-                     xp[3] = X1;
-                     yp[3] = Y1;
-                     xp[4] = xp[2];
-                     yp[4] = yp[2];
-                     npf   = 5;
-                  } else {
-                     xp[3] = xp[2];
-                     yp[3] = yp[2];
-                     npf   = 4;
-                  }
-                  if (Zi<Z1) {
-                     Rs    = (Zi-Z0)/(Z1-Z0);
-                     xp[2] = Rs*(X1-X0)+X0;
-                     yp[2] = Rs*(Y1-Y0)+Y0;
-                  } else {
-                     Rs    = (Zi-Z1)/(Z2-Z1);
-                     xp[2] = Rs*(X2-X1)+X1;
-                     yp[2] = Rs*(Y2-Y1)+Y1;
-                  }
-               }
-               Zip = Zi;
-               // Paint a stripe
-               gPad->PaintFillArea(npf,xp,yp);
-            }
+            xl[1]=R10*(X1-X0)+X0;
+            yl[1]=R10*(Y1-Y0)+Y0;
          }
-         SetFillColor(FC);
-         TAttFill::Modify();
-         break;
-
-      case 1:
-         // Paint the grid levels
-         SetLineStyle(3);
-         TAttLine::Modify();
-         for(i=0; i<fNbLevels; i++){
-            Zl=fGridLevels[i];
-            if(Zl >= Z0 && Zl <=Z2) {
-               R21=(Zl-Z1)/(Z2-Z1);
-               R20=(Zl-Z0)/(Z2-Z0);
-               R10=(Zl-Z0)/(Z1-Z0);
-               xl[0]=R20*(X2-X0)+X0;
-               yl[0]=R20*(Y2-Y0)+Y0;
-               if(Zl >= Z1 && Zl <=Z2) {
-                  xl[1]=R21*(X2-X1)+X1;
-                  yl[1]=R21*(Y2-Y1)+Y1;
-               } else {
-                  xl[1]=R10*(X1-X0)+X0;
-                  yl[1]=R10*(Y1-Y0)+Y0;
-               }
-               gPad->PaintPolyLine(2,xl,yl);
-            }
-         }
-         SetLineStyle(1);
-         TAttLine::Modify();
-         break;
-
-      default:
-         break;
+         gPad->PaintPolyLine(2,xl,yl);
+      }
    }
+///Int_t ncolors  = gStyle->GetNumberOfColors();
+///color = Int_t(0.01+(z-zmin)*scale);
+   SetLineStyle(1);
+   TAttLine::Modify();
 }
-
-
-//______________________________________________________________________________
-void TGraph2D::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
-{
-   // Paints a circle at each vertex. Each circle background is white. 
-
-   SetMarkerSize(GetMarkerSize());
-   Int_t MC = GetMarkerColor();
-
-   for (Int_t i=0; i<n; i++) {
-      SetMarkerStyle(20);
-      SetMarkerColor(0);
-      TAttMarker::Modify();
-      gPad->PaintPolyMarker(1,&x[i],&y[i]);
-      SetMarkerStyle(24);
-      SetMarkerColor(MC);
-      TAttMarker::Modify();
-      gPad->PaintPolyMarker(1,&x[i],&y[i]);
-   }
-}
-
 
 //______________________________________________________________________________
 void TGraph2D::PaintTriangles(Option_t *option)
@@ -2065,8 +1887,6 @@ void TGraph2D::PaintTriangles(Option_t *option)
 
    TString opt = option;
    Bool_t triangles = opt.Contains("tri"); 
-   Bool_t tri1      = opt.Contains("tri1"); 
-   Bool_t tri2      = opt.Contains("tri2"); 
    Bool_t markers   = opt.Contains("p");
    Bool_t markers0  = opt.Contains("p0");
    Bool_t wire      = opt.Contains("w");
@@ -2098,23 +1918,20 @@ void TGraph2D::PaintTriangles(Option_t *option)
       Error("PaintTriangles", "No TView in current pad");
       return;
    }
-
-   if (!tri1 && !tri2 && !wire) DefineGridLevels();
-
+   DefineGridLevels();
    // Compute minimums and maximums
    TAxis *xaxis = fHistogram->GetXaxis();
    Int_t first = xaxis->GetFirst();
    Double_t xmin = xaxis->GetBinLowEdge(first);
    if (logx && xmin <= 0) xmin = xaxis->GetBinUpEdge(xaxis->FindFixBin(0.01*xaxis->GetBinWidth(first)));
-   Double_t xmax = xaxis->GetBinUpEdge(xaxis->GetLast());
    TAxis *yaxis = fHistogram->GetYaxis();
    first = yaxis->GetFirst();
    Double_t ymin = yaxis->GetBinLowEdge(first);
    if (logy && ymin <= 0) ymin = yaxis->GetBinUpEdge(yaxis->FindFixBin(0.01*yaxis->GetBinWidth(first)));
-   Double_t ymax = yaxis->GetBinUpEdge(yaxis->GetLast());
    Double_t zmax = fHistogram->GetMaximum();
    Double_t zmin = fHistogram->GetMinimum();
    if (logz && zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*fHistogram->GetMaximum());
+
 
    // For each triangle, compute the distance between the triangle centre
    // and the back planes. Then these distances are sorted in order to draw
@@ -2153,14 +1970,9 @@ void TGraph2D::PaintTriangles(Option_t *option)
    
    // Draw markers only
    if (markers && !triangles) {
-
       Double_t *xm = new Double_t[fNpoints]; 
       Double_t *ym = new Double_t[fNpoints];
-      Int_t    npd = 0;
       for (IT=0; IT<fNpoints; IT++) {
-         if(fX[IT] < xmin || fX[IT] > xmax) continue;
-         if(fY[IT] < ymin || fY[IT] > ymax) continue;
-         npd++;
          temp1[0] = fX[IT];
          temp1[1] = fY[IT];
          temp1[2] = fZ[IT];
@@ -2176,13 +1988,22 @@ void TGraph2D::PaintTriangles(Option_t *option)
          ym[IT] = temp2[1];
       }
       if (markers0) {
-         PaintPolyMarker0(npd,xm,ym);
+         SetMarkerStyle(20);
+         SetMarkerSize(GetMarkerSize());
+         Int_t MC = GetMarkerColor();
+         SetMarkerColor(0);
+         TAttMarker::Modify();
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
+         SetMarkerStyle(24);
+         SetMarkerColor(MC);
+         TAttMarker::Modify();
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
       } else {
          SetMarkerStyle(GetMarkerStyle());
          SetMarkerSize(GetMarkerSize());
          SetMarkerColor(GetMarkerColor());
          TAttMarker::Modify();
-         gPad->PaintPolyMarker(npd,xm,ym);
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
       }
       delete [] xm;
       delete [] ym;
@@ -2190,8 +2011,7 @@ void TGraph2D::PaintTriangles(Option_t *option)
    // Draw the triangles and markers if requested
    } else if (triangles) {
       SetFillColor(GetFillColor());
-      Int_t FS = GetFillStyle();
-      SetFillStyle(1001);
+      SetFillStyle(GetFillStyle());
       TAttFill::Modify();
       SetLineColor(GetLineColor());
       TAttLine::Modify();
@@ -2201,8 +2021,6 @@ void TGraph2D::PaintTriangles(Option_t *option)
          T[1] = fNTried[fOrder[IT]];
          T[2] = fMTried[fOrder[IT]];
          for (Int_t t=0; t<3; t++) {
-            if(fX[T[t]-1] < xmin || fX[T[t]-1] > xmax) goto endloop;
-            if(fY[T[t]-1] < ymin || fY[T[t]-1] > ymax) goto endloop;
             temp1[0] = fX[T[t]-1];
             temp1[1] = fY[T[t]-1];
             temp1[2] = fZ[T[t]-1];
@@ -2219,15 +2037,23 @@ void TGraph2D::PaintTriangles(Option_t *option)
          }
          x[3] = x[0];
          y[3] = y[0];
-         if (tri1 || tri2) PaintLevels(T,x,y,zmin,zmax,0);
-         if (!tri1 && !tri2 && !wire) {
+         if (!wire) {
             gPad->PaintFillArea(3,x,y);
-            PaintLevels(T,x,y,zmin,zmax,1);
+            PaintOneTriangle(T,x,y);
          }
-         if (!tri2) gPad->PaintPolyLine(4,x,y);
+         gPad->PaintPolyLine(4,x,y);
          if (markers) {
             if (markers0) {
-               PaintPolyMarker0(3,x,y);
+               SetMarkerStyle(20);
+               SetMarkerSize(GetMarkerSize());
+               Int_t MC = GetMarkerColor();
+               SetMarkerColor(0);
+               TAttMarker::Modify();
+               gPad->PaintPolyMarker(3,x,y);
+               SetMarkerStyle(24);
+               SetMarkerColor(MC);
+               TAttMarker::Modify();
+               gPad->PaintPolyMarker(3,x,y);
             } else {
                SetMarkerStyle(GetMarkerStyle());
                SetMarkerSize(GetMarkerSize());
@@ -2236,19 +2062,14 @@ void TGraph2D::PaintTriangles(Option_t *option)
                gPad->PaintPolyMarker(3,x,y);
             }
          }
-endloop:
-         continue;
       }
-      SetFillStyle(FS);
       SetLineStyle(LS);
       TAttLine::Modify();
-      TAttFill::Modify();
       delete [] fOrder; fOrder = 0;
       delete [] fDist; fDist = 0;
    }
 
    if (!same && !frontbox) fHistogram->Paint("fb");
-   if (fGridLevels) {delete [] fGridLevels; fGridLevels = 0;}
 }
 
 //______________________________________________________________________________

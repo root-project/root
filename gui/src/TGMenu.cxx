@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.25 2003/12/12 18:21:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.19 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -274,13 +274,13 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
 
    Int_t        dummy;
    Window_t     wtarget;
-   TGMenuTitle *target=0;
+   TGMenuTitle *target;
 
    fStick = kFALSE; // use some threshold!
 
    gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
                                    dummy, dummy, wtarget);
-   if (wtarget) target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
+   target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
    if (target != 0 && target != fCurrent) {
       // deactivate all others
@@ -436,7 +436,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fHifontStruct  = GetHilightFontStruct();
    fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
 
-   // We need to change the default context to actually use the
+   // We need to change the default context to actually use the 
    // Menu Fonts.  [Are we actually changing the global settings?]
    GCValues_t    gcval;
    gcval.fMask = kGCFont;
@@ -1242,12 +1242,10 @@ void TGPopupMenu::RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast)
 
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id)
-         ptr->fStatus |= kMenuRadioMask | kMenuRadioEntryMask;
+         ptr->fStatus |= kMenuRadioMask;
       else
-         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast) {
+         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast)
             ptr->fStatus &= ~kMenuRadioMask;
-            ptr->fStatus |=  kMenuRadioEntryMask;
-         }
 }
 
 //______________________________________________________________________________
@@ -1510,10 +1508,6 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
 
-   Bool_t hasradio = kFALSE;
-   Int_t r_first, r_last, r_active;
-   r_active = r_first = r_last = -1;
-
    TGMenuEntry *mentry;
    TIter next(GetListOfEntries());
 
@@ -1538,19 +1532,26 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-
+            
+#ifdef R__WIN32
+            if (strchr(outext, '\\')) {
+               TString name = TString(outext);
+               name.ReplaceAll('\\','/');
+               text = name.Data();
+			   out << "   " << GetName() << "->AddEntry(" << quote
+			       << text << quote << "," << mentry->GetEntryId();
+            }
+#endif
             out << "   " << GetName() << "->AddEntry(" << quote
-                << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
-                << quote << "," << mentry->GetEntryId();
+  			    << outext << quote << "," << mentry->GetEntryId();
+
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
             if (mentry->fPic) {
                out << ",gClient->GetPicture(" << quote
-                   << gSystem->ExpandPathName(gSystem->UnixPathName(mentry->fPic->GetName()))
-                   << quote << ")";
+                   << mentry->fPic->GetName() << quote << ")";
             }
-            out << ");" << endl;
             delete [] outext;
             break;
          case kMenuPopup:
@@ -1571,11 +1572,19 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-
+#ifdef R__WIN32
+            if (strchr(outext, '\\')) {
+               TString name = TString(outext);
+               name.ReplaceAll('\\','/');
+               text = name.Data();
+			   out << "   " << GetName() << "->AddPopup(" << quote
+			       << text << quote << "," << mentry->fPopup->GetName();
+            }
+#endif			
             out << "   " << GetName() << "->AddPopup(" << quote
-                << outext << quote << "," << mentry->fPopup->GetName()
-                << ");" << endl;
-            delete [] outext;
+		    	<< outext << quote << "," << mentry->fPopup->GetName();
+
+			delete [] outext;
             break;
          case kMenuLabel:
             out << "   " << GetName() << "->AddLabel(" << quote
@@ -1585,12 +1594,12 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                    << mentry->fPic->GetName()
                    << quote << ")";
             }
-            out << ");" << endl;
             break;
          case kMenuSeparator:
-            out << "   " << GetName() << "->AddSeparator();" << endl;
+            out << "   " << GetName() << "->AddSeparator(";
             break;
       }
+      out << ");" << endl;
 
       if (!(mentry->GetStatus() & kMenuEnableMask)) {
           out << "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
@@ -1608,24 +1617,11 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
           out << "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
               << ");" << endl;
       }
-      if (mentry->GetStatus() & kMenuRadioEntryMask) {
-         switch (hasradio) {
-            case kFALSE:
-               r_first = mentry->GetEntryId();
-               hasradio = kTRUE;
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-               break;
-            case kTRUE:
-               r_last = mentry->GetEntryId();
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-            break;
-         }
-      } else if (hasradio) {
-         out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
-             << "," << r_last << ");" << endl;
-         hasradio = kFALSE;
-         r_active = r_first = r_last = -1;
-      }
+      if (mentry->GetStatus() & kMenuRadioMask) {
+     // Need to specify IDfirst IDLast of
+			  // RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast)
+			  // IsEntryRChecked(Int_t id)
+      }	      
    }
 }
 

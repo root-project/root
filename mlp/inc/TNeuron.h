@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.4 2003/10/27 16:51:54 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.3 2003/09/05 10:40:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TNeuron
@@ -44,26 +44,26 @@ class TNeuron : public TObject {
 
    TNeuron(NeuronType type = kSigmoid);
    virtual ~ TNeuron() {} 
-   inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
-   inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }
+   inline TSynapse* GetPre(Int_t n) { return (TSynapse*) fpre.At(n); }
+   inline TSynapse* GetPost(Int_t n) { return (TSynapse*) fpost.At(n); }
    TTreeFormula* UseBranch(TTree*, const char*);
-   Double_t GetValue() const; 
-   Double_t GetDerivative() const; 
-   Double_t GetError() const; 
-   Double_t GetDeDw() const;
-   Double_t GetBranch() const;
+   Double_t GetValue();
+   Double_t GetDerivative();
+   Double_t GetError();
+   Double_t GetDeDw();
+   Double_t GetBranch();
    void SetWeight(Double_t w); 
-   inline Double_t GetWeight() const { return fWeight; }
+   inline Double_t GetWeight() { return fWeight; }
    void SetNormalisation(Double_t mean, Double_t RMS);
-   inline const Double_t* GetNormalisation() const { return fNorm; }
-   void SetNewEvent() const;
+   inline Double_t* GetNormalisation() { return fNorm; }
+   void SetNewEvent();
    void SetDEDw(Double_t in); 
-   inline Double_t GetDEDw() const { return fDEDw; }
+   inline Double_t GetDEDw() { return fDEDw; }
    void ForceExternalValue(Double_t value); 
    
  protected:
-   Double_t Sigmoid(Double_t x) const;
-   Double_t DSigmoid(Double_t x) const;
+   Double_t Sigmoid(Double_t x);
+   Double_t DSigmoid(Double_t x);
    void AddPre(TSynapse*);
    void AddPost(TSynapse*);
    
@@ -74,7 +74,6 @@ class TNeuron : public TObject {
    Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
    NeuronType fType;      // neuron type
    //buffers
-   //should be mutable when supported by all compilers
    TTreeFormula* fFormula;//! formula to be used for inputs and outputs
    Bool_t fNewValue;      //! do we need to compute fValue again ?
    Double_t fValue;       //! buffer containing the last neuron output

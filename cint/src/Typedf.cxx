@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  ************************************************************************
  * Author                  Masaharu Goto 
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -37,9 +37,7 @@ void G__TypedefInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 void G__TypedefInfo::Init(const char *typenamein)
 {
-#ifndef G__OLDIMPLEMENTATION1944
   char store_var_type = G__var_type;
-#endif
   typenum = G__defined_typename(typenamein);
   if(-1!=typenum&&typenum<G__newtype.alltype) {
     tagnum = G__newtype.tagnum[typenum];
@@ -53,9 +51,7 @@ void G__TypedefInfo::Init(const char *typenamein)
     typenum= -1;
     isconst= 0;
   }
-#ifndef G__OLDIMPLEMENTATION1944
   G__var_type = store_var_type;
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__TypedefInfo::Init(int typenumin)

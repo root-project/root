@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.37 2003/07/25 17:22:38 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.36 2003/07/24 16:00:00 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1102,7 +1102,6 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch(parm1) {
                   case 1:
                   case 2:
-                     fFillHistos = kFALSE;
                      printf("\nTerminating dialog: %s pressed\n",
                             (parm1 == 1) ? "OK" : "Cancel");
                      CloseWindow();

@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  *   -I$(CINTSYSDIR) -I$(CINTSYSDIR)/src must be given at compile time
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,

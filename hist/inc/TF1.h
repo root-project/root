@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.41 2003/11/07 16:27:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.40 2003/11/07 11:15:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -69,10 +69,9 @@ protected:
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
-   static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
-         
+      
 public:
     // TF1 status bits
     enum {
@@ -161,7 +160,6 @@ public:
    virtual void     Update();
 
    static  TF1     *GetCurrent();
-   static  void     AbsValue(Bool_t reject=kTRUE);
    static  void     RejectPoint(Bool_t reject=kTRUE);
    static  Bool_t   RejectedPoint();
    static  void     SetCurrent(TF1 *f1);

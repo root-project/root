@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.29 2003/06/17 09:13:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.28 2003/02/18 15:37:36 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -305,7 +305,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    Double_t *points, *pointsm;
    Double_t local[3];
    Double_t point[3];
-   Double_t safety = TGeoShape::Big();
+   Double_t safety = 1e30;  //TGeoShape::kBig
    Int_t id, ip;
    // first, test if any of container vertices is inside some daughter
    // first, test if daughters extrude their container

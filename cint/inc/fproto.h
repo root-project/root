@@ -7,7 +7,7 @@
  * Description:
  *  K&R style function prototype
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -246,9 +246,6 @@ void G__floatexception G__P((int signame));
 void G__segmentviolation G__P((int signame));
 void G__outofmemory G__P((int signame));
 void G__buserror G__P((int signame));
-#ifndef G__OLDIMPLEMENTATION1946
-void G__errorexit G__P((int signame));
-#endif
 
 void G__killproc G__P((int signame));
 void G__timeout G__P((int signame));

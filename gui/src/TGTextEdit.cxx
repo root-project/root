@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.23 2003/12/12 18:57:22 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.18 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1615,18 +1615,33 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
    out << "   TGTextEdit *";
    out << GetName() << " = new TGTextEdit(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
+       //<< "," << GetText()
+       //<< "," << WidgetId()
        << ");"<< endl;
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
-   char fn[kMAXPATHLEN];
-   
+   char fn[kMAXPATHLEN];    // file name
+
    if (fromfile) {
-      const char *filename = txt->GetFileName();
-      sprintf(fn, gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
+      int len = 0;
+      const char *filename, *rootname, *pos;
+      rootname = gSystem->WorkingDirectory();
+#ifdef R__WIN32
+      TString dirname = TString(rootname);
+      dirname.ReplaceAll('\\','/');
+      rootname = dirname.Data();
+#endif
+      len = strlen(rootname);
+      filename = txt->GetFileName();
+      pos = strstr(filename, rootname);
+      if (pos) {
+         sprintf(fn,"$ROOTSYS%s",pos+len);  // if absolute path
+      }
    } else {
-      sprintf(fn,"Txt%s",GetName()+5);
+      sprintf(fn,"EditorText");
       txt->Save(fn);
    }
+
    out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
 }

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.74 2003/12/10 18:54:59 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.70 2003/11/10 14:05:01 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -595,13 +595,13 @@ again:
 //______________________________________________________________________________
 int RootdCheckTab(int mode)
 {
-   // Checks gRootdTab file to see if file can be opened. If mode = 1 then
+   // Checks gRootdTab file to see if file can be opened. If mode=1 then
    // check if file can safely be opened in write mode, i.e. see if file
-   // is not already opened in either read or write mode. If mode = 0 then
+   // is not already opened in either read or write mode. If mode=0 then
    // check if file can safely be opened in read mode, i.e. see if file
-   // is not already opened in write mode. If mode = -1 check write mode
-   // like 1 but do not update rootdtab file. Returns 1 if file can be
-   // opened safely, otherwise 0.
+   // is not already opened in write mode. Returns 1 if file can be
+   // opened safely, otherwise 0. If mode is -1 check write mode like 1
+   // but do not update rootdtab file.
    //
    // The format of the file is:
    // filename inode mode username pid
@@ -733,7 +733,7 @@ again:
 }
 
 //______________________________________________________________________________
-void RootdCloseTab(int force = 0)
+void RootdCloseTab(int force=0)
 {
    // Removes from the gRootdTab file the reference to gFile for the
    // current rootd. If force = 1, then remove all references for gFile
@@ -962,37 +962,34 @@ void RootdLogin()
    // Authentication was successful, set user environment.
 
    struct passwd *pw = getpwnam(gUser);
-   if (gDebug > 2)
-      ErrorInfo("RootdLogin: login dir: %s (uid: %d)", pw->pw_dir, getuid());
+   if (gDebug > 2) ErrorInfo("RootdLogin: login dir: %s (uid: %d)",pw->pw_dir, getuid());
 
    if (chdir(pw->pw_dir) == -1) {
       ErrorInfo("RootdLogin: can't change directory to %s",pw->pw_dir);
       return;
    }
 
-   if (gDebug > 2)
-      ErrorInfo("RootdLogin: gid: %d, uid: %d", pw->pw_gid, pw->pw_uid);
-
+   if (gDebug > 2) ErrorInfo("RootdLogin: gid: %d, uid: %d",pw->pw_gid,pw->pw_uid);
    if (getuid() == 0) {
 
-      if (gAnon && chroot(pw->pw_dir) == -1) {
+     if (gAnon && chroot(pw->pw_dir) == -1) {
          ErrorInfo("RootdLogin: can't chroot to %s", pw->pw_dir);
          return;
-      }
+     }
 
-      // set access control list from /etc/initgroup
-      initgroups(gUser, pw->pw_gid);
+     // set access control list from /etc/initgroup
+     initgroups(gUser, pw->pw_gid);
 
-      // set gid
-      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
-         ErrorInfo("RootdLogin: can't setgid for user %s", gUser);
-         return;
-      }
-      // set uid
-      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
-         ErrorInfo("RootdLogin: can't setuid for user %s", gUser);
-         return;
-      }
+     // set gid
+     if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
+        ErrorInfo("RootdLogin: can't setgid for user %s", gUser);
+        return;
+     }
+     // set uid
+     if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
+        ErrorInfo("RootdLogin: can't setuid for user %s", gUser);
+        return;
+     }
    }
 
    umask(022);
@@ -1176,17 +1173,14 @@ void RootdOpen(const char *msg)
    if (forceOpen)
       RootdCloseTab(1);
 
-   int trunc = 0;
    if (recreate) {
       if (!RootdCheckTab(-1))
          Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
       if (!access(gFile, F_OK))
-         trunc = O_TRUNC;
-      else {
-         recreate = 0;
-         create   = 1;
-         strcpy(gOption, "create");
-      }
+         unlink(gFile);
+      recreate = 0;
+      create   = 1;
+      strcpy(gOption, "create");
    }
 
    if (create && !access(gFile, F_OK))
@@ -1196,7 +1190,6 @@ void RootdOpen(const char *msg)
       if (access(gFile, F_OK)) {
          update = 0;
          create = 1;
-         strcpy(gOption, "create");
       }
       if (update && access(gFile, W_OK))
          Error(ErrFatal, kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
@@ -1209,13 +1202,13 @@ void RootdOpen(const char *msg)
          Error(ErrFatal, kErrNoAccess, "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
    }
 
-   if (create || recreate || update) {
-      if (create || recreate) {
+   if (create || update) {
+      if (create) {
          // make sure file exists so RootdCheckTab works correctly
 #ifndef WIN32
-         gFd = open(gFile, O_RDWR | O_CREAT | trunc, 0644);
+         gFd = open(gFile, O_RDWR | O_CREAT, 0644);
 #else
-         gFd = open(gFile, O_RDWR | O_CREAT | O_BINARY | trunc, S_IREAD | S_IWRITE);
+         gFd = open(gFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
          close(gFd);
          gFd = -1;
@@ -1257,19 +1250,14 @@ void RootdOpen(const char *msg)
 
    NetSend(gWritable, kROOTD_OPEN);
 
-   struct stat sbuf;
-   fstat(gFd, &sbuf);
-   unsigned long ino = (unsigned long) sbuf.st_ino;
-
    if (gDebug > 0)
       ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
    else {
       if (gAnon)
-         ErrorInfo("RootdOpen: file %s (inode=%lu,%s) opened by %s/%s",
-                   gFile, ino, gOption, gUser, gPasswd);
+         ErrorInfo("RootdOpen: file %s (%s) opened by %s/%s", gFile, gOption,
+                   gUser, gPasswd);
       else
-         ErrorInfo("RootdOpen: file %s (inode=%lu,%s) opened by %s",
-                   gFile, ino, gOption, gUser);
+         ErrorInfo("RootdOpen: file %s (%s) opened by %s", gFile, gOption, gUser);
    }
 }
 
@@ -1354,6 +1342,10 @@ void RootdGet(const char *msg)
    NetSend(0, kROOTD_GET);
 
    NetSendRaw(buf, len);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdGet deb: read %d bytes from file \n ----> buf: %s",
+                len, buf);
 
    delete [] buf;
 
@@ -2388,8 +2380,7 @@ int main(int argc, char **argv)
             strcpy(gConfDir, getenv("ROOTSYS"));
             sprintf(gExecDir, "%s/bin", gConfDir);
             sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
-            if (gDebug > 0)
-               ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+            if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
          } else {
             if (!gInetdFlag)
                fprintf(stderr, "rootd: no config directory specified\n");

@@ -87,8 +87,7 @@ protected:
    void     FindHull();
    Bool_t   InHull(Int_t E, Int_t X) const;
    Double_t InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const;
-   void     PaintLevels(Int_t *T, Double_t *x, Double_t *y, Double_t zmin, Double_t zmax, Int_t grid);
-   void     PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
+   void     PaintOneTriangle(Int_t *T,Double_t *x, Double_t *y);
    void     PaintTriangles(Option_t *option="");
    void     Reset(Int_t level=0);
 
@@ -112,7 +111,6 @@ public:
    TGraph2D operator=(const TGraph2D &);
 
    Int_t            DistancetoPrimitive(Int_t px, Int_t py);
-    virtual void    Draw(Option_t *option="");
    void             ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject *FindObject(const char *name) const;
    virtual TObject *FindObject(const TObject *obj) const;

@@ -29,7 +29,6 @@ linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
 linuxx8664gcc        for AMD Opteron (64 bit mode) Linux gcc 3.x and glibc
 lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc
-macosxxlc            for MacOS X with IBM xl compilers
 mklinux              for MkLinux gcc and glibc
 sgicc                for SGI IRIX 6.x CC
 sgicc64              for SGI IRIX 6.x CC 64 bits

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.41 2003/11/28 18:01:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.40 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -433,7 +433,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
       fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
                              tcpwindowsize);
       if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open %d parallel connections to rootd on "
+         Error("TNetFile", "can't open %d parallel connections to rootd on "
                "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
          goto zombie;
       }
@@ -443,7 +443,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    } else {
       fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
       if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open connection to rootd on host %s at port %d",
+         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
                fUrl.GetHost(), fUrl.GetPort());
          goto zombie;
       }
@@ -468,18 +468,18 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Check if rootd supports new options
    if (forceRead && fProtocol < 5) {
-      Warning("ConnectServer", "rootd does not support \"+read\" option");
+      Warning("TNetFile", "rootd does not support \"+read\" option");
       forceRead = kFALSE;
    }
 
    // Authenticate remotely
-   if (gDebug > 2) Info("ConnectServer", "user from Url: %s", fUrl.GetUser());
+   if (gDebug > 2) Info("Authenticate", "User from Url: %s", fUrl.GetUser());
    auth = new TAuthenticate(fSocket, fUrl.GetHost(),
                 Form("%s:%d",fUrl.GetProtocol(),fProtocol), fUrl.GetUser());
 
    // Attempt authentication
    if (!auth->Authenticate()) {
-      Error("ConnectServer", "authentication failed for %s@%s",
+      Error("TNetFile", "authentication failed for %s@%s",
             auth->GetUser(), fUrl.GetHost());
       delete auth;
       goto zombie;

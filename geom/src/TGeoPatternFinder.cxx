@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.8 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.7 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -497,8 +497,8 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
-   fTxz = TMath::Tan(theta*TMath::DegToRad())*TMath::Cos(phi*TMath::DegToRad());
-   fTyz = TMath::Tan(theta*TMath::DegToRad())*TMath::Sin(phi*TMath::DegToRad());
+   fTxz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Cos(phi*TGeoShape::kDegRad);
+   fTyz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Sin(phi*TGeoShape::kDegRad);
    Double_t dz = ((TGeoArb8*)vol->GetShape())->GetDz();
    fStart = -dz;
    fEnd = dz;
@@ -513,8 +513,8 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
-   fTxz = TMath::Tan(theta*TMath::DegToRad())*TMath::Cos(phi*TMath::DegToRad());
-   fTyz = TMath::Tan(theta*TMath::DegToRad())*TMath::Sin(phi*TMath::DegToRad());
+   fTxz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Cos(phi*TGeoShape::kDegRad);
+   fTyz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Sin(phi*TGeoShape::kDegRad);
    Double_t dz = ((TGeoArb8*)vol->GetShape())->GetDz();
    fStart = -dz;
    fEnd = fStart + ndivisions*step;
@@ -529,8 +529,8 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
-   fTxz = TMath::Tan(theta*TMath::DegToRad())*TMath::Cos(phi*TMath::DegToRad());
-   fTyz = TMath::Tan(theta*TMath::DegToRad())*TMath::Sin(phi*TMath::DegToRad());
+   fTxz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Cos(phi*TGeoShape::kDegRad);
+   fTyz = TMath::Tan(theta*TGeoShape::kDegRad)*TMath::Sin(phi*TGeoShape::kDegRad);
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
@@ -674,8 +674,8 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fMatrix->RegisterYourself();
    fSinCos     = new Double_t[2*ndivisions];
    for (Int_t idiv = 0; idiv<ndivisions; idiv++) {
-      fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(start+fStep/2+idiv*fStep));
-      fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+fStep/2+idiv*fStep));
+      fSinCos[2*idiv] = TMath::Sin(TGeoShape::kDegRad*(start+fStep/2+idiv*fStep));
+      fSinCos[2*idiv+1] = TMath::Cos(TGeoShape::kDegRad*(start+fStep/2+idiv*fStep));
    }
 }
 //-----------------------------------------------------------------------------
@@ -691,8 +691,8 @@ void TGeoPatternCylPhi::cd(Int_t idiv)
    if (!fSinCos) {
       fSinCos     = new Double_t[2*fNdivisions];
       for (Int_t i = 0; i<fNdivisions; i++) {
-         fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+fStep/2+i*fStep));
-         fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+fStep/2+i*fStep));
+         fSinCos[2*i] = TMath::Sin(TGeoShape::kDegRad*(fStart+fStep/2+i*fStep));
+         fSinCos[2*i+1] = TMath::Cos(TGeoShape::kDegRad*(fStart+fStep/2+i*fStep));
       }
    }   
    
@@ -703,7 +703,7 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
 {
 // find the node containing the query point
    TGeoNode *node = 0;
-   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
+   Double_t phi = TMath::ATan2(point[1], point[0])*TGeoShape::kRadDeg;
    if (phi<0) phi += 360;
 //   Double_t dphi = fStep*fNdivisions;
    Double_t ddp = phi - fStart;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.58 2003/11/25 11:34:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.57 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1156,7 +1156,8 @@ void TProof::Print(Option_t *option) const
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
       if (IsValid())
-         ((TProof*)this)->SendPrint(option);
+         ((TProof*)this)->SendPrint();
+
    } else {
       ((TProof*)this)->AskStatus();
       if (IsParallel())
@@ -1634,13 +1635,13 @@ Int_t TProof::SendObject(const TObject *obj, ESlaves list)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendPrint(Option_t *option)
+Int_t TProof::SendPrint()
 {
    // Send print command to master server.
 
    if (!IsValid()) return 0;
 
-   Broadcast(option, kPROOF_PRINT, kActive);
+   Broadcast(kPROOF_PRINT, kActive);
    return Collect(kActive);
 }
 

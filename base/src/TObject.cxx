@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.56 2003/11/24 09:02:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.55 2003/10/02 17:20:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -81,11 +81,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    //    add   is the data member address
 
    const Int_t kvalue = 30;
-#ifdef R__B64
-   const Int_t ktitle = 50;
-#else
    const Int_t ktitle = 42;
-#endif
    const Int_t kline  = 1024;
    Int_t cdate = 0;
    Int_t ctime = 0;
@@ -887,12 +883,12 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    }
    gFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
-
+   
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
    }
-
+     
    return nbytes;
 }
 

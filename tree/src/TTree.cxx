@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.169 2003/12/16 09:01:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.167 2003/11/12 11:09:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3428,11 +3428,9 @@ void TTree::ResetBranchAddresses()
 //______________________________________________________________________________
 Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
-   // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
-   // then print only first 8 columns. If varexp = "*" print all columns.
-   // Otherwise a columns selection can be made using "var1:var2:var3".
-   // see TTreePlayer::Scan for more information
-   
+//*-*-*-*-*-*-*-*-*Loop on Tree & print entries following selection*-*-*-*-*-*
+//*-*              ===============================================
+
    GetPlayer();
    if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
    else         return -1;
@@ -3956,7 +3954,7 @@ Int_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *s
 //   settings.  Otherwise the fit will effectively just maximize the
 //   area.
 //
-//   It is mandatory to have a normalization variable
+//   In practice it is convenient to have a normalization variable
 //   which is fixed for the fit.  e.g.
 //
 //     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);

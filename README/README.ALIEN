@@ -2,6 +2,8 @@
 How to use the TGrid/TAlien class V1.0 - Andreas.Peters@cern.ch
 =========================================================================
 
+- add to your LD_LIBRARY_PATH  '<alieninstalldir>/lib'
+
 To connect to Alien you have to connect to a running API service or you
 let the system start an API server on your local machine, if you have a
 full AliEn client installation.
@@ -11,13 +13,13 @@ Creating <gGrid> instance:
     // if there is already one running, it is reused!
 
     TGrid::Connect("alien://localhost");
-    or
-    TGrid::Connect("alien://");
+or  TGrid::Connect("alien://");
+
 
 2.  // connecting to an already running API server
     TGrid::Connect("alien://<host>:<port>/#?direct");
 
-3.  // asking the factory service to startup an API on a service machine
+3.  // asking the factory service to startup an API on a service machine 
     // (currently not working)
     TGrid::Connect("alien://<factoryhost>:<factoryport>");
 
@@ -30,20 +32,20 @@ Examples of gGrid usage:
 
    int handle = gGrid->OpenDir("<aliendir>");
    TGridResult *gr = gGrid->CreateGridResult(handle);
-   gr->Print();
+   gr->List();
    delete gr;
 
 2) Find all files under a directory:
 
    int handle = gGrid->Find("<aliendir>","*","");
    TGridResult *gr = gGrid->CreateGridResult(handle);
-   gr->Print();
+   gr->List();
    delete gr;
 
 3) Inserting Files in the catalogue
 
    if (!gGrid) {
-      TGrid::Connect("alien://aliens7.cern.ch:15000/?direct","");
+      TGrid::Connect("alien://aliens5.cern.ch:15000/?direct","");
    }
 
    TString dirname("/alice_mdc/user/a/alimdc/testdir");
@@ -73,3 +75,6 @@ Examples of gGrid usage:
       cout << "Error adding attribute to " << fname << endl;
    } // one can just continue the list of tags with more values ->
      // variable argument list
+
+
+

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.9 2003/11/28 12:09:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.8 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -155,8 +155,17 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote = '"';
 
-   int i = 0;
-   const char *picname;
+   char name[kMAXPATHLEN];
+   int i = 0, len = 0;
+   const char *picname, *rootname, *pos;
+
+   rootname = gSystem->Getenv("ROOTSYS");
+#ifdef R__WIN32
+   TString dirname = TString(rootname);
+   dirname.ReplaceAll('\\','/');
+   rootname = dirname.Data();
+#endif
+   len = strlen(rootname);
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -169,11 +178,23 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
          }
 
          TGPictureButton *pb = (TGPictureButton *)f->fFrame;
-         picname = pb->GetPicture()->GetName();
+         out << "   t.fPixmap = " << quote;
 
-         out << "   t.fPixmap = " << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(picname))
-             << quote << ";" << endl;
+         // next write the absolute path as $ROOTSYS/path
+         picname = pb->GetPicture()->GetName();
+#ifdef R__WIN32
+        TString pname = TString(picname);
+        pname.ReplaceAll('\\','/');
+        picname = pname.Data();
+#endif
+         pos = strstr(picname, rootname);
+         if (pos) {
+            sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path
+            out << name;
+         } else {
+            out << picname;                      // if no path
+         }
+         out << quote << ";" << endl;
          out << "   t.fTipText = " << quote
              << pb->GetToolTip()->GetText()->GetString() << quote << ";" << endl;
          if (pb->GetState() == kButtonDown) {
@@ -185,18 +206,6 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
          out << "   t.fButton = 0;" << endl;
          out << "   " << GetName() << "->AddButton(" << GetParent()->GetName()
              << ",&t," << f->fLayout->GetPadLeft() << ");" << endl;
-         if (pb->GetState() == kButtonDown) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDown);"  << endl;
-         }
-         if (pb->GetState() == kButtonDisabled) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDisabled);" << endl;
-         }
-         if (pb->GetState() == kButtonEngaged) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonEngaged);"  << endl;
-         }
          i++;
       } else {
          f->fFrame->SavePrimitive(out, option);

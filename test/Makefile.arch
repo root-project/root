@@ -444,18 +444,6 @@ DllSuf        = dylib
 SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress
 endif
 
-ifeq ($(ARCH),macosxxlc)
-# MacOS X with IBM xlC compiler
-CXX           = xlC
-CXXFLAGS      = 
-LD            = g++
-LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
-# The SOFLAGS will be used to create the .dylib; the .so will
-# be created separately
-DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress
-endif
-
 ifeq ($(ARCH),hiux)
 # Hitachi HIUX
 CXX           = g++

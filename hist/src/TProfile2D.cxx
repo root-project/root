@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.20 2003/10/29 10:57:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.19 2003/10/28 16:36:40 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -214,7 +214,7 @@ TProfile2D::TProfile2D(const TProfile2D &profile) : TH2D()
 
 
 //______________________________________________________________________________
-void TProfile2D::Add(TF1 *, Double_t , Option_t*)
+void TProfile2D::Add(TF1 *, Double_t )
 {
    // Performs the operation: this = this + c1*f1
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.32 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.30 2003/07/07 19:34:04 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -80,8 +80,8 @@ protected:
 
    //the next line should have a mutable in front. See GetNdata()
    Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
-   Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
-   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM];  //Pointer to a variable index.
+   Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
+   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
 
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
 
@@ -129,7 +129,6 @@ public:
    virtual void*       EvalObject(Int_t i=0);
    // EvalInstance should be const.  See comment on GetNdata()
    TFormLeafInfo      *GetLeafInfo(Int_t code) const;
-   TTreeFormulaManager*GetManager() const { return fManager; }
    TMethodCall        *GetMethodCall(Int_t code) const;
    virtual Int_t       GetMultiplicity() const {return fMultiplicity;}
    virtual TLeaf      *GetLeaf(Int_t n) const;
@@ -144,7 +143,6 @@ public:
    virtual Bool_t      IsString() const;
    virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual char       *PrintValue(Int_t mode=0) const;
-   virtual char       *PrintValue(Int_t mode, Int_t instance) const;
    virtual void        SetAxis(TAxis *axis=0);
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        UpdateFormulaLeaves();

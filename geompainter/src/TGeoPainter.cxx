@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.33 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.32 2003/11/14 08:35:55 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2261,7 +2261,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Int_t istep;
    Int_t base_color, color;
    Double_t light;
-   Double_t stemin=0, stemax=TGeoShape::Big();
+   Double_t stemin=0, stemax=1E30;
    TPoint *pxy = new TPoint[1];
    Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
    Int_t n10 = npoints/10;
@@ -2295,7 +2295,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          if (fClippingShape) {
             if (inclip) {
                stemin = fClippingShape->DistToOut(cop,dir,3);
-               stemax = TGeoShape::Big();
+               stemax = 1E30;
             } else {
                stemax = fClippingShape->DistToIn(cop,dir,3);
                stemin = 0;
@@ -2360,7 +2360,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   inclip = fClippingShape->Contains(point);
                   if (inclip) {
                      stemin = fClippingShape->DistToOut(point,dir,3);
-                     stemax = TGeoShape::Big();
+                     stemax = 1E30;
                      continue;
                   } else {
                      stemin = 0;
