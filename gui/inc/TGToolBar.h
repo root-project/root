@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.11 2004/09/15 17:37:29 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -57,6 +57,8 @@ public:
 
    virtual void ChangeIcon(ToolBarData_t *button, const char *new_icon);
    virtual void Cleanup();
+   virtual TGButton *GetButton(Int_t id) const;
+   virtual Int_t     GetId(TGButton *button) const;
 
    virtual void ButtonPressed();
    virtual void ButtonReleased();

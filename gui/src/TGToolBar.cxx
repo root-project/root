@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.11 2004/04/22 23:49:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.12 2004/09/15 17:37:29 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -115,6 +115,35 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    Connect(pbut, "Clicked()" , "TGToolBar", this, "ButtonClicked()");
 
    return pbut;
+}
+
+//______________________________________________________________________________
+TGButton *TGToolBar::GetButton(Int_t id) const
+{
+   // Finds and returns a pointer to the button with the specified
+   // identifier id. Returns null if the button was not found.
+
+   TIter next(fMapOfButtons);
+   register TGButton *item = 0;
+
+   while ((item = (TGButton*)next())) {
+      if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
+   }
+
+   return item;
+}
+
+//______________________________________________________________________________
+Int_t TGToolBar::GetId(TGButton *button) const
+{
+   // Finds and returns the id of the button.
+   // Returns -1 if the button is not a member of this group.
+
+   TPair *a = (TPair*) fMapOfButtons->FindObject(button);
+   if (a)
+      return (Int_t)Long_t(a->Value());
+   else
+      return -1;
 }
 
 //______________________________________________________________________________
