@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.9 2003/08/29 10:42:56 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.10 2004/03/17 17:34:01 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
