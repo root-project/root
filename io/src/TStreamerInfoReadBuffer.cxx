@@ -53,7 +53,7 @@
       Int_t *l = (Int_t*)(arr[index]+imethod);  \
       name **f = (name**)(arr[index]+ioffset);  \
       int j;                                    \
-      for(j=0;j<fLength[i];j++) {               \
+      if (isArray) for(j=0;j<fLength[i];j++) {  \
          delete [] f[j];                        \
          f[j] = 0; if (*l <=0) continue;        \
          f[j] = new name[*l];                   \
