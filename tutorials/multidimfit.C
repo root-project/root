@@ -8,6 +8,7 @@
 #include "TFile.h"
 #include "TRandom.h"
 #include "TMultiDimFit.h"
+#include "TVectorD.h"
 
 //____________________________________________________________________
 void makeData(Double_t* x, Double_t& d, Double_t& e) 
@@ -21,6 +22,78 @@ void makeData(Double_t* x, Double_t& d, Double_t& e)
   d = x[0] * TMath::Sqrt(x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
   
   e = gRandom->Gaus(upp[4],low[4]);
+}
+
+//____________________________________________________________________
+int CompareResults(TMultiDimFit *fit)
+{ 
+   //Compare results with reference run
+   
+   // the right coefficients
+  double GoodCoeffs[] = {
+  -2.57988,
+  43.2694,
+  13.2747,
+  13.4143,
+  13.3844,
+  13.4842,
+  13.3206,
+  13.3148,
+  4.4177,
+  -3.93429,
+  4.60247,
+  -4.07129,
+  -3.99255,
+  4.51781,
+  3.45324,
+  -4.15551,
+  4.75041,
+  4.28688,
+  -3.85046,
+  -4.0053,
+  4.3955,
+  3.59419};
+
+// Good Powers
+  int GoodPower[] = {
+  1,  1,  1,  1,
+  2,  1,  1,  1,
+  1,  1,  1,  2,
+  1,  1,  2,  1,
+  1,  2,  1,  1,
+  2,  2,  1,  1,
+  2,  1,  1,  2,
+  2,  1,  2,  1,
+  1,  1,  1,  3,
+  1,  2,  1,  2,
+  1,  1,  3,  1,
+  1,  2,  2,  1,
+  1,  1,  2,  2,
+  1,  3,  1,  1,
+  1,  2,  2,  2,
+  2,  2,  1,  2,
+  2,  1,  3,  1,
+  2,  1,  1,  3,
+  2,  1,  2,  2,
+  2,  2,  2,  1,
+  2,  3,  1,  1,
+  2,  2,  2,  2};
+
+  Int_t nc = fit->GetNCoefficients();
+  Int_t nv = fit->GetNVariables();
+  const Int_t *powers = fit->GetPowers();
+  const Int_t *pindex = fit->GetPowerIndex();
+  if (nc != 22) return 1;
+  const TVectorD *coeffs = fit->GetCoefficients();
+  int k = 0;
+  for (Int_t i=0;i<nc;i++) {
+     if (TMath::Abs((*coeffs)[i] - GoodCoeffs[i]) > 5e-5) return 2;
+     for (Int_t j=0;j<nv;j++) {
+        if (powers[pindex[i]*nv+j] != GoodPower[k]) return 3;
+        k++;
+     }
+  }
+  return 0;     
 }
 
 //____________________________________________________________________
@@ -131,10 +204,16 @@ Int_t multidimfit()
   output->Write();
   output->Close();
   delete output;
+  
+  // Compare results with reference run
+  Int_t compare = CompareResults(fit);
+  if (!compare) {
+     printf("\nmultidimfit ..............................................  OK\n");
+  } else {
+     printf("\nmultidimfit ..............................................  fails case %d\n",compare);
+  }
 
   // We're done 
   delete fit;
-  cout << "The END" << endl;
-
-  return 0;
+  return compare;
 }
