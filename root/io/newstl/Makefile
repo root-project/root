@@ -29,10 +29,10 @@ FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 $(FILEDIR):
-	@mkdir -p $(FILEDIR)
+	$(CMDECHO)mkdir -p $(FILEDIR)
 
 $(LIBDIR):
-	@mkdir -p $(LIBDIR)
+	$(CMDECHO)mkdir -p $(LIBDIR)
 
 directories: $(FILEDIR) $(LIBDIR)
 
@@ -87,8 +87,8 @@ $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.so/ > $@
 
 $(LIBDIR)%_C.$(DllSuf) : %.C 
-	$(CMDECHO) root.exe -q -l -b $(RULES_DIR)/build.C\(\"$<\"\)
-	@touch $@
+	$(CMDECHO) root.exe -q -l -b $(RULES_DIR)/build.C\(\"$<\"\) >& $*_C.build.log
+	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
 stlIoTest.log: directories $(TEST_DLL)

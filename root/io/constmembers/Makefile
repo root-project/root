@@ -7,8 +7,8 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-test:
-	@echo $(PWD) has a failing test FileInfoTest
+#test:
+#	$(CMDECHO)echo $(PWD) has a failing test FileInfoTest
 
 
 ifeq ($(FAIL),)
@@ -19,10 +19,10 @@ FileInfoTest: dict.o dictold.o
 endif
 
 dict.cxx: TFileInfo.h LinkDef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f dict.cxx -c TFileInfo.h LinkDef.h
+	$(CMDECHO)rootcint -f dict.cxx -c TFileInfo.h LinkDef.h
 
 dictold.cxx: old.h TFileInfo.h oldLinkDef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f dictold.cxx -c old.h TFileInfo.h oldLinkDef.h
+	$(CMDECHO)rootcint -f dictold.cxx -c old.h TFileInfo.h oldLinkDef.h
 
 
 

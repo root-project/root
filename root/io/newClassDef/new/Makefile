@@ -1,4 +1,4 @@
-TEST_TARGETS += new
+TEST_TARGETS += newTest
 CLEAN_TARGETS += local_clean
 
 #include $(ROOTSYS)/test/Makefile.arch
@@ -39,8 +39,10 @@ main: $(SHARED_LIBS)
 #	echo $(CXXFLAGS)
 #	echo $(SHARED_LIBS)
 
-new: main Run.C
-	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")"
+newTest: newTest.log
+	$(CMDECHO) diff -b newTest.log newTest.ref
+newTest.log : main Run.C
+	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" >& newTest.log
 #@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h
@@ -81,7 +83,7 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 local_clean:
 	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
 	$(CMDECHO)rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
-	$(CMDECHO)rm -rf *.exp .def
+	$(CMDECHO)rm -rf *.exp .def *.log
 
 clean: local_clean
 

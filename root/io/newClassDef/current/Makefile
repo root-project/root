@@ -1,4 +1,4 @@
-TEST_TARGETS += current
+TEST_TARGETS += currentTest
 CLEAN_TARGETS += local_clean
 
 #include $(ROOTSYS)/test/Makefile.arch
@@ -11,11 +11,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 local_all: main
 .PHONY: main
 
-
-
-
-
-
 PACKAGES = namespace template InheritMulti
 
 SHARED_LIBS = $(PACKAGES:%=%.$(DllSuf)) 
@@ -27,17 +22,20 @@ main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 #	echo $(CXXFLAGS)
 #	echo $(SHARED_LIBS)
 
-current: main Run.C
-	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")"
+current_test.log : main Run.C
+	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" >& current_test.log 
 #	$(CMDECHO)echo "All test succeeded in `pwd`"
 
+currentTest: current_test.log
+	$(CMDECHO) diff -b current_test.log current_test.ref
+	
 $(DICTS) : %dict.C : %.h %linkdef.h
 	$(CMDECHO)rootcint -f $@ -c $^
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
+		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" >& $*.build.log
 		   
 #ifeq ($(ARCH),aix)
 #		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
@@ -69,7 +67,7 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 local_clean:
 	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
 	$(CMDECHO)rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
-	$(CMDECHO)rm -rf *.exp .def
+	$(CMDECHO)rm -rf *.exp .def *.log
 
 clean: local_clean
 

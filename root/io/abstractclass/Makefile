@@ -51,41 +51,41 @@ all: depend rootcint lib
 rootcint: DataCint.cc DataCint.o
 
 DataCint.cc: LinkDef.h $(CINTLIST)
-	$(RM) DataCint.*
-	@echo "Generating DataCint dictionary ..." $(CXXSORUCE)
-	rootcint -f DataCint.cc -c -I. $(CINTLIST) LinkDef.h
+	$(CMDECHO)$(RM) DataCint.*
+#	$(CMDECHO)echo "Generating DataCint dictionary ..." $(CXXSORUCE)
+	$(CMDECHO)rootcint -f DataCint.cc -c -I. $(CINTLIST) LinkDef.h
 
 DataCint.o: DataCint.cc
-	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 DataBlockBase.o : DataBlockBase.cxx DataBlockBase.h
-	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 PureAbstractInterface.o : PureAbstractInterface.cxx PureAbstractInterface.h
-	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 DataBlock1.o : DataBlock1.cxx DataBlock1.h PureAbstractInterface.h
-	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 DataBlock2.o : DataBlock2.cxx DataBlock2.h PureAbstractInterface.h
-	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 
 lib: FORCE $(CXXSO)
 
 $(CXXSO): $(CXXOBJS)
-	$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt) $(CXXSO)
+	$(CMDECHO)$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt) $(CXXSO)
 
 depend: FORCE
-	@makedepend -f Makefile $(INCLUDES) $(CXXSOURCE)
+	$(CMDECHO)makedepend -f Makefile $(INCLUDES) $(CXXSOURCE)
 
 tar: FORCE
 	tar cvf badio.tar Makefile LinkDef.h $(CINTLIST) $(CXXSOURCES) *.C *.root
 	gzip badio.tar
 
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.o *~ core a.out $(CXXSO) DataCint.* Makefile.bak *.tar*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.o *~ core a.out $(CXXSO) DataCint.* Makefile.bak *.tar* *.log
 
-TEST_TARGETS += read_test
+TEST_TARGETS += depend rootcint lib read_test 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')

@@ -15,8 +15,8 @@ LOPT:=-g3
 #all: bigeventTest
 
 bigeventTest: ./Event ./libEvent.$(DllSuf)
-	./Event 10 1 1 1 > Event.write.log
-	./Event 10 1 1 20 > Event.read.log
+	$(CMDECHO)./Event 10 1 1 1 > Event.write.log
+	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
 
 Event : MainEvent.o Event.o EventDict.o
 	$(CMDECHO) $(CXX) $(OPT) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \

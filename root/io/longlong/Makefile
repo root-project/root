@@ -6,8 +6,10 @@ CLEAN_TARGETS += longlongdict.*
 #Set the list of target to make while testing
 TEST_TARGETS += longlongtest
 
-# adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 longlongdict.C: Class.h $(ROOTSYS)/bin/rootcint
 	$(CMDECHO)rootcint -f longlongdict.C -c Class.h linkdef.h

@@ -9,13 +9,13 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 multipleInheritTest: na_cxx.$(DllSuf) hout.root
-	$(CMDECHO) root.exe -q -l -b re.C > run.C 
+	$(CMDECHO) root.exe -q -l -b re.C >& run.C 
 
 na_cxx.$(DllSuf) : na.cxx na.h
 
 
 hout.root: wr.C na_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -q -l -b wr.C>& /dev/null
+	$(CMDECHO) root.exe -q -l -b wr.C >& /dev/null
 
 
 

@@ -16,6 +16,8 @@
 #endif
 #endif
 
+using namespace std;
+
 int reader() 
 {
   gROOT->LoadClass("Foo", "Foo.so");

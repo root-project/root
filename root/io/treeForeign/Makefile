@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 test.root: def.C def.h
-	$(CMDECHO) root.exe -b -l -q def.C+ > create.log
+	$(CMDECHO) root.exe -b -l -q def.C+ >& create.log
 
 testForeignDraw.log: Run.C test.root
 	$(CMDECHO) root.exe -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log

@@ -84,22 +84,22 @@ all:	driver$(ExeSuf) libIotest.$(DllSuf)
 shared: libIotest.$(DllSuf)
 
 noclassdef:   driver$(ExeSuf)
-	rm -f driver.output
-	./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > driver.output 
+	$(CMDECHO)rm -f driver.output
+	$(CMDECHO)./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > driver.output 
 ifeq ($(PLATFORM),win32)
-	diff good.win32.output driver.output
+	$(CMDECHO)diff good.win32.output driver.output
 else
-	diff good.linux.output driver.output
+	$(CMDECHO)diff good.linux.output driver.output
 endif
 #	@echo "All test succeeded in `pwd`"
 
 otest:   driver$(ExeSuf)
-	rm -f odriver.output
-	./driver$(ExeSuf) -readold 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > odriver.output 
+	$(CMDECHO)rm -f odriver.output
+	$(CMDECHO)./driver$(ExeSuf) -readold 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > odriver.output 
 ifeq ($(PLATFORM),win32)
-	diff good.win32.output odriver.output
+	$(CMDECHO)diff good.win32.output odriver.output
 else
-	diff good.linux.output odriver.output
+	$(CMDECHO)diff good.linux.output odriver.output
 endif
 	$(CMDECHO)echo "Testing reading old succeeded in `pwd`"
 
@@ -121,27 +121,27 @@ driver$(ExeSuf): main.cc mydict.cc
 
 stuff:
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
+		$(CMDECHO)ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
 		   -expect_unresolved "*" -g0 -O1 -shared \
 		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
 		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(CMDECHO)$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
+		$(CMDECHO)$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
@@ -153,23 +153,23 @@ endif
 #	$(CXX) -g -o driver $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 
 infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	@$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
+	$(CMDECHO)$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint 
-	@rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
-	@test `cat mydict.log | wc -l` == "1"; # mydict.log should only have one line!
+	$(CMDECHO)rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
+	$(CMDECHO)test `cat mydict.log | wc -l` == "1"; # mydict.log should only have one line!
 
 ifeq ($(PLATFORM),win32)
 libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
-	@bindexplib $* $^ > libIotest.def
-	@lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
+	$(CMDECHO)bindexplib $* $^ > libIotest.def
+	$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
                   $(OutPutOpt)libIotest.lib
-	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
+	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
                    $(OutPutOpt)$@
 else
 libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	@$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
+	$(CMDECHO)$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 endif
 
 .cc.$(ObjSuf):
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c $<
+	$(CMDECHO)$(CXX) $(CFLAGS) $(CXXFLAGS) -c $<

@@ -1,18 +1,25 @@
-test:
-tests:
-	@echo $(PWD) has some failing directory (this makefile is not up to date)
+TEST_TARGETS += clone
+CLEAN_TARGETS += RtObjDict.* $(ALL_LIBRARIES) tester
 
-CXX = g++
-CXXFLAGS = $(shell root-config --cflags)
-LDFLAGS = $(shell root-config --libs)
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifeq ($(FAIL),)
+clone:
+	$(WarnFailTest)
+else
+clone: tester
+endif
+	
 
 RtObjDict.C: RtObj.h RtObjLinkDef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f RtObjDict.C -c RtObj.h RtObjLinkDef.h
+	$(CMDECHO)rootcint -f RtObjDict.C -c RtObj.h RtObjLinkDef.h
 
 .C.o:
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -c $<
 
 tester: tester.o RtObjDict.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o tester tester.o RtObjDict.o
+	$(CMDECHO)$(CXX) $(CXXFLAGS) $(LDFLAGS) -o tester tester.o RtObjDict.o
 

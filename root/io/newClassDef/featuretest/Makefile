@@ -13,7 +13,7 @@ feature: Run.C
 	$(CMDECHO)root -q -l -b Run.C >run.out 2>&1
 #	$(CMDECHO)echo "All test succeeded in `pwd`"
 
-clean:
-	$(CMDECHO)rm -f ti_files *~ *.so
-	$(CMDECHO)rm -f .def *.dll *.exp *.lib *.def
+#clean:
+#	$(CMDECHO)rm -f ti_files *~ *.so
+#	$(CMDECHO)rm -f .def *.dll *.exp *.lib *.def
 
