@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.107 2004/12/14 00:20:48 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.108 2004/12/15 16:04:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3313,9 +3313,9 @@ Int_t TWinNTSystem::Select(TList *act, Long_t to)
       while ((h = (TFileHandler *) next())) {
          Int_t fd = h->GetFd();
          if (rd.IsSet(fd))
-            h->AssertReadReady();
+            h->SetReadReady();
          if (wr.IsSet(fd))
-            h->AssertWriteReady();
+            h->SetWriteReady();
       }
    }
 
@@ -3344,9 +3344,9 @@ Int_t TWinNTSystem::Select(TFileHandler *h, Long_t to)
    // Fill output lists, if required
    if (rc > 0) {
       if (rd.IsSet(fd))
-         h->AssertReadReady();
+         h->SetReadReady();
       if (wr.IsSet(fd))
-         h->AssertWriteReady();
+         h->SetWriteReady();
    }
 
    return rc;
