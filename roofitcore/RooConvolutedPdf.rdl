@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.13 2001/10/13 21:53:20 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.14 2001/10/17 05:03:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -37,7 +37,7 @@ public:
   RooConvolutedPdf(const RooConvolutedPdf& other, const char* name=0);
   virtual ~RooConvolutedPdf();
 
-  Int_t declareBasis(const char* expression, const RooArgSet& params) ;
+  Int_t declareBasis(const char* expression, const RooArgList& params) ;
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.54 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.55 2001/10/19 21:32:21 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,9 @@
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooCustomizer.hh"
+#include "RooFitCore/RooAbsData.hh"
+#include "RooFitCore/RooScaledFunc.hh"
+#include "RooFitCore/RooDataProjBinding.hh"
 
 #include <iostream.h>
 
@@ -667,11 +670,14 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions, 
-			    Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
+			    Double_t scaleFactor, ScaleType stype, 
+			    const RooAbsData* projData, const RooArgSet* projSet) const
 {
   // Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
   // function that occur in the previously plotted dataset are projected via partial integration,
-  // otherwise no projections are performed,
+  // otherwise no projections are performed. Optionally, certain projections can be performed
+  // by summing over the values present in a provided dataset ('projData'), to correctly
+  // project out data dependents that are not properly described by the PDF (e.g. per-event errors).
   //
   // The functions value can be multiplied with an optional scale factor. The interpretation
   // of the scale factor is unique for generic real functions, for PDFs there are various interpretations
@@ -704,6 +710,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
+  // Take out data-projected dependens from projectedVars
+  if (projData) {
+    projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
+  }
+
   // Clone the plot variable
   RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
   RooArgSet* plotCloneSet = (RooArgSet*) RooArgSet(*realVar).snapshot(kTRUE) ;
@@ -721,12 +732,39 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Reset name of projection to name of PDF to get appropriate curve name
   ((RooAbsArg*)projection)->SetName(GetName()) ;
-  
-  // create a new curve of our function using the clone to do the evaluations
-  RooCurve* curve= new RooCurve(*projection,*plotVar,scaleFactor);
 
-  // add this new curve to the specified plot frame
-  frame->addPlotable(curve, drawOptions);
+
+  // Apply data projection, if requested
+  if (projData) {
+
+    // Disable dirty state propagation in projection
+    RooArgSet branchList("branchList") ;
+    ((RooAbsReal*)projection)->setOperMode(RooAbsArg::ADirty) ;
+    projection->branchNodeServerList(&branchList) ;
+    TIterator* bIter = branchList.createIterator() ;
+    RooAbsArg* branch ;
+    while(branch=(RooAbsArg*)bIter->Next()) {
+      branch->setOperMode(RooAbsArg::ADirty) ;
+    }
+    delete bIter ;
+        
+    RooDataProjBinding projBind(*projection,*projData,*plotVar) ;
+    ((RooAbsReal*)projection)->attachDataSet(*projData) ;
+    RooScaledFunc scaleBind(projBind,scaleFactor);
+    RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
+				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+
+    // add this new curve to the specified plot frame
+    frame->addPlotable(curve, drawOptions);
+       
+  } else {
+    
+    // create a new curve of our function using the clone to do the evaluations
+    RooCurve *curve = new RooCurve(*projection,*plotVar,scaleFactor);
+
+    // add this new curve to the specified plot frame
+    frame->addPlotable(curve, drawOptions);
+  }
 
   delete projectionCompList ;
   return frame;
@@ -736,7 +774,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
 
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions, 
-				 Double_t scaleFactor, ScaleType stype) const
+				 Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
 {
   // Plot ourselves on given frame, as done in plotOn(), except that the variables 
   // listed in 'sliceSet' are taken out from the default list of projected dimensions created
@@ -760,7 +798,7 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
   }
   delete iter ;
 
-  return plotOn(frame,drawOptions,scaleFactor,stype,&projectedVars) ;
+  return plotOn(frame,drawOptions,scaleFactor,stype,projData,&projectedVars) ;
 }
 
 
@@ -768,7 +806,7 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
 
 
 RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions, 
-				Double_t scaleFactor, const RooArgSet* projSet) const
+				Double_t scaleFactor, const RooAbsData* projData, const RooArgSet* projSet) const
 {
   // Plot asymmetry of ourselves, defined as
   //
@@ -818,6 +856,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
+  // Take out data-projected dependens from projectedVars
+  if (projData) {
+    projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
+  }
+
   // Take out plotted asymmetry from projection
   if (projectedVars.find(asymCat.GetName())) {
     projectedVars.remove(*projectedVars.find(asymCat.GetName())) ;
@@ -859,12 +902,30 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   asymTitle.Append(projection->GetTitle()) ;
   RooFormulaVar* funcAsym = new RooFormulaVar(asymName,asymTitle,"(@0-@1)/(@0+@1)",RooArgSet(*funcPos,*funcNeg)) ;
 
-  // create a new curve of our function using the clone to do the evaluations
-  RooCurve* curve= new RooCurve(*funcAsym,*plotVar,scaleFactor);
-  dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
 
-  // add this new curve to the specified plot frame
-  frame->addPlotable(curve, drawOptions);
+  if (projData) {
+    
+    RooDataProjBinding projBind(*funcAsym,*projData,*plotVar) ;
+    ((RooAbsReal*)projection)->attachDataSet(*projData) ;
+    RooScaledFunc scaleBind(projBind,scaleFactor);
+    RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
+				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+    dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
+
+    // add this new curve to the specified plot frame
+    frame->addPlotable(curve, drawOptions);
+       
+  } else {
+
+    // create a new curve of our function using the clone to do the evaluations
+    RooCurve* curve= new RooCurve(*funcAsym,*plotVar,scaleFactor);
+    dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
+    
+    // add this new curve to the specified plot frame
+    frame->addPlotable(curve, drawOptions);
+  }
+
+
 
   // Cleanup
   delete projectionCompList ;
@@ -972,13 +1033,13 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
 
 
 
-RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset) const {
+RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid) const {
   // Create an interface adaptor f(vars) that binds us to the specified variables
   // (in arbitrary order). For example, calling bindVars({x1,x3}) on an object
   // F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
   // current values of x2 and x4. The caller takes ownership of the returned adaptor.
 
-  RooAbsFunc *binding= new RooRealBinding(*this,vars,nset);
+  RooAbsFunc *binding= new RooRealBinding(*this,vars,nset,clipInvalid);
   if(binding && !binding->isValid()) {
     cout << ClassName() << "::" << GetName() << ":bindVars: cannot bind to ";
     vars.Print();
@@ -1031,6 +1092,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     TString format(cleanName);
     format.Append("/D");
     t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
+
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree" 
 // 	 << (void*)&t << endl ;
   }
@@ -1044,7 +1106,7 @@ void RooAbsReal::fillTreeBranch(TTree& t)
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(cleanBranchName()) ;
   if (!branch) { 
-    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree: " << cleanBranchName() << endl ;
     assert(0) ;
   }
   branch->Fill() ;
@@ -1066,9 +1128,70 @@ TString RooAbsReal::cleanBranchName() const
   cleanName.ReplaceAll("]","R") ;
   cleanName.ReplaceAll("(","L") ;
   cleanName.ReplaceAll(")","R") ;
+  cleanName.ReplaceAll("{","L") ;
+  cleanName.ReplaceAll("}","R") ;
 
-  return cleanName ;
+  if (cleanName.Length()<=60) return cleanName ;
+
+  // Name is too long, truncate and include CRC32 checksum of full name in clean name
+  static char buf[1024] ;
+  strcpy(buf,cleanName.Data()) ;
+  sprintf(buf+46,"_CRC%08x",crc32(cleanName.Data())) ;
+
+  return TString(buf) ;
 }
+
+
+
+
+
+UInt_t RooAbsReal::crc32(const char* data) const
+{
+  // Calculate and extract length of string
+  Int_t len = strlen(data) ;
+  if (len<4) {
+    cout << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
+    return 0 ;
+  }
+
+  // Initialize CRC table on first use
+  static Bool_t init(kFALSE) ;
+  static unsigned int crctab[256];
+  if (!init) {
+    int i, j;
+    unsigned int crc;
+    for (i = 0; i < 256; i++){
+      crc = i << 24;
+      for (j = 0; j < 8; j++) {
+	if (crc & 0x80000000) {
+	  crc = (crc << 1) ^ 0x04c11db7 ;
+	} else {
+	  crc = crc << 1;
+	}
+      }
+      crctab[i] = crc;
+    }
+    init = kTRUE ;
+  }
+  
+  unsigned int        result(0);
+  int                 i(0);
+  unsigned char       octet(0);
+  
+  result = *data++ << 24;
+  result |= *data++ << 16;
+  result |= *data++ << 8;
+  result |= *data++;
+  result = ~ result;
+  len -=4;
+  
+  for (i=0; i<len; i++) {
+    result = (result << 8 | *data++) ^ crctab[result >> 24];
+  }
+
+  return ~result;
+}
+
 
 
 RooAbsArg *RooAbsReal::createFundamental(const char* newname) const {

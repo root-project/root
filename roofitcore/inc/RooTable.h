@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTable.rdl,v 1.5 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooTable.rdl,v 1.6 2001/09/12 01:25:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,8 +18,9 @@
 #include "TNamed.h"
 #include "THashList.h"
 #include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooPrintable.hh"
 
-class RooTable : public TNamed {
+class RooTable : public TNamed, public RooPrintable {
 public:
 
   // Constructors, cloning and assignment
@@ -31,9 +32,11 @@ public:
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
 
   // Printing interface (human readable) WVE change to RooPrintable interface
-  enum PrintOption { Standard=0 } ;
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
-  void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
+
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
 protected:
 

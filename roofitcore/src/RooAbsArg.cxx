@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.59 2001/10/19 22:19:47 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.60 2001/10/22 07:12:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -340,7 +340,7 @@ RooArgSet* RooAbsArg::getParameters(const RooAbsData* set) const
   // of the supplied data set (the dependents). The caller of this
   // function is responsible for deleting the returned argset.
   // The complement of this function is getDependents()
-  return getParameters(set->get()) ;
+  return getParameters(set?set->get():0) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.32 2001/10/21 22:57:02 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.33 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,22 +51,60 @@ static TVirtualFitter *_theFitter(0);
 
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_t cloneData, Bool_t clonePdf) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
-  _ownData(cloneData)
+  _ownData(cloneData), _zombie(kFALSE)
 {
   // Constructor
 
   if(0 == data) {
+    _zombie=kTRUE ;
     cout << "RooFitContext: cannot create without valid dataset" << endl;
     return;
   }
   if(0 == pdf) {
+    _zombie=kTRUE ;
     cout << "RooFitContext: cannot create without valid PDF" << endl;
     return;
   }
 
+  
+
+
   // Clone data 
   if (cloneData) {
-    _dataClone = (RooAbsData*) data->Clone() ;
+
+    // Check if the fit ranges of the dependents in the data and in the PDF are consistent
+    RooArgSet* pdfDepSet = pdf->getDependents(data) ;
+    const RooArgSet* dataDepSet = data->get() ;
+    TIterator* iter = pdfDepSet->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
+      if (!pdfReal) continue ;
+
+      RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(pdfReal->GetName())) ;
+      if (!datReal) continue ;
+
+      if (pdfReal->getFitMin()<datReal->getFitMin()) {
+	cout << "RooFitContxt: ERROR minimum of PDF variable " << arg->GetName() 
+	     << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
+	_zombie=kTRUE ;
+	return ;
+      }
+
+      if (pdfReal->getFitMax()>datReal->getFitMax()) {
+	cout << "RooFitContxt: ERROR maximum of PDF variable " << arg->GetName() 
+	     << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
+	_zombie=kTRUE ;
+	return ;
+      }
+      
+    }
+    delete iter ;
+    
+    // Copy data and strip entries lost by adjusted fit range
+    _dataClone = ((RooAbsData*)data)->reduce(*pdfDepSet) ;
+
+    delete pdfDepSet ;
   } else {
     _dataClone = (RooAbsData*) data ;
   }
@@ -412,6 +450,8 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
 {
   // Setup and perform MINUIT fit of PDF to dataset
 
+  if (_zombie) return 0 ;
+
   // Parse our fit options string
   TString fitOpts= fitOptions;
   fitOpts.ToLower();
@@ -533,13 +573,20 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
       // Calculate step size
       pstep= par->getError();
       if(pstep <= 0) {
-	pstep= 0.1*(pmax-pmin);
+	if (par->hasFitMin() && par->hasFitMax()) {
+	  pstep= 0.1*(pmax-pmin);
+	} else {
+	  pstep= 0.1*(par->getPlotMax()-par->getPlotMin()) ;
+	}						  
 	if(!estimateSteps && verbose) {
 	  cout << "*** WARNING: no initial error estimate available for "
 	       << par->GetName() << ": using " << pstep << endl;
 	}
       }
-    } 
+    } else {
+      pmin = par->getVal() ;
+      pmax = par->getVal() ;      
+    }
 
     _theFitter->SetParameter(index, par->GetName(), par->getVal(),
 			     pstep, pmin, pmax);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.22 2001/10/22 02:58:01 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.23 2001/10/22 07:12:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -232,8 +232,10 @@ Double_t RooAddPdf::evaluate() const
     // N pdfs, no coefficients
     while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
       Double_t nExpected = pdf->expectedEvents() ;
-      value += pdf->getVal(nset)*nExpected ; 
-      totExpected += nExpected ;
+      if (nExpected) {
+	value += pdf->getVal(nset)*nExpected ; 
+	totExpected += nExpected ;
+      }
     }	    
     if (totExpected==0.) {
       cout << "RooAddPdf::evaluate(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
@@ -249,8 +251,10 @@ Double_t RooAddPdf::evaluate() const
       while(coef=(RooAbsReal*)_coefIter->Next()) {
 	pdf = (RooAbsPdf*)_pdfIter->Next() ;
 	Double_t coefVal = coef->getVal(nset) ;
-	value += pdf->getVal(nset)*coefVal ;
-	coefSum += coefVal ;
+	if (coefVal) {
+	  value += pdf->getVal(nset)*coefVal ;
+	  coefSum += coefVal ;
+	}
       }
       value /= coefSum ;    
       
@@ -260,8 +264,11 @@ Double_t RooAddPdf::evaluate() const
       Double_t lastCoef(1) ;
       while(coef=(RooAbsReal*)_coefIter->Next()) {
 	pdf = (RooAbsPdf*)_pdfIter->Next() ;
-	value += pdf->getVal(nset)*coef->getVal(nset) ;
-	lastCoef -= coef->getVal(nset) ;
+	Double_t coefVal = coef->getVal(nset) ;
+	if (coefVal) {
+	  value += pdf->getVal(nset)*coefVal ;
+	  lastCoef -= coef->getVal(nset) ;
+	}
       }
       
       // Add last pdf with correct coefficient
@@ -403,10 +410,16 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
     // N pdfs, no coefficients
     while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
       Double_t nExpected = pdf->expectedEvents() ;
-      value += pdf->analyticalIntegralWN(subCode[i],normSet)*nExpected ;
-      totExpected += nExpected ; 
+      if (nExpected) {
+	value += pdf->analyticalIntegralWN(subCode[i],normSet)*nExpected ;
+	totExpected += nExpected ; 
+      }
     }	    
-    value /= totExpected ;
+    if (totExpected==0.) {
+      cout << "RooAddPdf::analyticalIntegral(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
+    } else {
+      value /= totExpected ;
+    }
 
   } else {
     if (_haveLastCoef) {
@@ -416,8 +429,10 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
       while(coef=(RooAbsReal*)_coefIter->Next()) {
 	pdf = (RooAbsPdf*)_pdfIter->Next() ;
 	Double_t coefVal = coef->getVal(normSet) ;
-	value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;      
-	coefSum += coefVal ;
+	if (coefVal) {
+	  value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;      
+	  coefSum += coefVal ;
+	}
 	i++ ;
       }    
       value /= coefSum ;
@@ -429,8 +444,10 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
       while(coef=(RooAbsReal*)_coefIter->Next()) {
 	pdf = (RooAbsPdf*)_pdfIter->Next() ;
 	Double_t coefVal = coef->getVal(normSet) ;
-	value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;
-	lastCoef -= coefVal ;
+	if (coefVal) {
+	  value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;
+	  lastCoef -= coefVal ;
+	}
 	i++ ;
       }
       
@@ -542,7 +559,7 @@ RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_
 
   // Plot temporary function
   cout << "RooAddPdf::plotCompOn(" << GetName() << ") plotting components " ; plotPdfList.Print("1") ;
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*coefPartSum/coefSum,stype,projSet) ;
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*coefPartSum/coefSum,stype,0,projSet) ;
 
   // Cleanup
   delete plotVar ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.2 2001/10/13 00:38:54 david Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.3 2001/10/14 07:11:42 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -126,6 +126,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     // Lookup pdf from selected prototype index state
     RooAbsCategory* cat = (RooAbsCategory*) theEvent.find(_idxCatName) ;
     ((RooAbsGenContext*)_gcList.FindObject(cat->getLabel()))->generateEvent(theEvent,remaining) ;
+    
   
   } else {
 
@@ -134,7 +135,9 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     Int_t i=0 ;
     for (i=0 ; i<_numPdf ; i++) {
       if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
-	((RooAbsGenContext*)_gcList.At(i))->generateEvent(theEvent,remaining) ;
+	RooAbsGenContext* gen= ((RooAbsGenContext*)_gcList.At(i)) ;
+	gen->generateEvent(theEvent,remaining) ;
+	((RooCategory*)theEvent.find(_idxCatName))->setLabel(gen->GetName()) ;
 	return ;
       }
     }

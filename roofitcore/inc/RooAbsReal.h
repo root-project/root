@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.37 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.38 2001/10/19 22:19:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,7 +48,7 @@ public:
   inline void setUnit(const char *unit) { _unit= unit; }
 
   // Lightweight interface adaptors (caller takes ownership)
-  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0) const;
+  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE) const;
 
   // Create a fundamental-type object that can hold our value.
   RooAbsArg *createFundamental(const char* newname=0) const;
@@ -80,11 +80,11 @@ public:
 
   enum ScaleType { Raw, Relative, NumEvent } ;
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
-			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
+			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
-			       Double_t scaleFactor=1.0, ScaleType stype=Relative) const;
+			       Double_t scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
-			      Double_t scaleFactor=1.0, const RooArgSet* projSet=0) const;
+			      Double_t scaleFactor=1.0, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
 
   // Create empty 1D and 2D histograms
   TH1F *createHistogram(const char *name, const char *yAxisLabel= 0, Int_t bins= 0) const;
@@ -147,6 +147,7 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;
   TString cleanBranchName() const ;
+  UInt_t crc32(const char* data) const ;
 
   friend class RooRealFixedBinIter ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealBinding.cc,v 1.4 2001/09/18 02:03:45 verkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.5 2001/10/08 05:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,10 +27,10 @@ ClassImp(RooRealBinding)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealBinding.cc,v 1.4 2001/09/18 02:03:45 verkerke Exp $";
+"$Id: RooRealBinding.cc,v 1.5 2001/10/08 05:20:20 verkerke Exp $";
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset) 
+RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid) :
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
@@ -59,15 +59,20 @@ RooRealBinding::~RooRealBinding() {
 }
 
 void RooRealBinding::loadValues(const Double_t xvector[]) const {
+  _xvecValid = kTRUE ;
   for(Int_t index= 0; index < _dimension; index++) {
-    _vars[index]->setVal(xvector[index]);
+    if (_clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
+      _xvecValid = kFALSE ;
+    } else {
+      _vars[index]->setVal(xvector[index]);
+    }
   }
 }  
 
 Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   assert(isValid());
   loadValues(xvector);
-  return _func->getVal(_nset);
+  return _xvecValid ? _func->getVal(_nset) : 0. ;
 }
 
 Double_t RooRealBinding::getMinLimit(UInt_t index) const {

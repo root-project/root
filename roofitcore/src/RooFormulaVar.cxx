@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.18 2001/10/08 05:20:15 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.19 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,7 +38,7 @@
 ClassImp(RooFormulaVar)
 
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgSet& dependents) : 
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents) : 
   RooAbsReal(name,title), _formula(name,formula,dependents)
 {  
   Bool_t anyServers(kFALSE) ;
@@ -55,7 +55,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* fo
 }
 
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgSet& dependents) : 
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
   RooAbsReal(name,title), _formula(name,title,dependents)
 {  
   Bool_t anyServers(kFALSE) ;

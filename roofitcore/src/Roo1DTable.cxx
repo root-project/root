@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.8 2001/09/24 23:05:56 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.9 2001/10/08 05:20:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -132,7 +132,9 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
   // Contents
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
-    os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
+    if (_count[i]>0 || opt>=Verbose) {
+      os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
+    }
   }
 
   // Overflow field

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.17 2001/10/19 22:19:49 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.18 2001/10/21 22:57:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -332,8 +332,9 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
   }
 
   // Loop over events in source tree   
-  RooAbsArg* destArg(0) ;
+  RooAbsArg* arg(0) ;
   Int_t nevent= t->numEntries() ;
+  Bool_t allValid ;
   for(Int_t i=0; i < nevent; ++i) {
     t->_tree->GetEntry(i,1) ;
 
@@ -341,8 +342,20 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
     if (select && select->getVal()==0) {
       continue ; 
     }
-
+    
     _vars = t->_vars ;
+    _iterator->Reset() ;
+
+    // Check that all copied values are valid
+    allValid=kTRUE ;
+    while(arg=(RooAbsArg*)_iterator->Next()) {
+      if (!arg->isValid()) {
+	allValid=kFALSE ;
+	break ;
+      }
+    }
+    if (!allValid) continue ;
+
     _cachedVars = t->_cachedVars ;
     Fill() ;
    }
@@ -926,6 +939,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
   // First see if var is in data set 
   RooAbsCategory* tableVar = (RooAbsCategory*) _vars.find(cat.GetName()) ;
+  RooArgSet *tableSet(0) ;
   Bool_t ownPlotVar(kFALSE) ;
   if (!tableVar) {
     if (!cat.dependsOn(_vars)) {
@@ -935,7 +949,8 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     }
 
     // Clone derived variable 
-    tableVar = (RooAbsCategory*) cat.Clone()  ;
+    tableSet = (RooArgSet*) RooArgSet(cat).snapshot(kTRUE) ;
+    tableVar = (RooAbsCategory*) tableSet->find(cat.GetName()) ;
     ownPlotVar = kTRUE ;    
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
@@ -943,6 +958,12 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
   }
 
   Roo1DTable* table = tableVar->createTable("dataset") ;
+
+  // Make cut selector if cut is specified
+  RooFormulaVar* cutVar(0) ;
+  if (cuts && strlen(cuts)) {
+    cutVar = new RooFormulaVar("cutVar",cuts,_vars) ;
+  }
   
   // Dump contents   
   Int_t nevent= (Int_t)_tree->GetEntries();
@@ -950,10 +971,14 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     Int_t entryNumber=_tree->GetEntryNumber(i);
     if (entryNumber<0) break;
     get(entryNumber);
+
+    if (cutVar && cutVar->getVal()==0) continue ;
+    
     table->fill(*tableVar,weight()) ;
   }
 
-  if (ownPlotVar) delete tableVar ;
+  if (ownPlotVar) delete tableSet ;
+  if (cutVar) delete cutVar ;
 
   return table ;
 }

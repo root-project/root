@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.42 2001/10/12 01:48:44 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.43 2001/10/19 06:56:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -300,7 +300,7 @@ void RooArgSet::writeToFile(const char* fileName)
 
 
 
-Bool_t RooArgSet::readFromFile(const char* fileName) 
+Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt) 
 {
   // Read contents of the argset from specified file.
   // See readFromStream() for details
@@ -309,7 +309,7 @@ Bool_t RooArgSet::readFromFile(const char* fileName)
     cout << "RooArgSet::readFromFile(" << GetName() << ") error opening file " << fileName << endl ;
     return kTRUE ;
   }
-  return readFromStream(ifs,kFALSE) ;
+  return readFromStream(ifs,kFALSE,flagReadAtt) ;
 }
 
 
@@ -342,7 +342,7 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact)
 
 
 
-Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, Bool_t verbose) 
 {
   // Read the contents of the argset in ASCII form from given stream.
   // 
@@ -524,7 +524,9 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	       << "): missing '=' sign: " << arg << endl ;
 	  continue ;
 	}
-	retVal |= arg->readFromStream(is,kFALSE,verbose) ;	
+	Bool_t argRet = arg->readFromStream(is,kFALSE,verbose) ;	
+	if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
+	retVal |= argRet ;
       } else {
 	cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
 	     << token << " not in list, ignored" << endl ;

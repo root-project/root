@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.10 2001/09/17 18:48:16 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.11 2001/10/08 05:20:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,6 +36,8 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
   _dirtyArray = new Bool_t[_nCtx] ;
 
   TString simCatName(simCat.GetName()) ;
+
+  // WVE clone simcat and attach to dataset!
   
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   Int_t n(0) ;
@@ -47,7 +49,7 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
     // Retrieve the PDF for this simCat state
     RooRealProxy* proxy = (RooRealProxy*) simpdf->_pdfProxyList.FindObject((const char*) simpdf->_indexCat) ;
     if (proxy) {
-      cout << "RooSimFitContext::RooSimFitContext: creating fit sub-context for state " << type->GetName() << endl ;
+      cout << "RooSimFitContext::RooSimFitContext: creating fit sub-context for state " << type->GetName() ;
       RooAbsPdf* pdf = (RooAbsPdf*)proxy->absArg() ;
 
       //Refine a dataset containing only events for this simCat state
@@ -56,14 +58,15 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
       RooAbsData* dset = _dataClone->reduce(RooFormulaVar("simCatCut",cutSpec,simCat)) ;
 //       new RooDataSet("dset_simcat","dset_simcat",
 // 		     _dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
+      cout << " (" << dset->numEntries() << " dataset entries)" << endl ;
       _dsetArray[n] = dset ;
       _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE) ;
       _dirtyArray[n] = kTRUE ;
       _nCtxFilled++ ;
 
     } else {
-      cout << "RooSimFitContext::RooSimFitContext: no pdf for state " << type->GetName() << endl ;
-      simpdf->_pdfProxyList.Print() ;
+      //cout << "RooSimFitContext::RooSimFitContext: no pdf for state " << type->GetName() << endl ;
+      _dsetArray[n] = 0 ;
       _ctxArray[n] = 0 ;
       _dirtyArray[n] = kFALSE ;
     }
@@ -131,8 +134,8 @@ Bool_t RooSimFitContext::optimize(Bool_t doPdf,Bool_t doData, Bool_t doCache)
   Bool_t ret(kFALSE) ;
   Int_t i ;
   for (i=0 ; i<_nCtx ; i++) {
-    cout << "RooSimFitContext::optimize: forwarding call to subContext " << i << endl ;
     if (_ctxArray[i]) {
+      cout << "RooSimFitContext::optimize: forwarding call to subContext " << i << endl ;
       if (_ctxArray[i]->optimize(doPdf,doData,doCache)) ret=kTRUE ;
     }
   }

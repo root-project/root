@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.54 2001/10/19 06:56:52 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.55 2001/10/21 22:57:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -411,7 +411,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
 }
 
 
-RooDataSet *RooDataSet::read(const char *fileList, RooArgList &variables,
+RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 			     const char *verbOpt, const char* commonPath, 
 			     const char* indexCatName) {
   // Read given list of ascii files, and construct a data set, using the given
@@ -458,6 +458,9 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgList &variables,
   // either by specifying "file1.txt:FOO,file2,txt:FOO,file3.txt:BAR"
   // or "file1.txt,file2.txt:FOO,file3.txt:BAR"
   //
+
+  // Make working copy of variables list 
+  RooArgList variables(varList) ;
 
   // Append blinding state category to variable list if not already there
   Bool_t ownIsBlind(kTRUE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.16 2001/10/08 21:22:51 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.17 2001/10/22 07:12:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -269,8 +269,11 @@ Double_t RooAddModel::evaluate() const
   RooRealProxy* model ;
   while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
     model = (RooRealProxy*)_modelProxyIter->Next() ;
-    value += (*model)*(*coef) ;
-    lastCoef -= (*coef) ;
+    Double_t coefVal = *coef ;
+    if (coefVal) {
+      value += (*model)*(*coef) ;
+      lastCoef -= (*coef) ;
+    }
   }
 
   // Add last model with correct coefficient
@@ -316,8 +319,11 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 			     << model->getNorm(nset) << " x " << (*coef) << " = " 
 			     << model->getNorm(nset)*(*coef) << endl ;
 
-    norm += model->getNorm(nset)*(*coef) ;
-    lastCoef -= (*coef) ;
+    Double_t coefVal = *coef ;
+    if (coefVal) {
+      norm += model->getNorm(nset)*(*coef) ;
+      lastCoef -= (*coef) ;
+    }
   }
 
   // Add last model with correct coefficient
@@ -365,8 +371,11 @@ Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
 			     << model->getNormSpecial(nset) << " x " << (*coef) << " = " 
 			     << model->getNormSpecial(nset)*(*coef) << endl ;
 
-    norm += model->getNormSpecial(nset)*(*coef) ;
-    lastCoef -= (*coef) ;
+    Double_t coefVal = *coef ;
+    if (coefVal) {
+      norm += model->getNormSpecial(nset)*(*coef) ;
+      lastCoef -= (*coef) ;
+    }
   }
 
   // Add last model with correct coefficient

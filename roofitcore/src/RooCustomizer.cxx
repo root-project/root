@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.2 2001/10/13 21:53:20 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.3 2001/10/19 06:56:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -190,6 +190,12 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
   //
   // Splitting is only available on customizers created with a master index category
 
+  if (_splitArgList.FindObject(arg.GetName())) {
+    cout << "RooCustomizer(" << GetName() << ") ERROR: multiple splitting rules defined for " 
+	 << arg.GetName() << " only using first rule" << endl ;
+    return ;
+  }
+
   if (_sterile) {
     cout << "RooCustomizer::splitArg(" << _name 
 	 << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
@@ -204,6 +210,12 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) 
 {
   // Replace any occurence of arg 'orig' with arg 'subst'
+
+  if (_replaceArgList.FindObject(orig.GetName())) {
+    cout << "RooCustomizer(" << GetName() << ") ERROR: multiple replacement rules defined for " 
+	 << orig.GetName() << " only using first rule" << endl ;
+    return ;
+  }
 
   _replaceArgList.Add((RooAbsArg*)&orig) ;
   _replaceSubList.Add((RooAbsArg*)&subst) ;

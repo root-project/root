@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.32 2001/10/17 05:03:58 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.33 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,6 +27,7 @@
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooFormula)
 
@@ -35,7 +36,7 @@ RooFormula::RooFormula() : TFormula(), _nset(0)
   // Dummy constructor
 }
 
-RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& list) : 
+RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& list) : 
   TFormula(), _isOK(kTRUE), _compiled(kFALSE)
 {
   // Constructor with expression string and list of variables

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.48 2001/10/12 01:48:43 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.49 2001/10/22 02:58:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -298,6 +298,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
   if (_verboseEval>0) cout << GetName() << ":updating lastNormSet from " << _lastNormSet << " to " << nset << endl ;
+  RooArgSet* lastNormSet(_lastNormSet) ;
   _lastNormSet = (RooArgSet*) nset ;
   _lastNameSet.refill(*nset) ;
 
@@ -331,7 +332,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
     if (!selfNormalized()) {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() 
 	   << ") recreating normalization integral " 
-	   << _lastNormSet << " -> " << nset << "=" ;
+	   << lastNormSet << " -> " << nset << "=" ;
       if (depList) depList->printToStream(cout,OneLine) ; else cout << "<none>" << endl ;
     } else {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
@@ -651,7 +652,8 @@ void RooAbsPdf::generateEvent(Int_t code) {
 
 
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, 
-			   Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
+			   Double_t scaleFactor, ScaleType stype, 
+			   const RooAbsData* projData, const RooArgSet* projSet) const
 {
   // Plot outself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
   // the scale factor for a PDF can be interpreted in three different ways. The interpretation
@@ -674,7 +676,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
   }
   frame->updateNormVars(*frame->getPlotVar()) ;
 
-  return RooAbsReal::plotOn(frame,drawOptions,scaleFactor,Raw,projSet) ;
+  return RooAbsReal::plotOn(frame,drawOptions,scaleFactor,Raw,projData,projSet) ;
 }
 
 

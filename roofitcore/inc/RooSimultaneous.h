@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.15 2001/10/12 01:48:47 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.16 2001/10/22 07:12:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -54,9 +54,7 @@ public:
   virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
 
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
-			  ScaleType stype=Relative, const RooArgSet* projSet=0) const ; // forwarder function
-  virtual RooPlot *plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
-			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
+			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
   virtual RooPlot *plotCompOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, Option_t* drawOptions="L",
 			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, const RooArgSet* projSet=0) const;
   virtual RooPlot *plotCompOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, Option_t* drawOptions="L",

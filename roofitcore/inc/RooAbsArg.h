@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.56 2001/10/19 22:19:48 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.57 2001/10/22 07:12:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -130,6 +130,7 @@ protected:
 
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;
+  friend class RooAbsReal ;
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
   void setOperMode(OperMode mode) { _operMode = mode ; operModeHook() ; }
   virtual void operModeHook() {} ;

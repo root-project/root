@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.36 2001/10/21 22:57:02 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.37 2001/10/23 00:45:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,22 +28,22 @@ public:
   RooDataSet() ; 
   RooDataSet(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, const char *cuts);
+	     const RooArgSet& vars, const char *cuts=0);
   RooDataSet(const char *name, const char *title, RooDataSet *t, 
 	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
   RooDataSet(const char *name, const char *title, TTree *t, 
 	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
-	     const RooArgSet& vars, const char *cuts);
+	     const RooArgSet& vars, const char *cuts=0);
   RooDataSet(const char *name, const char *filename, const char *treename, 
-	     const RooArgSet& vars, const char *cuts);  
+	     const RooArgSet& vars, const char *cuts=0);  
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
-  static RooDataSet *read(const char *filename, RooArgList &variables,
+  static RooDataSet *read(const char *filename, const RooArgList &variables,
 			  const char *opts= "", const char* commonPath="",
 			  const char *indexCatName=0) ;
   Bool_t write(const char* filename) ;

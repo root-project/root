@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.11 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.12 2001/10/19 22:19:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,6 +17,7 @@
 // (bins for binned data sets, data points for unbinned datasets).
 
 #include "RooFitCore/RooAbsData.hh"
+#include "RooFitCore/RooFormulaVar.hh"
 
 ClassImp(RooAbsData)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.23 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.24 2001/10/09 01:41:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.23 2001/10/08 05:20:14 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.24 2001/10/09 01:41:19 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -80,7 +80,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFacto
   setYAxisLabel(title.Data());
 
   RooAbsFunc *funcPtr(0),*rawPtr(0);
-  funcPtr= f.bindVars(x,normVars);
+  funcPtr= f.bindVars(x,normVars,kTRUE);
 
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
@@ -195,12 +195,14 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   // store points of the coarse scan and calculate any refinements necessary
   Double_t minDx= resolution*(xhi-xlo);
   Double_t x1,x2= xlo;
+  addPoint(xlo,0) ;
   addPoint(xlo,yval[0]);
   for(Int_t step= 1; step < minPoints; step++) {
     x1= x2;
     x2= xlo + step*dx;
     addRange(func,x1,x2,yval[step-1],yval[step],prec,minDx);
   }
+  addPoint(xhi,0) ;
 
   // cleanup
   delete [] yval;
@@ -233,6 +235,7 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
 void RooCurve::addPoint(Double_t x, Double_t y) {
   // Add a point with the specified coordinates. Update our y-axis limits.
 
+  //cout << "RooCurve("<< GetName() << ") adding point at " << x << endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
 }

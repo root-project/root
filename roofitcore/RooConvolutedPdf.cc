@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.22 2001/10/13 21:53:20 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.23 2001/10/17 05:03:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -114,7 +114,7 @@ RooConvolutedPdf::~RooConvolutedPdf()
 }
 
 
-Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& params) 
+Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgList& params) 
 {
   // Declare a basis function for use in this physics model. The string expression 
   // must be a valid RooFormulVar expression representing the basis function, referring
@@ -143,8 +143,9 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   }
 
   // Instantiate basis function
-  RooArgSet basisArgs(*_convVar) ;
+  RooArgList basisArgs(*_convVar) ;
   basisArgs.add(params) ;
+
   RooFormulaVar* basisFunc = new RooFormulaVar(expression,expression,basisArgs) ;
   _basisList.addOwned(*basisFunc) ;
 
@@ -211,14 +212,24 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars,
   if (dynamic_cast<RooTruthModel*>(_model)) {
     // Truth resolution model: use generic context explicitly allowing generation of convolution variable
     RooArgSet forceDirect(*convVar()) ;
+    cout << GetName() << ": truth convolution, choosing RooGenContext with forceDirect" << endl ;
     return new RooGenContext(*this,vars,prototype,verbose,&forceDirect) ;
-  } else if (numAddDep>0) {
+  } 
+
+  // Check if physics PDF and resolution model can both directly generate the convolution variable
+  RooArgSet dummy ;
+  Bool_t pdfCanDir = (getGenerator(*convVar(),dummy) != 0) ;
+  RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
+  Bool_t resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) ;
+
+  if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
+    // or pdf or resmodel do not support direct generation
     return new RooGenContext(*this,vars,prototype,verbose) ;
-  } else {
-    // Any other resolution model: use specialized generator context
-    return new RooConvGenContext(*this,vars,prototype,verbose) ;
-  }
+  } 
+  
+  // Any other resolution model: use specialized generator context
+  return new RooConvGenContext(*this,vars,prototype,verbose) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.19 2001/10/14 07:11:42 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.20 2001/10/22 07:12:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -176,7 +176,7 @@ Double_t RooSimultaneous::evaluate() const
   assert(proxy!=0) ;
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_lastNormSet) / _numPdf ;
+  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_lastNormSet) ; 
 }
 
 
@@ -307,36 +307,36 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
+
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
-				 ScaleType stype, const RooArgSet* projSet) const 
+				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet) const 
 {
-  // Overload RooAbsPdf::plotOn() implementation with stub function. A RooSimultaneous cannot
-  // be plotted properly without knowlegdge of a dataset which determines the relative weight
-  // of the component PDFs plotted
-
-  cout << "RooSimultaneous::plotOn(" << GetName() << ") Cannot plot simultaneous PDF without data set" << endl
-       << "to determine relative fractions of PDF components." << endl
-       << "Please use RooSimultaneous::plot(RooPlot*,RooAbsData*,...)" << endl ;
-  return frame ;
-}
+  // See RooAbsPdf::plotOn() for description. Because a RooSimultaneous PDF cannot project out
+  // its index category, plotOn() will abort if this is requested without providing a projection
+  // dataset
 
 
-
-RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor, 
-				 ScaleType stype, const RooArgSet* projSet) const
-{
-  // Special plotOn implementation for RooSimultaneous that weights the component PDFs with the relative
-  // abundance of their associated index category state in the supplied data set
-
-  RooArgSet allComponents ;
-  TIterator *iter = _pdfProxyList.MakeIterator() ;
-  RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
-    allComponents.add(proxy->arg()) ;
+  // Make list of variables to be projected
+  RooArgSet projectedVars ;
+  if (projSet) {
+    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
+  } else {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
-  delete iter ;
-  return plotCompOn(frame,wdata,allComponents,drawOptions,scaleFactor,stype,projSet) ;
+  
+  // If it turns out we're projecting over the index category, require it be in projData
+  if (projectedVars.find(_indexCat.arg().GetName())) {
+    if (!projData || !projData->get()->find(_indexCat.arg().GetName())) {
+      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
+	   << "requested, but index category is not provided in projected data set" << endl ;
+      return frame ;
+    }
+  }
+  
+  // If OK, forward to RooAbsPf
+  return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
 }
+
 
 
 
@@ -432,7 +432,7 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
 
   // Plot temporary function
   cout << "RooSimultaneous::plotCompOn(" << GetName() << ") plotting components " ; pdfCompList.Print("1") ;
-  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*plotFrac,stype,projSet) ;
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*plotFrac,stype,0,projSet) ;
 
   // Cleanup
   delete plotVar ;
