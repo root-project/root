@@ -79,5 +79,7 @@ endif
 merging: merging.log
 	$(TestDiff)
 
+iobug.log : iobug_C.$(DllSuf)
+
 iobug: iobug.log
 	$(TestDiff)

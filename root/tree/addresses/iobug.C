@@ -37,14 +37,14 @@ void iobug(int split=0, int classtype = 0, int clonesmode = 0, int show = 0, int
    g2->SetPoint(0,1,2);
    g2->SetPoint(1,3,4);
    g2->SetMarkerColor(2);
-   g2->SetMarkerSize(1.2);
-   g2->SetMarkerStyle(21);
+   g2->SetMarkerSize(1.4);
+   g2->SetMarkerStyle(27);
 
    g3->SetPoint(7,8,9);
    g3->SetPoint(10,13,14);
    g3->SetMarkerColor(3);
-   g3->SetMarkerSize(11.2);
-   g3->SetMarkerStyle(31);
+   g3->SetMarkerSize(1.5);
+   g3->SetMarkerStyle(30);
    delete gFile;
    TFile *f = new TFile("problem.root", "RECREATE");                      
    TTree *t = new TTree("graphs", "problematic graphs");                
@@ -52,17 +52,18 @@ void iobug(int split=0, int classtype = 0, int clonesmode = 0, int show = 0, int
    if (clonesmode&0x2) t->Branch("graphCl",&clones, 32000, split); 
 
    t->Fill();
-   g2->SetMarkerColor(4);
-   g2->SetMarkerSize(1.3);
-   g2->SetMarkerStyle(24);
-
-   g3->SetMarkerColor(5);
-   g3->SetMarkerSize(1.5);
-   g3->SetMarkerStyle(28);
-
    g->SetMarkerColor(3);
    g->SetMarkerSize(1.3);
    g->SetMarkerStyle(24);
+
+   g2->SetMarkerColor(4);
+   g2->SetMarkerSize(1.6);
+   g2->SetMarkerStyle(33);
+
+   g3->SetMarkerColor(5);
+   g3->SetMarkerSize(1.7);
+   g3->SetMarkerStyle(36);
+
    t->Fill();
    if (show) t->Show(0);
    t->Write();
@@ -78,7 +79,7 @@ void iobug(int split=0, int classtype = 0, int clonesmode = 0, int show = 0, int
    t->GetEntry(0);
    if (dumpmode&0x2) g->Dump();
    //f.Write();
-   //t->Print();
+   if (dumpmode&0x4) t->Print();
    if (clonesmode&0x1) t->Scan("fMarkerColor:fMarkerSize:graph.fMarkerStyle","","colsize=20");
    if (clonesmode&0x2) t->Scan("fMarkerColor:graphCl.fMarkerSize:graphCl.fMarkerStyle","","colsize=20");
 }
