@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -33,14 +33,9 @@
 #endif
 
 class TSocket;
-class TNetFile;
-
-typedef Int_t (*SecureAuth_t)(TNetFile *);
 
 
 class TNetFile : public TFile {
-
-friend Int_t SRPAuthenticate(TNetFile *);
 
 private:
    TUrl      fUrl;        //URL of file
@@ -48,19 +43,11 @@ private:
    Seek_t    fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
 
-   static char         *fgUser;
-   static char         *fgPasswd;
-   static SecureAuth_t  fgSecAuthHook;
-
    TNetFile() : fUrl("dummy") { fSocket = 0; }
-   Bool_t Authenticate();
-   Bool_t CheckNetrc(char *&user, char *&passwd);
    void   Init(Bool_t create);
    void   Print(Option_t *option);
    void   PrintError(const char *where, Int_t err);
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
-   char  *GetUser();
-   char  *GetPasswd(const char *prompt = "Password: ");
 
 public:
    TNetFile(const char *url, Option_t *option="", const char *ftitle="", Int_t compress=1);
@@ -72,10 +59,6 @@ public:
    Bool_t  ReadBuffer(char *buf, int len);
    Bool_t  WriteBuffer(const char *buf, int len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
-
-   static void SetUser(const char *user);
-   static void SetPasswd(const char *passwd);
-   static void SetSecureAuthHook(SecureAuth_t func);
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
