@@ -866,6 +866,31 @@ fi
 
 ######################################################################
 #
+### echo %%% SHIFT Support - Third party libraries
+#
+# (See http://www.cern.ch)
+#
+# Check for libshift.a
+#
+if test ! "x$enable_rfio" = "xno" ; then
+    check_library "libshift shift" "$enable_shared" "$shiftlibdir" \
+	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+	/usr/local/lib/shift /usr/lib /usr/local/lib
+    shiftlib=$found_lib
+    shiftlibdir=$found_dir
+
+    if test "x$shiftlib" = "x"; then
+        enable_rfio="no"
+    else
+        case $platform in
+           linux*) shiftlib="$shiftlib -lnsl" ;;
+        esac
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% CERNLIB Usage - Third party libraries
 #
 # (See http://www.cern.ch)
@@ -887,6 +912,16 @@ if test ! "x$enable_cern" = "xno"; then
 	$cernlibdirs
     kernlib=$found_lib
     kernlibdir=$found_dir
+
+    if test "x$enable_rfio" = "xno" ; then
+        # check if libpacklib contains rfio code (case of < 2002 version)
+        rfio_in_pack=`nm $packlib | grep rfio_connect > /dev/null 2>&1`
+        if [ $? -ne 0 ]; then
+            echo "### Need libshift with this version of $packlib"
+            echo "### Run configure with --enable-rfio or set --with-shift-libdir"
+            packlib=""
+        fi
+    fi
 
     if test "x$packlib" = "x" || test "x$kernlib" = "x"; then
         enable_cern="no"
@@ -955,31 +990,6 @@ if test ! "x$enable_venus" = "xno" ; then
 
     if test "x$venuslib" = "x" ; then
         enable_venus=no
-    fi
-fi
-
-######################################################################
-#
-### echo %%% SHIFT Support - Third party libraries
-#
-# (See http://www.cern.ch)
-#
-# Check for libshift.a
-#
-if test ! "x$enable_rfio" = "xno" ; then
-    check_library "libshift shift" "$enable_shared" "$shiftlibdir" \
-	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
-	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
-	/usr/local/lib/shift /usr/lib /usr/local/lib
-    shiftlib=$found_lib
-    shiftlibdir=$found_dir
-
-    if test "x$shiftlib" = "x"; then
-        enable_rfio="no"
-    else
-        case $platform in
-           linux*) shiftlib="$shiftlib -lnsl" ;;
-        esac
     fi
 fi
 
