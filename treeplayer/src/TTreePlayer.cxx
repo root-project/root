@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.59 2001/09/19 20:05:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.60 2001/09/29 16:03:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1665,10 +1665,17 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          //if (bre->GetStreamerType() ==63 || bre->GetStreamerType() == 64) {
          if (bre->GetStreamerType() > 60) {
             TClass *cle = gROOT->GetClass(bre->GetClassName());
-            TStreamerElement *elem = (TStreamerElement*)cle->GetStreamerInfo()->GetElements()->FindObject(bre->GetName());
+            char brename[256];
+            strcpy(brename,bre->GetName());
+            char *bren = brename;
+            char *adot = strrchr(bren,'.');
+            if (adot) bren = adot+1;
+            char *brack = strchr(bren,'[');
+            if (brack) *brack = 0;
+            TStreamerElement *elem = (TStreamerElement*)cle->GetStreamerInfo()->GetElements()->FindObject(bren);
             if (elem && elem->IsA() == TStreamerBase::Class()) continue;
-            if (elem) fprintf(fp,"   %-15s %s;\n",elem->GetTypeName(), bre->GetName());
-            else      fprintf(fp,"   %-15s %s;\n",bre->GetClassName(), bre->GetName());
+            if (elem) fprintf(fp,"   %-15s %s;\n",elem->GetTypeName(), branchname);
+            else      fprintf(fp,"   %-15s %s;\n",bre->GetClassName(), branchname);
             continue;
          }
        }
