@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.79 2002/06/18 10:23:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.80 2002/06/21 06:11:54 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -247,6 +247,9 @@ TClass::TClass(const char *name) : TDictionary()
    fStreamerInfo   = 0;
 
    ResetInstanceCount();
+
+   fClassMenuList  = new TList();
+   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
 
    if (!fClassInfo) {
       SetBit(kLoading);
