@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.24 2004/06/01 14:41:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.25 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -422,7 +422,7 @@ TPacketizer2::TFileNode *TPacketizer2::NextUnAllocNode()
 {
    fUnAllocated->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer2::NextUnAllocNode()" << std::endl;
+      cout << "TPacketizer2::NextUnAllocNode()" << endl;
       fUnAllocated->Print();
    }
    return (TFileNode*) fUnAllocated->First();
@@ -456,7 +456,7 @@ TPacketizer2::TFileNode *TPacketizer2::NextActiveNode()
 {
    fActive->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer2::NextActiveNode()" << std::endl;
+      cout << "TPacketizer2::NextActiveNode()" << endl;
       fActive->Print();
    }
    return (TFileNode*) fActive->First();
