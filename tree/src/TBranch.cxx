@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.81 2004/12/01 15:45:27 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.82 2005/01/20 01:10:52 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1394,6 +1394,7 @@ void TBranch::Streamer(TBuffer &b)
          }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
+         // Check Byte Count is not needed since it was done in ReadBuffer
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1443,6 +1444,7 @@ void TBranch::Streamer(TBuffer &b)
          }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
+         b.CheckByteCount(R__s, R__c, TBranch::IsA());
          return;
       }
       //====process very old versions
