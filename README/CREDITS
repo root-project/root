@@ -40,6 +40,10 @@ N: Dan Bradley
 E: dan@hep.wisc.edu
 D: Chirp plugin which allows remote file access via the Condor Chirp protocol
 
+N: Gerhard Brandt
+E: gbrandt@physi.uni-heidelberg.de
+D: class THtml, generation of the clickable class hierarchy
+
 N: Thomas Bretz
 E: tbretz@astro.uni-wuerzburg.de
 D: Additions to TF1: functions IntegralFast and CalcGaussLegendreSamplingPoints
