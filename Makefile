@@ -449,6 +449,7 @@ showbuild:
 	@echo "CPP                = $(CPP)"
 	@echo "LD                 = $(LD)"
 	@echo "F77LD              = $(F77LD)"
+	@echo "GCCVERS            = $(GCCVERS)"
 	@echo ""
 	@echo "CXXFLAGS           = $(CXXFLAGS)"
 	@echo "CINTCXXFLAGS       = $(CINTCXXFLAGS)"

@@ -27,6 +27,7 @@ CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/gcc3strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
@@ -97,6 +98,11 @@ CINTS1       += $(MODDIRS)/winnt.c
 CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
 ifeq ($(PLATFORM),vms)
+CINTS2       += $(MODDIRS)/fakestrm.cxx
+endif
+ifeq ($(GCCVERS),3)
+CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
+#CINTS2       += $(MODDIRS)/gcc3strm.cxx
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 
