@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -105,7 +105,8 @@ Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
    SetPoints(points);
 
    Int_t i, i1, i2, dsegment;
-   Float_t x1,y1,x2,y2, xndc[3];
+   Double_t x1,y1,x2,y2;
+   Float_t xndc[3];
    for (i = 0; i < 12; i++) {
       i1 = 3*seg1[i];
       view->WCtoNDC(&points[i1], xndc);
@@ -249,7 +250,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 //*-*            ========================================
 
    Int_t bin,ix,iy,iz;
-   Float_t xmin,xmax,ymin,ymax,zmin,zmax,wmin,wmax,w;
+   Double_t xmin,xmax,ymin,ymax,zmin,zmax,wmin,wmax,w;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
    TAxis *zaxis = h->GetZaxis();
@@ -285,7 +286,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
    m3.SetRefObject(h);
    m3.SetDirection(0,0);
    m3.SetLineColor(h->GetMarkerColor());
-   Float_t scale;
+   Double_t scale;
    for (ix=xaxis->GetFirst();ix<=xaxis->GetLast();ix++) {
       xmin = h->GetXaxis()->GetBinLowEdge(ix);
       xmax = xmin + h->GetXaxis()->GetBinWidth(ix);
@@ -315,7 +316,7 @@ void TMarker3DBox::PaintShape(X3DBuffer *buff, Bool_t rangeView)
 
     //*-* Paint in the pad
 
-    Float_t points[6], x0, y0, z0, x1, y1, z1;
+    Double_t points[6], x0, y0, z0, x1, y1, z1;
     const Int_t kExpandView = 2;
     int i0;
 
@@ -417,10 +418,10 @@ void TMarker3DBox::SetPoints(Float_t *buff)
         buff[21] = -fDx;    buff[22] =  fDy;    buff[23] =  fDz;
     }
 
-   Float_t x, y, z;
+   Double_t x, y, z;
    const Double_t kPI = TMath::Pi();
-   Float_t theta  = fTheta*kPI/180;
-   Float_t phi    = fPhi*kPI/180;
+   Double_t theta  = fTheta*kPI/180;
+   Double_t phi    = fPhi*kPI/180;
    Double_t sinth = TMath::Sin(theta);
    Double_t costh = TMath::Cos(theta);
    Double_t sinfi = TMath::Sin(phi);
@@ -430,7 +431,7 @@ void TMarker3DBox::SetPoints(Float_t *buff)
    // Matrix to convert from fruit frame to master frame
    //
 
-   Float_t M[9];
+   Double_t M[9];
    M[0] =  costh * cosfi;       M[1] = -sinfi;          M[2] = sinth*cosfi;
    M[3] =  costh * sinfi;       M[4] =  cosfi;          M[5] = sinth*sinfi;
    M[6] = -sinth;               M[7] =  0;              M[8] = costh;

@@ -37,7 +37,7 @@ INCLUDEFILES += $(VENUSDEP)
 include/%.h:    $(VENUSDIRI)/%.h
 		cp $< $@
 
-$(VENUSLIB):    $(VENUSO) $(VENUSDO) $(MAINLIBS)
+$(VENUSLIB):    $(VENUSO) $(VENUSDO) $(MAINLIBS) $(VENUSLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGVenus.$(SOEXT) $@ "$(VENUSO) $(VENUSDO)" \
 		   "$(VENUSLIBEXTRA) $(VENUS)"

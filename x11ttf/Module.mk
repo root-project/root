@@ -36,10 +36,11 @@ INCLUDEFILES += $(X11TTFDEP)
 include/%.h:    $(X11TTFDIRI)/%.h
 		cp $< $@
 
-$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11LIB)
+$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
-		   "$(X11TTFO) $(X11TTFDO)" "$(X11TTFLIBEXTRA)"
+		   "$(X11TTFO) $(X11TTFDO)" \
+		   "$(X11TTFLIBEXTRA) $(TTFLIBDIR)/libttf.a"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

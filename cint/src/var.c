@@ -773,11 +773,27 @@ int G__filescopeaccess(filenum,statictype)
 int filenum;
 int statictype;
 {
+#ifndef G__OLDIMPLEMENTATION1323
+  int store_filenum = filenum;
+  int store_statictype = statictype;
+#endif
   if(filenum==statictype) return(1);
   while(statictype>=0) {
     statictype = G__srcfile[statictype].included_from;
     if(filenum==statictype) return(1);
   }
+#ifndef G__OLDIMPLEMENTATION1323
+  statictype = store_statictype;
+  while(statictype>=0) {
+    filenum = store_filenum;
+    if(filenum==statictype) return(1);
+    statictype = G__srcfile[statictype].included_from;
+    while(filenum>=0) {
+      if(filenum==statictype) return(1);
+      filenum = G__srcfile[filenum].included_from;
+    }
+  }
+#endif
   return(0);
 }
 #endif

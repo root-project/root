@@ -37,4 +37,6 @@ F77           = fort77
 F77FLAGS      = $(OPT) -Nx800 -NC200
 F77LIBS       =
 
-
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/X11R6/lib -lXmu

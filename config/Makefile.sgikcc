@@ -13,8 +13,8 @@ CXXOPT        = +K0
 OPT           = -g -O0
 NOOPT         =
 else
-CXXOPT        = +K3 -O2 -OPT:Olimit=0
-OPT           = -O2 -OPT:Olimit=0
+CXXOPT        = +K3 
+OPT           = -O2
 NOOPT         =
 endif
 
@@ -69,9 +69,11 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd -ldl -lgen
 CRYPTLIBS     = -lcrypt
+
+# Fortran:
 F77           = f77
 F77FLAGS      = $(ABI)
 ifeq (n32,$(findstring n32,$(ROOTBUILD)))
@@ -79,3 +81,7 @@ F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a
+

@@ -10,6 +10,8 @@ linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
 linuxpgcc            for Linux pgcc and glibc
 linuxppcegcs         for PPC Linux egcs and glibc
 linuxdeb2ppc         for PPC Linux based on Debian v2.0
+linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
+linuxalphaegcs       for Alpha Linux egcs and glibc
 mklinux              for MkLinux gcc and glibc
 freebsd              for FreeBSD
 freebsd4             for FreeBSD 4.x

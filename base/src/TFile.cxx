@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1000,7 +1000,7 @@ void TFile::SumBuffer(Int_t bufsize)
 }
 
 //______________________________________________________________________________
-void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
 //*-*-*-*-*-*-*-*-*-*Write memory objects to this file*-*-*-*-*-*-*-*-*-*
 //*-*                =================================
@@ -1016,7 +1016,7 @@ void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 
    if (!IsWritable()) {
       Warning("Write", "file not opened in write mode");
-      return;
+      return 0;
    }
 
    TDirectory *cursav = gDirectory;
@@ -1029,11 +1029,12 @@ void TFile::Write(const char *, Int_t opt, Int_t bufsiz)
          Printf("TFile Writing Name=%s Title=%s", GetName(), GetTitle());
    }
 
-   TDirectory::Write(0, opt, bufsiz); // Write directory tree
+   Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
 
    cursav->cd();
+   return nbytes;
 }
 
 //______________________________________________________________________________

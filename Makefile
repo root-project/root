@@ -116,10 +116,12 @@ MAKEVERSION   = build/unix/makeversion.sh
 IMPORTCINT    = build/unix/importcint.sh
 MAKECOMPDATA  = build/unix/compiledata.sh
 MAKEMAKEINFO  = build/unix/makeinfo.sh
+MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
+MAKEDIST      = build/win/makedist.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
@@ -131,7 +133,7 @@ MAKEINFO      = cint/MAKEINFO
 ##### libCore #####
 
 COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
@@ -180,7 +182,7 @@ endif
 ##### TARGETS #####
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean compiledata importcint version html \
+                clean distclean compiledata importcint version html changelog \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -235,7 +237,7 @@ build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 %.d: %.cxx $(RMKDEP)
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
+$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA)"
@@ -243,7 +245,7 @@ $(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
 dist:
 	@$(MAKEDIST)
 
-distsrc: distclean
+distsrc:
 	@$(MAKEDISTSRC)
 
 clean::
@@ -259,8 +261,8 @@ distclean:: clean
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
-	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif
-	@rm -rf htmldoc
+	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
+	@rm -rf htmldoc README/ChangeLog
 	@cd test && $(MAKE) distclean
 
 version: $(CINTTMP)
@@ -269,9 +271,12 @@ version: $(CINTTMP)
 importcint: distclean-cint
 	@$(IMPORTCINT)
 
-html:    $(ROOTEXE)
+html: $(ROOTEXE)
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
+
+changelog:
+	@$(MAKECHANGELOG)
 
 install:
 	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
@@ -323,7 +328,7 @@ showbuild:
 	@echo "XLIBS              = $(XLIBS)"
 	@echo "CILIBS             = $(CILIBS)"
 	@echo "F77LIBS            = $(F77LIBS)"
-	@echi ""
+	@echo ""
 	@echo "PYTHIA             = $(PYTHIA)"
 	@echo "PYTHIA6            = $(PYTHIA6)"
 	@echo "VENUS              = $(VENUS)"
@@ -345,6 +350,6 @@ showbuild:
 	@echo "MAKEDEP            = $(MAKEDEP)"
 	@echo "MAKELIB            = $(MAKELIB)"
 	@echo "MAKEDIST           = $(MAKEDIST)"
-	@echo" MAKEDISTSRC        = $(MAKEDISTSRC)"
+	@echo "MAKEDISTSRC        = $(MAKEDISTSRC)"
 	@echo "MAKEVERSION        = $(MAKEVERSION)"
 	@echo "IMPORTCINT         = $(IMPORTCINT)"

@@ -552,19 +552,18 @@ void G__gen_cpplink()
 #endif
 
   if(0==(G__is_operator_newdelete&(G__MASK_OPERATOR_NEW|G__IS_OPERATOR_NEW))){
-#ifndef G__OLDIMPLEMENTATION938
     if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
       fprintf(fp,"static void* operator new(size_t size) {\n");
       fprintf(fp,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
     }
     else {
       fprintf(fp,"static void* operator new(size_t size,void* p) {\n");
-      fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
-    }
+#ifndef G__OLDIMPLEMENTATION1321
+      fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #else
-    fprintf(fp,"static void* operator new(size_t size,void* p) {\n");
-    fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+      fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #endif
+    }
     /* fprintf(fp,"  if(G__PVOID!=(long)p) return(p);\n"); */
     fprintf(fp,"#ifndef G__ROOT\n");
     fprintf(fp,"  return(malloc(size));\n");
@@ -629,7 +628,7 @@ void G__gen_cpplink()
   G__cpplink_global(fp);
   G__cpplink_func(fp);
   G__cpplink_tagtable(fp,hfp);
-  fprintf(fp,"extern \"C\" void G__cpp_setup%s() {\n",G__DLLID);
+  fprintf(fp,"extern \"C\" void G__cpp_setup%s(void) {\n",G__DLLID);
 #ifndef G__OLDIMPLEMENTATION1169
   fprintf(fp,"  G__check_setup_version(%d,\"G__cpp_setup%s()\");\n",
           G__CREATEDLLREV,G__DLLID);
@@ -684,19 +683,18 @@ void G__gen_cpplink()
     fprintf(G__serr,"extern \"C\" long G__getgvp();\n");
     fprintf(G__serr,"\n");
     if(G__is_operator_newdelete&(G__IS_OPERATOR_NEW)) {
-#ifndef G__OLDIMPLEMENTATION938
       if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
         fprintf(G__serr,"void* operator new(size_t size) {\n");
         fprintf(G__serr,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
       }
       else {
         fprintf(G__serr,"void* operator new(size_t size,void* p) {\n");
-        fprintf(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
-      }
+#ifndef G__OLDIMPLEMENTATION1321
+        fprintf(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #else
-      fprintf(G__serr,"void* operator new(size_t size,void* p) {\n");
-      fprintf(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+        fprintf(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #endif
+      }
       fprintf(G__serr,"  // Yourown things...\n");
       fprintf(G__serr,"}\n");
       fprintf(G__serr,"\n");
@@ -5408,7 +5406,11 @@ char *para_name;
   G__p_ifunc->para_reftype[G__func_now][ifn] = reftype;
 #endif
   G__p_ifunc->para_default[G__func_now][ifn] = para_default;
-  if(para_def[0]) {
+  if(para_def[0]
+#ifndef G__OLDIMPLEMENTATION1318
+     || (G__value*)NULL!=para_default
+#endif
+     ) {
     G__p_ifunc->para_def[G__func_now][ifn]=(char*)malloc(strlen(para_def)+1);
     strcpy(G__p_ifunc->para_def[G__func_now][ifn],para_def);
   }

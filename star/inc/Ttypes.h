@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name$:$Id$ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,15 +14,12 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.10 2000/04/27 23:20:43 fine Exp $
+// $Id: Ttypes.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
 // to generate a ROOT dictionary for "pure" C-strucutre the way ROOT    //
 // does it for the "normal" C++ classes                                 //
-//                                                                      //
-// This header file should be included into the all STAF table wrapper  //
-// classes (by stic compiler)                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -920,7 +920,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
       // special case for ROOT classes Txxx
       char *lib, *path;
 #ifdef WIN32
-      lib = Form("lib%s", libname);
+      lib = Form("lib%s", libname);       // used to be Root_%s
 #else
       lib = Form("lib%s", libname);
 #endif

@@ -1,0 +1,14 @@
+
+#ifndef G__FUNCTIONAL_DLL
+namespace std {
+#pragma include_noerr <functional.dll>
+}
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/functional>
+#else
+namespace std {
+#include <function.h>
+}
+#endif

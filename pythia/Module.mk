@@ -37,7 +37,7 @@ INCLUDEFILES += $(PYTHIADEP)
 include/%.h:    $(PYTHIADIRI)/%.h
 		cp $< $@
 
-$(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(EGLIB)
+$(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(PYTHIALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGPythia.$(SOEXT) $@ \
 		   "$(PYTHIAO) $(PYTHIADO)" \

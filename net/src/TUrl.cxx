@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -33,7 +33,8 @@ TUrl::TUrl(const char *url)
    // url: [proto://]host[:port][/file.ext][#anchor][?options]
    //
    // Known protocols: http, root, ftp, news, file, rfio, hpss (default http)
-   // Default ports: http=80, root=432, ftp=20, news=119.
+   // Default ports: http=80, root=1094, ftp=20, news=119.
+   // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
    if (!url || !strlen(url)) {
       fPort = -1;
@@ -86,7 +87,7 @@ TUrl::TUrl(const char *url)
       if (!fProtocol.CompareTo("http"))
          fPort = 80;
       else if (!fProtocol.CompareTo("root"))
-         fPort = 432;
+         fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))
          fPort = 20;
       else if (!fProtocol.CompareTo("news"))
@@ -223,9 +224,9 @@ const char *TUrl::GetUrl()
       }
 
       Bool_t deflt = kTRUE;
-      if ((!fProtocol.CompareTo("http") && fPort != 80)  ||
-          (!fProtocol.CompareTo("root") && fPort != 432) ||
-          (!fProtocol.CompareTo("ftp")  && fPort != 20)  ||
+      if ((!fProtocol.CompareTo("http") && fPort != 80)   ||
+          (!fProtocol.CompareTo("root") && fPort != 1094) ||
+          (!fProtocol.CompareTo("ftp")  && fPort != 20)   ||
           (!fProtocol.CompareTo("news") && fPort != 119))
          deflt = kFALSE;
       if (!deflt) {

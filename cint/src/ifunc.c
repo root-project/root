@@ -1141,6 +1141,28 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   isparam=0;
   cin=G__fgetname_template(paraname,"<*&,)=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(cin)) {
+    /* There was an argument and the parsing was stopped by a white
+     * space rather than on of ",)*&<=", it is possible that 
+     * we have a namespace followed by '::' in which case we have
+     * to grab more before stopping!
+    */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(cin) ) {
+      cin = G__fgetname(more,"<*&,)=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
   if(paraname[0]) {
     if(strcmp("void",paraname)==0) {
@@ -1781,6 +1803,28 @@ int func_now;
 
     /* read typename */
     c=G__fgetname_template(paraname,",)&*[(=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(c)) {
+    /* There was an argument and the parsing was stopped by a white
+     * space rather than on of ",)*&<=", it is possible that 
+     * we have a namespace followed by '::' in which case we have
+     * to grab more before stopping!
+    */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(c) ) {
+      c = G__fgetname(more,",)&*[(=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
     /* check const and unsigned keyword */
     if(strcmp(paraname,"...")==0) {
@@ -3190,6 +3234,11 @@ int recursive;
 	    -1!=formal_tagnum&&'e'==G__struct.type[formal_tagnum]) {
       funclist->p_rate[i] = G__EXACTMATCH;
     }
+#ifndef G__OLDIMPLEMENTATION1319
+    else if(isupper(formal_type)&&'i'==param_type&&0==libp->para[i].obj.i) {
+      funclist->p_rate[i] = G__STDCONVMATCH;
+    }
+#endif
     
     /* promotion */
     if(G__NOMATCH==funclist->p_rate[i]) {
@@ -3523,11 +3572,26 @@ int recursive;
 	G__incsetup_memfunc(param_tagnum);
 	ifunc2 = G__struct.memfunc[param_tagnum];
 	para.paran = 0;
+#ifndef G__OLDIMPLEMENTATION1316
+	sprintf(funcname2,"operator %s"
+		,G__type2string(formal_type,formal_tagnum,-1,0,0));
+#else
 	sprintf(funcname2,"operator %s"
 		,G__type2string(param_type,param_tagnum,-1,0,0));
+#endif
 	G__hash(funcname2,hash2,ifn2);
 	ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
 				   ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+#ifndef G__OLDIMPLEMENTATION1316
+	if(!ifunc2) {
+	  sprintf(funcname2,"operator %s"
+		  ,G__type2string(formal_type,formal_tagnum,-1,0,1));
+	  G__hash(funcname2,hash2,ifn2);
+	  ifunc2 = G__struct.memfunc[param_tagnum];
+	  ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
+				     ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+	}
+#endif
 	if(ifunc2 && -1!=ifn2) 
 	  funclist->p_rate[i] = G__USRCONVMATCH;
       }
@@ -4371,6 +4435,9 @@ int recursive;
 	    !p_ifunc->para_default[ifn][libp->paran])
 #ifdef G__OLDIMPLEMENTATION1260_YET
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
+#endif
+#ifndef G__OLDIMPLEMENTATION1315
+	   || (recursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	  funclist->rate = G__NOMATCH;
@@ -5750,7 +5817,11 @@ asm_ifunc_start:   /* loop compilation execution label */
        *  type func(type paraname=default,...)
        ****************************************/
       else {
-	if(p_ifunc->para_default[ifn][ipara]) {
+	if(
+#ifndef G__OLDIMPLEMENTATION1324
+	   p_ifunc->para_nu[ifn]>ipara && 
+#endif
+	   p_ifunc->para_default[ifn][ipara]) {
 	  if(p_ifunc->para_default[ifn][ipara]->type==G__DEFAULT_FUNCCALL) {
 	    G__ASSERT(p_ifunc->para_default[ifn][ipara]->ref);
 	    *p_ifunc->para_default[ifn][ipara] =

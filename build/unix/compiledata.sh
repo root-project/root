@@ -14,9 +14,12 @@ LDFLAGS=$6
 SOEXT=$7
 SYSLIBS=$8
 LIBDIR=$9
-ROOTLIBS=${10}
-RINTLIBS=${11}
-INCDIR=${12}
+shift
+ROOTLIBS=$9
+shift
+RINTLIBS=$9
+shift
+INCDIR=$9
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 // ***********************************************************************
 // * C++ class library to paint 3D axice "arround" TView object
@@ -177,7 +177,7 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
  if (fSelected) fSelected->ExecuteEvent(event,px,py);
  //  Execute action corresponding to the mouse event
 
-   static Float_t x0, y0, x1, y1;
+   static Double_t x0, y0, x1, y1;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
@@ -216,13 +216,13 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
         TView *view = gPad->GetView();
         if (!view) break;                       // no 3D view yet
 
-        Float_t min[3],max[3],viewCenter[3],viewCenterNDC[3];
+        Double_t min[3],max[3],viewCenter[3],viewCenterNDC[3];
 
         view->GetRange(min,max);
         for (i =0; i<3;i++) viewCenter[i] = (max[i]+min[i])/2;
         view->WCtoNDC(viewCenter,viewCenterNDC);
         // Define the center
-        Axis_t center[3],pointNDC[3],size[3],oldSize[3];
+        Double_t center[3],pointNDC[3],size[3],oldSize[3];
         ((TPad *)gPad)->AbsPixeltoXY(px,py,x1,y1);
         pointNDC[0] = (x0+x1)/2; pointNDC[1] = (y0+y1)/2;
         pointNDC[2] = viewCenterNDC[2];
@@ -232,14 +232,14 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
         // If there was a small motion, move the center only, do not change a scale
         if (TMath::Abs(px-px0)+TMath::Abs(py - py0) > 4 ) {
-           Float_t newEdge[3];
+           Double_t newEdge[3];
            for (i =0; i<3;i++) size[i] = -1;
 
            pointNDC[0] = x0; pointNDC[1] = y0;
 
            view->NDCtoWC(pointNDC, newEdge);
            for (i =0; i<3;i++) {
-             Float_t newSize = TMath::Abs(newEdge[i]-center[i]);
+             Double_t newSize = TMath::Abs(newEdge[i]-center[i]);
              if ( newSize/oldSize[i] > 0.002)
                size[i] = TMath::Max(size[i], newSize);
              else
@@ -250,7 +250,7 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
            view->NDCtoWC(pointNDC, newEdge);
            for (i =0; i<3;i++) {
-             Float_t newSize = TMath::Abs(newEdge[i]-center[i]);
+             Double_t newSize = TMath::Abs(newEdge[i]-center[i]);
              if ( newSize/oldSize[i] > 0.002)
                size[i] = TMath::Max(size[i], newSize);
              else
@@ -303,17 +303,17 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 //*-*          ==============================
 //*-* The original idea belongs:
 //*-*
-//*-* void THistPainter::PaintLegoAxis(TGaxis *axis, Float_t ang)
+//*-* void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //*-*
 
 
-    static Float_t epsil = 0.001;
+    static Double_t epsil = 0.001;
 
     Double_t cosa, sina;
-    Float_t bmin, bmax;
-    Float_t r[24]       /* was [3][8] */;
+    Double_t bmin, bmax;
+    Double_t r[24]       /* was [3][8] */;
     Int_t ndiv, i;
-    Float_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
+    Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
     char chopax[8];
     Int_t ix1, ix2, iy1, iy2, iz1, iz2;
     Double_t rad;
@@ -328,7 +328,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
         return;
     }
 
-    rad  = TMath::ATan(1.) * (float)4. / (float)180.;
+    rad  = TMath::ATan(1.) * 4. / 180.;
     cosa = TMath::Cos(ang*rad);
     sina = TMath::Sin(ang*rad);
 
@@ -348,15 +348,15 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 
     view->SetAxisNDC(x1, x2, y1, y2, z1, z2);
 
-    Float_t *rmin = view->GetRmin();
-    Float_t *rmax = view->GetRmax();
+    Double_t *rmin = view->GetRmin();
+    Double_t *rmax = view->GetRmax();
 
     axis->SetLineWidth(1);
 
     for (i=0;i<3;i++) {
 //*-*-          X axis drawing
 
-      Float_t ax[2], ay[2];
+      Double_t ax[2], ay[2];
       Bool_t logAx = kFALSE;
       memset(chopax,0,sizeof(chopax));
       switch (i) {
@@ -436,15 +436,15 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
     }
 }
 //______________________________________________________________________________
-Axis_t *TAxis3D::PixeltoXYZ(Axis_t px, Axis_t py, Axis_t *point3D, TView *view)
+Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view)
 {
   // Convert "screen pixel" coordinates to some center of 3D WC coordinate
   // if view and gPad present
-  Axis_t *thisPoint = 0;
+  Double_t *thisPoint = 0;
   if (!view && gPad) view = gPad->GetView();
   if (view) {
-    Axis_t x[3] = {px,py,0.5}; // ((TPad *)thisPad)->AbsPixeltoXY(px,py,x[0],x[1]);
-    Float_t min[3], max[3];
+    Double_t x[3] = {px,py,0.5}; // ((TPad *)thisPad)->AbsPixeltoXY(px,py,x[0],x[1]);
+    Double_t min[3], max[3];
     view->GetRange(min,max);
     Int_t i;
     for (i =0; i<3;i++) min[i] = (max[i]+min[i])/2;
@@ -578,7 +578,7 @@ void TAxis3D::SetAxisColor(Color_t color, Option_t *axis)
 }
 
 //______________________________________________________________________________
-void TAxis3D::SetAxisRange(Float_t xmin, Float_t xmax, Option_t *axis)
+void TAxis3D::SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    TAxis *theAxis = &fAxis[ax];

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -38,12 +38,12 @@ ClassImp(TGraphAsymmErrors)
 //   c1->GetFrame()->SetBorderSize(12);
 //
 //   Int_t n = 10;
-//   Float_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
-//   Float_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-//   Float_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-//   Float_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-//   Float_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
-//   Float_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+//   Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+//   Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+//   Double_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+//   Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+//   Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+//   Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
 //   gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
 //   gr->SetTitle("TGraphAsymmErrors Example");
 //   gr->SetMarkerColor(4);
@@ -72,6 +72,34 @@ TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
 
 
 //______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)
+       : TGraph(n)
+{
+//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
+//
+//  the arrays are preset to zero
+
+   if (n <= 0) {
+      Error("TGraphAsymmErrors", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fEXlow       = new Double_t[n];
+   fEYlow       = new Double_t[n];
+   fEXhigh      = new Double_t[n];
+   fEYhigh      = new Double_t[n];
+
+   for (Int_t i=0;i<n;i++) {
+      fEXlow[i]  = 0;
+      fEXhigh[i] = 0;
+      fEYlow[i]  = 0;
+      fEYhigh[i] = 0;
+   }
+}
+
+
+//______________________________________________________________________________
 TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Float_t *x, Float_t *y, Float_t *exl, Float_t *exh, Float_t *eyl, Float_t *eyh)
        : TGraph(n,x,y)
 {
@@ -85,10 +113,41 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Float_t *x, Float_t *y, Float_t *e
       return;
    }
 
-   fEXlow       = new Float_t[n];
-   fEYlow       = new Float_t[n];
-   fEXhigh      = new Float_t[n];
-   fEYhigh      = new Float_t[n];
+   fEXlow       = new Double_t[n];
+   fEYlow       = new Double_t[n];
+   fEXhigh      = new Double_t[n];
+   fEYhigh      = new Double_t[n];
+
+   for (Int_t i=0;i<n;i++) {
+      if (exl) fEXlow[i]  = exl[i];
+      else     fEXlow[i]  = 0;
+      if (exh) fEXhigh[i] = exh[i];
+      else     fEXhigh[i] = 0;
+      if (eyl) fEYlow[i]  = eyl[i];
+      else     fEYlow[i]  = 0;
+      if (eyh) fEYhigh[i] = eyh[i];
+      else     fEYhigh[i] = 0;
+   }
+}
+
+//______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Double_t *x, Double_t *y, Double_t *exl, Double_t *exh, Double_t *eyl, Double_t *eyh)
+       : TGraph(n,x,y)
+{
+//*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
+//
+//  if exl,h or eyl,h are null, the corresponding arrays are preset to zero
+
+   if (n <= 0) {
+      Error("TGraphAsymmErrors", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fEXlow       = new Double_t[n];
+   fEYlow       = new Double_t[n];
+   fEXhigh      = new Double_t[n];
+   fEYhigh      = new Double_t[n];
 
    for (Int_t i=0;i<n;i++) {
       if (exl) fEXlow[i]  = exl[i];
@@ -115,7 +174,7 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::ComputeRange(Float_t &xmin, Float_t &ymin, Float_t &xmax, Float_t &ymax)
+void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
 {
   for (Int_t i=0;i<fNpoints;i++) {
      if (fX[i] -fEXlow[i]  < xmin) xmin = fX[i]-fEXlow[i];
@@ -126,28 +185,28 @@ void TGraphAsymmErrors::ComputeRange(Float_t &xmin, Float_t &ymin, Float_t &xmax
 }
 
 //______________________________________________________________________________
-Float_t TGraphAsymmErrors::GetErrorX(Int_t i)
+Double_t TGraphAsymmErrors::GetErrorX(Int_t i)
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the quadratic error along X at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
-   Float_t elow=0, ehigh=0;
+   Double_t elow=0, ehigh=0;
    if (fEXlow)  elow  = fEXlow[i];
    if (fEXhigh) ehigh = fEXhigh[i];
    return TMath::Sqrt(elow*elow + ehigh*ehigh);
 }
 
 //______________________________________________________________________________
-Float_t TGraphAsymmErrors::GetErrorY(Int_t i)
+Double_t TGraphAsymmErrors::GetErrorY(Int_t i)
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the quadratic error along Y at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;
-   Float_t elow=0, ehigh=0;
+   Double_t elow=0, ehigh=0;
    if (fEYlow)  elow  = fEYlow[i];
    if (fEYhigh) ehigh = fEYhigh[i];
    return TMath::Sqrt(elow*elow + ehigh*ehigh);
@@ -160,8 +219,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 //*-*              ==================================================
 
    const Int_t BASEMARKER=8;
-   Float_t s2x, s2y, symbolsize;
-   Float_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
+   Double_t s2x, s2y, symbolsize;
+   Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
@@ -171,8 +230,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 
    symbolsize  = GetMarkerSize();
    Int_t mark  = GetMarkerStyle();
-   Float_t cx  = 0;
-   Float_t cy  = 0;
+   Double_t cx  = 0;
+   Double_t cy  = 0;
    if (mark >= 20 && mark < 31) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
@@ -265,7 +324,7 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::SetPoint(Int_t i, Float_t x, Float_t y)
+void TGraphAsymmErrors::SetPoint(Int_t i, Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set x and y values for point number i*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -273,19 +332,19 @@ void TGraphAsymmErrors::SetPoint(Int_t i, Float_t x, Float_t y)
    if (i < 0) return;
    if (i >= fNpoints) {
    // re-allocate the object
-      Float_t *savex   = new Float_t[i+1];
-      Float_t *savey   = new Float_t[i+1];
-      Float_t *saveexl = new Float_t[i+1];
-      Float_t *saveeyl = new Float_t[i+1];
-      Float_t *saveexh = new Float_t[i+1];
-      Float_t *saveeyh = new Float_t[i+1];
+      Double_t *savex   = new Double_t[i+1];
+      Double_t *savey   = new Double_t[i+1];
+      Double_t *saveexl = new Double_t[i+1];
+      Double_t *saveeyl = new Double_t[i+1];
+      Double_t *saveexh = new Double_t[i+1];
+      Double_t *saveeyh = new Double_t[i+1];
       if (fNpoints > 0) {
-         memcpy(savex,  fX,     fNpoints*sizeof(Float_t));
-         memcpy(savey,  fY,     fNpoints*sizeof(Float_t));
-         memcpy(saveexl,fEXlow, fNpoints*sizeof(Float_t));
-         memcpy(saveeyl,fEYlow, fNpoints*sizeof(Float_t));
-         memcpy(saveexh,fEXhigh,fNpoints*sizeof(Float_t));
-         memcpy(saveeyh,fEYhigh,fNpoints*sizeof(Float_t));
+         memcpy(savex,  fX,     fNpoints*sizeof(Double_t));
+         memcpy(savey,  fY,     fNpoints*sizeof(Double_t));
+         memcpy(saveexl,fEXlow, fNpoints*sizeof(Double_t));
+         memcpy(saveeyl,fEYlow, fNpoints*sizeof(Double_t));
+         memcpy(saveexh,fEXhigh,fNpoints*sizeof(Double_t));
+         memcpy(saveeyh,fEYhigh,fNpoints*sizeof(Double_t));
       }
       if (fX)      delete [] fX;
       if (fY)      delete [] fY;
@@ -306,7 +365,7 @@ void TGraphAsymmErrors::SetPoint(Int_t i, Float_t x, Float_t y)
 }
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::SetPointError(Int_t i, Float_t exl, Float_t exh, Float_t eyl, Float_t eyh)
+void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set ex and ey values for point number i*-*-*-*-*-*-*-*
 //*-*                  =======================================
@@ -329,16 +388,37 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
 
    UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TGraph::Streamer(b);
-      fEXlow  = new Float_t[fNpoints];
-      fEYlow  = new Float_t[fNpoints];
-      fEXhigh = new Float_t[fNpoints];
-      fEYhigh = new Float_t[fNpoints];
-      b.ReadFastArray(fEXlow,fNpoints);
-      b.ReadFastArray(fEYlow,fNpoints);
-      b.ReadFastArray(fEXhigh,fNpoints);
-      b.ReadFastArray(fEYhigh,fNpoints);
+      fEXlow  = new Double_t[fNpoints];
+      fEYlow  = new Double_t[fNpoints];
+      fEXhigh = new Double_t[fNpoints];
+      fEYhigh = new Double_t[fNpoints];
+      if (R__v < 2) {
+         Float_t *exlow  = new Float_t[fNpoints];
+         Float_t *eylow  = new Float_t[fNpoints];
+         Float_t *exhigh = new Float_t[fNpoints];
+         Float_t *eyhigh = new Float_t[fNpoints];
+         b.ReadFastArray(exlow,fNpoints);
+         b.ReadFastArray(eylow,fNpoints);
+         b.ReadFastArray(exhigh,fNpoints);
+         b.ReadFastArray(eyhigh,fNpoints);
+         for (Int_t i=0;i<fNpoints;i++) {
+            fEXlow[i]  = exlow[i];
+            fEYlow[i]  = eylow[i];
+            fEXhigh[i] = exhigh[i];
+            fEYhigh[i] = eyhigh[i];
+         }
+         delete [] eylow;
+         delete [] exlow;
+         delete [] eyhigh;
+         delete [] exhigh;
+      } else {
+         b.ReadFastArray(fEXlow,fNpoints);
+         b.ReadFastArray(fEYlow,fNpoints);
+         b.ReadFastArray(fEXhigh,fNpoints);
+         b.ReadFastArray(fEYhigh,fNpoints);
+      }
       b.CheckByteCount(R__s, R__c, TGraphAsymmErrors::IsA());
    } else {
       R__c = b.WriteVersion(TGraphAsymmErrors::IsA(), kTRUE);

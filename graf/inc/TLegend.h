@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TLegendEntry;
 class TLegend : public TPave , public TAttText {
  public:
   TLegend();
-  TLegend( Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2,
+  TLegend( Double_t x1, Double_t y1, Double_t x2, Double_t y2,
            const char* header = "", Option_t* option="brNDC" );
   virtual ~TLegend();
   TLegend( const TLegend &legend );

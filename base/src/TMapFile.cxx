@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -9,30 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #ifdef WIN32
-#if defined(__hpux) && !defined(__GNUG__)
-#pragma OPTIMIZE OFF
-#endif
-
-#if defined(_AIX) && !defined(__GNUG__)
-#endif
-
-#if defined(__alpha) && !defined(__GNUG__)
-#endif
-
-#if defined(__sun) && !defined(__GNUG__)
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__)
-#endif
-
-#if defined(_linux)
-#endif
-
-#ifdef WIN32
 #pragma optimize("",off)
 #endif
 
-#endif
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMapFile                                                             //

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
     virtual void    Export(TClonesArray *list, Int_t n);
     virtual void    FillBasket(TBuffer &b);
     const char     *GetTypeName() const {return "Float_t";}
-    Float_t         GetValue(Int_t i=0);
+    Double_t        GetValue(Int_t i=0);
     virtual void   *GetValuePointer() {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
     virtual void    Print(Option_t *option="");
@@ -51,6 +51,6 @@ public:
     ClassDef(TLeafF,1)  //A TLeaf for a 32 bit floating point data type.
 };
 
-inline Float_t TLeafF::GetValue(Int_t i) { return fValue[i]; }
+inline Double_t TLeafF::GetValue(Int_t i) { return fValue[i]; }
 
 #endif

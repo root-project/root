@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.8 2000/06/14 09:09:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -246,8 +246,14 @@
 #include "TVirtualPad.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
+#include "TF1.h"
+#include "TVirtualFitter.h"
 
 TTree *gTree;
+
+TVirtualFitter *tFitter=0;
+
+extern void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 
 ClassImp(TTree)
@@ -914,6 +920,79 @@ void TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int
 //  nentries is the number of entries to process (default is all)
 //  first is the first entry to process (default is 0)
 //
+//     Drawing expressions using arrays and array elements
+//     ===================================================
+// Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
+// or a TClonesArray. 
+// In a TTree::Draw expression you can now access fMatrix using the following 
+// syntaxes:
+// 
+//   String passed    What is used for each entry of the tree
+// 
+//   "fMatrix"       the 9 elements of fMatrix
+//   "fMatrix[][]"   the 9 elements of fMatrix
+//   "fMatrix[2][2]" only the elements fMatrix[2][2]
+//   "fMatrix[1]"    the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[1][]"  the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[][0]"  the 3 elements fMatrix[0][0], fMatrix[1][0] and fMatrix[2][0]
+// 
+//   "fEvent.fMatrix...." same as "fMatrix..." (unless there is more than one leaf named fMatrix!).
+// 
+// In summary, if a specific index is not specified for a dimension, TTree::Draw
+// will loop through all the indices along this dimension.  Leaving off the
+// last (right most) dimension of specifying then with the two characters '[]' 
+// is equivalent.  For variable size arrays (and TClonesArray) the range
+// of the first dimension is recalculated for each entry of the tree.
+// 
+// TTree::Draw also now properly handling operations involving 2 or more arrays.
+// 
+// Let assume a second matrix fResults[5][2], here are a sample of some 
+// of the possible combinations, the number of elements they produce and
+// the loop used:
+//  
+//  expression                       element(s)  Loop
+// 
+//  "fMatrix[2][1] - fResults[5][2]"   one     no loop
+//  "fMatrix[2][]  - fResults[5][2]"   three   on 2nd dim fMatrix
+//  "fMatrix[2][]  - fResults[5][]"    two     on both 2nd dimensions
+//  "fMatrix[][2]  - fResults[][1]"    three   on both 1st dimensions
+//  "fMatrix[][2]  - fResults[][]"     six     on both 1st and 2nd dimensions of
+//                                             fResults
+//  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of 
+//                                             fResults (at the same time)
+//  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim 
+//  
+// 
+// In summary, TTree::Draw loops through all un-specified dimensions.  To
+// figure out the range of each loop, we match each unspecified dimension 
+// from left to right (ignoring ALL dimensions for which an index has been 
+// specified), in the equivalent loop matched dimensions use the same index 
+// and are restricted to the smallest range (of only the matched dimensions).
+// When involving variable arrays, the range can of course be different
+// for each entry of the tree.
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
+// 
+//    for (Int_t i0; i < min(3,2); i++) {
+//       use the value of (fMatrix[i0][2] - fMatrix[3][i0])
+//    }
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < 2; i1++) { 
+//          use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
+//       }
+//    }
+// 
+// So the loop equivalent to "fMatrix[][] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < min(3,2); i1++) { 
+//          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
+//       }
+//    }
+//
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
@@ -1082,12 +1161,12 @@ Int_t TTree::Fill()
 }
 
 //______________________________________________________________________________
-void TTree::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+void TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
 //
-//  formula is a TF1 expression.
+//  funcname is a TF1 function.
 //
 //  See TTree::Draw for explanations of the other parameters.
 //
@@ -1099,9 +1178,10 @@ void TTree::Fit(const char *formula ,const char *varexp, const char *selection,O
 //    will fit sqrt(x) and save the histogram as "hsqrt" in the current
 //    directory.
 //
+//   See also TTree::UnbinnedFit
 
    GetPlayer();
-   if (fPlayer) fPlayer->Fit(formula,varexp,selection,option,goption,nentries,firstentry);
+   if (fPlayer) fPlayer->Fit(funcname,varexp,selection,option,goption,nentries,firstentry);
 }
 
 //______________________________________________________________________________
@@ -1232,7 +1312,7 @@ TLeaf *TTree::GetLeaf(const char *name)
 
 
 //______________________________________________________________________________
-Float_t TTree::GetMaximum(const char *columname)
+Double_t TTree::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
@@ -1240,10 +1320,10 @@ Float_t TTree::GetMaximum(const char *columname)
    TLeaf *leaf = GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
-   Float_t cmax = -FLT_MAX; //in float.h
+   Double_t cmax = -FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Float_t val = leaf->GetValue();
+      Double_t val = leaf->GetValue();
       if (val > cmax) cmax = val;
    }
    return cmax;
@@ -1251,7 +1331,7 @@ Float_t TTree::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Float_t TTree::GetMinimum(const char *columname)
+Double_t TTree::GetMinimum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
@@ -1259,10 +1339,10 @@ Float_t TTree::GetMinimum(const char *columname)
    TLeaf *leaf = GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
-   Float_t cmin = FLT_MAX; //in float.h
+   Double_t cmin = FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Float_t val = leaf->GetValue();
+      Double_t val = leaf->GetValue();
       if (val < cmin) cmin = val;
    }
    return cmin;
@@ -1455,13 +1535,13 @@ void TTree::Print(Option_t *option)
      TKey *key = fDirectory->GetKey(GetName());
      if (key) s = key->GetNbytes();
   }
-  Int_t total = Int_t(fTotBytes) + s;
-  Int_t file  = Int_t(fZipBytes) + s;
-  Float_t cx  = 1;
+  Double_t total = fTotBytes + s;
+  Int_t file     = Int_t(fZipBytes) + s;
+  Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
   Printf("******************************************************************************");
   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total  Size = %9d bytes  File  Size = %10d *",Int_t(fEntries),total,file);
+  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %10d *",Int_t(fEntries),total,file);
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
@@ -1557,7 +1637,7 @@ void TTree::Scan(const char *varexp, const char *selection, Option_t *option, In
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
       nb++;
       branch->SetBasketSize(buffsize);
    }
@@ -1593,41 +1673,56 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
 
-   TBranch *branch, *bclones, *bson;
+   TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
 
    Int_t i,j;
    Int_t nleaves = fLeaves.GetEntriesFast();
    TRegexp re(bname,kTRUE);
    Int_t nb = 0;
+   
+   // first pass, loop on all branches
+   // for leafcount branches activate/deactivate in function of status
    for (i=0;i<nleaves;i++)  {
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
       else        branch->SetBit(kDoNotProcess);
       leafcount = leaf->GetLeafCount();
       if (leafcount) {
-         bclones = GetBranch(leafcount->GetName());
-         bclones->ResetBit(kDoNotProcess);
+         bcount = GetBranch(leafcount->GetName());
+         if (status) bcount->ResetBit(kDoNotProcess);
+         else        bcount->SetBit(kDoNotProcess);
       }
    }
    if (!nb) {
       Error("SetBranchStatus", "unknown branch -> %s", bname);
       return;
    }
+   
+   
+   // second pass, loop again on all branches
+   // activate leafcount branches for active branches only
    for (i = 0; i < nleaves; i++) {
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
-      if (!branch->TestBit(kDoNotProcess)) continue;
-      Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
-      for (j=0;j<nbranches;j++) {
-         bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
-         if (!bson->TestBit(kDoNotProcess)) {
-             branch->ResetBit(kDoNotProcess);
-             break;
+      if (!branch->TestBit(kDoNotProcess)) {
+         leafcount = leaf->GetLeafCount();
+         if (leafcount) {
+            bcount = GetBranch(leafcount->GetName());
+            bcount->ResetBit(kDoNotProcess);
+         }
+      } else {
+         Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
+         for (j=0;j<nbranches;j++) {
+            bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
+            if (!bson->TestBit(kDoNotProcess)) {
+               branch->ResetBit(kDoNotProcess);
+               break;
+            }
          }
       }
    }
@@ -1803,4 +1898,223 @@ void TTree::Streamer(TBuffer &b)
       fStreamerInfoList->Streamer(b);
       b.SetByteCount(R__c, kTRUE);
    }
+}
+
+//______________________________________________________________________________
+void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t *par, Int_t flag)
+{
+// The fit function used by the unbinned likelihood fit.
+   
+  TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
+  Int_t n = gTree->GetSelectedRows();
+  Double_t  *data1 = gTree->GetV1();
+  Double_t  *data2 = gTree->GetV2();
+  Double_t  *data3 = gTree->GetV3();
+  Double_t *weight = gTree->GetW();
+  Double_t logEpsilon = -230;   // protect against negative probabilities
+  Double_t logL = 0.0, prob;
+  Double_t sum = fitfunc->GetChisquare();
+  
+  Double_t x[3];
+  for(Int_t i = 0; i < n; i++) {
+    x[0] = data1[i];
+    if (data2) x[1] = data2[i];
+    if (data3) x[2] = data3[i];
+    prob = fitfunc->EvalPar(x,par) * weight[i]/sum;
+    if(prob > 0) logL += TMath::Log(prob);
+    else         logL += logEpsilon;
+  }
+  
+  r = -logL;
+}
+
+
+
+//______________________________________________________________________________
+void TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
+//*-*        ===================================================
+//
+//  funcname is a TF1 function.
+//
+//  See TTree::Draw for explanations of the other parameters.
+//
+//   Fit the variable varexp using the function funcname using the
+//   selection cuts given by selection.
+//
+//   The list of fit options is given in parameter option.
+//      option = "Q" Quiet mode (minimum printing)
+//             = "V" Verbose mode (default is between Q and V)
+//             = "E" Perform better Errors estimation using Minos technique
+//             = "M" More. Improve fit results
+//
+//   You can specify boundary limits for some or all parameters via
+//        func->SetParLimits(p_number, parmin, parmax);
+//   if parmin>=parmax, the parameter is fixed
+//   Note that you are not forced to fix the limits for all parameters.
+//   For example, if you fit a function with 6 parameters, you can do:
+//     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
+//     func->SetParLimits(4,-10,-4);
+//     func->SetParLimits(5, 1,1);
+//   With this setup, parameters 0->3 can vary freely
+//   Parameter 4 has boundaries [-10,-4] with initial value -8
+//   Parameter 5 is fixed to 100.
+//
+//   For the fit to be meaningful, the function must be self-normalized.
+//
+//   i.e. It must have the same integral regardless of the parameter
+//   settings.  Otherwise the fit will effectively just maximize the
+//   area.
+//   
+//   In practice it is convenient to have a normalization variable
+//   which is fixed for the fit.  e.g.
+//   
+//     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
+//     f1->SetParameters(1, 3.1, 0.01);
+//     f1->SetParLimits(0, 1, 1); // fix the normalization parameter to 1
+//     data->UnbinnedFit("f1", "jpsimass", "jpsipt>3.0");
+//   //
+//
+//   1, 2 and 3 Dimensional fits are supported.
+//   See also TTree::Fit
+
+  Int_t i, npar,nvpar,nparx;
+  Double_t par, we, al, bl;
+  Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
+  Double_t arglist[10];
+  
+  // Set the global fit function so that TreeUnbinnedFitLikelihood can find it. 
+  TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
+  if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return; }
+  npar = fitfunc->GetNpar();
+  if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return; }
+  
+  // Spin through the data to select out the events of interest
+  // Make sure that the arrays V1,etc are created large enough to accomodate
+  // all entries
+  Int_t oldEstimate = fEstimate;
+  Int_t nent = Int_t(fEntries);
+  fEstimate = TMath::Min(nent,nentries);
+  
+  Draw(varexp, selection, "goff", nentries, firstentry);
+
+  fEstimate = oldEstimate;
+
+  //if no selected entries return
+  Int_t nrows = GetSelectedRows();
+  if (nrows <= 0) {
+     Error("UnbinnedFit", "Cannot fit: no entries selected"); 
+     return;
+  }
+     
+  // Check that function has same dimension as number of variables
+  Int_t ndim = fPlayer->GetDimension();
+  if (ndim != fitfunc->GetNdim()) {
+     Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim); 
+     return;
+  }
+       
+  //Compute total sum of weights to set the normalization factor
+  Double_t sum = 0;
+  Double_t *w = GetW();
+  for (i=0;i<nrows;i++) {
+     sum += w[i];
+  }
+  fitfunc->SetChisquare(sum); //this info can be used in fitfunc
+  
+  // Create and set up the fitter
+  gTree = this;
+  tFitter = TVirtualFitter::Fitter(this);
+  tFitter->Clear();
+  tFitter->SetFCN(TreeUnbinnedFitLikelihood);
+
+  tFitter->SetObjectFit(fitfunc);
+ 
+  TString opt = option;
+  opt.ToLower();
+  // Some initialisations
+   if (!opt.Contains("v")) {
+      arglist[0] = -1;
+      tFitter->ExecuteCommand("SET PRINT", arglist,1);
+      arglist[0] = 0;
+      tFitter->ExecuteCommand("SET NOW",   arglist,0);
+   }
+
+  // Setup the parameters (#, name, start, step, min, max)
+  Double_t min, max;
+  for(i = 0; i < npar; i++) {
+    fitfunc->GetParLimits(i, min, max);
+    if(min < max) {
+      tFitter->SetParameter(i, fitfunc->GetParName(i),
+                               fitfunc->GetParameter(i),
+                               fitfunc->GetParameter(i)/100.0, min, max);
+    } else {
+      tFitter->SetParameter(i, fitfunc->GetParName(i),
+                               fitfunc->GetParameter(i),
+                               fitfunc->GetParameter(i)/100.0, 0, 0);
+    }
+
+
+    // Check for a fixed parameter
+    if(max <= min && min > 0.0) {
+       tFitter->FixParameter(i);
+    }
+  }  // end for loop through parameters
+
+   // Reset Print level
+   if (opt.Contains("v")) {
+      arglist[0] = 0; 
+      tFitter->ExecuteCommand("SET PRINT", arglist,1);
+   }
+
+  // Now ready for minimization step
+  arglist[0] = TVirtualFitter::GetMaxIterations();
+  arglist[1] = 1;
+  tFitter->ExecuteCommand("MIGRAD", arglist, 2);
+  if (opt.Contains("m")) {
+     tFitter->ExecuteCommand("IMPROVE",arglist,0);
+  }
+  if (opt.Contains("e")) {
+     tFitter->ExecuteCommand("HESSE",arglist,0);
+     tFitter->ExecuteCommand("MINOS",arglist,0);
+  }
+  fitfunc->SetChisquare(0); //to not confuse user with the stored sum of w**2
+
+   // Get return status into function
+   char parName[50];
+   for (i=0;i<npar;i++) {
+      tFitter->GetParameter(i,parName, par,we,al,bl);
+      if (opt.Contains("e")) werr = we;
+      else {
+         tFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+         else                         werr = we;
+      }
+      fitfunc->SetParameter(i,par);
+      fitfunc->SetParError(i,werr);
+   }
+   tFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+
+   // Print final values of parameters.
+   if (!opt.Contains("q")) {
+      amin = 0;
+      tFitter->PrintResults(1, amin);
+   }
+}
+
+//______________________________________________________________________________
+void TTree::UseCurrentStyle()
+{
+//*-*-*-*-*-*Replace current attributes by current style*-*-*-*-*
+//*-*        ===========================================
+
+   SetFillColor(gStyle->GetHistFillColor());
+   SetFillStyle(gStyle->GetHistFillStyle());
+   SetLineColor(gStyle->GetHistLineColor());
+   SetLineStyle(gStyle->GetHistLineStyle());
+   SetLineWidth(gStyle->GetHistLineWidth());
+   SetMarkerColor(gStyle->GetMarkerColor());
+   SetMarkerStyle(gStyle->GetMarkerStyle());
+   SetMarkerSize(gStyle->GetMarkerSize());
 }

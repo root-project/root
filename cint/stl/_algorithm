@@ -1,0 +1,9 @@
+#ifndef G__ALGORITHM_DLL
+#pragma include_noerr <algorithm.dll>
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/algorithm>
+#else
+#include <algo.h>
+#endif

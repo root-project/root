@@ -33,4 +33,11 @@ SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen -L/usr/ucblib -lucb
 XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
+# Fortran:
+F77           = /opt/SUNWspro/bin/f77
+F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
 

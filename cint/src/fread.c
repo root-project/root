@@ -107,6 +107,9 @@ char *string,*endmark;
   int tmpltnest=0;
   char *pp = string;
 #endif
+#ifndef G__OLDIMPLEMENTATION1317
+  int pflag = 0;
+#endif
   
   spaceflag=0;
 
@@ -141,6 +144,11 @@ char *string,*endmark;
 	    c=' ';
 	    break;
 	  }
+#ifndef G__OLDIMPLEMENTATION1317
+	  else if('*'==string[i-1]) {
+	    pflag = 1;
+	  }
+#endif
 	}
 #endif
 #ifndef G__OLDIMPLEMENTATION1223
@@ -296,6 +304,12 @@ char *string,*endmark;
     }
     
     if(ignoreflag==0) {
+#ifndef G__OLDIMPLEMENTATION1317
+      if(pflag && (isalpha(c) || '_'==c)) {
+	string[i++] = ' ' ;
+      }
+      pflag = 0;
+#endif
       string[i++] = c ;
     }
     
@@ -573,6 +587,9 @@ char *string,*endmark;
 #ifndef G__OLDIMPLEMENTATION608
   char *pp = string;
 #endif
+#ifndef G__OLDIMPLEMENTATION1317
+  int pflag = 0;
+#endif
   
   
   do {
@@ -604,6 +621,11 @@ char *string,*endmark;
 	  pp=string+i+1;
 	  break;
 	}
+#ifndef G__OLDIMPLEMENTATION1317
+	else if(i&&'*'==string[i-1]) {
+	  pflag = 1;
+	}
+#endif
 #endif
 	ignoreflag=1;
       }
@@ -719,6 +741,12 @@ char *string,*endmark;
     }
     
     if(ignoreflag==0) {
+#ifndef G__OLDIMPLEMENTATION1317
+      if(pflag && (isalpha(c) || '_'==c)) {
+	string[i++] = ' ' ;
+      }
+      pflag = 0;
+#endif
       string[i++] = c ;
     }
     
@@ -759,6 +787,9 @@ char *string,*endmark;
   short nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
 #ifndef G__OLDIMPLEMENTATION608
   char *pp = string;
+#endif
+#ifndef G__OLDIMPLEMENTATION1317
+  int pflag = 0;
 #endif
   
 
@@ -833,6 +864,11 @@ char *string,*endmark;
 	  pp=string+i+1;
 	  break;
 	}
+#ifndef G__OLDIMPLEMENTATION1317
+	else if('*'==string[i-1]) {
+	  pflag = 1;
+	}
+#endif
 #endif
 	ignoreflag=1;
       }
@@ -869,7 +905,15 @@ char *string,*endmark;
 #endif
     }
     
-    if(ignoreflag==0) string[i++] = c ;
+    if(ignoreflag==0) {
+#ifndef G__OLDIMPLEMENTATION1317
+      if(pflag && (isalpha(c) || '_'==c)) {
+	string[i++] = ' ' ;
+      }
+      pflag = 0;
+#endif
+      string[i++] = c ;
+    }
     
   } while(flag==0) ;
   

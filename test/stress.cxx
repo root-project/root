@@ -37,7 +37,9 @@
 // At the end of the test a table is printed showing the global results
 // with the amount of I/O, Real Time and Cpu Time.
 // One single number (ROOTMARKS) is also calculated showing the relative
-// performance of your machine compared to a reference machine (HP735/99).
+// performance of your machine compared to a reference machine
+// a DELL Inspiron 7500 (Pentium III 600 Mhz) with 256 MBytes of memory
+// and 18 GBytes IDE disk.
 //
 // An example of output when all the tests run OK is shown below:
 // ******************************************************************
@@ -59,15 +61,15 @@
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
-// ******************************************************************
-// *  Linux pcnotebrun.cern.ch 2.0.33 #3 Sun Apr 12 10:53:37 METD
-// ******************************************************************
-// stress    : Total I/O =  425.6 Mbytes, I =  296.4, O = 129.3
-// stress    : Compr I/O =  407.3 Mbytes, I =  286.3, O = 121.0
-// stress    : Real Time = 365.89 seconds Cpu Time = 323.66 seconds
-// ******************************************************************
-// *  ROOTMARKS =  35.1   *  Root 2.00/13  981110/1312
-// ******************************************************************
+//******************************************************************
+//*  Linux pcnotebrun 2.2.14 #2 Tue Mar 21 16:36:17 MET 2000 i68
+//******************************************************************
+//stress    : Total I/O =  628.6 Mbytes, I =  475.5, O = 153.1
+//stress    : Compr I/O =  597.7 Mbytes, I =  452.9, O = 144.7
+//stress    : Real Time =  92.93 seconds Cpu Time =  79.29 seconds
+//******************************************************************
+//*  ROOTMARKS = 200.5   *  Root2.25/00   20000613/1440
+//******************************************************************
 //
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -196,21 +198,21 @@ void stress(Int_t nevent)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_hp10   = 171;  //HP times with the native compiler
-   Float_t cp_hp10   = 152;
-   Float_t rt_hp1000 = 674;
-   Float_t cp_hp1000 = 411;
+   Float_t rt_dell_30   = 36.85;  //Pentium III 600 Mhz times with the native compiler
+   Float_t cp_dell_30   = 34.97;
+   Float_t rt_dell_1000 = 94.44;
+   Float_t cp_dell_1000 = 80.38;
 #else
-   Float_t rt_hp10   = 476;  //HP times with CINT
-   Float_t cp_hp10   = 451;  //The difference is essentially coming from stress16
-   Float_t rt_hp1000 = 1165;
-   Float_t cp_hp1000 = 828;
+   Float_t rt_dell_30   = 81.73;  //Pentium III 600 Mhz times with CINT
+   Float_t cp_dell_30   = 79.43;  //The difference is essentially coming from stress16
+   Float_t rt_dell_1000 = 155.37;
+   Float_t cp_dell_1000 = 142.56;
 #endif
-   Float_t cp_hp = cp_hp1000 - (cp_hp1000 - cp_hp10)*(1000-nevent)/(1000-10);
-   Float_t rt_hp = rt_hp1000 - (rt_hp1000 - rt_hp10)*(1000-nevent)/(1000-10);
+   Float_t cp_dell = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
+   Float_t rt_dell = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt = gBenchmark->GetRealTime("stress");
    Float_t ct = gBenchmark->GetCpuTime("stress");
-   Float_t rootmarks = 27*(rt_hp + cp_hp)/(rt + ct);
+   Float_t rootmarks = 200*(rt_dell + cp_dell)/(rt + ct);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
@@ -354,8 +356,8 @@ void stress3()
    Int_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Int_t lastgood = 43222;
-   if (last <lastgood-300 || last > lastgood+300 || comp <1.37 || comp > 1.43) OK = kFALSE;
+   Int_t lastgood = 43417;
+   if (last <lastgood-300 || last > lastgood+300 || comp <1.37 || comp > 1.46) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -453,7 +455,7 @@ void stress5()
    FILE *fp = fopen("stress.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 952;
+   Int_t nlinesGood = 942;
    while (fgets(line,255,fp)) {
       nlines++;
    }
@@ -834,7 +836,7 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
    Double_t rms2  = h2->GetRMS();
    Float_t xrange = h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
    if (TMath::Abs((mean1-mean2)/xrange) > 0.001*xrange) return -1;
-   if (TMath::Abs((rms1-rms2)/rms1) > 0.001) return -2;
+   if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001) return -2;
    return n1-n2;
 }
 
@@ -875,6 +877,22 @@ void stress9tree(TTree *tree)
    tree->Draw("fCharge>>hCharge","fPx < 0","goff");
    tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
    tree->Draw("fValid>>hValid",  "fPx < 0","goff");
+
+   tree->Draw("fMatrix>>hFullMatrix","","goff");
+   tree->Draw("fMatrix[][0]>>hColMatrix","","goff");
+   tree->Draw("fMatrix[1][]>>hRowMatrix","","goff");
+   tree->Draw("fMatrix[2][2]>>hCellMatrix","","goff");
+
+   tree->Draw("fMatrix - fVertex>>hFullOper","","goff");
+   tree->Draw("fMatrix[2][1] - fVertex[5][1]>>hCellOper","","goff");
+   tree->Draw("fMatrix[][1]  - fVertex[5][1]>>hColOper","","goff");
+   tree->Draw("fMatrix[2][]  - fVertex[5][2]>>hRowOper","","goff");
+   tree->Draw("fMatrix[2][]  - fVertex[5][]>>hMatchRowOper","","goff");
+   tree->Draw("fMatrix[][2]  - fVertex[][1]>>hMatchColOper","","goff");
+   tree->Draw("fMatrix[][2]  - fVertex[][]>>hRowMatOper","","goff");
+   tree->Draw("fMatrix[][2]  - fVertex[5][]>>hMatchDiffOper","","goff");
+   tree->Draw("fMatrix[][]   - fVertex[][]>>hFullOper2","","goff");
+
    ntotin  += TFile::GetFileBytesRead() -nrsave;
 
    //Get pointers to the histograms generated above
@@ -898,6 +916,20 @@ void stress9tree(TTree *tree)
    TH1F *hCharge = (TH1F*)hfile->Get("hCharge");
    TH1F *hNpoint = (TH1F*)hfile->Get("hNpoint");
    TH1F *hValid  = (TH1F*)hfile->Get("hValid");
+
+   TH1F *hFullMatrix    = (TH1F*)hfile->Get("hFullMatrix");
+   TH1F *hColMatrix     = (TH1F*)hfile->Get("hColMatrix");
+   TH1F *hRowMatrix     = (TH1F*)hfile->Get("hRowMatrix");
+   TH1F *hCellMatrix    = (TH1F*)hfile->Get("hCellMatrix");
+   TH1F *hFullOper      = (TH1F*)hfile->Get("hFullOper");
+   TH1F *hCellOper      = (TH1F*)hfile->Get("hCellOper");
+   TH1F *hColOper       = (TH1F*)hfile->Get("hColOper");
+   TH1F *hRowOper       = (TH1F*)hfile->Get("hRowOper");
+   TH1F *hMatchRowOper  = (TH1F*)hfile->Get("hMatchRowOper");
+   TH1F *hMatchColOper  = (TH1F*)hfile->Get("hMatchColOper");
+   TH1F *hRowMatOper    = (TH1F*)hfile->Get("hRowMatOper");
+   TH1F *hMatchDiffOper = (TH1F*)hfile->Get("hMatchDiffOper");
+   TH1F *hFullOper2     = (TH1F*)hfile->Get("hFullOper2");
 
    //We make clones of the generated histograms
    //We set new names and reset the clones.
@@ -923,12 +955,26 @@ void stress9tree(TTree *tree)
    TH1F *bNpoint = (TH1F*)hNpoint->Clone(); bNpoint->SetName("bNpoint"); bNpoint->Reset();
    TH1F *bValid  = (TH1F*)hValid->Clone();  bValid->SetName("bValid");   bValid->Reset();
 
+   TH1F *bFullMatrix    =(TH1F*)hFullMatrix->Clone();    bFullMatrix->SetName("bFullMatrix");       bFullMatrix->Reset();
+   TH1F *bColMatrix    = (TH1F*)hColMatrix->Clone();     bColMatrix->SetName("bColMatrix");         bColMatrix->Reset();
+   TH1F *bRowMatrix    = (TH1F*)hRowMatrix->Clone();     bRowMatrix->SetName("bRowMatrix");         bRowMatrix->Reset();
+   TH1F *bCellMatrix   = (TH1F*)hCellMatrix->Clone();    bCellMatrix->SetName("bCellMatrix");       bCellMatrix->Reset();
+   TH1F *bFullOper     = (TH1F*)hFullOper->Clone();      bFullOper->SetName("bFullOper");           bFullOper->Reset();
+   TH1F *bCellOper     = (TH1F*)hCellOper->Clone();      bCellOper->SetName("bCellOper");           bCellOper->Reset();
+   TH1F *bColOper      = (TH1F*)hColOper->Clone();       bColOper->SetName("bColOper");             bColOper->Reset();
+   TH1F *bRowOper      = (TH1F*)hRowOper->Clone();       bRowOper->SetName("bRowOper");             bRowOper->Reset();
+   TH1F *bMatchRowOper = (TH1F*)hMatchRowOper->Clone();  bMatchRowOper->SetName("bMatchRowOper");   bMatchRowOper->Reset();
+   TH1F *bMatchColOper = (TH1F*)hMatchColOper->Clone();  bMatchColOper->SetName("bMatchColOper");   bMatchColOper->Reset();
+   TH1F *bRowMatOper   = (TH1F*)hRowMatOper->Clone();    bRowMatOper->SetName("bRowMatOper");       bRowMatOper->Reset();
+   TH1F *bMatchDiffOper= (TH1F*)hMatchDiffOper->Clone(); bMatchDiffOper->SetName("bMatchDiffOper"); bMatchDiffOper->Reset();
+   TH1F *bFullOper2    = (TH1F*)hFullOper2->Clone();     bFullOper2->SetName("bFullOper2");         bFullOper2->Reset();
+
    // Loop with user code on all events and fill the b histograms
    // The code below should produce identical results to the tree->Draw above
 
    TClonesArray *tracks = event->GetTracks();
    Int_t nev = (Int_t)tree->GetEntries();
-   Int_t i, ntracks, evmod;
+   Int_t i, ntracks, evmod,i0,i1;
    Track *t;
    EventHeader *head;
    Int_t nbin = 0;
@@ -941,6 +987,28 @@ void stress9tree(TTree *tree)
       bTemp->Fill(event->GetTemperature());
       bHmean->Fill(event->GetHistogram()->GetMean());
       ntracks = event->GetNtrack();
+      for(i0=0;i0<4;i0++) {
+         for(i1=0;i1<4;i1++) {
+            bFullMatrix->Fill(event->GetMatrix(i0,i1));
+         }
+         bColMatrix->Fill(event->GetMatrix(i0,0));
+         bRowMatrix->Fill(event->GetMatrix(1,i0)); // done here because the matrix is square!
+      }
+      bCellMatrix->Fill(event->GetMatrix(2,2));
+      if ( 5 < ntracks ) {
+         t = (Track*)tracks->UncheckedAt(5);
+         for(i0=0;i0<4;i0++) {
+            for(i1=0;i1<4;i1++) {
+            }
+            bColOper->Fill( event->GetMatrix(i0,1) - t->GetVertex(1) );
+            bRowOper->Fill( event->GetMatrix(2,i0) - t->GetVertex(2) );
+         }
+         for(i0=0;i0<3;i0++) {
+            bMatchRowOper->Fill( event->GetMatrix(2,i0) - t->GetVertex(i0) );
+            bMatchDiffOper->Fill( event->GetMatrix(i0,2) - t->GetVertex(i0) );
+         }
+         bCellOper->Fill( event->GetMatrix(2,1) - t->GetVertex(1) );
+      }
       for (i=0;i<ntracks;i++) {
          t = (Track*)tracks->UncheckedAt(i);
          if (evmod == 0) bPx->Fill(t->GetPx());
@@ -961,6 +1029,14 @@ void stress9tree(TTree *tree)
             bNpoint->Fill(t->GetNpoint());
             bValid->Fill(t->GetValid());
          }
+         if (i<4) { 
+            for(i1=0;i1<3;i1++) { // 3 is the min of the 2nd dim of Matrix and Vertex
+               bFullOper ->Fill( event->GetMatrix(i,i1) - t->GetVertex(i1) );
+               bFullOper2->Fill( event->GetMatrix(i,i1) - t->GetVertex(i1) );
+               bRowMatOper->Fill( event->GetMatrix(i,2) - t->GetVertex(i1) );
+            }
+            bMatchColOper->Fill( event->GetMatrix(i,2) - t->GetVertex(1) );    
+         }  
       }
    }
 
@@ -986,6 +1062,20 @@ void stress9tree(TTree *tree)
    Int_t cNpoint = HistCompare(hNpoint,bNpoint);
    Int_t cValid  = HistCompare(hValid,bValid);
 
+   Int_t cFullMatrix   = HistCompare(hFullMatrix,bFullMatrix);
+   Int_t cColMatrix    = HistCompare(hColMatrix,bColMatrix);
+   Int_t cRowMatrix    = HistCompare(hRowMatrix,bRowMatrix);
+   Int_t cCellMatrix   = HistCompare(hCellMatrix,bCellMatrix);
+   Int_t cFullOper     = HistCompare(hFullOper,bFullOper);
+   Int_t cCellOper     = HistCompare(hCellOper,bCellOper);
+   Int_t cColOper      = HistCompare(hColOper,bColOper);
+   Int_t cRowOper      = HistCompare(hRowOper,bRowOper);
+   Int_t cMatchRowOper = HistCompare(hMatchRowOper,bMatchRowOper);
+   Int_t cMatchColOper = HistCompare(hMatchColOper,bMatchColOper);
+   Int_t cRowMatOper   = HistCompare(hRowMatOper,bRowMatOper);
+   Int_t cMatchDiffOper= HistCompare(hMatchDiffOper,bMatchDiffOper);
+   Int_t cFullOper2    = HistCompare(hFullOper2,bFullOper2);
+
    delete event;
    Event::Reset();
    ntotin += nbin;
@@ -994,6 +1084,9 @@ void stress9tree(TTree *tree)
    if (cNtrack || cNseg   || cTemp  || cHmean || cPx    || cPy     || cPz) OK = kFALSE;
    if (cRandom || cMass2  || cBx    || cBy    || cXfirst|| cYfirst || cZfirst) OK = kFALSE;
    if (cXlast  || cYlast  || cZlast || cCharge|| cNpoint|| cValid) OK = kFALSE;
+   if (cFullMatrix || cColMatrix || cRowMatrix || cCellMatrix || cFullOper ) OK = kFALSE;
+   if (cCellOper || cColOper || cRowOper || cMatchRowOper || cMatchColOper ) OK = kFALSE;
+   if (cRowMatOper || cMatchDiffOper || cFullOper2 ) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -1002,6 +1095,10 @@ void stress9tree(TTree *tree)
       printf("%-8s cMass2 =%d, cbx    =%d, cBy    =%d, cXfirst=%d\n"," ",cMass2,cBx,cBy,cXfirst);
       printf("%-8s cYfirst=%d, cZfirst=%d, cXlast =%d, cYlast =%d\n"," ",cYfirst,cZfirst,cXlast,cYlast);
       printf("%-8s cZlast =%d, cCharge=%d, cNpoint=%d, cValid =%d\n"," ",cZlast,cCharge,cNpoint,cValid);
+      printf("%-8s cFullMatrix=%d, cColMatrix=%d, cRowMatrix=%d, cCellMatrix=%d\n"," ",cFullMatrix,cColMatrix,cRowMatrix,cCellMatrix);
+      printf("%-8s cFullOper=%d, cCellOper=%d, cColOper=%d, cRowOper=%d\n"," ",cFullOper,cCellOper,cColOper,cRowOper);
+      printf("%-8s cMatchRowOper=%d, cMatchColOper=%d, cRowMatOper=%d, cMatchDiffOper=%d\n"," ",cMatchRowOper,cMatchColOper,cRowMatOper,cMatchDiffOper);
+      printf("%-8s cFullOper2=%d\n"," ",cFullOper2);
    }
 }
 
@@ -1382,14 +1479,14 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 4023;
+   Int_t nlinesGood = 3950;
    while (fgets(line,255,fp)) {
       nlines++;
    }
    fclose(fp);
    delete c;
    Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-10 || nlines > nlinesGood+10) OK = kFALSE;
+   if (nlines < nlinesGood-100 || nlines > nlinesGood+100) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");

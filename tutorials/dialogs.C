@@ -72,7 +72,7 @@ InputDialog::InputDialog(const char *prompt, const char *defval, char *retstr)
 
    // command to be executed by buttons and text entry widget
    char cmd[128];
-   sprintf(cmd, "{long r__ptr=0x%x; ((InputDialog*)r__ptr)->ProcessMessage($MSG,$PARM1,$PARM2);}", this);
+   sprintf(cmd, "{long r__ptr=0x%lx; ((InputDialog*)r__ptr)->ProcessMessage($MSG,$PARM1,$PARM2);}", (Long_t)this);
 
    // create prompt label and textentry widget
    TGLabel *label = new TGLabel(fDialog, prompt);

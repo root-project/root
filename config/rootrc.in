@@ -1,0 +1,97 @@
+
+# ROOT Environment settings are handled via the class TEnv. To see
+# which values are active do: gEnv->Print().
+
+# Path used by dynamic loader to find shared libraries and macros
+# Paths are different for Unix and Windows. The example shows the defaults
+# for all ROOT applications for either Unix or Windows.
+Unix.*.Root.DynamicPath:    .:@libdir@
+Unix.*.Root.MacroPath:      .:@macrodir@
+WinNT.*.Root.DynamicPath:   ./;@bindir@;$(PATH)
+WinNT.*.Root.MacroPath:     ./;@macrodir@
+
+# Path where to look for TrueType fonts
+Unix.*.Root.UseTTFonts:     true
+Unix.*.Root.TTFontPath:     @ttffontdir@
+
+# Use thread library (if exists)
+Unix.*.Root.UseThreads:     false
+
+# Show where item is found in the specified path
+Root.ShowPath:           false
+
+# Activate memory statistics (size and cnt is used to trap allocation of
+# blocks of a certain size after cnt times)
+Root.MemStat:            0
+Root.MemStat.size:      -1
+Root.MemStat.cnt:       -1
+Root.ObjectStat:         0
+
+# Global debug mode. When >0 turns on progressively more details debugging.
+# When >4 X11 runs in synchronous mode.
+Root.Debug:              0
+
+# Default editor
+Unix.*.Editor:           vi
+WinNT.*.Editor:          notepad
+
+# Specify list of file endings which TTabCom (TAB completion) should ignore.
+#TabCom.FileIgnore:       .cpp:.h:.cmz
+
+# TCanvas specific settings. Opaque move and resize show full pad during
+# the operation instead of only the outline. Especially for resize you'll
+# need serious CPU power. UseScreenFactor=true means to size canvas according
+# to size of screen, so a canvas still looks good on a low resolution
+# laptop screen without having to change canvas size in macros.
+# HighLightColor 2 = red. ShowEventStatus allows the event status bar to
+# be turned on by default. AutoExec allows TExec objects to be executed
+# on mouse and key events.
+Canvas.MoveOpaque:          false
+Canvas.ResizeOpaque:        false
+Canvas.UseScreenFactor:     true
+Canvas.HighLightColor:      2
+Canvas.ShowEventStatus:     false
+Canvas.AutoExec:            true
+
+# THtml specific settings.
+Root.Html.OutputDir:         htmldoc/
+Root.Html.SourcePrefix:
+Unix.*.Root.Html.SourceDir:  ./:src/:include/
+WinNT.*.Root.Html.SourceDir: ./:src/:include/
+#Root.Html.Author:           // Author:
+#Root.Html.Author:           Fons Rademakers
+#Root.Html.Copyright:        * Copyright
+#Root.Html.LastUpdate:       // @(#)
+#Root.Html.Description:      //____________________
+#Root.Html.Root:             http://root.cern.ch/root/html
+#Root.Html.SearchEngine:     ../Search.phtml
+
+# GUI specific settings
+Gui.NormalFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.BoldFont:          -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.SmallFont:         -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.ProportionalFont:  -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.BackgroundColor:        #c0c0c0
+Gui.ForegroundColor:        black
+Gui.SelectForegroundColor:  white
+Gui.SelectBackgroundColor:  #000080
+Gui.IconPath:               $(HOME)/icons:@iconpath@:.
+Gui.MimeTypeFile:           $(HOME)/.root.mimes
+# If above does not exists defaults to this:
+#Gui.MimeTypeFile:           @iconpath@/root.mimes
+# Can be either small, big, list, details
+Browser.IconStyle:          small
+# Can be either name, type, size, date
+Browser.SortBy:             name
+
+# Rint (interactive ROOT executable) specific alias, logon and logoff macros
+Rint.Load:               rootalias.C
+Rint.Logon:              rootlogon.C
+Rint.Logoff:             rootlogoff.C
+Rint.History:            $(HOME)/.root_hist
+
+# Example of custom setting for the Rint application (root.exe).
+# This overrides the default specified above for a generic application.
+# Color 5 is yellow.
+Rint.Canvas.HighLightColor:      5
+

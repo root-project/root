@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -49,6 +49,22 @@ void TThread::Debu(const char *txt)
    fprintf(stderr,"TThread::Debu %s %d \n",txt,fgMain->fId);
 }
 
+//______________________________________________________________________________
+Int_t TThread::Exists() 
+{ 
+   // Check existing threads
+   // return number of running Threads
+   
+  TThread *l;
+
+  if (! fgMain) { //no threads
+    return 0;}
+
+  Int_t num=0;
+  for(l=fgMain; l ; l = l->fNext) {num++;} //count threads
+  return num;
+} 
+    
 //______________________________________________________________________________
 void TThread::SetPriority(EPriority pri)
 {

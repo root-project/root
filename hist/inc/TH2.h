@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.2 2000/06/13 10:35:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -38,18 +38,19 @@ protected:
 public:
    TH2();
    TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
-   TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+                                         ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                         ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
    TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t *ybins);
-   TH2(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t *ybins);
+                                         ,Int_t nbinsy,Double_t *ybins);
+   TH2(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                         ,Int_t nbinsy,Double_t *ybins);
+   TH2(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins
+                                         ,Int_t nbinsy,Float_t  *ybins);
    virtual ~TH2();
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y);
-   virtual Int_t   Fill(Axis_t x, Stat_t y) {return Fill(x, (Axis_t)y);}
    virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
    virtual void    FillN(Int_t, Axis_t *, Double_t *, Int_t) {;} //MayNotUse
    virtual void    FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Double_t *w, Int_t stride=1);
@@ -84,12 +85,14 @@ public:
    TH2C();
    TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                 ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
-   TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
    TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t *ybins);
-   TH2C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t *ybins);
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2C(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins
+                                          ,Int_t nbinsy,Float_t  *ybins);
    TH2C(const TH2C &h2c);
    virtual ~TH2C();
    virtual void    AddBinContent(Int_t bin);
@@ -120,13 +123,15 @@ class TH2S : public TH2, public TArrayS {
 public:
    TH2S();
    TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
-   TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
    TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t *ybins);
-   TH2S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t *ybins);
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2S(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins
+                                          ,Int_t nbinsy,Float_t  *ybins);
    TH2S(const TH2S &h2s);
    virtual ~TH2S();
    virtual void    AddBinContent(Int_t bin);
@@ -157,13 +162,15 @@ class TH2F : public TH2, public TArrayF {
 public:
    TH2F();
    TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
-   TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
    TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t *ybins);
-   TH2F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t *ybins);
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2F(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins
+                                          ,Int_t nbinsy,Float_t  *ybins);
    TH2F(const TH2F &h2f);
    virtual ~TH2F();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}
@@ -195,13 +202,15 @@ class TH2D : public TH2, public TArrayD {
 public:
    TH2D();
    TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
-   TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
    TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t *ybins);
-   TH2D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                ,Int_t nbinsy,Axis_t *ybins);
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                          ,Int_t nbinsy,Double_t *ybins);
+   TH2D(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins
+                                          ,Int_t nbinsy,Float_t  *ybins);
    TH2D(const TH2D &h2d);
    virtual ~TH2D();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}

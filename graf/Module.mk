@@ -41,7 +41,7 @@ INCLUDEFILES += $(GRAFDEP)
 include/%.h:    $(GRAFDIRI)/%.h
 		cp $< $@
 
-$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MAINLIBS) $(HISTLIB)
+$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MAINLIBS) $(GRAFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ "$(GRAFO) $(GRAFDO)" \
 		   "$(GRAFLIBEXTRA)"

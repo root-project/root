@@ -1,4 +1,4 @@
-// @(#)root/main:$Name$:$Id$
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -417,9 +417,13 @@ int main(int argc, char **argv)
 #endif
   chtitl[4*nwt] = 0;
   TH1F *h1;
+  Int_t i;
   if (hcbits[5]) {
      Int_t lbins = lq[lcid-2];
-     h1 = new TH1F(idname,chtitl,ncx,&q[lbins+1]);
+     Double_t *xbins = new Double_t[ncx+1];
+     for (i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
+     h1 = new TH1F(idname,chtitl,ncx,xbins);
+     delete [] xbins;
   } else {
      h1 = new TH1F(idname,chtitl,ncx,xmin,xmax);
   }
@@ -431,7 +435,7 @@ int main(int argc, char **argv)
   }
 
   Float_t x;
-  for (Int_t i=0;i<=ncx+1;i++) {
+  for (i=0;i<=ncx+1;i++) {
      x = h1->GetBinCenter(i);
      h1->Fill(x,hi(id,i));
      if (hcbits[8]) h1->SetBinError(i,hie(id,i));

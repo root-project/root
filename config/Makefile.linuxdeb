@@ -34,3 +34,6 @@ CILIBS        = -lm -lncurses -ldl -rdynamic
 # Fortran:
 
 
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/X11R6/lib -lXmu

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class TFrame : public TWbox {
 
 public:
         TFrame();
-        TFrame(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2);
+        TFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
         TFrame(const TFrame &frame);
         virtual ~TFrame();
                 void  Copy(TObject &frame);

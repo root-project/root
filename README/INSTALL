@@ -1,62 +1,35 @@
-Installion of ROOT from source
-==============================
+Installation of ROOT from source
+================================
 
 To install ROOT from source you first have to get the tar file
 containing the source. This tar file can be found in the usual
 ROOT download area (ftp://root.cern.ch/root).
 
-ATTENTION: the source distribution only works in combination with
-a binary distribution. First install a binary distribution for your
-platform, then add the source distribution. If the right binary
-distribution does not exist take one that matches as close as possible
-the one you want to built. Make sure ROOTSYS is specified and points
-to this binary distribution.
+An alternative approach is to use our public CVS repository to get
+the latest version. See URL: http://root.cern.ch/root/CVS.html.
 
-There are three main methods of installing ROOT from source.
+Before proceeding read the complete document.
+
+There are two main methods of installing ROOT from source.
 
 1) You have noting installed yet.
-   - get binary and source tar files or latest ROOT
-   - unpack binary tar file, this creates directory `root':
-        tar zxvf root_v2.23.Linux.2.2.12.tar.gz
-   - cd into `root' and unpack the source tar file,
-     this creates directory `src' in `root' and the needed
-     configure scripts and Makefiles:
-        tar zxvf root_v2.23.source.tar.gz
+   - get the source tar file of the latest ROOT
+   - unpack source tar file, this creates directory `root':
+        tar zxvf root_v2.25.01.source.tar.gz
    - set ROOTSYS to the `root' directory:
         export ROOTSYS=<path>/root
    - now type the build commands:
-        ./configure linuxegcs     [change linuxegcs appropriately, see AA_ARCHS]
-        make depend
-        make                      [or, make "MAKE=make -j2", for dual CPU's]
+        ./configure --help
+        ./configure <arch>        [change arch appropriately]
+        gmake                     [or, make -j2 for dual CPU machines]
+        gmake install             [when run directory is not $ROOTSYS]
    - add $ROOTSYS/bin to PATH and $ROOTSYS/lib to LD_LIBRARY_PATH:
         export PATH=$ROOTSYS/bin:$PATH
         export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
    - try running root:
         root
 
-2) You have an existing working ROOT environment (ROOTSYS, PATH and
-   LD_LIBRARY_PATH are set correctly). You want to install a new version
-   parallel to the old version and only after verification install the
-   new binaries in the ROOTSYS location. [In case you don't care about
-   having the new version next to the old version see case 1) above,
-   skipping the binary installation part.]
-   - get source tar file of latest ROOT
-   - unpack in new directory, `newroot':
-        mkdir newroot; cd newroot
-        tar zxvf root_v2.23.source.tar.gz
-   - now type the build commands:
-        ./configure linuxegcs     [change linuxegcs appropriately, see AA_ARCHS]
-        make depend
-        make                      [or, make "MAKE=make -j2", for dual CPU's]
-   - change ROOTSYS to the `newroot' directory:
-        export ROOTSYS=<path>/newroot
-   - try running root:
-        root
-   - by changing ROOTSYS one can easily switch between the two versions
-     (make sure PATH and LD_LIBRARY_PATH depend on $ROOTSYS and not some
-     explicit path name)
-
-3) You want to install ROOT in a fixed location, not depending on ROOTSYS.
+2) You want to install ROOT in a fixed location, not depending on ROOTSYS.
    Typically you want to do this when installing in a location like
    `/usr/local/bin' or even `/usr/bin'. This allows you, and all others on
    your system, to run ROOT without having to setup ROOTSYS and special
@@ -64,34 +37,28 @@ There are three main methods of installing ROOT from source.
    to make ROOT distributions/installations that fit with an existing system.
    E.g., it should be trivial to install ROOT via a RedHat (.rpm) or Debian
    (.dep) package.
-   - get binary and source tar files or latest ROOT (if you already have
-     a binary distribution you can set it up like in 2) using `newroot',
-     however, a fixed location binary install can not be used).
-   - unpack binary tar file, this creates directory `root':
-        tar zxvf root_v2.23.Linux.2.2.12.tar.gz
-   - cd into `root' and unpack the source tar file,
-     this creates directory `src' in `root' and the needed
-     configure scripts and Makefiles:
-        tar zxvf root_v2.23.source.tar.gz
+   - get source tar file of latest ROOT
+   - unpack source tar file, this creates directory `root':
+        tar zxvf root_v2.25.01.source.tar.gz
    - set ROOTSYS to the `root' directory (only needed during installation):
         export ROOTSYS=<path>/root
    - now type the build commands:
-        ./configure linuxegcs --prefix=/usr/local
-        make depend
-        make                    [or, make "MAKE=make -j2", for dual CPU's]
-        make install            [su to root if --prefix points to a system dir]
+        ./configure --help
+        ./configure <arch> --prefix=/usr/local [change arch appropriately]
+        gmake                   [or, make -j2, for dual CPU machines]
+        gmake install           [su to root if --prefix points to a system dir]
    - try running root:
         root
 
 
-Installation Names
-==================
+Installation Location
+=====================
 
   By default, the system will be installed depending on the ROOTSYS
 environment variable. In that case the whole package will live under the
 directory ROOTSYS points to.
 
-Using the fixed location mode (option 3 above), the default `--prefix'
+Using the fixed location mode (option 2 above), the default `--prefix'
 path is `/usr/local', which will result in the ROOT files to be installed
 in `/usr/local/bin', `/usr/local/lib', etc. You can specify an installation
 prefix other than `/usr/local' by giving `configure' the option
@@ -99,30 +66,56 @@ prefix other than `/usr/local' by giving `configure' the option
 `configure --help'.
 
 
-Installing add-on libraries for TrueType fonts and OpenGL graphics
-==================================================================
+Makefile targets
+================
 
-If you want to compile the ROOT add-on libraries to handle
-TrueType fonts and OpenGL graphics you have to make the following
-links in your $ROOTSYS directory prior to compiling:
+  The Makefile system and supported make targets are explained in the
+BUILDSYSTEM file.
 
-   cd $ROOTSYS
-   ln -s <pathname>/ttf ttf
-   ln -s <pathname>/Mesa-x.y opengl    (Mesa 2.2 or higher)
+
+Installing optional add-on libraries
+====================================
+
+If you want to compile the ROOT optional add-on libraries to handle
+TrueType fonts, OpenGL graphics, SRP authentication, MySQL access,
+RFIO access and event generator interfaces (Pythia, Pythia6 and
+Venus) you can either specify the options as environment variables
+or as arguments to the ./configure script. For example:
+
+# Used during build of ROOT can be overriden in ./configure
+export ROOTBUILD=debug        # see $ROOTSYS/README/BUILDSYSTEM
+export CERNLIB=~/cernlib      # must contain libpacklib.a libkernlib.a
+export RFIO=~/shift-1.10.2.9/lib/libshift.a  # CERN's SHIFT library
+export TTF=~/ttf              # must contain fonts/ (and possibly include/ lib/)
+export OPENGL=~/Mesa-3.2      # must contain include/ lib/
+export SRP=~/src/srp-1.5.0    # must contain include/ lib/
+#export AFS=                   # must contain include/ lib/
+#export XPM=                   # must contain libXpm.a
+#export MYSQL=                 # must contain include/ lib/
+#export PYTHIA=                # must contain libPythia
+#export PYTHIA6=               # must contain libPythia6
+#export VENUS=                 # must contain libVenus
 
 Alternatively you can also specify the location via `configure' flags
 (`--with--opengl-libdir, --with-opengl-incdir, --with-ttf-fontdir,
 --with-ttf-libdir, --with-ttf-incdir).
 
+On very few systems libXpm.a is not available. In that case get the
+pre-built version from ftp://root.cern.ch/root/xpm/. To use this
+library define either the environment variable `XPM=<path>/libXpm.a'
+or the `configure' flag `--with-xpm=<path>/libXpm.a'
+
 On how to get the TrueType ttf directory see:
    http://root.cern.ch/root/TrueType.html
+   (for prebuilt versions see: ftp://root.cern.ch/root/ttf/)
 
 On how to get an open source version of OpenGL see:
    http://www.mesa3d.org
+   (for prebuilt versions see: ftp://root.cern.ch/root/opengl/)
 
-The TrueType and OpenGL add-on's are not necessary for the proper
-functioning of ROOT but we advice you to at least get the TrueType
-fonts since they hugely increase the appearance of text on the screen.
+The optional add-on's are not necessary for the proper functioning of
+ROOT but we advice you to at least get the TrueType fonts since they
+hugely increase the appearance of text on the screen.
 
 
 Other Optional Features
@@ -130,12 +123,27 @@ Other Optional Features
 
 To build the library providing thread support you need to define either
 the environment variable `THREAD=-lpthread' or the `configure' flag
-`--with-thread=-lpthread'.
+`--with-thread=-lpthread' (it is the default for the linuxegcs architecture).
 
-To build the library providing CERN RFIO (remote I/O) supoort you need to
+To build the library providing CERN RFIO (remote I/O) support you need to
 define either the environment variable `RFIO=<path>/libshift.a' or the
 `configure' flag `--with-rfio=<path>/libshift.a'.
 
 To build the PAW and Geant3 conversion programs `h2root' and `g2root'
-you need to defined either the enviroment variable `CERNLIB=<cernlibpath>'
+you need to define either the enviroment variable `CERNLIB=<cernlibpath>'
 or the `configure' flag `--with-cern-libdir=<cernlibpath>'.
+
+To build the MySQL interface library you need to install MySQL first. See:
+   http://www.mysql.com/
+
+To build the strong authentication module used by rootd, you first have to
+install the SRP (Secure Remote Password) system. See:
+   http://jafar.stanford.edu/srp/index.html
+To use the library you have to define either the environment variable `SRP=<srpdir>' or the `configure'
+flag `--with-srp=<srpdir>'.
+
+To build the event generator interfaces for Pythia and Pythia6, you first
+have to get the pythia libraries:
+   ftp://root.cern.ch/root/pythia/
+To use the libraries you have to define either `PYTHIA=<pythiadir>' or
+the `configure' flag `--with-pythia=<pythiadir>'. The same for Pythia6.

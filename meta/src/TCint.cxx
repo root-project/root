@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.3 2000/06/19 23:36:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -367,36 +367,21 @@ void TCint::UpdateListOfGlobals()
    // Update the list of pointers to global variables. This function
    // is called by TROOT::GetListOfGlobals().
 
-   G__DataMemberInfo *a;
-   int last  = 0;
-   int nglob = 0;
-
-   // find the number of global objects
-   G__DataMemberInfo t;
-   while (t.Next()) nglob++;
-
-   for (int i = 0; i < nglob; i++) {
-      a = new G__DataMemberInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
+   G__DataMemberInfo t, *a;
+   while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
+      if (t.IsValid() && t.Name()) {
          // first remove if already in list
-         TGlobal *g = (TGlobal *)gROOT->fGlobals->FindObject(a->Name());
+         TGlobal *g = (TGlobal *)gROOT->fGlobals->FindObject(t.Name());
          if (g) {
             gROOT->fGlobals->Remove(g);
             delete g;
          }
+         a = new G__DataMemberInfo(t);
          gROOT->fGlobals->Add(new TGlobal(a));
-      } else
-         delete a;
-
-      last++;
+      }
    }
-}
+}    
 
 //______________________________________________________________________________
 void TCint::UpdateListOfGlobalFunctions()
@@ -404,71 +389,39 @@ void TCint::UpdateListOfGlobalFunctions()
    // Update the list of pointers to global functions. This function
    // is called by TROOT::GetListOfGlobalFunctions().
 
-   G__MethodInfo *a;
-   int last  = 0;
-   int nglob = 0;
-
-   // find the number of global functions
-   G__MethodInfo t;
-   while (t.Next()) nglob++;
-
-   for (int i = 0; i < nglob; i++) {
-      a = new G__MethodInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
+   G__MethodInfo t, *a;
+   while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
-         // first remove if already in list
-         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(a->Name());
+      if (t.IsValid() && t.Name()) {
+        // first remove if already in list
+         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
          if (f) {
             gROOT->fGlobalFunctions->Remove(f);
             delete f;
          }
+         a = new G__MethodInfo(t);
          gROOT->fGlobalFunctions->Add(new TFunction(a));
-      } else
-         delete a;
-
-      last++;
+      }
    }
-}
+} 
 
 //______________________________________________________________________________
 void TCint::UpdateListOfTypes()
 {
-   // Update the list of pointers to datatype (typedef) definitions. This
+   // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
-   G__TypedefInfo *a;
-   int last  = 0;
-   int ntype = 0;
-
-   // find the number of typedefs
-   G__TypedefInfo t;
-   while (t.Next()) ntype++;
-
-   for (int i = 0; i < ntype; i++) {
-      a = new G__TypedefInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
-      // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
-         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(a->Name());
+   G__TypedefInfo t, *a;
+   while (t.Next()) {
+      if (t.IsValid() && t.Name()) {
+         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals())
-         if (!d)
+         if (!d) {
+            a = new G__TypedefInfo(t);
             gROOT->fTypes->Add(new TDataType(a));
-         else
-            delete a;
-      } else
-         delete a;
-
-      last++;
+         }
+      }
    }
 }
 
@@ -497,27 +450,13 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 
       cl->fBase = new TList(cl);
 
-      G__BaseClassInfo *a;
-      int last  = 0;
-      int nbase = 0;
-
-      G__BaseClassInfo t(*cl->GetClassInfo());
-      while (t.Next()) nbase++;
-
-      for (int i = 0; i < nbase; i++) {
-         a = new G__BaseClassInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__BaseClassInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name())
+         if (t.IsValid() && t.Name()) {
+            a = new G__BaseClassInfo(t);
             cl->fBase->Add(new TBaseClass(a, cl));
-         else
-            delete a;
-
-         last++;
+         }      
       }
    }
 }
@@ -531,24 +470,13 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 
       cl->fData = new TList(cl);
 
-      G__DataMemberInfo *a;
-      int last = 0;
-      int nmem = cl->GetClassInfo()->NDataMembers();
-
-      for (int i = 0; i < nmem; i++) {
-         a = new G__DataMemberInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__DataMemberInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name() && strcmp(a->Name(), "G__virtualinfo"))
+         if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
+            a = new G__DataMemberInfo(t);
             cl->fData->Add(new TDataMember(a, cl));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -562,24 +490,13 @@ void TCint::CreateListOfMethods(TClass *cl)
 
       cl->fMethod = new TList(cl);
 
-      G__MethodInfo *a;
-      int last = 0;
-      int nmet = cl->GetClassInfo()->NMethods();
-
-      for (int i = 0; i < nmet; i++) {
-         a = new G__MethodInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__MethodInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name())
+         if (t.IsValid() && t.Name()) {
+            a = new G__MethodInfo(t);
             cl->fMethod->Add(new TMethod(a, cl));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -593,24 +510,13 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 
       m->fMethodArgs = new TList(m);
 
-      G__MethodArgInfo *a;
-      int last = 0;
-      int narg = m->GetNargs();
-
-      for (int i = 0; i < narg; i++) {
-         a = new G__MethodArgInfo(*m->fInfo);
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__MethodArgInfo t(*m->fInfo), *a;
+      while (t.Next()) {
          // if type cannot be obtained no use to put in list
-         if (a->IsValid() && a->Type())
+         if (t.IsValid() && t.Type()) {
+            a = new G__MethodArgInfo(t);
             m->fMethodArgs->Add(new TMethodArg(a, m));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -64,9 +64,9 @@ protected:
 
    void Expand(Int_t newsize);  //Expand buffer to newsize
 
-   void Read(const char *name) { TObject::Read(name); }
-   void Write(const char *name, Int_t opt, Int_t bufs)
-                                 { TObject::Write(name, opt, bufs); }
+   Int_t Read(const char *name) { return TObject::Read(name); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufs)
+                                 { return TObject::Write(name, opt, bufs); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };

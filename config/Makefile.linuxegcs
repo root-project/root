@@ -38,4 +38,8 @@ THREAD        = -lpthread
 # Fortran:
 F77           = g77
 F77FLAGS      =
-F77LIBS       = -lg2c
+F77LIBS       = -lg2c -lnsl
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/X11R6/lib -lXmu

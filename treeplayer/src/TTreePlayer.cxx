@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.5 2000/06/14 09:07:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -340,7 +340,7 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
-      if (fSelect->GetMultiplicity() == 1) fMultiplicity = fSelect;
+      if (fSelect->GetMultiplicity() >= 1) fMultiplicity = fSelect;
       if (fSelect->GetMultiplicity() == -1) force = 4;
    }
 //*-*- if varexp is empty, take first column by default
@@ -358,19 +358,19 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
       if (!fVar1->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar1->GetMultiplicity() == 1) fMultiplicity = fVar1;
+      if (!fMultiplicity && fVar1->GetMultiplicity() >= 1) fMultiplicity = fVar1;
       if (!force && fVar1->GetMultiplicity() == -1) force = 1;
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
       if (!fVar2->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar2->GetMultiplicity() == 1) fMultiplicity = fVar2;
+      if (!fMultiplicity && fVar2->GetMultiplicity() >= 1) fMultiplicity = fVar2;
       if (!force && fVar2->GetMultiplicity() == -1) force = 2;
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
       if (!fVar3->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar3->GetMultiplicity()  == 1) fMultiplicity = fVar3;
+      if (!fMultiplicity && fVar3->GetMultiplicity()  >= 1) fMultiplicity = fVar3;
       if (!force && fVar3->GetMultiplicity() == -1) force = 3;
    }
    if (force) fTree->SetBit(TTree::kForceRead);
@@ -496,6 +496,79 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //  nentries is the number of entries to process (default is all)
 //  first is the first entry to process (default is 0)
 //
+//     Drawing expressions using arrays and array elements
+//     ===================================================
+// Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
+// or a TClonesArray. 
+// In a TTree::Draw expression you can now access fMatrix using the following 
+// syntaxes:
+// 
+//   String passed    What is used for each entry of the tree
+// 
+//   "fMatrix"       the 9 elements of fMatrix
+//   "fMatrix[][]"   the 9 elements of fMatrix
+//   "fMatrix[2][2]" only the elements fMatrix[2][2]
+//   "fMatrix[1]"    the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[1][]"  the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[][0]"  the 3 elements fMatrix[0][0], fMatrix[1][0] and fMatrix[2][0]
+// 
+//   "fEvent.fMatrix...." same as "fMatrix..." (unless there is more than one leaf named fMatrix!).
+// 
+// In summary, if a specific index is not specified for a dimension, TTree::Draw
+// will loop through all the indices along this dimension.  Leaving off the
+// last (right most) dimension of specifying then with the two characters '[]' 
+// is equivalent.  For variable size arrays (and TClonesArray) the range
+// of the first dimension is recalculated for each entry of the tree.
+// 
+// TTree::Draw also now properly handling operations involving 2 or more arrays.
+// 
+// Let assume a second matrix fResults[5][2], here are a sample of some 
+// of the possible combinations, the number of elements they produce and
+// the loop used:
+//  
+//  expression                       element(s)  Loop
+// 
+//  "fMatrix[2][1] - fResults[5][2]"   one     no loop
+//  "fMatrix[2][]  - fResults[5][2]"   three   on 2nd dim fMatrix
+//  "fMatrix[2][]  - fResults[5][]"    two     on both 2nd dimensions
+//  "fMatrix[][2]  - fResults[][1]"    three   on both 1st dimensions
+//  "fMatrix[][2]  - fResults[][]"     six     on both 1st and 2nd dimensions of
+//                                             fResults
+//  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of 
+//                                             fResults (at the same time)
+//  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim 
+//  
+// 
+// In summary, TTree::Draw loops through all un-specified dimensions.  To
+// figure out the range of each loop, we match each unspecified dimension 
+// from left to right (ignoring ALL dimensions for which an index has been 
+// specified), in the equivalent loop matched dimensions use the same index 
+// and are restricted to the smallest range (of only the matched dimensions).
+// When involving variable arrays, the range can of course be different
+// for each entry of the tree.
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
+// 
+//    for (Int_t i0; i < min(3,2); i++) {
+//       use the value of (fMatrix[i0][2] - fMatrix[3][i0])
+//    }
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < 2; i1++) { 
+//          use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
+//       }
+//    }
+// 
+// So the loop equivalent to "fMatrix[][] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < min(3,2); i1++) { 
+//          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
+//       }
+//    }
+// 
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
@@ -745,7 +818,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
          gProof->SendObject(h1);
          if (!hkeep) delete h1;
          char *mess = new char[strlen(varexp0)+strlen(selection)+strlen(option)+128];
-         sprintf(mess, "%s %d %d", GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
+         sprintf(mess, "%s %d %d", fTree->GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
          gProof->Broadcast(mess, kPROOF_TREEDRAW);
          sprintf(mess,"%s->Draw(\"%s\",\"%s\",\"%s\",%d,%d)", fTree->GetName(), varexp0,
                  selection, option, nentries, firstentry);
@@ -901,8 +974,8 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
                 fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
              } else {
                 TView *view = gPad->GetView();
-                Float_t *rmin = view->GetRmin();
-                Float_t *rmax = view->GetRmax();
+                Double_t *rmin = view->GetRmin();
+                Double_t *rmax = view->GetRmax();
                 fNbins[2] = 20;
                 fVmin[2]  = rmin[0];
                 fVmax[2]  = rmax[0];
@@ -998,12 +1071,13 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       timer = new TProcessEventTimer(interval);
 
    npoints = 0;
-   if (!fV1 && fVar1)   fV1 = new Float_t[fTree->GetEstimate()];
-   if (!fV2 && fVar2)   fV2 = new Float_t[fTree->GetEstimate()];
-   if (!fV3 && fVar3)   fV3 = new Float_t[fTree->GetEstimate()];
+   if (!fV1 && fVar1)   fV1 = new Double_t[fTree->GetEstimate()];
+   if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
+   if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
-   Int_t force = TestBit(TTree::kForceRead);
+   Int_t force = fTree->TestBit(TTree::kForceRead);
    if (!fMultiplicity || !fDimension) {
+      Bool_t available = kTRUE;
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -1011,27 +1085,29 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (gROOT->IsInterrupted()) break;
          fTree->LoadTree(entryNumber);
          if (fSelect) {
-            if (force) fSelect->GetNdata();
+            if (force) { available = (fSelect->GetNdata()>0); };
             fW[fNfill] = fSelect->EvalInstance(0);
             if (!fW[fNfill]) continue;
          } else fW[fNfill] = 1;
          if (fVar1) {
-            if (force) fVar1->GetNdata();
+            if (force) { available = (fVar1->GetNdata()>0); };
             fV1[fNfill] = fVar1->EvalInstance(0);
          }
          if (fVar2) {
-            if (force) fVar2->GetNdata();
+            if (force) { available = (fVar2->GetNdata()>0); };
             fV2[fNfill] = fVar2->EvalInstance(0);
             if (fVar3) {
-               if (force) fVar3->GetNdata();
+               if (force) { available = (fVar3->GetNdata()>0); };
                fV3[fNfill] = fVar3->EvalInstance(0);
             }
          }
-         fNfill++;
-         if (fNfill >= fTree->GetEstimate()) {
-            TakeAction(fNfill,npoints,action,obj,option);
-            fNfill = 0;
-         }
+         if (available) {
+            fNfill++;
+            if (fNfill >= fTree->GetEstimate()) {
+               TakeAction(fNfill,npoints,action,obj,option);
+               fNfill = 0;
+            }
+         } else available = kTRUE;
       }
 
       // nentries == -1 when all entries have been processed by proofserver
@@ -1167,17 +1243,17 @@ void TTreePlayer::EstimateLimits(Int_t, Int_t nentries, Int_t firstentry)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax)
+void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax)
 {
 //*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
 
    static TGaxis gaxis_tree;
-   Float_t binlow,binhigh,binwidth;
+   Double_t binlow,binhigh,binwidth;
    Int_t n;
-   Float_t dx = 0.1*(xmax-xmin);
-   Float_t umin = xmin - dx;
-   Float_t umax = xmax + dx;
+   Double_t dx = 0.1*(xmax-xmin);
+   Double_t umin = xmin - dx;
+   Double_t umax = xmax + dx;
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
@@ -2235,11 +2311,11 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);
@@ -2295,7 +2371,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 //*-*        ===========================================
 
   Int_t i;
-  Float_t rmin[3],rmax[3];
+  Double_t rmin[3],rmax[3];
   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
 //__________________________1-D histogram_______________________
@@ -2380,11 +2456,11 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);

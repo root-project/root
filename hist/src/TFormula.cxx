@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.3 2000/05/26 06:43:01 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -117,6 +117,19 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
   fNames  = 0;
   fNval   = 0;
   fNstring= 0;
+
+  //eliminate blanks in expression
+  Int_t i,j,nch;
+  nch = strlen(expression);
+  char *expr = new char[nch+1];
+  j = 0;
+  for (i=0;i<nch;i++) {
+     if (expression[i] == ' ') continue;
+     expr[j] = expression[i]; j++;
+   }
+  expr[j] = 0;
+  if (j) SetTitle(expr);
+  delete [] expr;
 
   if (Compile()) return;
 
@@ -1642,7 +1655,7 @@ Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
           case  41 : tab[pos-1] = TMath::Abs(tab[pos-1]); break;
           case  42 : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; break;
           case  43 : tab[pos-1] = Double_t(Int_t(tab[pos-1])); break;
-          case  50 : tab[pos-1] = gRandom->Rndm(1); break;
+          case  50 : pos++; tab[pos-1] = gRandom->Rndm(1); break;
           case  60 : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
           case  61 : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
@@ -1699,13 +1712,13 @@ Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
           pos++;
           inter=action/100-20;
           int1=action-inter*100;
-          intermede2=Float_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
+          intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
           tab[pos-1] = fParams[int1-2001]*TMath::Exp(-0.5*intermede2*intermede2);
 //*-*- xygaus
     } else if (action > 2500 && action < 2600) {
           pos++;
-          intermede1=Float_t((x[0]-fParams[action-2500])/fParams[action-2499]);
-          intermede2=Float_t((x[1]-fParams[action-2498])/fParams[action-2497]);
+          intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
+          intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
           tab[pos-1] = fParams[action-2501]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
 //*-*- landau, xlandau, ylandau or zlandau
     } else if (action > 4000 && action < 4500) {

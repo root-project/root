@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name$:$Id$ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hparam.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,28 +29,28 @@ typedef struct Hparam_t {
 //*-*-     structure to store current histogram parameters
 //*-*      ===============================================
 //*-*
-   Int_t    xfirst;        //first bin number along X
-   Int_t    xlast;         //last bin number along X
-   Float_t  xbinsize;      //bin size in case of equidistant bins
-   Float_t  xlowedge;      //low edge of axis
-   Float_t  xmin;          //minimum value along X
-   Float_t  xmax;          //maximum value along X
-   Int_t    yfirst;        //first bin number along Y
-   Int_t    ylast;         //last bin number along Y
-   Float_t  ybinsize;      //bin size in case of equidistant bins
-   Float_t  ylowedge;      //low edge of axis
-   Float_t  ymin;          //minimum value along y
-   Float_t  ymax;          //maximum value along y
-   Int_t    zfirst;        //first bin number along Z
-   Int_t    zlast;         //last bin number along Z
-   Float_t  zbinsize;      //bin size in case of equidistant bins
-   Float_t  zlowedge;      //low edge of axis
-   Float_t  zmin;          //minimum value along Z
-   Float_t  zmax;          //maximum value along Z
-   Float_t  factor;        //multiplication factor (normalization)
-   Stat_t   allchan;       //integrated sum of contents
-   Float_t  baroffset;     //offset of bin for bars or legos [0,1]
-   Float_t  barwidth;      //width of bin for bars and legos [0,1]
+   Double_t  xbinsize;      //bin size in case of equidistant bins
+   Double_t  xlowedge;      //low edge of axis
+   Double_t  xmin;          //minimum value along X
+   Double_t  xmax;          //maximum value along X
+   Double_t  ybinsize;      //bin size in case of equidistant bins
+   Double_t  ylowedge;      //low edge of axis
+   Double_t  ymin;          //minimum value along y
+   Double_t  ymax;          //maximum value along y
+   Double_t  zbinsize;      //bin size in case of equidistant bins
+   Double_t  zlowedge;      //low edge of axis
+   Double_t  zmin;          //minimum value along Z
+   Double_t  zmax;          //maximum value along Z
+   Double_t  factor;        //multiplication factor (normalization)
+   Double_t  allchan;       //integrated sum of contents
+   Double_t  baroffset;     //offset of bin for bars or legos [0,1]
+   Double_t  barwidth;      //width of bin for bars and legos [0,1]
+   Int_t     xfirst;        //first bin number along X
+   Int_t     xlast;         //last bin number along X
+   Int_t     yfirst;        //first bin number along Y
+   Int_t     ylast;         //last bin number along Y
+   Int_t     zfirst;        //first bin number along Z
+   Int_t     zlast;         //last bin number along Z
 } Hparam_t;
 
 #endif

@@ -39,3 +39,6 @@ F77FLAGS      = -K +ppu
 F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/contrib/X11R6/lib -lXext -lXmu -lXi -lX11

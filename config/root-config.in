@@ -178,6 +178,18 @@ linuxppcegcs)
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
+linuxia64gcc)
+   # Itanium Linux with gcc 2.9x
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxalphaegcs)
+   # Alpha Linux with egcs
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
 mklinux)
    # MkLinux with libc5
    auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"

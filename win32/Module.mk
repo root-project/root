@@ -37,7 +37,7 @@ INCLUDEFILES += $(WIN32DEP)
 include/%.h:    $(WIN32DIRI)/%.h
 		cp $< $@
 
-$(WIN32LIB):    $(WIN32O) $(WIN32DO) $(MAINLIBS) $(GRAFLIB) $(GPADLIB)
+$(WIN32LIB):    $(WIN32O) $(WIN32DO) $(MAINLIBS) $(WIN32LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libWin32.$(SOEXT) $@ "$(WIN32O) $(WIN32DO)" \
 		   "$(WIN32LIBEXTRA)"

@@ -42,6 +42,7 @@ public:
 class Event : public TObject {
 
 private:
+   char           fType[20];
    Int_t          fNtrack;
    Int_t          fNseg;
    Int_t          fNvertex;
@@ -50,6 +51,8 @@ private:
    EventHeader    fEvtHdr;
    TClonesArray  *fTracks;
    TH1F          *fH;
+   Int_t          fMeasures[10];
+   Float_t        fMatrix[4][4];
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
@@ -65,10 +68,13 @@ public:
    void          SetNvertex(Int_t n) { fNvertex = n; }
    void          SetFlag(UInt_t f) { fFlag = f; }
    void          SetTemperature(Float_t t) { fTemperature = t; }
-
+   void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
    void          AddTrack(Float_t random);
+   void          SetMeasure(UChar_t which, Int_t what);
+   void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
 
+   char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
    Int_t         GetNseg() const { return fNseg; }
    Int_t         GetNvertex() const { return fNvertex; }
@@ -77,6 +83,8 @@ public:
    EventHeader  *GetHeader() { return &fEvtHdr; }
    TClonesArray *GetTracks() const { return fTracks; }
    TH1F         *GetHistogram() const { return fH; }
+   Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
+   Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 
    ClassDef(Event,1)  //Event structure
 };
@@ -100,6 +108,7 @@ private:
    Float_t      fZfirst;       //Z coordinate of the first point
    Float_t      fZlast;        //Z coordinate of the last point
    Float_t      fCharge;       //Charge of this track
+   Float_t      fVertex[3];    //Track vertex position
    Int_t        fNpoint;       //Number of points for this track
    Short_t      fValid;        //Validity criterion
 
@@ -123,6 +132,7 @@ public:
    Float_t       GetZfirst() const { return fZfirst; }
    Float_t       GetZlast()  const { return fZlast; }
    Float_t       GetCharge() const { return fCharge; }
+   Float_t       GetVertex(Int_t i=0) {return fVertex[i];}
    Int_t         GetNpoint() const { return fNpoint; }
    Short_t       GetValid()  const { return fValid; }
    virtual void  SetValid(Int_t valid=1) { fValid = valid; }

@@ -645,6 +645,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
     G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+    G__globalvarpointer = G__PVOID;
+#endif
     return; /* long long handling */
   }
 #endif
@@ -911,6 +914,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
 
@@ -1007,6 +1013,27 @@ int tagnum,typenum;      /* overrides global variables */
 	  store_line = G__ifile.line_number;
 	  if(G__dispsource) G__disp_mask=1000;
 	  cin = G__fgetname(temp,",)*&<=");
+#ifndef G__PHILIPPE8
+          if (strlen(temp) && isspace(cin)) {
+            /* There was an argument and the parsing was stopped by a white
+             * space rather than on of ",)*&<=", it is possible that 
+             * we have a namespace followed by '::' in which case we have
+             * to grab more before stopping! */
+            int namespace_tagnum;
+            char more[G__LONGLINE];
+   
+            namespace_tagnum = G__defined_tagname(temp,2);
+            while ( ( ( (namespace_tagnum!=-1)
+                        && (G__struct.type[namespace_tagnum]=='n') )
+                      || (strcmp("std",temp)==0)
+                      || (temp[strlen(temp)-1]==':') )
+                    && isspace(cin) ) {
+              cin = G__fgetname(more,",)*&<=");
+              strcat(temp,more);
+              namespace_tagnum = G__defined_tagname(temp,2);
+            }
+          }
+#endif         
 	  fsetpos(G__ifile.fp,&store_fpos);
 	  if(G__dispsource) G__disp_mask=1;
 	  G__ifile.line_number = store_line;
@@ -1041,6 +1068,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -1129,6 +1159,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1161,6 +1194,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -1286,6 +1322,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  return;
 	}
 	
@@ -1345,6 +1384,24 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 	do {
 	  G__def_tagnum = G__defined_tagname(new_name+i,0) ;
+#ifndef G__PHILIPPE9
+          if (G__def_tagnum<0) {
+            /* Hopefully restore all values! */
+            G__decl=store_decl;
+            G__constvar=0;
+            G__tagnum = store_tagnum;
+            G__typenum = store_typenum;
+            G__reftype=G__PARANORMAL;
+            G__static_alloc=store_static_alloc2;
+#ifndef G__OLDIMPLEMENTATION1119
+            G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+            G__globalvarpointer = G__PVOID;
+#endif
+            return;
+          }
+#endif /* G__PHILIPPE9 */
 	  G__tagdefining  = G__def_tagnum;
 	  cin = G__fgetstream(new_name+i,"(=;:");
 	} while(':'==cin && EOF!=(cin=G__fgetc())) ;
@@ -1446,6 +1503,9 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }
@@ -1743,6 +1803,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1789,6 +1852,9 @@ int tagnum,typenum;      /* overrides global variables */
 	  G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
 #endif
 	  return;
 	}
@@ -1890,7 +1956,11 @@ int tagnum,typenum;      /* overrides global variables */
 		G__var_type = var_type;
 #ifndef G__OLDIMPLEMENTATION1137
 #ifndef G__OLDIMPLEMENTATION1251
-		if(known&& (G__globalvarpointer||G__asm_noverflow)) {
+		if((known && (G__globalvarpointer||G__asm_noverflow))
+#ifndef G__OLDIMPLEMENTATION1325
+		   || G__NOLINK != G__globalcomp 
+#endif
+		   ) {
 #else
 		if(G__globalvarpointer) {
 #endif
@@ -1963,6 +2033,9 @@ int tagnum,typenum;      /* overrides global variables */
 	      G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
 #endif
 	      return;
 	    }
@@ -2062,6 +2135,9 @@ int tagnum,typenum;      /* overrides global variables */
 		G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
 #endif
 		return;
 	      }
@@ -2206,6 +2282,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
+#endif
 		return;
 	      }
 	    }
@@ -2259,6 +2338,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  return;
 	}
 	/* insert array initialization */
@@ -2275,6 +2357,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -2327,6 +2412,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
     else if('}'==cin) {
@@ -2340,6 +2428,9 @@ int tagnum,typenum;      /* overrides global variables */
       G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
 #endif
       return;
     }
@@ -2361,6 +2452,9 @@ int tagnum,typenum;      /* overrides global variables */
 	G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 // absolute pathname requires a // after the host or port specifier     //
 // (see last example). Further the expansion of the standard shell      //
 // characters, like ~, $, .., are handled as expected.                  //
-// TNetFile (actually TUrl) uses 432 as default port for rootd.         //
+// TNetFile (actually TUrl) uses 1094 as default port for rootd.        //
 //                                                                      //
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //
@@ -106,6 +106,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    // sure this is not the case you can force open the file by preceding the
    // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
    // in cases when you are very sure nobody else is using the file.
+   // The preferred interface to this constructor is via TFile::Open().
 
    fOffset = 0;
 

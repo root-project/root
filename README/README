@@ -3,15 +3,13 @@ Contents
 
 Directory root/ :
 
-AA_README   - this file
-AA_LICENSE  - usage terms and conditions
-AA_CREDITS  - list of contributors to the ROOT system
-AA_INSTALL  - how to install ROOT from source (comes with source dist)
-AA_ARCHS    - supported architecures (comes with source dist)
+README      - directory containing important information
+LICENSE     - usage terms and conditions
+configure   - build configuration script
 bin         - directory containing executables
 include     - directory containing the ROOT header files
 lib         - directory containing the ROOT libraries (in shared library format)
-macros      - directory containing system macros (e.g. GL.C to load OpenGL libs)
+macros      - directory containing system macros
 icons       - directory containing xpm icons
 test        - some ROOT test programs
 tutorials   - example macros that can be executed by the bin/root module
@@ -33,9 +31,7 @@ Add ROOTSYS/bin to your PATH:
 On systems using shared libraries you must specify the load path
 before you can run the root module. NOTE: with version 2.00 this
 is not necessary anymore since the front-end program sets the
-load path correctly. However, it is still needed for running
-rootcint or you'll need it when distributing your own ROOT based
-applications.
+load path correctly.
 
 On HP-UX do:
    export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib       (in bash or ksh)

@@ -928,7 +928,11 @@ int *piout;
 		 We need to need to carry this information on.
 		 If the previous file (G__ifile) was preprocessed, this one
 		 should also be. */
-	      if( G__cpp && G__srcfile[G__ifile.filenum].prepname[0] ) {
+	      if( G__cpp && 
+#ifndef G__OLDIMPLEMENTATION1323
+		  G__srcfile[G__ifile.filenum].prepname &&
+#endif
+		  G__srcfile[G__ifile.filenum].prepname[0] ) {
 		G__srcfile[G__nfile].prepname = 
 	       (char*)malloc(strlen(G__srcfile[G__ifile.filenum].prepname)+1);
 		strcpy(G__srcfile[G__nfile].prepname,
@@ -3610,6 +3614,7 @@ G__value G__exec_statement()
 	  }
 #ifndef G__OLDIMPLEMENTATION949
           else {
+            int namespace_tagnum;
 #ifdef G__NEVER 
 	    /* This part given by Scott Snyder causes problem on Redhat4.2
 	     * Linux 2.0.30  gcc -O. If optimizer is turned off, everything
@@ -3624,7 +3629,17 @@ G__value G__exec_statement()
             if (iout >= 2 &&
                 statement[iout-1] == ':' && statement[iout-2] == ':') {
               spaceflag = 0;
-	    }
+            }
+            /* Allow for spaces before a scope operator. */
+            namespace_tagnum = G__defined_tagname(statement,2);
+#ifndef G__PHILIPPE8
+            if (((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n'))
+		||(strcmp(statement,"std")==0)) {
+#else 
+            if ((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n')) {
+#endif
+              spaceflag = 0;	    
+            }
           }
 #endif
 	  ++spaceflag;

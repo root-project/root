@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
    virtual Bool_t    WriteBuffer(const char *buf, int len);
-   virtual void      Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void      WriteFree();
    virtual void      WriteHeader();
 

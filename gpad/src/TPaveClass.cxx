@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,7 +36,7 @@ TPaveClass::TPaveClass(): TPaveLabel()
 }
 
 //______________________________________________________________________________
-TPaveClass::TPaveClass(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, const char *label, TClassTree *classtree)
+TPaveClass::TPaveClass(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, TClassTree *classtree)
            :TPaveLabel(x1,y1,x2,y2,label,"br")
 {
 //*-*-*-*-*-*-*-*-*-*-*PaveClass normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*

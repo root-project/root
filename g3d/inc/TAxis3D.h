@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.7 1999/12/12 17:25:52 fine Exp $
+// $Id: TAxis3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -90,21 +90,21 @@ public:
 
     virtual void     GetLowEdge(Axis_t *edge){fAxis[0].GetLowEdge(edge);}
 
-    virtual char  *GetObjectInfo(Int_t px, Int_t py);
+    virtual char    *GetObjectInfo(Int_t px, Int_t py);
 
     Option_t        *GetOption() const {return fOption.Data();}
 
     virtual TAxis   *GetXaxis() {return &fAxis[0];}
     virtual TAxis   *GetYaxis() {return &fAxis[1];}
     virtual TAxis   *GetZaxis() {return &fAxis[2];}
-    virtual Bool_t  IsFolder(){ return kTRUE;}
-    virtual void    Paint(Option_t *option="");
+    virtual Bool_t   IsFolder(){ return kTRUE;}
+    virtual void     Paint(Option_t *option="");
             void     PaintAxis(TGaxis *axis, Float_t ang);
-    static Axis_t  *PixeltoXYZ(Axis_t px, Axis_t py, Axis_t *point3D, TView *view =0);
+    static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
     virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
     virtual void     SetAxisColor(Color_t color=1, Option_t *axis="*"); //*MENU*
-    virtual void     SetAxisRange(Float_t xmin, Float_t xmax, Option_t *axis="*");
+    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="*");
 
     virtual void     SetLabelColor(Color_t color=1, Option_t *axis="*");//*MENU*
     virtual void     SetLabelFont(Style_t font=62, Option_t *axis="*"); //*MENU*
@@ -129,6 +129,9 @@ public:
 inline Bool_t TAxis3D::SwitchZoom(){Bool_t s = fZoomMode; fZoomMode = !fZoomMode; return s;}
 //__________________________________________________________________________
 // $Log: TAxis3D.h,v $
+// Revision 1.1.1.1  2000/05/16 17:00:43  rdm
+// Initial import of ROOT into CVS
+//
 // Revision 1.7  1999/12/12 17:25:52  fine
 // smart zooming
 //

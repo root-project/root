@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -231,7 +231,11 @@ void TRootGLViewer::InitGLWindow()
 
    gVirtualGL->SetTrueColorMode();
    static int dblBuf[] = {
-       GLX_DOUBLEBUFFER, GLX_RGBA, GLX_DEPTH_SIZE, 16,
+       GLX_DOUBLEBUFFER,
+#ifdef STEREO_GL
+       GLX_STEREO,
+#endif
+       GLX_RGBA, GLX_DEPTH_SIZE, 16,
        GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
        None
    };

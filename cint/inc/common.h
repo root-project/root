@@ -708,7 +708,7 @@ struct G__includepath {
 
 #endif /* G__SHAREDLIB */
 
-#define G__MAX_SL 50
+#define G__MAX_SL 150
 
 /*********************************************************************
 * debugging flag

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name$:$Id$
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
         enum { kBranchObject = BIT(15) };
 
         TPaveVar();
-        TPaveVar(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2, const char *label, TTreeViewer *viewer);
+        TPaveVar(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TTreeViewer *viewer);
         TPaveVar(const TPaveVar &PaveVar);
         virtual      ~TPaveVar();
                 void  Copy(TObject &PaveVar);

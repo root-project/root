@@ -36,6 +36,10 @@ RFIO           := @rfio@
 SRPDIR         := @srpdir@
 AFSDIR         := @afsdir@
 
+PYTHIA         := @pythialib@
+PYTHIA6        := @pythia6lib@
+VENUS          := @venuslib@
+
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p

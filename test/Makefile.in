@@ -70,9 +70,9 @@ endif
 
 ifeq ($(ARCH),solaris)
 # Solaris CC
-CXX           = CC
+CXX           = /opt/SUNWspro/bin/CC
 CXXFLAGS      = -O -KPIC
-LD            = CC
+LD            = /opt/SUNWspro/bin/CC
 LDFLAGS       = -O
 SOFLAGS       = -G
 endif
@@ -106,9 +106,9 @@ endif
 
 ifeq ($(ARCH),sgicc)
 # SGI
-CXX           = CC -n32
+CXX           = CC -n32  -I/usr/include/CC.sgi
 CXXFLAGS      = -O
-LD            = CC -n32
+LD            = CC -n32  -I/usr/include/CC.sgi
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
@@ -142,9 +142,9 @@ endif
 
 ifeq ($(ARCH),sgikcc)
 # SGI with KCC
-CXX           = KCC -32
+CXX           = KCC -n32 --no_exceptions
 CXXFLAGS      = -O
-LD            = KCC -32
+LD            = KCC -n32 --no_exceptions
 LDFLAGS       = -O
 SOFLAGS       =
 endif
@@ -182,7 +182,7 @@ CXX           = cxx
 CXXFLAGS      = -O0
 LD            = cxx
 LDFLAGS       = -O
-SOFLAGS       = -Wl,-expect_unresolved,* -call_shared
+SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
 
 ifeq ($(ARCH),alphacxx)
@@ -264,6 +264,24 @@ CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-soname,
+endif
+
+ifeq ($(ARCH),linuxia64gcc)
+# Itanium Linux with gcc 2.9x
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxalphaegcs)
+# Alpha Linux with egcs
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),mklinux)
@@ -395,7 +413,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(TETRISSO) $(STRESS)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS)
 ifneq ($(ARCH),win32)
 OBJS         += $(GUITESTO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(TETRISSO)
@@ -545,7 +563,7 @@ clean:
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
-		   *.root *.ps .def
+		   *.root *.ps .def so_locations
 
 .SUFFIXES: .$(SrcSuf)
 

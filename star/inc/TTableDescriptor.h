@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -30,7 +30,7 @@ class TTableDescriptor : public TTable {
              const Char_t *ColumnName(Int_t columnIndex)        const;
              const Int_t ColumnByName(const Char_t *columnName=0) const;
              UInt_t      NumberOfColumns()                      const;
-             UInt_t     *IndexArray(Int_t columnIndex)          const;
+             const UInt_t *IndexArray(Int_t columnIndex)        const;
              UInt_t      Offset(Int_t columnIndex)              const;
              Int_t       Offset(const Char_t *columnName=0)     const;
              UInt_t      ColumnSize(Int_t columnIndex)          const;
@@ -55,7 +55,7 @@ class TTableDescriptor : public TTable {
 //______________________________________________________________________________
 inline  const Char_t *TTableDescriptor::ColumnName(Int_t column)const {return ((tableDescriptor_st *)At(column))->fColumnName;}
 inline  UInt_t  TTableDescriptor::Offset(Int_t column)          const {return ((tableDescriptor_st *)At(column))->fOffset;    }
-inline  UInt_t *TTableDescriptor::IndexArray(Int_t column)      const {return ((tableDescriptor_st *)At(column))->fIndexArray;}
+inline  const UInt_t *TTableDescriptor::IndexArray(Int_t column)const {return ((tableDescriptor_st *)At(column))->fIndexArray;}
 inline  UInt_t  TTableDescriptor::NumberOfColumns()             const {return  GetNRows();                                      }
 inline  UInt_t  TTableDescriptor::ColumnSize(Int_t column)      const {return ((tableDescriptor_st *)At(column))->fSize;      }
 inline  UInt_t  TTableDescriptor::TypeSize(Int_t column)        const {return ((tableDescriptor_st *)At(column))->fTypeSize;  }

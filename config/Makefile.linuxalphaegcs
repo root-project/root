@@ -1,0 +1,45 @@
+# Makefile of ROOT for Itanium/Linux with gcc
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O2
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fPIC $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+CINTCFLAGS    = -Wall -fPIC $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl $(THREAD) -rdynamic
+XLIBS         = -L/usr/X11R6/lib -lXpm -lX11
+CILIBS        = -lm -ldl -rdynamic
+CRYPTLIBS     = -lcrypt
+THREAD        = -lpthread
+
+# Fortran:
+F77           = g77
+F77FLAGS      =
+F77LIBS       = -lg2c -lnsl
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+                -L/usr/X11R6/lib -lXmu

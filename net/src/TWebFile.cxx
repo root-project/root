@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -35,7 +35,8 @@ TWebFile::TWebFile(const char *url) : TFile(url, "WEB"), fUrl(url)
    // argument must be of the form: http://host.dom.ain/file.root.
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
-   // to see if the file is accessible.
+   // to see if the file is accessible. The preferred interface to this
+   // constructor is via TFile::Open().
 
    fOffset = 0;
 

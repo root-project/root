@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.3 2000/06/11 12:08:30 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -18,11 +18,11 @@
 // a connection to a rootd server or by hand (i.e. from the command     //
 // line). The rootd server works with the ROOT TNetFile class. It       //
 // allows remote access to ROOT database files in either read or        //
-// write mode. By default TNetFile assumes port 432 (which requires     //
-// rootd to be started as root). To run rootd via inetd add the         //
+// write mode. By default TNetFile uses port 1094 (allocated by IANA,   //
+// www.iana.org, to rootd). To run rootd via inetd add the              //
 // following line to /etc/services:                                     //
 //                                                                      //
-// rootd     432/tcp                                                    //
+// rootd     1094/tcp                                                   //
 //                                                                      //
 // and to /etc/inetd.conf:                                              //
 //                                                                      //
@@ -143,7 +143,7 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
 extern "C" int initgroups(char *name, int basegid);
 #endif
 
@@ -160,12 +160,6 @@ extern "C" {
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
-#endif
-
-#if (defined(__linux__) && defined(__powerpc__) && __GNUG__>=2)
-#  if (__GNUG__==2 && __GNUC_MINOR__ >=95)
-extern "C" int initgroups(char *name, int basegid);
-#  endif
 #endif
 
 #if defined(__sun)

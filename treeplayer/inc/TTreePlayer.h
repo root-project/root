@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.2 2000/05/29 06:19:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,11 +57,11 @@ protected:
     Int_t         fSelectedRows;    //Number of selected entries
     Int_t         fPacketSize;      //Number of entries in one packet for parallel root
     Int_t         fNbins[4];        //Number of bins per dimension
-    Float_t       fVmin[4];         //Minima of varexp columns
-    Float_t       fVmax[4];         //Maxima of varexp columns
-    Float_t       *fV1;             //Local buffer for variable 1
-    Float_t       *fV2;             //Local buffer for variable 2
-    Float_t       *fV3;             //Local buffer for variable 3
+    Double_t       fVmin[4];        //Minima of varexp columns
+    Double_t       fVmax[4];        //Maxima of varexp columns
+    Double_t      *fV1;             //Local buffer for variable 1
+    Double_t      *fV2;             //Local buffer for variable 2
+    Double_t      *fV3;             //Local buffer for variable 3
     Double_t      *fW;              //Local buffer for weights
     TSelector     *fSelector;       //Pointer to current selector
     TPacketGenerator *fPacketGen;   //Packet generator
@@ -88,9 +88,10 @@ public:
     virtual void      EstimateLimits(Int_t estimate, Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
 
-            void      FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax);
+            void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax);
     virtual void      Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     GetDimension() {return fDimension;}
     TH1              *GetHistogram() {return fHistogram;}
     TTreeFormula     *GetMultiplicity()   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
@@ -103,9 +104,9 @@ public:
     TTreeFormula     *GetVar2() {return fVar2;}
     TTreeFormula     *GetVar3() {return fVar3;}
     TTreeFormula     *GetVar4() {return fVar4;}
-    virtual Float_t  *GetV1()   {return fV1;}
-    virtual Float_t  *GetV2()   {return fV2;}
-    virtual Float_t  *GetV3()   {return fV3;}
+    virtual Double_t *GetV1()   {return fV1;}
+    virtual Double_t *GetV2()   {return fV2;}
+    virtual Double_t *GetV3()   {return fV3;}
     virtual Double_t *GetW()    {return fW;}
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     MakeClass(const char *classname=0);

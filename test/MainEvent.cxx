@@ -187,7 +187,8 @@ int main(int argc, char **argv)
       event = new Event();
       TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
-
+      char etype[20];
+      
       for (ev = 0; ev < nevent; ev++) {
          if (ev%printev == 0) {
             tnew = timer.RealTime();
@@ -203,11 +204,22 @@ int main(int argc, char **argv)
          Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
          Float_t random = gRandom->Rndm(1);
 
+         sprintf(etype,"type%d",ev%5);
+         event->SetType(etype);
          event->SetHeader(ev, 200, 960312, random);
          event->SetNseg(Int_t(10*ntrack+20*sigmas));
          event->SetNvertex(1);
          event->SetFlag(UInt_t(random+0.5));
          event->SetTemperature(random+20.);
+
+         for(UChar_t m = 0; m < 10; m++) {
+            event->SetMeasure( m, gRandom->Gaus(m,m+1) ); 
+         }
+         for(UChar_t i0 = 0; i0 < 4; i0++) {
+            for(UChar_t i1 = 0; i1 < 4; i1++) {
+               event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+            }
+         }
 
          //  Create and Fill the Track objects
          for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);

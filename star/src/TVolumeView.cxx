@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -590,11 +590,11 @@ Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py)
 {
    if (!gPad) return "";
    static char info[512];
-   Axis_t x[3] = {0,0,0.5};
+   Double_t x[3] = {0,0,0.5};
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);
    TView *view =gPad->GetView();
    if (view) {
-       Float_t min[3], max[3];
+       Double_t min[3], max[3];
        view->GetRange(min,max);
        for (int i =0; i<3;i++) min[i] = (max[i]+min[i])/2;
        view->WCtoNDC(min,max);

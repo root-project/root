@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -531,7 +531,10 @@ void TRandom::SetSeed(UInt_t seed)
 {
 //  Set the random generator seed
 //  if seed is zero, the seed is set to the current  machine clock
-
+//  Note that the machine clock is returned with a precision of 1 second.
+//  If one calls SetSeed(0) within a loop and the loop time is less than 1s, 
+//  all generated numbers will be identical!
+   
   if( seed==0 ) {
     time_t curtime;      // Set 'random' seed number  if seed=0
     time(&curtime);      // Get current time in fSeed.

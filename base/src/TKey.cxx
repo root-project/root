@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -476,7 +476,7 @@ TObject *TKey::ReadObj()
 }
 
 //______________________________________________________________________________
-void TKey::Read(TObject *obj)
+Int_t TKey::Read(TObject *obj)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*To read an object from the file*-*-*-*-*-*-*-*-*
 //*-*                      ===============================
@@ -485,7 +485,7 @@ void TKey::Read(TObject *obj)
 //  default constructor.
 //
 
-   if (!obj) return;
+   if (!obj) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
 
@@ -518,6 +518,7 @@ void TKey::Read(TObject *obj)
    fBufferRef = 0;
    fBuffer    = 0;
    gDirectory = cursav;
+   return fNbytes;
 }
 
 //______________________________________________________________________________
@@ -615,7 +616,7 @@ void TKey::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TKey::WriteFile(Int_t cycle)
+Int_t TKey::WriteFile(Int_t cycle)
 {
 //*-*-*-*-*-*-*-*-*-*-*Write the encoded object supported by this key*-*-*-*
 //*-*                  ==============================================
@@ -644,4 +645,5 @@ void TKey::WriteFile(Int_t cycle)
   }
 
   DeleteBuffer();
+  return nsize;
 }

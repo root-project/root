@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
     virtual Int_t   GetMaximum() {return fMaximum;}
     virtual Int_t   GetMinimum() {return fMinimum;}
     const char     *GetTypeName() const;
-    Float_t         GetValue(Int_t i=0);
+    Double_t        GetValue(Int_t i=0);
     virtual void   *GetValuePointer() {return fValue;}
     char           *GetValueString()  {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
@@ -54,6 +54,6 @@ public:
     ClassDef(TLeafC,1)  //A TLeaf for a variable length string.
 };
 
-inline Float_t TLeafC::GetValue(Int_t i) { return fValue[i]; }
+inline Double_t TLeafC::GetValue(Int_t i) { return fValue[i]; }
 
 #endif

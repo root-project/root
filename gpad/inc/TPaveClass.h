@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   06/08/99
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
 
 public:
         TPaveClass();
-        TPaveClass(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2, const char *label, TClassTree *classtree);
+        TPaveClass(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TClassTree *classtree);
         TPaveClass(const TPaveClass &PaveVar);
         virtual      ~TPaveClass();
                 void  Copy(TObject &PaveVar);
