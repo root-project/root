@@ -2084,6 +2084,10 @@ void TGraph2D::PaintTriangles(Option_t *option)
       GetHistogram();
    }
 
+   // Depending on number of bins, fHistogram's maximum and minimum   
+   // can be different from the data set minimum and maximum
+   if(fHistogram->GetMinimum() > GetZmin()) fHistogram->SetMinimum(GetZmin());
+   if(fHistogram->GetMaximum() < GetZmax()) fHistogram->SetMaximum(GetZmax());
    if (!same) {
       if (!backbox) {
          fHistogram->Paint("BB");
