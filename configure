@@ -39,8 +39,8 @@ options="                 \
    enable_pythia          \
    enable_pythia6         \
    enable_python          \
-   enable_ruby            \
    enable_qt              \
+   enable_ruby            \
    enable_rfio            \
    enable_rpath           \
    enable_sapdb           \
@@ -65,12 +65,12 @@ for c in $options ; do eval $c="yes" ; done
 enable_afs=no
 enable_explicitlink=no
 enable_pythia=no
+enable_qt=no
 enable_rpath=no
+enable_ruby=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
-enable_ruby=no
-enable_qt=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_xrootd=           # must be set explicitely via --enable-xrootd
 
@@ -575,13 +575,14 @@ enable/disable options, prefix with either --enable- or --disable-
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
-   python          PyROOT python bindings, requires python >= 2.1
-   ruby            Ruby ROOT bindings, requires ruby >= 1.8
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
    pythia6         Pythia6 EG support, requires libPythia6
+   python          Python ROOT bindings, requires python >= 2.1
+   qt              Qt graphics backend, requires libqt >= 3
    rfio            CASTOR support, requires libshift from CASTOR
    rpath           Set run-time library load path on executables
+   ruby            Ruby ROOT bindings, requires ruby >= 1.8
    sapdb           SapDB support, requires libsqlod and libsqlrte
    shadowpw        Shadow password support
    shared          Use shared 3rd party libraries if possible
@@ -604,10 +605,10 @@ with options, prefix with --with-, enables corresponding support
    chirp-libdir    Chirp support, location of libchirp_client
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
+   globus          Globus support, path to what should be GLOBUS_LOCATION
    krb5            Kerberos5 support, location of Kerberos distribution
    krb5-incdir     Kerberos5 support, location of krb5.h
    krb5-libdir     Kerberos5 support, location of libkrb5
-   globus          Globus support, path to what should be GLOBUS_LOCATION
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -618,6 +619,12 @@ with options, prefix with --with-, enables corresponding support
    pgsql-libdir    PostgreSQL support, location of libpq
    pythia-libdir   PYHTIA support, location of libPythia
    pythia6-libdir  PYHTIA6 support, location of libPythia6
+   python-incdir   Python support, location of Python.h
+   python-libdir   Python support, location of libpython
+   qt-incdir       Qt support, location of qt.h
+   qt-libdir       Qt support, location of libqt-mt or libqt
+   ruby-incdir     Ruby support, location of ruby.h
+   ruby-libdir     Ruby support, location of libruby
    sapdb-incdir    SapDB support, location of sql.h
    sapdb-libdir    SapDB support, location of libsqlod
    shift-incdir    CASTOR support, location of rfio_api.h
@@ -630,6 +637,8 @@ with options, prefix with --with-, enables corresponding support
    sys-iconpath    Extra icon path
    thread-libdir   Thread support, path to libpthread
    venus-libdir    VENUS support, location of libVenus
+   xml-incdir      XML support, location of libxml/tree.h
+   xml-libdir      XML support, location of libxml2
    x11-libdir      X11 support, path to libX11
    xpm-libdir      XPM support, path to libXpm
 
@@ -747,10 +756,10 @@ if test $# -gt 0 ; then
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
-      --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
-      --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"      ;;
       --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"      ;;
+      --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
+      --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-shift-incdir=*)   shiftincdir=$optarg   ; enable_rfio="yes"    ;;
