@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.38 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.39 2005/01/13 20:03:31 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -1047,6 +1047,7 @@ void TGListBox::Resize(UInt_t w, UInt_t h)
       h = TMath::Max(fItemVsize, ((h - (fBorderWidth << 1)) / fItemVsize) * fItemVsize)
                      + (fBorderWidth << 1);
    TGCompositeFrame::Resize(w, h);
+   fClient->NeedRedraw(fLbc);
 }
 
 //______________________________________________________________________________
@@ -1058,6 +1059,7 @@ void TGListBox::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
       h = TMath::Max(fItemVsize, ((h - (fBorderWidth << 1)) / fItemVsize) * fItemVsize)
                      + (fBorderWidth << 1);
    TGCompositeFrame::MoveResize(x, y, w, h);
+   fClient->NeedRedraw(fLbc);
 }
 
 //______________________________________________________________________________
@@ -1123,6 +1125,7 @@ void TGListBox::Layout()
    }
 
    fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
+   fClient->NeedRedraw(container);
 }
 
 //______________________________________________________________________________
