@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.19 2004/01/15 16:11:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.20 2004/01/27 13:28:23 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -174,8 +174,6 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       //TH1 * hnew = (TH1 *) hin->Clone("markov");
       //for (i = 0; i < size; i++)
       //   hnew->SetBinContent(i + 1, source[i]);
-      if (strstr(option, "goff"))
-         return npeaks;
       for (i = 0; i < npeaks; i++) {
          bin = 1 + Int_t(fPositionX[i] + 0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
