@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.26 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.27 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,7 +40,7 @@ ClassImp(RooAbsReal)
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(0), _plotMax(0), _lastData(0)
+  _plotMin(0), _plotMax(0)
 {
   // Constructor
   setValueDirty() ;
@@ -50,7 +50,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(minVal), _plotMax(maxVal), _lastData(0)
+  _plotMin(minVal), _plotMax(maxVal)
 {
   // Constructor with plot range
   setValueDirty() ;
@@ -60,8 +60,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value),
-  _lastData(other._lastData)
+  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
 {
   // Copy constructor
 }
@@ -81,24 +80,23 @@ Bool_t RooAbsReal::operator==(Double_t value) const
 }
 
 
-Double_t RooAbsReal::getVal(const RooDataSet* dset) const
+Double_t RooAbsReal::getVal(const RooArgSet* set) const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || isShapeDirty()) {
-    _value = traceEval(dset) ;
-    _lastData = (RooDataSet*) dset ;
-    clearValueDirty() ; //setValueDirty(kFALSE) ;
-    clearShapeDirty() ; //setShapeDirty(kFALSE) ;
+    _value = traceEval(set) ;
+    clearValueDirty() ; 
+    clearShapeDirty() ; 
   }
   
   return _value ;
 }
 
 
-Double_t RooAbsReal::traceEval(const RooDataSet* dset) const
+Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
 {
   // Calculate current value of object, with error tracing wrapper
-  Double_t value = evaluate(dset) ;
+  Double_t value = evaluate(nset) ;
   
   //Standard tracing code goes here
   if (!isValid(value)) {
@@ -111,6 +109,23 @@ Double_t RooAbsReal::traceEval(const RooDataSet* dset) const
 
   return value ;
 }
+
+
+Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) const
+{
+  // By default we do supply any analytical integrals
+  return 0 ;
+}
+
+
+Double_t RooAbsReal::analyticalIntegral(Int_t code) const
+{
+  // By default no analytical integrals are implemented
+  return getVal() ;
+}
+
+
+
 
 
 const char *RooAbsReal::getPlotLabel() const {

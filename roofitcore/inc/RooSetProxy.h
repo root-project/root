@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.rdl,v 1.4 2001/06/23 01:20:34 verkerke Exp $
+ *    File: $Id: RooSetProxy.rdl,v 1.5 2001/07/31 05:54:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -46,7 +46,7 @@ protected:
 
   virtual Bool_t changePointer(const RooArgSet& newServerSet, Bool_t nameChange=kFALSE) ;
 
-  ClassDef(RooSetProxy,0) // Proxy class for a RooArgSet
+  ClassDef(RooSetProxy,1) // Proxy class for a RooArgSet
 };
 
 #endif

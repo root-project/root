@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.3 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -107,7 +107,7 @@ void RooAddPdf::addLastPdf(RooAbsPdf& pdf)
 }
 
 
-Double_t RooAddPdf::evaluate(const RooDataSet* dset) const 
+Double_t RooAddPdf::evaluate(const RooArgSet* nset) const 
 {
   // Calculate the current value of this object
   TIterator *pIter = _pdfProxyList.MakeIterator() ;
@@ -143,7 +143,7 @@ Double_t RooAddPdf::evaluate(const RooDataSet* dset) const
 }
 
 
-Bool_t RooAddPdf::checkDependents(const RooDataSet* set) const 
+Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const 
 {
   // Check if PDF is valid with dependent configuration given by specified data set
 
@@ -158,9 +158,9 @@ Bool_t RooAddPdf::checkDependents(const RooDataSet* set) const
   RooRealProxy* pdf ;
   while(coef=(RooRealProxy*)cIter->Next()) {
     pdf = (RooRealProxy*)pIter->Next() ;
-    ret |= pdf->arg().checkDependents(set) ;
-    ret |= coef->arg().checkDependents(set) ;
-    if (pdf->arg().dependentOverlaps(set,coef->arg())) {
+    ret |= pdf->arg().checkDependents(nset) ;
+    ret |= coef->arg().checkDependents(nset) ;
+    if (pdf->arg().dependentOverlaps(nset,coef->arg())) {
       cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
 	   << " and PDF " << pdf->arg().GetName() << " have one or more dependents in common" << endl ;
       ret = kTRUE ;

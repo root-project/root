@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooThresholdCategory.cc,v 1.1 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -83,7 +83,7 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
       type=defineType(catName,catIdx) ;      
     }
   }
-  te = new RooThreshEntry(upperLimit,type) ;
+  te = new RooThreshEntry(upperLimit,*type) ;
   _threshList.Add(te) ;
      
   return kFALSE ;
@@ -98,7 +98,7 @@ RooThresholdCategory::evaluate() const
   _threshIter->Reset() ;
   RooThreshEntry* te ;
   while(te=(RooThreshEntry*)_threshIter->Next()) {
-    if (_inputVar<te->thresh()) return *te->cat() ;
+    if (_inputVar<te->thresh()) return te->cat() ;
   }
 
   // Return default if nothing found
@@ -120,7 +120,7 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
     _threshIter->Reset() ;
     RooThreshEntry* te ;
     while(te=(RooThreshEntry*)_threshIter->Next()) {
-      os << te->cat()->GetName() << ":<" << te->thresh() << " " ;
+      os << te->cat().GetName() << ":<" << te->thresh() << " " ;
     }
     os << _defCat->GetName() << ":*" ;
   }
@@ -148,7 +148,7 @@ void RooThresholdCategory::printToStream(ostream& os, PrintOption opt, TString i
      RooThreshEntry* te ;
      while(te=(RooThreshEntry*)_threshIter->Next()) {
        os << indent << "    input < " << te->thresh() << " --> " ; 
-       te->cat()->printToStream(os,OneLine) ;
+       te->cat().printToStream(os,OneLine) ;
      }
      os << indent << "  Default value is ";
      _defCat->printToStream(os,OneLine);

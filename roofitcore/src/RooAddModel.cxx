@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.2 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.3 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -251,7 +251,7 @@ Int_t RooAddModel::basisCode(const char* name) const
 
 
 
-Double_t RooAddModel::evaluate(const RooDataSet* dset) const 
+Double_t RooAddModel::evaluate(const RooArgSet* nset) const 
 {
   // Calculate the current value of this object
   _coefProxyIter->Reset() ;
@@ -287,10 +287,10 @@ Double_t RooAddModel::evaluate(const RooDataSet* dset) const
 }
 
 
-Double_t RooAddModel::getNorm(const RooDataSet* dset) const
+Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 {
   // Operate as regular PDF if we have no basis function
-  if (!_basis) return RooAbsPdf::getNorm(dset) ;
+  if (!_basis) return RooAbsPdf::getNorm(nset) ;
 
   // Return sum of component normalizations
   _coefProxyIter->Reset() ;
@@ -305,19 +305,19 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
   while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
     model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
     if (_verboseEval>1) cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
-			     << model->getNorm(dset) << " x " << (*coef) << " = " 
-			     << model->getNorm(dset)*(*coef) << endl ;
+			     << model->getNorm(nset) << " x " << (*coef) << " = " 
+			     << model->getNorm(nset)*(*coef) << endl ;
 
-    norm += model->getNorm(dset)*(*coef) ;
+    norm += model->getNorm(nset)*(*coef) ;
     lastCoef -= (*coef) ;
   }
 
   // Add last model with correct coefficient
   model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
-  norm += model->getNorm(dset)*lastCoef ;
+  norm += model->getNorm(nset)*lastCoef ;
   if (_verboseEval>1) cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
-			   << model->getNorm(dset) << " x " << lastCoef << " = " 
-			   << model->getNorm(dset)*lastCoef << endl ;
+			   << model->getNorm(nset) << " x " << lastCoef << " = " 
+			   << model->getNorm(nset)*lastCoef << endl ;
 
   // Warn about coefficient degeneration
   if (lastCoef<0 || lastCoef>1) {
@@ -332,7 +332,7 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
 
 
 
-Bool_t RooAddModel::checkDependents(const RooDataSet* set) const 
+Bool_t RooAddModel::checkDependents(const RooArgSet* set) const 
 {
   // Check if model is valid with dependent configuration given by specified data set
 
@@ -397,22 +397,22 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
   delete pIter ;
 }
 
-void RooAddModel::syncNormalization(const RooDataSet* dset) const 
+void RooAddModel::syncNormalization(const RooArgSet* nset) const 
 {
   // Fan out syncNormalization call to components
   if (_verboseEval>0) cout << "RooAddModel:syncNormalization(" << GetName() 
 			 << ") forwarding sync request to components (" 
-			 << _lastDataSet << " -> " << dset << ")" << endl ;
+			 << _lastNormSet << " -> " << nset << ")" << endl ;
 
   // Update dataset pointers of proxies
-  ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
+  ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
 
   TIterator *pIter = _modelProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
   RooResolutionModel* model ;
   while(proxy = (RooRealProxy*)pIter->Next()) {
     model = (RooResolutionModel*) proxy->absArg() ;
-    model->syncNormalization(dset) ;
+    model->syncNormalization(nset) ;
   }
   delete pIter ;
   

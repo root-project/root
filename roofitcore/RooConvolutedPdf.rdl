@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.3 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.4 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,7 +35,7 @@ public:
   virtual ~RooConvolutedPdf();
 
   Int_t declareBasis(const char* expression, const RooArgSet& params) ;
-  virtual Double_t evaluate(const RooDataSet* dset) const ;
+  virtual Double_t evaluate(const RooArgSet* nset) const ;
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 
@@ -50,7 +50,7 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
-  void dump(const RooDataSet* dset) const ;
+  void dump(const RooArgSet* nset) const ;
     
 protected:
 
@@ -59,12 +59,12 @@ protected:
   RooResolutionModel* _model   ; // Original resolution model
   RooRealVar* _convVar ;         // Convolution variable
 
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooDataSet* dset) const ;
-  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooDataSet* dset) const ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const ;
+  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const ;
 
   const RooRealVar* convVar() const ;  // Convolution variable 
   RooSetProxy _convSet  ;        // Set of resModel X basisFunc convolution
-  mutable RooDataSet* _convDummyDataSet ; // Dummy data set for convolution integrations
+  mutable RooArgSet* _convNormSet ; // Dummy data set for convolution integrations
   mutable TIterator* _convSetIter ; //! do not persist
 
   ClassDef(RooConvolutedPdf,1) // Abstract Resolution Model

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooThreshEntry.rdl,v 1.1 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,25 +16,25 @@
 #include <iostream.h>
 #include "TNamed.h"
 #include "TRegexp.h"
-class RooCatType ;
+#include "RooFitCore/RooCatType.hh"
 
 class RooThreshEntry : public TObject {
 public:
-  inline RooThreshEntry() : TObject(), _thresh(0), _cat(0) {} 
-  RooThreshEntry(Double_t thresh, const RooCatType* cat) ;
+  inline RooThreshEntry() : TObject(), _thresh(0), _cat() {} 
+  RooThreshEntry(Double_t thresh, const RooCatType& cat) ;
   RooThreshEntry(const RooThreshEntry& other) ;
-  virtual TObject* Clone(const char*) const { return new RooThreshEntry(*this); }
+  virtual TObject* Clone(const char* newname = 0) const { return new RooThreshEntry(*this); }
 
   virtual Int_t Compare(const TObject *) const ;
   virtual Bool_t IsSortable() const { return kTRUE ; }
 
   inline Double_t thresh() const { return _thresh ; }
-  inline const RooCatType* cat() const { return _cat ; }
+  inline const RooCatType& cat() const { return _cat ; }
 
 protected:
 
   Double_t _thresh ;
-  RooCatType* _cat ;
+  RooCatType _cat ;
 	
   ClassDef(RooThreshEntry,1) // Utility class, holding a threshold/category state pair
 } ;

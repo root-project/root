@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooThreshEntry.cc,v 1.1 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,8 +19,8 @@
 ClassImp(RooThreshEntry)
 ;
 
-RooThreshEntry::RooThreshEntry(Double_t thresh, const RooCatType* cat) : 
-  _thresh(thresh), _cat((RooCatType*)cat) 
+RooThreshEntry::RooThreshEntry(Double_t thresh, const RooCatType& cat) : 
+  _thresh(thresh), _cat(cat) 
 {
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.5 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,7 +51,7 @@ RooGenericPdf::~RooGenericPdf()
 }
 
 
-Double_t RooGenericPdf::evaluate(const RooDataSet* dset) const
+Double_t RooGenericPdf::evaluate(const RooArgSet* nset) const
 {
   // Calculate current value of this object
   return _formula.eval() ;
@@ -91,7 +91,7 @@ Bool_t RooGenericPdf::redirectServersHook(const RooArgSet& newServerList, Bool_t
 
 
 
-Bool_t RooGenericPdf::checkDependents(const RooDataSet* set) const 
+Bool_t RooGenericPdf::checkDependents(const RooArgSet* nset) const 
 {
   // Check if this PDF is valid for dependent configuration given by specified data set
 

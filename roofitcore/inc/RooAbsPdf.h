@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.18 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.19 2001/08/01 01:24:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,12 +45,6 @@ public:
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
   virtual void generateEvent(Int_t code);
 
-  // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
-  virtual Bool_t selfNormalized() const { return kFALSE ; }
-  
   // PDF-specific plotting & display
   TH1F *Scan(RooDataSet* data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
   TH1F *Scan(RooDataSet& data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
@@ -63,13 +57,12 @@ public:
   // Interactions with a dataset  
   virtual Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
-  Double_t nLogLikelihood(const RooDataSet* dset, Bool_t extended=kFALSE) const ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
-  virtual Double_t getVal(const RooDataSet* dset=0) const ;
-  Double_t getLogVal(const RooDataSet* dset=0) const ;
-  virtual Double_t getNorm(const RooDataSet* dset=0) const ;
+  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  Double_t getLogVal(const RooArgSet* set=0) const ;
+  virtual Double_t getNorm(const RooArgSet* set=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
   void traceEvalPdf(Double_t value) const ;
@@ -94,9 +87,9 @@ protected:
   friend class RooFitContext ;
   static Int_t _verboseEval ;
 
-  virtual void syncNormalization(const RooDataSet* dset) const ;
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooDataSet* dset) const { return kFALSE ; } ;
-  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooDataSet* dset) const {} ;
+  virtual void syncNormalization(const RooArgSet* dset) const ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const { return kFALSE ; } ;
+  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const {} ;
 
   virtual void operModeHook() ;
 
@@ -131,7 +124,7 @@ protected:
   friend class RooConvolutedPdf ;
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
-  mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid
+  mutable RooArgSet* _lastNormSet ;
   mutable RooNameSet _lastNameSet ;  // Names of variables in last normalization set
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print

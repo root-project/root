@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.20 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.21 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,7 @@
 #define ROO_DATA_SET
 
 #include "TTree.h"
+#include "TNamed.h"
 
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -34,23 +35,22 @@ class RooPlot;
 class RooFitContext ;
 class RooFormulaVar ;
 
-class RooDataSet : public TTree, public RooPrintable {
+class RooDataSet : public TNamed, public RooPrintable {
 public:
 
   // Constructors, factory methods etc.
-  inline RooDataSet() { }
+  RooDataSet() ; 
   RooDataSet(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *title, RooDataSet *t, 
-	     const RooArgSet& vars, RooFormulaVar& cutVar) ;
+	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);  
-  RooDataSet(RooDataSet const & other) ;
-  // WVE Circular call caveat: Clone() cannot be overloaded to use 
-  // the copy ctor as the copy ctor needs to use clone to initialize the copy
+  RooDataSet(RooDataSet const & other, const char* newname=0) ;
+  virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
@@ -82,10 +82,15 @@ public:
     printToStream(defaultStream(),parseOptions(options));
   }
 
+  // Forwarded from TTree
+  inline Stat_t GetEntries() const { return _tree.GetEntries() ; }
+  inline void Reset(Option_t* option=0) { _tree.Reset(option) ; }
+  inline Int_t Fill() { return _tree.Fill() ; }
+  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree.GetEntry(entry,getall) ; }
 
   // WVE Debug stuff
   void dump() ;
-  void origPrint() { TTree::Print() ; }
+  void origPrint() { _tree.Print() ; }
 
   // Cache copy feature is not publicly accessible
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
@@ -108,9 +113,12 @@ protected:
 
   void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
+  TTree _tree ; 
+
   // Column structure definition
-  RooArgSet _vars, _truth;
-  RooArgSet _cachedVars ;  //! do not clone
+  RooArgSet _vars;         
+  RooArgSet _truth;        
+  RooArgSet _cachedVars ;  
   TString _blindString ;
 
 private:
@@ -120,7 +128,6 @@ private:
 
   TIterator *_iterator;    //! don't make this data member persistent
   TIterator *_cacheIter ;  //! don't make this data member persistent
-  TBranch *_branch; //! don't make this data member persistent
   Bool_t _doDirtyProp ;
 
   enum { bufSize = 8192 };

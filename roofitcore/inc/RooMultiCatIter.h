@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.rdl,v 1.3 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.4 2001/05/14 22:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@ public:
   // Constructors, assignment etc.
   RooMultiCatIter(const RooArgSet& catList) ;
   RooMultiCatIter(const RooMultiCatIter& other) ;
-  ~RooMultiCatIter() ;
+  virtual ~RooMultiCatIter() ;
 
   // Iterator implementation
   virtual const TCollection* GetCollection() const ;

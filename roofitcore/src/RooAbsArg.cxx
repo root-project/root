@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.39 2001/06/30 01:33:10 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.40 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,6 +35,7 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooTrace.hh"
 
 #include <string.h>
 #include <iomanip.h>
@@ -42,8 +43,6 @@
 ClassImp(RooAbsArg)
 ;
 
-TList RooAbsArg::_traceList ;
-Bool_t RooAbsArg::_traceFlag(kFALSE) ;
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
@@ -52,7 +51,10 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
   // Default constructor creates an unnamed object.
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
-  if (_traceFlag) _traceList.Add(this) ;
+  cout << "RooAbsArg::ctor WARNING: default ctor called" << endl ;
+  assert(0) ;
+
+  RooTrace::create(this) ;
 }
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
@@ -64,7 +66,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
   // dirty flags set.
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
-  if (_traceFlag) _traceList.Add(this) ;
+  RooTrace::create(this) ;
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
@@ -103,7 +105,7 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   setValueDirty() ;
   setShapeDirty() ;
 
-  if (_traceFlag) _traceList.Add(this) ;
+  RooTrace::create(this) ;
 }
 
 
@@ -136,10 +138,10 @@ RooAbsArg::~RooAbsArg()
 
   _attribList.Delete() ;
 
-  if (_traceFlag) _traceList.Remove(this) ;
-
   delete _clientShapeIter ;
   delete _clientValueIter ;
+
+  RooTrace::destroy(this) ;
 }
 
 
@@ -311,12 +313,16 @@ void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t
 }
 
 
-
-
 RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const 
 {
+  return getParameters(set->get()) ;
+}
+
+
+
+RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const 
+{
   RooArgSet* parList = new RooArgSet("parameters") ;
-  const RooArgSet* dataList = set->get() ;
 
   // Create and fill deep server list
   RooArgSet leafList("leafNodeServerList") ;
@@ -327,7 +333,7 @@ RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
 
-    if (!arg->dependsOn(*dataList)) {
+    if (!arg->dependsOn(*nset)) {
       parList->add(*arg) ;
     }
   }
@@ -366,7 +372,7 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
 
 
 
-Bool_t RooAbsArg::checkDependents(const RooDataSet* set) const 
+Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const 
 {
   return kFALSE ;
 }
@@ -430,7 +436,13 @@ Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg) const
 
 Bool_t RooAbsArg::dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const
 {
-  RooArgSet* depList = getDependents(dset) ;
+  return dependentOverlaps(dset->get(),testArg) ;
+}
+
+
+Bool_t RooAbsArg::dependentOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
+{
+  RooArgSet* depList = getDependents(nset) ;
   Bool_t ret = testArg.dependsOn(*depList) ;
   delete depList ;
   return ret ;
@@ -697,10 +709,10 @@ Int_t RooAbsArg::numProxies() const
 
 
 
-void RooAbsArg::setProxyDataSet(const RooDataSet* dset) 
+void RooAbsArg::setProxyNormSet(const RooArgSet* nset) 
 {
   for (int i=0 ; i<numProxies() ; i++) {
-    getProxy(i)->changeDataSet(dset) ;
+    getProxy(i)->changeNormSet(nset) ;
   }
 }
 
@@ -858,18 +870,6 @@ Int_t RooAbsArg::Compare(const TObject* other) const
   return strcmp(GetName(),other->GetName()) ;
 }
 
-
-void RooAbsArg::traceDump(ostream& os) {
-  os << "List of RooAbsArg objects in memory while trace active:" << endl ;
-  TIterator* iter = _traceList.MakeIterator() ;
-  RooAbsArg* arg ;
-  char buf[100] ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    sprintf(buf,"%010x : ",(void*)arg) ;
-    os << buf << setw(20) << arg->ClassName() << setw(0) << " - " << arg->GetName() << endl ;
-  }
-  delete iter ;
-}
 
 void RooAbsArg::printDirty(Bool_t depth) const 
 {

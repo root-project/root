@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFunc1D.cc,v 1.3 2001/06/30 01:33:14 verkerke Exp $
+ *    File: $Id: RooRealFunc1D.cc,v 1.4 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,11 +29,11 @@ ClassImp(RooRealFunc1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealFunc1D.cc,v 1.3 2001/06/30 01:33:14 verkerke Exp $";
+"$Id: RooRealFunc1D.cc,v 1.4 2001/08/01 21:30:15 david Exp $";
 
 RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor,
 			     const RooArgSet *normVars) :
-  _funcPtr(&func), _xPtr(&x), _scale(scaleFactor), _dset(0), _projected(0)
+  _funcPtr(&func), _xPtr(&x), _scale(scaleFactor), _nset(0), _projected(0)
 {
   // Create a new binding object. The input objects are not cloned so the
   // lifetime of the newly created object is limited by their lifetimes.
@@ -44,7 +44,7 @@ RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t sca
     if(found) {
       // if requested, normalize ourselves wrt to the dependent x
       vars.remove(*found);
-      _dset= new RooDataSet("xVar","Self-Normalization Set",*found);
+      _nset= new RooArgSet(*found,"Self-Normalization Set");
     }
     if(vars.GetSize() > 0) {
       // project out any other variables if possible
@@ -68,11 +68,11 @@ RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t sca
 }
 
 RooRealFunc1D::~RooRealFunc1D() {
-  if(_dset) delete _dset;
+  if(_nset) delete _nset;
   if(_projected) delete _projected;
 }
 
 Double_t RooRealFunc1D::operator()(Double_t x) const {
   _xPtr->setVal(x);
-  return _scale*_funcPtr->getVal(_dset);
+  return _scale*_funcPtr->getVal(_nset);
 }

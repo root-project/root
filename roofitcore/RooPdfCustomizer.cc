@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooPdfCustomizer.cc,v 1.1 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -49,7 +49,7 @@ RooPdfCustomizer::~RooPdfCustomizer()
 
 
   
-void RooPdfCustomizer::splitArgs(RooArgSet& set, RooAbsCategory& splitCat) 
+void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
 {
   TIterator* iter = set.MakeIterator() ;
   RooAbsArg* arg ;
@@ -59,10 +59,10 @@ void RooPdfCustomizer::splitArgs(RooArgSet& set, RooAbsCategory& splitCat)
 }
 
 
-void RooPdfCustomizer::splitArg(RooAbsArg& arg, RooAbsCategory& splitCat) 
+void RooPdfCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) 
 {
-  _splitArgList.Add(&arg) ;
-  _splitCatList.Add(&splitCat) ;
+  _splitArgList.Add((RooAbsArg*)&arg) ;
+  _splitCatList.Add((RooAbsCategory*)&splitCat) ;
 }
 
 

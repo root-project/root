@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.7 2001/06/06 00:06:39 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.8 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -32,7 +32,7 @@
 ClassImp(RooSuperCategory)
 ;
 
-RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList) :
+RooSuperCategory::RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList) :
   RooAbsCategoryLValue(name, title), _catSet("catSet","Input category set",this,kTRUE,kTRUE)
 {  
   // Constructor from list of input categories

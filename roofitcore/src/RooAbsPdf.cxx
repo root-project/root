@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.20 2001/08/01 01:24:07 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.21 2001/08/01 21:30:14 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,7 +48,7 @@ Int_t RooAbsPdf::_verboseEval(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _lastDataSet(0)
+  RooAbsReal(name,title), _norm(0), _lastNormSet(0)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -58,7 +58,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastDataSet(0)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -68,7 +68,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
-  RooAbsReal(other,name), _norm(0), _lastDataSet(0)
+  RooAbsReal(other,name), _norm(0), _lastNormSet(0)
 {
   // Copy constructor
   resetErrorCounters() ;
@@ -85,7 +85,7 @@ RooAbsPdf::~RooAbsPdf()
 }
 
 
-Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
+Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 {
   // Return current value with normalization appropriate for given dataset.
   // A null data set pointer will return the unnormalized value
@@ -95,19 +95,19 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
   // spoil the cache and interfere with returning the cached
   // return value. Since unnormalized calls are typically
   // done in integration calls, there is no performance hit.
-  if (!dset) return traceEval(dset) ;
+  if (!nset) return traceEval(nset) ;
 
   // Process change in last data set used
-  Bool_t dsetChanged = (dset != _lastDataSet) ;
-  if (dsetChanged) syncNormalization(dset) ;
+  Bool_t nsetChanged = (nset != _lastNormSet) ;
+  if (nsetChanged) syncNormalization(nset) ;
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if ((isValueDirty() || _norm->isValueDirty() || dsetChanged) && operMode()!=AClean) {
+  if ((isValueDirty() || _norm->isValueDirty() || nsetChanged) && operMode()!=AClean) {
 
 //     startTimer() ;
 //     _nDirtyCacheHits++ ;
 
-    Double_t rawVal = evaluate(dset) ;
+    Double_t rawVal = evaluate(nset) ;
     _value = rawVal / _norm->getVal() ;
     traceEvalPdf(rawVal) ; // Error checking and printing
 
@@ -151,11 +151,11 @@ void RooAbsPdf::traceEvalPdf(Double_t value) const
 
 
 
-Double_t RooAbsPdf::getNorm(const RooDataSet* dset) const
+Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 {
-  if (!dset) return 1 ;
+  if (!nset) return 1 ;
 
-  syncNormalization(dset) ;
+  syncNormalization(nset) ;
   if (_verboseEval>1) cout << "RooAbsPdf::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
   return _norm->getVal() ;
 }
@@ -163,14 +163,14 @@ Double_t RooAbsPdf::getNorm(const RooDataSet* dset) const
 
 
 
-void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
+void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 {
   // Check if data sets are identical
-  if (dset == _lastDataSet) return ;
+  if (nset == _lastNormSet) return ;
 
   // Check if data sets have identical contents
-  if (_lastDataSet) {
-    RooNameSet newNames(*dset->get()) ;
+  if (_lastNormSet) {
+    RooNameSet newNames(*nset) ;
     if (newNames==_lastNameSet) {
       if (_verboseEval>1) {
 	cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
@@ -181,16 +181,16 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 
   if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
 			 << ") recreating normalization integral(" 
-			 << _lastDataSet << " -> " << dset << ")" << endl ;
-  _lastDataSet = (RooDataSet*) dset ;
-  _lastNameSet.refill(*dset->get()) ;
+			 << _lastNormSet << " -> " << nset << ")" << endl ;
+  _lastNormSet = (RooArgSet*) nset ;
+  _lastNameSet.refill(*nset) ;
 
   // Update dataset pointers of proxies
-  ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
+  ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
   
   // Allow optional post-processing
-  Bool_t fullNorm = syncNormalizationPreHook(_norm,dset) ;
-  RooArgSet* depList = fullNorm ? dset->get() : getDependents(dset) ;
+  Bool_t fullNorm = syncNormalizationPreHook(_norm,nset) ;
+  RooArgSet* depList = fullNorm ? ((RooArgSet*)nset) : getDependents(nset) ;
 
   // Destroy old normalization & create new
   if (_norm) delete _norm ;
@@ -204,7 +204,7 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
   }
 
   // Allow optional post-processing
-  syncNormalizationPostHook(_norm,dset) ;
+  syncNormalizationPostHook(_norm,nset) ;
  
   if (!fullNorm) delete depList ;
 }
@@ -261,16 +261,8 @@ void RooAbsPdf::operModeHook()
 //   if (operMode()==AClean) {
 //     delete _norm ;
 //     _norm = 0 ;
-//     _lastDataSet=0 ;
+//     _lastNormSet=0 ;
 //   }
-}
-
-
-
-Int_t RooAbsPdf::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) const
-{
-  // By default we do supply any analytical integrals
-  return 0 ;
 }
 
 
@@ -377,28 +369,20 @@ Bool_t RooAbsPdf::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedAr
   return isMatched;
 }
 
-Double_t RooAbsPdf::analyticalIntegral(Int_t code) const
-{
-  // By default no analytical integrals are implemented
-  return getVal() ;
-}
-
-
-
-Double_t RooAbsPdf::getLogVal(const RooDataSet* dset) const 
+Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const 
 {
   // Return the log of the current value 
-  Double_t prob = getVal(dset) ;
+  Double_t prob = getVal(nset) ;
   if(prob <= 0) {
 
     if (_negCount-- > 0) {
       cout << "RooAbsPdf:" << fName << ": calculated prob = " << prob
            << " using" << endl;
       
-      cout << "dset ptr = " << (void*)dset << endl ;
+      cout << "nset ptr = " << (void*)nset << endl ;
       cout << "raw Value = " << getVal(0) << endl ;
-      RooArgSet* params = getParameters(dset) ;
-      RooArgSet* depends = getDependents(dset) ;	 
+      RooArgSet* params = getParameters(nset) ;
+      RooArgSet* depends = getDependents(nset) ;	 
       params->Print("v") ;
       depends->Print("v") ;
       delete params ;
@@ -441,36 +425,6 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
   return extra;
 }
 
-
-
-Double_t RooAbsPdf::nLogLikelihood(const RooDataSet* dset, Bool_t extended) const
-{
-  // Return the likelihood of this PDF for the given dataset
-  Double_t result(0);
-  const RooArgSet *values = dset->get() ;
-  if(!values) {
-    cout << dset->GetName() << "::nLogLikelihood: cannot get values from dataset " << endl ;
-    return 0.0;
-    }
-
-  Stat_t events= dset->GetEntries();
-  for(Int_t index= 0; index<events; index++) {
-
-    // get the data values for this event
-    dset->get(index);
-
-    Double_t term = getLogVal(dset);
-    if(term == 0) return 0;
-    result-= term;
-  }
-
-  // include the extended maximum likelihood term, if requested
-  if(extended) {
-    result+= extendedTerm(events);
-  }
-
-  return result;
-}
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.rdl,v 1.2 2001/06/09 05:08:48 verkerke Exp $
+ *    File: $Id: RooTruthModel.rdl,v 1.3 2001/07/31 05:54:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,7 +27,7 @@ public:
   virtual Int_t basisCode(const char* name) const ;
 
 protected:
-  virtual Double_t evaluate(const RooDataSet* dset) const ;
+  virtual Double_t evaluate(const RooArgSet* nset) const ;
   virtual void changeBasis(RooFormulaVar* basis) ;
 
   ClassDef(RooTruthModel,1) // Abstract Resolution Model

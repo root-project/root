@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.18 2001/06/12 19:06:27 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.19 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -30,7 +30,7 @@
 
 ClassImp(RooFormula)
 
-RooFormula::RooFormula() : TFormula(), _dset(0)
+RooFormula::RooFormula() : TFormula(), _nset(0)
 {
   // Dummy constructor
 }
@@ -180,7 +180,7 @@ Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplace
 }
 
 
-Double_t RooFormula::eval(const RooDataSet* dset)
+Double_t RooFormula::eval(const RooArgSet* nset)
 { 
   // Return current value of formula  
 
@@ -191,7 +191,7 @@ Double_t RooFormula::eval(const RooDataSet* dset)
   }
 
   // Pass current dataset pointer to DefinedValue
-  _dset = (RooDataSet*) dset ;
+  _nset = (RooArgSet*) nset ;
 
   return EvalPar(0,0) ; 
 }
@@ -205,7 +205,7 @@ RooFormula::DefinedValue(Int_t code) {
   TString& label=((TObjString*)_labelList.At(code))->String() ;
 
   if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-    return ((RooAbsReal*)arg)->getVal(_dset) ;
+    return ((RooAbsReal*)arg)->getVal(_nset) ;
   } else if (arg->IsA()->InheritsFrom(RooAbsCategory::Class())) {
     if (label.IsNull()) {
       return ((RooAbsCategory*)_useList.At(code))->getIndex() ;

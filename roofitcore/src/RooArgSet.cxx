@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.24 2001/07/31 05:54:18 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.25 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooStringVar.hh"
+#include "RooFitCore/RooTrace.hh"
 
 ClassImp(RooArgSet)
 
@@ -32,17 +33,20 @@ ClassImp(RooArgSet)
 RooArgSet::RooArgSet() :
   _name(), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
 }
 
 RooArgSet::RooArgSet(const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
 }
 
 RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1);
 }
 
@@ -50,6 +54,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2);
 }
 
@@ -58,6 +63,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3);
 }
 
@@ -66,6 +72,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4);
 }
 
@@ -75,6 +82,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5);
 }
 
@@ -84,6 +92,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
 }
 
@@ -94,6 +103,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
 }
 
@@ -104,6 +114,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
 }
 
@@ -115,6 +126,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var9, const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ; add(var9) ;
 }
 
@@ -122,6 +134,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
+  RooTrace::create(this) ;
   if (!name) SetName(other.GetName()) ;
 
   // Transfer contents (not owned)
@@ -139,6 +152,7 @@ RooArgSet::~RooArgSet()
   if(_isCopy){ 
     Delete();
   }
+  RooTrace::destroy(this) ;
 }
 
 RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const
@@ -408,7 +422,7 @@ void RooArgSet::setAttribAll(const Text_t* name, Bool_t value)
 }
 
 
-RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) 
+RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
 {
   // Create output set
   RooArgSet *sel = new RooArgSet(TString(GetName()).Append("_selection")) ;

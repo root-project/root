@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.2 2001/06/30 01:33:14 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.3 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -81,7 +81,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 
 
-Double_t RooSimultaneous::evaluate(const RooDataSet* dset) const
+Double_t RooSimultaneous::evaluate(const RooArgSet* nset) const
 {
 //   // Require that all states have an associated PDF
 //   if (_pdfProxyList.GetSize() != _indexCat.arg().numTypes()) {
@@ -96,6 +96,6 @@ Double_t RooSimultaneous::evaluate(const RooDataSet* dset) const
   assert(proxy) ;
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(dset) / _numPdf ;
+  return ((RooAbsPdf*)(proxy->absArg()))->getVal(nset) / _numPdf ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.rdl,v 1.5 2001/06/06 00:06:39 verkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.6 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -23,7 +23,7 @@ class RooSuperCategory : public RooAbsCategoryLValue {
 public:
   // Constructors etc.
   inline RooSuperCategory() { }
-  RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList);
+  RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooSuperCategory(const RooSuperCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooSuperCategory(*this,newname); }
   virtual ~RooSuperCategory();

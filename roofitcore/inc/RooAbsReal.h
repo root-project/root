@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.18 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.19 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ public:
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal(const RooDataSet* dset=0) const ;
+  virtual Double_t getVal(const RooArgSet* set=0) const ;
   Bool_t operator==(Double_t value) const ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
@@ -45,6 +45,12 @@ public:
   // Create a fundamental-type object that can hold our value.
   RooAbsArg *createFundamental() const;
 
+  // Analytical integration support
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
+  virtual Bool_t selfNormalized() const { return kFALSE ; }
+  
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
   inline Double_t getPlotMax() const { return _plotMax; }
@@ -79,12 +85,12 @@ protected:
   virtual Bool_t isValid(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Function evaluation and error tracing
-  Double_t traceEval(const RooDataSet* dset) const ;
+  Double_t traceEval(const RooArgSet* set) const ;
   virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
-  virtual Double_t evaluate(const RooDataSet* dset) const = 0 ;
+  virtual Double_t evaluate(const RooArgSet* set) const = 0 ;
 
   // Hooks for RooDataSet interface
-  virtual void syncCache(const RooDataSet* dset=0) { getVal(dset) ; }
+  virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
@@ -92,7 +98,6 @@ protected:
   Double_t _plotMax ;
   Int_t    _plotBins ;
   mutable Double_t _value ;
-  mutable RooDataSet* _lastData ;
   TString  _unit ;
   TString  _label ;
 

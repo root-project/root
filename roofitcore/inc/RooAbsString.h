@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.6 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.7 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,7 +52,7 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(TString value) const ;
 
-  virtual void syncCache(const RooDataSet* dset=0) { getVal() ; }
+  virtual void syncCache(const RooArgSet* nset=0) { getVal() ; }
   void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 

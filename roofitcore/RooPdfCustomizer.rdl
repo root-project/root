@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooPdfCustomizer.rdl,v 1.1 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -29,8 +29,8 @@ public:
   RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
   virtual ~RooPdfCustomizer() ;
   
-  void splitArgs(RooArgSet& argSet, RooAbsCategory& splitCat) ;
-  void splitArg(RooAbsArg& arg, RooAbsCategory& splitCat) ;
+  void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
+  void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
   RooAbsPdf* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
 
   const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
@@ -58,6 +58,8 @@ protected:
 
   // Cloned nodes are owned by the customizer
   RooArgSet _cloneBranchList ;
+
+  // Cloned leafs are owned by the user supplied list in the ctor
   RooArgSet& _cloneLeafList ;
 
   ClassDef(RooPdfCustomizer,0) // PDF customizer 

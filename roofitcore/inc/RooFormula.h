@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.15 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.16 2001/06/12 19:06:27 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,7 +40,7 @@ public:
 
   // Function value accessor
   inline Bool_t ok() { return _isOK ; }
-  Double_t eval(const RooDataSet* dset=0) ;
+  Double_t eval(const RooArgSet* nset=0) ;
 
   // Debugging
   void dump() ;
@@ -60,7 +60,7 @@ protected:
   Int_t DefinedVariable(TString &name) ;
   Double_t DefinedValue(Int_t code) ;
 
-  RooDataSet* _dset ;
+  RooArgSet* _nset ;
   Bool_t    _isOK ;
   TList     _origList ;   //! Original list of dependents
   TObjArray _useList ;    //! List of actual dependents 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.19 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.20 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooDataSet* set) const { return kTRUE ; }
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* set) const { return kTRUE ; }
 
   RooAbsArg *createFundamental() const;
 
@@ -73,7 +73,7 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(RooCatType value) const ;
 
-  virtual void syncCache(const RooDataSet* dset=0) { getIndex() ; }
+  virtual void syncCache(const RooArgSet* set=0) { getIndex() ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 

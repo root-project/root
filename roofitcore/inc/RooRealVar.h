@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.21 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.22 2001/07/31 05:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,7 @@ public:
   RooRealVar& operator=(const RooRealVar& other) ;
   
   // Parameter value and error accessors
-  inline virtual Double_t getVal(const RooDataSet* dset=0) const { return _value ; }
+  inline virtual Double_t getVal(const RooArgSet* nset=0) const { return _value ; }
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error; }
   inline void setError(Double_t value) { _error= value; }
@@ -67,7 +67,7 @@ public:
 
 protected:
 
-  virtual Double_t evaluate(const RooDataSet* dset) const { return _value ; } // dummy because we overloaded getVal()
+  virtual Double_t evaluate(const RooArgSet* nset) const { return _value ; } // dummy because we overloaded getVal()
 
   Double_t chopAt(Double_t what, Int_t where) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.5 2001/06/12 19:06:27 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.6 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -70,10 +70,10 @@ RooFormulaVar::~RooFormulaVar()
 }
 
 
-Double_t RooFormulaVar::evaluate(const RooDataSet* dset) const
+Double_t RooFormulaVar::evaluate(const RooArgSet* nset) const
 {
   // Calculate current value of object
-  return _formula.eval(dset) ;
+  return _formula.eval(nset) ;
 }
 
 
@@ -111,7 +111,7 @@ Bool_t RooFormulaVar::redirectServersHook(const RooArgSet& newServerList, Bool_t
 
 
 
-Bool_t RooFormulaVar::checkDependents(const RooDataSet* set) const 
+Bool_t RooFormulaVar::checkDependents(const RooArgSet* nset) const 
 {
   // Check if dependent configuration of given data set is OK
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.35 2001/06/30 01:33:10 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.36 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,7 +36,7 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname=0) const = 0 ;
+  virtual TObject* clone(const char* newname) const = 0 ;
   virtual TObject* Clone(const char* newname=0) const { return clone(newname?newname:GetName()) ; }
 
   // Accessors to client-server relation information 
@@ -72,10 +72,12 @@ public:
 
   // Parameter & dependents interpretation of servers
   RooArgSet* getParameters(const RooDataSet* set) const ;
+  RooArgSet* getParameters(const RooArgSet* depList) const ;
   RooArgSet* getDependents(const RooDataSet* set) const ;
   RooArgSet* getDependents(const RooArgSet* depList) const ;
   Bool_t dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const ;
-  virtual Bool_t checkDependents(const RooDataSet* set) const ;
+  Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
+  virtual Bool_t checkDependents(const RooArgSet* nset) const ;
   void attachDataSet(const RooDataSet &set);
 
   // I/O streaming interface (machine readable)
@@ -100,8 +102,6 @@ public:
 
   //Debug hooks
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
-  static void trace(Bool_t flag) { _traceFlag = flag ; }
-  static void traceDump(ostream& os=cout) ;
   static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
 
@@ -172,7 +172,7 @@ protected:
   void unRegisterProxy(RooArgProxy& proxy) ;
   void unRegisterProxy(RooSetProxy& proxy) ;
   RooAbsProxy* getProxy(Int_t index) const ;
-  void setProxyDataSet(const RooDataSet* dset) ;
+  void setProxyNormSet(const RooArgSet* nset) ;
   Int_t numProxies() const ;
 	
   // Attribute list
@@ -181,7 +181,7 @@ protected:
 
   // Hooks for RooDataSet interface
   friend class RooDataSet ;
-  virtual void syncCache(const RooDataSet* dset=0) = 0 ;
+  virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
 
@@ -191,8 +191,6 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ;
-  static Bool_t _traceFlag ;
-  static TList  _traceList ;
 
 private:
 

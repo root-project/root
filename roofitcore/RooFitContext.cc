@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.12 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.13 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,7 +62,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
   if (cloneData) {
     _dataClone = new RooDataSet(*data) ;
   } else {
-    _dataClone = data ;
+    _dataClone = (RooDataSet*) data ;
   }
 
   // Clone all PDF compents by copying all branch nodes
@@ -77,7 +77,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
 
   } else {
     _pdfCompList = (RooArgSet*) tmp.Clone() ;
-    _pdfClone = pdf ;
+    _pdfClone = (RooAbsPdf*)pdf ;
   }
 
   // Attach PDF to data set
@@ -176,7 +176,7 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 Double_t RooFitContext::getVal(Int_t evt) const 
 {
   _dataClone->get(evt) ;
-  return _pdfClone->getVal(_dataClone) ;
+  return _pdfClone->getVal(_dataClone->get()) ;
 }
 
 
@@ -241,13 +241,13 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       TIterator* pcIter = _pdfCompList->MakeIterator() ;
       while(arg=(RooAbsArg*)pcIter->Next()){
 	if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-	  ((RooAbsReal*)arg)->getVal(trimData) ;
+	  ((RooAbsReal*)arg)->getVal(trimData->get()) ;
 	}
       }
       delete pcIter ;
 
       // Substitute new data for old data 
-      delete _dataClone ;
+      if (_ownData) delete _dataClone ;
       _dataClone = trimData ;
 
       // Update _lastDataSet in cached variables to new trimmed dataset
@@ -255,7 +255,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 	TIterator* cIter = cacheList.MakeIterator() ;
 	RooAbsArg *cacheArg ;
 	while(cacheArg=(RooAbsArg*)cIter->Next()){
-	  ((RooAbsReal*)cacheArg)->getVal(_dataClone) ;
+	  ((RooAbsReal*)cacheArg)->getVal(_dataClone->get()) ;
 	}
 	delete cIter ;
 
@@ -399,7 +399,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   }
 
   // Check if there are any unprotected multiple occurrences of dependents
-  if (_pdfClone->checkDependents(_dataClone)) {
+  if (_pdfClone->checkDependents(_dataClone->get())) {
     cout << "RooFitContext::fit: Error in PDF dependents, abort" << endl ;
     return -1 ;
   }
@@ -591,7 +591,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
     // get the data values for this event
     _dataClone->get(index);
 
-    Double_t term = _pdfClone->getLogVal(_dataClone);
+    Double_t term = _pdfClone->getLogVal(_dataClone->get());
     if(term == 0) return 0;
     result-= term;
   }
