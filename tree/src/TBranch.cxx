@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.17 2001/02/09 18:19:56 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.18 2001/03/12 07:17:43 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -706,15 +706,17 @@ void TBranch::Print(Option_t *) const
   const int kLINEND = 77;
   Float_t cx = 1;
   int aLength = strlen (GetTitle());
+  if (strcmp(GetName(),GetTitle()) == 0) aLength = 0;
+  int len = aLength;
   aLength += (aLength / 54 + 1) * 80 + 100;
   if (aLength < 200) aLength = 200;
   char *bline = new char[aLength];
   if (fZipBytes) cx = fTotBytes/fZipBytes;
-  sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
+  if (len) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
+  else     sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
   if (strlen(bline) > UInt_t(kLINEND)) {
-     int len=strlen(GetTitle());
      char *tmp = new char[strlen(bline)+1];
-     strcpy(tmp, GetTitle());
+     if (len) strcpy(tmp, GetTitle());
      sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
      int pos = strlen (bline);
      int npos = pos;
@@ -731,7 +733,7 @@ void TBranch::Print(Option_t *) const
            bline[pos ++] = '\n';
            bline[pos ++] = '*';
            npos = 1;
-           for (; npos < 22; npos ++)
+           for (; npos < 12; npos ++)
                bline[pos ++] = ' ';
            bline[pos-2] = '|';
         }
