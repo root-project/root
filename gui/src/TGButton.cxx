@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.47 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.48 2004/11/24 08:13:05 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -262,9 +262,9 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      SetState(kButtonDown, kTRUE);
+      SetState(kButtonDown, kFALSE);
    } else {
-      SetState(kButtonUp, kTRUE);
+      SetState(kButtonUp, kFALSE);
    }
    return kTRUE;
 }
