@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.13 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.16 2002/11/15 14:53:50 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -665,7 +665,7 @@ void TGListTree::PageUp(Bool_t select)
 {
    // Move content one page up.
 
-   if (!fCanvas) return;
+   if (!fCanvas || !fSelected) return;
 
    TGDimension dim = GetPageDimension();
 
@@ -680,7 +680,7 @@ void TGListTree::PageDown(Bool_t select)
 {
    // Move content one page down.
 
-   if (!fCanvas) return;
+   if (!fCanvas || !fSelected) return;
 
    TGDimension dim = GetPageDimension();
 
@@ -694,7 +694,7 @@ void TGListTree::LineUp(Bool_t select)
 {
    // Move content one item-size up.
 
-   if (!fCanvas) return;
+   if (!fCanvas || !fSelected) return;
 
    const TGPicture *pic;
    Int_t height;
@@ -717,7 +717,7 @@ void TGListTree::LineDown(Bool_t select)
 {
    // Move content one item-size down.
 
-   if (!fCanvas) return;
+   if (!fCanvas || !fSelected) return;
 
    const TGPicture *pic;
    Int_t height;
