@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.4 2003/06/10 20:51:46 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.5 2003/06/27 11:02:34 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -189,7 +189,6 @@ Int_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
    Error("Process", "no active PROOF session");
    return -1;
 }
-
 
 //______________________________________________________________________________
 void TDSet::AddInput(TObject *obj)

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.9 2002/06/04 14:38:26 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.10 2003/02/12 17:44:02 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -47,15 +47,18 @@ class TLorentzRotation;
 
 class TLorentzVector : public TObject {
 
+private:
+
+  TVector3 fP;  // 3 vector component
+  Double_t fE;  // time or energy of (x,y,z,t) or (px,py,pz,e)
+
 public:
 
   enum { kX=0, kY=1, kZ=2, kT=3, kNUM_COORDINATES=4, kSIZE=kNUM_COORDINATES };
   // Safe indexing of the coordinates when using with matrices, arrays, etc.
 
-
-
   TLorentzVector(Double_t x = 0.0, Double_t y = 0.0,
-                          Double_t z = 0.0, Double_t t = 0.0);
+                 Double_t z = 0.0, Double_t t = 0.0);
   // Constructor giving the components x, y, z, t.
 
   TLorentzVector(const Double_t * carray);
@@ -254,13 +257,7 @@ public:
   TLorentzVector & Transform(const TLorentzRotation &);
   // Transformation with HepLorenzRotation.
 
-private:
-
-  TVector3 fP;  // 3 vector component
-  Double_t fE;  // time or energy of (x,y,z,t) or (px,py,pz,e)
-
   ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
-
 };
 
 
@@ -515,9 +512,9 @@ TLorentzVector::operator * (const TLorentzVector & q) const {
 }
 
 //Member functions Plus() and Minus() return the positive and negative
-//light-cone components: 
+//light-cone components:
 //
-//  Double_t pcone = v.Plus(); 
+//  Double_t pcone = v.Plus();
 //  Double_t mcone = v.Minus();
 //
 //CAVEAT: The values returned are T{+,-}Z. It is known that some authors
