@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.23 2001/02/22 14:07:40 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.24 2001/02/22 14:37:46 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1285,10 +1285,11 @@ void RootdPutFile(const char *msg)
 
    // check file system space
    struct statfs statfsbuf;
-   if (fstatfs(fd, &statfsbuf) == 0) {
 #if defined(__sgi)
+   if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
       double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
 #else
+   if (fstatfs(fd, &statfsbuf) == 0) {
       double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
       if (space < size - restartat) {
