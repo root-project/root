@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.h,v 1.2 2000/06/13 09:52:03 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -101,6 +101,7 @@ public:
    void    BackBox(Double_t ang);
    void    ClearRaster();
    void    ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep);
+   void    DefineGridLevels(Int_t ndivz);
    void    DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);
    void    DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);
    void    DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.5 2001/07/20 13:49:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.6 2001/12/09 17:36:25 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -38,6 +38,8 @@
 #include "TMath.h"
 #include "TStyle.h"
 #include "TObjArray.h"
+#include "THLimitsFinder.h"
+
 
 #ifdef R__SUNCCBUG
 const Double_t kRad = 1.74532925199432955e-02;
@@ -240,6 +242,39 @@ void TLego::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
     for (i = 0; i < fNlevel+1; ++i) fColorLevel[i] = icl[i];
 }
 
+
+//______________________________________________________________________________
+void TLego::DefineGridLevels(Int_t ndivz)
+{
+   // Define the grid levels drawn in the background of surface and lego plots.
+   // The grid levels are aligned on the  Z axis' main tick marks.
+   
+   Int_t i, nbins;
+   Double_t BinLow, BinHigh, BinWidth;
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("GridLevels", "no TView in current pad");
+      return;
+   }
+
+   // Find the main tick marks positions. 
+   Double_t *rmin = view->GetRmin();
+   Double_t *rmax = view->GetRmax();
+   if (ndivz > 0) {
+      THLimitsFinder::Optimize(rmin[2], rmax[2], ndivz,
+                               BinLow, BinHigh, nbins, BinWidth, " ");
+   } else {
+      nbins = TMath::Abs(ndivz);
+      BinLow = rmin[2];
+      BinHigh = rmax[2];
+      BinWidth = (BinHigh-BinLow)/nbins;
+   }
+
+   // Define the grid levels
+   fNlevel = nbins+1;
+   for (i = 0; i < fNlevel; ++i) fFunLevel[i] = BinLow+i*BinWidth;
+}
 
 //______________________________________________________________________________
 void TLego::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.9 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.10 2002/03/09 09:49:10 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -57,6 +57,7 @@ protected:
 public:
     THistPainter();
     virtual ~THistPainter();
+    virtual void       DefineColorLevels(Int_t ndivz);
     virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
     virtual void       DrawPanel();
     virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);

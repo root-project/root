@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.74 2002/03/09 09:49:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.75 2002/03/13 17:00:33 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3203,7 +3203,6 @@ void THistPainter::PaintLego(Option_t *)
 //
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Int_t i;
    Int_t raster = 1;
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    Int_t   nx      = Hparam.xlast - Hparam.xfirst + 1;
@@ -3329,6 +3328,8 @@ void THistPainter::PaintLego(Option_t *)
    fLego->SetFillColor(fH->GetFillColor());
    fLego->TAttFill::Modify();
 
+   fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+
    if (raster) fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
    else        fLego->InitMoveScreen(-1.1,1.1);
 
@@ -3340,27 +3341,7 @@ void THistPainter::PaintLego(Option_t *)
       }
    }
 
-//                 Initialize the colour levels
-   if (ndivz >= 100) {
-      Warning("PaintLego", "too many color levels, %d, reset to 8", ndivz);
-      ndivz = 8;
-   }
-   Double_t *funlevel = new Double_t[ndivz+1];
-   Int_t *colorlevel = new Int_t[ndivz+1];
-   //Int_t lowcolor = fH->GetFillColor();
-   Int_t theColor;
-   Int_t ncolors = gStyle->GetNumberOfColors();
-   for (i = 0; i < ndivz; ++i) {
-      funlevel[i]   = fH->GetContourLevel(i);
-      //theColor = lowcolor + Int_t(i*Float_t(ncolors)/Float_t(ndivz));
-      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
-      colorlevel[i] = gStyle->GetColorPalette(theColor);
-   }
-   //colorlevel[ndivz] = gStyle->GetColorPalette(lowcolor+ncolors-1);
-   colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
-   fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
-   delete [] colorlevel;
-   delete [] funlevel;
+   if (Hoption.Lego == 12) DefineColorLevels(ndivz);
 
    fLego->SetLegoFunction(&TLego::LegoFunction);
    if (Hoption.Lego ==  1) fLego->SetDrawFace(&TLego::DrawFaceRaster2);
@@ -3498,15 +3479,15 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
     ndivz = fZaxis->GetNdivisions();
     if (ndivx < 0) {
 	ndivx = TMath::Abs(ndivx);
-	chopax[6] = 'N';
+        strcat(chopax, "N");
     }
     if (ndivy < 0) {
 	ndivy = TMath::Abs(ndivy);
-	chopay[6] = 'N';
+        strcat(chopay, "N");
     }
     if (ndivz < 0) {
 	ndivz = TMath::Abs(ndivz);
-	chopaz[6] = 'N';
+        strcat(chopaz, "N");
     }
 
 //              Set Axis attributes.
@@ -3620,6 +3601,7 @@ void THistPainter::PaintPalette()
    Double_t wmax = fH->GetMaximum();
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
+   static char chopt[5] = "";
    if (Hoption.Logz) {
       wlmin = Hparam.zmin;
       if (wmax > 0) wlmax = TMath::Log10(wmax);
@@ -3650,13 +3632,18 @@ void THistPainter::PaintPalette()
    TGaxis axis;
    axis.ImportAxisAttributes(zaxis);
    Int_t ndiv  = zaxis->GetNdivisions()%100; //take primary divisions only
+   chopt[0] = 0;
+   strcat(chopt, "+L");
+   if (ndiv < 0) {
+      ndiv =TMath::Abs(ndiv);
+      strcat(chopt, "N");
+   }
    if (Hoption.Logz) {
       wmin = TMath::Power(10.,wlmin);
       wmax = TMath::Power(10.,wlmax);
-      axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,"+LG");
-   } else {
-      axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,"+L");
+      strcat(chopt, "G");
    }
+   axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,chopt);
 }
 
 //______________________________________________________________________________
@@ -4117,7 +4104,6 @@ void THistPainter::PaintSurface(Option_t *)
    const Double_t qd = 0.15;
    const Double_t qs = 0.8;
    Double_t fmin, fmax;
-   Int_t i;
    Int_t raster = 0;
    Int_t irep   = 0;
 
@@ -4203,25 +4189,6 @@ void THistPainter::PaintSurface(Option_t *)
 
    if (Hoption.System != kCARTESIAN) {nx++; ny++;}
 
-//                 Initialize the colour levels
-   if (ndivz >= 100) {
-      Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
-      ndivz = 8;
-   }
-   Double_t *funlevel = new Double_t[ndivz+1];
-   Int_t *colorlevel = new Int_t[ndivz+1];
-   Int_t theColor;
-   Int_t ncolors = gStyle->GetNumberOfColors();
-   for (i = 0; i < ndivz; ++i) {
-      funlevel[i]   = fH->GetContourLevel(i);
-      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
-      colorlevel[i] = gStyle->GetColorPalette(theColor);
-   }
-   colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
-   fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
-   delete [] colorlevel;
-   delete [] funlevel;
-
 //     Now ready to draw the surface plot
 
    TView *view = gPad->GetView();
@@ -4252,6 +4219,7 @@ void THistPainter::PaintSurface(Option_t *)
    Int_t icol1 = fH->GetFillColor();
 
    if (Hoption.Surf == 13) {
+      DefineColorLevels(ndivz);
       Hoption.Surf = 23;
       fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
       fLego->SetDrawFace(&TLego::DrawFaceMode2);
@@ -4269,6 +4237,7 @@ void THistPainter::PaintSurface(Option_t *)
    else        fLego->InitMoveScreen(-1.1,1.1);
 
    if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 14) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TLego::DrawFaceMove1);
@@ -4308,6 +4277,11 @@ void THistPainter::PaintSurface(Option_t *)
    }
    else {
 //     Draw the surface
+      if (Hoption.Surf == 11 || Hoption.Surf == 12) {
+         DefineColorLevels(ndivz);
+      } else {
+         fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      }
       fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
       if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceRaster1);
       if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
@@ -4348,6 +4322,32 @@ void THistPainter::PaintSurface(Option_t *)
 
    delete axis;
    delete fLego; fLego = 0;
+}
+
+
+//______________________________________________________________________________
+void THistPainter::DefineColorLevels(Int_t ndivz)
+{
+   Int_t i, irep;
+
+   // Initialize the colour levels
+   if (ndivz >= 100) {
+      Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
+      ndivz = 8;
+   }
+   Double_t *funlevel = new Double_t[ndivz+1];
+   Int_t *colorlevel = new Int_t[ndivz+1];
+   Int_t theColor;
+   Int_t ncolors = gStyle->GetNumberOfColors();
+   for (i = 0; i < ndivz; ++i) {
+      funlevel[i]   = fH->GetContourLevel(i);
+      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      colorlevel[i] = gStyle->GetColorPalette(theColor);
+   }
+   colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
+   fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
+   delete [] colorlevel;
+   delete [] funlevel;
 }
 
 
