@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.11 2000/12/13 16:05:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.12 2000/12/26 14:17:57 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -190,6 +190,16 @@ TObject *TCollection::FindObject(const TObject *obj) const
    return 0;
 }
 
+//______________________________________________________________________________
+const char *TCollection::GetName() const
+{
+  // Return name of this collection.
+  // if no name, return the collection class name.
+   
+   if (fName.Length() > 0) return fName.Data();
+   return ClassName();
+}
+   
 //______________________________________________________________________________
 Int_t TCollection::GrowBy(Int_t delta) const
 {
