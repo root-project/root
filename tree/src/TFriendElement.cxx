@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.1 2001/04/09 07:52:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.2 2001/04/10 16:34:51 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "TFriendElement.h"
 #include "TFile.h"
 
+R__EXTERN TTree *gTree;
+
 ClassImp(TFriendElement)
 
 //______________________________________________________________________________
@@ -39,7 +41,7 @@ TFriendElement::TFriendElement(): TNamed()
 
    fFile       = 0;
    fTree       = 0;
-   fParentTree = 0;
+   fParentTree = gTree;
 }
 
 //______________________________________________________________________________
@@ -72,7 +74,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
 TFriendElement::~TFriendElement()
 {
 
-   DisConnect();
+   DisConnect(); 
 }
 
 //_______________________________________________________________________
