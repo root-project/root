@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.2 2000/06/13 09:15:33 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #endif
 
 const Int_t kMAXCODES = 100;
+const Int_t kMAXFORMDIM = 5; // Maximum number of array dimensions support in TTreeFormula
 
 class TTree;
 class TMethodCall;
@@ -54,7 +55,13 @@ protected:
    Int_t       fNindex;           //Size of fIndex
    Int_t       *fIndex;           //array of instances numbers
    TObjArray   fMethods;          //List of leaf method calls
+   
+   Int_t       fNdimensions[kMAXCODES];            //Number of array dimensions in each leaf
+   Int_t       fCumulSize[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
+   Int_t       fCumulUsedSize[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this formula
+   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];   //Index of array selected by user for each leaf
 
+   void        DefineDimensions(const char *size, Int_t code);
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
