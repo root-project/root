@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.65 2004/07/30 09:01:18 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.66 2004/07/30 19:09:51 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -517,8 +517,8 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          if (!IsNamespace(classPtr)) {
             // make a link to the inheritance tree (postscript)
-            classFile << " - <a href=\"" << cClassFileName << "_Tree.ps\"";
-            classFile << ">inheritance tree (.ps)</a>";
+            classFile << " - <a href=\"" << cClassFileName << "_Tree.pdf\"";
+            classFile << ">inheritance tree (.pdf)</a>";
          }
 
          if (cClassFileName != 0) delete[]cClassFileName;
@@ -1756,14 +1756,14 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
       char *filename = StrDup(tmp1, 16);
 
 
-      strcat(filename, "_Tree.ps");
+      strcat(filename, "_Tree.pdf");
 
       if (tmp1)
          delete[]tmp1;
       tmp1 = 0;
 
       if (IsModified(classPtr, kTree) || force) {
-	 // TCanvas already prints ps being saved
+	 // TCanvas already prints pdf being saved
          // Printf(formatStr, "", "", filename);
          classPtr->Draw("same");
          psCanvas->SaveAs(filename);
@@ -3244,7 +3244,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
       strcpy(filename, strPtr);
       delete[]strPtr;
       delete[]strPtr2;
-      strcat(filename, "_Tree.ps");
+      strcat(filename, "_Tree.pdf");
       break;
 
    default:
