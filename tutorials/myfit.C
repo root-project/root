@@ -31,7 +31,7 @@ void myfit()
    func->SetParNames("Constant","Mean_value","Sigma");
 
 // Fit histogram in range defined by function
-   hpx->Fit("fitf","r");
+   hpx->Fit(func,"r");
 
 // Gets integral of function between fit limits
    printf("Integral of function = %g\n",func->Integral(-2,2));
