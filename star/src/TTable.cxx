@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1.1.3 2001/01/16 01:47:08 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1.1.4 2001/01/22 12:59:38 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //

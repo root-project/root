@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1.1.5 2001/01/16 01:47:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1.1.6 2001/01/22 12:59:39 fisyak Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.1.1.5 2001/01/16 01:47:14 fisyak Exp $
+// $Id: TTableSorter.cxx,v 1.1.1.6 2001/01/22 12:59:39 fisyak Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.2 2001/01/14 03:43:53 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.1.1.3 2001/01/22 12:59:34 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.2 2001/01/14 03:43:53 fine Exp $
+// $Id: TDataSetIter.h,v 1.1.1.3 2001/01/22 12:59:34 fisyak Exp $
 //
 // TDataSetIter                                                         //
 //                                                                      //
@@ -73,13 +73,18 @@ public:
   virtual TDataSet    *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="");
   virtual TDataSet    *FindByName(const Char_t *name,const Char_t *path="",Option_t *opt="");
   virtual TDataSet    *FindDataSet(TDataSet *set,const Char_t *path,Option_t *opt="");
+  virtual TDataSet    *FindByPointer(TDataSet *set,const Char_t *path=0,Option_t *opt="");
+  virtual TObject     *FindObject(const Char_t *name) const;
+  virtual TObject     *FindObject(const TObject *obj) const;
+
   virtual Int_t        Flag(UInt_t flag=kMark,EBitOpt reset=kSet){return Flag((TDataSet *)0,flag,reset);}
   virtual Int_t        Flag(const Char_t *path,UInt_t flag=kMark,EBitOpt reset=kSet);
   virtual Int_t        Flag(TDataSet *dataset,UInt_t flag=kMark,EBitOpt reset=kSet);
 
   virtual TDataSet    *Ls(const Char_t *dirname="",Option_t *opt="") const;
   virtual TDataSet    *Ls(const Char_t *dirname,Int_t depth) const;
-  virtual TDataSet    *ls(const Char_t *dirname="",Option_t *opt="") const  {return Ls(dirname,opt);}
+  virtual void         ls(Option_t *dirname="") const { Ls(dirname,"");}
+  virtual TDataSet    *ls(TString dirname,Option_t *opt="") const  {return Ls(dirname.Data(),opt);}
   virtual TDataSet    *ls(const Char_t *dirname,Int_t depth) const {return Ls(dirname,depth);}
   virtual TDataSet    *Mkdir(const Char_t *dirname);
   virtual TDataSet    *Md(const Char_t *dirname)                       {return Mkdir(dirname);}
@@ -96,6 +101,7 @@ public:
 
   virtual TDataSet    *Next( EDataSetPass mode=kContinue);
   virtual TDataSet    *Next(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE){return Find(path,rootset,mkdir);}
+  virtual Bool_t      Notify() { return TObject::Notify();}
   virtual void         Notify(TDataSet *dataset);
    const  Option_t    *GetOption() const                                { return fNext ? fNext->GetOption():0; }
   virtual void         Reset(TDataSet *l=0,Int_t depth=0);

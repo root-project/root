@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.2 2001/01/16 01:47:11 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.1.1.2 2001/01/16 01:47:11 fisyak Exp $
+// $Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
 #include <stdlib.h>
 
 #include "TTableDescriptor.h"

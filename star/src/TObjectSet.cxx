@@ -1,7 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.2 2001/01/14 01:27:02 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.1.1.2 2001/01/22 12:59:37 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.2 2001/01/14 01:27:02 fine Exp $
+// $Id: TObjectSet.cxx,v 1.1.1.2 2001/01/22 12:59:37 fisyak Exp $
 // $Log: TObjectSet.cxx,v $
+// Revision 1.1.1.2  2001/01/22 12:59:37  fisyak
+// *** empty log message ***
+//
+// Revision 1.2  2001/01/19 07:22:54  brun
+// A few changes in the STAR classes to remove some compiler warnings.
+//
 // Revision 1.2  2001/01/14 01:27:02  fine
 // New implementation TTable::SavePrimitive and AsString
 //

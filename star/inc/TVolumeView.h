@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.2 2000/12/11 09:52:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.2 2000/12/18 21:05:29 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -10,6 +10,8 @@
  *************************************************************************/
 #ifndef ROOT_TVolumeView
 #define ROOT_TVolumeView
+
+#include <assert.h>
 
 #include "TVolume.h"
 
@@ -41,6 +43,7 @@ public:
   TVolumeView(TVolume *thisNode,TVolumePosition *nodePosition);
   virtual ~TVolumeView();
   virtual TVolume *AddNode(TVolume *node);
+  virtual void     Add(TDataSet *dataset);
   virtual void     Add(TVolumeView *node);
   virtual void     Add(TShape *shape, Bool_t IsMaster=kFALSE);
   virtual void     Browse(TBrowser *b);
@@ -73,6 +76,7 @@ public:
   ClassDef(TVolumeView,1)
 };
 
+inline void    TVolumeView::Add(TDataSet *dataset){ assert(0);}
 inline void    TVolumeView::Add(TVolumeView *node){ TDataSet::Add(node);}
 inline Bool_t  TVolumeView::IsMarked() const { return TestBit(kMark); }
 inline TList  *TVolumeView::GetListOfShapes() const {return fListOfShapes;}

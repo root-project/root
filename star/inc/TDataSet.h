@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.10 2001/01/12 08:42:23 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.1.1.4 2001/01/16 01:46:57 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -111,7 +111,7 @@ class TDataSet : public TNamed
     virtual TDataSet    *FindByPath(const char *path) const;
     virtual TDataSet    *FindByName(const char *name,const char *path="",Option_t *opt="") const;
             TObject     *FindObject(const char *name) const {return FindByName(name);}
-            TObject     *FindObject(const TObject *)  const { return 0;}
+            TObject     *FindObject(const TObject *o)  const { return TObject::FindObject(o);}
     virtual TDataSet    *First() const;
             TObjArray   *GetObjArray() const { return (TObjArray *)fList; }
             TSeqCollection *GetCollection() const { return (TSeqCollection *)fList; }

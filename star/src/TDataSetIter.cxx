@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.3 2001/01/14 03:43:53 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1.1.3 2001/01/22 12:59:37 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -295,6 +295,46 @@ TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *o
   TDataSet *nextSet = 0;
   while ( (nextSet = next()) )
         if (set == nextSet) break;
+
+  return nextSet;
+}
+//______________________________________________________________________________
+TObject *TDataSetIter::FindObject(const Char_t *name) const
+{ 
+  // This method is not recommended.
+  // It is done to back TObject::FindObject method only.
+  // One is recommnened to use FindByName method instead.
+  return ((TDataSetIter *)this)->FindByName(name);
+}
+ 
+//______________________________________________________________________________
+TObject  *TDataSetIter::FindObject(const TObject *dataset) const
+{ 
+  // This method is not recommended.
+  // It is done to back TObject::FindObject method only.
+  // One is recommended to use FindByName method instead.
+  return ((TDataSetIter *)this)->FindByPointer((TDataSet *)dataset);
+}
+//______________________________________________________________________________
+TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t *opt)
+{
+  //
+  // Check whether the object does belong the TDataSet defined with "path"
+  // opt = "-l"  - check the "reference" links only
+  //       "-s"  - check the "structural" links only
+  //             = "by default" - checks all links
+  //
+  if (!set) return 0;
+
+  TDataSet *startset = 0;
+  if (path && path[0]) startset = Find(path);
+  else      startset = fWorkingDataSet;
+  if (!startset) return 0;
+ 
+  TDataSetIter next(startset);
+  TDataSet *nextSet = 0;
+  while ( (nextSet = next()) )
+     if (set == nextSet) break;
 
   return nextSet;
 }

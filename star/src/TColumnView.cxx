@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.2 2001/01/14 01:27:01 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.1.1.2 2001/01/22 12:59:37 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 //////////////////////////////////////////////////////////////////////////

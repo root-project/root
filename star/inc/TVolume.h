@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.2 2000/12/11 09:35:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.1.1.2 2000/12/18 21:05:28 fisyak Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -56,6 +56,7 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
                                    //                 01 - this visible but sons
                                    //                 11 - neither this nor its sons are visible
 
+   virtual void             Add(TDataSet *dataset);
    virtual void             Add(TVolumePosition *position);
    virtual TVolumePosition *Add(TVolume *node, TVolumePosition *nodePosition);
    virtual Int_t            DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *position=0);
@@ -101,6 +102,7 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         ClassDef(TVolume,1)  //Description of parameters to position a 3-D geometry object
 };
 
+inline void   TVolume::Add(TDataSet *dataset){ TDataSet::Add(dataset);}
 inline Bool_t TVolume::IsMarked() const { return TestBit(kMark); }
 
 #endif

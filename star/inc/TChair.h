@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.2 2001/01/14 01:26:54 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1.1.3 2001/01/22 12:59:34 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.2 2001/01/14 01:26:54 fine Exp $
+// $Id: TChair.h,v 1.1.1.3 2001/01/22 12:59:34 fisyak Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -44,6 +44,7 @@ public:
    virtual    ~TChair(){;}
 
    virtual     void       Adopt(Int_t n, void *array){GetThisTable()->Adopt(n,array);}
+   virtual     void       AddAt(TDataSet *dataset,Int_t idx);
    virtual     void       AddAt(const void *c, Int_t i){GetThisTable()->AddAt(c,i);}
               const void *At(Int_t i) const {return GetThisTable()->At(i);}
    virtual     void       Browse(TBrowser *b){GetThisTable()->Browse(b);}
@@ -99,6 +100,9 @@ public:
    ClassDef(TChair,0)  // A base class to provide a user custom interface to TTable class objects
 };
 
+inline void  TChair::AddAt(TDataSet *dataset,Int_t idx)
+{TDataSet::AddAt(dataset,idx);}
+
 inline void *TChair::operator[](Int_t i)
 {
 
@@ -115,6 +119,12 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.1.1.3  2001/01/22 12:59:34  fisyak
+// *** empty log message ***
+//
+// Revision 1.8  2001/01/19 07:22:54  brun
+// A few changes in the STAR classes to remove some compiler warnings.
+//
 // Revision 1.2  2001/01/14 01:26:54  fine
 // New implementation TTable::SavePrimitive and AsString
 //

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.3 2001/01/16 01:46:58 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.4 2001/01/22 12:59:34 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -90,6 +90,7 @@ public:
    virtual     void       Adopt(Int_t n, void *array);
    virtual     Int_t      AddAt(const void *c);
    virtual     void       AddAt(const void *c, Int_t i);
+   virtual     void       AddAt(TDataSet *dataset,Int_t idx=0);
    virtual     void       AsString(void *buf, EColumnType type, Int_t width, ostream &out) const;
               const void *At(Int_t i) const;
    virtual     void       Browse(TBrowser *b);
@@ -118,7 +119,7 @@ public:
    static      TTable    *New(const Char_t *name, const Char_t *type, void *array, UInt_t size);
    virtual     Char_t    *MakeExpression(const Char_t *expressions[],Int_t nExpressions);
    virtual     Char_t    *Print(Char_t *buf,Int_t n) const ;
-   virtual     void       Print(Option_t *opt="");
+   virtual     void       Print(Option_t *opt="") const;
    virtual  const Char_t *Print(Int_t row, Int_t rownumber=10,
                                 const Char_t *colfirst="", const Char_t *collast="") const; // *MENU*
    virtual     void       PrintContents(Option_t *opt="") const;
@@ -165,6 +166,10 @@ public:
 };
 
 //________________________________________________________________________
+inline void  TTable::AddAt(TDataSet *dataset,Int_t idx)
+{ TDataSet::AddAt(dataset,idx); }
+
+//________________________________________________________________________
 inline const char *TTable::GetTypeName(TTable::EColumnType type)
 {  return  fgTypeName[type]; }
 
@@ -193,7 +198,7 @@ inline Bool_t TTable::BoundsOk(const char *where, Int_t at) const
 inline  void  *TTable::GetArray() const { return (void *)fTable;}
 
 //________________________________________________________________________
-inline  void   TTable::Print(Option_t *) { Print((Char_t *)0,Int_t(0)); }
+inline  void   TTable::Print(Option_t *) const { Print((Char_t *)0,Int_t(0)); }
 
 //________________________________________________________________________
 inline  void   TTable::SetUsedRows(Int_t n) { fMaxIndex = n;}

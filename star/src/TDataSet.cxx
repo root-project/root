@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1.1.3 2001/01/16 01:47:01 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1.1.4 2001/01/22 12:59:36 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.1.1.3 2001/01/16 01:47:01 fisyak Exp $"
+    "$Id: TDataSet.cxx,v 1.1.1.4 2001/01/22 12:59:36 fisyak Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"

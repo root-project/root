@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.2 2000/06/13 09:31:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1.1.2 2000/12/18 21:05:33 fisyak Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -518,7 +518,7 @@ TRotMatrix *TVolume::GetIdentity()
 //______________________________________________________________________________
 Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
-   if (!gPad) return "";
+   if (!gPad) return 0;
    static char info[512];
    sprintf(info,"%s/%s",GetName(),GetTitle());
    Double_t x[3];
