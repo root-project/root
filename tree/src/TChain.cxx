@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.8 2000/07/17 10:26:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.9 2000/08/15 08:56:00 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -375,8 +375,10 @@ Int_t TChain::GetNbranches()
 //______________________________________________________________________________
 Int_t TChain::LoadTree(Int_t entry)
 {
-//    Load tree corresponding to entry
-
+//  The input argument entry is the entry serial number in the whole chain.
+//  The function finds the corresponding Tree and returns the entry number
+//  in this tree.
+   
    if (!fNtrees) return 1;
    if (entry < 0 || entry > fEntries) return -2;
 
