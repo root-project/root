@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.7 2001/11/30 09:04:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.8 2001/12/02 15:20:06 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -220,8 +220,7 @@ TRef &TRef::operator=(const TRef &ref)
 {
    // TRef assignment operator.
 
-   TObject *obj = ref.GetObject();
-   *this = obj;
+   SetUniqueID(ref.GetUniqueID());
    fPID = ref.fPID;
    return *this;
 }
