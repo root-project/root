@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.66 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.67 2004/05/27 08:37:22 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -147,6 +147,7 @@
 // 8: change in Kerberos authentication protocol
 // 9: change authentication cleaning protocol
 // 10: modified SSH protocol + support for server 'no authentication' mode
+// 11: added support for openSSL keys for encryption
 
 #include "config.h"
 #include "RConfig.h"
@@ -234,7 +235,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 10;       // increase when protocol changes
+static int gProtocol             = 11;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;

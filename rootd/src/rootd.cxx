@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.88 2004/04/22 13:14:43 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.89 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -191,6 +191,7 @@
 // 8 -> 9: change in Kerberos authentication protocol
 // 9 -> 10: Receives client protocol with kROOTD_PROTOCOL + change cleaning protocol
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
+// 11 -> 12: added support for openSSL keys for encryption
 
 #include "config.h"
 #include "RConfig.h"
@@ -330,7 +331,7 @@ static std::string gDaemonrc;
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 11;      // increase when protocol changes
+static int gProtocol             = 12;      // increase when protocol changes
 static int gClientProtocol       = -1;  // Determined by RpdInitSession
 static int gAnon                 = 0;      // anonymous user flag
 static std::string gUser;

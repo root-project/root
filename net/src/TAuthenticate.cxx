@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.57 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.58 2004/06/25 23:12:51 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -130,7 +130,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fSocket   = sock;
    fRemote   = remote;
    fHostAuth = 0;
-   fVersion  = 4;                // The latest, by default
+   fVersion  = 5;                // The latest, by default
    fSecContext = 0;
 
    if (gDebug > 2)
@@ -147,26 +147,32 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          int rproto = atoi(pdd + 1);
          *pdd = '\0';
          if (strstr(sproto, "root") != 0) {
-            if (rproto < 11 ) {
-               fVersion = 3;
-               if (rproto < 9 ) {
-                  fVersion = 2;
-                  if (rproto < 8) {
-                     fVersion = 1;
-                     if (rproto < 6)
-                        fVersion = 0;
+            if (rproto < 12 ) {
+               fVersion = 4;
+               if (rproto < 11 ) {
+                  fVersion = 3;
+                  if (rproto < 9 ) {
+                     fVersion = 2;
+                     if (rproto < 8) {
+                        fVersion = 1;
+                        if (rproto < 6)
+                           fVersion = 0;
+                     }
                   }
                }
             }
             servtype = TSocket::kROOTD;
          }
          if (strstr(sproto, "proof") != 0) {
-            if (rproto < 10) {
-               fVersion = 3;
-               if (rproto < 8) {
-                  fVersion = 2;
-                  if (rproto < 7)
-                     fVersion = 1;
+            if (rproto < 11) {
+               fVersion = 4;
+               if (rproto < 10) {
+                  fVersion = 3;
+                  if (rproto < 8) {
+                     fVersion = 2;
+                     if (rproto < 7)
+                        fVersion = 1;
+                  }
                }
             }
             servtype = TSocket::kPROOFD;
@@ -1711,8 +1717,13 @@ Int_t TAuthenticate::SshAuth(TString &User)
             floc = fopen(fileLoc, "w");
             if (ReUse == 1) {
                // Send our public key
-               fprintf(floc,"k: %d\n",fRSAKey+1);
-               fwrite(fgRSAPubExport[fRSAKey].keys,1,fgRSAPubExport[fRSAKey].len,floc);
+               if (fVersion > 4) {
+                  fprintf(floc,"k: %d\n",fRSAKey+1);
+                  fwrite(fgRSAPubExport[fRSAKey].keys,1,
+                         fgRSAPubExport[fRSAKey].len,floc);
+               } else {
+                  fprintf(floc,"k: %s\n",fgRSAPubExport[0].keys);
+               }
             } else
                // Just a notification
                fprintf(floc,"k: -1\n");
