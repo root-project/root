@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.3 2000/11/21 20:29:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.4 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsil=0.000001)
                             {return TF1::Integral(ax,bx,ay,by,az,bz,epsil);}
    virtual void     Paint(Option_t *option="");
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetNpy(Int_t npy=100); // *MENU*
    virtual void     SetContour(Int_t nlevels=20, Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.3 2000/11/21 20:32:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.4 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
+#include <fstream.h>
 
 ClassImp(TF2)
 
@@ -450,6 +451,66 @@ void TF2::Paint(Option_t *option)
    gStyle->SetOptStat(optStat);
 
 }
+
+//______________________________________________________________________________
+void TF2::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TF2::Class())) {
+       out<<"   ";
+   } else {
+       out<<"   TF2 *";
+   }
+   if (!fMethodCall) {
+      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<endl;
+   } else {
+      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<endl;
+   }
+
+   if (GetFillColor() != 0) {
+      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+   }
+   if (GetFillStyle() != 1001) {
+      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+   }
+   if (GetMarkerColor() != 1) {
+      out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
+   }
+   if (GetMarkerStyle() != 1) {
+      out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<endl;
+   }
+   if (GetMarkerSize() != 1) {
+      out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<endl;
+   }
+   if (GetLineColor() != 1) {
+      out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+   }
+   if (GetLineWidth() != 4) {
+      out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<endl;
+   }
+   if (GetLineStyle() != 1) {
+      out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<endl;
+   }
+   if (GetNpx() != 100) {
+      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<endl;
+   }
+   if (GetChisquare() != 0) {
+      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
+   }
+   Double_t parmin, parmax;
+   for (Int_t i=0;i<fNpar;i++) {
+      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
+      GetParLimits(i,parmin,parmax);
+      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
+   }
+   out<<"   "<<GetName()<<"->Draw("
+      <<quote<<option<<quote<<");"<<endl;
+}
+
 
 
 //______________________________________________________________________________
