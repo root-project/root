@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.10 2002/07/08 14:41:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.11 2002/09/13 19:43:12 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -180,7 +180,7 @@ public:
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
    virtual void  CloseWindow();
-   virtual void  Delete(Option_t *option) {}                     // *MENU*
+   virtual void  Delete(Option_t *) { }                          // *MENU*
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*
@@ -200,7 +200,7 @@ public:
    Int_t         Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void          RemoveItem();
-   void          RemoveLastRecord();                                 // *MENU*
+   void          RemoveLastRecord();                             // *MENU*
    void          SaveSource(const char* filename="");            // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.2 2001/02/20 18:18:32 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.3 2002/12/02 18:50:01 rdm Exp $ */
 /* Author: */
 
 /* Demangler for GNU C++
@@ -2572,7 +2572,7 @@ demangle_function_name (work, mangled, declp, scan)
       if (declp->b[4] == '\0')
 	{
 	  /* Operator.  */
-	  for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
 	      if ((int)strlen (optable[i].in) == 2
 		  && memcmp (optable[i].in, declp->b + 2, 2) == 0)
@@ -2589,7 +2589,7 @@ demangle_function_name (work, mangled, declp, scan)
 	  if (declp->b[2] == 'a' && declp->b[5] == '\0')
 	    {
 	      /* Assignment. */
-	      for (i = 0; i < sizeof (optable) / sizeof (optable[0]); i++)
+	      for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 		{
 		  if ((int)strlen (optable[i].in) == 3
 		      && memcmp (optable[i].in, declp->b + 2, 3) == 0)

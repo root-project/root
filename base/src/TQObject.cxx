@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.27 2002/10/21 17:37:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.28 2002/10/31 13:23:30 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -473,7 +473,7 @@ void TQConnectionList::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TQConnectionList::Print(Option_t *option) const
+void TQConnectionList::Print(Option_t *) const
 {
    // Print signal name.
 

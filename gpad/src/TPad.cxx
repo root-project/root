@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.92 2002/11/24 14:06:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.93 2002/11/25 16:27:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2724,9 +2724,9 @@ void TPad::PaintModified()
           TText *tdate;
           if (gStyle->GetOptDate() < 10) {
              //by default use format like "Wed Sep 25 17:10:35 2002"
-             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsString());             
+             tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),dt.AsString());
           } else if (gStyle->GetOptDate() < 20) {
-             //use ISO format like 2002-09-25 
+             //use ISO format like 2002-09-25
              char iso[16];
              strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
              tdate = new TText(gStyle->GetDateX(),gStyle->GetDateY(),iso);
@@ -3874,7 +3874,7 @@ void TPad::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TPad::RedrawAxis(Option_t *option)
+void TPad::RedrawAxis(Option_t *)
 {
 //  Redraw the frame axis
 //  Redrawing axis may be necessary in case of superimposed histograms
@@ -4744,13 +4744,13 @@ void TPad::Streamer(TBuffer &b)
       TPad::Class()->WriteBuffer(b,this);
    }
 }
-   
-   
+
+
 //______________________________________________________________________________
 void TPad::UpdateFillAttributes(Int_t col, Int_t sty)
 {
 // update fill area attributes via the dialog canvas
-   
+
    gROOT->SetSelectedPad(gPad->GetSelectedPad());
 
    TList *lc = (TList*)gROOT->GetListOfCanvases();
@@ -4761,13 +4761,13 @@ void TPad::UpdateFillAttributes(Int_t col, Int_t sty)
    R__attfill->UpdateFillAttributes(col,sty);
    R__attfill->Show();
 }
-   
-   
+
+
 //______________________________________________________________________________
 void TPad::UpdateLineAttributes(Int_t col, Int_t sty, Int_t width)
 {
 // update line attributes via the dialog canvas
-   
+
    gROOT->SetSelectedPad(gPad->GetSelectedPad());
 
    TList *lc = (TList*)gROOT->GetListOfCanvases();
@@ -4778,13 +4778,13 @@ void TPad::UpdateLineAttributes(Int_t col, Int_t sty, Int_t width)
    R__attline->UpdateLineAttributes(col,sty,width);
    R__attline->Show();
 }
-   
-   
+
+
 //______________________________________________________________________________
 void TPad::UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz)
 {
 // update marker attributes via the dialog canvas
-   
+
    gROOT->SetSelectedPad(gPad->GetSelectedPad());
 
    TList *lc = (TList*)gROOT->GetListOfCanvases();
@@ -4795,13 +4795,13 @@ void TPad::UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz)
    R__attmarker->UpdateMarkerAttributes(col,sty,msiz);
    R__attmarker->Show();
 }
-   
-   
+
+
 //______________________________________________________________________________
 void TPad::UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize)
 {
 // update text attributes via the dialog canvas
-   
+
    gROOT->SetSelectedPad(gPad->GetSelectedPad());
 
    TList *lc = (TList*)gROOT->GetListOfCanvases();
@@ -4812,7 +4812,7 @@ void TPad::UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,F
    R__atttext->UpdateTextAttributes(align,angle,col,font,tsize);
    R__atttext->Show();
 }
-   
+
 //______________________________________________________________________________
 void TPad::UseCurrentStyle()
 {
