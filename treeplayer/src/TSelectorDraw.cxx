@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.26 2004/04/20 08:45:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.27 2004/04/25 17:16:04 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1071,27 +1071,12 @@ void TSelectorDraw::TakeAction()
    }
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
-      TGraph *pm = new TGraph(fNfill);
-	  pm->SetEditable(kFALSE);
+      TGraph *pm = new TGraph(fNfill,fV2,fV1);
+      pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
-      Double_t u, v;
-      Double_t umin = gPad->GetUxmin();
-      Double_t umax = gPad->GetUxmax();
-      Double_t vmin = gPad->GetUymin();
-      Double_t vmax = gPad->GetUymax();
-
-      for (i=0;i<fNfill;i++) {
-         u = gPad->XtoPad(fV2[i]);
-         v = gPad->YtoPad(fV1[i]);
-         if (u < umin) u = umin;
-         if (u > umax) u = umax;
-         if (v < vmin) v = vmin;
-         if (v > vmax) v = vmax;
-         pm->SetPoint(i,u,v);
-      }
 
    if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
       else                                          pm->Draw(fOption.Data());
@@ -1227,27 +1212,12 @@ void TSelectorDraw::TakeEstimate()
          h2->Draw(fOption.Data());
          gPad->Update();
       }
-      TGraph *pm = new TGraph(fNfill);
+      TGraph *pm = new TGraph(fNfill,fV2,fV1);
       pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
-      Double_t u, v;
-      Double_t umin = gPad->GetUxmin();
-      Double_t umax = gPad->GetUxmax();
-      Double_t vmin = gPad->GetUymin();
-      Double_t vmax = gPad->GetUymax();
-
-      for (i=0;i<fNfill;i++) {
-         u = gPad->XtoPad(fV2[i]);
-         v = gPad->YtoPad(fV1[i]);
-         if (u < umin) u = umin;
-         if (u > umax) u = umax;
-         if (v < vmin) v = vmin;
-         if (v > vmax) v = vmax;
-         pm->SetPoint(i,u,v);
-      }
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
          if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
          else                                             pm->Draw(fOption.Data());
