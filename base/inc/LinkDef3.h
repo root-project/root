@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.10 2002/12/05 10:25:37 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.11 2003/03/05 16:08:55 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -111,6 +111,8 @@
 #pragma link C++ enum EInitialState;
 #pragma link C++ enum EKeySym;
 #pragma link C++ enum EEventType;
+#pragma link C++ enum ECursor;
+#pragma link C++ global kNumCursors;
 
 #pragma link C++ typedef timespec_t;
 #pragma link C++ typedef Handle_t;
