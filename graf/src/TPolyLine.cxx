@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.15 2002/11/05 16:09:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.16 2003/11/02 10:32:17 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -536,7 +536,13 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
 //______________________________________________________________________________
 void TPolyLine::SetPolyLine(Int_t n)
 {
-   SetPoint(n-1,0,0);
+   if (n < 1) return;
+   if (n < fN) {
+      fN = n;
+      fLastPoint = n - 1;
+   } else {
+      SetPoint(n-1,0,0);
+   }
 }
 
 //______________________________________________________________________________
