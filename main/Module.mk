@@ -87,7 +87,8 @@ endif
 endif
 
 # include all dependency files
-INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP)
+INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
+                $(SSH2RPDDEP)
 
 ##### local rules #####
 $(ROOTEXE):     $(ROOTEXEO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
@@ -110,7 +111,7 @@ $(HADD):        $(HADDO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(RPATH) $(ROOTLIBS) $(SYSLIBS)
 
 $(SSH2RPD):     $(SSH2RPDO)
-		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO)
+		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO) $(SYSLIBS)
 
 $(H2ROOT):      $(H2ROOTO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)

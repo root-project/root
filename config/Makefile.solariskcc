@@ -64,7 +64,7 @@ CRYPTLIBS     =
 # Fortran:
 F77           = f77
 F77FLAGS      =
-F77LIBS       = -L/opt/SUNWspro/lib -lM77 -lF77 -lsunmath -lsocket -lnsl
+F77LIBS       = -L/opt/SUNWspro/lib -lM77 -lF77 -lsunmath
 
 # Override default in Makefile.config
 INSTALL      := cp -pR
