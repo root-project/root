@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.67 2001/11/20 07:26:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.68 2001/11/22 09:05:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1837,6 +1837,81 @@ char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 //   corresponding to cursor position px,py
 //
    return fPainter->GetObjectInfo(px,py);
+}
+
+//______________________________________________________________________________
+Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum) 
+{
+//  Compute Quantiles for this histogram 
+//     Quantile x_q of a probability distribution Function F is defined as
+//
+//        F(x_q) = q with 0 <= q <= 1.
+//
+//     For instance the median x_0.5 of a distribution is defined as that value
+//     of the random variable for which the distribution function equals 0.5:
+//
+//        F(x_0.5) = Probability(x < x_0.5) = 0.5
+//
+//  code from Eddy Offermann, Renaissance
+//
+// input parameters
+//   - this 1-d histogram (TH1F,D,etc). Could also be a TProfile
+//   - nprobSum maximum size of array q and size of array probSum (if given)
+//   - probSum array of positions where quantiles will be computed.
+//     if probSum is null, probSum will be computed internally and will
+//     have a size = number of bins + 1 in h. it will correspond to the
+//      quantiles calculated at the lowest edge of the histogram (quantile=0) and
+//     all the upper edges of the bins.
+//     if probSum is not null, it is assumed to contain at least nprobSum values.
+//  output
+//   - return value nq (<=nprobSum) with the number of quantiles computed
+//   - array q filled with nq quantiles
+//
+//  Getting quantiles q from two histograms and storing results in a TGraph,
+//   a so-called QQ-plot
+// 
+//     TGraph *gr = new TGraph(nprob);
+//     h1->GetQuantiles(nprob,gr->GetX());
+//     h2->GetQuantiles(nprob,gr->GetY());
+//     gr->Draw("alp");
+
+  if (GetDimension() > 1) {
+     Error("GetQuantiles","Only available for 1-d histograms");
+     return 0;
+  }
+  if (nprobSum < 2) {
+     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
+     return 0;
+  }
+  if (!fIntegral) ComputeIntegral();
+   
+  const Int_t nbins = GetXaxis()->GetNbins();
+
+  Int_t i, ibin;
+  Double_t *prob = (Double_t*)probSum;
+  Int_t nq = nprobSum;
+  if (probSum == 0) {
+     nq = nbins+1;
+     prob = new Double_t[nq];
+     prob[0] = 0;
+     for (i=1;i<nq;i++) {
+        prob[i] = fIntegral[i]/fIntegral[nbins];
+     }
+  }
+  
+  for (i = 0; i < nq; i++) {
+     ibin = TMath::BinarySearch(nbins,fIntegral,prob[i]);
+     while (ibin < nbins-1 && fIntegral[ibin+1] == prob[i]) {
+       if (fIntegral[ibin+2] == prob[i]) ibin++;
+       else break;
+     }
+     q[i] = GetBinLowEdge(ibin+1);
+     const Double_t dint = fIntegral[ibin+1]-fIntegral[ibin];
+     if (dint > 0) q[i] += GetBinWidth(ibin+1)*(prob[i]-fIntegral[ibin])/dint;
+  }
+
+  if (!probSum) delete [] prob;
+  return nq;
 }
 
 //______________________________________________________________________________

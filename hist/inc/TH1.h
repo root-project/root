@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.19 2001/03/05 10:44:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.20 2001/11/02 17:20:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -192,6 +192,7 @@ public:
 
     TVirtualHistPainter *GetPainter() const {return fPainter;}
 
+    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0); 
     virtual Axis_t   GetRandom();
     virtual void     GetStats(Stat_t *stats) const;
     virtual Stat_t   GetSumOfWeights() const;
