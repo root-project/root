@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.11 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.12 2001/05/11 06:30:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,7 @@ ClassImp(RooCategory)
 RooCategory::RooCategory(const char *name, const char *title) : 
   RooAbsCategoryLValue(name,title)
 {
+  // Constructor. Types must be defined before variable can be used
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
 }
@@ -36,17 +37,21 @@ RooCategory::RooCategory(const char *name, const char *title) :
 RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name)
 {
+  // Copy constructor
 }
 
 
 RooCategory::~RooCategory()
 {
+  // Destructor
 }
 
 
 
 Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
 {
+  // Set value by specifying the index code of the desired state
+
   const RooCatType* type = lookupType(index,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
@@ -58,6 +63,8 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 
 Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
 {
+  // Set value by specifying the name of the desired state
+
   const RooCatType* type = lookupType(label,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
@@ -69,6 +76,8 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 
 Bool_t RooCategory::defineType(const char* label) 
 { 
+  // Define a state with given name, index code as automatically assigned
+
   if (TString(label).Contains(";")) {
   cout << "RooCategory::defineType(" << GetName() 
        << "): semicolons not allowed in label name" << endl ;
@@ -81,6 +90,8 @@ Bool_t RooCategory::defineType(const char* label)
 
 Bool_t RooCategory::defineType(const char* label, Int_t index) 
 {
+  // Define a state with given name and index code
+
   if (TString(label).Contains(";")) {
   cout << "RooCategory::defineType(" << GetName() 
        << "): semicolons not allowed in label name" << endl ;
@@ -93,6 +104,8 @@ Bool_t RooCategory::defineType(const char* label, Int_t index)
 
 RooCategory& RooCategory::operator=(const RooCategory& other) 
 {
+  // Assignment from another RooCategory
+
   const RooCatType* type = lookupType(other._value,kTRUE) ;
   if (!type) return *this ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.9 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.10 2001/05/10 00:16:08 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -24,6 +24,7 @@ ClassImp(RooMappedCategory)
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut) :
   RooAbsCategory(name, title), _inputCat("inputCat","Input category",this,inputCat)
 {
+  // Constructor with input category and name of default (unmapped) output state
   _defCat = (RooCatType*) defineType(defOut) ;
 }
 
@@ -31,6 +32,7 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
   RooAbsCategory(other,name), _defCat(other._defCat), _inputCat("inputCat",this,other._inputCat)
 {
+  // Copy constructor
   int i ;
   for (i=0 ; i<other._mapArray.GetEntries() ; i++) {
     _mapArray.Add(other._mapArray.At(i)) ;
@@ -41,6 +43,7 @@ RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char 
 
 RooMappedCategory::~RooMappedCategory() 
 {
+  // Destructor
   _mapArray.Delete() ;
 }
 
@@ -48,6 +51,8 @@ RooMappedCategory::~RooMappedCategory()
 
 Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey)
 {
+  // Map input state names matching given regular expression to given output state name
+
   if (!inKeyRegExp || !outKey) return kTRUE ;  
 
   // Check if pattern is already registered
@@ -84,6 +89,7 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey)
 RooCatType
 RooMappedCategory::evaluate() const
 {
+  // Calculate the current value of the object
   const char* inKey = _inputCat ;
 
   // Scan array of regexps
@@ -130,6 +136,7 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt, TString inde
 
 Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
+  // Read object contents from given stream
    if (compact) {
      cout << "RooMappedCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
      return kTRUE ;    
@@ -184,6 +191,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t ver
 
 void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Write object contents to given stream
   if (compact) {
     // Write value only
     os << getLabel() ;

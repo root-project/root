@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooAddPdf.cc,v 1.1 2001/05/07 06:26:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,7 @@ ClassImp(RooAddPdf)
 
 RooAddPdf::RooAddPdf(const char *name, const char *title)
 {
+  // Dummy constructor 
 }
 
 
@@ -35,6 +36,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title)
 {
+  // Constructor with two PDFs
   addPdf(pdf1,coef1) ;
   addLastPdf(pdf2) ;    
 }
@@ -43,6 +45,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name)
 {
+  // Copy constructor
+
   // Copy proxy lists
   TIterator *iter = other._coefProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
@@ -61,6 +65,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
 
 RooAddPdf::~RooAddPdf()
 {
+  // Destructor
+
   // Delete all owned proxies 
   _coefProxyList.Delete() ;
   _pdfProxyList.Delete() ;
@@ -70,6 +76,8 @@ RooAddPdf::~RooAddPdf()
 
 void RooAddPdf::addPdf(RooAbsPdf& pdf, RooAbsReal& coef) 
 {  
+  // Add a PDF/coefficient pair to the PDF sum
+
   RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
   RooRealProxy *coefProxy = new RooRealProxy("coef","coef",this,coef) ;
   
@@ -80,6 +88,8 @@ void RooAddPdf::addPdf(RooAbsPdf& pdf, RooAbsReal& coef)
 
 void RooAddPdf::addLastPdf(RooAbsPdf& pdf) 
 {
+  // Specify the last PDF, whose coefficient is automatically 
+  // calculated from the normalization requirement
   RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
   _pdfProxyList.Add(pdfProxy) ;
 }
@@ -87,6 +97,7 @@ void RooAddPdf::addLastPdf(RooAbsPdf& pdf)
 
 Double_t RooAddPdf::evaluate() const 
 {
+  // Calculate the current value of this object
   TIterator *pIter = _pdfProxyList.MakeIterator() ;
   TIterator *cIter = _coefProxyList.MakeIterator() ;
   
@@ -122,6 +133,8 @@ Double_t RooAddPdf::evaluate() const
 
 Bool_t RooAddPdf::checkDependents(const RooDataSet* set) const 
 {
+  // Check if PDF is valid with dependent configuration given by specified data set
+
   // Special, more lenient dependent checking: Coeffient and PDF should
   // be non-overlapping, but coef/pdf pairs can
   Bool_t ret(kFALSE) ;
@@ -152,6 +165,9 @@ Bool_t RooAddPdf::checkDependents(const RooDataSet* set) const
 
 Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
 {
+  // Determine which part (if any) of given integral can be performed analytically.
+  // If any analytical integration is possible, return integration scenario code
+
   // This PDF is by construction normalized
   return 0 ;
 }
@@ -159,6 +175,8 @@ Int_t RooAddPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) c
 
 Double_t RooAddPdf::analyticalIntegral(Int_t code) const 
 {
+  // Return analytical integral defined by given scenario code
+
   // This PDF is by construction normalized
   return 1.0 ;
 }

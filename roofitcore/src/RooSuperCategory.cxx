@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.3 2001/05/11 06:30:01 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.4 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -28,6 +28,7 @@ ClassImp(RooSuperCategory)
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList) :
   RooAbsCategoryLValue(name, title) 
 {  
+  // Constructor from list of input categories
 
   // Copy category list
   RooArgSet* catList = new RooArgSet("catList") ;
@@ -50,6 +51,8 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSe
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
   RooAbsCategoryLValue(other,name)
 {
+  // Copy constructor
+
   RooArgSet* catList = new RooArgSet("catList") ;
   TIterator* iter = other._catListProxy->set()->MakeIterator() ;
   RooAbsArg* arg ;
@@ -67,6 +70,8 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 
 RooSuperCategory::~RooSuperCategory() 
 {
+  // Destructor
+
   // We own the ArgSet of the proxy
   delete _catListProxy->set() ;
 }
@@ -75,6 +80,7 @@ RooSuperCategory::~RooSuperCategory()
 
 TIterator* RooSuperCategory::MakeIterator() const 
 {
+  // Make an iterator over the input categories of this supercategory
   return new RooMultiCatIter(*_catListProxy->set()) ;
 }
 
@@ -82,6 +88,8 @@ TIterator* RooSuperCategory::MakeIterator() const
 
 void RooSuperCategory::updateIndexList()
 {
+  // Update the list of our category states 
+
   clearTypes() ;
   RooArgSet* catListClone = _catListProxy->set()->snapshot(kTRUE) ;
   RooMultiCatIter mcIter(*_catListProxy->set()) ;
@@ -101,6 +109,9 @@ void RooSuperCategory::updateIndexList()
 
 TString RooSuperCategory::currentLabel() const
 {
+  // Return the name of the current state, 
+  // constructed from the state names of the input categories
+
   TIterator* lIter = _catListProxy->set()->MakeIterator() ;
 
   // Construct composite label name
@@ -122,6 +133,7 @@ TString RooSuperCategory::currentLabel() const
 RooCatType
 RooSuperCategory::evaluate() const
 {
+  // Calculate the current value 
   if (isShapeDirty()) const_cast<RooSuperCategory*>(this)->updateIndexList() ;
   return *lookupType(currentLabel()) ;
 }
@@ -129,6 +141,8 @@ RooSuperCategory::evaluate() const
 
 Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t printError) 
 {
+  // Set the value of the super category by specifying the state index code
+  // Indirectly sets the values of the input categories
   const RooCatType* type = lookupType(index,kTRUE) ;
   if (!type) return kTRUE ;
   return setType(type) ;
@@ -137,6 +151,8 @@ Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t printError)
 
 Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError) 
 {
+  // Set the value of the super category by specifying the state name
+  // Indirectly sets the values of the input categories
   const RooCatType* type = lookupType(label,kTRUE) ;
   if (!type) return kTRUE ;
   return setType(type) ;
@@ -145,8 +161,10 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
 
 Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
 {
-  // WVE: adapt parser to understand composite super categories
+  // Set the value of the super category by specifying the state object
+  // Indirectly sets the values of the input categories
 
+  // WVE: adapt parser to understand composite super categories
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 
@@ -169,6 +187,8 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
 
 void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
+  // Print the state of this object to the specified output stream.
+
   RooAbsCategory::printToStream(os,opt,indent) ;
   
   if (opt>=Verbose) {     
@@ -181,6 +201,7 @@ void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString inden
 
 Bool_t RooSuperCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
+  // Read object contents from given stream
   return kTRUE ;
 }
 
@@ -188,5 +209,6 @@ Bool_t RooSuperCategory::readFromStream(istream& is, Bool_t compact, Bool_t verb
 
 void RooSuperCategory::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Write object contents to given stream
   RooAbsCategory::writeToStream(os,compact) ;
 }

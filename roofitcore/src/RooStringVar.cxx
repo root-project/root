@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.5 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.6 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,6 +27,7 @@ ClassImp(RooStringVar)
 RooStringVar::RooStringVar(const char *name, const char *title, const char* value) :
   RooAbsString(name, title)
 {
+  // Constructor with initial value
   if(!isValid(value)) {
     cout << "RooStringVar::RooStringVar(" << GetName() 
 	 << "): initial contents too long and ignored" << endl ;
@@ -42,20 +43,24 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
 RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
   RooAbsString(other, name)
 {
+  // Copy constructor
 }
 
 
 RooStringVar::~RooStringVar() 
 {
+  // Destructor
 }
 
 
 RooStringVar::operator TString() {
+  // Cast operator to TString
   return this->getVal();
 }
 
 
 void RooStringVar::setVal(TString value) {
+  // Set value to given TString
   if (!isValid(value)) {    
     cout << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
@@ -67,6 +72,7 @@ void RooStringVar::setVal(TString value) {
 
 TString RooStringVar::operator=(TString newValue) 
 {
+  // Set value to given TString
   if (!isValid(newValue)) {
     cout << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
@@ -80,11 +86,13 @@ TString RooStringVar::operator=(TString newValue)
 
 Bool_t RooStringVar::isValid() const
 {
+  // Check if current value is valid
   return isValid(getVal()) ;
 }
 
 
 Bool_t RooStringVar::isValid(TString value, Bool_t verbose) const {
+  // Test if given TString is valid
   return kTRUE ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.17 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.18 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,6 +26,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(0)
 {
+  // Constructor with value and unit
   _value = value ;
   removeFitRange();
   setConstant(kTRUE) ;
@@ -36,6 +37,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(0)
 {
+  // Constructor with range and unit. Value is set to middle of range
+
   _value= 0.5*(minValue + maxValue);
 
   setPlotRange(minValue,maxValue) ;
@@ -47,6 +50,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(0)
 {
+  // Constructor with value, range and unit
   _value = value ;
   setPlotRange(minValue,maxValue) ;
   setFitRange(minValue,maxValue) ;
@@ -58,11 +62,13 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _fitMin(other._fitMin),
   _fitMax(other._fitMax)
 {
+  // Copy Constructor
 }
 
 
 RooRealVar::~RooRealVar() 
 {
+  // Destructor
 }
 
 void RooRealVar::setVal(Double_t value) {
@@ -133,6 +139,7 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
 Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
+
   TString token,errorPrefix("RooRealVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
@@ -250,7 +257,9 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 
 RooRealVar& RooRealVar::operator=(const RooRealVar& orig)
 {
-  // WVE define this
+  // Assignment operator from other RooRealVar
+
+  _value = orig._value ;
 
   return (*this) ;
 }

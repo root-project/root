@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooProdPdf.cc,v 1.1 2001/05/10 00:16:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,7 @@ ClassImp(RooProdPdf)
 
 RooProdPdf::RooProdPdf(const char *name, const char *title)
 {
+  // Dummy constructor
 }
 
 
@@ -35,6 +36,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2) : 
   RooAbsPdf(name,title)
 {
+  // Constructor with 2 PDFs
   addPdf(pdf1) ;
   addPdf(pdf2) ;    
 }
@@ -43,6 +45,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name)
 {
+  // Copy constructor
+
   // Copy proxy lists
   RooRealProxy* proxy ;
   TIterator *iter = other._pdfProxyList.MakeIterator() ;
@@ -55,6 +59,8 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
 
 RooProdPdf::~RooProdPdf()
 {
+  // Destructor
+
   // Delete all owned proxies 
   _pdfProxyList.Delete() ;
 }
@@ -63,6 +69,7 @@ RooProdPdf::~RooProdPdf()
 
 void RooProdPdf::addPdf(RooAbsPdf& pdf) 
 {  
+  // Add PDF to product of PDFs
   RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;  
   _pdfProxyList.Add(pdfProxy) ;
 }
@@ -70,6 +77,8 @@ void RooProdPdf::addPdf(RooAbsPdf& pdf)
 
 Double_t RooProdPdf::evaluate() const 
 {
+  // Calculate current value of object
+
   TIterator *pIter = _pdfProxyList.MakeIterator() ;
   Double_t value(1) ;
     
@@ -86,6 +95,9 @@ Double_t RooProdPdf::evaluate() const
 
 Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
 {
+  // Determine which part (if any) of given integral can be performed analytically.
+  // If any analytical integration is possible, return integration scenario code
+
   // This PDF is by construction normalized
   return 0 ;
 }
@@ -93,6 +105,8 @@ Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) 
 
 Double_t RooProdPdf::analyticalIntegral(Int_t code) const 
 {
+  // Return analytical integral defined by given scenario code
+
   // This PDF is by construction normalized
   return 1.0 ;
 }

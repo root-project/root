@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.14 2001/05/11 21:06:22 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.15 2001/05/14 05:22:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -23,11 +23,13 @@ ClassImp(RooFormula)
 
 RooFormula::RooFormula() : TFormula()
 {
+  // Dummy constructor
 }
 
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& list) : 
   TFormula(), _isOK(kTRUE) 
 {
+  // Constructor with expression string and list of variables
   SetName(name) ;
   SetTitle(formula) ;
 
@@ -48,6 +50,8 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& l
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
   TFormula(), _isOK(other._isOK) 
 {
+  // Copy constructor
+
   SetName(name?name:other.GetName()) ;
   SetTitle(other.GetTitle()) ;
 
@@ -64,6 +68,8 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 
 Bool_t RooFormula::reCompile(const char* newFormula) 
 {
+  // Recompile formula with new expression
+
   fNval=0 ;
   _useList.Clear() ;  
 
@@ -81,20 +87,23 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 
 RooFormula& RooFormula::operator=(const RooFormula& other) 
 {
-  // to be implemented
+  // to be deprecated
+
   return *this ;
 }
 
 
 RooFormula::~RooFormula() 
 {
+  // Destructor
 }
 
 
 
 RooArgSet& RooFormula::actualDependents() const
 {
-  // Return list of actual dependents
+  // Return list of dependents used in formula expression
+
   // (formula might not use all given input parameters)
   static RooArgSet set("actualDependents") ;
   set.Clear() ;
@@ -127,6 +136,8 @@ void RooFormula::dump() {
 
 Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplaceAll) 
 {
+  // Change used variables to those with the same name in given list
+
   //Change current servers to new servers with the same name given in list
   Bool_t errorStat(kFALSE) ;
   int i ;
@@ -146,6 +157,8 @@ Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplace
 
 Double_t RooFormula::eval()
 { 
+  // Return current value of formula
+
   // WVE sanity check should go here
   if (!_isOK) {
     cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile" << endl ;
@@ -157,7 +170,7 @@ Double_t RooFormula::eval()
 
 Double_t
 RooFormula::DefinedValue(Int_t code) {
-  // Return current value for parameter indicated by internal reference code
+  // Return current value for variable indicated by internal reference code
   if (code>=_useList.GetEntries()) return 0 ;
   RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
   TString& label=((TObjString*)_labelList.At(code))->String() ;
@@ -177,6 +190,8 @@ RooFormula::DefinedValue(Int_t code) {
 Int_t 
 RooFormula::DefinedVariable(TString &name)
 {
+  // Check if a variable with given name is available
+
   char argName[1024];
   strcpy(argName,name.Data()) ;
 

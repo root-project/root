@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.6 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.7 2001/05/14 22:56:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,7 +32,7 @@ Bool_t RooAbsPdf::_verboseEval(kFALSE) ;
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, const char *unit) : 
   RooAbsReal(name,title,unit), _norm(0), _lastDataSet(0)
 {
-
+  // Constructor with unit
   resetErrorCounters() ;
   setTraceCounter(0) ;
 }
@@ -42,6 +42,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 				 Double_t plotMin, Double_t plotMax, const char *unit) :
   RooAbsReal(name,title,plotMin,plotMax,unit), _norm(0), _lastDataSet(0)
 {
+  // Constructor with plot range and unit
   resetErrorCounters() ;
   setTraceCounter(0) ;
 }
@@ -51,6 +52,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
   RooAbsReal(other,name), _norm(0), _lastDataSet(0)
 {
+  // Copy constructor
   resetErrorCounters() ;
   setTraceCounter(0) ;
 }
@@ -60,12 +62,16 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
 
 RooAbsPdf::~RooAbsPdf()
 {
+  // Destructor
   if (_norm) delete _norm ;
 }
 
 
 Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 {
+  // Return current value with normalization appropriate for given dataset.
+  // A null data set pointer will return the unnormalized value
+
   // Unnormalized values are not cached
   // Doing so would be complicated as _norm->getVal() could
   // spoil the cache and interfere with returning the cached
@@ -113,6 +119,8 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 
 Bool_t RooAbsPdf::traceEvalHook(Double_t value) const 
 {
+  // Floating point error checking and tracing for given float value
+
   // check for a math error or negative value
   Bool_t error= isnan(value) || (value < 0);
 
@@ -141,6 +149,7 @@ Bool_t RooAbsPdf::traceEvalHook(Double_t value) const
 
 void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 {
+  // Reset error counter to given value 
   _errorCount = resetValue ;
   _negCount   = resetValue ;
 }
@@ -149,6 +158,7 @@ void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 
 void RooAbsPdf::setTraceCounter(Int_t value)
 {
+  // Reset trace counter to given value
   _traceCount = value ;
 }
 
@@ -156,6 +166,8 @@ void RooAbsPdf::setTraceCounter(Int_t value)
 
 void RooAbsPdf::attachDataSet(const RooDataSet* set) 
 {
+  // Replace server nodes with names matching the dataset variable names
+  // with those data set variables, making this PDF directly dependent on the dataset
   if(0 != set) recursiveRedirectServers(*set->get(),kFALSE) ;
 }
 
@@ -164,6 +176,7 @@ void RooAbsPdf::attachDataSet(const RooDataSet* set)
 
 Double_t RooAbsPdf::getLogVal(const RooDataSet* dset) const 
 {
+  // Return the log of the current value 
   Double_t prob = getVal(dset) ;
   if(prob <= 0) {
 
@@ -189,7 +202,8 @@ Double_t RooAbsPdf::getLogVal(const RooDataSet* dset) const
 
 
 
-Double_t RooAbsPdf::extendedTerm(UInt_t observed) const {
+Double_t RooAbsPdf::extendedTerm(UInt_t observed) const 
+{
   // check if this PDF supports extended maximum likelihood fits
   if(!canBeExtended()) {
     cout << fName << ": this PDF does not support extended maximum likelihood"
@@ -220,6 +234,7 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const {
 
 Double_t RooAbsPdf::nLogLikelihood(const RooDataSet* dset, Bool_t extended) const
 {
+  // Return the likelihood of this PDF for the given dataset
   Double_t result(0);
   const RooArgSet *values(0);
   Stat_t events= dset->GetEntries();
@@ -252,6 +267,7 @@ Double_t RooAbsPdf::nLogLikelihood(const RooDataSet* dset, Bool_t extended) cons
 
 Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) 
 {
+  // Fit this PDF to given data set
   RooFitContext context(&data,this) ;
   return context.fit(options,minValue) ;
 }

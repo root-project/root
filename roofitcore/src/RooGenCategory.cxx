@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooGenCategory.cc,v 1.1 2001/05/11 06:30:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -25,6 +25,8 @@ ClassImp(RooGenCategory)
 RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFunc, RooArgSet& catList) :
   RooAbsCategory(name, title), _superCat("superCat","Super Category",catList), _map(0) 
 {
+  // Constructor with pointer to user mapping function and list of input categories
+  
   // Convert the function pointer into a parse object using the CINT
   // dictionary in memory.
   _userFuncName = G__p2f2funcname(userFunc);
@@ -40,6 +42,7 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
 RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
   RooAbsCategory(other,name), _superCat(other._superCat), _map(0), _userFuncName(other._userFuncName)
 {
+  // Copy constructor
   initialize() ;
 }
 
@@ -48,6 +51,8 @@ RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
 
 void RooGenCategory::initialize()
 {
+  // Initialization function
+
   // This is a static link, no need for redirection support
   addServer(_superCat,kTRUE,kTRUE) ;
 
@@ -62,6 +67,8 @@ void RooGenCategory::initialize()
 
 RooGenCategory::~RooGenCategory() 
 {
+  // Destructor
+
   // Server no longer exists when RooAbsArg destructor is executing
   removeServer(_superCat) ;
 }
@@ -69,6 +76,7 @@ RooGenCategory::~RooGenCategory()
 
 TString RooGenCategory::evalUserFunc(RooArgSet *vars) 
 {
+  // Utility function to evaluate (interpreted) user function
   assert(0 != _userFunc);
   Long_t result;
   _userArgs[0]= (Long_t)vars ;
@@ -82,6 +90,8 @@ TString RooGenCategory::evalUserFunc(RooArgSet *vars)
 
 void RooGenCategory::updateIndexList()
 {
+  // Update list of states and reevaluate input index code to output index code map
+
   // Recreate super-index to gen-index map ;
   if (_map) delete[] _map ;
   _map = new Int_t[_superCat.numTypes()] ;
@@ -112,6 +122,7 @@ void RooGenCategory::updateIndexList()
 RooCatType
 RooGenCategory::evaluate() const
 {
+  // Calculate current value of object
   if (isShapeDirty()) {
     const_cast<RooGenCategory*>(this)->updateIndexList() ;
   }
@@ -143,6 +154,7 @@ void RooGenCategory::printToStream(ostream& os, PrintOption opt, TString indent)
 
 Bool_t RooGenCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
+  // Read object contents from given stream
    if (compact) {
      cout << "RooGenCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
      return kTRUE ;    
@@ -156,6 +168,7 @@ Bool_t RooGenCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbos
 
 void RooGenCategory::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Write object contents to given stream 
   if (compact) {
     // Write value only
     os << getLabel() ;
