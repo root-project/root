@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.9 2000/11/21 16:31:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.10 2000/11/23 09:52:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1200,7 +1200,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    TString opt = option;
    opt.ToLower();
    void *dir = gSystem->OpenDirectory(dirname);
-   char *path = new char[2000];
+   char *path = new char[4000];
       
    if (opt.Contains("update")) {
       // check that directory exist, if not create it
@@ -1311,12 +1311,37 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    fprintf(fpMAKE,"%s %sProjectDict.cxx\n",gSystem->GetIncludePath() ,dirname);
      
    // add line to generate the shared lib
-   char *compiler    = strstr(dollarInclude+1,"; ") +2;
-   char *objectFiles = strstr(compiler,"$ObjectFiles");
-   char *sharedLib   = strstr(objectFiles,"$SharedLib");
-   *objectFiles = 0;
-   *sharedLib   = 0;
-   fprintf(fpMAKE,"%s %sProjectDict.%s %s %s.%s\n",compiler,dirname,gSystem->GetObjExt(),objectFiles+12,dirname,gSystem->GetSoExt());
+   char cxxFile[256];
+   char *semicolon = strstr(dollarInclude+1,"; ");
+   if (semicolon == 0) { //this happens on NT
+      fclose(fpMAKE);
+      delete [] path;
+      return;
+   }
+      
+   char *librarian   = semicolon +2;
+   char *objectFiles = strstr(librarian,"$ObjectFiles");
+   if (objectFiles) {
+      strcpy(path+2000,objectFiles+strlen("$ObjectFiles"));
+      sprintf(cxxFile,"%sProjectDict.%s",dirname,gSystem->GetObjExt());
+      strcpy(objectFiles,cxxFile);
+      strcat(objectFiles,path+2000);
+   }
+   char *sharedLib   = strstr(librarian,"$SharedLib");
+   if (sharedLib) {
+      strcpy(path+2000,sharedLib+strlen("$SharedLib"));
+      sprintf(cxxFile,"%s.%s",dirname,gSystem->GetSoExt());
+      strcpy(sharedLib,cxxFile);
+      strcat(sharedLib,path+2000);
+   }
+   char *linkedLibs   = strstr(librarian,"$LinkedLibs");
+   if (linkedLibs) {
+      strcpy(path+2000,linkedLibs+strlen("$LinkedLibs"));
+      sprintf(cxxFile,"%s",gSystem->GetLinkedLibs());
+      strcpy(linkedLibs,cxxFile);
+      strcat(linkedLibs,path+2000);
+   }
+   fprintf(fpMAKE,"%s\n",librarian);
       
    fclose(fpMAKE);
    printf("%s/MAKE file has been generated\n",dirname);
@@ -1334,8 +1359,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    if (opt.Contains("++")) {
       gSystem->Load(path);
       printf("Shared lib %s has been dynamically linked\n",path); 
-   }  
-      
+   }        
    delete [] path;
 }
                          
