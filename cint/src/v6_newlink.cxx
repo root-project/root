@@ -2448,7 +2448,7 @@ FILE *hfp;
 	      continue;
 	    }
 	    else {
-#define G__DEFAULTASSIGNOPR
+/* #define G__DEFAULTASSIGNOPR */
 #ifdef G__DEFAULTASSIGNOPR
 	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
 		++isassignmentoperator;
