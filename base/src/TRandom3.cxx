@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.2 2000/11/21 16:37:43 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ TRandom3::~TRandom3()
 }
 
 //______________________________________________________________________________
-Float_t TRandom3::Rndm(Int_t)
+Double_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
 //  Produces uniformly-distributed floating points between 0 and 1.

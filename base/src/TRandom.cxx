@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.3 2000/06/23 15:15:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.4 2000/09/29 07:12:43 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 // For example, to get a random number distributed following abs(sin(x)/x)*sqrt(x)
 // you can do:
 //   TF1 *f1 = new TF1("f1","abs(sin(x)/x)*sqrt(x)",0,10);
-//   float r = f1->GetRandom();
+//   double r = f1->GetRandom();
 // The technique of using a TF1,2 or 3 function is very powerful.
 // It is also more precise than using the basic functions (except Rndm).
 // With a TF1 function, for example, the real integral of the function
@@ -102,8 +102,8 @@
 //   #endif
 //   void rand() {
 //     int i, N = 1000000;
-//     float cpn = 1000000./N;
-//     float x;
+//     double cpn = 1000000./N;
+//     double x;
 //     TStopwatch sw;
 //     sw.Start();
 //     for (i=0;i<N;i++) {
@@ -195,7 +195,7 @@ TRandom::~TRandom()
 }
 
 //______________________________________________________________________________
-Int_t TRandom::Binomial(Int_t ntot, Float_t prob)
+Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 {
 // Generates a random integer N according to the binomial law
 // Coded from Los Alamos report LA-5061-MS
@@ -230,12 +230,12 @@ Double_t TRandom::Exp(Double_t tau)
 }
 
 //______________________________________________________________________________
-Double_t TRandom::Gaus(Float_t mean, Float_t sigma)
+Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 {
 //      Return a number distributed following a gaussian with mean and sigma
 
    // Local variables
-   Float_t x, y, z, result;
+   Double_t x, y, z, result;
 
    do {
      y = Rndm();
@@ -257,7 +257,7 @@ UInt_t TRandom::Integer(UInt_t imax)
 }
 
 //______________________________________________________________________________
-Double_t TRandom::Landau(Float_t mean, Float_t sigma)
+Double_t TRandom::Landau(Double_t mean, Double_t sigma)
 {
 //  Generate a random number following a Landau distribution
 //  with average value mean and rms
@@ -464,7 +464,7 @@ Double_t TRandom::Landau(Float_t mean, Float_t sigma)
 }
 
 //______________________________________________________________________________
-Int_t TRandom::Poisson(Float_t mean)
+Int_t TRandom::Poisson(Double_t mean)
 {
 // Generates a random integer N according to a Poisson law.
 // Coded from Los Alamos report LA-5061-MS
@@ -477,8 +477,8 @@ Int_t TRandom::Poisson(Float_t mean)
       N = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
       return N;
    }
-   Float_t expmean = TMath::Exp(-mean);
-   Float_t pir = 1;
+   Double_t expmean = TMath::Exp(-mean);
+   Double_t pir = 1;
    N = -1;
    while(1) {
       N++;
@@ -494,7 +494,7 @@ void TRandom::Rannor(Float_t &a, Float_t &b)
 //      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
 
    // Local variables
-   Float_t r, x, y, z;
+   Double_t r, x, y, z;
 
    do {
      y = Rndm();
@@ -507,7 +507,25 @@ void TRandom::Rannor(Float_t &a, Float_t &b)
 }
 
 //______________________________________________________________________________
-Float_t TRandom::Rndm(Int_t)
+void TRandom::Rannor(Double_t &a, Double_t &b)
+{
+//      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
+
+   // Local variables
+   Double_t r, x, y, z;
+
+   do {
+     y = Rndm();
+   } while (!y);
+   z = Rndm();
+   x = z * 6.283185;
+   r = TMath::Sqrt(-2*TMath::Log(y));
+   a = r * TMath::Sin(x);
+   b = r * TMath::Cos(x);
+}
+
+//______________________________________________________________________________
+Double_t TRandom::Rndm(Int_t)
 {
 //  Machine independent random number generator.
 //  Produces uniformly-distributed floating points between 0 and 1.
@@ -525,7 +543,7 @@ Float_t TRandom::Rndm(Int_t)
       // Set lower 8 bits to zero to assure exact float
    Int_t jy = (fSeed/256)*256;
    Float_t random = kCONS*jy;
-   return random;
+   return Double_t(random);
 }
 
 //______________________________________________________________________________
