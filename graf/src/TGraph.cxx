@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.140 2004/09/13 12:27:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.141 2004/09/13 15:18:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -977,6 +977,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //             = "U" Use a User specified fitting algorithm (via SetFCN)
 //             = "Q" Quiet mode (minimum printing)
 //             = "V" Verbose mode (default is between Q and V)
+//             = "B" Use this option when you want to fix one or more parameters
+//                   and the fitting function is like "gaus","expo","poln","landau".
 //             = "R" Use the Range specified in the function range
 //             = "N" Do not store the graphics function, do not draw
 //             = "0" Do not plot the result of the fit. By default the fitted function

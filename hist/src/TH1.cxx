@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.202 2004/09/13 10:03:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.203 2004/09/15 10:05:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2001,6 +2001,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //                = "Q" Quiet mode (minimum printing)
 //                = "V" Verbose mode (default is between Q and V)
 //                = "E" Perform better Errors estimation using Minos technique
+//                = "B" Use this option when you want to fix one or more parameters
+//                      and the fitting function is like "gaus","expo","poln","landau".
 //                = "M" More. Improve fit results
 //                = "R" Use the Range specified in the function range
 //                = "N" Do not store the graphics function, do not draw
