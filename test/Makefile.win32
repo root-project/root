@@ -8,7 +8,7 @@ OutPutOpt     = -out:
 !include <win32.mak>
 CC            = $(cc)
 CXX           = $(cc)
-CXXFLAGS      = $(cvarsdll) -nologo -G5 -GR -GX -MD -DWIN32 \
+CXXFLAGS      = $(cvarsdll) -EHsc  -nologo -G5 -GR -MD -DWIN32 \
                 -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
 CXXOPT        = -O2
 #CXXOPT       = -Z7
@@ -16,7 +16,7 @@ CXXOPT        = -O2
 LD            = $(link)
 LDOPT         = -opt:ref
 #LDOPT         = -debug
-LDFLAGS       = $(LDOPT) $(conlflags) -nologo -pdb:none
+LDFLAGS       = $(LDOPT) $(conlflags) -nologo
 SOFLAGS       = $(dlllflags:-pdb:none=)
 ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
                 $(ROOTSYS)/lib/libCint.lib $(ROOTSYS)/lib/libHist.lib \
