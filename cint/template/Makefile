@@ -3,7 +3,7 @@ SHELL = /bin/bash
 
 
 
-test: operator1
+test: operator1 separateDict
 	true;
 
 operator1:
@@ -13,3 +13,6 @@ operator1:
 	@cat operator1.comp.out | grep -v 'not declared' |grep -v 'Info in <ACLiC>:' | diff - operator1.cint.out
 
 
+separateDict:
+	rootcint -f masterDict.C -c master.h masterLinkDef.h
+	rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
