@@ -369,7 +369,7 @@ if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
                     /usr/freetype/include /usr/local/freetype/include \
                     /usr/freetype /usr/local/freetype /opt/freetype \
                     /opt/freetype/include /usr/local/ttf/include \
-                    /opt/ttf/include"
+                    /opt/ttf/include /usr/include/freetype1/freetype"
     fi
     ttfincdir=no
     ttfheaders="freetype.h"
