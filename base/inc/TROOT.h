@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.2 2000/08/18 13:18:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.3 2000/08/18 13:43:46 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -44,13 +44,14 @@ class TInterpreter;
 class TBrowser;
 class TGlobal;
 class TFunction;
-
+class TFolder;
 
 class TROOT : public TDirectory {
 
 friend class TCint;
 
 private:
+   static Int_t    fgDirLevel;            //indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
 
@@ -67,7 +68,6 @@ protected:
    TVirtualPad     *fCurrentCanvas;       //Current graphics canvas
    TVirtualPad     *fCurrentPad;          //Current graphics pad
    TStyle          *fCurrentStyle;        //Current graphics style
-   void            *fCurrentFunction;     //Current function
    Bool_t          fBatch;                //True if session without graphics
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
@@ -88,13 +88,14 @@ protected:
    TSeqCollection  *fCanvases;            //List of canvases
    TSeqCollection  *fStyles;              //List of styles
    TSeqCollection  *fFunctions;           //List of analytic functions
-   TSeqCollection  *fProcesses;           //List of connected processes
+   TSeqCollection  *fTasks;               //List of tasks
    TSeqCollection  *fColors;              //List of colors
    TSeqCollection  *fGeometries;          //List of geometries
    TSeqCollection  *fBrowsers;            //List of browsers
    TSeqCollection  *fSpecials;            //List of special objects
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TList           *fBrowsables;          //List of browsables
+   TFolder         *fRootFolder;          //Pointer to the top Root folder
    TString         fDefCanvasName;        //Name of default canvas
    TString         fCutClassName;         //Name of default CutG class in graphics editor
 
@@ -111,8 +112,8 @@ public:
    virtual           ~TROOT();
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
-   TObject          *FindObject(const char *name) { void *dum; return FindObject(name, dum); }
-   TObject          *FindObject(const char *name, void *&where);
+   TObject          *FindObject(const char *name) const;
+   TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() {return fFromPopUp;}
@@ -143,6 +144,7 @@ public:
    TSeqCollection   *GetListOfGeometries() {return fGeometries;}
    TSeqCollection   *GetListOfBrowsers()   {return fBrowsers;}
    TSeqCollection   *GetListOfSpecials()   {return fSpecials;}
+   TSeqCollection   *GetListOfTasks()      {return fTasks;}
    TSeqCollection   *GetListOfMessageHandlers()   {return fMessageHandlers;}
    TList            *GetListOfBrowsables() {return fBrowsables;}
    TDataType        *GetType(const char *name, Bool_t load = kFALSE);
@@ -159,10 +161,11 @@ public:
    TVirtualPad      *GetSelectedPad() {return fSelectPad;}
    Int_t             GetNclasses() {return fClasses->GetSize();}
    Int_t             GetNtypes() {return fTypes->GetSize();}
+   TFolder          *GetRootFolder() {return fRootFolder;}
    void              Idle(UInt_t idleTimeInSec, const char *command=0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
-   Bool_t            IsFolder() {return kTRUE;}
+   Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
    void              ls(Option_t *option="");
@@ -196,8 +199,14 @@ public:
    void              Time(Int_t casetime=1) { fTimer = casetime; }
    Int_t             Timer() { return fTimer; }
 
+   //---- static functions
+   static Int_t       DecreaseDirLevel();
+   static Int_t       GetDirLevel();
    static const char *GetMacroPath();
+   static Int_t       IncreaseDirLevel();
+   static void        IndentLevel();
    static Bool_t      Initialized();
+   static void        SetDirLevel(Int_t level=0);
    static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes

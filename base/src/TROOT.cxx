@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.9 2000/08/18 21:51:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.10 2000/09/04 17:47:59 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -94,6 +94,7 @@
 #include "TRandom.h"
 #include "TMessageHandler.h"
 #include "TVirtualGL.h"
+#include "TFolder.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -162,6 +163,7 @@ TRandom    *gRandom;       // Global pointer to random generator
 Int_t       gDebug;
 
 
+Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
@@ -246,12 +248,28 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCanvases    = new TList(this);
    fStyles      = new TList(this);
    fFunctions   = new TList(this);
-   fProcesses   = new TList(this);
+   fTasks       = new TList(this);
    fGeometries  = new TList(this);
    fBrowsers    = new TList(this);
    fSpecials    = new TList(this);
    fBrowsables  = new TList(this);
    fMessageHandlers = new TList(this);
+   
+   fRootFolder = new TFolder("root","root of all folders");
+   fRootFolder->AddFolder("Classes",   "List of active classes",fClasses);
+   fRootFolder->AddFolder("Colors",    "List of active colors",fColors);
+   fRootFolder->AddFolder("Files",     "List of connected root files",fFiles);
+   fRootFolder->AddFolder("MapFiles",  "List of MapFiles",fMappedFiles);
+   fRootFolder->AddFolder("Sockets",   "List of Socket connections",fSockets);
+   fRootFolder->AddFolder("Canvases",  "List of Canvases",fCanvases);
+   fRootFolder->AddFolder("Styles",    "List of Styles",fStyles);
+   fRootFolder->AddFolder("Functions", "List of Functions",fFunctions);
+   fRootFolder->AddFolder("Tasks",     "List of Tasks",fTasks);
+   fRootFolder->AddFolder("Geometries","List of Geometries",fGeometries);
+   fRootFolder->AddFolder("Browsers",  "List of Browsers",fBrowsers);
+   fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
+   fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
+
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
    fReadingBasket = kFALSE;
@@ -305,16 +323,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    InitThreads();
 
    // Set initial/default list of browsable objects
+   fBrowsables->Add(fRootFolder, "root");
    fBrowsables->Add(fClasses, "Classes");
-   fBrowsables->Add(GetListOfGlobals(), "Global Variables");
-// fBrowsables->Add(GetListOfGlobalFunctions(), "Global Functions");
-   fBrowsables->Add(fCanvases, "Canvases");
    fBrowsables->Add(fGeometries, "Geometries");
-   fBrowsables->Add(fColors, "Colors");
    fBrowsables->Add(fStyles, "Styles");
    fBrowsables->Add(fFunctions, "Functions");
-   fBrowsables->Add(fSockets, "Network Connections");
-   fBrowsables->Add(fMappedFiles, "Memory Mapped Files");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -413,11 +426,61 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 }
 
 //______________________________________________________________________________
-TObject *TROOT::FindObject(const char *name, void *&where)
+TObject *TROOT::FindObject(const char *name) const
 {
 //*-*-*-*-*Returns address of a ROOT object if it exists*-*-*-*-*-*-*-*-*-*
 //*-*      =============================================
 //*-*
+//*-*  This function looks in the following order in the ROOT lists:
+//*-*     - List of files
+//*-*     - List of memory mapped files
+//*-*     - List of functions
+//*-*     - List of geometries
+//*-*     - List of canvases
+//*-*     - List of styles
+//*-*     - List of specials
+//*-*     - List of materials in current geometry
+//*-*     - List of shapes in current geometry
+//*-*     - List of matrices in current geometry
+//*-*     - List of Nodes in current geometry
+//*-*     - Current Directory in memory
+//*-*     - Current Directory on file
+//*-*-
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   TObject *temp = 0;
+
+   if (!temp && !strcmp(name, "gPad")) temp = gPad;
+   if (!temp) temp   = fFiles->FindObject(name);
+   if (!temp) temp   = fMappedFiles->FindObject(name);
+   if (!temp) temp   = fFunctions->FindObject(name);
+   if (!temp) temp   = fGeometries->FindObject(name);
+   if (!temp) temp   = fCanvases->FindObject(name);
+   if (!temp) temp   = fStyles->FindObject(name);
+   if (!temp) temp   = fSpecials->FindObject(name);
+   if (!temp && TClassTable::GetDict("TGeometry")) {
+      TObjArray *loc = (TObjArray*)ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
+      if (loc) temp   = loc->At(0);
+   }
+   if (!temp && gDirectory) temp   = gDirectory->Get(name);
+   if (!temp && gPad) {
+      TVirtualPad *canvas = gPad->GetVirtCanvas();
+      if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
+         temp   = canvas->GetPrimitive(name);
+         if (!temp && canvas != gPad) temp  = gPad->GetPrimitive(name);
+      }
+   }
+   if (!temp) return 0;
+   if (temp->TestBit(kNotDeleted)) return temp;
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TROOT::FindSpecialObject(const char *name, void *&where)
+{
+// Returns address and folder of a ROOT object if it exists
+//
+//
 //*-*  This function looks in the following order in the ROOT lists:
 //*-*     - List of files
 //*-*     - List of memory mapped files
@@ -448,48 +511,48 @@ TObject *TROOT::FindObject(const char *name, void *&where)
       }
    }
    if (!temp) {
-      temp  = fFiles->FindObject(name);
+      temp   = fFiles->FindObject(name);
       where = fFiles;
    }
    if (!temp) {
-      temp  = fMappedFiles->FindObject(name);
+      temp   = fMappedFiles->FindObject(name);
       where = fMappedFiles;
    }
    if (!temp) {
-      temp  = fFunctions->FindObject(name);
+      temp   = fFunctions->FindObject(name);
       where = fFunctions;
    }
    if (!temp) {
-      temp  = fGeometries->FindObject(name);
+      temp   = fGeometries->FindObject(name);
       where = fGeometries;
    }
    if (!temp) {
-      temp  = fCanvases->FindObject(name);
+      temp   = fCanvases->FindObject(name);
       where = fCanvases;
    }
    if (!temp) {
-      temp  = fStyles->FindObject(name);
+      temp   = fStyles->FindObject(name);
       where = fStyles;
    }
    if (!temp) {
-      temp  = fSpecials->FindObject(name);
+      temp   = fSpecials->FindObject(name);
       where = fSpecials;
    }
    if (!temp && TClassTable::GetDict("TGeometry")) {
       TObjArray *loc = (TObjArray*)ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
       if (loc) {
-         temp  = loc->At(0);
+         temp   = loc->At(0);
          where = loc->At(1);
       }
    }
    if (!temp && gDirectory) {
-      temp  = gDirectory->Get(name);
+      temp   = gDirectory->Get(name);
       where = gDirectory;
    }
    if (!temp && gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp  = canvas->GetPrimitive(name);
+         temp   = canvas->GetPrimitive(name);
          where = canvas;
          if (!temp && canvas != gPad) {
             temp  = gPad->GetPrimitive(name);
@@ -1184,16 +1247,6 @@ void TROOT::SetEditorMode(const char *mode)
 }
 
 //______________________________________________________________________________
-void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
-{
-   // Static function used to set the address of the default make canvas method.
-   // This address is by default initialized to 0.
-   // It is set as soon as the library containing the TCanvas class is loaded.
-
-   fgMakeDefCanvas = makecanvas;
-}
-
-//______________________________________________________________________________
 void TROOT::SetStyle(const char *stylename)
 {
    // Change current style to style with name stylename
@@ -1206,10 +1259,17 @@ void TROOT::SetStyle(const char *stylename)
 
 //-------- Static Member Functions ---------------------------------------------
 
+
 //______________________________________________________________________________
-Bool_t  TROOT::Initialized()
+Int_t TROOT::DecreaseDirLevel()
 {
-   return fgRootInit;
+   return --fgDirLevel;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::GetDirLevel()
+{
+   return fgDirLevel;
 }
 
 //______________________________________________________________________________
@@ -1241,5 +1301,41 @@ const char *TROOT::GetMacroPath()
 #endif
    }
    return macropath;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::IncreaseDirLevel()
+{
+   return ++fgDirLevel;
+}
+
+//______________________________________________________________________________
+void TROOT::IndentLevel()
+{
+   // Functions used by ls() to indent an object hierarchy.
+
+   for (int i = 0; i < fgDirLevel; i++) cout.put(' ');
+}
+
+//______________________________________________________________________________
+Bool_t  TROOT::Initialized()
+{
+   return fgRootInit;
+}
+
+//______________________________________________________________________________
+void TROOT::SetDirLevel(Int_t level)
+{
+   fgDirLevel = level;
+}
+
+//______________________________________________________________________________
+void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
+{
+   // Static function used to set the address of the default make canvas method.
+   // This address is by default initialized to 0.
+   // It is set as soon as the library containing the TCanvas class is loaded.
+
+   fgMakeDefCanvas = makecanvas;
 }
 
