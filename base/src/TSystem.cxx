@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.64 2003/06/29 22:42:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.65 2003/07/03 13:00:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1351,7 +1351,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // If build_dir is specified, it is used as an alternative 'root' for the
    // generation of the shared library.  The library is stored in a sub-directories
    // of 'build_dir' including the full pathname of the script.  See also
-   // TSystem::SetBuildDir
+   // TSystem::SetBuildDir.
    //
    // If library_specified is not specified, CompileMacro generate a default name
    // for library by taking the name of the file "filename" but replacing the
@@ -1474,6 +1474,16 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    }
    TString filename_fullpath = library;
 
+   TString file_dirname = DirName( filename_fullpath );
+   // For some probably good reason, DirName on Windows returns the 'name' of
+   // the directory, omitting the drive letter (even if there was one). In
+   // consequence the result is not useable as a 'root directory', we need to
+   // add the drive letter if there was one..
+   if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
+      file_dirname.Prepend(library(0,2));
+   }
+   TString file_location( file_dirname  ); // Location of the script.
+
    Ssiz_t dot_pos = library.Last('.');
    TString extension = library;
    extension.Replace( 0, dot_pos+1, 0 , 0);
@@ -1487,16 +1497,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
 
-   TString lib_dirname = DirName( library );
-   // For some probably good reason, DirName on Windows on returns the
-   // 'name' of the directory, omitting the drive letter (even if
-   // there was one). In consequence the result is not useable as it.
-   if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
-     lib_dirname.Prepend(library(0,2));
-   }
-
-   TString file_location( lib_dirname  ); // Location of the script.
-
    if (library_specified && strlen(library_specified) ) {
       // Use the specified name instead of the default
       libname = BaseName( library_specified );
@@ -1508,6 +1508,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = TString(library) + "." + fSoExt;
    }
 
+   TString lib_dirname = DirName( library );
+   // For some probably good reason, DirName on Windows returns the 'name' of
+   // the directory, omitting the drive letter (even if there was one). In
+   // consequence the result is not useable as a 'root directory', we need to
+   // add the drive letter if there was one..
+   if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
+      lib_dirname.Prepend(library(0,2));
+   }
    TString lib_location( lib_dirname );
 
    if (build_loc.Length()==0) {
