@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.4 2004/12/09 15:40:46 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.5 2004/12/09 15:56:59 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -1168,7 +1168,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /* New zlib format */
   if (src[0] == 'Z' && src[1] == 'L') {
-    z_stream stream; // decompression stream
+    z_stream stream; /* decompression stream */
     int err = 0;
 
     stream.next_in   = (Bytef*)(&src[HDRSIZE]);

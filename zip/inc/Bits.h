@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.5 2004/12/09 15:40:46 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.6 2004/12/09 15:56:59 brun Exp $ */
 /* Author: */
 /*
 
@@ -406,10 +406,11 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
      /* char *tgt, *src;                  source and target buffers */
 
 {
+  int err;
+  int method   = Z_DEFLATED;
+  
   if (R__ZipMode != 0) {
     z_stream stream;
-    int err;
-
     *irep = 0;
 
     error_flag   = 0;
@@ -418,7 +419,6 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
 
-    int method   = Z_DEFLATED;
 
     stream.next_in   = (Bytef*)src;
     stream.avail_in  = (uInt)(*srcsize);
@@ -463,7 +463,6 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
   } else {
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
-    int method   = Z_DEFLATED;
     level        = cxlevel;
 
     *irep        = 0;
