@@ -716,8 +716,11 @@ void G__gen_cpplink()
       }
     }
     if(algoflag&1) {
-      fprintf(hfp,"#include <algorithm>\n");
-      if(G__ignore_stdnamespace) fprintf(hfp,"using namespace std;\n");
+      int known, acc = 0;
+      fprintf(hfp,"#include <algorithm>\n");  
+      G__getvariable("__HP_aCC", &known, &G__global, (struct G__var_array*)NULL);
+      if (known) acc = G__int(G__calc_internal("__HP_aCC<53000"));
+      if(G__ignore_stdnamespace && !acc) fprintf(hfp,"using namespace std;\n");
     }
     else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
