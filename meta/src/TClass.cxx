@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.40 2001/04/20 17:47:40 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.41 2001/04/23 07:08:09 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1086,7 +1086,9 @@ void *TClass::New(Bool_t defConstructor)
    fgCallingNew = defConstructor;
    void *p = GetClassInfo()->New();
    fgCallingNew = kFALSE;
-   if (!p) Error("New", "no default ctor for class %s", GetName());
+   if (!p) {
+      Error("New", "Cannot create object of class %s", GetName());
+   }
 
    return p;
 }
