@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.7 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.8 2003/09/10 03:58:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -676,12 +676,14 @@ Bool_t RooMinuit::setLogFile(const char* logfile)
 {
   if (_logfile) {
     cout << "RooMinuit::setLogFile: closing previous log file" << endl ;
+    _logfile->close() ;
     delete _logfile ;
     _logfile = 0 ;
   }
   _logfile = new ofstream(logfile) ;
   if (!_logfile->good()) {
     cout << "RooMinuit::setLogFile: cannot open file " << logfile << endl ;
+    _logfile->close() ;
     delete _logfile ;
     _logfile= 0;
   }  
