@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.18 2004/09/14 15:15:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.19 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -407,6 +407,7 @@ void TViewerOpenGL::UpdateScene(Option_t *)
    if (buff->fOption == buff->kOGL) {
       ++fNbShapes;
       TGLSceneObject *addObj = 0;
+      if (buff->fColor <= 1) buff->fColor = 42; //temporary
       TColor *color = gROOT->GetColor(buff->fColor);
       Float_t rgb[3];
       if (color) {
