@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.79 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.80 2002/02/05 17:04:23 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -188,7 +188,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          } else {
             clones = (TClonesArray*)pointer;
          }
-         basket->DeleteEntryOffset(); //entryoffset not require for the clonesarray counterif (!clones) return; // TClonesArray must exist
+         basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
          fEntryOffsetLen = 0;
          clm = clones->GetClass();
          if (!clm) return;
@@ -1255,9 +1255,10 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
             }
          } else {
             if (elem->GetClassPointer() == TClonesArray::Class()) {
-               //process case of a TClonesArray in a derived class
+               //process case of a TClonesArray in a derived class (do not split)
                char *pointer = fBranchPointer + elem->GetOffset();
-               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
+               //branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
+               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,0,btype);
             } else {
                branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
                branch->SetType(btype);
