@@ -9,9 +9,9 @@ using std::endl;
 Int_t doBanner()
 {
   cout << endl
-       << "\033[1mRooFit v1.91 -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl 
-              << "                Copyright (C) 2000-2005 University of California & Stanford University" << endl 
-              << "                All rights reserved, please read http://roofit.sourceforge.net/license.txt" << endl << endl ;
+       << "\033[1mRooFit -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl 
+              << "          Copyright (C) 2000-2005 University of California & Stanford University" << endl 
+              << "          All rights reserved, please read http://roofit.sourceforge.net/license.txt" << endl << endl ;
   return 0 ;
 }
 
