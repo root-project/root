@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.70 2004/01/21 22:22:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.71 2004/01/21 23:15:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -259,7 +259,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
       if (gApplication->IsCmdThread()) {
          gROOT->SetLineIsProcessing();
 
-         G__value local_res;
+         G__value local_res = G__null;
 
          // It checks whether the input line contains the "fantom" method
          // to synchronize user keyboard input and ROOT prompt line
