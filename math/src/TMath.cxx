@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.93 2004/12/16 18:08:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.94 2005/02/04 22:34:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -486,7 +486,11 @@ Double_t TMath::Gamma(Double_t z)
 //______________________________________________________________________________
 Double_t TMath::Gamma(Double_t a,Double_t x)
 {
-   // Computation of the incomplete gamma function P(a,x)
+   // Computation of the upper incomplete gamma function P(a,x) as defined in the
+   // Handbook of Mathematical Functions by Abramowitz and Stegun, formula 6.5.1 on page 260 .
+   //
+   // Note that this is the version of the incomplete gamma function as used in statistics :
+   // its normalization is such that TMath::Gamma(a,+infinity) = 1 .
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
