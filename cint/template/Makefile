@@ -26,7 +26,7 @@ else
 endif
 
 operator1:
-	$(CMDECHO)rm  -f operator1.cint.out operator1.comp.out
+	$(CMDECHO)rm -f operator1.cint.out operator1.comp.out
 	$(CMDECHO) root.exe -q -l -b smalltest.C > operator1.cint.out 2>&1
 	$(CMDECHO) root.exe -q -l -b smalltest.C+ > operator1.comp.out 2>&1
 ifeq ($(FAIL),)
@@ -36,7 +36,7 @@ else
 endif
 
 
-simpleSeparateDict:
+simpleSeparateDict: 
 	$(CMDECHO)rootcint -f masterDict.C -c master.h masterLinkDef.h
 	$(CMDECHO)rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
 

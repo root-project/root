@@ -5,9 +5,9 @@
 #include <iostream>
 #include <typeinfo>
 
-class Parent{ };
+class Parent{ public: static const char *ClassName() { return "Parent"; } };
 
-class Child : public Parent { };
+class Child : public Parent { public: static const char *ClassName() { return "Child"; }};
 
 template <class T> class shared_ptr;
 
@@ -32,7 +32,7 @@ public:
   shared_ptr(T* someobject) 
   { 
 #if defined(__CINT__) || defined(_MSC_VER)
-    std::cout << "shared_ptr<T>::shared_ptr(T *) [with T = " << typeid(T).name() << "]" << endl;
+     std::cout << "shared_ptr<T>::shared_ptr(T *) [with T = " << T::ClassName() << "]" << endl;
 #else
     std::cout << __PRETTY_FUNCTION__ << std::endl;
 #endif
@@ -44,8 +44,8 @@ public:
     : theobject(dynamic_cast<T*>(rhs.theobject)) 
   {
 #if defined(__CINT__) || defined(_MSC_VER)
-     std::cout << "shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = " << typeid(Y).name()
-               << ", T = " << typeid(T).name() << "]" << endl;
+     std::cout << "shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = " << Y::ClassName()
+               << ", T = " << T::ClassName() << "]" << endl;
 #else
     std::cout << __PRETTY_FUNCTION__ << std::endl;
 #endif
