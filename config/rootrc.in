@@ -7,8 +7,8 @@
 # for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:@libdir@
 Unix.*.Root.MacroPath:      .:@macrodir@
-WinNT.*.Root.DynamicPath:   ./;@bindir@;$(PATH)
-WinNT.*.Root.MacroPath:     ./;@macrodir@
+WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH)
+WinNT.*.Root.MacroPath:     .;@macrodir@
 
 # Path where to look for TrueType fonts
 Unix.*.Root.UseTTFonts:     true
@@ -56,8 +56,8 @@ Canvas.AutoExec:            true
 # THtml specific settings.
 Root.Html.OutputDir:         htmldoc/
 Root.Html.SourcePrefix:
-Unix.*.Root.Html.SourceDir:  ./:src/:include/
-WinNT.*.Root.Html.SourceDir: ./:src/:include/
+Unix.*.Root.Html.SourceDir:  .:src:include
+WinNT.*.Root.Html.SourceDir: .;src;include
 #Root.Html.Author:           // Author:
 #Root.Html.Author:           Fons Rademakers
 #Root.Html.Copyright:        * Copyright
