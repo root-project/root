@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.13 2004/02/13 20:12:44 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.14 2004/07/27 16:30:38 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,6 +107,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define type_of_call _stdcall
 #endif
 
+
 extern "C" void type_of_call pyevnt();
 extern "C" void type_of_call pystat(int *key);
 extern "C" void type_of_call pylist(int *key);
@@ -137,7 +138,7 @@ extern "C" void type_of_call pyinit(char *frame,  Long_t l_frame,
 #endif
 
 extern "C" {
-  void*  type_of_call pythia6_common_block_address(char*, int len);
+  void*  pythia6_common_address(const char*);
   void   type_of_call tpythia6_open_fortran_file(int* lun, char* name, int);
   void   type_of_call tpythia6_close_fortran_file(int* lun);
 }
@@ -172,28 +173,28 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
 
   // initialize common-blocks
 
-  fPyjets = (Pyjets_t*) pythia6_common_block_address((char*)"PYJETS",6);
-  fPydat1 = (Pydat1_t*) pythia6_common_block_address((char*)"PYDAT1",6);
-  fPydat2 = (Pydat2_t*) pythia6_common_block_address((char*)"PYDAT2",6);
-  fPydat3 = (Pydat3_t*) pythia6_common_block_address((char*)"PYDAT3",6);
-  fPydat4 = (Pydat4_t*) pythia6_common_block_address((char*)"PYDAT4",6);
-  fPydatr = (Pydatr_t*) pythia6_common_block_address((char*)"PYDATR",6);
-  fPysubs = (Pysubs_t*) pythia6_common_block_address((char*)"PYSUBS",6);
-  fPypars = (Pypars_t*) pythia6_common_block_address((char*)"PYPARS",6);
-  fPyint1 = (Pyint1_t*) pythia6_common_block_address((char*)"PYINT1",6);
-  fPyint2 = (Pyint2_t*) pythia6_common_block_address((char*)"PYINT2",6);
-  fPyint3 = (Pyint3_t*) pythia6_common_block_address((char*)"PYINT3",6);
-  fPyint4 = (Pyint4_t*) pythia6_common_block_address((char*)"PYINT4",6);
-  fPyint5 = (Pyint5_t*) pythia6_common_block_address((char*)"PYINT5",6);
-  fPyint6 = (Pyint6_t*) pythia6_common_block_address((char*)"PYINT6",6);
-  fPyint7 = (Pyint7_t*) pythia6_common_block_address((char*)"PYINT7",6);
-  fPyint8 = (Pyint8_t*) pythia6_common_block_address((char*)"PYINT8",6);
-  fPyint9 = (Pyint9_t*) pythia6_common_block_address((char*)"PYINT9",6);
-  fPyuppr = (Pyuppr_t*) pythia6_common_block_address((char*)"PYUPPR",6);
-  fPymssm = (Pymssm_t*) pythia6_common_block_address((char*)"PYMSSM",6);
-  fPyssmt = (Pyssmt_t*) pythia6_common_block_address((char*)"PYSSMT",6);
-  fPyints = (Pyints_t*) pythia6_common_block_address((char*)"PYINTS",6);
-  fPybins = (Pybins_t*) pythia6_common_block_address((char*)"PYBINS",6);
+  fPyjets = (Pyjets_t*) pythia6_common_address("PYJETS");
+  fPydat1 = (Pydat1_t*) pythia6_common_address("PYDAT1");
+  fPydat2 = (Pydat2_t*) pythia6_common_address("PYDAT2");
+  fPydat3 = (Pydat3_t*) pythia6_common_address("PYDAT3");
+  fPydat4 = (Pydat4_t*) pythia6_common_address("PYDAT4");
+  fPydatr = (Pydatr_t*) pythia6_common_address("PYDATR");
+  fPysubs = (Pysubs_t*) pythia6_common_address("PYSUBS");
+  fPypars = (Pypars_t*) pythia6_common_address("PYPARS");
+  fPyint1 = (Pyint1_t*) pythia6_common_address("PYINT1");
+  fPyint2 = (Pyint2_t*) pythia6_common_address("PYINT2");
+  fPyint3 = (Pyint3_t*) pythia6_common_address("PYINT3");
+  fPyint4 = (Pyint4_t*) pythia6_common_address("PYINT4");
+  fPyint5 = (Pyint5_t*) pythia6_common_address("PYINT5");
+  fPyint6 = (Pyint6_t*) pythia6_common_address("PYINT6");
+  fPyint7 = (Pyint7_t*) pythia6_common_address("PYINT7");
+  fPyint8 = (Pyint8_t*) pythia6_common_address("PYINT8");
+  fPyint9 = (Pyint9_t*) pythia6_common_address("PYINT9");
+  fPyuppr = (Pyuppr_t*) pythia6_common_address("PYUPPR");
+  fPymssm = (Pymssm_t*) pythia6_common_address("PYMSSM");
+  fPyssmt = (Pyssmt_t*) pythia6_common_address("PYSSMT");
+  fPyints = (Pyints_t*) pythia6_common_address("PYINTS");
+  fPybins = (Pybins_t*) pythia6_common_address("PYBINS");
 }
 
 //------------------------------------------------------------------------------
