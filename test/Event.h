@@ -46,7 +46,8 @@ private:
 public:
    Track() { fPointValue = 0; }
    Track(Float_t random);
-   virtual ~Track() { delete fPointValue; fPointValue=0; }
+   virtual ~Track() {Clear();}
+   void          Clear(Option_t *option="") { delete [] fPointValue; fPointValue=0; }
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }

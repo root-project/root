@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.17 2002/08/01 21:33:48 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.18 2002/08/07 13:55:45 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 //______________________________________________________________________________
 void Event::Clear(Option_t *option)
 {
-   fTracks->Delete();
+   fTracks->Clear("C"); //will also call Track::Clear
    fHighPt->Delete();
    fMuons->Delete();
 }
