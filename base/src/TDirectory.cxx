@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.45 2004/05/14 08:26:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.46 2004/05/17 12:28:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1575,7 +1575,8 @@ Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *op
    }
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
-
+   if (fFile->TestBit(TFile::kWriteError)) return 0;
+   
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
@@ -1662,6 +1663,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    }
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
+   if (fFile->TestBit(TFile::kWriteError)) return 0;
 
    if (oldkey) {
       oldkey->Delete();
