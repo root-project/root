@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id$ */
+/* @(#) $Id: zutil.c,v 1.1 2004/03/17 17:34:01 brun Exp $ */
 
 #include "zutil.h"
 
@@ -15,7 +15,7 @@ struct internal_state      {int dummy;}; /* for buggy compilers */
 extern void exit OF((int));
 #endif
 
-const char * const z_errmsg[10] = {
+const char * const z_ROOT_errmsg[10] = {
 "need dictionary",     /* Z_NEED_DICT       2  */
 "stream end",          /* Z_STREAM_END      1  */
 "",                    /* Z_OK              0  */
