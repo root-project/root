@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.152 2003/07/17 16:34:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.153 2003/07/17 16:50:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3100,6 +3100,7 @@ void TTree::Print(Option_t *option) const
      TBranch::ResetCount();
      while ((br= (TBranch*)next())) {
         TString s = br->GetName();
+        s.ReplaceAll("/","_");
         if (s.Index(re) == kNPOS) continue;
         br->Print(option);
      }
