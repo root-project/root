@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.58 2004/04/28 12:19:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.59 2004/04/29 07:52:27 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2309,7 +2309,7 @@ Double_t TMath::BesselK0(Double_t x)
 
    // Parameters of the polynomial approximation
    const Double_t p1=-0.57721566,  p2=0.42278420,   p3=0.23069756,
-                  p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-5;
+                  p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-6;
 
    const Double_t q1= 1.25331414,  q2=-7.832358e-2, q3= 2.189568e-2,
                   q4=-1.062446e-2, q5= 5.87872e-3,  q6=-2.51540e-3,  q7=5.3208e-4;
