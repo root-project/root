@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.19 2001/10/02 09:08:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.20 2001/11/06 11:43:03 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -503,10 +503,18 @@ void TApplication::LoadGraphicsLibs()
    gROOT->ProcessLineFast("new TGX11(\"X11\", \"ROOT interface to X11\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
 #else
+#ifndef GDK_WIN32
    gROOT->LoadClass("TGWin32", "Win32");
 
    gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TWin32GuiFactory();");
+#else
+   gROOT->LoadClass("TGWin32", "Win32gdk");
+   gROOT->LoadClass("TRootGuiFactory", "Gui");
+
+   gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
+   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
+#endif
 #endif
 }
 

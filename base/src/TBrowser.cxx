@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.4 2001/03/08 20:16:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.5 2001/09/18 21:58:39 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -171,6 +171,9 @@ void TBrowser::Create(TObject *obj)
 #ifndef WIN32
       if (fImp) fImp->BrowseObj(obj);
 #else
+#ifdef GDK_WIN32
+      if (fImp) fImp->BrowseObj(obj);
+#endif
  //     obj->Browse(this);
 #endif
    }
@@ -178,6 +181,9 @@ void TBrowser::Create(TObject *obj)
 #ifndef WIN32
    else if (fImp) fImp->BrowseObj(gROOT);
 #else
+#ifdef GDK_WIN32
+   else if (fImp) fImp->BrowseObj(gROOT);
+#endif
    // The first list will be filled by TWin32BrowserImp ctor
    // with all browsable classes from TROOT
 #endif

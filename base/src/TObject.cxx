@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.25 2001/10/03 16:43:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.26 2001/11/28 14:49:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -605,7 +605,11 @@ void TObject::Inspect() const
    //End_Html
 
 #ifdef WIN32
+#ifdef GDK_WIN32
+   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
+#else
    gGuiFactory->CreateInspectorImp(this, 400, 200);
+#endif
 #else
    gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
 #endif
