@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.2 2000/06/27 15:12:23 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -22,10 +22,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGDimension + TGPosition                                             //
+// TGDimension, TGPosition, TGLongPosition, TGInsets and TGRectangle    //
 //                                                                      //
-// Two small classes that implement dimensions (width and height) and   //
-// positions (x and y). They are trivial and their members are public.  //
+// Several small geometry classes that implement dimensions             //
+// (width and height), positions (x and y), insets and rectangles.      //
+// They are trivial and their members are public.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -34,3 +35,5 @@
 ClassImp(TGDimension)
 ClassImp(TGPosition)
 ClassImp(TGLongPosition)
+ClassImp(TGInsets)
+ClassImp(TGRectangle)
