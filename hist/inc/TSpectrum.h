@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.6 2003/04/14 12:56:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.7 2003/07/10 09:55:44 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -163,8 +163,7 @@ public:
    Int_t       GetNPeaks() const {return fNPeaks;}
    Float_t    *GetPositionX() const {return fPositionX;}
    Float_t    *GetPositionY() const {return fPositionY;}
-   virtual Int_t       Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
-   Int_t       Search1(const float *spectrum,int size,double sigma);
+   virtual Int_t  Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
    void        SetResolution(Float_t resolution=1);
 
    //new functions April 2003
@@ -172,7 +171,6 @@ public:
    const char *Smooth1(float *spectrum,int size,int points);
    const char *Deconvolution1HighResolution(float *source,const float *resp,int size,int number_of_iterations,int number_of_repetitions,double boost);
    const char *Deconvolution1Unfolding(float *source,const float **resp,int sizex,int sizey,int number_of_iterations);
-   Int_t Search1General(float *spectrum,float *dest,int size,float sigma, double threshold,bool markov,int aver_window);
    Int_t Search1HighRes(float *source,float *dest, int size, float sigma, double threshold,
                         bool background_remove,int decon_iterations,bool markov, int aver_window);
    double      Lls(double a);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.10 2003/04/15 09:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.11 2003/07/10 09:55:45 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 
 
 //______________________________________________________________________________
-    Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t threshold) 
+Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t threshold) 
 {
    
 /////////////////////////////////////////////////////////////////////////////
@@ -140,6 +140,8 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 //   Function parameters:                                                  //
 //   hin:       pointer to the histogram of source spectrum                //
 //   sigma:   sigma of searched peaks, for details we refer to manual      //
+//   threshold: (default=0.05)  peaks with amplitude less than             //
+//       threshold*highest_peak are discarded.                             //
 //                                                                         //
 //   if option is not equal to "goff" (goff is the default), then          //
 //   a polymarker object is created and added to the list of functions of  //
@@ -152,8 +154,8 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 //    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
-       if (hin == 0)
-      return 0;
+       
+   if (hin == 0) return 0;
    Int_t dimension = hin->GetDimension();
    if (dimension > 2) {
       Error("Search", "Only implemented for 1-d and 2-d histograms");
@@ -164,21 +166,13 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
       Int_t i, bin, npeaks;
       Float_t * source = new float[size];
       Float_t * dest   = new float[size];
-      for (i = 0; i < size; i++)
-         source[i] = hin->GetBinContent(i + 1);
-      //int threshold = (int) (2 * TMath::Sqrt(0.5 * hin->GetMaximum()));
-      if (strstr(option, "old")) {
-         npeaks = Search1(source, size, sigma);
-      } else if (strstr(option, "new")){
-         npeaks =
-             Search1HighRes(source, dest, size, sigma, threshold, kTRUE, 3, kTRUE, 3);
-      } else {
-         npeaks =
-             Search1General(source, dest, size, sigma, threshold, kTRUE, 3);
-      }
-      TH1 * hnew = (TH1 *) hin->Clone("markov");
-      for (i = 0; i < size; i++)
-         hnew->SetBinContent(i + 1, source[i]);
+      for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + 1);
+
+      npeaks = Search1HighRes(source, dest, size, sigma, 100*threshold, kTRUE, 3, kTRUE, 3);
+
+      //TH1 * hnew = (TH1 *) hin->Clone("markov");
+      //for (i = 0; i < size; i++)
+      //   hnew->SetBinContent(i + 1, source[i]);
       if (strstr(option, "goff"))
          return npeaks;
       for (i = 0; i < npeaks; i++) {
@@ -188,7 +182,12 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
       }
       if (strstr(option, "goff"))
          return npeaks;
-      TPolyMarker * pm = new TPolyMarker(npeaks, fPositionX, fPositionY);
+      TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
+      if (pm) {
+         hin->GetListOfFunctions()->Remove(pm);
+         delete pm;
+      }
+      pm = new TPolyMarker(npeaks, fPositionX, fPositionY);
       hin->GetListOfFunctions()->Add(pm);
       pm->SetMarkerStyle(23);
       pm->SetMarkerColor(kRed);
@@ -2268,368 +2267,6 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    delete[]working_space;
    return 0;
 }
-
-
-//_____________________________________________________________________________
-    Int_t TSpectrum::Search1(const float *spectrum, int size, double sigma) 
-{
-   
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
-//   This function searches for peaks in source spectrum                   //
-//   The number of found peaks and their positions are written into        //
-//   the members fNpeaks and fPositionX.                                   //
-//                                                                         //
-//   Function parameters:                                                  //
-//   source:  pointer to the vector of source spectrum                     //
-//   size:    length of source spectrum                                    //
-//   sigma:   sigma of searched peaks, for details we refer to manual      //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-   int xmin, xmax, i, j, l, i1, i2, i3, i5, n1, n2, n3, stav, peak_index,
-       lmin, lmax;
-   i1 = i2 = i3 = 0;
-   double a, b, s, f, si4, fi4, suma, sumai, sold, fold =
-       0, norma, filter[PEAK_WINDOW];
-   si4 = fi4 = 0;
-   
-//start of checking (has been inserted up to end of checking)
-       if (size <= 0) {
-      Error("Search1", "Wrong size, must positive");
-      return 0;
-   }
-   if (sigma <= 0) {
-      Error("Search1", "Invalid sigma, must be positive");
-      return 0;
-   }
-   j = (int) (3.0 * sigma);
-   if (j >= PEAK_WINDOW / 2) {
-      Error("Search1", "Too large sigma");
-      return 0;
-   }
-   
-//end of checking
-       for (i = 0; i < PEAK_WINDOW; i++)
-      filter[i] = 0;
-   for (i = -j; i <= j; i++) {
-      a = i;
-      a = -a * a;
-      b = 2.0 * sigma * sigma;
-      a = a / b;
-      a = exp(a);
-      s = i;
-      s = s * s;
-      s = s - sigma * sigma;
-      s = s / (sigma * sigma * sigma * sigma);
-      s = s * a;
-      filter[PEAK_WINDOW / 2 + i] = s;
-   }
-   norma = 0;
-   for (i = 0; i < PEAK_WINDOW; i++)
-      norma = norma + TMath::Abs(filter[i]);
-   for (i = 0; i < PEAK_WINDOW; i++)
-      filter[i] = filter[i] / norma;
-   suma = 0;
-   sumai = 0;
-   stav = 1;
-   peak_index = 0;
-   sold = PEAK_WINDOW / 2;
-   xmin = (int) (3.0 * sigma);
-   xmax = size - (int) (3.0 * sigma);
-   lmin = PEAK_WINDOW / 2 - (int) (3.0 * sigma);
-   lmax = PEAK_WINDOW / 2 + (int) (3.0 * sigma);
-   for (i = xmin; i <= xmax; i++) {
-      s = 0;
-      f = 0;
-      for (l = lmin; l <= lmax; l++) {
-         if (i + l - PEAK_WINDOW / 2 >= size)
-            break;
-         a = spectrum[i + l - PEAK_WINDOW / 2];
-         s += a * filter[l];
-         f += a * filter[l] * filter[l];
-      }
-      f = TMath::Sqrt(f);
-      if (s < 0) {
-         a = i;
-         a *= s;
-         suma += s;
-         sumai += a;
-      }
-      if ((stav == 1) && (s > f)) {
-       stav1:stav = 2;
-         suma = 0;
-         sumai = 0;
-         i1 = i;
-      }
-      
-      else if ((stav == 2) && (s <= f)) {
-         stav = 3;
-         i2 = i;
-      }
-      
-      else if (stav == 3) {
-         if (s > f)
-            goto stav1;
-         if (s <= 0) {
-            stav = 4;
-            i3 = i;
-         }
-      }
-      
-      else if ((stav == 4) && (s >= sold)) {
-         si4 = sold;
-         fi4 = fold;
-         stav = 5;
-      }
-      
-      else if ((stav == 5) && (s >= 0)) {
-         stav = 6;
-         i5 = i;
-         if (si4 == 0)
-            stav = 0;
-         
-         else {
-            n1 = i5 - i3 + 1;
-            a = n1 + 2;
-            a = fi4 * a / (2. * si4) + 1 / 2.;
-            a = TMath::Abs(a);
-            n2 = (int) a;
-            a = n1 - 4;
-            if (a < 0)
-               a = 0;
-            a = a * (1 - 2. * (fi4 / si4)) + 1 / 2.;
-            a = TMath::Abs(a);
-            n3 = (int) (a / fResolution);
-            a = TMath::Abs(si4);
-            if (a <= (2. * fi4))
-               stav = 0;
-            if (n2 >= 1) {
-               if ((i3 - i2 - 1) > n2)
-                  stav = 0;
-            }
-            
-            else {
-               if ((i3 - i2 - 1) > 1)
-                  stav = 0;
-            }
-            if ((i2 - i1 + 1) < n3)
-               stav = 0;
-         }
-         if (stav != 0) {
-            b = sumai / suma;
-            if (peak_index < fMaxPeaks) {
-               fPositionX[peak_index] = b;
-               peak_index += 1;
-            } else {
-               Warning("Search1", "PEAK BUFFER FULL");
-               return 0;
-            }
-         }
-         stav = 1;
-         suma = 0;
-         sumai = 0;
-      }
-      sold = s;
-      fold = f;
-   }
-   fNPeaks = peak_index;
-   return fNPeaks;
-}
-
-
-//_____________________________________________________________________________
-    Int_t TSpectrum::Search1General(float *source,float *dest, int size,
-                                     float sigma, double threshold,
-                                     bool markov, int aver_window)
-{
-
-/////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL GENERAL PEAK SEARCH FUNCTION			   */
-/*	This function searches for peaks in source spectrum		   */
-/*									   */
-/*	Function parameters:						   */
-/*	source-pointer to the vector of source spectrum			   */
-/*	dest-pointer to the vector of resulting SSD spectrum		   */
-/*	size-length of source spectrum			                   */
-/*	sigma-sigma of searched peaks, for details we refer to manual	   */
-/*	threshold-threshold value in % for selected peaks, peaks with      */
-/*                amplitude of SSD less than threshold*highest_SSD_peak/100*/
-/*                are ignored, see manual                                  */
-/*      markov-logical variable, if it is true, first the source spectrum  */
-/*             is replaced by new spectrum calculated using Markov         */
-/*             chains method.                                              */
-/*	aver_window-averanging window of searched peaks, for details       */
-/*                  we refer to manual (applies only for Markov method)    */
-/*									   */
-/////////////////////////////////////////////////////////////////////////////
-   int xmin, xmax, i, l, peak_index = 0;
-   float a, b, maxch;
-   float nom, nip, nim, sp, sm, plocha = 0;
-   int j, lmin, lmax;
-   float s, norma, filter[PEAK_WINDOW], minimum=0;
-   if (sigma < 1) {
-      Error("Search1General", "Invalid sigma, must be greater than or equal to 1");
-      return 0;
-   }	
-   if(threshold<=0||threshold>=100){
-      Error("Search1General", "Invalid threshold, must be positive and less than 100");
-      return 0;
-   }
-   j = (int) (5.0 * sigma + 0.5);
-   if (j >= PEAK_WINDOW / 2) {
-      Error("Search1General", "Too large sigma");
-      return 0;
-   }
-   if (markov == true) {
-      if (aver_window <= 0) {
-         Error("Search1General", "Averanging window must be positive");
-         return 0;
-      }
-   }
-   float *working_space = new float[size];
-   for (i = 0; i < PEAK_WINDOW; i++){
-      filter[i] = 0;
-   }   
-   if (markov == true) {
-      xmin = 0;
-      xmax = size - 1; 	
-      for (i = 0, maxch = 0; i < size; i++) {
-         working_space[i] = 0;
-         if (maxch < source[i])
-            maxch = source[i];         
-         plocha += source[i];
-      }
-      if (maxch == 0)
-         return 0;
-      nom = 1;
-      working_space[xmin] = 1;
-      for (i = xmin; i < xmax; i++) {
-         nip = source[i] / maxch;
-         nim = source[i + 1] / maxch;
-         sp = 0, sm = 0;
-         for (l = 1; l <= aver_window; l++) {
-            if((i + l) > xmax)
-               a = source[xmax] / maxch;
-
-            else
-               a = source[i + l] / maxch;
-            b = a - nip;
-            if (a + nip <= 0)
-               a = 1;
-               
-            else
-               a = TMath::Sqrt(a + nip);
-            b = b / a;
-            b = TMath::Exp(b);
-            sp = sp + b;
-            if((i - l + 1) < xmin)
-               a = source[xmin] / maxch;
-
-            else
-               a = source[i - l + 1] / maxch;               
-
-            b = a - nim;
-            if (a + nim <= 0)
-               a = 1;
-
-            else
-               a = TMath::Sqrt(a + nim);
-            b = b / a;
-            b = TMath::Exp(b);
-            sm = sm + b;
-         }
-         a = sp / sm;
-         a = working_space[i + 1] = working_space[i] * a;
-         nom = nom + a;
-      }
-      for (i = xmin; i <= xmax; i++) {
-         working_space[i] = working_space[i] / nom;
-      }
-      for (i = 0; i < size; i++)
-         source[i] = working_space[i] * plocha;
-   }
-   for (i = -j; i <= j; i++) {
-      a = i;
-      a = -a * a;
-      b = 2.0 * sigma * sigma;
-      a = a / b;
-      a = TMath::Exp(a);
-      s = i;
-      s = s * s;
-      s = s - sigma * sigma;
-      s = s / (sigma * sigma * sigma * sigma);
-      s = s * a;
-      filter[PEAK_WINDOW / 2 + i] = s;
-   }  
-   norma = 0;
-   for (i = 0; i < PEAK_WINDOW; i++){
-      norma = norma + TMath::Abs(filter[i]);
-   }
-   for (i = 0; i < PEAK_WINDOW; i++){
-      filter[i] = filter[i] / norma;
-   }   
-   peak_index = 0;
-   xmin = int(-5.0 * sigma);
-   xmax = int(size + 5.0 * sigma);
-   lmin = int(PEAK_WINDOW / 2 - 5.0 * sigma);
-   lmax = int(PEAK_WINDOW / 2 + 5.0 * sigma);
-   for(i = xmin; i <= xmax; i++){
-      s=0;
-      for(l = lmin; l <= lmax; l++){
-         if((i + l - PEAK_WINDOW / 2) < 0)
-            a = source[0];
-            
-         else if(( i + l - PEAK_WINDOW / 2) >= size)
-            a = source[size - 1];
-            
-         else
-       	    a = source[i + l - PEAK_WINDOW / 2];
-       	    
-       	 s += a * filter[l];
-      }
-      if(i >= 0 && i < size)
-         working_space[i]=s;
-   }
-   for(i = 0; i < size; i++){
-      if(working_space[i] < minimum)
-         minimum = working_space[i];
-   }
-   for(i = 1; i < size - 1; i++){
-      if(working_space[i] < 0 && working_space[i] < working_space[i - 1] && working_space[i] < working_space[i + 1]){
-         if(working_space[i] < threshold * minimum / 100.0){
-            if(peak_index < fMaxPeaks){
-               for(j = i - 1,a = 0,b = 0; j <= i + 1; j++){
-                  a += (double)j * working_space[j];
-                  b += working_space[j];
-               }
-               a = a / b;
-               if(a < 0)
-                  a = 0;
-               if(a >= size - 1)
-                  a = size - 1;
-               fPositionX[peak_index] = a;                  
-               peak_index+=1;
-	    }
-	    
-	    else{
-               Warning("Search1General", "Peak buffer full");
-               return 0;
-            }
-         }
-      }
-   }
-   for(i = 0; i < size; i++){
-      if(working_space[i] < 0)
-         dest[i] = -working_space[i];
-         
-      else
-        dest[i] = 0;
-   }
-   delete[]working_space;
-   fNPeaks = peak_index;
-   return fNPeaks;
-}
-
 
 
 //_____________________________________________________________________________
