@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.31 2005/01/18 21:07:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.32 2005/01/19 16:09:29 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -127,7 +127,7 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
    fX0 = fY0  = 0;
 
    AddInput(kStructureNotifyMask);
-   SetWindowName(); 
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -303,7 +303,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
-   SetWindowName(); 
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -336,7 +336,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
                          kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
-   SetWindowName(); 
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -1828,13 +1828,6 @@ TGCanvas::~TGCanvas()
 
    delete fHScrollbar;
    delete fVScrollbar;
-
-   TGFrame *container = fVport->GetContainer();
-
-   if (container->MustCleanup()) {
-      delete container;
-   }
-
    delete fVport;
 }
 
