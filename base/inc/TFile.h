@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.15 2001/12/02 15:15:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.16 2002/02/01 07:14:01 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    Seek_t            GetSize() const;
+   TList            *GetStreamerInfoList();
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
    virtual void      MakeFree(Seek_t first, Seek_t last);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.55 2002/02/25 11:26:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.56 2002/03/20 18:54:56 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -733,6 +733,44 @@ Seek_t TFile::GetSize() const
    }
 
    return size;
+}
+
+//______________________________________________________________________________
+TList *TFile::GetStreamerInfoList() 
+{
+// Read the list of TStreamerInfo objects written to this file.
+// The function returns a TList. It is the user'responsability
+// to delete the list created by this function.
+//
+// Using the list, one can access additional information,eg:
+//   TFile f("myfile.root");
+//   TList *list = f.GetStreamerInfoList();
+//   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
+//   Int_t classversionid = info->GetClassVersion();
+//   list->Delete();
+//   delete list;
+
+   TList *list = 0;
+   if (fSeekInfo) {
+      TKey *key = new TKey();
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
+      Seek(fSeekInfo);
+      ReadBuffer(buf,fNbytesInfo);
+      key->ReadBuffer(buf);
+      list = (TList*)key->ReadObj();
+      delete [] buffer;
+      delete key;
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
+
+   if (list == 0) {
+      printf("Cannot find the StreamerInfo record in this file\n");
+      return 0;
+   }
+
+   return list;
 }
 
 //______________________________________________________________________________
@@ -1546,26 +1584,10 @@ void TFile::ShowStreamerInfo()
 {
 // Show the StreamerInfo of all classes written to this file.
 
-   TList *list = 0;
-   if (fSeekInfo) {
-      TKey *key = new TKey();
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
+   TList *list = GetStreamerInfoList();
 
-   if (list == 0) {
-      printf("Cannot find the StreamerInfo record in this file\n");
-      return;
-   }
-
+   if (!list) return;
+   
    list->ls();
 
    list->Delete();
