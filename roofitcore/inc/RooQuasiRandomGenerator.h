@@ -1,0 +1,49 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id: RooMCIntegrator.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   21-Aug-2001 DK Created initial version
+ *
+ * Copyright (C) 2001 Stanford University
+ *****************************************************************************/
+#ifndef ROO_QUASI_RANDOM_GENERATOR
+#define ROO_QUASI_RANDOM_GENERATOR
+
+#include "Rtypes.h"
+
+class RooQuasiRandomGenerator {
+public:
+  RooQuasiRandomGenerator();
+  ~RooQuasiRandomGenerator();
+  void reset();
+  Bool_t generate(UInt_t dimension, Double_t vector[]);
+  enum { MaxDimension = 12 , NBits = 31 , MaxDegree = 50 , MaxPrimitiveDegree = 5 };
+protected:
+  void calculateCoefs(UInt_t dimension);
+  void calculateV(const int px[], int px_degree,
+		  int pb[], int * pb_degree, int v[], int maxv);
+  void polyMultiply(const int pa[], int pa_degree, const int pb[],
+		    int pb_degree, int pc[], int  * pc_degree);
+  // Z_2 field operations
+  inline Int_t add(Int_t x, Int_t y) const { return (x+y)%2; }
+  inline Int_t mul(Int_t x, Int_t y) const { return (x*y)%2; }
+  inline Int_t sub(Int_t x, Int_t y) const { return add(x,y); }
+private:
+  Int_t *_nextq;
+  Int_t _sequenceCount;
+
+  static Bool_t _coefsCalculated;
+  static Int_t _cj[NBits][MaxDimension];
+  static const Int_t _primitivePoly[MaxDimension+1][MaxPrimitiveDegree+1];
+  static const Int_t _polyDegree[MaxDimension+1];
+
+  ClassDef(RooQuasiRandomGenerator,0) // quasi-random number generator
+};
+
+#endif
+
+

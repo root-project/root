@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.4 2001/07/31 20:54:06 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.5 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooRandom.hh"
 
 #include "TString.h"
 #include "TIterator.h"
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.4 2001/07/31 20:54:06 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.5 2001/08/01 21:30:15 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -219,7 +219,7 @@ Bool_t RooAcceptReject::acceptEvent(const RooDataSet &cache, RooRealVar *funcVal
   const RooArgSet *event(0);
   while(event= cache.get(++_eventsUsed)) {    
     // accept this cached event?
-    Double_t r= RooGenContext::uniform();
+    Double_t r= RooRandom::uniform();
     if(r*_maxFuncVal > funcVal->getVal()) continue;
     // copy this event into the output container
     if(_verbose) cout << "accepted event (used " << _eventsUsed << " of "

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooGrid.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,8 @@ public:
   Bool_t initialize(const RooAbsFunc &function);
   void resize(UInt_t bins);
   void resetValues();
-  void generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol) const;
+  void generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[],
+		     Double_t &vol, Bool_t useQuasiRandom= kTRUE) const;
   void accumulate(const UInt_t bin[], Double_t amount);
   void refine(Double_t alpha= 1.5);
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.8 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.1 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,7 +13,9 @@
 
 // -- CLASS DESCRIPTION --
 // RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
-// numerical integration, following the VEGAS algorithm.
+// numerical integration, following the VEGAS algorithm originally described
+// in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
+// based on a C version from the 0.9 beta release of the GNU scientific library.
 
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooNumber.hh"
@@ -24,8 +26,10 @@
 ClassImp(RooMCIntegrator)
 ;
 
-RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode, Bool_t verbose) :
-  RooAbsIntegrator(function), _grid(function), _verbose(verbose), _mode(mode), _alpha(1.5)
+RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
+				 GeneratorType genType, Bool_t verbose) :
+  RooAbsIntegrator(function), _grid(function), _verbose(verbose),
+  _genType(genType), _mode(mode), _alpha(1.5)
 {
   // check that our grid initialized without errors
   if(!(_valid= _grid.isValid())) return;
@@ -36,8 +40,13 @@ RooMCIntegrator::~RooMCIntegrator() {
 }
 
 Double_t RooMCIntegrator::integral() {
-  Double_t absError;
-  return vegas(AllStages,10000,3,&absError);
+  // Evaluate the integral using a fixed number of calls to evaluate the integrand
+  // equal to about 10k per dimension. Use the first 5k calls to refine the grid
+  // over 5 iterations of 1k calls each, and the remaining 5k calls for a single
+  // high statistics integration.
+
+  vegas(AllStages,1000*_grid.getDimension(),5);
+  return vegas(ReuseGrid,5000*_grid.getDimension(),1);
 }
 
 Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) {
@@ -130,7 +139,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
       for(UInt_t k = 0; k < _calls_per_box; k++) {
 	// generate a random point in this box
 	Double_t bin_vol(0);
-	_grid.generatePoint(box, x, bin, bin_vol);
+	_grid.generatePoint(box, x, bin, bin_vol, _genType == QuasiRandom ? kTRUE : kFALSE);
 	// evaluate the integrand at the generated point
 	Double_t fval= jacbin*bin_vol*integrand(x);	
 	// update mean and variance calculations

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.28 2001/08/09 01:02:13 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.29 2001/08/21 18:53:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -129,7 +129,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   _name(name), TList(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ; add(var9) ;
+  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
 }
 
 
@@ -137,8 +137,9 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
   if (other._isCopy) {
-    cout << "!!!!! Making copy of copied list !!!!!" << endl ;
-    assert(0) ;
+    cout << ClassName() << "::" << GetName() << ": cannot copy the already copied ";
+    other.Print();
+    assert(other._isCopy == kFALSE) ;
   }
 
   RooTrace::create(this) ;

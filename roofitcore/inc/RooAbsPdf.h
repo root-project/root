@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.21 2001/08/18 02:13:10 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.22 2001/08/21 01:46:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,7 +40,6 @@ public:
   // Toy MC generation
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype) const;
-  virtual void generateEvent(const RooArgSet &whatVars, Int_t maxTrials);
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
@@ -95,10 +94,6 @@ protected:
   virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const {} ;
 
   virtual void operModeHook() ;
-
-  // support interface for generating toy MC samples
-  virtual Double_t generateEnvelope(const RooArgSet &whatVars);
-  virtual Bool_t applyResolution(const RooArgSet &whatVars);
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
 

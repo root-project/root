@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.6 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.7 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooAbsCategoryLValue) 
 ;
@@ -108,6 +108,6 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
 }
 
 void RooAbsCategoryLValue::randomize() {
-  UInt_t ordinal= RooGenContext::integer(numTypes());
+  UInt_t ordinal= RooRandom::integer(numTypes());
   setOrdinal(ordinal);
 }

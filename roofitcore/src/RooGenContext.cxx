@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -23,13 +23,12 @@
 
 #include "TString.h"
 #include "TIterator.h"
-#include "TRandom3.h"
 
 ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -252,23 +251,4 @@ void RooGenContext::printToStream(ostream &os, PrintOption opt, TString indent) 
       _protoVars.printToStream(os,less,indent);
     }
   }
-}
-
-TRandom &RooGenContext::randomGenerator() {
-  // Return a pointer to a singleton random-number generator
-  // implementation. Creates the object the first time it is called.
-
-  static TRandom *_theGenerator= 0;
-  if(0 == _theGenerator) _theGenerator= new TRandom3();
-  return *_theGenerator;
-}
-
-Double_t RooGenContext::uniform() {
-  // Return a number uniformly distributed from (0,1)
-  return randomGenerator().Rndm();
-}
-
-UInt_t RooGenContext::integer(UInt_t n) {
-  // Return an integer uniformly distributed from [0,n-1]
-  return randomGenerator().Integer(n);
 }

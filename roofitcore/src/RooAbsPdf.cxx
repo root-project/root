@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.24 2001/08/18 02:13:10 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.25 2001/08/21 01:46:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -489,53 +489,6 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   // returned dataset.
 
   return 0;
-}
-
-void RooAbsPdf::generateEvent(const RooArgSet &vars, Int_t maxTrials) {
-  // Set the values of the specified subset of our dependents to
-  // generate a new "event" according to our PDF model. Use an accept/reject
-  // algorithm with at most maxTrials trials.
-
-  // loop over accept/reject trials
-  Int_t trial(0);
-  while(trial++ < maxTrials) {
-    // generate an event according to an envelope function
-    Double_t envelopeProb= generateEnvelope(vars);
-    // reject this event?
-    if(envelopeProb > 0 && RooGenContext::uniform() > envelopeProb) continue;
-    // apply resolution smearing
-    applyResolution(vars);
-    // test if the generated event is within the allowed range for each generated variable
-    //if(!vars.areValid()) continue;
-  }
-  if(trial >= maxTrials) {
-    cout << fName << "::" << ClassName() << ":generateEvent: giving up after "
-	 << maxTrials << " trials" << endl;
-  }
-}
-
-Double_t RooAbsPdf::generateEnvelope(const RooArgSet &vars) {
-  // Set the values of the specified variables by sampling them from
-  // an envelope model whose value is always >= our PDF value with
-  // the current settings of our servers that are not in vars. Return
-  // zero if the envelope function is exact, or else return the probability
-  // (target-prob)/(envelope-prob) that the generated point should be
-  // accepted in order to recover the target generator model. The generated
-  // value for real variables does not necessarily need to lie within the
-  // allowed range of each variable in vars, but this will reduce the efficiency
-  // of the generator. The target model is not necessarily the same as our model
-  // since resolution effects can be applied as a separate step using
-  // the applyResolution() method.
-
-  return 0;
-}
-
-Bool_t RooAbsPdf::applyResolution(const RooArgSet &vars) {
-  // Apply any resolution smearing to the specified variables, calculated
-  // using the current settings of our servers that are not in vars. Return
-  // kTRUE if any smearing has been applied, or otherwise kFALSE.
-
-  return kFALSE;
 }
 
 Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars) const {

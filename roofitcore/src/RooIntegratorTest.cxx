@@ -7,54 +7,38 @@
 
 // Study the performance of the Monte Carlo integration algorithm
 
-enum MCMode { Naive, Stratified, Importance, Pseudo };
+enum MCMode { Naive, Stratified, Importance, QuasiRandom };
 
-void runMCStudy() {
+void runMCStudy(Int_t samples= 100000, Bool_t wide= kFALSE) {
+  Double_t exact(1.1763744607);
   RooRealVar x("x","A variable",-1,+1);
+  if(wide) {
+    x.setFitMin(-5);
+    x.setFitMax(+5);
+    exact= 1.7723636230009768;
+  }
   RooRealVar s("s","A variable",1,2);
   RooFormulaVar f2D("f2D","An integrand","exp(-x*x/(s*s))/s",RooArgSet(x,s));
 
   RooRealBinding f(f2D,RooArgSet(x,s));
   RooMCIntegrator If(f);
 
-  gStyle->SetOptStat();
-  TCanvas *c= new TCanvas("mcstudy","MC Integration Study",800,700);
-  c->Divide(2,2);
-
-  c->cd(1);
-  //calculateMCSpread(If,Naive)->DrawCopy();
-  c->Update();
-
-  c->cd(2);
-  calculateMCSpread(If,Stratified)->DrawCopy();
-  c->Update();
-
-  c->cd(3);
-  calculateMCSpread(If,Importance)->DrawCopy();
+  cout << "=== " << samples << " Samples ===" << endl;
+  calculateMCSpread(If,Naive,samples,exact);
+  calculateMCSpread(If,Stratified,samples,exact);
+  calculateMCSpread(If,Importance,samples,exact);
+  calculateMCSpread(If,QuasiRandom,samples,exact);
 }
 
-TH1F *calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
-			Int_t samples= 100000, Int_t trials= 100, Double_t exact= 1.1763744607) {
+void calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
+		       Int_t samples, Double_t exact, Int_t trials= 100) {
 
   // Perform a number of statistically independent Monte Carlo integrations of
   // the specified integrand and return a histogram of the resulting fractional errors
   // relative to the specified exact result. Each integration will use approximately
   // the specified number of integrand samples.
 
-  // calculate the expected fractional error RMS for the naive integration, which will be used
-  // to scale the actual error calculated for each trial.
-  Double_t sigma= 1./sqrt(samples);
-
-  // create an empty histogram to fill with a mode-specific name
-  TString name= Form("mode-%d",mode);
-  Double_t lim(0.01);
-  if(mode == Naive) lim= 1;
-  TH1F *hist= new TH1F(name,name,20,-lim,+lim);
-  hist->SetXTitle("Fractional Error * #sqrt{N}");
-  hist->SetYTitle("Trials");
-
   Double_t sum1(0),sum2(0);
-
   if(mode == Naive) {
     const RooAbsFunc *func= integrator.integrand();
     int dim= func->getDimension();
@@ -66,7 +50,7 @@ TH1F *calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
 	// choose random values for each dependent
 	for(int index= 0; index < dim; index++) {
 	  x[index]= func->getMinLimit(index) +
-	    (func->getMaxLimit(index) - func->getMinLimit(index))*RooGenContext::uniform();
+	    (func->getMaxLimit(index) - func->getMinLimit(index))*RooRandom::uniform();
 	}
 	// evaluate the function at this randomly chosen point
 	sum+= integrator.integrand(x);
@@ -74,18 +58,17 @@ TH1F *calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
       Double_t result= sum*vol/samples;
       sum1+= result;
       sum2+= result*result;
-      Double_t ferr= (result-exact)/exact/sigma;
-      if(trial % 100 == 0) cout << "trial " << trial << " gives " << ferr << endl;
-      hist->Fill(ferr);
     }
     delete x;
   }
   else {
+    integrator.setGenType(RooMCIntegrator::PseudoRandom);
     if(mode == Stratified) {
       integrator.setAlpha(0);
     }
     else {
       integrator.setAlpha(1.5);
+      if(mode == QuasiRandom) integrator.setGenType(RooMCIntegrator::QuasiRandom);
     }
     for(int trial= 0; trial < trials; trial++) {
       Double_t result(0);
@@ -101,20 +84,15 @@ TH1F *calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
       }
       sum1+= result;
       sum2+= result*result;
-      Double_t ferr= (result - exact)/exact/sigma;
-      if(trial % 100 == 0) cout << "trial " << trial << " gives " << ferr << endl;
-      hist->Fill(ferr);
     }
   }
 
-  // calculate the mean (relative to the exact result) and rms (normalized to the exact result)
-  // of this set of trials
-  Double_t mean= sum1/trials - exact;
+  // calculate the mean (relative to the exact result) and rms of this set of trials,
+  // both normalized to the exact result.
+  Double_t mean= (sum1/trials - exact)/exact;
   Double_t rms= sqrt((sum2 - sum1*sum1/trials)/(trials-1.))/exact;
 
   cout << "mode-" << mode << " : " << mean << " +/- " << rms << endl;
-
-  return hist;
 }
 
 // Test Monte Carlo numerical integration

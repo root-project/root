@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.2 2001/08/20 23:45:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
- *   08-Aug-2001 WV Created initial version
+ *   08-Aug-2001 DK Created initial version
  *
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
@@ -21,7 +21,9 @@ public:
 
   // Constructors, assignment etc
   enum SamplingMode { Importance, ImportanceOnly, Stratified };
-  RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance, Bool_t verbose= kFALSE);
+  enum GeneratorType { QuasiRandom, PseudoRandom };
+  RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
+		  GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
   virtual ~RooMCIntegrator();
 
   virtual Double_t integral();
@@ -31,6 +33,9 @@ public:
 
   Double_t getAlpha() const { return _alpha; }
   void setAlpha(Double_t alpha) { _alpha= alpha; }
+
+  GeneratorType getGenType() const { return _genType; }
+  void setGenType(GeneratorType type) { _genType= type; }
 
   const RooGrid &grid() const { return _grid; }
 
@@ -42,6 +47,7 @@ protected:
   Bool_t _verbose;
   Double_t _alpha;
   Int_t _mode;
+  GeneratorType _genType;
 
   // scratch variables preserved between calls to vegas1/2/2
   Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma;

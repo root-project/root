@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.rdl,v 1.2 2001/05/31 21:21:37 david Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.3 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,11 +28,6 @@ public:
 		Bool_t _verbose= kFALSE);
   virtual ~RooGenContext();
   virtual RooDataSet *generate(Int_t nEvents= 0) const;
-
-  // static random number generator interface
-  static TRandom &randomGenerator();
-  static Double_t uniform();
-  static UInt_t integer(UInt_t max);
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {

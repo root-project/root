@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooGrid.cc,v 1.1 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,7 @@
 #include "RooFitCore/RooGrid.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooRandom.hh"
 
 #include <math.h>
 #include <iostream.h>
@@ -141,7 +141,8 @@ void RooGrid::resetValues() {
   }
 }
 
-void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol) const {
+void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
+			    Bool_t useQuasiRandom) const {
   // Generate a random vector in the specified box and and store its
   // coordinates in the x[] array provided, the corresponding bin
   // indices in the bin[] array, and the volume of this bin in vol.
@@ -150,12 +151,20 @@ void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Doub
 
   vol= 1;
 
+  // generate a vector of quasi-random numbers to use
+  if(useQuasiRandom) {
+    RooRandom::quasi(_dim,x);
+  }
+  else {
+    RooRandom::uniform(_dim,x);
+  }
+
   // loop over coordinate axes
   for(UInt_t j= 0; j < _dim; ++j) {
 
     // generate a random point uniformly distributed (in box space)
     // within the box[j]-th box of coordinate axis j.
-    Double_t z= ((box[j] + RooGenContext::uniform())/_boxes)*_bins;
+    Double_t z= ((box[j] + x[j])/_boxes)*_bins;
 
     // store the bin in which this point lies along the j-th
     // coordinate axis and calculate its width and position y
