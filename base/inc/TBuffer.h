@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.35 2004/05/10 12:08:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.36 2004/05/29 17:42:05 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -28,6 +28,15 @@
 #include "Bytes.h"
 #endif
 
+#include <vector>
+
+#ifdef R__HPUX
+namespace std {
+   using ::string;
+   using ::vector;
+}
+#endif
+
 class TStreamerInfo;
 class TClass;
 class TExMap;
@@ -35,6 +44,8 @@ class TExMap;
 class TBuffer : public TObject {
 
 protected:
+   typedef std::vector<TStreamerInfo*> InfoList_t;
+
    Bool_t          fMode;          //Read or write mode
    Int_t           fVersion;       //Buffer format version
    Int_t           fBufSize;       //Size of buffer
@@ -48,6 +59,7 @@ protected:
    TExMap         *fClassMap;      //Map containing object,class pairs for reading
    TObject        *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
    TStreamerInfo  *fInfo;          //pointer to TStreamerInfo object writing/reading the buffer
+   InfoList_t      fInfos;         //stack of pointers to the TStreamerInfos.
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
 
@@ -109,9 +121,9 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast);
 
-   virtual void       IncrementLevel(TStreamerInfo* info) {fInfo=info;}
+   virtual void       IncrementLevel(TStreamerInfo* info); 
    virtual void       SetStreamerElementNumber(Int_t) {}
-   virtual void       DecrementLevel(TStreamerInfo*) {}
+   virtual void       DecrementLevel(TStreamerInfo*);
    TStreamerInfo     *GetInfo() {return fInfo;}
 
    Bool_t   IsReading() const { return (fMode & kWrite) == 0; }

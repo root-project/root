@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.66 2004/05/10 12:08:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.67 2004/05/26 08:57:30 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -65,7 +65,8 @@ static inline ULong_t Void_Hash(const void *ptr)
 
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode)
+TBuffer::TBuffer(EMode mode) : 
+   fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -90,7 +91,8 @@ TBuffer::TBuffer(EMode mode)
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz) : 
+   fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite.
@@ -115,7 +117,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) : 
+   fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -469,6 +472,20 @@ void TBuffer::InitMap()
          fClassMap->Add(0, kNullTag);      // put kNullTag in slot 0
       }
    }
+}
+
+//______________________________________________________________________________
+void TBuffer::IncrementLevel(TStreamerInfo* info)
+{
+   fInfos.push_back(fInfo);
+   fInfo = info;
+}
+
+//______________________________________________________________________________
+void TBuffer::DecrementLevel(TStreamerInfo* /*info*/)
+{
+   fInfo = fInfos.back();
+   fInfos.pop_back();
 }
 
 //______________________________________________________________________________
