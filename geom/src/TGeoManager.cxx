@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.53 2003/06/23 12:31:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.54 2003/06/24 12:37:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1975,12 +1975,14 @@ void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t va
 {
 // Set volume attributes in G3 style.
    TGeoVolume *volume;
+   Bool_t all = kFALSE;
+   if (strstr(name,"*")) all=kTRUE;
    Int_t ivo=0;
    TIter next(fVolumes);
    TString chatt = att;
    chatt.ToLower();
    while ((volume=(TGeoVolume*)next())) {
-      if (strcmp(volume->GetName(), name)) continue;
+      if (strcmp(volume->GetName(), name) && !all) continue;
       ivo++;
       if (chatt.Contains("colo")) volume->SetLineColor(val);
       if (chatt.Contains("lsty")) volume->SetLineStyle(val);
@@ -1990,7 +1992,7 @@ void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t va
    }   
    TIter next1(fGVolumes);
    while ((volume=(TGeoVolume*)next1())) {
-      if (strcmp(volume->GetName(), name)) continue;
+      if (strcmp(volume->GetName(), name) && !all) continue;
       ivo++;
       if (chatt.Contains("colo")) volume->SetLineColor(val);
       if (chatt.Contains("lsty")) volume->SetLineStyle(val);
