@@ -3,5 +3,7 @@
    TFile *file = TFile::Open("CaloTowers.root");
    Events->SetScanField(0);
    int n = Events->Scan("CaloTowerCollection.obj.e");
-   return !(n==4207);
+   if (n!=4207) { return 1; }
+   n = Events->Scan("CaloTowerCollection.obj.layers.e");
+   return !(n==3128);
 }
