@@ -79,10 +79,51 @@ class map {
   typedef typename Allocator::difference_type       difference_type;
 #endif
 
-  class iterator 
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)
-	: public _Bidit<T, difference_type, const_pointer, const_reference>
-#elif defined(G__VISUAL)
+	class const_iterator
+		: public _Bidit<value_type,difference_typ,  const_pointer, const_reference>
+	{	// iterator for nonmutable _Tree
+	public:
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef _Dift difference_type;
+		typedef _Ctptr pointer;
+		typedef const_reference reference;
+
+		const_iterator();
+		const_reference operator*() const;
+		_Ctptr operator->() const'
+		const_iterator& operator++();
+		const_iterator operator++(int);
+		const_iterator& operator--();
+		const_iterator operator--(int);
+		bool operator==(const const_iterator& _Right) const;
+		bool operator!=(const const_iterator& _Right) const;
+		void _Dec();
+		void _Inc();
+	};
+
+	class iterator
+		: public const_iterator
+	{	// iterator for mutable _Tree
+	public:
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef map::difference_type difference_type;
+		typedef map::pointer pointer;
+		typedef map::reference reference;
+
+		iterator();
+		iterator(_Nodeptr _Pnode);
+		reference operator*() const;
+		pointer operator->() const;
+		iterator& operator++();
+		iterator operator++(int);
+		iterator& operator--();
+		iterator operator--(int);
+   };
+
+#else
+  class iterator 
+#if defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
@@ -113,6 +154,8 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
+#endif
+
 #if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
@@ -153,9 +196,14 @@ class map {
   friend bool operator!=(const map::reverse_iterator& x
                         ,const map::reverse_iterator& y) const;
 
+
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+   typedef std::reverse_iterator<iterator> reverse_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+#else
   typedef const iterator const_iterator;
   typedef const reverse_iterator const_reverse_iterator;
-
+#endif
   // _lib.map.cons_ construct/copy/destroy:
   map();
 #if 0
