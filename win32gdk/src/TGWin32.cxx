@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.8 2002/08/19 16:37:15 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.9 2002/08/21 08:21:45 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #include <ctype.h>
 #include <process.h>
 #include "gdk/gdkkeysyms.h"
-
 
 //---- globals
 
@@ -367,6 +366,7 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
 
    // Create Thread for Non-Blocking Splash Screen
    hThread2 = (HANDLE)_beginthreadex( NULL, 0, &HandleSplashThread, 0, 0, &thread2ID );
+
 }
 
 //______________________________________________________________________________
@@ -419,7 +419,6 @@ TGWin32::~TGWin32()
 
    if (fWindows)
       ::operator delete(fWindows);
-
    if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
 }
 
@@ -3119,6 +3118,7 @@ BOOL CALLBACK ShowChildProc(HWND hwndChild, LPARAM lParam)
 //______________________________________________________________________________
 UInt_t TGWin32::ExecCommand(TGWin32Command * code)
 {
+
 #if 0
    GdkWindow *event_window;
    GdkWindow *parent_window;
@@ -3184,8 +3184,8 @@ void TGWin32::UpdateWindow(int mode)
    }
    if (mode == 1)
       gdk_flush();
-   else
-      GdiFlush();
+//   else
+//      GdiFlush();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.14 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.15 2002/08/17 16:29:30 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -295,6 +295,7 @@ public:
    Bool_t       ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color);
    Bool_t       AllocColor(Colormap_t cmap, ColorStruct_t &color);
    void         QueryColor(Colormap_t cmap, ColorStruct_t &color);
+   void         FreeColor(Colormap_t cmap, ULong_t pixel);
    Int_t        EventsPending();
    void         NextEvent(Event_t &event);
    void         Bell(Int_t percent);
@@ -373,6 +374,15 @@ public:
    Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    Bool_t       EqualRegion(Region_t rega, Region_t regb);
    void         GetRegionBox(Region_t reg, Rectangle_t *);
+   char       **ListFonts(char *fontname, Int_t max, Int_t &count);
+   void         FreeFontNames(char **fontlist);
+   Drawable_t   CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad);
+   void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
+   void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
+   void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
+                         Int_t dx, Int_t dy, Int_t x, Int_t y,
+                         UInt_t w, UInt_t h);
+   void         DeleteImage(Drawable_t img);
 
    ClassDef(TGX11,0)  //Interface to X11
 };

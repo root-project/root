@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.12 2002/02/21 11:30:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.13 2002/08/17 16:29:30 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -206,6 +206,7 @@ public:
    virtual Bool_t       ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color);
    virtual Bool_t       AllocColor(Colormap_t cmap, ColorStruct_t &color);
    virtual void         QueryColor(Colormap_t cmap, ColorStruct_t &color);
+   virtual void         FreeColor(Colormap_t cmap, ULong_t pixel);
    virtual Int_t        EventsPending();
    virtual void         NextEvent(Event_t &event);
    virtual void         Bell(Int_t percent);
@@ -284,6 +285,15 @@ public:
    virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+   virtual char       **ListFonts(char *fontname, Int_t max, Int_t &count);
+   virtual void         FreeFontNames(char **fontlist);
+   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad);
+   virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
+   virtual void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
+   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
+                                 Int_t dx, Int_t dy, Int_t x, Int_t y,
+                                 UInt_t w, UInt_t h);
+   virtual void         DeleteImage(Drawable_t img);
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
@@ -392,6 +402,7 @@ inline Bool_t       TVirtualX::CreatePictureFromData(Drawable_t, char **, Pixmap
 inline Bool_t       TVirtualX::ReadPictureDataFromFile(const char *, char ***) { return kFALSE; }
 inline void         TVirtualX::DeletePictureData(void *) { }
 inline void         TVirtualX::SetDashes(GContext_t, Int_t, const char *, Int_t) { }
+inline void         TVirtualX::FreeColor(Colormap_t, ULong_t) { }
 inline Int_t        TVirtualX::EventsPending() { return 0; }
 inline void         TVirtualX::Bell(Int_t) { }
 inline void         TVirtualX::CopyArea(Drawable_t, Drawable_t, GContext_t,
@@ -467,5 +478,14 @@ inline Bool_t       TVirtualX::EmptyRegion(Region_t) { return kFALSE; }
 inline Bool_t       TVirtualX::PointInRegion(Int_t, Int_t, Region_t) { return kFALSE; }
 inline Bool_t       TVirtualX::EqualRegion(Region_t, Region_t) { return kFALSE; }
 inline void         TVirtualX::GetRegionBox(Region_t, Rectangle_t *) { }
+inline char       **TVirtualX::ListFonts(char *fontname, Int_t max, Int_t &count) { return 0; }
+inline void         TVirtualX::FreeFontNames(char **fontlist) { }
+inline Drawable_t   TVirtualX::CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad) { return 0; }
+inline void         TVirtualX::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height) { }
+inline void         TVirtualX::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel) { }
+inline void         TVirtualX::PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
+                                        Int_t dx, Int_t dy, Int_t x, Int_t y,
+                                        UInt_t w, UInt_t h) { }
+inline void         TVirtualX::DeleteImage(Drawable_t img) { }
 
 #endif

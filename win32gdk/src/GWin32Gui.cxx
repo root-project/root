@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.4 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.5 2002/07/23 12:23:46 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -1331,6 +1331,14 @@ void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
    color.fRed = xc.red;
    color.fGreen = xc.green;
    color.fBlue = xc.blue;
+}
+
+//______________________________________________________________________________
+void TGWin32::FreeColor(Colormap_t cmap, ULong_t pixel)
+{
+   // Free color cell with specified pixel value.
+
+   // FIXME: to be implemented.
 }
 
 //______________________________________________________________________________
@@ -2740,4 +2748,56 @@ void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
    rect->fY = r.y;
    rect->fWidth = r.width;
    rect->fHeight = r.height;
+}
+
+//______________________________________________________________________________
+char **TGWin32::ListFonts(char *fontname, Int_t /*max*/, Int_t &count)
+{
+    car **fontlist;
+    Int_t fontcount = 0;
+    fontlist = gdk_font_list_new(fontname, &fontcount);
+    count = fontcount;
+    if (fontcount > 0)
+        return fontlist;
+    return 0;
+}
+
+//______________________________________________________________________________
+void TGWin32::FreeFontNames(char **fontlist)
+{
+    gdk_font_list_free(fontlist);
+}
+
+//______________________________________________________________________________
+Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height, Int_t /*bitmap_pad*/)
+{
+    return (Drawable_t) gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(),
+                                      &width, &height);
+}
+
+//______________________________________________________________________________
+void TGWin32::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
+{
+    width  = ((GdkImage*)id)->width;
+    height = ((GdkImage*)id)->height;
+}
+
+//______________________________________________________________________________
+void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
+{
+    gdk_image_put_pixel((GdkImage*)id, x, y, pixel);
+}
+
+//______________________________________________________________________________
+void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
+                       Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+    gdk_draw_image((GdkDrawable *) id, (GdkGC *)gc, (GdkImage*)img, x, y, dx, dy, w, h);
+    gdk_flush();
+}
+
+//______________________________________________________________________________
+void TGWin32::DeleteImage(Drawable_t img)
+{
+    gdk_image_unref((GdkImage*)img);
 }

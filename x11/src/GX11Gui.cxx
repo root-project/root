@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.22 2002/02/21 12:14:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.23 2002/02/25 18:06:24 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1265,13 +1265,21 @@ void TGX11::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 
    // still very slight dark shift ??
    //QueryColors((Colormap)cmap, &xc, 1);
-   //printf("1 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
+   //printf("1 xc.red = %u, xc.green = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
    XQueryColor(fDisplay, (Colormap)cmap, &xc);
-   //printf("2 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
+   //printf("2 xc.red = %u, xc.green = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
 
    color.fRed   = xc.red;
    color.fGreen = xc.green;
    color.fBlue  = xc.blue;
+}
+
+//______________________________________________________________________________
+void TGX11::FreeColor(Colormap_t cmap, ULong_t pixel)
+{
+   // Free color cell with specified pixel value.
+
+   XFreeColors(fDisplay, (Colormap)cmap, &pixel, 1, 0);
 }
 
 //______________________________________________________________________________
@@ -2363,4 +2371,73 @@ void TGX11::GetRegionBox(Region_t reg, Rectangle_t *rect)
    // Return smallest enclosing rectangle.
 
    XClipBox((Region) reg, (XRectangle*) rect);
+}
+
+//______________________________________________________________________________
+char **TGX11::ListFonts(char *fontname, Int_t max, Int_t &count)
+{
+   // Return list of font names matching fontname regexp, like "-*-times-*".
+
+   char **fontlist;
+   Int_t fontcount = 0;
+   fontlist = XListFonts(fDisplay, fontname, 10000, &fontcount);
+   count = fontcount;
+   return fontlist;
+}
+
+//______________________________________________________________________________
+void TGX11::FreeFontNames(char **fontlist)
+{
+   // Free list of font names.
+
+   XFreeFontNames(fontlist);
+}
+
+//______________________________________________________________________________
+Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad)
+{
+   // Create a client-side XImage. Returns handle to XImage.
+
+   XImage *xim = XCreateImage(fDisplay, fVisual, fDepth, ZPixmap,
+                              0, 0, width, height, bitmap_pad, 0);
+
+   // use calloc since Xlib will use free() in XDestroyImage
+   xim->data = (char *) calloc(1, xim->bytes_per_line * xim->height);
+
+   return (Drawable_t) xim;
+}
+
+//______________________________________________________________________________
+void TGX11::GetImageSize(Drawable_t img, UInt_t &width, UInt_t &height)
+{
+   // Get size of XImage img.
+
+   width  = ((XImage*)img)->width;
+   height = ((XImage*)img)->height;
+}
+
+//______________________________________________________________________________
+void TGX11::PutPixel(Drawable_t img, Int_t x, Int_t y, ULong_t pixel)
+{
+   // Set pixel at specified location in XImage img.
+
+   XPutPixel((XImage*) img, x, y, pixel);
+}
+
+//______________________________________________________________________________
+void TGX11::PutImage(Drawable_t win, GContext_t gc, Drawable_t img, Int_t dx,
+                     Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Put (x,y,w,h) part of image img in window win at position dx,dy.
+
+   XPutImage(fDisplay, (Drawable) win, (GC) gc, (XImage*) img,
+             x, y, dx, dy, w, h);
+}
+
+//______________________________________________________________________________
+void TGX11::DeleteImage(Drawable_t img)
+{
+   // Destroy XImage img.
+
+   XDestroyImage((XImage*) img);
 }
