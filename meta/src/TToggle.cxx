@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.2 2001/10/29 16:23:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.3 2002/02/21 15:40:08 rdm Exp $
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 // This facility is required in context Pop-Up menu, when the only      //
 // information about how to toggle a field is a name of methhod which   //
 // sets it.                                                             //
-// This Object may be also used for toggling an integer variable ,      //
+// This class may be also used for toggling an integer variable,        //
 // which may be important while building universal objects...           //
 // When user provides a "set-method" of name SetXXX this object tries   //
 // automaticaly find a matching "get-method" by lookin for a method     //
@@ -70,10 +70,8 @@ Bool_t  TToggle::GetState()
 {
    // Returns the state of Toggle according to its current value and
    // fOnValue ; Returns true if they match.
-   if (!fInitialized){
-      Error("GetState", "object has not been initialized yet!");
-      return 0;
-   } else {
+
+   if (fInitialized) {
       fGetter->Execute(fObject,fValue);
       return (fState=(fValue==fOnValue));
    }
@@ -85,9 +83,7 @@ void TToggle::SetState(Bool_t state)
    // Sets the value of toggle to fOnValue or fOffValue according to passed
    // argument.
 
-   if (!fInitialized)
-      Error("SetState", "object has not been initialized yet!");
-   else {
+   if (fInitialized) {
       char stringon[7];
       char stringoff[7];
       sprintf(stringon,"%li",fOnValue);
@@ -105,9 +101,7 @@ void TToggle::SetValue(Long_t val)
    // Sets the value of toggle and modifies its state according to whether
    // the value is equal to fOnValue.
 
-   if (!fInitialized)
-      Error("SetValue()", "object has not been initialized yet!");
-   else {
+   if (fInitialized) {
       char stringval[7];
       sprintf(stringval,"%li",val);
       fSetter->Execute(fObject, stringval);
@@ -144,13 +138,20 @@ void TToggle::SetToggledObject(TObject *obj, TMethod *anymethod)
    // Initializes it to toggle an object's datamember using this object's
    // method.
 
-   fObject=obj;
-   TDataMember *m=anymethod->FindDataMember();
-   if (!m)
-      Error("SetToggledObject", "cannot determine TDataMember!");
-   else {
-      fGetter=m->GetterMethod(obj->IsA());
-      fSetter=m->SetterMethod(obj->IsA());
+   fObject = obj;
+   TDataMember *m = anymethod->FindDataMember();
+   if (!m) {
+      // try to see if the TMethod has a getter associated via the *GETTER=
+      // comment string
+      if (anymethod->GetterMethod()) {
+         fGetter = anymethod->GetterMethod();
+         fSetter = anymethod->SetterMethod();
+         fInitialized = 1;
+      } else
+         Error("SetToggledObject", "cannot determine getter method for %s", anymethod->GetName());
+   } else {
+      fGetter = m->GetterMethod(obj->IsA());
+      fSetter = m->SetterMethod(obj->IsA());
       fInitialized = 1;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.3 2003/06/13 14:21:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.4 2003/06/13 16:21:21 rdm Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 class TList;
 class TDataMember;
+class TMethodCall;
 class TClass;
 class G__MethodInfo;
 
@@ -45,6 +46,9 @@ class TMethod : public TFunction {
 private:
    TClass                 *fClass;           //pointer to the class
    EMenuItemKind           fMenuItem;        //type of menuitem in context menu
+   TString                 fGetter;          //state getter in case this is a *TOGGLE method
+   TMethodCall            *fGetterMethod;    //methodcall for state getter in case this is a *TOGGLE method
+   TMethodCall            *fSetterMethod;    //methodcall for state setter in case this is a *TOGGLE method
 
    void                    CreateSignature();
 
@@ -52,11 +56,14 @@ public:
                            TMethod(G__MethodInfo *info = 0, TClass *cl = 0);
                            TMethod(const TMethod &org);
    TMethod&                operator=(const TMethod &rhs);
-   virtual                ~TMethod() { }
+   virtual                ~TMethod();
    virtual TObject        *Clone(const char *newname="") const;
    TClass                 *GetClass() const { return fClass; }
    EMenuItemKind           IsMenuItem() const { return fMenuItem; }
    virtual const char     *GetCommentString();
+   virtual const char     *Getter() const { return fGetter; }
+   virtual TMethodCall    *GetterMethod();
+   virtual TMethodCall    *SetterMethod();
    virtual TDataMember    *FindDataMember();
    virtual TList          *GetListOfMethodArgs();
    virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}

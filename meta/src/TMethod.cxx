@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.3 2003/06/13 14:21:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.4 2003/06/13 16:21:21 rdm Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TClass.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TMethodCall.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TInterpreter.h"
@@ -38,16 +39,23 @@ TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
 {
    // Default TMethod ctor. TMethods are constructed in TClass.
    // Comment strings are pre-parsed to find out whether the method is
-   // a contxt-menu item.
+   // a context-menu item.
 
-   fClass = cl;
+   fClass        = cl;
+   fGetterMethod = 0;
+   fSetterMethod = 0;
 
    if (fInfo) {
       const char *t = fInfo->Title();
 
-      if (t && strstr(t, "*TOGGLE"))
+      if (t && strstr(t, "*TOGGLE")) {
          fMenuItem = kMenuToggle;
-      else
+         char *s;
+         if ((s = strstr(t, "*GETTER="))) {
+            fGetter = s+8;
+            fGetter = fGetter.Strip(TString::kBoth);
+         }
+      } else
       if (t && strstr(t, "*MENU"))
          fMenuItem = kMenuDialog;
       else
@@ -65,8 +73,11 @@ TMethod::TMethod(const TMethod& orig) : TFunction(orig)
 {
    // Copy ctor.
 
-   fClass = orig.fClass;
-   fMenuItem = orig.fMenuItem;
+   fClass        = orig.fClass;
+   fMenuItem     = orig.fMenuItem;
+   fGetter       = orig.fGetter;
+   fGetterMethod = 0;
+   fSetterMethod = 0;
 }
 
 //______________________________________________________________________________
@@ -76,10 +87,26 @@ TMethod& TMethod::operator=(const TMethod& rhs)
 
    if (this != &rhs) {
       TFunction::operator=(rhs);
-      fClass = rhs.fClass;
-      fMenuItem = rhs.fMenuItem;
+      fClass        = rhs.fClass;
+      fMenuItem     = rhs.fMenuItem;
+      fGetter       = rhs.fGetter;
+      if (fGetterMethod)
+         delete fGetterMethod;
+      fGetterMethod = 0;
+      if (fSetterMethod)
+         delete fSetterMethod;
+      fSetterMethod = 0;
    }
    return *this;
+}
+
+//______________________________________________________________________________
+TMethod::~TMethod()
+{
+   // Cleanup.
+
+   delete fGetterMethod;
+   delete fSetterMethod;
 }
 
 //______________________________________________________________________________
@@ -239,6 +266,30 @@ TDataMember *TMethod::FindDataMember()
 
     //if nothing found - return null -pointer:
     return 0;
+}
+
+//______________________________________________________________________________
+TMethodCall *TMethod::GetterMethod()
+{
+   // Return call environment for the getter method in case this is a
+   // *TOGGLE method (for the context menu).
+
+   if (!fGetterMethod && fMenuItem == kMenuToggle && fGetter != "" && fClass) {
+      fGetterMethod = new TMethodCall(fClass, Getter(), "");
+   }
+   return fGetterMethod;
+}
+
+//______________________________________________________________________________
+TMethodCall *TMethod::SetterMethod()
+{
+   // Return call environment for this method in case this is a
+   // *TOGGLE method which takes a single boolean or integer argument.
+
+   if (!fSetterMethod && fMenuItem == kMenuToggle && fClass) {
+      fSetterMethod = new TMethodCall(fClass, GetName(), "1");
+   }
+   return fSetterMethod;
 }
 
 //______________________________________________________________________________
