@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.64 2004/05/10 12:10:09 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.65 2004/05/10 15:06:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6521,12 +6521,13 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
    dw = (HWND) GDK_DRAWABLE_XID((GdkWindow *) dest);
    point.x = src_x;
    point.y = src_y;
-   MapWindowPoints(sw,         // handle of window to be mapped from
+   ::MapWindowPoints(sw,        // handle of window to be mapped from
                    dw,          // handle to window to be mapped to
                    &point,      // pointer to array with points to map
                    1);          // number of structures in array
-   ch = ChildWindowFromPoint(dw, point);
+   ch = ::ChildWindowFromPoint(dw, point);
    child = (Window_t) gdk_xid_table_lookup(ch);
+
    if (child == src) {
       child = (Window_t) 0;
    }
@@ -6580,18 +6581,18 @@ void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
 
    window = (HWND) GDK_DRAWABLE_XID((GdkWindow *)id);
    rootw = (Window_t)GDK_ROOT_PARENT();
-   GetCursorPos(&currPt);
-   chw = ChildWindowFromPoint(window, currPt);
-   ClientToScreen(window, &mousePt);
+   ::GetCursorPos(&currPt);
+   chw = ::WindowFromPoint(currPt);
+   ::ClientToScreen(window, &mousePt);
    root_x = mousePt.x;
    root_y = mousePt.y;
    sPt.x = mousePt.x;
    sPt.y = mousePt.y;
-   ScreenToClient(window, &sPt);
+   ::ScreenToClient(window, &sPt);
    win_x = sPt.x;
    win_y = sPt.y;
    childw = (Window_t)gdk_xid_table_lookup(chw);
-   GetKeyboardState (kbd);
+   ::GetKeyboardState (kbd);
 
    if (kbd[VK_SHIFT] & 0x80) {
       umask |= GDK_SHIFT_MASK;
