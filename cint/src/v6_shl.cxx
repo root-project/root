@@ -933,7 +933,8 @@ char *shlfile;
   }
 
   /* set fine name */
-  strcpy(G__ifile.name,shlfile);
+ if (G__ifile.name!=shlfile)
+   strcpy(G__ifile.name,shlfile);
 
 #ifndef G__OLDIMPLEMENTATION670
 #ifdef G__WIN32
