@@ -1089,7 +1089,7 @@ if [ -n "$haveconfig" ]; then
                 < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 
-    if [ "x$enable_rpath" = "yes" ]; then
+    if [ "x$enable_rpath" = "xyes" ]; then
         sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
                 < Makefile.tmp > Makefile.tmpp
         mv Makefile.tmpp Makefile.tmp
