@@ -1,7 +1,7 @@
 # Makefile of ROOT for Linux with glibc and KCC compiler
 
-# When changing OPT to -O you can also change +K0 to +K3
-# When changing OPT to -g you can also change +K3 to +K0
+# When changing OPT to -O you can also change +K0 to +K1
+# When changing OPT to -g you can also change +K1 to +K0
 
 PLATFORM      = linux
 

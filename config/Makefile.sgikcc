@@ -13,7 +13,7 @@ CXXOPT        = +K0
 OPT           = -g -O0
 NOOPT         =
 else
-CXXOPT        = +K3
+CXXOPT        = +K1
 OPT           = -O2
 NOOPT         =
 endif

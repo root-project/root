@@ -8,7 +8,7 @@ CXXOPT        = +K0 -O0
 NOOPT         =
 else
 OPT           = -O4
-CXXOPT        = +K3
+CXXOPT        = +K1
 NOOPT         =
 endif
 
