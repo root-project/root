@@ -51,6 +51,7 @@ options="                 \
    enable_table           \
    enable_thread          \
    enable_venus           \
+   enable_xml             \
 "
 
 #
@@ -83,6 +84,7 @@ RFIO             \
 CERNLIB          \
 PYTHIA           \
 PYTHIA6          \
+PYTHONDIR        \
 VENUS            \
 DCACHE           \
 CHIRP            \
@@ -93,6 +95,7 @@ GLOBUS_LOCATION  \
 SRP              \
 AFS              \
 TABLE            \
+XMLDIR           \
 "
 configenvvars=
 for c in $envvars ; do
@@ -572,6 +575,7 @@ enable/disable options, prefix with either --enable- or --disable-
    table           Build libTable contrib library
    thread          Thread support (currently only POSIX threads)
    venus           Venus EG support, requires libVenus
+   xml             XML I/O interface
 
 with options, prefix with --with-, enables corresponding support
 
@@ -735,6 +739,8 @@ if test $# -gt 0 ; then
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
+      --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
+      --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       ################################################################
@@ -1537,6 +1543,42 @@ if test ! "x$enable_python" = "xno" ; then
     else
         # Python support requires the explicitlink option
         enable_explicitlink="yes"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% xml - the XML I/O interface
+#
+# (See http://www.xmlsoft.org)
+#
+# If the user has set the flags "--disable-xml", we don't check for
+# XML at all.
+#
+if test ! "x$enable_xml" = "xno" ; then
+    # Check for xml include and library
+    if test "x$platform" = "xwin32"; then
+       check_header "libxml/tree.h" "$xmlincdir" $XMLDIR/include
+       xmlincdir=$found_dir
+
+       check_library "libxml2_a" "$enable_shared" "$xmllibdir" $XMLDIR/lib
+       xmllib=$found_lib
+       xmllibdir=$found_dir
+       xmllibextra=" lib/iconv_a.lib Ws2_32.lib"
+    else
+       check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
+           /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
+       xmlincdir=$found_dir
+
+       check_library "libxml2" "$enable_shared" "$xmllibdir" $XMLDIR $XMLDIR/lib \
+	   $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
+       xmllib=$found_lib
+       xmllibdir=$found_dir
+       xmllibextra=" -lxml2"
+    fi
+
+    if test "x$xmlincdir" = "x" || test "x$xmllib" = "x"; then
+        enable_xml="no"
     fi
 fi
 
@@ -2475,6 +2517,9 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@tutdir@|$tutdir|"                    \
     -e "s|@venuslib@|$venuslib|"                \
     -e "s|@venuslibdir@|$venuslibdir|"          \
+    -e "s|@xmlincdir@|$xmlincdir|"              \
+    -e "s|@xmllib@|$xmllib|"                    \
+    -e "s|@xmllibdir@|$xmllibdir|"              \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \

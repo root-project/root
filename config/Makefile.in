@@ -113,6 +113,10 @@ PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := @pythonincdir@
 PYTHONLIBFLAGS := @pythonlibflags@
 
+XMLLIBDIR      := @xmllibdir@
+XMLLIB         := @xmllib@
+XMLINCDIR      := @xmlincdir@
+
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@
 SRPINCDIR      := @srpincdir@
