@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.52 2001/11/04 11:04:21 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.53 2001/11/16 18:29:30 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -428,12 +428,19 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
          fprintf(fp, "         for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
          const char *s = TemplateArg(m).Name();
          if (!strncmp(s, "const ", 6)) s += 6;
-         if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
-         else
-            fprintf(fp, "            %s[R__l].clear();\n", m.Name());
          fprintf(fp, "            int R__i, R__n;\n");
          fprintf(fp, "            R__b >> R__n;\n");
+         if (m.Property() & G__BIT_ISPOINTER) {
+            fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
+            if (!strcmp(stlc, "vector")) {
+               fprintf(fp, "            %s[R__l]->reserve(R__n);\n", m.Name());
+            }  
+         } else {
+            fprintf(fp, "            %s[R__l].clear();\n", m.Name());
+            if (!strcmp(stlc, "vector")) {
+               fprintf(fp, "            %s[R__l].reserve(R__n);\n", m.Name());
+            }  
+         }
          fprintf(fp, "            for (R__i = 0; R__i < R__n; R__i++) {\n");
          fprintf(fp, "               %s R__t;\n", s);
          if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
