@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.50 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.51 2004/09/06 16:42:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -61,7 +61,8 @@ private :
    Int_t                 fVisOption;        // global visualization option
    Int_t                 fVisLevel;         // maximum visualization depth
    Int_t                 fNsegments;        // number of segments to approximate circles
-   Int_t                 fNtracks;          //  number of tracks
+   Int_t                 fNtracks;          // number of tracks
+   Int_t                 fMaxVisNodes;      // maximum number of visible nodes
    TVirtualGeoTrack     *fCurrentTrack;     //! current track
    Int_t                 fNpdg;             // number of different pdg's stored
    Int_t                 fPdgId[256];       // pdg conversion table
@@ -174,6 +175,7 @@ public:
    TVirtualGeoPainter    *GetGeomPainter();
    Int_t                  GetBombMode() const  {return fExplodedView;}
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
+   Int_t                  GetMaxVisNodes() const {return fMaxVisNodes;}
    Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
    Double_t               GetTmax() const {return fTmax;}
    TGeoVolume            *GetPaintVolume() const {return fPaintVolume;}
@@ -199,7 +201,7 @@ public:
    void                   ViewLeaves(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisLeaves
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*
    void                   RestoreMasterVolume(); // *MENU*
-
+   void                   SetMaxVisNodes(Int_t maxnodes=10000); // *MENU*
    //--- geometry checking
    void                   AnimateTracks(Double_t tmin=0, Double_t tmax=5E-8, Int_t nframes=200, Option_t *option="/*"); // *MENU*
    void                   CheckGeometry(Option_t *option="");
@@ -474,7 +476,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 7)          // geometry manager
+  ClassDef(TGeoManager, 8)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.41 2004/08/13 07:38:11 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.42 2004/09/06 16:42:33 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -446,6 +446,27 @@ void TGeoPainter::DefaultColors()
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
+   Int_t maxnodes = gGeoManager->GetMaxVisNodes(); 
+   if (maxnodes > 0) {
+      //if (the total number of nodes of the top volume is less than maxnodes
+      // we can visualize everything.
+      TGeoVolume *top = gGeoManager->GetTopVolume();
+      //top->CountNodes(99);
+      //recompute the best visibility level
+      Int_t maxn = 0;
+      for (Int_t level = 1;level<20;level++) {
+         fVisLevel = level;
+         Int_t nnodes = top->CountNodes(level);
+         if (nnodes > maxnodes) {
+            fVisLevel--;
+            break;
+         }
+         if (nnodes == maxn) break;
+         maxn = nnodes;
+      }
+      printf("Drawing %d nodes with %d visible levels\n",maxn,fVisLevel);
+   }
+         
    TString opt = option;
    opt.ToLower();
    fPaintingOverlaps = kFALSE;

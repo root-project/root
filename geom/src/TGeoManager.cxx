@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.92 2004/10/06 09:40:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.93 2004/10/08 10:26:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -500,6 +500,8 @@ void TGeoManager::Init()
    fOverlaps = new TObjArray(256);
    fNNodes = 0;
    fLevel = 0;
+   fMaxVisNodes = 10000;
+   
    memset(fLastPoint, 0, kN3);
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
@@ -2219,6 +2221,13 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
       fClippingShape = shape;
    }
    painter->SetClippingShape(shape);
+}
+
+//_____________________________________________________________________________
+void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
+// set the maximum number of visible nodes.
+   
+   fMaxVisNodes = maxnodes;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoVolume.cxx,v 1.43 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.44 2004/08/30 07:04:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -538,7 +538,7 @@ void TGeoVolume::CheckShapes()
 Int_t TGeoVolume::CountNodes(Int_t nlevels)
 {
 // count total number of subnodes starting from this volume, nlevels down
-   if (fNtotal) return fNtotal;
+   //if (fNtotal) return fNtotal;
    fNtotal = 1;
    if (!fNodes || !nlevels) return fNtotal;
    Int_t nd = GetNdaughters();
