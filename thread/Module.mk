@@ -29,10 +29,17 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
 ALLLIBS      += $(THREADLIB)
 ifeq ($(PLATFORM),linux)
+ifneq ($(ARCH),win32gcc)
 CXXFLAGS     += -pthread
 CFLAGS       += -pthread
 CINTCXXFLAGS += -pthread
 CINTCFLAGS   += -pthread
+else
+CXXFLAGS     += -D_REENTRANT
+CFLAGS       += -D_REENTRANT
+CINTCXXFLAGS += -D_REENTRANT
+CINTCFLAGS   += -D_REENTRANT
+endif
 else
 ifeq ($(PLATFORM),fbsd)
 CXXFLAGS     += -pthread
