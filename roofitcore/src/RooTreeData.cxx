@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.27 2001/11/29 07:24:11 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.28 2001/12/05 17:38:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -401,6 +401,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
 
   // Loop over events in source tree   
   RooAbsArg* destArg(0) ;
+  Int_t numInvalid(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
   for(Int_t i=0; i < nevent; ++i) {
     Int_t entryNumber=tClone->GetEntryNumber(i);
@@ -413,14 +414,12 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
      Bool_t allOK(kTRUE) ;
      while (destArg = (RooAbsArg*)_iterator->Next()) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
-       if (!sourceArg->isValid()) {
-	 cout << "RooTreeData::loadValues(" << GetName() << ") row " << i 
-	      << ": TTree branch " << sourceArg->GetName() 
-	      << " has an invalid value, value not copied" << endl ;
+       destArg->copyCache(sourceArg) ;
+       if (!destArg->isValid()) {
+	 numInvalid++ ;
 	 allOK=kFALSE ;
 	 break ;
        }       
-       destArg->copyCache(sourceArg) ;
      }   
 
      // Does this event pass the cuts?
@@ -430,6 +429,10 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
 
      Fill() ;
    }
+
+  if (numInvalid>0) {
+    cout << "RooTreeData::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
+  }
   
   SetTitle(t->GetTitle());
 
