@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.105 2002/07/16 17:49:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.106 2002/08/05 21:14:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3116,8 +3116,9 @@ void atest() {
    const Int_t kNstat = 4;
    Stat_t stats[kNstat], totstats[kNstat];
    TH1 *h;
-   Int_t i, nentries=0;
+   Int_t i, nentries=(Int_t)fEntries;
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    Bool_t same = kTRUE;
    while ((h=(TH1*)next())) {
       if (!h->InheritsFrom(TH1::Class())) {
