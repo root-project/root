@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.84 2001/08/13 09:15:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.85 2001/08/13 17:24:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -852,11 +852,29 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    }
 
    // generate default functions, ClassDef and trailer
-   fprintf(fp,"\n   %s() {;}\n",GetName());
-   fprintf(fp,"   virtual ~%s() {;}\n\n",GetName());
+   fprintf(fp,"\n   %s();\n",GetName());
+   fprintf(fp,"   virtual ~%s();\n\n",GetName());
    fprintf(fp,"   ClassDef(%s,%d) //\n",GetName(),fClassVersion);
    fprintf(fp,"};\n");
-   fprintf(fp,"\n   ClassImp(%s)\n",GetName());
+   fprintf(fp,"\n   ClassImp(%s)\n\n",GetName());
+   //generate constructor code
+   fprintf(fp,"%s::%s() {\n",GetName(),GetName());
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      if (element->GetType() == kObjectp || element->GetType() == kObjectP) {
+         fprintf(fp,"   %s = 0;\n",element->GetName());
+      }
+   }
+   fprintf(fp,"}\n\n");
+   //generate destructor code
+   fprintf(fp,"%s::~%s() {\n",GetName(),GetName());
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      if (element->GetType() == kObjectp || element->GetType() == kObjectP) {
+         fprintf(fp,"   delete %s;   %s = 0;\n",element->GetName(),element->GetName());
+      }
+   }
+   fprintf(fp,"}\n\n");
    fprintf(fp,"#endif\n");
 
    fclose(fp);
