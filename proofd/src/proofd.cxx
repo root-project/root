@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.16 2000/12/19 16:18:27 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.17 2000/12/19 16:27:50 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -244,7 +244,7 @@ void ProofdSRPUser(const char *user)
    if (!*user)
       ErrorFatal("ProofdSRPUser: bad user name");
 
-   if (kSRootdPass) { }  // remove compiler warning
+   if (kSRootdPass[0]) { }  // remove compiler warning
 
 #ifdef R__SRP
 
@@ -838,6 +838,5 @@ int main(int argc, char **argv)
 
    }
 
-   // not reached
-   return 0;
+   return 0;   // not reached
 }

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.14 2000/12/19 16:18:27 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.15 2000/12/19 16:27:50 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -488,7 +488,7 @@ again:
 
    if (result && !noupdate) {
       unsigned long ino = inode;
-      sprintf(msg, "%s %lu %s %s %d\n", gFile, ino, smode, gUser, getpid());
+      sprintf(msg, "%s %lu %s %s %d\n", gFile, ino, smode, gUser, (int) getpid());
       write(fid, msg, strlen(msg));
    }
 
@@ -699,7 +699,7 @@ void RootdSRPUser(const char *user)
    if (!*user)
       ErrorFatal(kErrBadUser, "RootdSRPUser: bad user name");
 
-   if (kSRootdPass) { }  // remove compiler warning
+   if (kSRootdPass[0]) { }  // remove compiler warning
 
 #ifdef R__SRP
 
@@ -1314,6 +1314,5 @@ int main(int argc, char **argv)
 
    }
 
-   // not reached
-   return 0;
+   return 0;   // not reached
 }
