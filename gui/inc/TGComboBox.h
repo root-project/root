@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.9 2004/02/19 09:44:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.10 2004/07/06 10:55:57 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -47,7 +47,6 @@ public:
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetWhitePixel());
 
-   virtual Bool_t HandleButton(Event_t *);
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void EndPopup();
 
@@ -139,8 +138,6 @@ public:
    TGLineStyleComboBox(const TGWindow *p, Int_t id,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
-   
-   virtual Bool_t HandleButton(Event_t *event);
       
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
     

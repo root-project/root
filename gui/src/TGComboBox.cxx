@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.18 2004/06/01 15:26:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.19 2004/07/06 10:55:57 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -75,16 +75,6 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
-{
-   // Handle mouse button event in combo box popup.
-
-   if (event->fType == kButtonRelease && event->fCode == kButton1)
-      EndPopup();
-   return kTRUE;
-}
-
-//______________________________________________________________________________
 void TGComboBoxPopup::EndPopup()
 {
    // Ungrab pointer and unmap popup window.
@@ -119,7 +109,6 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
-   EndPopup();
 }
 
 
@@ -205,7 +194,7 @@ void TGComboBox::Init()
    fComboFrame->Resize(fComboFrame->GetDefaultSize());
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
-                        kButtonReleaseMask, kNone, kNone);
+                        kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different
@@ -280,23 +269,25 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
    // Handle mouse button events in the combo box.
 
    if (event->fType == kButtonPress) {
-      if ((Window_t)event->fUser[0] == fDDButton->GetId()) {  // fUser[0] = child window
+      Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
+
+      if ( child == fDDButton->GetId()) { 
          fDDButton->SetState(kButtonDown);
+
+         if (fTextEntry && (child == fTextEntry->GetId())) {
+            return fTextEntry->HandleButton(event);
+         }
+         int      ax, ay;
+         Window_t wdummy;
+
+         gVirtualX->TranslateCoordinates(fId, fComboFrame->GetParent()->GetId(),
+                                         0, fHeight, ax, ay, wdummy);
+   
+         fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
+
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
-   } else {
-      if (fTextEntry && ((Window_t)event->fUser[0] == fTextEntry->GetId())) {
-         return fTextEntry->HandleButton(event);
-      }
-      int      ax, ay;
-      Window_t wdummy;
-
-      fDDButton->SetState(kButtonUp);
-      gVirtualX->TranslateCoordinates(fId, (fComboFrame->GetParent())->GetId(),
-                                 0, fHeight, ax, ay, wdummy);
-
-      fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
    }
    return kTRUE;
 }
@@ -304,7 +295,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
 {
-   //
+   // handle double click in text entry
 
    return fTextEntry ? fTextEntry->HandleDoubleClick(event) : kTRUE;
 }
@@ -312,7 +303,7 @@ Bool_t TGComboBox::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleMotion(Event_t *event)
 {
-   //
+   // handle pointer motion in text entry
 
    return fTextEntry ? fTextEntry->HandleMotion(event) : kTRUE;
 }
@@ -320,7 +311,7 @@ Bool_t TGComboBox::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleSelection(Event_t *event)
 {
-   //
+   // handle selection  in text entry
 
    return fTextEntry ? fTextEntry->HandleSelection(event) : kTRUE;
 }
@@ -328,7 +319,7 @@ Bool_t TGComboBox::HandleSelection(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 {
-   //
+   // handle selection request in text entry
 
    return fTextEntry ? fTextEntry->HandleSelectionRequest(event) : kTRUE;
 }
@@ -356,6 +347,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                }
                Layout();
                fComboFrame->EndPopup();
+               fDDButton->SetState(kButtonUp);
                SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_COMBOBOX),
                            fWidgetId, parm2);
                if (e->InheritsFrom(TGTextLBEntry::Class())) {
@@ -397,7 +389,13 @@ void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
 
    out << endl << "   // combo box" << endl;
    out << "   TGComboBox *";
-   out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
+
+   if (!fTextEntry) {
+      out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
+   } else {
+      out << GetName() << " = new TGComboBox(" << fParent->GetName() << ",";
+       out << '\"' <<  fTextEntry->GetText() << '\"' << "," <<fWidgetId;
+   }
 
    if (fBackground == GetWhitePixel()) {
       if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
@@ -443,25 +441,6 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    fComboFrame->SetHeight(25);
    Select(1);  // to have first entry selected
-}
-
-//______________________________________________________________________________
-Bool_t TGLineStyleComboBox::HandleButton(Event_t *event)
-{
-   // Handle mouse button events in a line style combo box.
-
-   if (event->fType == kButtonPress) {
-      if ((Window_t)event->fUser[0] == fDDButton->GetId())   // fUser[0] = child window
-         fDDButton->SetState(kButtonDown);
-   } else {
-      int      ax, ay;
-      Window_t wdummy;
-      fDDButton->SetState(kButtonUp);
-      gVirtualX->TranslateCoordinates(fId,(fComboFrame->GetParent())->GetId(),
-                                      0, fHeight, ax, ay, wdummy);
-      fComboFrame->PlacePopup(ax, ay, fWidth-2, fSelEntry->GetDefaultHeight()*4);
-   }
-   return kTRUE;
 }
 
 //______________________________________________________________________________
