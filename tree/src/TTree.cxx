@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.73 2001/05/20 13:57:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.74 2001/05/21 11:10:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -987,7 +987,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          Error("Bronch","Pointer to TClonesArray is null");
          return 0;
       }
-      TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel-1);
+      TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
