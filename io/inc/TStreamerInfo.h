@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.14 2001/01/28 13:55:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.15 2001/02/02 11:16:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -87,7 +87,9 @@ public:
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
    TObjArray          *GetElements() const {return fElements;}
-   Int_t               GetNumber() const {return fNumber;}
+   ULong_t            *GetElems()   const {return fElem;}
+   Int_t               GetNdata()   const {return fNdata;}
+   Int_t               GetNumber()  const {return fNumber;}
    Int_t              *GetLengths() const {return fLength;}
    ULong_t            *GetMethods() const {return fMethod;}
    Int_t              *GetOffsets() const {return fOffset;}
