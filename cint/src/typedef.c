@@ -138,6 +138,7 @@ void G__define_type()
   char temp[G__LONGLINE];
 #endif
   int isnext;
+  int tmptypenum;
   fpos_t next_fpos;
   int /* itag=0,*/ mparen,store_tagnum,store_def_struct_member=0;
   struct G__var_array *store_local;
@@ -584,7 +585,6 @@ void G__define_type()
   if(strcmp(typename,"long")==0) {
 #endif /* G__PHILIPPE34 */
 #ifndef G__OLDIMPLEMENTATION1836
-    int tmptypenum;
     if('l'==type) {
       G__loadlonglong(&itemp,&tmptypenum,G__LONGLONG);
       type = 'u';
