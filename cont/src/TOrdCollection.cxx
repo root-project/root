@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.5 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -128,7 +128,7 @@ void TOrdCollection::AddBefore(TObject *before, TObject *obj)
          AddFirst(obj);
          return;
       }
-      AddAt(obj, idx-1);
+      AddAt(obj, idx);
    }
 }
 
