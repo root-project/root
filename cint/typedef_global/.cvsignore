@@ -1,1 +1,12 @@
 *dict*
+*.log
+*.def
+*.dll
+*.exp
+*.lib
+*.pdb
+.def
+*.out
+*.d
+*Dict*
+output

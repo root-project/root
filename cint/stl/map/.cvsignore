@@ -1,2 +1,9 @@
 *.log
 *.d
+*.def
+*.dll
+*.exp
+*.lib
+*.pdb
+dict*
+.def

@@ -4,3 +4,11 @@ slaveDict.C
 slaveDict.h
 *.log
 *Dict*
+*.def
+*.dll
+*.exp
+*.lib
+*.pdb
+.def
+*.out
+*.d
