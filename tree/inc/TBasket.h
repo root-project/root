@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.4 2000/12/20 15:45:37 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -43,7 +43,6 @@ protected:
     Int_t       fNevBuf;          //Number of entries in basket
     Int_t       fLast;            //Pointer to last used byte in basket
     Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
-    char       *fZipBuffer;       //Basket compressed buffer (if compression)
     Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
     Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
     TBranch    *fBranch;          //Pointer to the basket support branch
@@ -60,7 +59,6 @@ public:
             Int_t  *GetDisplacement() const {return fDisplacement;}
             Int_t  *GetEntryOffset() const {return fEntryOffset;}
             Int_t   GetEntryPointer(Int_t Entry);
-            char   *GetZipBuffer() const {return fZipBuffer;}
             Int_t   GetNevBuf() const {return fNevBuf;}
             Int_t   GetNevBufSize() const {return fNevBufSize;}
             Int_t   GetLast() const {return fLast;}

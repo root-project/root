@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.3 2000/12/20 15:45:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.4 2001/01/04 13:25:48 rdm Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,10 +36,14 @@ TBasket::TBasket()
 //               Default contructor
    fDisplacement  = 0;
    fEntryOffset   = 0;
-   fZipBuffer     = 0;
    fBufferRef     = 0;
    fBuffer        = 0;
    fHeaderOnly    = kFALSE;
+   fBufferSize    = 0;
+   fNevBufSize    = 0;
+   fNevBuf        = 0;
+   fLast          = 0;
+   fBranch        = 0;
 }
 
 //_______________________________________________________________________
@@ -66,7 +70,6 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fLast        = fKeylen;
    fBuffer      = 0;
    fBranch      = branch;
-   fZipBuffer   = 0;
    fHeaderOnly  = kFALSE;
    if (fNevBufSize) fEntryOffset = new Int_t[fNevBufSize];
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
@@ -80,12 +83,10 @@ TBasket::~TBasket()
 
    if (fDisplacement) delete [] fDisplacement;
    if (fEntryOffset)  delete [] fEntryOffset;
-   if (fZipBuffer)    delete [] fZipBuffer;
 //   if (fBufferRef)   delete fBufferRef; //this is done in the TKey destructor
 //   fBufferRef   = 0;
    fDisplacement= 0;
    fEntryOffset = 0;
-   fZipBuffer   = 0;
 }
 
 //_______________________________________________________________________
