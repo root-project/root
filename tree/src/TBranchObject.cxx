@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.4 2000/12/04 16:45:09 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -269,7 +269,7 @@ void TBranchObject::SetAddress(void *add)
       }
       return;
    }
-   if (!cl->GetListOfRealData())  cl->BuildRealData();
+   if (!cl->GetListOfRealData())  cl->BuildRealData(obj);
    char *fullname = new char[200];
    const char *bname = GetName();
    Int_t lenName = strlen(bname);
