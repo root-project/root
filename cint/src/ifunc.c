@@ -5558,7 +5558,11 @@ int isrecursive;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1727
+#ifndef G__OLDIMPLEMENTATION2061
+  if(!templatedConstructor && (pexplicitarg=strchr(funcname,'<'))) {
+#else
   if((pexplicitarg=strchr(funcname,'<'))) {
+#endif
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;
