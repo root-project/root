@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.4 2000/11/27 10:39:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.5 2000/11/27 12:23:15 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1199,8 +1199,7 @@ static char *Format(const char* format, va_list ap)
    int l = strlen(buf);
    if (l > fld_size) {
       buf[50] = 0;
-      fprintf(stderr, "Fatal in <Format>: buf = %s...\n", buf);
-      Fatal("Format", "buffer overflow");
+      Error("Format", "Buffer overflow : buf = %s...\n", buf);
    }
    bfree = buf+l+1;
    return buf;
