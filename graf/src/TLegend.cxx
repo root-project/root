@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.11 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.12 2002/03/20 09:01:30 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -581,7 +581,7 @@ void TLegend::SetHeader( const char *header )
   first->SetTextAlign(0);
   first->SetTextAngle(0);
   first->SetTextColor(0);
-  first->SetTextFont(62); // default font is 62 for the header
+  first->SetTextFont(GetTextFont()); // default font is TLegend font for the header
   first->SetTextSize(0);
   fPrimitives->AddFirst((TObject*)first);
 }
