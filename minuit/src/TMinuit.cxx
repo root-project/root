@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.20 2002/06/03 08:39:46 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.21 2002/07/10 19:21:15 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -282,6 +282,7 @@ some variables.
 #include "TMinuit.h"
 #include "TMath.h"
 #include "TError.h"
+#include "TPluginManager.h"
 #include "Api.h"
 
 TMinuit *gMinuit;
@@ -502,12 +503,15 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
     return (TObject *)0;
   }
   fStatus=0;
-  // check if TGraph class is loaded
-  if (gROOT->LoadClass("TGraph","Graf")) return 0;
-  // create graph via the interpreter
+  // create graph via the  PluginManager
   xcoor[npoints] = xcoor[0];  // add first point at end to get closed polyline
   ycoor[npoints] = ycoor[0];
-  TObject *gr =  (TObject *)gROOT->ProcessLineFast(Form("new TGraph(%d,(Double_t*)0x%lx,(Double_t*)0x%lx);",npoints+1,xcoor,ycoor));
+  TObject *gr = 0;
+  TPluginHandler *h;
+  if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
+     if (h->LoadPlugin() != -1)
+       gr = (TObject*)h->ExecPlugin(3,npoints,xcoor,ycoor);
+  }
   delete [] xcoor;
   delete [] ycoor;
   return gr;
