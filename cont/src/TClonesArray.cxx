@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.23 2001/12/02 22:19:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.24 2001/12/24 11:11:57 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -494,7 +494,7 @@ void TClonesArray::Streamer(TBuffer &b)
       Bool_t optim = TStreamerInfo::CanOptimize();
       if (optim) TStreamerInfo::Optimize(kFALSE);
       TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      sinfo->ForceWriteInfo();
+      sinfo->ForceWriteInfo((TFile *)b.GetParent());
       if (optim) TStreamerInfo::Optimize(kTRUE);
       if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
 
