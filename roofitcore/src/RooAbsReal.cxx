@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.73 2002/02/06 01:31:37 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.74 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -301,7 +301,7 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 
 
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset=0) const 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset) const 
 {
   TString name(GetName()) ;
   TString title(GetTitle()) ;
