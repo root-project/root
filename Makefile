@@ -97,6 +97,9 @@ endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
+ifneq ($(CERNLIBS),)
+MODULES      += hbook
+endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
@@ -594,6 +597,7 @@ showbuild:
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
+	@echo "CERNLIBS           = $(CERNLIBS)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"
