@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.20 2002/03/22 22:43:57 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.21 2002/06/03 22:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -60,6 +60,8 @@ protected:
   mutable TIterator* _intIter1 ;    //! Iterator of PDF list
   mutable TIterator* _intIter2 ;    //! Iterator of PDF list
   mutable TIterator* _intIter  ;    //! Iterator of PDF list
+
+  virtual void operModeHook() ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
 

@@ -10,12 +10,6 @@ void makedocs(const char *version="Development", const char *where= "./html")
   gEnv->SetValue("Root.Html.LastUpdate"," *    File: $Id: ");
 
   RooHtml docMaker(version);
-  docMaker.Convert("demo13.cc","Using variable binning") ;
-  docMaker.Convert("demo14.cc","Plotting a PDF projection on a subset of the event sample") ;
-  docMaker.Convert("demo15.cc","Plotting with a cut on the likelihood") ;
-  docMaker.Convert("demo16.cc","Plotting slices of simultaneous PDFs") ;
-  return ;
-
   docMaker.MakeAll(kTRUE,"Roo*");
   docMaker.MakeIndexNew("Roo*");  
 

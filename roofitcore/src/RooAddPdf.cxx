@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.44 2002/07/02 23:36:12 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.45 2002/07/10 18:09:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -441,8 +441,11 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
 
   Double_t coefSum(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
-    RooAbsPdf::globalSelectComp(kTRUE) ;
-    Double_t proj = ((RooAbsReal*)_pdfProjList.at(i))->getVal() ;
+    RooAbsPdf::globalSelectComp(kTRUE) ;    
+
+    RooAbsReal* pp = ((RooAbsReal*)_pdfProjList.at(i)) ; 
+    Double_t proj = pp->getVal() ;    
+   
     RooAbsPdf::globalSelectComp(kFALSE) ;
     _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;

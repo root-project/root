@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.23 2002/05/31 22:48:41 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.24 2002/06/03 22:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -418,6 +418,27 @@ void RooProdPdf::syncAnaInt(RooArgSet& partIntSet, Int_t code) const
   }
 }
 
+
+void RooProdPdf::operModeHook() 
+{
+  if (_partIntSet1.isOwning()) {
+    _intIter1->Reset() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)_intIter1->Next()) {
+      arg->setOperMode(_operMode) ;
+    }
+  }
+  if (_partIntSet2.isOwning()) {
+    _intIter2->Reset() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)_intIter2->Next()) {
+      arg->setOperMode(_operMode) ;
+    }
+  }
+  return ;
+}
+
+
 Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
@@ -439,10 +460,11 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
   RooAbsReal* partInt ;
   Double_t value(1.0) ;
   _intIter->Reset() ;
+
   while(partInt=(RooAbsReal*)_intIter->Next()) {    
     Double_t piVal = partInt->getVal(normSet) ;
     value *= piVal ;
-//     cout << GetName() << ": value *= " << piVal << " (" << partInt->GetName() << ")" << endl ;
+    //cout << GetName() << ": value *= " << piVal << " (" << partInt->GetName() << ")" << endl ;
     if (value<_cutOff) {
       //cout << "RooProdPdf::aIWN(" << GetName() << ") calculation cut off after " << partInt->GetName() << endl ; 
       break ;
@@ -461,7 +483,7 @@ RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet
 
 Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
-  Bool_t ret(kFALSE) ;
+  Bool_t ret(kFALSE) ;  
 
   _intIter1->Reset() ;
   RooAbsArg* arg ;

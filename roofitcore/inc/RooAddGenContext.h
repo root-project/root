@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddGenContext.rdl,v 1.2 2001/10/13 00:38:53 david Exp $
+ *    File: $Id: RooAddGenContext.rdl,v 1.3 2001/10/13 23:02:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -33,9 +33,12 @@ protected:
 
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void updateThresholds() ;
 
   RooAddGenContext(const RooAddGenContext& other) ;
 
+  const RooArgSet* _vars ;       
+  const RooArgSet* _pdfSet ;
   const RooAddPdf *_pdf ;        //  Original PDF
   TList _gcList ;                //  List of component generator contexts
   Int_t  _nComp ;                //  Number of PDF components
