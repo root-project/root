@@ -67,6 +67,7 @@ clean() {
    rm -f $CINTDIRS/queue.dll
    rm -f $CINTDIRS/valarray.dll
    rm -f $CINTDIRS/exception.dll
+   rm -f $CINTDIRS/complex.dll
 }
 
 execute() {
@@ -91,6 +92,7 @@ cpdllwin32() {
    mv -f bin/stack.dll     $CINTDIRS
    mv -f bin/exception.dll $CINTDIRS
    mv -f bin/list.dll      $CINTDIRS
+   mv -f bin/complex.dll   $CINTDIRS
 }
 
 ##### first delete old dll's #####
@@ -369,6 +371,14 @@ execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_exception.o \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" exception.$SOEXT \
    $CINTDIRS/exception.$SOEXT $STLDIR/G__cpp_exception.o
 rename $CINTDIRS/exception
+
+execute "$CINT -w1 -zcomplex -n$STLDIR/G__cpp_complex.cxx -D__MAKECINT__ \
+         -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/cmplx.h"
+execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_complex.o \
+         -c $STLDIR/G__cpp_complex.cxx"
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" complex.$SOEXT \
+   $CINTDIRS/complex.$SOEXT $STLDIR/G__cpp_complex.o
+rename $CINTDIRS/complex
 
 rm -f $STLDIR/G__* $STLDIR/rootcint_*  $STLDIR/stlLoader_*
 
