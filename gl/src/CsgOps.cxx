@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.2 2005/04/06 06:23:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.3 2005/04/06 09:43:39 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1332,8 +1332,12 @@ namespace RootCsg {
 				if ((newClassification != lastClassification) && newClassification && lastClassification)
 				{
 					Int_t newVertexIndex = fMesh.Verts().size();
+               #ifdef R__SOLARIS // Solaris CC objects to portability correct typename use
+					fMesh.Verts().push_back(TMesh::Vertex());
+               #else
 					fMesh.Verts().push_back(typename TMesh::Vertex());
-					Vector3 v = aVertex - lastVertex;
+               #endif
+               Vector3 v = aVertex - lastVertex;
 					Double_t sideA = plane.SignedDistance(lastVertex);
 					Double_t epsilon = -sideA / plane.Normal().Dot(v);
 					fMesh.Verts().back().Pos() = lastVertex + (v * epsilon);
