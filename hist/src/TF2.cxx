@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.8 2001/07/19 17:12:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.9 2001/10/27 10:38:50 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -410,7 +410,7 @@ Double_t TF2::GetSave(const Double_t *xx)
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t t    = (x-xlow)/dx;
-   Double_t u    = (y-ylow)/dx;
+   Double_t u    = (y-ylow)/dy;
    Int_t k1      = jbin*(npx+1) + ibin;
    Int_t k2      = jbin*(npx+1) + ibin +1;
    Int_t k3      = (jbin+1)*(npx+1) + ibin +1;
