@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.158 2003/02/28 09:27:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.159 2003/02/28 20:26:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -528,11 +528,11 @@ void TStreamerInfo::BuildOld()
                   if (dm->IsaPointer()) newtype += kOffsetP;
                   else if (element->GetArrayLength() > 1) newtype += kOffsetL;
                   element->SetNewType(newtype);
-                  printf("element: %s::%s %s has new type: %s/%d\n",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName(),newtype);
+                  if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s/%d",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName(),newtype);
                }
             } else {
                element->SetNewType(-2);
-               printf("Cannot convert %s::%s from type:%s to type:%s, skip element\n",
+               Warning("BuildOld","Cannot convert %s::%s from type:%s to type:%s, skip element",
                   GetName(),element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
             }
          }
@@ -546,7 +546,7 @@ void TStreamerInfo::BuildOld()
             if (dt) {
                if (element->GetType() != dt->GetType()) {
                   element->SetNewType(dt->GetType());
-                  printf("element: %s::%s %s has new type: %s\n",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+                  if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
                }
             }
          } else {
