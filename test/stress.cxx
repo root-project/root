@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.50 2004/01/06 16:21:02 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.51 2004/01/06 16:24:27 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -18,8 +18,9 @@
 //
 // To run interactively, do
 // root -b
-//  Root > .x stress.cxx(1000)  run standard test with 1000 events
-//  Root > .x stress.cxx(30)    run with 30 events only
+//  Root > .L stress.cxx
+//  Root > stress(1000)  run standard test with 1000 events
+//  Root > stress(30)    run with 30 events only
 //
 // The standard test with 1000 events will create several files.
 // The size of all files is around 100 Mbytes.
@@ -138,10 +139,6 @@ Double_t ntotin=0, ntotout=0;
 void stress(Int_t nevent, Int_t style = 1)
 {
    //Main control function invoking all test programs
-
-   //just in case an interactive version runs stress.cxx, check that
-   //libEvent library is loaded
-   if (!gROOT->GetClass("Event")) gSystem->Load("libEvent");
    
    if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
