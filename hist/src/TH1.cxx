@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.7 2000/06/16 07:37:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.8 2000/06/28 14:35:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3017,7 +3017,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    if (opt.Contains("D")) {
       printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
-      printf(" Kolmo Max Dist = %g\n",dfmax);
+      printf(" Kolmo Probabil = %g, Max Dist = %g\n",prb,dfmax);
       if (opt.Contains("N")) 
       printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
    }
