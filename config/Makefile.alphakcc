@@ -60,7 +60,7 @@ SOEXT         = so
 SYSLIBS       = -lm
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap -lbsd
-CRYPTLIBS     = -L$(ROOTSYS)/lib -lcrypt
+CRYPTLIBS     = -lcrypt
 
 # Fortran:
 F77           = f77

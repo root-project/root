@@ -121,6 +121,14 @@ KRB5LIB        := @krb5lib@
 KRB5LIBDIR     := @krb5libdir@
 KRB5INCDIR     := @krb5incdir@
 
+COMERRLIB      := @comerrlib@
+COMERRLIBDIR   := @comerrlibdir@
+
+RESOLVLIB      := @resolvlib@
+
+CRYPTOLIB      := @cryptolib@
+CRYPTOLIBDIR   := @cryptolibdir@
+
 GLOBUSLIB      := @globuslib@
 GLOBUSLIBDIR   := @globuslibdir@
 GLOBUSINCDIR   := @globusincdir@

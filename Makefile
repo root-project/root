@@ -126,10 +126,8 @@ endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
-ifneq ($(KRB5INCDIR),)
 ifneq ($(KRB5LIB),)
 MODULES      += krb5auth
-endif
 endif
 ifneq ($(LDAPINCDIR),)
 ifneq ($(LDAPCLILIB),)
@@ -430,6 +428,7 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
+	@$(MAKECINTDLLS) clean
 	-@cd test && $(MAKE) distclean
 	-@cd test/RootShower && $(MAKE) distclean
 
@@ -462,7 +461,7 @@ html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
-install:
+install: all
 	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \

@@ -1,5 +1,5 @@
 #! /bin/sh
-
+#
 # A (not so) simple configure script.
 #
 # Authors: Christian Holm Christensen and Fons Rademakers
@@ -17,51 +17,59 @@
 found_lib=no
 found_dir=no
 found_hdr=no
+show_pkglist=no
 noact="no"
 
+options="                 \
+   enable_afs             \
+   enable_alien           \
+   enable_asimage         \
+   enable_cern            \
+   enable_chirp           \
+   enable_dcache          \
+   enable_exceptions      \
+   enable_explicitlink    \
+   enable_globus          \
+   enable_krb5            \
+   enable_ldap            \
+   enable_mysql           \
+   enable_opengl          \
+   enable_openiv          \
+   enable_pgsql           \
+   enable_pythia          \
+   enable_pythia6         \
+   enable_qt              \
+   enable_rfio            \
+   enable_rpath           \
+   enable_sapdb           \
+   enable_shadowpw        \
+   enable_shared          \
+   enable_soversion       \
+   enable_srp             \
+   enable_table           \
+   enable_thread          \
+   enable_venus           \
+"
+
+#
+# This sets all options to "yes" - we turn off those we don't want
+# on per default explictly afterwards.
+#
+for c in $options ; do eval $c="yes" ; done
+
 enable_afs=no
-enable_alien=yes
-enable_asimage=yes
-enable_cern=yes
-enable_chirp=yes
-enable_dcache=yes
-enable_globus=yes
-enable_krb5=yes
-enable_ldap=yes
-enable_mysql=yes
-enable_opengl=yes
-enable_openiv=yes
-enable_pgsql=yes
-enable_pythia=yes
-enable_pythia6=yes
-enable_qt=yes
-enable_rfio=yes
+enable_explicitlink=no
 enable_rpath=no
-enable_sapdb=yes
 enable_shadowpw=
-enable_shared=yes
 enable_soversion=no
-enable_srp=yes
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
-enable_venus=yes
-enable_exceptions=yes
-enable_explicitlink=no
-show_pkglist=no
-
-options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
-         enable_pythia enable_pythia6 enable_qt enable_rfio enable_dcache \
-         enable_rpath enable_sapdb enable_shadowpw enable_shared \
-         enable_soversion enable_srp enable_table enable_thread enable_venus \
-         enable_krb5 enable_ldap enable_openiv enable_alien enable_asimage \
-         enable_chirp enable_globus \
-         enable_exceptions enable_explicitlink "
-
 
 ######################################################################
 #
 ### echo %%% Some common functions
 #
+#_____________________________________________________________________
 message() {
     # Write a simple message to std out
     if test $# -lt 1 ; then
@@ -71,6 +79,7 @@ message() {
     echo $ac_n "$* ... $ac_c"
 }
 
+#_____________________________________________________________________
 checking_msg() {
     # Write a simple "checking" message to std out.
     if test $# -lt 1 ; then
@@ -88,6 +97,7 @@ checking_msg() {
     echo $ac_n " $1 ... $ac_c"
 }
 
+#_____________________________________________________________________
 check_library() {
     # This function will try to locate a library [$1] in the specific
     # directory [$3] or in a default path [$*].  If the second argument
@@ -131,7 +141,7 @@ check_library() {
     if test ! "x$shared" = "xno" ; then
 	slibs=""
 	for i in $lib ; do
-	    for ext in .so .sl .dylib ; do
+	    for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
 		slibs="$slibs $i$ext"
 	    done
 	done
@@ -209,6 +219,7 @@ check_library() {
     unset libdirl
 }
 
+#_____________________________________________________________________
 check_header()  {
     # This function will try to locate a header [$1] in the specific
     # directory [$2] or in a default path [$*].
@@ -277,6 +288,7 @@ check_header()  {
     unset hdrdir
 }
 
+#_____________________________________________________________________
 check_symbol() {
     # This function will try to locate a symbol [$1] in a specific
     # library [$2] and in a given directory [$3].
@@ -323,6 +335,49 @@ check_symbol() {
     fi
 }
 
+#_____________________________________________________________________
+guess_architecture () {
+    # Try to guess the architecture of the host system
+    # Note, that there's no attempt at guessing the compiler.
+    # The `native' compiler is used in all cases.
+    # If a user really want a specifific compiler, s/he better use the
+    # first argument to do so.
+    arch=`uname -s | tr '[A-Z]' '[a-z]'`
+    chip=`uname -m`
+    rele=`uname -r`
+    case "$arch:$chip:$rele" in
+        aix*)                  arch=aix5            ;;
+        osf1*:alpha:*)         arch=alphacxx6       ;;
+        freebsd*:*:4*)         arch=freebsd4        ;;
+        freebsd*:*:*)          arch=freebsd         ;;
+        hp-ux:ia64:*)          arch=hpuxia64acc     ;;
+        hp-ux:*:*)             arch=hpuxacc         ;;
+        hurd*:*:*)             arch=hurddeb         ;;
+        linux:ia64:*)          arch=linuxia64gcc    ;;
+        linux:x86_64:*)        arch=linuxx8664gcc   ;;
+        linux:alpha:*)         arch=linuxalphaegcs  ;;
+        linux:arm*:*)          arch=linuxarm        ;;
+        linux:ppc*:*)          arch=linuxppcegcs    ;;
+        linux:i*86:*)          arch=linux           ;;
+        lynx:*:*)              arch=lynxos          ;;
+        darwin:i*86:*)         arch=macosx          ;;
+        darwin:powerpc:*)      arch=macosx          ;;
+        irix*:sgi*:*)          arch=sgicc           ;;
+        sunos:sun*:6*)         arch=solarisCC5      ;;
+        sunos:sun*:5*)         arch=solarisCC5      ;;
+        sunos:sun*:4*)         arch=solaris         ;;
+        windows_*:*86:*)       arch=win32gdk        ;;
+        windows_*:pentium:*)   arch=win32gdk        ;;
+        windows_*:ia64)        arch=win32gdk        ;;
+        *)
+            echo "Attempts at guessing your architecture failed."
+            echo "Please specify the architecture as the first argument."
+            echo "Do '$0 --help' for a list of avaliable architectures."
+            exit 1
+            ;;
+   esac
+}
+
 ###################################################################
 #
 ### echo %%% Some skeleton and config files
@@ -364,15 +419,23 @@ fi
 ### echo %%% Help function
 #
 confhelp() {
+vers=`cat build/version_number`
 cat <<EOF
-Usage:     $0 <architecture> [flag=value]
+\`configure' configures ROOT $vers to adapt to many kind of systems.
+
+Usage:     $0 [architecture] [flag=value]
+
+The architecture to build for will be guessed from the output of 'uname'.
+If, however, that fails, or you don't want the 'native' compiler on the
+host platform, you can specify the architecture to use by passing as the
+FIRST argument one of the architecures given at the end of this message.
 
    FLAG            DESCRIPTION               DEFAULT
    --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)
    --bindir        Binary installation dir   (<prefix>/bin)
    --build         Build configuration [debug, exceptions, ...],
                    overrides the ROOTBUILD shell variable
-   --cintincdir    CINT interpeted headers   (<datadir>/cint)
+   --cintincdir    CINT interpeted headers   (<libdir>/cint)
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
@@ -389,6 +452,12 @@ Usage:     $0 <architecture> [flag=value]
    --srcdir        Sources installation dir  (<datadir>/src)
    --testdir       Tests                     (<docdir>/test)
    --tutdir        Tutorials                 (<docdir>/tutorial)
+
+If any of the flags --cintincdir, --datadir, --docdir, --etcdir, --iconpath
+--incdir, --libdir, --macrodir, --mandir, --prefix, or --proofdir is given,
+ROOT will be compiled with static directory names, and you should not set
+the ROOTSYS environment variable.
+
 enable/disable options, prefix with either --enable- or --disable-
    afs             AFS support, requires AFS libs and objects
    alien           AliEn support, requires libAliEn from ALICE
@@ -408,16 +477,18 @@ enable/disable options, prefix with either --enable- or --disable-
    pythia          Pythia5 EG support, requires libPythia
    pythia6         Pythia6 EG support, requires libPythia6
    rfio            SHIFT support, requires libshift from CERN
-   rpath           Set library path on executables
+   rpath           Set run-time library load path on executables
    sapdb           SapDB support, requires libsqlod and libsqlrte
    shadowpw        Shadow password support
    shared          Use shared 3rd party libraries if possible
-   soversion       Set version number in sonames
+   soversion       Set version number in sonames (recommended)
    srp             SRP support, requires SRP source tree
    table           Build libTable contrib library
-   thread          Thread support
+   thread          Thread support (currently only POSIX threads)
    venus           Venus EG support, requires libVenus
+
 with options, prefix with --with-, enables corresponding support
+
    afs             AFS support, location of AFS distribution
    alien-incdir    AliEn support, location of AliEn.h
    alien-libdir    AliEn support, location of libAliEn
@@ -427,6 +498,8 @@ with options, prefix with --with-, enables corresponding support
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
    krb5            Kerberos5 support, location of Kerberos distribution
+   krb5-incdir     Kerberos5 support, location of krb5.h
+   krb5-libdir     Kerberos5 support, location of libkrb5
    globus          Globus support, path to what should be GLOBUS_LOCATION
    globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.globus)
    ldap-incdir     LDAP support, location of ldap.h
@@ -453,8 +526,19 @@ with options, prefix with --with-, enables corresponding support
    x11-libdir      X11 support, path to libX11
    xpm-libdir      XPM support, path to libXpm
 
+Supported Architectures:
+
 EOF
-    cat config/ARCHS
+   cat config/ARCHS | sed -e 's/^/   /'
+cat <<EOF
+
+Help output is rather long, so you may want to pipe it through a pager, like
+for example
+
+  $0 --help | more
+
+Report bugs to <rootdev@root.cern.ch>
+EOF
 }
 
 ######################################################################
@@ -462,36 +546,44 @@ EOF
 ### echo %%% See if we got the architecture
 #
 if test $# -lt 1 ; then
-   echo "You must give architecture as first argument - try $0 --help"
-   exit 1
+   #echo "You must give architecture as first argument - try $0 --help"
+   #exit 1
+   guess_architecture
 else
    case $1 in
-   -h|--help) confhelp ; exit 0 ;;
-   *) arch1=$1
-      if test "$arch1" = "linuxegcs" ; then
-         arch1="linux"
-      fi
-      if `grep "^$arch1 " $ARCHS >/dev/null 2>&1` ; then
-         arch=$arch1
-         echo "Configuring for $arch"
-         shift
-      else
-         echo "Invalid architecture. Try $0 --help"
-         exit 1
-      fi
-      if test "x$arch" = "xwin32" || test "x$arch" = "xwin32gdk" ; then
-         platform="win32"
-      else
-         platform=$arch
-      fi
-      if test "x$arch" = "xsgicc" ; then
-         checklib32="yes"
-      fi
-      if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
-         checklib64="yes"
-      fi
-      ;;
+      -h|--help) confhelp ; exit 0 ;;
+      -*) # in case the first argument wasn't an architecure but an option
+          guess_architecture
+          ;;
+       *)
+          arch=$1
+          shift
+          ;;
    esac
+fi
+
+# check that we got a valid architecture
+if test "$arch" = "linuxegcs" ; then
+    arch="linux"
+fi
+
+if `awk '{ print $1 }' $ARCHS | grep "^$arch$" > /dev/null  2>&1` ; then
+   echo "Configuring for $arch"
+else
+   echo "Invalid architecture. Try $0 --help"
+   exit 1
+fi
+
+if test "x$arch" = "xwin32" || test "x$arch" = "xwin32gdk" ; then
+   platform="win32"
+else
+   platform=$arch
+fi
+if test "x$arch" = "xsgicc" ; then
+   checklib32="yes"
+fi
+if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
+   checklib64="yes"
 fi
 
 ######################################################################
@@ -530,6 +622,8 @@ if test $# -gt 0 ; then
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
       --with-globus-patch=*)   globuspatchdir=$optarg ; enable_globus="yes" ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
+      --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
+      --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
@@ -547,9 +641,9 @@ if test $# -gt 0 ; then
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
-      --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
@@ -588,7 +682,7 @@ if test $# -gt 0 ; then
       #
       # Build steering option
       #
-      --build=*)              rootbuild="ROOTBUILD      := $optarg"  ;;
+      --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
       ################################################################
       #
       # Install path options
@@ -606,7 +700,7 @@ if test $# -gt 0 ; then
       --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
       --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
       --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
-      --pkglist*)     show_pkglist="yes" ; noact="yes";;
+      --pkglist*)     show_pkglist="yes"       ; noact="yes"         ;;
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
       --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
       --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
@@ -1387,22 +1481,21 @@ if test ! "x$enable_globus" = "xno"; then
     fi
 
     if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
+        globuslib=""
         enable_globus="no"
     fi
 
     if test "x$enable_globus" = "xyes"; then
-        glbextracflags="-DR__GLBS -I$globusincdir"
+        glbextracflags="-DR__GLBS"
         if test ! "x$globuspatchdir" = "x" ; then
             glbpatchcflags="-DR__GLBCPATCH -I$globusincdir \
-                            -I$globuspatchdir/globus_gsi_credential-0.5/library/ \
-                            -I$globuspatchdir/globus_gssapi_gsi-3.6/library/ \
-                            -I$globuspatchdir/globus_gsi_credential-0.5/ \
-                            -I$globuspatchdir/globus_openssl-0.10/crypto/ \
-                            -I$globuspatchdir/globus_gsi_sysconfig-0.3/library/"
+                          -I$globuspatchdir/globus_gsi_credential-0.5/library/ \
+                          -I$globuspatchdir/globus_gssapi_gsi-3.6/library/ \
+                          -I$globuspatchdir/globus_gsi_credential-0.5/ \
+                          -I$globuspatchdir/globus_openssl-0.10/crypto/ \
+                          -I$globuspatchdir/globus_gsi_sysconfig-0.3/library/"
             echo "Applying experimental patch to globus_gsi_system_config.c"
         fi
-    else
-        glbextracflags=" "
     fi
 fi
 
@@ -1426,7 +1519,8 @@ if test ! "x$enable_srp" = "xno" ; then
     fi
 
     check_header "t_server.h" "$srpincdir" $SRP/include $SRP/libsrp \
-        /usr/srp/include /usr/include /usr/local/include /usr/local/srp/include
+        /usr/srp/include /usr/include /usr/include/srp /usr/local/include \
+        /usr/local/srp/include /usr/local/include/srp
     srpinc=$found_hdr
     srpincdir=$found_dir
 
@@ -1448,7 +1542,6 @@ if test ! "x$enable_srp" = "xno" ; then
     srplib=$found_lib
     srplibdir=$found_dir
 
-
     check_symbol BN_new "$srplib" "$srplibdir"
 
     if test $found_symbol -eq 0 ; then
@@ -1457,11 +1550,11 @@ if test ! "x$enable_srp" = "xno" ; then
         gmplibdir=$found_dir
     else
         check_library "libcrypto" "$enable_shared" "" $srplibdir $srplibdirs
-        gmplib=$found_lib
-        gmplibdir=$found_dir
-        if test -r $gmplib && test "x$enable_shared" = "xno" ; then
+        cryptolib=$found_lib
+        cryptolibdir=$found_dir
+        if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
            case $arch in
-               linux*) gmplib="$gmplib -ldl"
+               linux*) cryptolib="$cryptolib -ldl"
            esac
         fi
     fi
@@ -1469,20 +1562,20 @@ if test ! "x$enable_srp" = "xno" ; then
     if test "x$srplib" = "x" ; then
         enable_srp="no"
         srplibdir=""
-    elif test "x$gmplib" = "x" ; then
+    elif test "x$gmplib" = "x" && test "x$cryptolib" = "x" ; then
         enable_srp="no"
         gmplibdir=""
     else
         srplib="$srplib $gmplib"
         srplibdir="$srplibdir $gmplibdir"
-        case $arch in
-            linux*) srplib="$srplib -lcrypt" ;;
-        esac
     fi
 
     srputillib=""
     srputillibdir=""
-    for i in base/libmisc/libmisc base/lib/libshadow ; do
+    srplibdirs="$SRP/base/libmisc $SRP/base/lib
+        /usr/local/srp/lib /usr/local/lib/srp /usr/srp/lib /usr/lib/srp \
+        /usr/local/lib /usr/lib"
+    for i in libmisc libshadow ; do
 	check_library "$i" "no" "$srpdir" $srplibdirs
 	if test "x$found_lib" = "x" ; then
 	    srputillib=""
@@ -1499,7 +1592,7 @@ if test ! "x$enable_srp" = "xno" ; then
 	srputilincdir=$srpdir/base/lib
     fi
     check_header "pwauth.h" "$srputilincdir" $SRP $SRP/base/lib \
-	/usr/srp/base/lib /usr/local/srp/base/lib
+        /usr/local/srp/base/lib /usr/srp/base/lib
     srputilincdir=$found_dir
 
     if test "x$srputilincdir" = "x" ; then
@@ -1512,7 +1605,6 @@ if test ! "x$enable_srp" = "xno" ; then
     else
         srpextracflags="-DR__SRP"
     fi
-
 fi
 
 ######################################################################
@@ -1534,7 +1626,7 @@ if test ! "x$enable_afs" = "xno" ; then
     afslib=""
     afslibdir=""
     for i in afs/libkauth afs/libprot afs/libauth afs/libsys afs/libcmd \
-             afs/libcom_err afs/libaudit afs/util libubik librx librxkad \
+             afs/libaudit afs/util libubik librx librxkad \
              liblwp libafsrpc libdes ; do
 	check_library "$i" "no" "$afsdir" $afslibdirs
 	if test "x$found_lib" = "x" ; then
@@ -1546,13 +1638,6 @@ if test ! "x$enable_afs" = "xno" ; then
 	afslib="$afslib $found_lib"
 	afslibdir="$afslibdir $found_dir"
     done
-
-    # on linux, the resolver lives in a separate library
-    if test ! "x$afslibdir" = "x" ; then
-	case $arch in
-	    linux*) afslibdir="$afslibdir -lresolv" ;;
-	esac
-    fi
 
     if test "x$afslib" = "x" ; then
         enable_afs="no"
@@ -1568,67 +1653,85 @@ fi
 #
 krb5extracflags=""
 if test ! "x$enable_krb5" = "xno" ; then
-    krb5incdir=""
-    krb5libdirorg=""
-    krb5bindir=""
-    if test ! "x$krb5dir" = "x" ; then
+    enable_krb5="yes"
+    if test "x$krb5incdir" = "x" && test ! "x$krb5dir" = "x" ; then
 	krb5incdir=$krb5dir/include
-	krb5libdirorg=$krb5dir/lib
-	krb5bindir=$krb5dir/bin
     fi
     check_header "krb5.h" "$krb5incdir" /usr/athena/include \
 	    /usr/local/athena/include /usr/kerberos/include \
 	    /usr/krb5/include /usr/local/kerberos/include \
 	    /usr/include /usr/local/include
-    krb5inc=$found_hdr
-    krb5incdir=$found_dir
+    if test "x$found_dir" = "x" ; then
+	enable_krb5=no
+    else
+        krb5inc=$found_hdr
+        krb5incdir=$found_dir
+    fi
 
+    krb5libdirorg=""
+    if test ! "x$krb5libdir" = "x" ; then
+	krb5libdirorg=$krb5libdir
+    fi
+    if test "x$krb5libdir" = "x" && test ! "x$krb5dir" = "x" ; then
+	krb5libdirorg=$krb5dir/lib
+    fi
     krb5libdirs="/usr/athena/lib /usr/local/athena/lib /usr/kerberos/lib \
                  /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
 
     # check whether using MIT krb5
-    krb5mit=yes
-    check_library libk5crypto "no" "$krb5libdirorg" $krb5libdirs
-    if test "x$found_lib" = "x" ; then
-	krb5mit=no
-    fi
-
+    krb5mit=no
     krb5lib=""
     krb5libdir=""
+    check_library libk5crypto "no" "$krb5libdirorg" $krb5libdirs
+    if test ! "x$found_lib" = "x" ; then
+	krb5mit=yes
+        krb5lib=$found_lib
+        krb5libdir=$found_dir
+    fi
+    message "Checking whether we're using MIT Kerberos"
+    echo "$krb5mit"
 
-    if test $krb5mit = yes ; then
-	for i in libkrb5 libcom_err libss libk5crypto; do
-	    check_library $i "no" "$krb5libdirorg" $krb5libdirs
-	    if test "x$found_lib" = "x" ; then
-		krb5lib=""
-		krb5libdir=""
-		enable_krb5="no"
-		break
-	    fi
-	    krb5lib="$krb5lib $found_lib"
-	    krb5libdir="$krb5libdir $found_dir"
-	done
+    check_library libkrb5 "no" "$krb5libdirorg" $krb5libdirs
+    if test "x$found_lib" = "x" ; then
+	enable_krb5=no
     else
-	for i in libkrb5 libcom_err libcrypto ; do
-	    check_library $i "no" "$krb5libdirorg" $krb5libdirs
-	    if test "x$found_lib" = "x" ; then
-		krb5lib=""
-		krb5libdir=""
-		enable_krb5="no"
-		break
+	# The order is important here
+	krb5lib="$found_lib $krb5lib"
+	krb5libdir="$found_dir $krb5libdir"
+	if test "x$krb5mit" = "xyes" ; then
+	    # check_library libss "no" "$krb5libdirorg" $krb5libdirs
+	    # if test "x$found_lib" = "x" ; then
+	    #    enable_krb5=no
+	    # else
+	    #    krb5lib="$krb5lib $found_lib"
+	    #    krb5libdir="$krb5libdir $found_dir"
+	    # fi
+	    :
+	elif test "x$cryptolib" = "x" ; then
+            check_library "libcrypto" "$enable_shared" "$krb5libdirorg" $krb5libdirs
+            cryptolib=$found_lib
+            cryptolibdir=$found_dir
+            if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
+               case $arch in
+                   linux*) cryptolib="$cryptolib -ldl"
+               esac
+            fi
+	    if test "x$cryptolib" = "x" ; then
+                enable_krb5=no
 	    fi
-	    krb5lib="$krb5lib $found_lib"
-	    krb5libdir="$krb5libdir $found_dir"
-	done
+	fi
     fi
 
-
     krb5init=""
+    krb5bindir=""
+    if test ! "x$krb5dir" = "x" ; then
+	krb5bindir=$krb5dir/bin
+    fi
     for i in "$krb5bindir" /usr/athena/bin \
              /usr/local/athena/bin /usr/kerberos/bin \
              /usr/krb5/bin /usr/local/kerberos/bin \
              /usr/bin /usr/local/bin ; do
-        if test -r $i/kinit ; then
+        if test -x $i/kinit ; then
             krb5init=$i/kinit
             break
         fi
@@ -1640,20 +1743,55 @@ if test ! "x$enable_krb5" = "xno" ; then
         echo "Checking for kinit ... $krb5init"
     fi
 
-    # on linux, the resolver lives in a separate library
-    if test ! "x$krb5lib" = "x" ; then
-	case $arch in
-	    linux*) krb5lib="$krb5lib -lresolv" ;;
-	esac
-    fi
-
-    if test "x$krb5lib" = "x" || test "x$krb5incdir" = "x" ; then
-        enable_krb5="no"
-    fi
-
-    if test ! "x$enable_krb5" = "xno" ; then
+    if test ! "x$enable_krb5" = "xyes" ; then
+        krb5incdir=""
+        krb5lib=""
+        krb5libdir=""
+    else
         krb5extracflags="-DR__KRB5"
     fi
+fi
+
+######################################################################
+#
+### echo %%% Communication of errors library
+#
+# This library is needed by both AFS and Kerberos support, so to
+# avoid duplicate linkage, this is done here.
+#
+if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
+    if test ! "x$afsdir" = "x" ; then
+        comerrlibdir=$afsdir
+    fi
+    if test ! "x$krb5libdirorg" = "x" ; then
+        if test ! "x$comerrlibdir" = "x" ; then
+            comerrlibdir="$comerrlibdir $krb5libdirorg"
+        else
+            comerrlibdir=$krb5libdirorg
+        fi
+    fi
+    check_library libcom_err "$enable_shared" "$comerrlibdir" \
+                                              "$afslibdirs $krb5libdirs"
+    if test "x$found_lib" = "x" ; then
+	enable_krb5=no
+        krb5incdir=""
+        krb5lib=""
+        krb5libdir=""
+        krb5extracflags=""
+	enable_afs=no
+        afslib=""
+	comerrlib=""
+	comerrlibdir=""
+    else
+	comerrlib=$found_lib
+	comerrlibdir=$found_dir
+    fi
+
+    case $arch in
+	linux*) # Resolver lives in separate library
+	    resolvlib="-lresolv"
+	    ;;
+    esac
 fi
 
 ######################################################################
@@ -1810,7 +1948,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$datadir" = "x";      then datadir=$prefix/share/root; fi
     if test "x$proofdir" = "x";     then proofdir=$datadir/proof; fi
     if test "x$macrodir" = "x";     then macrodir=$datadir/macros; fi
-    if test "x$cintincdir" = "x";   then cintincdir=$datadir/cint; fi
+    if test "x$cintincdir" = "x";   then cintincdir=$libdir/cint; fi
     if test "x$iconpath" = "x";     then iconpath=$datadir/icons; fi
     if test "x$srcdir" = "x";       then srcdir=$datadir/src; fi
     if test "x$fontdir" = "x";      then fontdir=$datadir/fonts; fi
@@ -1915,6 +2053,10 @@ sed \
     -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@datadir@|$datadir|"                  \
     -e "s|@dcapincdir@|$dcapincdir|"            \
+    -e "s|@comerrlib@|$comerrlib|"              \
+    -e "s|@comerrlibdir@|$comerrlibdir|"        \
+    -e "s|@cryptolib@|$cryptolib|"              \
+    -e "s|@cryptolibdir@|$cryptolibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"                  \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@docdir@|$docdir|"                    \
@@ -1964,6 +2106,7 @@ sed \
     -e "s|@qtincdir@|$qtincdir|"                \
     -e "s|@qtlib@|$qtlib|"                      \
     -e "s|@qtlibdir@|$qtlibdir|"                \
+    -e "s|@resolvlib@|$resolvlib|"              \
     -e "s|@rootbuild@|$rootbuild|"              \
     -e "s|@sapdbincdir@|$sapdbincdir|"          \
     -e "s|@sapdblib@|$sapdblib|"                \

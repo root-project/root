@@ -32,19 +32,19 @@ endif
 
 # use SRP for authentication
 ifneq ($(SRPLIB),)
-SRPFLAGS     := -DR__SRP -I$(SRPINCDIR)
+SRPFLAGS     := -I$(SRPINCDIR)
 SRPLIBS      := $(SRPLIBDIR) $(SRPLIB)
 endif
 
 # use krb5 for authentication
 ifneq ($(KRB5LIB),)
-KRB5FLAGS     := -DR__KRB5 -I$(KRB5INCDIR)
+KRB5FLAGS     := -I$(KRB5INCDIR)
 KRB5LIBS      := $(KRB5LIBDIR) $(KRB5LIB)
 endif
 
 # use Globus for authentication
 ifneq ($(GLOBUSLIB),)
-GLBSFLAGS     := -DR__GLBS -I$(GLOBUSINCDIR)
+GLBSFLAGS     := -I$(GLOBUSINCDIR)
 GLBSLIBS      := $(GLOBUSLIBDIR) $(GLOBUSLIB)
 else
 RPDUTILS      := $(filter-out $(MODDIRS)/globus.cxx,$(RPDUTILS))
@@ -52,9 +52,11 @@ RPDUTILO      := $(filter-out $(MODDIRS)/globus.o,$(RPDUTILO))
 endif
 
 # Combined...
-AUTHFLAGS     := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(KRB5FLAGS) \
-                 $(GLBSFLAGS) $(EXTRA_AUTHFLAGS)
-AUTHLIBS      := $(GLBSLIBS) $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS)
+AUTHFLAGS     := $(EXTRA_AUTHFLAGS) $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) \
+                 $(KRB5FLAGS) $(GLBSFLAGS)
+AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
+                 $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
+                 $(CRYPTOLIBDIR) $(CRYPTOLIB)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))

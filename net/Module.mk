@@ -51,7 +51,3 @@ distclean-net:  clean-net
 		@rm -f $(NETDEP) $(NETDS) $(NETDH)
 
 distclean::     distclean-net
-
-##### extra rules ######
-$(NETO): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -o $@ -c $<

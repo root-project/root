@@ -1,5 +1,3 @@
-Architectures supported:
-
 aix                  for AIX 4.x xlC
 aix5                 for AIX 5.x xlC
 aixegcs              for AIX 4.x egcs 1.1.x
