@@ -318,7 +318,8 @@ int G__IncludePathInfo::Next() {
 #include <exception>
 #include <typeinfo>
 #if !defined(__hpux) || defined(__HP_aCC)
-using namespace std;
+    namespace std {};
+    using namespace std;
 #endif
 #endif
 /*********************************************************************

@@ -353,7 +353,7 @@ char *typename;
   buf = G__getexpr(typename);
   if(buf.type) {
 #ifndef G__OLDIMPLEMENTATION16
-    if('C'==buf.type && '"'==typename) return(strlen((char*)buf.obj.i));
+    if('C'==buf.type && '"'==typename[0]) return(strlen((char*)buf.obj.i));
 #endif
     return(G__sizeof(&buf));
   }
