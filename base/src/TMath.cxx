@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.48 2004/03/12 15:42:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.49 2004/04/23 10:30:26 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2819,7 +2819,7 @@ Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
   // and not touched any more. The method returns kFALSE when 
   // all combinations are exhausted, i.e. after n! calls
   //
-  Int_t itmp;
+  Int_t i,itmp;
   Int_t i1=-1;
   
   if(start) {
@@ -2840,7 +2840,7 @@ Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
     else {
       // find lower right element higher than the lower
       // element of the upward transition
-      for(Int_t i=n-1;i>i1;i--) {
+      for(i=n-1;i>i1;i--) {
 	if(a[i] > a[i1]) {
 	  // swap the two
 	  itmp=a[i1];
@@ -2851,7 +2851,7 @@ Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
       }
       // order the rest, in fact just invert, as there 
       // are only downward transitions from here on
-      for(Int_t i=0;i<(n-i1-1)/2;i++) {
+      for(i=0;i<(n-i1-1)/2;i++) {
 	itmp=a[i1+i+1];
 	a[i1+i+1]=a[n-i-1];
 	a[n-i-1]=itmp;
