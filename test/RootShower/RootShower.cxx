@@ -9,7 +9,6 @@
 
 
 #include <Riostream.h>
-#include <time.h>
 
 #include <TROOT.h>
 #include <TStyle.h>
@@ -84,7 +83,7 @@ enum RootShowerMessageTypes {
     M_HELP_PHYSICS,
     M_HELP_SIMULATION,
     M_HELP_LICENSE,
-    M_HELP_ABOUT,
+    M_HELP_ABOUT
 };
 
 const char *xpm_names[] = {
@@ -197,7 +196,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
 
     fEventNr = 0;
     fNRun    = 0;
-    time( &fEventTime );
 
     bpic = gClient->GetPicture("branch_t.xpm");
     bspic = gClient->GetPicture("branch_t.xpm");
@@ -835,8 +833,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
      
                 case kCT_ITEMDBLCLICK:
                     if (parm1 == kButton1) {
-                        TGListTreeItem *item;
-	                    if ((item = fEventListTree->GetSelected()) != 0) {
+	                    if (fEventListTree->GetSelected()) {
 	                        fClient->NeedRedraw(fEventListTree);
 	                    }
                     }
@@ -912,7 +909,7 @@ void RootShower::Initialize(Int_t set_angles)
 //______________________________________________________________________________
 void RootShower::produce()
 {
-    Int_t     j,local_num,local_last,local_end;
+    Int_t     local_num,local_last,local_end;
     Int_t     old_num;
     Char_t    strtmp[80];
 
@@ -931,7 +928,6 @@ void RootShower::produce()
     fEvent->GetDetector()->GetGeometry()->cd();
     Interrupt(kFALSE);
     old_num = -1;
-    j = 1;
     // loop events until user interrupt or until all particles are dead
     while((!IsInterrupted()) && (fEvent->GetNAlives() > 0)) {
         gSystem->ProcessEvents();  // handle GUI events
@@ -1101,7 +1097,6 @@ void RootShower::OnOpenFile(const Char_t *filename)
 {
     // Opens a root file into which a previous event
     // has been saved.
-    Int_t  entries = 0;
     Char_t   strtmp[80];
     Int_t  i;
     TFile *f = new TFile(filename);
@@ -1116,7 +1111,6 @@ void RootShower::OnOpenFile(const Char_t *filename)
 
     branch = tree->GetBranch("Event");
     branch->SetAddress(&fEvent);
-    entries = (Int_t)tree->GetEntries();
     tree->GetEntry(0, 1);
     f->Close();
     // take back detector dimensions for selection geometry

@@ -19,6 +19,9 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
+#ifndef ROOT_TDatime
+#include "TDatime.h"
+#endif
 
 class TGMenuBar;
 class TGPopupMenu;
@@ -70,7 +73,7 @@ private:
 
     ULong_t             fEventNr;   // Event number
     UInt_t              fNRun;      // Run number
-    Long_t              fEventTime; // Event generation date
+    TDatime             fEventTime; // Event generation date
 
     Int_t               fPicIndex;
     Int_t               fPicNumber;

@@ -126,7 +126,7 @@ void MyEvent::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void MyEvent::SetHeader(Int_t i, Int_t run, Long_t date, Int_t primary, Double_t energy)
+void MyEvent::SetHeader(Int_t i, Int_t run, TDatime date, Int_t primary, Double_t energy)
 {
     // set event header with event identification and startup parameters
     fNtrack = 0;

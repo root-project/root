@@ -103,11 +103,10 @@ void MyDetector::UpdateShape()
     // Update geometry shape (after change of detector dimensions)
     //
     TBRIK       *shape;
-    TNode       *node;
     fGeometry->cd();
     shape = new TBRIK("shape","shape",fMaterialName,fDimX/2.0,fDimY/2.0,fDimZ/2.0);
     shape->SetLineColor(7);
-    node = new TNode("node","node","shape");
+    new TNode("node","node","shape");
 
 }
 

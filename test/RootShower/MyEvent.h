@@ -29,6 +29,7 @@
 #include "MyParticle.h"
 #include "MyDetector.h"
 #include "TGListTree.h"
+#include "TDatime.h"
 
 class EventHeader {
 
@@ -36,18 +37,18 @@ private:
 
     Int_t       fEvtNum;
     Int_t       fRun;
-    Long_t      fDate;
+    TDatime     fDate;
     Int_t       fPrimary;   // Type of primary particle
     Double_t    fEnergy;    // Energy of primary particle
 
 public:
-    EventHeader() : fEvtNum(0), fRun(0), fDate(0), fPrimary(0), fEnergy(0.0) { }
+    EventHeader() : fEvtNum(0), fRun(0), fPrimary(0), fEnergy(0.0) { }
     virtual ~EventHeader() { }
-    void        Set(Int_t i, Int_t r, Long_t d, Int_t p, Double_t e)
+    void        Set(Int_t i, Int_t r, TDatime d, Int_t p, Double_t e)
                 { fEvtNum = i; fRun = r; fDate = d; fPrimary = p; fEnergy = e; }
     Int_t       GetEvtNum() const { return fEvtNum; }
     Int_t       GetRun() const { return fRun; }
-    Long_t      GetDate() const { return fDate; }
+    TDatime     GetDate() const { return fDate; }
     Int_t       GetPrimary() const { return fPrimary; }
     Double_t    GetEnergy() const { return fEnergy; }
 
@@ -89,7 +90,7 @@ public :
     void            SetB(Double_t newB) { fB = newB; }
     void            SetNseg(Int_t n) { fNseg = n; }
     void            SetNtrack(Int_t n) { fNtrack = n; }
-    void            SetHeader(Int_t, Int_t, Long_t, Int_t, Double_t);
+    void            SetHeader(Int_t, Int_t, TDatime, Int_t, Double_t);
     TPolyLine3D    *AddTrack(const TVector3 &, Int_t);
     TPolyLine3D    *AddTrack(Double_t, Double_t, Double_t, Int_t);
     MyParticle     *AddParticle(Int_t, Int_t, const TVector3 &, const TVector3 &);
