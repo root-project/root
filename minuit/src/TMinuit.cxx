@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.41 2004/03/30 21:13:31 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.42 2004/04/17 06:38:26 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -2862,7 +2862,7 @@ L901:
 	}
 	continue;
 L930:
-	Printf(" PARAMETER %4d %s IGNORED.",iext,(const char*)chwhy);
+	if (fISW[4] >= 0) Printf(" PARAMETER %4d %s IGNORED.",iext,(const char*)chwhy);
     }
     if (lfreed || lfixed) mnrset(0);
     if (lfreed) {
