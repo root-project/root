@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.24 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.25 2002/01/24 11:39:27 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -521,7 +521,7 @@ void TApplication::LoadGraphicsLibs()
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
+void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -570,8 +570,10 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
       return;
    }
 
+   Int_t error = 0;
+
    if (!strncmp(line, ".L", 2)) {
-      char *fn  = Strip(line+3);
+      char *fn = Strip(line+3);
       // See if script compilation requested
       char postfix[3];
       postfix[0] = 0;
@@ -593,20 +595,21 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
       else {
          if (sync)
            gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
-                                          (TInterpreter::EErrorCode*)error);
+                                          (TInterpreter::EErrorCode*)&error);
          else
            gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)error);
+                                     (TInterpreter::EErrorCode*)&error);
       }
 
       delete [] fn;
       delete [] mac;
-      return;
+
+      goto out;
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3,error);
-      return;
+      ProcessFile(line+3, &error);
+      goto out;
    }
 
    if (!strcmp(line, ".reset")) {
@@ -623,9 +626,17 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)&error);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)&error);
+
+out:
+   if (error == TInterpreter::kExit) {
+      gInterpreter->ResetGlobals();
+      Terminate(0);
+   }
+   if (err)
+      *err = error;
 }
 
 //______________________________________________________________________________

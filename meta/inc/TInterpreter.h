@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.6 2001/12/19 07:15:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.7 2001/12/21 09:37:25 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
       kRecoverable = 1,
       kDangerous   = 2,
       kFatal       = 3,
+      kExit        = 5,
       kProcessing  = 99
    };
 
