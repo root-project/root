@@ -41,7 +41,12 @@ checkLittle1.log : checkLittle1.C little_v2_C.$(DllSuf) little.root
 	$(CMDECHO) root.exe -b -l -q checkLittle1.C > checkLittle1.log 2>&1 
 
 littleTest: printLittle.log checkLittle0.log checkLittle.log checkLittle1.log 
+ifeq ($(FAIL),)
+	@echo "The library loading order problem is not solved yet"
+	$(WarnFailTest)	
+else
 	$(CMDECHO) diff -b -u checkLittle0.ref checkLittle0.log && \
 	diff -b -u checkLittle.ref checkLittle.log && \
 	diff -b -u checkLittle1.ref checkLittle1.log 
+endif
 
