@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.2 2002/07/16 13:59:19 rdm Exp $
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,7 +24,7 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
    // The painter will paint the specified obj. If the histogram painter
    // does not exist a default painter is created.
 
-   // if no painter set yet, set THistPainter by default
+   // if no painter set yet, create a default painter via the PluginManager
    if (!fgPainter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualHistPainter"))) {
