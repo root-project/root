@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.27 2004/12/14 15:06:18 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.28 2004/12/14 16:56:11 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -47,7 +47,86 @@ volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
 
+//------------------------------------------------------------------------------
+
+class TJoinHelper {
+private:
+   TThread    *fT;
+   TThread    *fH;
+   void      **fRet;
+   Long_t      fRc;
+   TMutex     *fM;
+   TCondition *fC;
+
+   static void JoinFunc(void *p);
+
+public:
+   TJoinHelper(TThread *th, void **ret);
+   ~TJoinHelper();
+
+   Int_t Join();
+};
+
+//______________________________________________________________________________
+TJoinHelper::TJoinHelper(TThread *th, void **ret)
+   : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM))
+{
+   fH = new TThread("JoinHelper", JoinFunc, this);
+}
+
+//______________________________________________________________________________
+TJoinHelper::~TJoinHelper()
+{
+   delete fC;
+   delete fM;
+   delete fH;
+}
+
+//______________________________________________________________________________
+void TJoinHelper::JoinFunc(void *p)
+{
+   // Static method which runs in a separate thread to handle thread
+   // joins without blocking the main thread.
+
+   TJoinHelper *jp = (TJoinHelper*)p;
+
+   jp->fRc = jp->fT->Join(jp->fRet);
+
+   jp->fM->Lock();
+   jp->fC->Signal();
+   jp->fM->UnLock();
+
+   TThread::Exit(0);
+}
+
+//______________________________________________________________________________
+Int_t TJoinHelper::Join()
+{
+   fM->Lock();
+   fH->Run();
+
+   ULong_t absSec, absNanoSec;
+
+   while (kTRUE) {
+      TThread::GetTime(&absSec, &absNanoSec);
+      absNanoSec += 100 * 1000000;
+      int r = fC->TimedWait(absSec, absNanoSec);  // 100 ms
+
+      if (r == 0) break;
+
+      gSystem->ProcessEvents();
+   }
+
+   fM->UnLock();
+
+   return fRc;
+}
+
+
+//------------------------------------------------------------------------------
+
 ClassImp(TThread)
+
 
 //______________________________________________________________________________
 TThread::TThread(VoidRtnFunc_t fn, void *arg, EPriority pri)
@@ -296,33 +375,6 @@ TThread *TThread::Self()
    return GetThread(SelfId());
 }
 
-//______________________________________________________________________________
-struct TJoinParam {
-   TThread    *fT;
-   void      **fRet;
-   Long_t      fRc;
-   TMutex     *fM;
-   TCondition *fC;
-
-   TJoinParam(TThread *th, void **ret)
-     : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM)) { }
-   ~TJoinParam() { delete fC; delete fM; }
-};
-
-//______________________________________________________________________________
-void TThread::JoinFunc(void *p)
-{
-   // Static method which runs in a separate thread to handle thread
-   // joins without blocking the main thread.
-
-   TJoinParam *jp = (TJoinParam*)p;
-
-   jp->fRc = jp->fT->Join(jp->fRet);
-
-   jp->fM->Lock();
-   jp->fC->Signal();
-   jp->fM->UnLock();
-}
 
 //______________________________________________________________________________
 Long_t TThread::Join(void **ret)
@@ -343,27 +395,9 @@ Long_t TThread::Join(void **ret)
       return fgThreadImp->Join(this, ret);
 
    // do not block the main thread, use helper thread
-   TJoinParam jp(this, ret);
-   TThread *jh = new TThread("JoinHelper", JoinFunc, &jp);
+   TJoinHelper helper(this, ret);
 
-   jp.fM->Lock();
-   jh->Run();
-
-   ULong_t absSec, absNanoSec;
-
-   while (kTRUE) {
-      TThread::GetTime(&absSec, &absNanoSec);
-      absNanoSec += 100 * 1000000;
-      int r = jp.fC->TimedWait(absSec, absNanoSec);  // 100 ms
-
-      if (r == 0) break;
-
-      gSystem->ProcessEvents();
-   }
-
-   jp.fM->UnLock();
-
-   return jp.fRc;
+   return helper.Join();
 }
 
 //______________________________________________________________________________
