@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.142 2004/08/12 14:22:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.143 2004/08/25 14:41:48 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5035,6 +5035,7 @@ void TPad::x3d(Option_t *option)
 
    if (!option || !option[0])
       option = "x3d";
+   if (fViewer3D) delete fViewer3D;
    fViewer3D = TVirtualViewer3D::Viewer3D(option);
    if (fViewer3D) {
       fViewer3D->CreateScene(option);
