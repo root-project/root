@@ -368,6 +368,8 @@ G__value *buf1,*buf2;
 	  G__storeobject(&lbuf1,&lbuf2);
 	  break;
 	  
+	case 'b':
+	case 'c':
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
@@ -375,13 +377,11 @@ G__value *buf1,*buf2;
 	  memcpy((void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
 		 ,G__INTALLOC*(var1->varlabel[i][1]+1));
-	  break;
-#endif
-	case 'b':
-	case 'c':
+#else
 	  memcpy((void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
 		 ,G__CHARALLOC*(var1->varlabel[i][1]+1));
+#endif
 	  break;
 	  
 	case 'r':

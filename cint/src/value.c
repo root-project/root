@@ -77,62 +77,6 @@ long value; /* used to be int */
 #endif
 }
 
-#ifndef G__OLDIMPLEMENTATION2189
-/****************************************************************
-* G__letLonglong(G__value buf,char type,int value)
-*   macro in G__ci.h
-****************************************************************/
-void G__letLonglong(buf,type,value)
-G__value *buf;
-int type;
-long long value; /* used to be int */
-{
-  buf->type=type;
-  buf->obj.ll=value;
-  /*
-    buf->tagnum = -1;
-    buf->typenum = -1;
-  */
-  /*buf->obj.reftype.reftype = G__PARANORMAL; */
-}
-
-/****************************************************************
-* G__letULonglong(G__value buf,char type,int value)
-*   macro in G__ci.h
-****************************************************************/
-void G__letULonglong(buf,type,value)
-G__value *buf;
-int type;
-unsigned long long value; /* used to be int */
-{
-  buf->type=type;
-  buf->obj.ull=value;
-  /*
-    buf->tagnum = -1;
-    buf->typenum = -1;
-  */
-  /* buf->obj.reftype.reftype = G__PARANORMAL; */
-}
-
-/****************************************************************
-* G__letLongdouble(G__value buf,char type,int value)
-*   macro in G__ci.h
-****************************************************************/
-void G__letLongdouble(buf,type,value)
-G__value *buf;
-int type;
-long double value; /* used to be int */
-{
-  buf->type=type;
-  buf->obj.ld=value;
-  /*
-    buf->tagnum = -1;
-    buf->typenum = -1;
-  */
-  /* buf->obj.reftype.reftype = G__PARANORMAL; */
-}
-#endif
-
 /****************************************************************
 * int G__isdouble(G__value buf)
 * 
@@ -240,74 +184,6 @@ G__value buf;
 		return(buf.obj.i);
 	}
 }
-
-#ifndef G__OLDIMPLEMENTATION2189
-/****************************************************************
-* long long G__Longlong(G__value buf)
-* 
-****************************************************************/
-long long G__Longlong(buf) /* used to be int */
-G__value buf;
-{
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((long long)buf.obj.d);
-  case 'n':
-    return((long long)buf.obj.ll);
-  case 'm':
-    return((long long)buf.obj.ull);
-  case 'q':
-    return((long long)buf.obj.ld);
-  default:
-    return((long long)buf.obj.i);
-  }
-}
-
-/****************************************************************
-* unsigned long long G__Longlong(G__value buf)
-* 
-****************************************************************/
-unsigned long long G__ULonglong(buf) /* used to be int */
-G__value buf;
-{
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((unsigned long long)buf.obj.d);
-  case 'n':
-    return((unsigned long long)buf.obj.ll);
-  case 'm':
-    return((unsigned long long)buf.obj.ull);
-  case 'q':
-    return((unsigned long long)buf.obj.ld);
-  default:
-    return((unsigned long long)buf.obj.i);
-  }
-}
-
-/****************************************************************
-* long double G__Longdouble(G__value buf)
-* 
-****************************************************************/
-long double G__Longdouble(buf) /* used to be int */
-G__value buf;
-{
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((long double)buf.obj.d);
-  case 'n':
-    return((long double)buf.obj.ll);
-  case 'm':
-    return((long double)buf.obj.ull);
-  case 'q':
-    return((long double)buf.obj.ld);
-  default:
-    return((long double)buf.obj.i);
-  }
-}
-#endif
 
 /******************************************************************
 * G__value G__toXvalue(G__value p,int var_type)
@@ -495,27 +371,8 @@ G__value p;
   }
 
   switch(p.type) {
-#ifndef G__OLDIMPLEMENTATION2189
-  case 'N':
-    result.obj.ll = (*(long long*)(p.obj.i));
-    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_LL;
-    break;
-  case 'M':
-    result.obj.ull = (*(unsigned long long*)(p.obj.i));
-    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_ULL;
-    break;
-  case 'Q':
-    result.obj.ld = (*(long double*)(p.obj.i));
-    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_LD;
-    break;
-#endif
 #ifndef G__OLDIMPLEMENTATION1982
   case 'G':
-#ifdef G__BOOL4BYTE
-    result.obj.i = (long)(*(int*)(p.obj.i));
-    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I;
-    break;
-#endif
 #endif
   case 'B':
     result.obj.i = (long)(*(unsigned char *)(p.obj.i));

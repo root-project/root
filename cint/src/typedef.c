@@ -592,22 +592,7 @@ void G__define_type()
 #else 
   if(strcmp(typename,"long")==0) {
 #endif /* G__PHILIPPE34 */
-#if !defined(G__OLDIMPLEMENTATION2189)
-    int tmptypenum;
-#ifndef G__PHILIPPE34
-    if (strlen(typename)>=5) {
-      /* Rewind. */
-      fseek(G__ifile.fp,-1-(strlen(typename) - strlen("long")) ,SEEK_CUR);
-    }
-#endif /* G__PHILIPPE34 */
-    if('l'==type) {
-      type = 'n';
-    }
-    else if('k'==type) {
-      type = 'm';
-    }
-    strcpy(tagname,""); /* ??? */
-#elif !defined(G__OLDIMPLEMENTATION1836)
+#ifndef G__OLDIMPLEMENTATION1836
     int tmptypenum;
 #ifndef G__PHILIPPE34
     if (strlen(typename)>=5) {
@@ -677,11 +662,7 @@ void G__define_type()
   if(strcmp(typename,"double")==0) {
 #endif /* G__PHILIPPE34 */
     if('l'==type) {
-#if !defined(G__OLDIMPLEMENTATION2189)
-      int tmptypenum;
-      type = 'q';
-      strcpy(tagname,""); /* ??? */
-#elif !defined(G__OLDIMPLEMENTATION1836)
+#ifndef G__OLDIMPLEMENTATION1836
       int tmptypenum;
       G__loadlonglong(&itemp,&tmptypenum,G__LONGDOUBLE);
       type = 'u';
@@ -979,11 +960,7 @@ void G__define_type()
     int ix=1;
     if(isupper(type)
 #ifndef G__OLDIMPLEMENTATION933
-#ifndef G__OLDIMPLEMENTATION2191
-       &&'1'!=type
-#else
        &&'Q'!=type
-#endif
 #endif
        ) {
       reftype = G__PARAP2P;
@@ -1634,11 +1611,7 @@ int reftype;
   char typename[G__LONGLINE];
   strcpy(typename,typenamein);
   /* keep uniqueness for pointer to function typedefs */
-#ifndef G__OLDIMPLEMENTATION2191
-  if('1'==typein) G__make_uniqueP2Ftypedef(typename);
-#else
   if('Q'==typein) G__make_uniqueP2Ftypedef(typename);
-#endif
 #endif
   
 /* G__OLDIMPLEMENTATIONON620 should affect, but not implemented here */

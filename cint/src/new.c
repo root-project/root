@@ -304,11 +304,6 @@ char *expression;
 #ifndef G__OLDIMPLEMENTATION1604
       else if(strcmp(type,"bool")==0) var_type='g';
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-      else if(strcmp(type,"longlong")==0) var_type='n';
-      else if(strcmp(type,"unsignedlonglong")==0) var_type='m';
-      else if(strcmp(type,"longdouble")==0) var_type='q';
-#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION683

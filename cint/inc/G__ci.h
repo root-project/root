@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000025
-#define G__CINTVERSIONSTR  "6.0.25, Dec 12 2004"
+#define G__CINTVERSION      6000023
+#define G__CINTVERSIONSTR  "6.0.23, Nov 14 2004"
 #else
-#define G__CINTVERSION      50150161
-#define G__CINTVERSIONSTR  "5.15.161, Dec 12 2004"
+#define G__CINTVERSION      50150159
+#define G__CINTVERSIONSTR  "5.15.159, Nov 14 2004"
 #endif
 
 #define G__ALWAYS
@@ -102,12 +102,6 @@
 #define G__OLDIMPLEMENTATION2051
 #define G__OLDIMPLEMENTATION2042
 #define G__OLDIMPLEMENTATION1073
-#endif
-
-/* Native long long, unsigned long long, long double implementation */
-#define G__NATIVELONGLONG 1
-#ifndef G__NATIVELONGLONG
-#define G__OLDIMPLEMENTATION2189
 #endif
 
 /* Problem remains with autoloading if library is unloaded. Tried to fix it
@@ -452,7 +446,6 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #else
 #define G__EXPORT
 #endif
-
 
 
 #if defined(G__SIGNEDCHAR) 
@@ -892,11 +885,6 @@ typedef struct {
     unsigned int uin;
     unsigned long ulo;
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-    long long ll;
-    unsigned long long ull;
-    long double ld;
-#endif
   } obj;
   int type;
   int tagnum;
@@ -976,10 +964,6 @@ extern G__value G__null;
 #define G__FLOATALLOC  sizeof(float)
 #define G__DOUBLEALLOC sizeof(double)
 #define G__P2MFALLOC   G__sizep2memfunc
-#ifndef G__OLDIMPLEMENTATION2189
-#define G__LONGLONGALLOC sizeof(long long)
-#define G__LONGDOUBLEALLOC sizeof(long double)
-#endif
 #endif /* __CINT__ */
 
 #ifdef G__TESTMAIN
@@ -1737,16 +1721,6 @@ extern void (*G__aterror)();
 #define G__P(funcparam) ()
 #endif
 
-extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,long long value));
-extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,unsigned long long value));
-extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
-extern G__EXPORT long long G__Longlong G__P((G__value buf)); 
-extern G__EXPORT unsigned long long G__ULonglong G__P((G__value buf));
-extern G__EXPORT long double G__Longdouble G__P((G__value buf));
-extern G__EXPORT long long* G__Longlongref G__P((G__value *buf));
-extern G__EXPORT unsigned long long* G__ULonglongref G__P((G__value *buf));
-extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
-
 #if defined(G__DEBUG) && !defined(G__MEMTEST_C)
 #include "src/memtest.h"
 #endif
@@ -2224,17 +2198,6 @@ extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 extern G__EXPORT void G__set_errmsgcallback(void* p);
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,long long value));
-extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,unsigned long long value));
-extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
-extern G__EXPORT long long G__Longlong G__P((G__value buf)); 
-extern G__EXPORT unsigned long long G__ULonglong G__P((G__value buf));
-extern G__EXPORT long double G__Longdouble G__P((G__value buf));
-extern G__EXPORT long long* G__Longlongref G__P((G__value *buf));
-extern G__EXPORT unsigned long long* G__ULonglongref G__P((G__value *buf));
-extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
-#endif
 
 #else /* G__MULTITHREADLIBCINT */
 
@@ -2386,17 +2349,6 @@ static void (*G__set_emergencycallback) G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 static void (*G__set_errmsgcallback) G__P((void* p));
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-static void (*G__letLonglong) G__P((G__value* buf,int type,long long value));
-static void (*G__letULonglong) G__P((G__value* buf,int type,unsigned long long value));
-static void (*G__letLongdouble) G__P((G__value* buf,int type,long double value));
-static long long (*G__Longlong) G__P((G__value buf)); /* used to be int */
-static unsigned long long (*G__ULonglong) G__P((G__value buf)); /* used to be int */
-static long double (*G__Longdouble) G__P((G__value buf)); /* used to be int */
-static long long* (*G__Longlongref) G__P((G__value *buf));
-static unsigned long long* (*G__ULonglongref) G__P((G__value *buf));
-static long double* (*G__Longdoubleref) G__P((G__value *buf));
-#endif
 
 #ifdef G__MULTITHREADLIBCINTC
 G__EXPORT void G__SetCCintApiPointers(
@@ -2531,17 +2483,6 @@ G__EXPORT void G__SetCppCintApiPointers(
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
 		,void* a127
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-		,void* a128
-		,void* a129
-		,void* a130
-		,void* a131
-		,void* a132
-		,void* a133
-		,void* a134
-		,void* a135
-		,void* a136
 #endif
 		)
 {
@@ -2681,17 +2622,6 @@ G__EXPORT void G__SetCppCintApiPointers(
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
   G__set_errmsgcallback= (void (*) G__P((void *p)) ) a127;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-  G__letLonglong=(void (*) G__P((G__value* buf,int type,long long value)))a128;
-  G__letULonglong=(void (*) G__P((G__value* buf,int type,unsigned long long value)))a129;
-  G__letLongdouble=(void (*) G__P((G__value* buf,int type,long double value)))a130;
-  G__Longlong=(void (*) G__P((G__value buf)))a131;
-  G__ULonglong=(void (*) G__P((G__value buf)))a132;
-  G__Longdouble=(void (*) G__P((G__value buf)))a133;
-  G__Longlongref=(void (*) G__P((G__value *buf)))a134;
-  G__ULonglongref=(void (*) G__P((G__value *buf)))a135;
-  G__Longdoubleref=(void (*) G__P((G__value *buf)))a136;
 #endif
 }
 

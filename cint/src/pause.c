@@ -839,12 +839,7 @@ G__value buf;
   G__asm_exec = 0;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2191
-  if('1'==buf.type || 'a'==buf.type 
-     || 'n'==buf.type || 'm'==buf.type || 'q'==buf.type) return(0);
-#else
   if('Q'==buf.type || 'a'==buf.type) return(0);
-#endif
   G__valuemonitor(buf,buf2);
   sprintf(com,"G__ateval(%s)",buf2);
   G__break=0; G__step=0; G__dispsource=0;

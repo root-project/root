@@ -4246,7 +4246,7 @@ fpos_t *ppos;
 #ifndef G__OLDIMPLEMENTATION1462
             || strcmp(paraname,"typename")==0
 #endif
-	    );
+	      );
 
 #ifndef G__OLDIMPLEMENTATION1464
     /* Don't barf on an empty arg list. */

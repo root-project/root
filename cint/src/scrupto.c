@@ -235,19 +235,6 @@ struct G__dictposition *dictpos;
   G__freetemplatefunc(dictpos->definedtemplatefunc);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2190
- {
-   int nfile = G__nfile;
-   while(nfile > dictpos->nfile) {
-     struct G__dictposition *dictposx = G__srcfile[nfile].dictpos;
-     if(dictpos && dictposx->ptype && (char*)G__PVOID!=dictposx->ptype ) {
-       free((void*)dictposx->ptype);
-       dictposx->ptype = (char*)NULL;
-     }
-     --nfile;
-   }
- }
-#endif
 #ifndef G__OLDIMPLEMENTATION2026
   if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
     int i;

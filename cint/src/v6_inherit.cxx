@@ -366,11 +366,6 @@ struct G__baseparam *pbaseparam;
   int donen=0;
   long addr,lval;
   double dval;
-#ifndef G__OLDIMPLEMENTATION2189
-  long long llval;
-  long long ullval;
-  long double ldval;
-#endif
 #ifdef G__VIRTUALBASE
   int store_toplevelinstantiation;
   struct G__vbaseaddrlist *store_pvbaseaddrlist=NULL;
@@ -775,32 +770,6 @@ struct G__baseparam *pbaseparam;
 		lval = G__int(G__getexpr(pbaseparam->param[j]))?1:0;
 #endif
 		*(unsigned char*)addr = lval;
-		break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-	      case 'n':
-#ifndef G__OLDIMPLEMENTATION1870
-		llval = G__Longlong(G__getexpr(pbaseparam->param));
-#else
-		llval = G__Longlong(G__getexpr(pbaseparam->param[j]));
-#endif
-		*(long long*)addr = llval;
-		break;
-	      case 'm':
-#ifndef G__OLDIMPLEMENTATION1870
-		ullval = G__ULonglong(G__getexpr(pbaseparam->param));
-#else
-		ullval = G__ULonglong(G__getexpr(pbaseparam->param[j]));
-#endif
-		*(unsigned long long*)addr = ullval;
-		break;
-	      case 'q':
-#ifndef G__OLDIMPLEMENTATION1870
-		ldval = G__Longdouble(G__getexpr(pbaseparam->param));
-#else
-		ldval = G__Longdouble(G__getexpr(pbaseparam->param[j]));
-#endif
-		*(long double*)addr = ldval;
 		break;
 #endif
 	      default:

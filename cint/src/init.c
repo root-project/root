@@ -2365,9 +2365,6 @@ void G__platformMacro()
 #ifdef G__NO_STDLIBS
   sprintf(temp,"G__NO_STDLIBS=%ld",(long)G__NO_STDLIBS); G__add_macro(temp);
 #endif
-#ifdef G__NATIVELONGLONG
-  sprintf(temp,"G__NATIVELONGLONG=%ld",(long)G__NATIVELONGLONG); G__add_macro(temp);
-#endif
   
   sprintf(temp,"int& G__cintv6=*(int*)(%ld);",(long)(&G__cintv6)); G__exec_text(temp);
 }

@@ -5419,15 +5419,9 @@ char *pvar_type;
       *pvar_type = 'a';
     }
     else {
-#ifndef G__OLDIMPLEMENTATION2191
-      G__typenum = G__search_typename(temp,'1',-1,0);
-      G__var_type = '1';
-      *pvar_type = '1';
-#else
       G__typenum = G__search_typename(temp,'Q',-1,0);
       G__var_type = 'Q';
       *pvar_type = 'Q';
-#endif
     }
     G__ifile.line_number=line;
     fsetpos(G__ifile.fp,&pos);

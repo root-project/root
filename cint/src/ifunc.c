@@ -101,17 +101,6 @@ struct G__param *libp;
 #endif
 	break;
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-      case 'n':
-	libp->para[itemp].ref = (long)G__Longlongref(&libp->para[itemp]);
-	break;
-      case 'm':
-	libp->para[itemp].ref = (long)G__ULonglongref(&libp->para[itemp]);
-	break;
-      case 'q':
-	libp->para[itemp].ref = (long)G__Longdoubleref(&libp->para[itemp]);
-	break;
-#endif
       }
     }
   }
@@ -414,17 +403,6 @@ int hash; /* not used */
 #else
 	  G__asm_stack[j].ref=(long)G__UCharref(&libp->para[i]);
 #endif
-	  break;
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-	case 'n':
-	  G__asm_stack[j].ref=(long)G__Longlongref(&libp->para[i]);
-	  break;
-	case 'm':
-	  G__asm_stack[j].ref=(long)G__ULonglongref(&libp->para[i]);
-	  break;
-	case 'q':
-	  G__asm_stack[j].ref=(long)G__Longdoubleref(&libp->para[i]);
 	  break;
 #endif
 	default:
@@ -2662,21 +2640,7 @@ int func_now;
 	fgetpos(G__ifile.fp,&pos);
 	c=G__fgetname(paraname,",)&*[(=");
 	if(strcmp(paraname,"long")==0 || strcmp(paraname,"double")==0) {
-#if !defined(G__OLDIMPLEMENTATION2189)
-	  if(strcmp(paraname,"long")==0) {
-	    tagnum = -1;
-	    typenum = -1;
-	    if(isunsigned) {
-	      type='m';
-	    }
-	    else {
-	      type='n';
-	    }
-	  }
-	  else {
-	    type='q';
-	  }
-#elif !defined(G__OLDIMPLEMENTATION1836)
+#ifndef G__OLDIMPLEMENTATION1836
 	  type='u';
 	  if(strcmp(paraname,"long")==0) {
 	    if(isunsigned) {
@@ -2904,13 +2868,8 @@ int func_now;
 #endif
 	ip=strlen(paraname);
 	paraname[ip++]='\0';
-#ifndef G__OLDIMPLEMENTATION2191
-	typenum = G__search_typename(paraname,'1',-1,0);
-	type='1';
-#else
 	typenum = G__search_typename(paraname,'Q',-1,0);
 	type='Q';
-#endif
 	tagnum = -1;
 	break;
       case '=':
@@ -2936,18 +2895,12 @@ int func_now;
 	else {
 #ifndef G__OLDIMPLEMENTATION832
 	  if(strcmp(name,"long")==0 && strcmp(paraname,"long")==0) {
-#ifndef G__OLDIMPLEMENTATION2189
-	    type = 'n';
-	    tagnum = -1;
-	    typenum = -1;
-#else
 	    tagnum=G__defined_tagname("G__longlong",2);
 	    if(-1==tagnum) {
 	      G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
 	    }
 	    typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
 	    type='u';
-#endif
 	  }
 #endif
 	  name[0] = c;
@@ -3469,10 +3422,6 @@ int formal_isconst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g':
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-    case 'n':
-    case 'm':
-#endif
       switch(param_type) {
       case 'd':
       case 'f':
@@ -3491,10 +3440,6 @@ int formal_isconst;
       case 'l':
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-      case 'n':
-      case 'm':
 #endif
 	match=1;
 	break;
@@ -3516,10 +3461,6 @@ int formal_isconst;
       case 'l':
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-      case 'n': /* questionable */
-      case 'm':
 #endif
 	if(G__PARAREFERENCE==formal_reftype) {
           param->obj.d = param->obj.i;
@@ -3576,11 +3517,7 @@ int formal_isconst;
 #endif
       case 'Y':
 #ifdef G__OLDIMPLEMENTATION1219
-#ifndef G__OLDIMPLEMENTATION2191
-      case '1': /* questionable */
-#else
       case 'Q': /* questionable */
-#endif
 #endif
 	match=1;
 	break;
@@ -3591,11 +3528,7 @@ int formal_isconst;
       break;
     case 'Y':
 #ifdef G__OLDIMPLEMENTATION1219
-#ifndef G__OLDIMPLEMENTATION2191
-    case '1': /* questionable */
-#else
     case 'Q': /* questionable */
-#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION839
       if(isupper(param_type)||0==param->obj.i) {
@@ -3608,12 +3541,7 @@ int formal_isconst;
 	match=0;
       }
       break;
-#if !defined(G__OLDIMPLEMENTATION2191)
-    case '1': /* questionable */
-      if('1'==param_type||'C'==param_type ||'Y'==param_type) match=1;
-      else  match=0;
-      break;
-#elif !defined(G__OLDIMPLEMENTATION1225)
+#ifndef G__OLDIMPLEMENTATION1225
     case 'Q': /* questionable */
       if('Q'==param_type||'C'==param_type
 #ifndef G__OLDIMPLEMENTATION1248
@@ -3673,11 +3601,7 @@ int formal_isconst;
 	}
 	break;
       case 'Y':
-#ifndef G__OLDIMPLEMENTATION2191
-      case '1': /* questionable */
-#else
       case 'Q': /* questionable */
-#endif
 	match=1;
 	break;
 #ifndef G__OLDIMPLEMENTATION764
@@ -3694,14 +3618,6 @@ int formal_isconst;
       break;
     default:
       /* questionable */
-#ifndef G__OLDIMPLEMENTATION2191
-      if((param_type=='Y'||param_type=='1'||0==param->obj.i)&&
-	 (isupper(formal_type) || 'a'==formal_type)) {
-	match=1;
-      }
-      else {
-	match=0;
-      }
 #ifndef G__OLDIMPLEMENTATION764
       if((param_type=='Y'||param_type=='Q'||0==param->obj.i)&&
 	 (isupper(formal_type)
@@ -3717,7 +3633,6 @@ int formal_isconst;
       else {
 	match=0;
       }
-#endif
       break;
     }
   }
@@ -4117,9 +4032,7 @@ int formal_isconst;
 #ifndef G__OLDIMPLEMENTATION1120
   if(match && isupper(param_type) && isupper(formal_type) && 
      'Y'!=param_type && 'Y'!=formal_type
-#if !defined(G__OLDIMPLEMENTATION2191)
-     && '1'!=param_type 
-#elif !defined(G__OLDIMPLEMENTATION1266)
+#ifndef G__OLDIMPLEMENTATION1266
      && 'Q'!=param_type 
 #endif
      ) {
@@ -4258,11 +4171,6 @@ int formal_type;
   case 'k':
   case 'l':
     return(5);
-#ifndef G__OLDIMPLEMENTATION2189
-  case 'n':
-  case 'm':
-    return(6);
-#endif
   }
   return(0);
 }
@@ -4373,10 +4281,6 @@ int recursive;
 	case 'd':
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-	case 'n':
-	case 'm':
 #endif
 #endif /* 1954 */
 	case 'f':
@@ -4551,11 +4455,7 @@ int recursive;
 	break;
 #ifndef G__OLDIMPLEMENTATION1435
       case 'Y':
-	if(isupper(param_type)||0==libp->para[i].obj.i
-#ifndef G__OLDIMPLEMENTATION2191
-	   || '1'==param_type
-#endif
-	   ) {
+	if(isupper(param_type)||0==libp->para[i].obj.i) {
 	  funclist->p_rate[i] = G__PROMOTIONMATCH+G__TOVOIDPMATCH;
 	}
 	break;
@@ -4579,10 +4479,6 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-      case 'n':
-      case 'm':
-#endif
 	switch(param_type) {
 	case 'd':
 	case 'f':
@@ -4596,11 +4492,6 @@ int recursive;
 	case 'l':
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-	case 'n':
-	case 'm':
-	case 'q':
 #endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
@@ -4623,10 +4514,6 @@ int recursive;
 	case 'f':
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-	case 'n':
-	case 'm':
 #endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
@@ -4655,11 +4542,7 @@ int recursive;
 	  break;
 #endif
 #ifdef G__OLDIMPLEMENTATION1219
-#ifndef G__OLDIMPLEMENTATION2191
-	case '1': /* questionable */
-#else
 	case 'Q': /* questionable */
-#endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
 #endif
@@ -4669,30 +4552,16 @@ int recursive;
 	break;
       case 'Y':
 #ifdef G__OLDIMPLEMENTATION1219
-#ifndef G__OLDIMPLEMENTATION2191
-      case '1': /* questionable */
-#else
       case 'Q': /* questionable */
-#endif
 #endif
 	if(isupper(param_type)||0==libp->para[i].obj.i) {
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	}
 	break;
-#if !defined(G__OLDIMPLEMENTATION1225)
-#ifndef G__OLDIMPLEMENTATION2191
-      case '1': /* questionable */
-#else
+#ifndef G__OLDIMPLEMENTATION1225
       case 'Q': /* questionable */
-#endif
 #ifndef G__OLDIMPLEMENTATION1299
-	if(
-#ifndef G__OLDIMPLEMENTATION2191
-	   '1'==param_type
-#else
-	   'Q'==param_type
-#endif
-	   ) 
+	if('Q'==param_type) 
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	else if('Y'==param_type) 
 	  funclist->p_rate[i] = G__STDCONVMATCH+G__V2P2FCONVMATCH;
@@ -4709,14 +4578,9 @@ int recursive;
 	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;/*???*/
 	  }
 	}
+	
 #else
-	if(
-#ifndef G__OLDIMPLEMENTATION2191
-	   '1'==param_type
-#else
-	   'Q'==param_type
-#endif
-	   ||'C'==param_type
+	if('Q'==param_type||'C'==param_type
 #ifndef G__OLDIMPLEMENTATION1248
 	   ||'Y'==param_type
 #endif
@@ -4762,11 +4626,7 @@ int recursive;
 	  }
 	  break;
 #endif
-#ifndef G__OLDIMPLEMENTATION2191
-	case '1': /* questionable */
-#else
 	case 'Q': /* questionable */
-#endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
 #ifndef G__OLDIMPLEMENTATION764
@@ -4781,17 +4641,10 @@ int recursive;
 	break;
       default:
 	/* questionable */
-#ifndef G__OLDIMPLEMENTATION2191
-	if((param_type=='Y'||param_type=='1'||0==libp->para[0].obj.i)&&
-	   (isupper(formal_type) || 'a'==formal_type)) {
-	  funclist->p_rate[i] = G__STDCONVMATCH;
-	}
-#else
 	if((param_type=='Y'||param_type=='Q'||0==libp->para[0].obj.i)&&
 	   (isupper(formal_type) || 'a'==formal_type)) {
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	}
-#endif
 	break;
       }
     }
@@ -5441,95 +5294,6 @@ struct G__funclist *pmatch;
       }
       break;
 #endif
-#ifndef G__OLDIMPLEMENTATION2189
-    case 'n': /* long long */
-      if(G__PARAREFERENCE==formal_reftype) {
-	param->type = formal_type;
-	param->ref = 0;
-	switch(param_type) {
-	case 'd':
-	case 'f':
-	  param->obj.ll = param->obj.d;
-	  break;
-	case 'g':
-	case 'c':
-	case 's':
-	case 'i':
-	case 'l':
-	case 'b':
-	case 'r':
-	case 'h':
-	case 'k':
-	  param->obj.ll = param->obj.i;
-	  break;
-	case 'm':
-	  param->obj.ll = param->obj.ull;
-	  break;
-	case 'q':
-	  param->obj.ll = (long long)param->obj.ld;
-	  break;
-	}
-      }
-      break;
-    case 'm': /* unsigned long long */
-      if(G__PARAREFERENCE==formal_reftype) {
-	param->type = formal_type;
-	param->ref = 0;
-	switch(param_type) {
-	case 'd':
-	case 'f':
-	  param->obj.ull = param->obj.d;
-	  break;
-	case 'g':
-	case 'c':
-	case 's':
-	case 'i':
-	case 'l':
-	case 'b':
-	case 'r':
-	case 'h':
-	case 'k':
-	  param->obj.ull = param->obj.i;
-	  break;
-	case 'n':
-	  param->obj.ull = param->obj.ll;
-	  break;
-	case 'q':
-	  param->obj.ull = (long long)param->obj.ld;
-	  break;
-	}
-      }
-      break;
-    case 'q': /* long double */
-      if(G__PARAREFERENCE==formal_reftype) {
-	param->type = formal_type;
-	param->ref = 0;
-	switch(param_type) {
-	case 'd':
-	case 'f':
-	  param->obj.ld = param->obj.d;
-	  break;
-	case 'g':
-	case 'c':
-	case 's':
-	case 'i':
-	case 'l':
-	case 'b':
-	case 'r':
-	case 'h':
-	case 'k':
-	  param->obj.ld = param->obj.i;
-	  break;
-	case 'n':
-	  param->obj.ld = param->obj.ll;
-	  break;
-	case 'm':
-	  param->obj.ld = (long long)param->obj.ld;
-	  break;
-	}
-      }
-      break;
-#endif
     case 'd':
     case 'f':
       switch(param_type) {
@@ -5543,10 +5307,6 @@ struct G__funclist *pmatch;
       case 'l':
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
-#endif
-#ifndef G__OLDIMPLEMENTATION2189
-      case 'n':
-      case 'm':
 #endif
 	/* std conv */
 	if(G__PARAREFERENCE==formal_reftype) {
@@ -5674,11 +5434,7 @@ struct G__funclist *pmatch;
 	break;
       }
 #ifndef G__OLDIMPLEMENTATION1365
-#ifndef G__OLDIMPLEMENTATION2191
-    case '1':
-#else
     case 'Q':
-#endif
       if('C'==param_type && 
 #ifndef G__OLDIMPLEMENTATION2012
 	 p_ifunc->pentry[ifn]->size<0
@@ -7693,17 +7449,6 @@ asm_ifunc_start:   /* loop compilation execution label */
 	  case 'u':
 	    G__ansipara.ref = G__ansipara.obj.i;
 	    break;
-#ifndef G__OLDIMPLEMENTATION2189
-	  case 'n':
-	    G__ansipara.ref = (long)(&libp->para[ipara].obj.ll);
-	    break;
-	  case 'm':
-	    G__ansipara.ref = (long)(&libp->para[ipara].obj.ull);
-	    break;
-	  case 'q':
-	    G__ansipara.ref = (long)(&libp->para[ipara].obj.ld);
-	    break;
-#endif
           default:
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.i);
 	    break;
@@ -7990,7 +7735,8 @@ asm_ifunc_start:   /* loop compilation execution label */
     case 'd': /* double */
     case 'f': /* float */
     case 'w': /* logic (original type) */
-      G__letdouble(result7,p_ifunc->type[ifn] ,G__double(*result7));
+      G__letdouble(result7,p_ifunc->type[ifn]
+		   ,G__double(*result7));
 #define G__OLDIMPLEMENTATION753
 #ifdef G__OLDIMPLEMENTATION753
       if(p_ifunc->reftype[ifn]==G__PARANORMAL) result7->ref=0;
@@ -7999,21 +7745,6 @@ asm_ifunc_start:   /* loop compilation execution label */
       result7->isconst = p_ifunc->isconst[ifn];
 #endif
       break;
-
-#ifndef G__OLDIMPLEMENTATION2189
-    case 'n':
-    case 'm':
-      G__letLonglong(result7,p_ifunc->type[ifn],G__Longlong(*result7));
-      if(p_ifunc->reftype[ifn]==G__PARANORMAL) result7->ref=0;
-      result7->isconst = p_ifunc->isconst[ifn];
-      break;
-
-    case 'q':
-      G__letLongdouble(result7,p_ifunc->type[ifn],G__Longdouble(*result7));
-      if(p_ifunc->reftype[ifn]==G__PARANORMAL) result7->ref=0;
-      result7->isconst = p_ifunc->isconst[ifn];
-      break;
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g':

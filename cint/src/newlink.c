@@ -3155,13 +3155,7 @@ struct G__ifunc_table *ifunc;
   if(G__CPPLINK!=G__globalcomp) return;
   for(k=0;k<ifunc->para_nu[ifn];k++) {
     /*DEBUG*/ printf("%s %d\n",ifunc->funcname[ifn],k);
-    if(
-#ifndef G__OLDIMPLEMENTATION2191
-       '1'==ifunc->para_type[ifn][k]
-#else
-       'Q'==ifunc->para_type[ifn][k]
-#endif
-       ) {
+    if('Q'==ifunc->para_type[ifn][k]) {
       strcpy(buf,G__type2string(ifunc->para_type[ifn][k],
 				ifunc->para_p_tagtable[ifn][k],
 				ifunc->para_p_typetable[ifn][k],0,
@@ -4906,20 +4900,6 @@ char *endoffunc;
     fprintf(fp,"      G__letint(result7,%d,(long)",type);
     sprintf(endoffunc,");");
     return(0);
-#ifndef G__OLDIMPLEMENTATION2189
-  case 'n':
-    fprintf(fp,"      G__letLonglong(result7,%d,(long long)",type);
-    sprintf(endoffunc,");");
-    return(0);
-  case 'm':
-    fprintf(fp,"      G__letULonglong(result7,%d,(unsigned long long)",type);
-    sprintf(endoffunc,");");
-    return(0);
-  case 'q':
-    fprintf(fp,"      G__letLongdouble(result7,%d,(long double)",type);
-    sprintf(endoffunc,");");
-    return(0);
-#endif
   case 'f':
   case 'd':
     fprintf(fp,"      G__letdouble(result7,%d,(double)",type);
@@ -5108,13 +5088,7 @@ int k;
   }
 #endif
 
-  if(
-#ifndef G__OLDIMPLEMENTATION2191
-     '1'!=type && 'a'!=type
-#else
-     'Q'!=type && 'a'!=type
-#endif
-     ) {
+  if('Q'!=type && 'a'!=type) {
     switch(reftype) {
 #ifndef G__OLDIMPLEMENTATION1112
     case G__PARANORMAL:
@@ -5172,20 +5146,6 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION2189
-        case 'n':
-	  fprintf(fp,"*(%s*)G__Longlongref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
-	  break;
-        case 'm':
-	  fprintf(fp,"*(%s*)G__ULonglongref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
-	  break;
-        case 'q':
-	  fprintf(fp,"*(%s*)G__Longdoubleref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
-	  break;
-#endif
 #if !defined(G__OLDIMPLEMENTATION2047)
         case 'g':
 	  fprintf(fp,"*(%s*)G__Boolref(&libp->para[%d])"
@@ -5242,20 +5202,6 @@ int k;
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulong(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION2189
-        case 'n':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mlonglong(libp->para[%d])"
-		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
-	  break;
-        case 'm':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulonglong(libp->para[%d])"
-		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
-	  break;
-        case 'q':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mlongdouble(libp->para[%d])"
-		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
-	  break;
-#endif
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
 #ifdef G__BOOL4BYTE
@@ -5400,11 +5346,7 @@ int k;
   }
 
   switch(type) {
-#ifndef G__OLDIMPLEMENTATION2191
-  case '1': /* Pointer to function */
-#else
   case 'Q': /* Pointer to function */
-#endif
 #ifndef G__OLDIMPLEMENTATION1235
 #ifdef G__CPPIF_EXTERNC
     fprintf(fp,"(%s)G__int(libp->para[%d])"
@@ -5435,20 +5377,6 @@ int k;
     fprintf(fp,"*(%s *)G__int(libp->para[%d])"
 	      ,G__type2string(type,tagnum,typenum,0,isconst),k);
     break;
-#ifndef G__OLDIMPLEMENTATION2189
-  case 'n':
-    fprintf(fp,"(%s)G__Longlong(libp->para[%d])"
-	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
-    break;
-  case 'm':
-    fprintf(fp,"(%s)G__ULonglong(libp->para[%d])"
-	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
-    break;
-  case 'q':
-    fprintf(fp,"(%s)G__Longdouble(libp->para[%d])"
-	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
-    break;
-#endif
   case 'f':
   case 'd':
     fprintf(fp,"(%s)G__double(libp->para[%d])"
@@ -7108,11 +7036,7 @@ FILE *fp;
 	  (0==var->p[j] && G__COMPILEDGLOBAL==var->statictype[j] &&
 	   INT_MAX == var->varlabel[j][1])) && /* extern type v[]; */
 	 G__NOLINK>var->globalcomp[j] &&   /* with -c-1 or -c-2 option */
-#ifndef G__OLDIMPLEMENTATION2191
-	 'j'!=tolower(var->type[j]) /* questionable */
-#else
 	 'm'!=tolower(var->type[j])
-#endif
 	 && var->varnamebuf[j][0]
 	 ) {
 
@@ -10755,60 +10679,6 @@ G__value *buf;
   return(&buf->obj.d);
 }
 /* #endif   ON1167 */
-
-#ifndef G__OLDIMPLEMENTATION2189
-/**************************************************************************
-* G__Longlongref()
-**************************************************************************/
-long long* G__Longlongref(buf)
-G__value *buf;
-{
-  if('n'==buf->type && buf->ref) 
-    return((long long*)buf->ref);
-  else if('m'==buf->type && buf->ref) 
-    buf->obj.ll = (long long)buf->obj.ull;
-  else if('d'==buf->type || 'f'==buf->type) 
-    buf->obj.ll = (long long)buf->obj.d;
-  else 
-    buf->obj.ll = (long long)buf->obj.i;
-  return(&buf->obj.ll);
-}
-/**************************************************************************
-* G__ULonglongref()
-**************************************************************************/
-unsigned long long* G__ULonglongref(buf)
-G__value *buf;
-{
-  if('m'==buf->type && buf->ref) 
-    return((unsigned long long*)buf->ref);
-  else if('n'==buf->type && buf->ref) 
-    buf->obj.ull = (unsigned long long)buf->obj.ll;
-  else if('d'==buf->type || 'f'==buf->type) 
-    buf->obj.ull = (unsigned long long)buf->obj.d;
-  else 
-    buf->obj.ull = (unsigned long long)buf->obj.i;
-  return(&buf->obj.ull);
-}
-/**************************************************************************
-* G__Longdoubleref()
-**************************************************************************/
-long double* G__Longdoubleref(buf)
-G__value *buf;
-{
-  if('q'==buf->type && buf->ref) 
-    return((long double*)buf->ref);
-  else if('n'==buf->type)
-    buf->obj.ld = (long double)buf->obj.ll;
-  else if('m'==buf->type)
-    buf->obj.ld = (long double)buf->obj.ull;
-  else if('d'==buf->type || 'f'==buf->type) 
-    buf->obj.ld = (long double)buf->obj.d;
-  else 
-    buf->obj.ld = (long double)buf->obj.i;
-  return(&buf->obj.ld);
-}
-
-#endif
 
 
 #ifndef G__PHILIPPE30

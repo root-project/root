@@ -202,8 +202,7 @@ class string {
   string& replace(size_t pos,size_t n,char c,size_t rep);
   //char get_at(size_t pos) const;
   //void put_at(size_t pos,char c);
-  const char& operator[](size_t pos) const;
-  char& operator[](size_t pos);
+  char operator[](size_t pos) const;
   const char* c_str(void) const;
   const char* data(void) const;
   size_t length(void) const;

@@ -746,8 +746,6 @@ extern int G__do_setmemfuncenv;
 extern int G__scopelevel;
 extern int G__cintv6;
 
-extern struct G__input_file G__lasterrorpos;
-
 #ifndef __CINT__
 #ifdef __cplusplus
 }
