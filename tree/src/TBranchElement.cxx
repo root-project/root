@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.7 2001/02/06 11:02:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.8 2001/02/07 08:31:36 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -101,7 +101,9 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
       TClass *clm;
       TObjArray *elements = sinfo->GetElements();
       TStreamerElement *element = (TStreamerElement *)elements->At(id);
-      if (element->IsA() == TStreamerBase::Class()) {
+      if (element->CannotSplit()) {
+         printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
+      } else if (element->IsA() == TStreamerBase::Class()) {
          // ===> develop the base class
          fType = 1;
          clm = gROOT->GetClass(element->GetName());
