@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.8 2003/05/07 10:35:39 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.9 2003/05/07 13:46:18 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1070,13 +1070,12 @@ Int_t TFumili::Minimize()
 	  if (fPL[I] > .0) fPL0[I]=fPL[I];
       }
   }
-  Int_t NN0 , NA;
+  Int_t NN0;
   // Calculate number of fZ-matrix elements as NN0=1+2+..+N0 
   NN0 = N0*(N0+1)/2;
   // if (NN0 >= 1) ????
   // fZ-matrix is initialized
   for( I=0; I < NN0; I++) fZ[I]=0.;
-  NA = fNpar;
 
   // Flag1
   fINDFLG[0] = 0;
