@@ -1281,7 +1281,6 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     }
     gPad->SetSelected((TObject*)gPad->GetView());
     return gPad->GetView()->DistancetoPrimitive(px,py);
-    return 0;
 }
 
 //______________________________________________________________________________
