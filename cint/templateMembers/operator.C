@@ -14,7 +14,7 @@ namespace edm {
    class RCPtr {
    public:
       
-      friend bool operator< <T> (const RCPtr<T>& p1, const RCPtr<T>& p2);
+      friend bool operator< <> (const RCPtr<T>& p1, const RCPtr<T>& p2);
    };
    
    template <class T> 

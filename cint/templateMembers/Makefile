@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.*
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest templateConstructorTest operatorTest
+TEST_TARGETS += mytest templateConstructorTest operatorTest templateMembers
 
 # adjust the location of Rules.mk as needed.
 include ../../root/Rules.mk
@@ -27,3 +27,26 @@ opdict.cxx: operator.C linkdef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
 operatorTest: opdict.$(ObjSuf)
+
+
+
+templateMembersDict.cxx: templateMembersClasses.h templateMembersLinkdef.h
+	$(CMDECHO) rootcint -v4 -f templateMembersDict.cxx -c templateMembersClasses.h templateMembersLinkdef.h
+
+templateMembers_C.$(DllSuf): templateMembersDict.cxx
+
+templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v Processing > templateMembers.log
+
+templateMembers: templateMembers.log  templateMembers.ref
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+	@echo This failures is due to the odd object life time in CINT.
+	$(CMDECHO) diff -b -u templateMembers.ref templateMembers.log > templateMembers.diff.log || \
+		diff templateMembers.diff.log templateMembers.diff.ref
+else
+	$(TestDiff)
+endif
+
+templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templateMembersCode_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v Processing > templateMembers.ref
