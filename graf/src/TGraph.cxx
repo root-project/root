@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.59 2002/02/24 18:01:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.60 2002/02/27 11:41:53 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -642,7 +642,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
+void TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
@@ -650,11 +650,11 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Printf("Unknown function: %s",fname); return; }
-   Fit(f1,option);
+   Fit(f1,option,"",xmin,xmax);
 }
 
 //______________________________________________________________________________
-void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
+void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fit this graph with function f1*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -704,6 +704,13 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
 //   With this setup, parameters 0->3 can vary freely
 //   Parameter 4 has boundaries [-10,-4] with initial value -8
 //   Parameter 5 is fixed to 100.
+//
+//  Fit range
+//  =========
+//  The fit range can be specified in two ways:
+//    - specify rxmax > rxmin (default is rxmin=rxmax=0)
+//    - specify the option "R". In this case, the function will be taken
+//      instead of the full graph range.
 //
 //   Changing the fitting function
 //   =============================
@@ -777,18 +784,14 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
       if (fY[i] < ymin) ymin = fY[i];
       if (fY[i] > ymax) ymax = fY[i];
    }
-
+   if (rxmax > rxmin) {
+      xmin = rxmin;
+      xmax = rxmax;
+   }
 //*-*- Check if Minuit is initialized and create special functions
    grFitter = TVirtualFitter::Fitter(this);
    grFitter->Clear();
 
-/*
-      if (!gROOT->GetFunction("gaus")) {
-      grF1 = new TF1("gaus","gaus",xmin,xmax);
-      grF1 = new TF1("expo","expo",xmin,xmax);
-      for (i=0;i<10;i++) grF1 = new TF1(Form("pol%d",i),Form("pol%d",i),xmin,xmax);
-   }
-*/
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grF1 = f1;
