@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.138 2004/08/03 16:01:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.139 2004/08/04 13:45:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5027,14 +5027,15 @@ void TPad::CloseToolTip(TObject *tip)
 //______________________________________________________________________________
 void TPad::x3d(Option_t *option)
 {
-   // Invokes a 3D viewer
+   // Invokes a 3D viewer.
 
-   fViewer3D = 0;
+   if (!option || !option[0])
+      option = "x3d";
    fViewer3D = TVirtualViewer3D::Viewer3D(option);
    if (fViewer3D) {
       fViewer3D->CreateScene(option);
    } else {
-      Error("x3d", "Cannot load 3D viewer with option: %s",option);
+      Error("x3d", "cannot load 3D viewer with option: %s", option);
    }
 }
 
