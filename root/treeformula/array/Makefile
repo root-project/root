@@ -4,16 +4,15 @@
 CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += arrayDrawTest arrayEventListTest boolOptTest
+TEST_TARGETS += arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
 
 ifneq ($(FAIL),)
    #force re-execution in the fail case
-	forceExec := $(shell rm arrayDrawTest.output)
+	forceExec := $(shell rm -f arrayDrawTest.output)
 endif
-   
 
 myTree.root: runFillTree.C fillTree.cxx Data.h Data.cxx 
 	$(CMDECHO) root.exe -q -b -l runFillTree.C > filltree.output
@@ -39,6 +38,13 @@ boolOptTest.log: boolOpt.C
 
 boolOptTest: boolOptTest.log
 	$(CMDECHO) diff -b boolOptTest.ref boolOptTest.log
+
+indexMultiDim.log: indexMultiDim.C orange.root
+	$(CMDECHO) root.exe -b -l -q indexMultiDim.C > indexMultiDim.log 2>&1 || \
+		diff -b indexMultiDim.ref indexMultiDim.log
+
+indexMultiDimTest: indexMultiDim.log
+	$(CMDECHO) diff -b indexMultiDim.ref indexMultiDim.log
 
 testWithFailure:
 ifeq ($(FAIL),)
