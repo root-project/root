@@ -43,7 +43,11 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
+ifeq ($(ICC_MAJOR),8)
+F77           = ifort
+else
 F77           = ifc
+endif
 F77FLAGS      =
 # check path for libg2c and libfrtbegin
 LIBG2C       := $(shell gcc -print-file-name=libg2c.a | \
