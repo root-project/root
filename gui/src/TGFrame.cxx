@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.81 2004/09/13 19:23:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.82 2004/09/14 10:50:47 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1574,7 +1574,7 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
    // the root window, otherwise no action is taken and the default
    // wm placement will be used.
 
-   Int_t x, y, ax, ay;
+   Int_t x=0, y=0, ax, ay;
    Window_t wdummy;
 
    UInt_t dw = fClient->GetDisplayWidth();
