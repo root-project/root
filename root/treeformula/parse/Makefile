@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES)
+CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake*
 
 #Set the list of target to make while testing
 TEST_TARGETS += templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean
