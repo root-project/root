@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.24 2003/12/05 01:17:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.25 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1761,10 +1761,11 @@ void TGCanvas::MapSubwindows()
 {
    // Map all canvas sub windows.
 
-   TGWindow::MapSubwindows();
    fHScrollbar->MapSubwindows();
    fVScrollbar->MapSubwindows();
    fVport->MapSubwindows();
+   fVport->MapWindow();
+   Layout();
 }
 
 //______________________________________________________________________________

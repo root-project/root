@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.95 2004/10/12 11:57:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.96 2004/10/12 13:41:35 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -423,7 +423,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             fgDbw = event->fWindow;
 
             if (dbl_clk) {
-               if ((event->fState == (kKeyControlMask | kButton1Mask)) &&
+               if ((event->fState & kKeyControlMask) &&
                     !IsEditDisabled() && gGuiBuilder) {
                   StartGuiBuilding(!IsEditable());
                   return kTRUE;

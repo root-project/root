@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.19 2004/10/11 16:25:10 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.20 2004/10/12 20:30:11 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -490,6 +490,10 @@ TGuiBldDragManager::~TGuiBldDragManager()
 
    delete fLassoMenu;
    fLassoMenu = 0;
+
+   if (!gSystem->AccessPathName(fPasteFileName.Data())) {
+      gSystem->Unlink(fPasteFileName.Data());
+   }
 
    gGuiBldDragManager = 0;
 }
@@ -2704,9 +2708,14 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
       UngrabFrame();
       gVirtualX->SelectInput(fClient->GetRoot()->GetId(), fEventMask);
    }
+
    if (on && fClient->IsEditable()) {
       gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
                            gVirtualX->CreateCursor(kPointer));
+   }
+
+   if (!on && !gSystem->AccessPathName(fPasteFileName.Data())) {
+      gSystem->Unlink(fPasteFileName.Data());
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.20 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.21 2004/10/12 20:30:11 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -382,12 +382,12 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    act->fAct = "new TGHProgressBar()";
    act->fPic = "bld_hprogressbar.xpm";
    AddAction(act, "Display");
-/*
-   act = new TGuiBldAction("TRootEmbeddedCanvas", "Embedded Canvas", kGuiBldCtor);
+
+   act = new TGuiBldAction("TRootEmbeddedCanvas", "Embed Canvas", kGuiBldCtor);
    act->fAct = "new TRootEmbeddedCanvas()";
    act->fPic = "bld_embedcanvas.xpm";
    AddAction(act, "Display");
-*/
+
    // Containers
    act = new TGuiBldAction("TGHorizontalFrame", "Horizontal Frame", kGuiBldCtor);
    act->fAct = "new TGHorizontalFrame()";
