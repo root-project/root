@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.5 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.6 2001/01/08 11:45:12 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -179,11 +179,11 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+
       SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_RELEASE), fWidgetId, 0);
       Released();
-
-      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -320,11 +320,11 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
       fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
       Released();
-
-      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
