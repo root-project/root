@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.14 2001/10/02 16:46:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.15 2001/12/02 15:15:23 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -120,7 +120,7 @@ public:
    virtual Bool_t    ReadBuffer(char *buf, Int_t len);
    virtual void      ReadFree();
    virtual void      ReadStreamerInfo();
-   virtual void      Recover();
+   virtual Int_t     Recover();
    virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEND(Seek_t last) { fEND = last; }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.48 2002/01/27 13:57:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.49 2002/01/28 17:01:53 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -429,7 +429,7 @@ void TFile::Init(Bool_t create)
          } else {
             Warning("TFile","file %s probably not closed, trying to recover",GetName());
          }
-         Recover();
+         if (!Recover()) goto zombie;
       }
    }
    gROOT->GetListOfFiles()->Add(this);
@@ -949,11 +949,15 @@ void TFile::ReadFree()
 }
 
 //______________________________________________________________________________
-void TFile::Recover()
+Int_t TFile::Recover()
 {
 //*-*-*-*-*-*-*-*-*Attempt to recover file if not correctly closed*-*-*-*-*
 //*-*              ===============================================
-
+//
+//  The function returns the number of keys that have been recovered.
+//  If no keys can be recovered, the file will be declared Zombie by 
+//  the calling function.
+       
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -966,7 +970,7 @@ void TFile::Recover()
    Long_t id, size, flags, modtime;
    if (SysStat(fD, &id, &size, &flags, &modtime)) {
       Error("Recover", "cannot stat the file %s", GetName());
-      return;
+      return 0;
    }
 
    fEND = Seek_t(size);
@@ -1025,7 +1029,8 @@ void TFile::Recover()
    }
    delete [] header;
    if (nrecov) Warning("Recover", "successfully recovered %d keys", nrecov);
-   else        Warning("Recover", "no keys recovered");
+   else        Warning("Recover", "no keys recovered: file is a Zombie");
+   return nrecov;
 }
 
 //______________________________________________________________________________
