@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.15 2002/02/06 18:27:40 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.16 2002/10/28 14:22:51 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -41,9 +41,11 @@
 #   define R__GLIBC
 #endif
 
+#include "RConfig.h"
 #include "rootdp.h"
 
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__))
+#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__)) || \
+    defined(R__SUNGCC3)
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
 #   define USE_SOCKLEN_T

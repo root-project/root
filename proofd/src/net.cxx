@@ -1,4 +1,4 @@
-// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.4 2002/01/22 10:53:28 rdm Exp $
+// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.5 2002/02/06 18:27:40 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -42,9 +42,11 @@
 #   define R__GLIBC
 #endif
 
+#include "RConfig.h"
 #include "proofdp.h"
 
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__))
+#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__)) || \
+    defined(R__SUNGCC3)
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
 #   define USE_SOCKLEN_T

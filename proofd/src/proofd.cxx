@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.28 2003/01/13 01:33:52 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.29 2003/01/22 11:23:03 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -108,6 +108,7 @@
 // 6: added support for kerberos5 authentication
 
 #include "config.h"
+#include "RConfig.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -177,7 +178,11 @@ extern "C" {
 #endif
 
 #if defined(__sun)
+#if defined(R__SUNGCC3)
+extern "C" int gethostname(char *, unsigned int);
+#else
 extern "C" int gethostname(char *, int);
+#endif
 #ifndef R__SHADOWPW
 #define R__SHADOWPW
 #endif

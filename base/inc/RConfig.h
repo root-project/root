@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.51 2003/02/28 11:09:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.52 2003/04/03 13:46:49 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -124,6 +124,9 @@
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
+#   endif
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
+#      define R__SUNGCC3
 #   endif
 #endif
 
