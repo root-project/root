@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.7 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.8 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,6 +43,39 @@ ClassImp(TAttFill)
 //    3000+pattern_number (see below)
 //    4000 :the window is transparent.
 //    4000 to 4100 the window is 100% transparent to 100% opaque
+//
+//  pattern_number can have any value from 1 to 25 (see table), or any value
+// from 100 to 999. For the latest the numbering convention is the following:
+//
+//            pattern_number = ijk      (FillStyle = 3ijk)
+//
+//    i (1-9) : specify the space between each hatch
+//              1 = 1/2mm  9 = 6mm
+//
+//    j (0-9) : specify angle between 0 and 90 degrees
+//
+//              0 = 0  
+//              1 = 10
+//              2 = 20
+//              3 = 30
+//              4 = 45
+//              5 = Not drawn
+//              6 = 60
+//              7 = 70
+//              8 = 80
+//              9 = 90
+//
+//    k (0-9) : specify angle between 90 and 180 degrees
+//              0 = 180
+//              1 = 170
+//              2 = 160
+//              3 = 150
+//              4 = 135
+//              5 = Not drawn
+//              6 = 120
+//              7 = 110
+//              8 = 100
+//              9 = 90
 //
 //*-*  The following table shows the list of pattern styles.
 //Begin_Html
