@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.183 2004/03/14 09:12:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.184 2004/03/17 09:31:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1663,11 +1663,11 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    }
    leaves->Compress();
 
-  // copy branch addresses
+   // copy branch addresses
    newtree->SetMakeClass(fMakeClass);
    CopyAddresses(newtree);
 
-  // may be copy some entries
+   // may be copy some entries
    if (nentries < 0) nentries = Int_t(fEntries);
    if (nentries > fEntries) nentries = Int_t(fEntries);
    for (i=0;i<nentries;i++) {
@@ -3664,6 +3664,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
                // the clone's branch is still pointing to us
                cloneBr->SetAddress(add);
             }
+            lnk = lnk->Next();
          }
       }
       branch->SetAddress(add);
