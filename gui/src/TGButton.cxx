@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.6 2001/11/08 16:12:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.7 2002/03/29 20:16:28 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -433,16 +433,17 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
 
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button %d", id);
-      return;
+      fPic = fClient->GetPicture("mb_question_s.xpm");
+   } else
+      fPic = pic;
+
+   if (fPic) {
+      fTWidth  = fPic->GetWidth();
+      fTHeight = fPic->GetHeight();
+
+      Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
+             fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
-
-   fPic = pic;
-
-   fTWidth  = fPic->GetWidth();
-   fTHeight = fPic->GetHeight();
-
-   Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
-          fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
 }
 
 //______________________________________________________________________________
@@ -457,17 +458,19 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
 
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button\n%s", cmd);
-      return;
-   }
+      fPic = fClient->GetPicture("mb_question_s.xpm");
+   } else
+      fPic = pic;
 
-   fPic     = pic;
    fCommand = cmd;
 
-   fTWidth  = fPic->GetWidth();
-   fTHeight = fPic->GetHeight();
+   if (fPic) {
+      fTWidth  = fPic->GetWidth();
+      fTHeight = fPic->GetHeight();
 
-   Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
-          fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
+      Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
+             fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
+   }
 }
 
 //______________________________________________________________________________
@@ -496,7 +499,10 @@ void TGPictureButton::DoRedraw()
 {
    // Redraw picture button.
 
-   if (!fPic) return;
+   if (!fPic) {
+      TGFrame::DoRedraw();
+      return;
+   }
 
    int x = (fWidth - fTWidth) >> 1;
    int y = (fHeight - fTHeight) >> 1;
