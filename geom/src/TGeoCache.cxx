@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.19 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.20 2003/06/24 12:37:39 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -146,8 +146,10 @@ TGeoNodeCache::~TGeoNodeCache()
 void TGeoNodeCache::BuildIdArray()
 {
 // Builds node id array.
+   Int_t nnodes = gGeoManager->GetNNodes();
+   if (nnodes>3E7) return;
    if (fNodeIdArray) delete [] fNodeIdArray;
-   fNodeIdArray = new Int_t[2*gGeoManager->GetNNodes()+1];
+   fNodeIdArray = new Int_t[2*nnodes+1];
    fNodeIdArray[0] = 0;
    Int_t ifree  = 1;
    Int_t nodeid = 0;
@@ -201,6 +203,10 @@ Int_t TGeoNodeCache::AddNode(TGeoNode *node)
 void TGeoNodeCache::CdNode(Int_t nodeid) {
 // Change current path to point to the node having this id.
 // Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+   if (!fNodeIdArray) {
+      printf("WARNING:CdNode() disabled - too many nodes\n");
+      return;
+   }   
    Int_t *arr = fNodeIdArray;
    if (nodeid == arr[fIndex]) return;
    while (fLevel>0) {
@@ -259,8 +265,10 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
    }
    // make daughter current 
    fBranch[++fLevel] = nind_d;
-   fIndex = fNodeIdArray[fIndex+index+1];
-   fIdBranch[fLevel] = fIndex;
+   if (fNodeIdArray) {
+      fIndex = fNodeIdArray[fIndex+index+1];
+      fIdBranch[fLevel] = fIndex;
+   }   
    fCurrentNode = nind_d;
    fCurrentCache = CacheId(nind_d);
    fCurrentIndex = Index(nind_d);
@@ -298,7 +306,7 @@ void TGeoNodeCache::CdUp()
 // change current path to mother.
    if (!fLevel) return;
    fLevel--;
-   fIndex = fIdBranch[fLevel];
+   if (fNodeIdArray) fIndex = fIdBranch[fLevel];
    fCurrentNode = fBranch[fLevel];
    fCurrentCache = CacheId(fCurrentNode);
    fCurrentIndex = Index(fCurrentNode);
@@ -579,8 +587,10 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
    *newmat = fMatrix;
    newmat->Multiply(local);
    fLevel++;
-   fIndex = fNodeIdArray[fIndex+index+1];
-   fIdBranch[fLevel] = fIndex;
+   if (fNodeIdArray) {
+      fIndex = fNodeIdArray[fIndex+index+1];
+      fIdBranch[fLevel] = fIndex;
+   }   
    fMatrix = newmat;
    fNode = newnode;
    fNodeBranch[fLevel] = fNode;
@@ -593,7 +603,7 @@ void TGeoCacheDummy::CdUp()
 {
    if (!fLevel) return;
    fLevel--;
-   fIndex = fIdBranch[fLevel];
+   if (fNodeIdArray) fIndex = fIdBranch[fLevel];
    fNode = fNodeBranch[fLevel];
    fMatrix = fMatrixBranch[fLevel];
 }

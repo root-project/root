@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.27 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.28 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -71,6 +71,7 @@ protected :
    TObject           *fField;          //! just a hook for now
    TString            fOption;         //! option - if any
    Int_t              fNumber;         //  volume serial number in the list of volumes
+   Int_t              fNtotal;         // total number of physical nodes
 public:
    enum EGeoVolumeTypes {
       kVolumeDiv     =     BIT(16),
@@ -95,7 +96,7 @@ public:
    void            CleanAll();
    void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
-   Int_t           CountNodes(Int_t nlevels=1000) const; // *MENU*
+   Int_t           CountNodes(Int_t nlevels=1000);
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
@@ -125,6 +126,7 @@ public:
    Bool_t          FindMatrixOfDaughterVolume(TGeoVolume *vol) const;
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
+   Int_t           GetNtotal() const {return fNtotal;}
    virtual Int_t   GetByteCount() const;
    TGeoMaterial   *GetMaterial() const               {return fMedium->GetMaterial();}
    TGeoMedium     *GetMedium() const                 {return fMedium;}
@@ -151,6 +153,7 @@ public:
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
+   void            Raytrace(Option_t *option=""); // *MENU*
    void            SetAsTopVolume(); // *MENU*
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
@@ -175,7 +178,7 @@ public:
    void            Voxelize(Option_t *option);
    Double_t        Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
 
-  ClassDef(TGeoVolume, 3)              // geometry volume descriptor
+  ClassDef(TGeoVolume, 4)              // geometry volume descriptor
 };
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.56 2003/06/29 22:20:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.57 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2644,10 +2644,10 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
    Double_t is_entering = fIsEntering;
    Double_t bigstep = 1.E6;
    Int_t i, istep;
-   Int_t start = GetCurrentNodeId();
+   Int_t start = PushPath();
    memcpy(saved_point, fPoint, 3*sizeof(Double_t));
    memcpy(saved_direction, fDirection, 3*sizeof(Double_t));
-   PushPath();
+//   PushPath();
    if (!forward) {
       // change to opposite direction
       for (i=0; i<3; i++) fDirection[i] *= -1.;
@@ -2683,7 +2683,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = 1E-3;
          Step();
       }
-      if (!fIsStepEntering) CdNode(start);
+      if (!fIsStepEntering) PopPath(start);
       // restore initial direction
       memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
    } else {
@@ -2717,7 +2717,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = 1E-3;
          Step();
       }
-      if (!fIsStepEntering) CdNode(start);
+      if (!fIsStepEntering) PopPath(start);
    }   
    // now the current point is close to the boundary of the current node
    // we compute the normal
@@ -3440,7 +3440,16 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 // Instanciate a TGeoChecker object and investigates the geometry according to
 // option. Not implemented yet.
    // check shapes first
-   fTopNode->CheckShapes();
+   TIter next(fGShapes);
+   TGeoShape *shape;
+   Bool_t has_runtime = kFALSE;
+   while ((shape = (TGeoShape*)next())) {
+      if (shape->IsRunTimeShape()) {
+         has_runtime = kTRUE;
+         break;
+      }
+   }      
+   if (has_runtime) fTopNode->CheckShapes();
 }
 
 //_____________________________________________________________________________

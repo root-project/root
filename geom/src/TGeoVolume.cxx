@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.32 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.33 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -356,6 +356,7 @@ TGeoVolume::TGeoVolume()
    fField    = 0;
    fMedium   = 0;
    fNumber   = 0;
+   fNtotal   = 0;
    fOption   = "";
    TObject::ResetBit(kVolumeImportNodes);
 }
@@ -376,6 +377,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fOption   = "";
    fMedium   = (TGeoMedium*)med;
    fNumber   = 0;
+   fNtotal   = 0;
    if (gGeoManager) fNumber = gGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
 }
@@ -527,19 +529,21 @@ void TGeoVolume::CheckShapes()
 }     
 
 //_____________________________________________________________________________
-Int_t TGeoVolume::CountNodes(Int_t nlevels) const
+Int_t TGeoVolume::CountNodes(Int_t nlevels)
 {
 // count total number of subnodes starting from this volume, nlevels down
-   Int_t count = 1;
-   if (!fNodes || !nlevels) return 1;
-   TIter next(fNodes);
+   if (fNtotal) return fNtotal;
+   fNtotal = 1;
+   if (!fNodes || !nlevels) return fNtotal;
+   Int_t nd = GetNdaughters();
    TGeoNode *node;
    TGeoVolume *vol;
-   while ((node=(TGeoNode*)next())) {
+   for (Int_t i=0; i<nd; i++) {
+      node = GetNode(i);
       vol = node->GetVolume();
-      count += vol->CountNodes(nlevels-1);
+      fNtotal += vol->CountNodes(nlevels-1);
    }
-   return count;
+   return fNtotal;
 }
 
 //_____________________________________________________________________________
@@ -783,6 +787,7 @@ void TGeoVolume::Draw(Option_t *option)
    else old_vol=0;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   painter->SetRaytracing(kFALSE);
    painter->Draw(option);   
 }
 
@@ -867,6 +872,15 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
    else old_vol=0;
    gGeoManager->RandomRays(nrays, startx, starty, startz);
 }
+
+//_____________________________________________________________________________
+void TGeoVolume::Raytrace(Option_t * /*option*/)
+{
+// Draw this volume with current settings and perform raytracing in the pad.
+//   Draw();
+//   gGeoManager->GetGeomPainter()->SetRaytracing();
+//   gGeoManager->GetGeomPainter()->ModifiedPad();
+}   
 
 //_____________________________________________________________________________
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
