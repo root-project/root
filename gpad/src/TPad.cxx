@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.45 2001/08/28 16:33:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.46 2001/08/28 21:45:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -383,7 +383,11 @@ void TPad::Clear(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Delete all pad primitives*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
-
+//
+//   If the bit kClearAfterCR has been set for this pad, the Clear function
+//   will execute only after having pressed a CarriageReturn
+//   Set the bit with mypad->SetBit(TPad::kClearAfterCR)
+      
    if (!IsEditable()) return;
 
    if (!fPadPaint) {
@@ -393,7 +397,9 @@ void TPad::Clear(Option_t *option)
    }
 
    cd();
-
+   
+   if (TestBit(kClearAfterCR)) getchar();
+   
    if (!gPad->IsBatch()) gVirtualX->ClearWindow();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
