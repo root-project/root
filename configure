@@ -102,7 +102,7 @@ check_library() {
     if test ! "x$shared" = "xno" ; then
 	slibs=""
 	for i in $lib ; do
-	    for ext in .so .sl ; do
+	    for ext in .so .sl .dylib ; do
 		slibs="$slibs $i$ext"
 	    done
 	done
@@ -918,6 +918,10 @@ if test ! "x$enable_srp" = "xno" ; then
     srpinc=$found_hdr
     srpincdir=$found_dir
 
+    if test "x$srpincdir" = "x" ; then
+	enable_srp="no"
+    fi
+
     if test "x$srplibdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srplibdir=$srpdir/lib
     fi
@@ -968,8 +972,13 @@ if test ! "x$enable_srp" = "xno" ; then
 	/usr/srp/base/lib /usr/local/srp/base/lib
     srputilincdir=$found_dir
 
-    if test "x$srputillib" = "x" ; then
-        enable_srp="no"
+    if test "x$srputilincdir" = "x" ; then
+	enable_srp="no"
+    fi
+
+    if test "x$enable_srp" = "xno" ; then
+	srplib=""
+	srputillib=""
     fi
 fi
 
