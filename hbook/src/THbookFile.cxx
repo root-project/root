@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.8 2002/04/19 07:39:31 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.9 2002/04/30 07:26:47 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -422,7 +422,11 @@ TObject *THbookFile::Get(Int_t idd)
      if (id == idd) break;
   }
   if (id == 0) return 0;
-
+  if (id != idd) {
+     printf("Error cannot find ID = %d\n",idd);
+     return 0;
+  }
+  
   int i999 = 999;
   hrin(id,i999,0);
   if (quest[0]) {
