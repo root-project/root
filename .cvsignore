@@ -1,6 +1,7 @@
 bin
 lib
 include
+config.status
 work.pc
 work.pcl
 .def
