@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.18 2004/09/15 17:37:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.19 2004/09/22 12:34:10 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -513,6 +513,11 @@ void TGButtonGroup::SavePrimitive(ofstream &out, Option_t *option)
      out << "," << GetOptionString() << "," << ParGC << "," << ParFont << ",ucolor);" << endl;
    }
    
+   // setting layout manager
+   out << "   " << GetName() <<"->SetLayoutManager(";
+   GetLayoutManager()->SavePrimitive(out, option);
+   out << ");"<< endl;
+
    TGFrameElement *f;
    TIter next(GetList());
    while ((f = (TGFrameElement *)next())) {
