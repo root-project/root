@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.7 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.8 2004/04/06 21:24:06 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -920,7 +920,7 @@ void TGGCPool::FreeGC(const TGGC *gct)
    TGGC *gc = (TGGC *) fList->FindObject(gct);
 
    if (gc) {
-      if (!gc->RemoveReference() == 0) {
+      if (gc->RemoveReference() == 0) {
          fList->Remove(gc);
          delete gc;
       }
@@ -966,6 +966,16 @@ TGGC *TGGCPool::FindGC(GContext_t gct)
          return gc;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TGGC *TGGCPool::GetGC(GContext_t gct)
+{
+   // returns graphics context based on its GContext_t handle.
+
+   GCValues_t gval;
+   gVirtualX->GetGCValues(gct, gval);
+   return GetGC(&gval, kTRUE);
 }
 
 //______________________________________________________________________________

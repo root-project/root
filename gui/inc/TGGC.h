@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -129,6 +129,7 @@ public:
    virtual ~TGGCPool();
 
    TGGC *GetGC(GCValues_t *values, Bool_t rw = kFALSE);
+   TGGC *GetGC(GContext_t gct);
    void  FreeGC(const TGGC *gc);
    void  FreeGC(GContext_t gc);
 
