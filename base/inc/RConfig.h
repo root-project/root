@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.18 2001/04/06 14:17:41 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.19 2001/04/25 14:38:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -38,6 +38,12 @@
 #   define R__UNIX
 #   define ANSICPP
 #   define NEED_STRCASECMP
+#endif
+
+#ifdef __linux
+#   ifndef linux
+#      define linux
+#   endif
 #endif
 
 #if defined(__alpha) && !defined(linux)
@@ -186,10 +192,10 @@
 #   define R__FBSD
 #   define R__UNIX
 #   define R__BYTESWAP
-#   define R__NOSTATS         /* problem using stats with FreeBSD malloc/free */
+#   define R__NOSTATS      /* problem using stats with FreeBSD malloc/free */
 #endif
 
-#if defined(__APPLE__)  /* MacOS X support, initially following FreeBSD */
+#if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
 #   define R__MACOSX
 #   define R__UNIX
 #endif
