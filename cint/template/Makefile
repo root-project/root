@@ -2,7 +2,8 @@
 CLEAN_TARGETS += *.log *.root $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += usingtemplate operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
+TEST_TARGETS += longlong usingtemplate operator1 simpleSeparateDict forwardDecl constructorTest typenameTest \
+	templatefriend
 
 SHELL = /bin/bash
 
@@ -53,4 +54,14 @@ constructorTest: constructorDict.o
 usingtemplate.log: usingtemplate_C.$(DllSuf)
 
 usingtemplate: usingtemplate.log
+	$(TestDiff)
+
+longlong.log: longlong_C.$(DllSuf)
+
+longlong: longlong.log
+	$(TestDiff)
+
+templatefriend.log : templatefriend_cxx.$(DllSuf)
+
+templatefriend: templatefriend.log
 	$(TestDiff)
