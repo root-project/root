@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.26 2001/01/15 07:35:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.27 2001/01/16 16:21:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -731,12 +731,12 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
    return 0;
 }
 
+ 
 //______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const
 {
 //  List the TStreamerElement list and also the precomputed tables
-
-   printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
+  printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
 
    if (fElements) fElements->ls(option);
    for (Int_t i=0;i<fNdata;i++) {
@@ -744,6 +744,19 @@ void TStreamerInfo::ls(Option_t *option) const
       printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld\n",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i]);
    }
 }
+
+//______________________________________________________________________________
+void TStreamerInfo::Optimize(Bool_t opt)
+{
+//  This is a static function.
+//  Set optimization option.
+//  When this option is activated (default), consecutive data members
+//  of the same type are merged into an array (faster).
+//  Optimization must be off in TTree split mode.
+   
+   fgOptimize = opt;
+}
+
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
