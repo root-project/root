@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.25 2002/11/28 07:29:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.26 2003/02/04 22:04:16 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -43,8 +43,8 @@ protected:
    Int_t     fMapCount;      //Number of objects or classes in map
    Int_t     fMapSize;       //Default size of map
    Int_t     fDisplacement;  //Value to be added to the map offsets
-   TExMap   *fMap;           //Map containing object,id pairs for reading/ writing
-   TExMap   *fClassMap;      //Map classes of containing object,id pairs for reading
+   TExMap   *fMap;           //Map containing object,offset pairs for reading/writing
+   TExMap   *fClassMap;      //Map containing object,class pairs for reading
    TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
@@ -80,7 +80,7 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
-   void     MapObject(const void *obj, TClass* cl, UInt_t offset = 1);
+   void     MapObject(const void *obj, TClass *cl, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
@@ -234,11 +234,11 @@ public:
 
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
 #ifndef __CINT__
-   
+
 #if defined(R__SOLARIS) && defined(R__GNU)
 #include <typeinfo>
 #endif
-   
+
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 {
    // Read TObject derived classes from a TBuffer. Need to provide
