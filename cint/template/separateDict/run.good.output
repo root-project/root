@@ -7,7 +7,7 @@ List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
 Defined in MyClass
-run.C             3 0x0        private: static TClass* fgIsA
+run.C             4 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: void ~MyClass(void);
@@ -34,7 +34,7 @@ List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
 Defined in MyClass
-run.C             3 0x0        private: static TClass* fgIsA
+run.C             4 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: void ~MyClass(void);
@@ -62,7 +62,7 @@ List of base class--------------------------------------------------------
 0x0        public: TObject //Basic ROOT object
 List of member variable---------------------------------------------------
 Defined in MyClass
-run.C             3 0x0        private: static TClass* fgIsA
+run.C             4 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: void ~MyClass(void);
