@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.17 2001/05/03 15:07:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.18 2001/05/29 06:57:13 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -238,6 +238,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     !           68
 //*-*     ==(string)  76                  &            78
 //*-*     !=(string)  77                  |            79
+//*-*     <<(shift)   80                  >>(shift)    81
 //*-*
 //*-*   * constants :
 //*-*
@@ -301,7 +302,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    TString s1,s2,s3,ctemp;
    TString chaine = schain;
    TFormula *oldformula;
-   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux;
+   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift;
    char t;
 
   Int_t inter2 = 0;
@@ -335,7 +336,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
     }
   }
   if (lchain==0) err=4; // empty string
-  modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=0;
+  modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=rshift=lshift=0;
 
 //*-*- Look for simple operators
 //*-*  =========================
@@ -373,8 +374,12 @@ if (err==0) {
     if (chaine(i-1,2)=="||" && compt==0 && compt2==0 && ou==0) {puiss10=0; ou=i;}
     if (chaine(i-1,1)=="&" && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
     if (chaine(i-1,1)=="|" && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
-    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && grand==0) {puiss10=0; grand=i;}
-    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && petit==0) {puiss10=0; petit=i;}
+    if (chaine(i-1,2)==">>" && compt==0 && compt2==0 && rshift==0) {puiss10=0; rshift=i;}
+    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0) 
+        {puiss10=0; grand=i;}
+    if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
+    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0) 
+        {puiss10=0; petit=i;}
     if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
         && peteg==0) {peteg=i; puiss10=0; petit=0;}
     if ((chaine(i-1,2)=="=>" || chaine(i-1,2)==">=") && compt==0 && compt2==0
@@ -587,6 +592,32 @@ if (err==0) {
            fExpr[fNoper] = "%";
            fOper[fNoper] = 5;
            fNoper++;
+         }
+    } else if (rshift != 0) {
+         if (rshift == 1 || rshift == lchain) {
+            err=5;
+            chaine_error=">>";
+         } else {
+            ctemp = chaine(0,rshift-1);
+            Analyze(ctemp.Data(),err,offset);
+            ctemp = chaine(rshift+1,lchain-rshift-1);
+            Analyze(ctemp.Data(),err,offset);
+            fExpr[fNoper] = ">>";
+            fOper[fNoper] = 81;
+            fNoper++;
+         }
+    } else if (lshift != 0) {
+         if (lshift == 1 || lshift == lchain) {
+            err=5;
+            chaine_error=">>";
+         } else {
+            ctemp = chaine(0,lshift-1);
+            Analyze(ctemp.Data(),err,offset);
+            ctemp = chaine(lshift+1,lchain-lshift-1);
+            Analyze(ctemp.Data(),err,offset);
+            fExpr[fNoper] = ">>";
+            fOper[fNoper] = 80;
+            fNoper++;
          }
     } else {
       if (multi != 0) {
@@ -1691,6 +1722,8 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                             else tab[pos-1]=0; break;
           case  78 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); break;
           case  79 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); break;
+          case  80 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); break;
+          case  81 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); break;
        }
 //*-*- Parameter substitution
     } else if (action > 100 && action < 200) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.48 2001/05/28 06:32:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.49 2001/06/05 13:51:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -706,13 +706,21 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    Int_t i,j,hkeep, action;
    opt = option;
    opt.ToLower();
-   char *hname = (char*)strstr(varexp0,">>");
    TH1 *oldh1 = 0;
    TEventList *elist = 0;
    char htitle[2560]; htitle[0] = '\0';
    Bool_t profile = kFALSE;
 
    fHistogram = 0;
+   char *hname = 0;
+   for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
+      if (varexp0[k]==')' || varexp0[k]==']') break;
+      if (varexp0[k]=='>' && varexp0[k-1]=='>') {
+         hname = (char*) &(varexp0[k-1]);
+         break;
+      }
+   }
+   //   char *hname = (char*)strstr(varexp0,">>");
    if (hname) {
       i = (int)( hname - varexp0 );
       hname += 2;
