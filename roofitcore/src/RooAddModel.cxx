@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.24 2002/04/03 23:37:23 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.25 2002/05/15 23:36:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -296,7 +296,9 @@ Double_t RooAddModel::evaluate() const
 
   // Add last model with correct coefficient
   model = (RooRealProxy*) _modelProxyIter->Next() ;
-  value += model->arg().getVal(nset)*lastCoef ;
+  if (((RooAbsPdf&)model->arg()).isSelectedComp()) {
+    value += model->arg().getVal(nset)*lastCoef ;
+  }
 
   // Warn about coefficient degeneration
   if ((lastCoef<0.0 || lastCoef>1.0) && ++_errorCount<=10) {
