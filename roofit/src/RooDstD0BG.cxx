@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDstD0BG.cc,v 1.5 2001/09/24 23:08:55 verkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.6 2001/10/08 05:21:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   UE, Ulrik Egede, RAL, U.Egede@rl.ac.uk
@@ -33,7 +33,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.5 2001/09/24 23:08:55 verkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.6 2001/10/08 05:21:16 verkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
@@ -65,7 +65,7 @@ Double_t RooDstD0BG::evaluate() const
 
 Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
-  if (matchArgs(allVars,analVars,dm)) return 1 ;
+  // if (matchArgs(allVars,analVars,dm)) return 1 ;
   return 0 ;
 }
 

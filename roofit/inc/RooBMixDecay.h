@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.rdl,v 1.1 2001/06/26 18:13:00 verkerke Exp $
+ *    File: $Id: RooBMixDecay.rdl,v 1.2 2001/07/31 05:58:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -37,11 +37,18 @@ public:
 
   virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code) const ;
+
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  void generateEvent(Int_t code);
   
 protected:
 
+  DecayType        _type ;
   RooRealProxy     _mistag ;
   RooCategoryProxy _tag ;
+  RooRealProxy     _tau ;
+  RooRealProxy     _dm ;
+  RooRealProxy     x ;
   Int_t _basisExpPlus ;
   Int_t _basisExpMinus ;
   Int_t _basisCosPlus ;

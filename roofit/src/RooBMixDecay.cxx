@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.2 2001/09/24 23:08:55 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.3 2001/10/08 05:21:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,6 +16,7 @@
 #include <iostream.h>
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitModels/RooBMixDecay.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooBMixDecay) 
 ;
@@ -28,7 +29,10 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 			   DecayType type) :
   RooConvolutedPdf(name,title,model,t), 
   _mistag("mistag","Mistag rate",this,mistag),
-  _tag("tag","Mixing state",this,tag)
+  _tag("tag","Mixing state",this,tag),_type(type),
+  _tau("tau","Mixing life time",this,tau),
+  _dm("dm","Mixing frequency",this,dm),
+  x("x","time",this,t)
 {
   // Constructor
   if (type==SingleSided || type==DoubleSided) 
@@ -49,10 +53,14 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
   RooConvolutedPdf(other,name), 
   _mistag("mistag",this,other._mistag),
   _tag("tag",this,other._tag),
+  _tau("tau",this,other._tau),
+  _dm("dm",this,other._dm),
+  x("x",this,other.x),
   _basisExpPlus(other._basisExpPlus),
   _basisExpMinus(other._basisExpMinus),
   _basisCosPlus(other._basisCosPlus),
-  _basisCosMinus(other._basisCosMinus)
+  _basisCosMinus(other._basisCosMinus),
+  _type(other._type)
 {
   // Copy constructor
 }
@@ -98,8 +106,7 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
   case 1:
     if (basisIndex==_basisExpPlus || basisIndex==_basisExpMinus) {
       return 2.0 ;
-    }
-    
+    }    
     if (basisIndex==_basisCosPlus || basisIndex==_basisCosMinus) {
       return 0.0 ;
     }
@@ -110,3 +117,50 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
   return 0 ;
 }
 
+
+Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+{
+  if (matchArgs(directVars,generateVars,x,_tag)) return 2 ;  
+  if (matchArgs(directVars,generateVars,x)) return 1 ;  
+  return 0 ;
+}
+
+
+
+void RooBMixDecay::generateEvent(Int_t code)
+{
+  // Generate mix-state dependent
+  if (code==2) {
+    Double_t rand = RooRandom::uniform() ;
+    _tag = (rand<=0.5) ? -1 : 1 ;
+  }
+
+  // Generate delta-t dependent
+  while(1) {
+    Double_t rand = RooRandom::uniform() ;
+    Double_t tval(0) ;
+
+    switch(_type) {
+    case SingleSided:
+      tval = -_tau*log(rand);
+      break ;
+    case Flipped:
+      tval= +_tau*log(rand);
+      break ;
+    case DoubleSided:
+      tval = (rand<=0.5) ? -_tau*log(2*rand) : +_tau*log(2*(rand-0.5)) ;
+      break ;
+    }
+
+    // Accept event if T is in generated range
+    Double_t maxAcceptProb = 1 + fabs(1-2*_mistag) ;
+    Double_t acceptProb = 1 + _tag*(1-2*_mistag)*cos(_dm*tval);
+    Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    
+    if (tval<x.max() && tval>x.min() && mixAccept) {
+      x = tval ;
+      break ;
+    }
+  }
+  
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.rdl,v 1.7 2001/09/24 23:08:56 verkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.8 2001/10/03 16:17:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -39,6 +39,9 @@ public:
   virtual Int_t basisCode(const char* name) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
+
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  void generateEvent(Int_t code);
 
 protected:
 
