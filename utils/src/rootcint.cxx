@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.65 2002/05/09 20:22:01 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.66 2002/05/10 21:32:09 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -77,9 +77,11 @@
 // operator>>(TBuffer &b, MyClass *&obj) function. This is necessary to //
 // be able to write pointers to objects of classes not inheriting from  //
 // TObject. See for an example the source of the TArrayF class.         //
-// A trailing + in the class name tells rootcint to generate an         //
-// automatic Streamer(), i.e. a streamer that let ROOT do automatic     //
-// schema evolution. The + option is mutually exclusive with            //
+// If the class contains a ClassDef macro, a trailing + in the class    //
+// name tells rootcint to generate an automatic Streamer(), i.e. a      //
+// streamer that let ROOT do automatic schema evolution. Otherwise, a   //
+// trailing + in the class name tells rootcint to generate a ShowMember //
+// function and a Shadow Class. The + option is mutually exclusive with //
 // the - option. For new classes the + option is the                    //
 // preferred option. For legacy reasons it is not yet the default.      //
 // When the linkdef file is not specified a default version exporting   //
@@ -192,9 +194,11 @@ const char *help =
 "operator>>(TBuffer &b, MyClass *&obj) method. This is necessary to\n"
 "be able to write pointers to objects of classes not inheriting from\n"
 "TObject. See for an example the source of the TArrayF class.\n"
-"A trailing + in the class name tells rootcint to generate an\n"
-"automatic Streamer(), i.e. a streamer that let ROOT do automatic\n"
-"schema evolution. The + option is mutually exclusive with\n"
+"If the class contains a ClassDef macro, a trailing + in the class\n"
+"name tells rootcint to generate an automatic Streamer(), i.e. a\n"
+"streamer that let ROOT do automatic schema evolution. Otherwise, a\n"
+"trailing + in the class name tells rootcint to generate a ShowMember\n"
+"function and a Shadow Class. The + option is mutually exclusive with\n"
 "the - option. For new classes the + option is the\n"
 "preferred option. For legacy reasons it is not yet the default.\n"
 "When this linkdef file is not specified a default version exporting\n"
@@ -321,6 +325,11 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
    return 0;
 }
 
+bool NeedShadowClass(G__ClassInfo& cl) {
+
+  return (!cl.HasMethod("ShowMembers") || cl.IsTmplt()) 
+    && cl.RootFlag() & G__USEBYTECOUNT;
+}
 //______________________________________________________________________________
 void AddShadowClassName(string& buffer, G__ClassInfo &cl) {
   
@@ -1203,7 +1212,7 @@ void WriteClassInit(G__ClassInfo &cl)
            cl.Fullname());
 
 
-   if (!cl.HasMethod("ShowMembers")) {
+   if (NeedShadowClass(cl)) {
       fprintf(fp, "      // Make sure the shadow class has the right sizeof\n");
       fprintf(fp, "      Assert(sizeof(::%s)", cl.Fullname() );
       fprintf(fp, "==sizeof(%s));\n", GetFullShadowName(cl));
@@ -1252,8 +1261,8 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",cl.Fullname());
    //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", cl.Fullname(),cl.RootFlag());
    fprintf(fp, "                  ");
-   if (cl.HasMethod("ShowMembers") && !cl.IsTmplt()){
-      //      fprintf(fp, "                  0, ");
+   if (!NeedShadowClass(cl)){
+      if (!cl.HasMethod("ShowMembers")) fprintf(fp, "                  0, ");
    } else {
       fprintf(fp, "(void*)&%s_ShowMembers, ",G__map_cpp_name((char *)cl.Fullname()));
    }
@@ -2088,7 +2097,7 @@ void WriteClassCode(G__ClassInfo &cl) {
       if (cl.HasMethod("ShowMembers")) {
          WriteShowMembers(cl);
       } else {
-         WriteShowMembers(cl,true);
+         if (NeedShadowClass(cl)) WriteShowMembers(cl,true);
       }
 
    }
@@ -2121,7 +2130,7 @@ void WriteShadowClass(G__ClassInfo &cl) {
   // for which all data member are the same as the one in the class but are
   // all public
 
-   if (cl.HasMethod("ShowMembers") && !cl.IsTmplt()) return;
+  if (!NeedShadowClass(cl)) return;
 
   // Here we copy the shadow only if the class does not have a ClassDef
   // in it.
@@ -2182,7 +2191,8 @@ void WriteShadowClass(G__ClassInfo &cl) {
        // fprintf(stderr,"%s::%s has property 0x%x\n",cl.Fullname(),methods.Name(),methods.Property());
         if (methods.Property()&
             (G__BIT_ISVIRTUALBASE|G__BIT_ISVIRTUAL|G__BIT_ISPUREVIRTUAL) ) {
-           fprintf(fp,"         virtual void forceVirtualTable() {};\n"); 
+           fprintf(fp,"         // To force the creation of a virtual table.\n"); 
+           fprintf(fp,"         virtual ~%s() {};\n",classname.c_str());
            break;
         }
      }
