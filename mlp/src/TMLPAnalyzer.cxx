@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.h,v 1.2 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.4 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -41,7 +41,8 @@ TMLPAnalyzer::~TMLPAnalyzer() { if(fAnalysisTree) delete fAnalysisTree; }
 //______________________________________________________________________________
 Int_t TMLPAnalyzer::GetLayers()
 {
-   // Returns the number of layers
+   // Returns the number of layers.
+
    TString fStructure = fNetwork->GetStructure();
    return fStructure.CountChar(':')+1;
 }
@@ -49,7 +50,8 @@ Int_t TMLPAnalyzer::GetLayers()
 //______________________________________________________________________________
 Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
 {
-   // Returns the number of neurons in given layer
+   // Returns the number of neurons in given layer.
+
    if(layer==1) {
       TString fStructure = fNetwork->GetStructure();
       TString input      = TString(fStructure(0, fStructure.First(':')));
@@ -58,14 +60,14 @@ Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
    else if(layer==GetLayers()) {
       TString fStructure = fNetwork->GetStructure();
       TString output = TString(fStructure(fStructure.Last(':') + 1,
-                                  fStructure.Length() - fStructure.Last(':')));
+                               fStructure.Length() - fStructure.Last(':')));
       return output.CountChar(',')+1;
    }
    else {
      Int_t cnt=1;
      TString fStructure = fNetwork->GetStructure();
      TString hidden = TString(fStructure(fStructure.First(':') + 1,
-                            fStructure.Last(':') - fStructure.First(':') - 1));
+                              fStructure.Last(':') - fStructure.First(':') - 1));
      Int_t beg = 0;
      Int_t end = hidden.Index(":", beg + 1);
      Int_t num = 0;
@@ -86,8 +88,9 @@ Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
 //______________________________________________________________________________
 TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
 {
-   // returns the formula used as input for neuron (idx) in
+   // Returns the formula used as input for neuron (idx) in
    // the first layer.
+
    TString fStructure = fNetwork->GetStructure();
    TString input      = TString(fStructure(0, fStructure.First(':')));
    Int_t beg = 0;
@@ -108,16 +111,17 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
 //______________________________________________________________________________
 void TMLPAnalyzer::CheckNetwork()
 {
-   // gives some information about the network in the terminal.
+   // Gives some information about the network in the terminal.
+
    TString fStructure = fNetwork->GetStructure();
    cout << "Network with structure: " << fStructure.Data() << endl;
    cout << "an input with lower values may not be needed" << endl;
    // Checks if some input variable is not needed
    char var[64], sel[64];
-   for(Int_t i=0;i<GetNeurons(1);i++) {
+   for (Int_t i = 0; i < GetNeurons(1); i++) {
       sprintf(var,"Diff>>tmp%d",i);
       sprintf(sel,"InNeuron==%d",i);
-      fAnalysisTree->Draw(var,sel,"goff");
+      fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       cout << GetNeuronFormula(i) << " -> " << tmp->GetMean()
            << " +/- " << tmp->GetRMS() << endl;
@@ -130,7 +134,7 @@ void TMLPAnalyzer::GatherInformations()
    // Collect informations about what is usefull in the network.
    // This method as to be called first when analyzing a network.
 
-#define shift 0.1
+   Double_t shift = 0.1;
 
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
@@ -158,7 +162,7 @@ void TMLPAnalyzer::GatherInformations()
    // Loop on the input neurons
    Double_t v1 = 0.;
    Double_t v2 = 0.;
-   for(i=0; i<GetNeurons(1); i++){
+   for (i = 0; i < GetNeurons(1); i++) {
       InNeuron = i;
       // Loop on the events in the test sample
       for(j=0; j< nEvents; j++) {
@@ -183,6 +187,7 @@ void TMLPAnalyzer::GatherInformations()
    delete[] params;
    delete[] rms;
    for(i=0; i<GetNeurons(1); i++) delete formulas[i]; delete [] formulas;
+   fAnalysisTree->ResetBranchAddresses();
 }
 
 //______________________________________________________________________________
@@ -191,6 +196,7 @@ void TMLPAnalyzer::DrawDInput(Int_t i)
    // Draws the distribution (on the test sample) of the
    // impact on the network output of a small variation of
    // the ith input.
+
    char sel[64];
    sprintf(sel, "InNeuron==%d", i);
    fAnalysisTree->Draw("Diff", sel);
@@ -202,11 +208,12 @@ void TMLPAnalyzer::DrawDInputs()
    // Draws the distribution (on the test sample) of the
    // impact on the network output of a small variation of
    // each input.
+
    THStack* stack  = new THStack("differences","differences");
    TLegend* legend = new TLegend(0.75,0.75,0.95,0.95);
    TH1F* tmp = NULL;
    char var[64], sel[64];
-   for(Int_t i=0;i<GetNeurons(1);i++) {
+   for(Int_t i = 0; i < GetNeurons(1); i++) {
       sprintf(var, "Diff>>tmp%d", i);
       sprintf(sel, "InNeuron==%d", i);
       fAnalysisTree->Draw(var, sel, "goff");
@@ -226,8 +233,8 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
 {
    // Draws the distribution of the neural network (using ith neuron).
    // Two distributions are drawn, for events passing respectively the "signal"
-   // and "background" cuts.
-   // Only the test sample is used.
+   // and "background" cuts. Only the test sample is used.
+
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
    TEventList* current = data->GetEventList();
@@ -275,4 +282,3 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    delete signal_list;
    delete bg_list;
 }
-
