@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGraphSpring.rdl,v 1.3 2002/09/05 04:33:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #ifndef ROO_GRAPH_SPRING
 #define ROO_GRAPH_SPRING
 
-#include "RooFitCore/RooGraphNode.rdl"
+#include "RooFitCore/RooGraphNode.hh"
 #include "TObject.h"
 
 class RooGraphSpring : public TObject

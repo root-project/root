@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooBinning.rdl,v 1.3 2002/09/05 04:33:15 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ public:
 
   RooBinning(Double_t xlo=-RooNumber::infinity, Double_t xhi=RooNumber::infinity) ;
   RooBinning(Int_t nBins, Double_t xlo, Double_t xhi) ;
-  RooBinning(Int_t nBins, Double_t* boundaries) ;
+  RooBinning(Int_t nBins, const Double_t* boundaries) ;
   RooBinning(const RooBinning& other) ;
   RooAbsBinning* clone() const { return new RooBinning(*this) ; }
   ~RooBinning() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGraphSpring.cc,v 1.3 2002/09/05 04:33:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,9 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooGraphSpring.rdl"
+#include "RooFitCore/RooGraphSpring.hh"
 #include "TList.h"
-#include "RooFitCore/RooGraphEdge.rdl"
+#include "RooFitCore/RooGraphEdge.hh"
 
 #include <iostream.h>
 #include <fstream.h>
