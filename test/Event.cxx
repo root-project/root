@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.5 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.6 2000/07/12 16:42:40 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -8,6 +8,7 @@
 //
 //  The Event class is a naive/simple example of an event structure.
 //     public:
+//        char           fType[20];
 //        Int_t          fNtrack;
 //        Int_t          fNseg;
 //        Int_t          fNvertex;
@@ -16,6 +17,8 @@
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
 //        TH1F          *fH;
+//        Float_t        fMatrix[4][4];
+//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -91,6 +94,7 @@ Event::Event()
       }
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
+   fClosestDistance = 0;
 }
 
 //______________________________________________________________________________
@@ -100,6 +104,7 @@ Event::~Event()
    if (fH == fgHist) fgHist = 0;
    delete fH;
    fH = 0;
+   delete fClosestDistance;
 }
 
 //______________________________________________________________________________
@@ -140,8 +145,23 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    fH->Fill(random);
 }
 
+//______________________________________________________________________________
 void Event::SetMeasure(UChar_t which, Int_t what) {
    if (which<10) fMeasures[which] = what;
+}
+
+//______________________________________________________________________________
+void Event::SetRandomVertex() {
+   // This delete is to test the relocation of variable length array
+   delete fClosestDistance;
+   if (!fNvertex) {
+      fClosestDistance = 0;
+      return;
+   }
+   fClosestDistance = new Float_t[fNvertex];
+   for (Int_t k = 0; k < fNvertex; k++ ) {
+      fClosestDistance[k] = gRandom->Gaus(1,1);
+   }
 }
 
 //______________________________________________________________________________

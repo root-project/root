@@ -53,6 +53,7 @@ private:
    TH1F          *fH;
    Int_t          fMeasures[10];
    Float_t        fMatrix[4][4];
+   Float_t       *fClosestDistance; //[fNvertex] 
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
@@ -65,7 +66,7 @@ public:
    void          ResetHistogramPointer() {fH=0;}
    void          SetNseg(Int_t n) { fNseg = n; }
    void          SetNtrack(Int_t n) { fNtrack = n; }
-   void          SetNvertex(Int_t n) { fNvertex = n; }
+   void          SetNvertex(Int_t n) { fNvertex = n; SetRandomVertex(); }
    void          SetFlag(UInt_t f) { fFlag = f; }
    void          SetTemperature(Float_t t) { fTemperature = t; }
    void          SetType(char *type) {strcpy(fType,type);}
@@ -73,6 +74,7 @@ public:
    void          AddTrack(Float_t random);
    void          SetMeasure(UChar_t which, Int_t what);
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
+   void          SetRandomVertex();
 
    char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
