@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.23 2001/01/17 09:44:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.24 2001/01/17 11:21:18 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1559,11 +1559,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
    // via a normal TFile (+). To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
-   // of the individual file classes.
+   // of the individual file classes. In case of error returns 0.
 
    // (+) Unless PROOF is active and this is not a PROOF master server, i.e.
    // this is a PROOF client, in that case open as a TNetFile so the TNetFile
-   // gets propagated to PROOF to be opened there too (a TFile open does
+   // gets propagated to PROOF to be opened there too (a TFile open does not
    // get propagated to PROOF since it makes not much sense trying to open
    // a local file on a remote machine).
 
