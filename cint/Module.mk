@@ -49,7 +49,8 @@ endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)
 ifeq ($(findstring $(CXXFLAGS),-library=iostream,no%Cstd),)
-CINTS2       += $(MODDIRS)/sunstrm.cxx
+#CINTS2       += $(MODDIRS)/sunstrm.cxx
+CINTS2       += $(MODDIRS)/sun5strm.cxx
 else
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
@@ -178,6 +179,9 @@ $(CINTDIRS)/vcstrm.o: $(CINTDIRS)/vcstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vcstream -o $@ -c $<
 
 $(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
+
+$(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
 
 $(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
