@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.2 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
@@ -18,11 +18,11 @@ PyObject* PyROOT::ClassMethodHolder::operator()( ObjectProxy*, PyObject* args, P
 {
 // setup as necessary
    if ( ! Initialize() )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
 // translate the arguments
    if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
 // execute function
    return Execute( 0 );

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_OBJECTPROXY_H
@@ -6,6 +6,7 @@
 
 // ROOT
 #include "DllImport.h"
+#include "TClassRef.h"
 class TClass;
 
 
@@ -46,16 +47,16 @@ namespace PyROOT {
 
       TClass* ObjectIsA() const
       {
-         return const_cast< TClass* >( fClass );          // may be null
+         return fClass.GetClass();                        // may return null
       }
 
       void Release() { fFlags &= ~kIsOwner; }
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      void*   fObject;
-      TClass* fClass;
-      int     fFlags;
+      void*     fObject;
+      TClassRef fClass;
+      int       fFlags;
 
    private:              // private, as the python C-API will handle creation
       ObjectProxy() {}

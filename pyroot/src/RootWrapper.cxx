@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.19 2005/03/04 19:41:29 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.20 2005/03/16 06:15:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -74,9 +74,15 @@ void PyROOT::InitRoot()
    if ( !gBenchmark ) gBenchmark = new TBenchmark();
    if ( !gStyle ) gStyle = new TStyle();
    if ( !gApplication ) {
-      char* argv[1];
+   // retrieve arg list from python, translate to raw C, pass on
+      PyObject* argl = PySys_GetObject( "argv" );
+
+      int argc = PyList_Size( argl );
+      char** argv = new char*[ argc ];
+      for ( int i = 0; i < argc; ++i )
+         argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
       argv[0] = Py_GetProgramName();
-      int argc = 0;
+
       gApplication = new PyROOTApplication( "PyROOT", &argc, argv );
    }
 
@@ -367,7 +373,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef
 
 // instantiate an object of this class
    ObjectProxy* pyobj =
-      (ObjectProxy*)PyType_GenericNew( (PyTypeObject*)pyclass, NULL, NULL );
+      (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, NULL, NULL );
    Py_DECREF( pyclass );
 
 // bind, register and return if successful

@@ -1,11 +1,11 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
 
 // ROOT
 #include "DllImport.h"
-class TClass;
+#include "TClassRef.h"
 
 // CINT
 class G__CallFunc;
@@ -60,13 +60,13 @@ namespace PyROOT {
 
    class RootObjectExecutor : public Executor {
    public:
-      RootObjectExecutor( TClass* klass ) : fClass( klass ) {}
+      RootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
 
    public:
       virtual PyObject* Execute( G__CallFunc*, void* );
 
    private:
-      TClass* fClass;
+      TClassRef fClass;
    };
 
    PYROOT_BASIC_EXECUTOR( ConstructorExecutor );

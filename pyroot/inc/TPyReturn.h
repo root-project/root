@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.6 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.3 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyReturn
@@ -17,7 +17,11 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TClassRef
+#include "TClassRef.h"
+#endif
 class TClass;
+
 
 // Python
 struct _object;
@@ -49,7 +53,7 @@ private:
 
 private:
    PyObject* fPyObject;            // python side object
-   TClass*   fClass;               // TClass of held object if ROOT object
+   TClassRef fClass;               // TClass of held object if ROOT object
 
 };
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.10 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.11 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -9,7 +9,7 @@
 #include "PyCallable.h"
 
 // ROOT
-class TClass;
+#include "TClassRef.h"
 class TMethod;
 
 // CINT
@@ -50,7 +50,7 @@ namespace PyROOT {
       virtual PyObject* Execute( void* self );
 
    protected:
-      TClass* GetClass() { return fClass; }
+      TClass* GetClass() { return fClass.GetClass(); }
       TMethod* GetMethod() { return fMethod; }
 
       virtual bool InitExecutor_( Executor*& );
@@ -64,7 +64,7 @@ namespace PyROOT {
 
    private:
    // representation
-      TClass*      fClass;
+      TClassRef    fClass;
       TMethod*     fMethod;
       G__CallFunc* fMethodCall;
       Executor*    fExecutor;

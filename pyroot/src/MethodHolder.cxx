@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.27 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.28 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -328,7 +328,7 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
 {
 // setup as necessary
    if ( ! Initialize() )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
 // verify and put the arguments in usable order
    if ( ! FilterArgs( self, args, kwds ) )
@@ -336,7 +336,7 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
 
 // translate the arguments
    if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
 // get the ROOT object that this object proxy is a handle for
    void* object = self->GetObject();

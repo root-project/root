@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -7,7 +7,6 @@
 
 // ROOT
 #include "TObject.h"
-#include "TClass.h"
 
 
 namespace PyROOT {
@@ -64,6 +63,16 @@ namespace {
 
 
 //= PyROOT method proxy construction/destruction =================================
+   ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
+   {
+      ObjectProxy* pyobj = (ObjectProxy*)PyType_GenericNew( subtype, NULL, NULL );
+      pyobj->fObject = NULL;
+      new (&pyobj->fClass) TClassRef( (TClass*)0 );
+      pyobj->fFlags  = 0;
+
+      return pyobj;
+   }
+
    void op_dealloc( ObjectProxy* pyobj )
    {
       if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
@@ -116,7 +125,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_dictoffset
    0,                         // tp_init
    0,                         // tp_alloc
-   PyType_GenericNew,         // tp_new
+   (newfunc)op_new,           // tp_new
    0,                         // tp_free
    0,                         // tp_is_gc
    0,                         // tp_bases

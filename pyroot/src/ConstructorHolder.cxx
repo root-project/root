@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -44,7 +44,7 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
 {
 // setup as necessary
    if ( ! Initialize() )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
 // verify and put the arguments in usable order
    if ( ! FilterArgs( self, args, kwds ) )
@@ -52,7 +52,7 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
 
 // translate the arguments
    if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not PyNone
+      return 0;                              // important: 0, not Py_None
 
    TClass* klass = GetClass();
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.3 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -6,7 +6,6 @@
 #include "TPyReturn.h"
 
 // ROOT
-#include "TClass.h"
 #include "TObject.h"
 #include "TInterpreter.h"
 
@@ -40,7 +39,7 @@ void TPyReturn::AutoDestruct_() const
 
 
 //- constructors/destructor --------------------------------------------------
-TPyReturn::TPyReturn() : fClass( 0 )
+TPyReturn::TPyReturn() : fClass( (TClass*)0 )
 {
 // Construct a TPyReturn object from Py_None.
    Py_INCREF( Py_None );
@@ -83,7 +82,7 @@ TPyReturn::~TPyReturn()
 TClass* TPyReturn::IsA() const
 {
 // Return the held object TClass (not the TPyReturn TClass).
-   return fClass;
+   return fClass.GetClass();
 }
 
 //____________________________________________________________________________
