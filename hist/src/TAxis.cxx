@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.27 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.28 2002/02/04 23:27:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -134,6 +134,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 //   width in years ?
                   if (awidth>=6) {
                      awidth /= 12; reasformat = 6;
+                     if (awidth>=2) {
+                        awidth /= 12; reasformat = 7;
+                     }                  
                   }
                }
             }
@@ -162,6 +165,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
         break;
       case 6:
         formatstr = "%d/%m/%y";
+        break;
+      case 7:
+        formatstr = "%m/%y";
         break;
       default:
         formatstr = "%H:%M:%S";
