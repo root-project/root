@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.43 2003/03/11 09:19:02 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.44 2003/06/17 16:45:25 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -1391,6 +1391,7 @@ void stress16()
    pipe->SetFillColor(2);
 
    TProfile *hp[nlev+1];
+   TProfile::Approximate();
    for (i = 0; i <= nlev; i++) {
       char s[64];
       sprintf(s, "buf%d", i);
