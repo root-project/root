@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.76 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.77 2003/11/23 12:10:04 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1379,6 +1379,15 @@ Int_t TUnixSystem::GetUid(const char *user)
 }
 
 //______________________________________________________________________________
+Int_t TUnixSystem::GetEffectiveUid()
+{
+   // Returns the effective user id. The effective id corresponds to the
+   // set id bit on the file being executed.
+
+   return geteuid();
+}
+
+//______________________________________________________________________________
 Int_t TUnixSystem::GetGid(const char *group)
 {
    // Returns the group's id. If group = 0, returns current user's group.
@@ -1391,6 +1400,15 @@ Int_t TUnixSystem::GetGid(const char *group)
          return grp->gr_gid;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::GetEffectiveGid()
+{
+   // Returns the effective group id. The effective group id corresponds
+   // to the set id bit on the file being executed.
+
+   return getegid();
 }
 
 //______________________________________________________________________________

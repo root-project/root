@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.30 2003/09/23 08:54:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.31 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -305,6 +305,8 @@ public:
    //---- Users & Groups
    virtual Int_t           GetUid(const char *user = 0);
    virtual Int_t           GetGid(const char *group = 0);
+   virtual Int_t           GetEffectiveUid();
+   virtual Int_t           GetEffectiveGid();
    virtual UserGroup_t    *GetUserInfo(Int_t uid);
    virtual UserGroup_t    *GetUserInfo(const char *user = 0);
    virtual UserGroup_t    *GetGroupInfo(Int_t gid);
