@@ -14,6 +14,10 @@ N: Maarten Ballintijn
 E: maartenb@xs4all.nl
 D: initial linux port
 
+N: Guy Barrand
+E: barrand@lal.in2p3.fr
+D: contribution to GUI classes
+
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
