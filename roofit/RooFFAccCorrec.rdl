@@ -1,0 +1,65 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitModels
+ *    File: $Id: RooFFAccCorrec.rdl,v 1.4 2001/09/24 23:08:56 verkerke Exp $
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   05-Jan-2000 DK Created initial version from RooGaussianProb
+ *   02-May-2001 WV Port to RooFitModels/RooFitCore
+ *
+ * Copyright (C) 2000 Stanford University
+ *****************************************************************************/
+#ifndef ROO_FF_ACC_CORREC
+#define ROO_FF_ACC_CORREC
+
+#include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooRealProxy.hh"
+
+class RooRealVar;
+
+class RooFFAccCorrec : public  RooAbsPdf  {
+public:
+  // Your constructor needs a name and title and then a list of the
+  // dependent variables and parameters used by this PDF. Use an
+  // underscore in the variable names to distinguish them from your
+  // own local versions.
+
+// Main ctor
+  RooFFAccCorrec(const char *name, const char *title, RooAbsReal& _w,
+		RooAbsReal& _ctl, RooAbsReal& _ctv, RooAbsReal& _chi,
+		RooAbsReal& _R1, RooAbsReal& _R2, RooAbsReal& _rho2);
+	
+	// Copy ctor
+  RooFFAccCorrec(const RooFFAccCorrec& other, const char* name=0);
+
+	 // Clone object
+ virtual TObject* clone(const char* newname) const { return new RooFFAccCorrec(*this,newname); }
+
+   // An empty destructor is usually ok
+  inline virtual ~RooFFAccCorrec() { }
+
+  // Declare your dependent variables and params here
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  Double_t analyticalIntegral(Int_t code) const ;
+  	 
+ protected:
+
+  RooRealProxy w;
+  RooRealProxy ctl;
+  RooRealProxy ctv;
+  RooRealProxy chi;
+  RooRealProxy R1;
+  RooRealProxy R2;
+  RooRealProxy rho2;
+
+protected:
+  Double_t evaluate() const ;
+
+private:
+  Double_t _norm;
+  ClassDef(RooFFAccCorrec,0) // FFAccCorrec fitter
+};
+
+#endif
