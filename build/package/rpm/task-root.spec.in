@@ -1,0 +1,19 @@
+######################################################################
+#
+# Task Sub package 
+# 
+%package -n task-root
+Group: ROOT
+Summary: @short@
+Requires: root-cint >= %ver, libroot >= %ver, libroot-dev >= %ver, root-bin >= %ver
+%description -n task-root
+@long@
+
+#---------------------------------------------------------------------
+# Explicit dependencies
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n task-root
+%attr(-,root,root) %doc build/package/rpm/README.Redhat LICENSE 
+

@@ -1,0 +1,14 @@
+######################################################################
+#
+# ttf Sub package 
+# 
+%package -n root-ttf
+Group: ROOT
+Summary: @short@
+%description -n root-ttf
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-ttf -f @files@
+

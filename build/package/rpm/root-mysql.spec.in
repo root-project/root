@@ -1,0 +1,14 @@
+######################################################################
+#
+# mysql Sub package 
+# 
+%package -n root-mysql
+Group: ROOT
+Summary: @short@
+%description -n root-mysql
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-mysql -f @files@
+

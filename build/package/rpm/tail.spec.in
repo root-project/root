@@ -1,0 +1,48 @@
+######################################################################
+#
+# Package building section 
+#
+# Prepare sources - make package output dir (e.g. ../i686)
+%prep
+%setup
+
+#---------------------------------------------------------------------
+# The actual build
+#
+# Configure the ROOT source tree. You may want to disable some
+# features here, though it is STRONGLY DEPRECIATED. 
+#
+# Note that there is a problem with Redhats standard installation
+# directories. They do not conform to standard Linux directory
+# structure, so we use our own. 
+#
+# For reference, this are the translations. 
+#
+#   SPEC file macro       This package      Rpm default
+#   ---------------------------------------------------
+#   %{_prefix}            /usr              /usr
+#   %{_defaultdocdir}     /usr/share/doc    /usr/doc
+#   %{_mandir}            /usr/share/man    /usr/man
+#   %{_datadir}           /usr/share        /usr/share
+#
+# In the future, we might add support for other directories. 
+#
+%build
+@configure@
+make 
+
+#---------------------------------------------------------------------
+# The installation 
+#
+# We install in `pwd`/build/package/rpm so that we do not disturb
+# the system, and so that non-priviliged user may build the packages. 
+#
+%install
+make install DESTDIR=${RPM_BUILD_ROOT}
+find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
+@libdir@/makerpmfiles.sh ${RPM_BUILD_ROOT}
+
+######################################################################
+#
+# End Of Spec File for ROOT
+#

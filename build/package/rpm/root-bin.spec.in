@@ -1,0 +1,14 @@
+######################################################################
+#
+# Program Sub package 
+# 
+%package -n root-bin
+Group: ROOT
+Summary: @short@
+%description -n root-bin
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-bin -f @files@
+

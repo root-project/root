@@ -1,0 +1,57 @@
+######################################################################
+#
+# Preamble 
+#
+# Macro definitions
+%define ver    @version@
+%define rel    1
+%define prefix /usr
+
+######################################################################
+#
+# Header 
+#
+Name:         root
+Version:      %{ver}
+Release:      %{rel}
+Copyright:    ROOT Software Terms and Conditions (see package)
+Packager:     Christian Holm <cholm@nbi.dk>
+Distribution: ROOT
+Vendor:       ROOT Team
+URL:          http://root.cern.ch
+Source:       ftp://root.cern.ch/root/root-v%{ver}.source.tar.gz
+Group:        ROOT
+BuildRoot:    /tmp/rootrpm
+Summary:      Numerical data analysis framework (OO)
+#
+# Over all description - not used, but required
+#
+%description
+See root-bin documentation 
+
+######################################################################
+#
+# Sub packages
+#
+# Please note, that the order in which the pacakges are listed is
+# important, since the files will be moved in that order. DO NOT
+# CHANGE THE ORDER! You have been warned. 
+#
+# For reference and check, here's a list of packages, and the order in
+# which they should be specified:
+#
+#       root-daemon     \
+#       root-ttf        |
+#       root-zebra      |
+#       root-opengl     + Feature packages
+#       root-mysql      |
+#       root-pythia     |
+#       root-star       |
+#       root-shift      /
+#       root-cint       | CINT package
+#       root-bin        \
+#       root-dev        + Base packages
+#       root-lib        /
+# 
+######################################################################
+

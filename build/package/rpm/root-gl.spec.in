@@ -1,0 +1,14 @@
+######################################################################
+#
+# opengl Sub package 
+# 
+%package -n root-gl
+Group: ROOT
+Summary: @short@
+%description -n root-gl
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-gl -f @files@
+
