@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.59 2001/04/19 14:02:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.60 2001/04/20 09:13:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1027,8 +1027,6 @@ Int_t TStreamerInfo::New(const char *p)
    while ((element = (TStreamerElement*)next())) {
       Int_t etype = element->GetType();
       if (element->GetOffset() == kMissing) continue;
-      TClass *cle = element->GetClassPointer();
-      if (!cle) continue;
       //cle->GetStreamerInfo(); //necessary in case "->" is not specified
       if (etype == kObjectp) {
          // if the option "->" is given in the data member comment field 
@@ -1061,6 +1059,8 @@ Int_t TStreamerInfo::New(const char *p)
       }
       if (etype == kObject || etype == kAny || etype == kBase || 
           etype == kTObject || etype == kTString || etype == kTNamed) {
+         TClass *cle = element->GetClassPointer();
+         if (!cle) continue;
          cle->New((char*)p + element->GetOffset());
       }
    }
