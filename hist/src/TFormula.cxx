@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.37 2003/02/27 11:40:08 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.38 2003/04/11 21:24:39 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -296,6 +296,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
    Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter,nest;
    Int_t compt,compt2,compt3,compt4,hexa;
+   Bool_t inString;
    Double_t vafConst;
    ULong_t vafConst2;
    Bool_t parenthese;
@@ -318,14 +319,18 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
   while (parenthese && lchain>0 && err==0){
     compt  = 0;
     compt2 = 0;
+    inString = false;
     lchain = chaine.Length();
     if (lchain==0) err=4;
     else {
       for (i=1; i<=lchain; ++i) {
-        if (chaine(i-1,1) == "[") compt2++;
-        if (chaine(i-1,1) == "]") compt2--;
-        if (chaine(i-1,1) == "(") compt++;
-        if (chaine(i-1,1) == ")") compt--;
+        if (chaine(i-1,1) == "\"") inString = !inString;
+        if (!inString) {
+          if (chaine(i-1,1) == "[") compt2++;
+          if (chaine(i-1,1) == "]") compt2--;
+          if (chaine(i-1,1) == "(") compt++;
+          if (chaine(i-1,1) == ")") compt--;
+        }
         if (compt < 0) err = 40; // more open parentheses than close parentheses
         if (compt2< 0) err = 42; // more ] than [
         if (compt==0 && (i!=lchain || lchain==1)) parenthese = kFALSE;
@@ -344,6 +349,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
 if (err==0) {
   compt = compt2 = compt3 = compt4 = 0;puiss10=0;puiss10bis = 0;
+  inString = false;
   j = lchain;
   for (i=1;i<=lchain; i++) {
     puiss10=puiss10bis=0;
@@ -363,6 +369,8 @@ if (err==0) {
           if (strchr("0123456789",t) && chaine(j-3,2) == ".e" ) puiss10bis = 1;
           }
     }
+    if (chaine(i-1,1) == "\"") inString = !inString;
+    if (inString) continue;
     if (chaine(i-1,1) == "[") compt2++;
     if (chaine(i-1,1) == "]") compt2--;
     if (chaine(i-1,1) == "(") compt++;
@@ -371,15 +379,15 @@ if (err==0) {
     if (chaine(j-1,1) == "]") compt3--;
     if (chaine(j-1,1) == "(") compt4++;
     if (chaine(j-1,1) == ")") compt4--;
-    if (chaine(i-1,2)=="&&" && compt==0 && compt2==0 && et==0) {et=i;puiss=0;}
+    if (chaine(i-1,2)=="&&" && !inString && compt==0 && compt2==0 && et==0) {et=i;puiss=0;}
     if (chaine(i-1,2)=="||" && compt==0 && compt2==0 && ou==0) {puiss10=0; ou=i;}
-    if (chaine(i-1,1)=="&" && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
-    if (chaine(i-1,1)=="|" && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
+    if (chaine(i-1,1)=="&"  && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
+    if (chaine(i-1,1)=="|"  && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
     if (chaine(i-1,2)==">>" && compt==0 && compt2==0 && rshift==0) {puiss10=0; rshift=i;}
-    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0)
+    if (chaine(i-1,1)==">"  && compt==0 && compt2==0 && rshift==0 && grand==0)
         {puiss10=0; grand=i;}
     if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
-    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0)
+    if (chaine(i-1,1)=="<"  && compt==0 && compt2==0 && lshift==0 && petit==0)
         {puiss10=0; petit=i;}
     if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
         && peteg==0) {peteg=i; puiss10=0; petit=0;}
@@ -393,9 +401,9 @@ if (err==0) {
     if (chaine(i-1,1)=="%" && compt==0 && compt2==0 && modulo==0) {puiss10=0; modulo=i;}
     if (chaine(i-1,1)=="*" && compt==0 && compt2==0 && multi==0)  {puiss10=0; multi=i;}
     if (chaine(j-1,1)=="/" && chaine(j-2,1)!="\\"
-	&& compt4==0 && compt3==0 && divi==0)
+        && compt4==0 && compt3==0 && divi==0)
       {
-	puiss10=0; divi=j;
+        puiss10=0; divi=j;
       }
     if (chaine(j-1,1)=="^" && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
     j--;
