@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.38 2001/02/26 10:28:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.39 2001/02/27 17:24:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2383,13 +2383,10 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be deleted at the end of the function.
+//      and dynamically loaded. 
 //   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be kept at the end of the function. At next call, if file.C
-//      is older than file.o and file.so, the file.C is not compiled, only
-//      file.so is loaded.
+//      and dynamically loaded. At next call, if file.C is older than file.o 
+//      and file.so, the file.C is not compiled, only file.so is loaded.
 
 
    //Get a pointer to the TSelector object

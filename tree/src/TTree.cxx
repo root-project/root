@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.53 2001/02/14 07:39:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.54 2001/03/01 16:26:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1885,13 +1885,10 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //   
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be deleted at the end of the function.
+//      and dynamically loaded. 
 //   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be kept at the end of the function. At next call, if file.C
-//      is older than file.o and file.so, the file.C is not compiled, only
-//      file.so is loaded.
+//      and dynamically loaded. At next call, if file.C is older than file.o 
+//      and file.so, the file.C is not compiled, only file.so is loaded.
 //
 //   The function returns the number of processed entries. It returns -1
 //   in case of an error.

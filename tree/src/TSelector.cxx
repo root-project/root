@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.4 2000/07/17 10:26:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.5 2000/07/18 07:11:32 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -78,10 +78,8 @@ TSelector *TSelector::GetSelector(const char *filename)
 //      and dynamically loaded. The corresponding binary file and shared library
 //      will be deleted at the end of the function.
 //   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. The corresponding binary file and shared library
-//      will be kept at the end of the function. At next call, if file.C
-//      is older than file.o and file.so, the file.C is not compiled, only
-//      file.so is loaded.
+//      and dynamically loaded. At next call, if file.C is older than file.o 
+//      and file.so, the file.C is not compiled, only file.so is loaded.
 //
 //   The static function returns a pointer to a TSelector object
 
