@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.30 2002/02/18 23:08:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.31 2002/02/25 16:05:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -106,7 +106,8 @@ public:
        kNoStats     = BIT(9),  // don't draw stats box
        kUserContour = BIT(10), // user specified contour levels
        kCanRebin    = BIT(11), // can rebin axis
-       kLogX        = BIT(15)  // X-axis in log scale
+       kLogX        = BIT(15), // X-axis in log scale
+       kIsZoomed    = BIT(16)  // bit set when zooming on Y axis
     };
 
     TH1();
@@ -142,8 +143,8 @@ public:
     virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
     virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
     virtual Int_t    FindBin(Axis_t x, Axis_t y=0, Axis_t z=0);
-    virtual void     Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
-    virtual void     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
+    virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
+    virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
     virtual void     FitPanel(); // *MENU*
     Int_t            GetBufferLength() const {return (Int_t)fBuffer[0];}
     Int_t            GetBufferSize  () const {return fBufferSize;}

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.88 2002/02/18 23:08:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.89 2002/02/25 16:05:37 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1619,7 +1619,7 @@ Int_t TH1::FindBin(Axis_t x, Axis_t y, Axis_t z)
 }
 
 //______________________________________________________________________________
-void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
+Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
 {
 //                     Fit histogram with function fname
 //                     =================================
@@ -1631,12 +1631,12 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
 //  and calls TH1::Fit(TF1 *f1,...)
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Error("Fit", "Unknown function: %s",fname); return; }
-   Fit(f1,option,goption,xxmin,xxmax);
+   if (!f1) { Error("Fit", "Unknown function: %s",fname); return -1; }
+   return Fit(f1,option,goption,xxmin,xxmax);
 }
 
 //______________________________________________________________________________
-void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
+Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t xxmax)
 {
 //                     Fit histogram with function f1
 //                     ==============================
@@ -1743,6 +1743,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+   Int_t fitResult = 0;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
@@ -1777,19 +1778,19 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
    gF1 = f1;
-   if (!gF1) { Error("Fit", "Pointer to function is null"); return; }
+   if (!gF1) { Error("Fit", "Pointer to function is null"); return 0; }
    npar = gF1->GetNpar();
-   if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return; }
+   if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return 0; }
 
 //   - Check that function has same dimension as histogram
    if (gF1->GetNdim() == 1 && GetDimension() > 1) {
-      Error("Fit", "Function %s is not 2-D",f1->GetName()); return; }
+      Error("Fit", "Function %s is not 2-D",f1->GetName()); return 0; }
    if (gF1->GetNdim() == 2 && GetDimension() < 2) {
-      Error("Fit", "Function %s is not 1-D",f1->GetName()); return; }
+      Error("Fit", "Function %s is not 1-D",f1->GetName()); return 0; }
    if (xxmin != xxmax) gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //   - Decode list of options into Foption
-   if (!FitOptionsMake(option)) return;
+   if (!FitOptionsMake(option)) return 0;
    if (xxmin != xxmax) {
       gF1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
       Foption.Range = 1;
@@ -1883,7 +1884,15 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //   - Perform minimization
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-   hFitter->ExecuteCommand("MIGRAD",arglist,2);
+   fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
+   if (fitResult != 0) {
+     //   Abnormal termination, MIGRAD might not have converged on a
+     //   minimum.
+     if (!Foption.Quiet) {
+        Warning("Fit","Abnormal termination of minimization.");
+     }
+     return fitResult;
+   }
    if (Foption.More) {
       hFitter->ExecuteCommand("IMPROVE",arglist,0);
    }
@@ -1955,9 +1964,10 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
          fnew3->SetParent(this);
          fnew3->SetBit(TFormula::kNotGlobal);
       }
-      if (TestBit(kCanDelete)) return;
+      if (TestBit(kCanDelete)) return fitResult;
       if (!Foption.Nograph && GetDimension() < 3) Draw(goption);
   }
+  return fitResult;
 }
 
 //______________________________________________________________________________
