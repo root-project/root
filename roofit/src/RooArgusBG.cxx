@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooArgusBG.cc,v 1.4 2001/08/23 01:23:34 verkerke Exp $
+ *    File: $Id: RooArgusBG.cc,v 1.5 2001/10/08 05:21:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@
 
 #include "RooFitModels/RooArgusBG.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooRealConstant.hh"
 
 ClassImp(RooArgusBG)
 
@@ -28,12 +29,27 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
   RooAbsPdf(name, title), 
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),
-  c("c","Slope parameter",this,_c)
+  c("c","Slope parameter",this,_c),
+  p("p","Power",this,(RooRealVar&)RooRealConstant::value(0.5))
+{
+}
+
+RooArgusBG::RooArgusBG(const char *name, const char *title,
+		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
+  RooAbsPdf(name, title), 
+  m("m","Mass",this,_m),
+  m0("m0","Resonance mass",this,_m0),
+  c("c","Slope parameter",this,_c),
+  p("p","Power",this,_p)
 {
 }
 
 RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
-  RooAbsPdf(other,name), m("m",this,other.m), m0("m0",this,other.m0), c("c",this,other.c)
+  RooAbsPdf(other,name), 
+  m("m",this,other.m), 
+  m0("m0",this,other.m0), 
+  c("c",this,other.c),
+  p("p",this,other.p)
 {
 }
 
@@ -43,7 +59,7 @@ Double_t RooArgusBG::evaluate() const {
   if(t >= 1) return 0;
 
   Double_t u= 1 - t*t;
-  return m*sqrt(u)*exp(c*u) ;
+  return m*pow(u,p)*exp(c*u) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooArgusBG.rdl,v 1.4 2001/08/02 21:40:03 verkerke Exp $
+ *    File: $Id: RooArgusBG.rdl,v 1.5 2001/08/23 01:23:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,8 @@ class RooArgusBG : public RooAbsPdf {
 public:
   RooArgusBG(const char *name, const char *title, 
 	     RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c);
+  RooArgusBG(const char *name, const char *title, 
+	     RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p);
   RooArgusBG(const RooArgusBG& other,const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooArgusBG(*this,newname); }
   inline virtual ~RooArgusBG() { }
@@ -32,6 +34,7 @@ protected:
   RooRealProxy m ;
   RooRealProxy m0 ;
   RooRealProxy c ;
+  RooRealProxy p ;
 
   Double_t evaluate() const ;
 //   void initGenerator();
