@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.33 2001/02/19 17:07:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.34 2001/02/26 09:41:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ TGraph::TGraph(Int_t n)
 }
 
 //______________________________________________________________________________
-TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
+TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with floats-*-*-*-*-*-*-*-*-*
@@ -146,7 +146,7 @@ TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
 }
 
 //______________________________________________________________________________
-TGraph::TGraph(Int_t n, Double_t *x, Double_t *y)
+TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with doubles-*-*-*-*-*-*-*-*
@@ -284,7 +284,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGraph::DrawGraph(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TGraph::DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -299,7 +299,7 @@ void TGraph::DrawGraph(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 
 
 //______________________________________________________________________________
-void TGraph::DrawGraph(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+void TGraph::DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -1209,7 +1209,7 @@ void TGraph::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt)
+void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw a graph*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -1635,7 +1635,7 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
 }
 
 //______________________________________________________________________________
-void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt)
+void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*Control function to draw a graphistogram*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
