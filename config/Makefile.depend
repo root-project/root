@@ -66,6 +66,9 @@ MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
+QUADPDEP            = $(MATRIXLIB) 
+QUADPLIBEXTRA       = lib/libMatrix.lib
+
 ifeq ($(ARCH),win32gdk)
 GLLIBDEP            = $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
@@ -154,5 +157,7 @@ QTROOTLIBDEP        = $(GQTLIB) $(GUILIB)
 QTROOTLIBEXTRA      = -Llib -lGQt -lGui $(QTLIB)
 QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
 QTGUILIBEXTRA       = -Llib -lGraf -lGpad -lGQt -lGui $(QTLIB)
+QUADPDEP            = $(MATRIXLIB) 
+QUADPLIBEXTRA       = -Llib -lMatrix
 
 endif
