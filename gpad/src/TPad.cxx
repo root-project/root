@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.158 2004/12/27 17:15:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.159 2005/01/12 18:46:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -813,7 +813,8 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
       if (mode == kCurlyArc) {
-         radius = TMath::Sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
+         //calculate radius in pixels and convert to users x
+         radius = fPixeltoX*TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)));
          phimin = 0;
          phimax = 360;
          cline = new TCurlyArc(x0,y0,radius,phimin,phimax);
