@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.4 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.5 2000/09/29 07:47:49 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -202,12 +202,12 @@ int main(int argc, char **argv)
          event->SetType(etype);
          event->SetHeader(ev, 200, 960312, random);
          event->SetNseg(Int_t(10*ntrack+20*sigmas));
-         event->SetNvertex(1+20*gRandom->Rndm());
+         event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
          event->SetFlag(UInt_t(random+0.5));
          event->SetTemperature(random+20.);
 
          for(UChar_t m = 0; m < 10; m++) {
-            event->SetMeasure( m, gRandom->Gaus(m,m+1) );
+            event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
          }
          for(UChar_t i0 = 0; i0 < 4; i0++) {
             for(UChar_t i1 = 0; i1 < 4; i1++) {
