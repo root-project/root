@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.5 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.6 2003/01/07 09:48:41 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TGeoMaterial : public TNamed,
    };
 
 protected:
+   Int_t                    fIndex;      // material index
    Double_t                 fA;          // A of material
    Double_t                 fZ;          // Z of material
    Double_t                 fDensity;    // density of material
@@ -69,12 +70,14 @@ public:
    virtual Double_t         GetDensity() const {return fDensity;}
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
+   Int_t                    GetIndex();
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual void             Print(const Option_t *option="") const;
+   void                     SetIndex(Int_t index) {fIndex=index;}
    static  Double_t         ScreenFactor(Double_t z);
 
 
-  ClassDef(TGeoMaterial, 2)              // base material class
+  ClassDef(TGeoMaterial, 3)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

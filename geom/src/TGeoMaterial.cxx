@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.5 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.6 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -34,6 +34,7 @@ ClassImp(TGeoMaterial)
 TGeoMaterial::TGeoMaterial()
 {
 // Default constructor
+   fIndex   = -1;
    fShader  = 0;
    fA       = 0;
    fZ       = 0;
@@ -46,6 +47,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, "")
 {
 // constructor
+   fIndex   = -1;
    fShader  = 0;
    fA       = 0;
    fZ       = 0;
@@ -64,6 +66,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 {
 // constructor
    fShader  = 0;
+   fIndex   = -1;
    fA       = a;
    fZ       = z;
    fDensity = rho;
@@ -121,7 +124,7 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
 void TGeoMaterial::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
-   printf("%s   %s   A=%6.2f Z=%6.0f rho=%6.2f\n", GetName(), GetTitle(),
+   printf("index=%i: %s   %s   A=%g Z=%g rho=%g\n", fIndex, GetName(), GetTitle(),
           fA,fZ,fDensity);
 }
 //-----------------------------------------------------------------------------
@@ -130,6 +133,16 @@ Int_t TGeoMaterial::GetDefaultColor() const
    Int_t id = 1+ gGeoManager->GetListOfMaterials()->IndexOf(this);
    return (2+id%6);
 }
+
+//-----------------------------------------------------------------------------
+Int_t TGeoMaterial::GetIndex()
+{
+// Retreive material index in the list of materials
+   if (fIndex>=0) return fIndex;
+   TList *matlist = gGeoManager->GetListOfMaterials();
+   fIndex = matlist->IndexOf(this);
+   return fIndex;
+}      
 /*************************************************************************
  * TGeoMixture - mixtures of elements 
  *

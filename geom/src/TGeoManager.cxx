@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.44 2003/02/11 08:48:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.45 2003/02/12 14:49:37 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1629,6 +1629,76 @@ void TGeoManager::DefaultColors()
    while ((vol=(TGeoVolume*)next()))
       vol->SetLineColor(vol->GetMaterial()->GetDefaultColor());
 }
+
+//_____________________________________________________________________________
+Double_t TGeoManager::Safety()
+{
+// Compute safe distance from the current point. This represent the distance
+// from POINT to the closest boundary.
+   
+   Double_t point[3];
+   Double_t local[3];
+   fSafety = TGeoShape::kBig;
+   if (fIsOutside) {
+      fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
+      return fSafety;
+   }
+   //---> convert point to local reference frame of current node
+   fCache->MasterToLocal(fPoint, point);
+
+   //---> compute safety to current node
+   TGeoVolume *vol = fCurrentNode->GetVolume();
+   fSafety = vol->GetShape()->Safety(point, kTRUE);
+
+   //---> if we were just entering, return this safety
+   if (fSafety<1E-3) return fSafety;
+
+   //---> now check the safety to the last node
+
+
+   //---> if we were just exiting, return this safety
+   if (fSafety<1E-3) return fSafety;
+
+   Int_t nd = fCurrentNode->GetNdaughters();
+   TGeoNode *node;
+   Double_t safe;
+   Int_t id;
+   
+   // if current volume is divided, we are in the non-divided region. We
+   // check only the first and the last cell
+   TGeoPatternFinder *finder = vol->GetFinder();
+   if (finder) {
+      Int_t ifirst = finder->GetDivIndex();
+      node = vol->GetNode(ifirst);
+      node->cd();
+      node->MasterToLocal(point, local);
+      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      if (safe<fSafety && safe>=0) fSafety=safe;
+      if (fSafety<1E-3) return fSafety;
+      Int_t ilast = ifirst+finder->GetNdiv()-1;
+      if (ilast==ifirst) return fSafety;
+      node = vol->GetNode(ilast);
+      node->cd();
+      node->MasterToLocal(point, local);
+      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      if (safe<fSafety && safe>=0) fSafety=safe;
+      if (fSafety<1E-3) return fSafety;
+   }
+   
+   //---> If not so many daughters (???) of the current volume, just loop them
+   if (nd<1000) {
+      for (id=0; id<nd; id++) {
+         node = vol->GetNode(id);
+         node->MasterToLocal(point, local);
+         safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+         if (safe<0) continue; // ignore overlaps
+         if (safe<fSafety) fSafety=safe;
+      }
+      return fSafety;
+   }      
+   return fSafety;
+}
+
 //_____________________________________________________________________________
 void TGeoManager::SetVolumeAttribute(const char *name, const char *att, Int_t val)
 {
@@ -2151,24 +2221,6 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    Double_t ldir[3];
    Double_t safety = TGeoShape::kBig;
    Int_t i=0;
-   // if only one daughter, check it and exit
-   if (nd<5) {
-      for (i=0; i<nd; i++) {
-         current = vol->GetNode(i);
-         current->cd();
-         current->MasterToLocal(&point[0], &lpoint[0]);
-         current->MasterToLocalVect(&dir[0], &ldir[0]);
-         snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);
-         fSafety = TMath::Min(fSafety, safety);
-         if (snext<fStep) {
-            fStep=snext;
-            fIsStepEntering=kTRUE;
-            fIsStepExiting=kFALSE;
-            clnode = current;
-         }
-      }
-      return clnode;
-   }
    // if current volume is divided, we are in the non-divided region. We
    // check only the first and the last cell
    TGeoPatternFinder *finder = vol->GetFinder();
@@ -2200,6 +2252,24 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          fIsStepExiting=kFALSE;
          return current;
       }
+   }
+   // if only few daughters, check all and exit
+   if (nd<5) {
+      for (i=0; i<nd; i++) {
+         current = vol->GetNode(i);
+         current->cd();
+         current->MasterToLocal(&point[0], &lpoint[0]);
+         current->MasterToLocalVect(&dir[0], &ldir[0]);
+         snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safety);
+         fSafety = TMath::Min(fSafety, safety);
+         if (snext<fStep) {
+            fStep=snext;
+            fIsStepEntering=kTRUE;
+            fIsStepExiting=kFALSE;
+            clnode = current;
+         }
+      }
+      return clnode;
    }
    // if current volume is voxelized, first get current voxel
    TGeoVoxelFinder *voxels = vol->GetVoxels();
@@ -2868,6 +2938,25 @@ void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 // Computes and changes the current node according to the new position.
 // Not implemented.
 }
+
+//_____________________________________________________________________________
+Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
+{
+// Estimate weight of volume VOL with a precision SIGMA(W)/W better than PRECISION.
+// Option can be "v" - verbose (default)
+   GetGeomPainter();
+   if (!fPainter) return 0;
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("v")) {
+      printf("* Estimating weight of %s with %g %% precision\n", fTopVolume->GetName(), 100.*precision);
+      printf("    event         weight         err\n");
+      printf("========================================\n");
+   }   
+   Double_t weight = fPainter->Weight(precision, option);
+   RestoreMasterVolume();
+   return weight;
+}   
 
 //_____________________________________________________________________________
 ULong_t TGeoManager::SizeOf(const TGeoNode * /*node*/, Option_t * /*option*/)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.16 2003/01/23 14:25:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.17 2003/01/30 14:05:45 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -125,7 +125,7 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
    if (fOBy) delete [] fOBy;
    if (fOBz) delete [] fOBz;
 //   printf("OBx OBy OBz...\n");
-   if (fBoxes) delete fBoxes;
+   if (fBoxes) delete [] fBoxes;
 //   printf("boxes...\n");
    if (fXb) delete [] fXb;
    if (fYb) delete [] fYb;
@@ -150,10 +150,10 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    //printf("building boxes for %s  nd=%i\n", fVolume->GetName(), nd);
    Int_t id;
    TGeoNode *node;
-   if (fBoxes) delete fBoxes;
+   if (fBoxes) delete [] fBoxes;
    fNboxes = 6*nd;
    fBoxes = new Double_t[fNboxes];
-   if (fCheckList) delete fCheckList;
+   if (fCheckList) delete [] fCheckList;
    fCheckList = new Int_t[nd];
    Double_t vert[24];
    Double_t pt[3];

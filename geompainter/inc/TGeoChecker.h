@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.8 2003/02/10 09:54:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.9 2003/02/11 08:48:21 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
    void             Test(Int_t npoints, Option_t *option);
    void             TestOverlaps(const char *path);
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
+   Double_t         Weight(Double_t precision=0.01, Option_t *option="v");
    
   ClassDef(TGeoChecker, 1)               // a simple geometry checker
 };

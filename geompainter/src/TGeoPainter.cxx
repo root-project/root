@@ -1908,4 +1908,10 @@ void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
    }   
 }
    
+//______________________________________________________________________________
+Double_t TGeoPainter::Weight(Double_t precision, Option_t *option)
+{
+   return fChecker->Weight(precision, option);
+}
+   
    

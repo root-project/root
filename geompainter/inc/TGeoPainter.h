@@ -128,6 +128,7 @@ public:
    virtual void       TestOverlaps(const char *path);
    virtual Bool_t     TestVoxels(TGeoVolume *vol);
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr);
+   virtual Double_t   Weight(Double_t precision, Option_t *option="v");
 
   ClassDef(TGeoPainter,0)  //geometry painter
 };

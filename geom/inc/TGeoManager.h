@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.27 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.28 2003/02/11 08:48:20 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -164,6 +164,7 @@ public:
                                        const char *g3path="");
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
+   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); //*MENU*
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
@@ -249,6 +250,7 @@ public:
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
+   Double_t               Safety();
    TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
    Int_t                  GetVirtualLevel();

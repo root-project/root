@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.14 2003/02/11 08:48:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.15 2003/02/12 17:20:54 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -122,6 +122,7 @@ public:
    virtual void       TestOverlaps(const char *path) = 0;
    virtual Bool_t     TestVoxels(TGeoVolume *vol) = 0;
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
+   virtual Double_t   Weight(Double_t precision, Option_t *option="v") = 0;
       
   ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
 };

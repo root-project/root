@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.25 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.26 2003/02/11 08:48:21 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -1089,6 +1089,83 @@ void TGeoChecker::TestOverlaps(const char* path)
    delete pm;
    delete xyz;
    delete overlaps;
+}
+
+//-----------------------------------------------------------------------------
+Double_t TGeoChecker::Weight(Double_t precision, Option_t *option)
+{
+// Estimate weight of top level volume with a precision SIGMA(W)/W
+// better than PRECISION. Option can be "v" - verbose (default).
+   TList *matlist = fGeom->GetListOfMaterials();
+   Int_t nmat = matlist->GetSize();
+   if (!nmat) return 0;
+   Int_t *nin = new Int_t[nmat];
+   memset(nin, 0, nmat*sizeof(Int_t));
+   gRandom = new TRandom3();
+   TString opt = option;
+   opt.ToLower();
+   Bool_t isverbose = opt.Contains("v");
+   TGeoBBox *box = (TGeoBBox *)fGeom->GetTopVolume()->GetShape();
+   Double_t dx = box->GetDX();
+   Double_t dy = box->GetDY();
+   Double_t dz = box->GetDZ();
+   Double_t ox = (box->GetOrigin())[0];
+   Double_t oy = (box->GetOrigin())[1];
+   Double_t oz = (box->GetOrigin())[2];
+   Double_t x,y,z;
+   TGeoNode *node;
+   TGeoMaterial *mat;
+   Double_t vbox = 0.000008*dx*dy*dz; // m3
+   Bool_t end = kFALSE;
+   Double_t weight=0, sigma, eps, dens;
+   Double_t eps0=1.;
+   Int_t indmat;
+   Int_t igen=0;
+   Int_t iin = 0;
+   while (!end) {
+      x = ox-dx+2*dx*gRandom->Rndm();
+      y = oy-dy+2*dy*gRandom->Rndm();
+      z = oz-dz+2*dz*gRandom->Rndm();
+      node = fGeom->FindNode(x,y,z);
+      igen++;
+      if (!node) continue;
+      mat = node->GetVolume()->GetMedium()->GetMaterial();
+      indmat = mat->GetIndex();
+      if (indmat<0) continue;
+      nin[indmat]++;
+      iin++;
+      if ((iin%100000)==0 || igen>1E8) {
+         weight = 0;
+         sigma = 0;
+         for (indmat=0; indmat<nmat; indmat++) {
+            mat = (TGeoMaterial*)matlist->At(indmat);
+            dens = mat->GetDensity(); //  [g/cm3]
+            if (dens<1E-2) dens=0;
+            dens *= 1000.;            // [kg/m3]
+            weight += dens*Double_t(nin[indmat]);
+            sigma  += dens*dens*nin[indmat];
+         }
+	       sigma = TMath::Sqrt(sigma);
+	       eps = sigma/weight;
+	       weight *= vbox/Double_t(igen);
+	       sigma *= vbox/Double_t(igen);
+	       if (eps<precision || igen>1E8) {
+	          if (isverbose) {
+	             printf("=== Weight of %s : %g +/- %g [kg]\n", 
+	                    fGeom->GetTopVolume()->GetName(), weight, sigma);
+            }
+	          end = kTRUE;		      
+	       } else {
+	          if (isverbose && eps<0.5*eps0) {
+	             printf("%8dK: %14.7g kg  %g %%\n", 
+                       igen/1000, weight, eps*100);
+               eps0 = eps;
+            } 
+	       }
+      }
+   }      
+   delete [] nin;
+   return weight;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints)
