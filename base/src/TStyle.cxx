@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.18 2002/04/20 08:06:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.19 2002/05/18 08:43:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -273,6 +273,8 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fPadGridY       = fPadGridY;
    ((TStyle&)obj).fPadTickX       = fPadTickX;
    ((TStyle&)obj).fPadTickY       = fPadTickY;
+   ((TStyle&)obj).fPaperSizeX     = fPaperSizeX;
+   ((TStyle&)obj).fPaperSizeY     = fPaperSizeY;
    ((TStyle&)obj).fFuncColor      = fFuncColor;
    ((TStyle&)obj).fFuncStyle      = fFuncStyle;
    ((TStyle&)obj).fFuncWidth      = fFuncWidth;
@@ -824,7 +826,7 @@ void TStyle::SetOptStat(Int_t mode)
 //
    fOptStat = mode;
 }
-  
+
   //______________________________________________________________________________
 void TStyle::SetOptStat(Option_t *stat)
 {
@@ -842,7 +844,7 @@ void TStyle::SetOptStat(Option_t *stat)
 //  which is the default layout (RMEN)
 
   Int_t mode=0;
- 
+
   TString opt = stat;
   opt.ToLower();
 
