@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.8 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -162,7 +162,7 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
    rootname = gSystem->Getenv("ROOTSYS");
 #ifdef R__WIN32
    TString dirname = TString(rootname);
-   dirname.ReplaceAll("/","\\");
+   dirname.ReplaceAll('\\','/');
    rootname = dirname.Data();
 #endif
    len = strlen(rootname);
@@ -182,6 +182,11 @@ void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
 
          // next write the absolute path as $ROOTSYS/path
          picname = pb->GetPicture()->GetName();
+#ifdef R__WIN32
+        TString pname = TString(picname);
+        pname.ReplaceAll('\\','/');
+        picname = pname.Data();
+#endif
          pos = strstr(picname, rootname);
          if (pos) {
             sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path

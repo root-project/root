@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.18 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.19 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1534,14 +1534,17 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
             outext[i]=0;
             
 #ifdef R__WIN32
-            if (strchr(outext, '/')) {
+            if (strchr(outext, '\\')) {
                TString name = TString(outext);
-               name.ReplaceAll("/","\\");
-               outext = name.Data();
+               name.ReplaceAll('\\','/');
+               text = name.Data();
+			   out << "   " << GetName() << "->AddEntry(" << quote
+			       << text << quote << "," << mentry->GetEntryId();
             }
 #endif
             out << "   " << GetName() << "->AddEntry(" << quote
-                << outext << quote << "," << mentry->GetEntryId();
+  			    << outext << quote << "," << mentry->GetEntryId();
+
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
@@ -1570,15 +1573,18 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
             }
             outext[i]=0;
 #ifdef R__WIN32
-            if (strchr(outext, '/')) {
+            if (strchr(outext, '\\')) {
                TString name = TString(outext);
-               name.ReplaceAll("/","\\");
-               outext = name.Data();
+               name.ReplaceAll('\\','/');
+               text = name.Data();
+			   out << "   " << GetName() << "->AddPopup(" << quote
+			       << text << quote << "," << mentry->fPopup->GetName();
             }
-#endif
+#endif			
             out << "   " << GetName() << "->AddPopup(" << quote
-                << outext << quote << "," << mentry->fPopup->GetName();
-            delete [] outext;
+		    	<< outext << quote << "," << mentry->fPopup->GetName();
+
+			delete [] outext;
             break;
          case kMenuLabel:
             out << "   " << GetName() << "->AddLabel(" << quote

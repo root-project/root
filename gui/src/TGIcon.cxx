@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.4 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.5 2003/11/28 08:48:51 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -88,14 +88,19 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    int len = 0;
    const char *picname, *rootname, *pos;
 
-   rootname = gSystem->Getenv("ROOTSYS");
+   rootname = gSystem->WorkingDirectory();
 #ifdef R__WIN32
    TString dirname = TString(rootname);
-   dirname.ReplaceAll("/","\\");
+   dirname.ReplaceAll('\\','/');
    rootname = dirname.Data();
 #endif
    len = strlen(rootname);
    picname = fPic->GetName();
+#ifdef R__WIN32
+   TString pname = TString(picname);
+   pname.ReplaceAll('\\','/');
+   picname = pname.Data();
+#endif
    pos = strstr(picname, rootname);
 
    out <<"   TGIcon *";
@@ -104,8 +109,10 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    if (pos) {
       sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path
       out << name;
+	  printf("name = %s\n",name);
    } else {
-      out << picname;                      // if no path
+	  printf("picname = %s\n",picname);
+	  out << picname;                      // if no path
    }
    out << quote << ")" << "," << GetWidth() << "," << GetHeight();
 
