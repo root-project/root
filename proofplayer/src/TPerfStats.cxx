@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.2 2004/11/24 07:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.3 2005/02/07 18:02:37 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -138,16 +138,19 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Slave",
                               nslaves, 0, nslaves);
       fPacketsHist->SetDirectory(0);
+      fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
 
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Slave",
                              nslaves, 0, nslaves);
       fEventsHist->SetDirectory(0);
+      fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
 
       fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
                            nslaves, 0, nslaves);
       fNodeHist->SetDirectory(0);
+      fNodeHist->SetMinimum(0);
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
 
@@ -155,6 +158,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                               nslaves, 0, nslaves,
                               ntime_bins, min_time, time_per_bin);
       fLatencyHist->SetDirectory(0);
+      fLatencyHist->SetMarkerStyle(4);
       fLatencyHist->SetBit(TH1::kCanRebin);
       output->Add(fLatencyHist);
 
@@ -162,6 +166,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                                nslaves, 0, nslaves,
                                ntime_bins, min_time, time_per_bin);
       fProcTimeHist->SetDirectory(0);
+      fProcTimeHist->SetMarkerStyle(4);
       fProcTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fProcTimeHist);
 
@@ -169,6 +174,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                               nslaves, 0, nslaves,
                               ntime_bins, min_time, time_per_bin);
       fCpuTimeHist->SetDirectory(0);
+      fCpuTimeHist->SetMarkerStyle(4);
       fCpuTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fCpuTimeHist);
 

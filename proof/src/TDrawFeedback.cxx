@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.4 2004/12/17 23:04:42 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.5 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -38,6 +38,8 @@ ClassImp(TDrawFeedback)
 TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
+   fNames = new THashList;
+
    if (proof == 0) proof = gProof;
 
    TProof *p = dynamic_cast<TProof*>(proof);
@@ -47,16 +49,19 @@ TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
    }
    fProof = p;
 
-   proof->Connect("Feedback(TList*)", "TDrawFeedback",
-                  this, "Feedback(TList*)");
+   Bool_t ok = proof->Connect("Feedback(TList *objs)", "TDrawFeedback",
+                  this, "Feedback(TList *objs)");
 
-   fNames = new THashList;
+   if ( !ok ) {
+      Error("TDrawFeedback","Connect() failed");
+      return;
+   }
 
    if (names != 0) {
       TIter next(names);
       TObjString *name;
       while((name = dynamic_cast<TObjString*>(next())) != 0) {
-         fNames->Add(new TObjString(*name));
+         fNames->Add(new TNamed(name->GetName(),""));
       }
    } else {
       fAll = kTRUE;
@@ -77,22 +82,15 @@ void TDrawFeedback::Feedback(TList *objs)
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
    TVirtualPad *save = gPad;
 
+   PDB(kFeedback,1) Info("Feedback","%d Objects", objs->GetSize());
+
    TIter next(objs);
    TObject *o;
    while( (o = next()) )
    {
       TString name = o->GetName();
-      if ( (fAll || fNames->FindObject(name.Data())) && o->InheritsFrom("TH1")) {
+      if (fAll || fNames->FindObject(name.Data())) {
 
-/*
-         TH2 *h2 = dynamic_cast<TH2*>(o);
-         if (h2 != 0) {
-            h2->SetMarkerStyle(4);
-         } else {
-            TH1 *h = dynamic_cast<TH1*>(o);
-            h->SetMinimum(0);
-         }
-*/
          name += "_canvas";
 
          TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
@@ -100,28 +98,18 @@ void TDrawFeedback::Feedback(TList *objs)
          if ( p == 0 ) {
             (gROOT->GetMakeDefCanvas())();
             gPad->SetName(name);
-            ((TH1*)o)->DrawCopy(fOption);
             PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
          } else {
             p->cd();
-            ((TH1*)o)->DrawCopy(fOption);
             PDB(kFeedback,2) Info("Feedback","Used canvas %s", name.Data());
          }
-         gPad->Update();
-      }
-      else if ((fAll || fNames->FindObject(name.Data())) && o->InheritsFrom("TProofNTuple")) {
-         name += "_canvas";
-         TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
-         if ( p == 0 ) {
-            (gROOT->GetMakeDefCanvas())();
-            gPad->SetName(name);
-            ((TProofNTuple*)o)->DrawCopy(fOption);
-            PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
-         } else {
-            p->cd();
-            ((TProofNTuple*)o)->DrawCopy(fOption);
-            PDB(kFeedback,2) Info("Feedback","Used canvas %s", name.Data());
+
+         if (TH1 *h = dynamic_cast<TH1*>(o)) {
+            h->DrawCopy(fOption);
+         } else if (TProofNTuple *n = dynamic_cast<TProofNTuple*>(o)) {
+            n->DrawCopy(fOption);
          }
+
          gPad->Update();
       }
    }

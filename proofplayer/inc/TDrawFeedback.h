@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.2 2004/11/24 07:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.3 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -30,7 +30,7 @@ class THashList;
 class TSeqCollection;
 
 
-class TDrawFeedback : public TQObject {
+class TDrawFeedback : public TObject, public TQObject {
 private:
    Bool_t         fAll;    //draw all or selected objects
    THashList     *fNames;  //selected objects
