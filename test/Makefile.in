@@ -15,8 +15,6 @@ ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o 
 
-EVENTLIB      = $(EVENTSO)
-
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
@@ -426,7 +424,6 @@ SOFLAGS       = -DLL
 SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
                 advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib \
                 msvcirt.lib
-EVENTLIB      = libEvent.lib
 
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
@@ -446,6 +443,11 @@ EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
 EVENT         = Event$(ExeSuf)
+ifeq ($(PLATFORM),win32)
+EVENTLIB      = libEvent.lib
+else
+EVENTLIB      = $(EVENTSO)
+endif
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
