@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProofStats.h,v 1.1 2004/05/18 11:32:49 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -42,10 +42,11 @@ class TList;
 class TProofEvent : public TObject {
 
 public:
-   enum EEventType { kUnDefined, kPacket, kStart, kStop };
+   enum EEventType { kUnDefined, kPacket, kStart, kStop, kFile };
 
    EEventType  fType;
    TString     fSlaveName;
+   TString     fNodeName;
    TString     fFileName;
    Int_t       fSlave;
    Long64_t    fEventsProcessed;
@@ -53,10 +54,11 @@ public:
    Double_t    fProcTime;
    Double_t    fCpuTime;
    TTimeStamp  fTimeStamp;
+   Bool_t      fIsStart;
 
    TProofEvent()
      : fType(kUnDefined), fSlave(0), fEventsProcessed(0), fLatency(0.0),
-       fProcTime(0.0), fCpuTime(0.0)
+       fProcTime(0.0), fCpuTime(0.0), fIsStart(kFALSE)
    {
    }
 
@@ -73,6 +75,7 @@ private:
    TProofEvent   *fProofEvent;   //!TProofEvent used to fill tree
    TH1D          *fPacketsHist;  //!histogram of packets processed per slave
    TH1D          *fEventsHist;   //!histogram of events processed per slave
+   TH1D          *fNodeHist;     //!histogram of slaves per file serving node
    TH2D          *fLatencyHist;  //!histogram of latency due to packet requests
    TH2D          *fProcTimeHist; //!histogram of real time spent processing packets
    TH2D          *fCpuTimeHist;  //!histogram of cpu time spent processing packets
@@ -82,9 +85,12 @@ public:
    virtual ~TProofStats() {}
 
    void SimpleEvent(TProofEvent::EEventType type);
-   void PacketEvent(const char* slavename, const char* filename, Int_t slave,
-             Long64_t eventsprocessed, Double_t latency, Double_t proctime, Double_t cputime);
-
+   void PacketEvent(Int_t slave, const char *slavename, const char *filename,
+                    Long64_t eventsprocessed, Double_t latency, Double_t proctime, Double_t cputime);
+   void FileEvent(Int_t slave, const char *slavename, const char *nodename, const char *filename,
+                  Bool_t isStart);
+   
+   
    ClassDef(TProofStats,0)  // Class for collecting PROOF statistics
 };
 

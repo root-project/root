@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.33 2004/03/11 11:02:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.34 2004/05/18 11:32:49 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "THashList.h"
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
+#include "TPacketizer.h"
 #include "TPacketizer2.h"
 #include "TSelector.h"
 #include "TSocket.h"
@@ -175,7 +176,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
-   fOutput = 0; 
+   fOutput = 0;
    if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
@@ -303,21 +304,21 @@ Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
 {
    TNamed *varexpobj = new TNamed("varexp", varexp);
    TNamed *selectionobj = new TNamed("selection", selection);
-   
+
    fInput->Clear();  // good idea? what about a feedbacklist, but old query
                      // could have left objs? clear at end? no, may want to
                      // rerun, separate player?
-   
+
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
-   
+
    Int_t r = Process(set, "TProofDraw", option, nentries, firstentry);
-   
+
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);
    delete varexpobj;
    delete selectionobj;
-   
+
    return r;
 }
 
@@ -396,7 +397,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TString aclicMode;
       TString arguments;
       TString io;
-      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);      
+      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
 
       PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
       if ( fProof->SendFile(filename) == -1 ) return -1;
@@ -422,7 +423,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
 
       delete fPacketizer;
-      fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
+      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
                                      first, nentries);
 
       if ( !fPacketizer->IsValid() ) {
@@ -455,7 +456,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
 
-   
+
    if (fProof->IsMaster()) {
       if (fProofStats != 0) {
          fProofStats->SimpleEvent(TProofEvent::kStop);
@@ -842,6 +843,6 @@ Int_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
    MayNotUse("DrawSelect");
-   
+
    return -1;
 }

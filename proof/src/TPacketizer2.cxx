@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.21 2004/03/11 11:02:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.22 2004/05/18 11:32:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -560,11 +560,10 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
                               numev, latency, proctime, proccpu);
 
       if (fStat != 0) {
-         fStat->PacketEvent(sl->GetName(), slstat->fCurElem->GetFileName(),
-                                 sl->GetOrdinal(), numev, latency, proctime,
-                                 proccpu);
+         fStat->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
+                            numev, latency, proctime, proccpu);
       }
-         
+
       slstat->fCurElem = 0;
       if ( fProcessed == fTotalEntries ) {
          HandleTimer(0);   // Send last timer message

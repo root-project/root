@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.4 2002/11/28 18:38:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.5 2004/05/18 11:32:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -36,6 +36,9 @@ class TTimer;
 class TTree;
 class TMap;
 class TProofStats;
+class TFileNode;
+class TFileStat;
+class TSlaveStat;
 
 
 class TPacketizer2 : public TVirtualPacketizer {
@@ -47,22 +50,36 @@ private:
 
    Long64_t       fTotalEntries; // total number of entries to be distributed
 
-   TList         *fFileNodes;    // nodes with files                             
-   TList         *fUnAllocated;  // nodes with unallocated files                 
-   TObject       *fUnAllocNext;  // cursor in fUnAllocated                       
-   TList         *fActive;       // nodes with unfinished files                  
-   TObject       *fActiveNext;   // cursor in fActive                            
-   TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave   
-   TTimer        *fProgress;     // progress updates timer                       
+   TList         *fFileNodes;    // nodes with files
+   TList         *fUnAllocated;  // nodes with unallocated files
+   TObject       *fUnAllocNext;  // cursor in fUnAllocated
+   TList         *fActive;       // nodes with unfinished files
+   TObject       *fActiveNext;   // cursor in fActive
+   TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
+   TTimer        *fProgress;     // progress updates timer
 
-   Long64_t       fPacketSize;   // global base packet size                      
-   Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index     
+   Long64_t       fPacketSize;   // global base packet size
+   Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate
    void operator=(const TPacketizer2 &);  // error on accidental usage
 
-   virtual Bool_t      HandleTimer(TTimer *timer);
+   virtual Bool_t HandleTimer(TTimer *timer);
+
+   TFileNode     *NextUnAllocNode();
+   void           RemoveUnAllocNode(TFileNode *);
+
+   TFileNode     *NextActiveNode();
+   void           RemoveActiveNode(TFileNode *);
+
+   TFileStat     *GetNextUnAlloc(TFileNode *node = 0);
+   TFileStat     *GetNextActive();
+   void           RemoveActive(TFileStat *file);
+
+   void           Reset();
+   void           ValidateFiles(TDSet *dset, TList *slaves);
+
 
 public:
    TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
@@ -71,6 +88,7 @@ public:
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
+
 
    ClassDef(TPacketizer2,0)  //Generate work packets for parallel processing
 };

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.42 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.43 2004/04/29 23:43:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -87,6 +87,7 @@ friend class TProofInterruptHandler;
 friend class TProofPlayer;
 friend class TProofPlayerRemote;
 friend class TSlave;
+friend class TPacketizer;
 friend class TPacketizer2;
 friend class TCondor;
 

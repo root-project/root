@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProofStats.cxx,v 1.1 2004/05/18 11:32:49 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -66,6 +66,11 @@ TProofStats::TProofStats(Int_t nslaves, TList *output, Bool_t doHist, Bool_t doT
       fEventsHist->SetDirectory(0);
       output->Add(fEventsHist);
 
+      fNodeHist = new TH1D("NodeHist","Slaves per Fileserving Node",
+                             0, 0, 0);
+      fNodeHist->SetDirectory(0);
+      output->Add(fNodeHist);
+
       fLatencyHist = new TH2D("LatencyHist","GetPacket Latency per Slave",
                               nslaves, 0, nslaves,
                               ntime_bins, min_time, time_per_bin*ntime_bins);
@@ -90,6 +95,10 @@ TProofStats::TProofStats(Int_t nslaves, TList *output, Bool_t doHist, Bool_t doT
 //______________________________________________________________________________
 void TProofStats::SimpleEvent(TProofEvent::EEventType type)
 {
+   if (type == TProofEvent::kStop && fPacketsHist != 0) {
+      fNodeHist->LabelsDeflate("X");
+      fNodeHist->LabelsOption("auv","X");
+   }
 
    if (fTrace == 0) return;
 
@@ -104,8 +113,9 @@ void TProofStats::SimpleEvent(TProofEvent::EEventType type)
 
 
 //______________________________________________________________________________
-void TProofStats::PacketEvent(const char* slavename, const char* filename, Int_t slave,
-                       Long64_t eventsprocessed, Double_t latency, Double_t proctime, Double_t cputime)
+void TProofStats::PacketEvent(Int_t slave, const char* slavename, const char* filename,
+                              Long64_t eventsprocessed, Double_t latency, Double_t proctime,
+                              Double_t cputime)
 {
 
    if (fTrace != 0) {
@@ -131,5 +141,30 @@ void TProofStats::PacketEvent(const char* slavename, const char* filename, Int_t
       fLatencyHist->Fill(slave, latency);
       fProcTimeHist->Fill(slave, proctime);
       fCpuTimeHist->Fill(slave, cputime);
+   }
+}
+
+
+//______________________________________________________________________________
+void TProofStats::FileEvent(Int_t slave, const char *slavename, const char *nodename,
+                            const char *filename, Bool_t isStart)
+{
+   if (fTrace != 0) {
+      TProofEvent pe; // sets timestamp
+
+      pe.fType = TProofEvent::kFile;
+      pe.fSlaveName = slavename;
+      pe.fNodeName = nodename;
+      pe.fFileName = filename;
+      pe.fSlave = slave;
+      pe.fIsStart = isStart;
+
+      fProofEvent = &pe;
+      fTrace->Fill();
+      fProofEvent = 0;
+   }
+
+   if (fPacketsHist != 0) {
+      fNodeHist->Fill(nodename, isStart ? 1 : -1);
    }
 }
