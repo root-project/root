@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.27 2003/01/20 10:25:58 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.28 2003/01/24 08:24:13 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1315,7 +1315,7 @@ void TTreeViewer::ExecuteDraw()
       axis[2] = hist->GetZaxis();
       for (Int_t ind=0; ind<3; ind++) axis[ind]->SetTitle(alias[ind].Data());
    }
-   gPad->Update();
+   if (gPad) gPad->Update();
 }
 
 //______________________________________________________________________________
