@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.3 2000/06/13 10:34:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.4 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -42,9 +42,9 @@ private:
         Char_t      *fXlabels;        //!Labels associated to axis
         Int_t        fFirst;          //first bin to display
         Int_t        fLast;           //last bin to display
-        TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
         Bool_t       fTimeDisplay;    //on/off displaying time values instead of numerics
-        TObject     *fParent;         //Object owning this axis
+        TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
+        TObject     *fParent;         //!Object owning this axis
 
 public:
         // TAxis status bits
