@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.43 2004/12/09 07:14:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.44 2005/03/05 22:15:52 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -89,7 +89,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
    enum { kStreamedMemberWise = BIT(14) }; //Added to version number to know if a collection has been stored member-wise.
-   enum { kIsOwner = BIT(15) };  //If set TBuffer owns fBuffer
+  //warning, never use BIT(15), it is used by TBasket
+   enum { kIsOwner = BIT(16) };  //If set TBuffer owns fBuffer
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBuffer(EMode mode);
