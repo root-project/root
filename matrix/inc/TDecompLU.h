@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.8 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.9 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public :
           const TMatrixD  GetMatrix ();
   virtual       Int_t     GetNrows  () const { return fLU.GetNrows(); }
   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
-                TMatrixD &GetLU     ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+                TMatrixD &GetLU     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fLU; }
 
   virtual       void      SetMatrix (const TMatrixD &a);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.2 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.3 2004/05/19 15:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -148,13 +148,13 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 //  fFact.Set((Int_t) 1.2*this->MinRealWorkspace()+1);
   fFact.Set((Int_t) 3*this->MinRealWorkspace()+1);
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
 }
 
 //______________________________________________________________________________
 Bool_t TDecompSparse::Decompose()
 {
-  if ( !( fStatus & kMatrixSet ) )
+  if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
   Int_t done = 0; Int_t tries = 0;
@@ -246,7 +246,7 @@ Bool_t TDecompSparse::Decompose()
       Error("Decompose()","did not get a factorization after 10 tries");
   } else {
     ok = kTRUE;
-    fStatus |= kDecomposed;
+    SetBit(kDecomposed);
   }
 
   return ok;
@@ -258,9 +258,9 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
 // Solve Ax=b . Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }

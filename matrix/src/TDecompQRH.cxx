@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.8 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.10 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fCondition = a.Norm1();
   fTol = a.GetTol();
   if (tol > 0.0)
@@ -121,7 +121,7 @@ Bool_t TDecompQRH::Decompose()
 // 'u-form' in lower triang of fQ and fW, the latter containing the
 //  "Householder betas".
 
-  if ( !( fStatus & kMatrixSet ) )
+  if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
   const Int_t nRow   = this->GetNrows();
@@ -145,7 +145,7 @@ Bool_t TDecompQRH::Decompose()
     fQ.Shift(rowLwb,0);
     fR.Shift(0,colLwb);
 
-    fStatus |= kDecomposed;
+    SetBit(kDecomposed);
   }
 
   return kTRUE;
@@ -191,7 +191,7 @@ void TDecompQRH::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fCondition = a.Norm1();
 
   fRowLwb = a.GetRowLwb();
@@ -218,9 +218,9 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -282,9 +282,9 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -336,9 +336,9 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -404,9 +404,9 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -460,15 +460,15 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
 {
   // This routine calculates the absolute (!) value of the determinant
 
-  if ( !( fStatus & kDetermined ) ) {
-    if ( !( fStatus & kDecomposed ) )
+  if ( !TestBit(kDetermined) ) {
+    if ( !TestBit(kDecomposed) )
       Decompose();
-    if ( fStatus & kSingular ) {
+    if (TestBit(kSingular)) {
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else
       TDecompBase::Det(d1,d2);
-    fStatus |= kDetermined;
+    SetBit(kDetermined);
   }
   d1 = fDet1;
   d2 = fDet2;

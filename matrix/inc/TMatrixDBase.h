@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.10 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.11 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -82,10 +82,15 @@ protected:
 		              Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
+  enum EMatrixStatusBits {
+    kStatus = BIT(14) // set if matrix object is valid
+  };
+
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixDBase() { fIsOwner = kTRUE; fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
+  TMatrixDBase() { SetBit(kStatus); fIsOwner = kTRUE; 
+                   fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixDBase() {}
 
@@ -112,8 +117,9 @@ public:
 
   virtual void   Clear      (Option_t *option="") = 0;
 
-  virtual void   Invalidate ()       { fNrows = -1; }
-  inline  Bool_t IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
+  inline  void   Invalidate ()       { SetBit(kStatus); }
+  inline  void   MakeValid  ()       { ResetBit(kStatus); }
+  inline  Bool_t IsValid    () const { return TestBit(kStatus); }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
   virtual Bool_t IsSymmetric() const;
 

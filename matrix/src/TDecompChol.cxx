@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.7 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.8 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -48,7 +48,7 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 {
   Assert(a.IsValid());
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -70,7 +70,7 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -91,7 +91,7 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompChol::Decompose()
 {
-  if ( !( fStatus & kMatrixSet ) )
+  if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
   const Int_t     n  = fA.GetNrows();
@@ -124,7 +124,7 @@ Bool_t TDecompChol::Decompose()
     }
   }
 
-  fStatus |= kDecomposed;
+  SetBit(kDecomposed);
 
   return kTRUE;
 }
@@ -134,9 +134,9 @@ const TMatrixD TDecompChol::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return TMatrixD();
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return TMatrixD();
   }
@@ -155,7 +155,7 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
     return;
   } 
   
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fCondition = -1.0;
     
   fRowLwb = a.GetRowLwb();
@@ -173,9 +173,9 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 // element is zero. The solution is returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -238,9 +238,9 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -291,11 +291,11 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 Double_t TDecompChol::Condition()
 {
-  if ( !( fStatus & kCondition ) ) {
+  if ( !TestBit(kCondition) ) {
     fCondition = -1;
-    if (fStatus & kSingular)
+    if (TestBit(kSingular))
       return fCondition;
-    if ( !( fStatus & kDecomposed ) ) {
+    if ( !TestBit(kDecomposed) ) {
       if (!Decompose())
         return fCondition;
     }
@@ -305,7 +305,7 @@ Double_t TDecompChol::Condition()
       fCondition = norm*invNorm;
     else // no convergence in Hager
       Error("Condition()","Hager procedure did NOT converge");
-    fStatus |= kCondition;
+    SetBit(kCondition);
   }
   return fCondition;
 }
@@ -315,14 +315,14 @@ void TDecompChol::Det(Double_t &d1,Double_t &d2)
 {
   // determinant is square of diagProd of cholesky factor
 
-  if ( !( fStatus & kDetermined ) ) {
-    if ( !( fStatus & kDecomposed ) )
+  if ( !TestBit(kDetermined) ) {
+    if ( !TestBit(kDecomposed) )
       Decompose();
     TDecompBase::Det(d1,d2);
     // square det as calculated by above
     fDet1 *= fDet1;
     fDet2 += fDet2;
-    fStatus |= kDetermined;
+    SetBit(kDetermined);
   }
   d1 = fDet1;
   d2 = fDet2;

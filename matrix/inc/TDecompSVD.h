@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.7 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.8 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -54,11 +54,11 @@ public :
           const TMatrixD  GetMatrix ();
   virtual       Int_t     GetNrows  () const { return fU.GetNrows(); }
   virtual       Int_t     GetNcols  () const { return fV.GetNcols(); }
-          const TMatrixD &GetU      ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+          const TMatrixD &GetU      ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fU; }
-          const TMatrixD &GetV      ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+          const TMatrixD &GetV      ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fV; }
-          const TVectorD &GetSig    ()       { if ( !( fStatus & kDecomposed ) ) Decompose();
+          const TVectorD &GetSig    ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fSig; }
 
   virtual       void      SetMatrix (const TMatrixD &a);

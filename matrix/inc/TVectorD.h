@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.31 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.32 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -49,7 +49,8 @@ protected:
   void Allocate  (Int_t nrows,Int_t row_lwb = 0,Int_t init = 0);
 
 public:
-  TVectorD() { fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
+
+  TVectorD() { SetBit(TMatrixDBase::kStatus); fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
   explicit TVectorD(Int_t n);
   TVectorD(Int_t lwb,Int_t upb);
   TVectorD(Int_t n,const Double_t *elements);
@@ -72,8 +73,9 @@ public:
   inline          Double_t *GetMatrixArray  ()       { return fElements; }
   inline const    Double_t *GetMatrixArray  () const { return fElements; }
 
-  inline void     Invalidate () { fNrows = -1; }
-  inline Bool_t   IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
+  inline void     Invalidate ()       { SetBit(TMatrixDBase::kStatus); }
+  inline void     MakeValid  ()       { ResetBit(TMatrixDBase::kStatus); }
+  inline Bool_t   IsValid    () const { return TestBit(TMatrixDBase::kStatus); }
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Double_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Double_t)); }

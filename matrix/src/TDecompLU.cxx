@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.8 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.9 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fImplicitPivot = implicit;
   fTol = a.GetTol();
   if (tol > 0)
@@ -94,7 +94,7 @@ TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompLU::Decompose()
 {
-  if ( !( fStatus & kMatrixSet ) )
+  if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
   Int_t nrZeros = 0;
@@ -106,9 +106,9 @@ Bool_t TDecompLU::Decompose()
 
   if (!ok) {
     fLU.Invalidate();
-    fStatus |= kSingular;
+    SetBit(kSingular);
   }
-  fStatus |= kDecomposed;
+  SetBit(kDecomposed);
 
   return ok;
 }
@@ -118,9 +118,9 @@ const TMatrixD TDecompLU::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return TMatrixD();
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return TMatrixD();
   }
@@ -170,7 +170,7 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fCondition = -1.0;
 
   fSign = 1.0;
@@ -193,9 +193,9 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -269,9 +269,9 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
     
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -336,9 +336,9 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -415,9 +415,9 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -476,11 +476,11 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 Double_t TDecompLU::Condition()
 {
-  if ( !( fStatus & kCondition ) ) {
+  if ( !TestBit(kCondition) ) {
     fCondition = -1;
-    if (fStatus & kSingular)
+    if (TestBit(kSingular))
       return fCondition;
-    if ( !( fStatus & kDecomposed ) ) {
+    if ( !TestBit(kDecomposed) ) {
       if (!Decompose())
         return fCondition;
     }
@@ -490,7 +490,7 @@ Double_t TDecompLU::Condition()
       fCondition = norm*invNorm;
     else // no convergence in Hager
       Error("Condition()","Hager procedure did NOT converge");
-    fStatus |= kCondition;
+    SetBit(kCondition);
   }
   return fCondition;
 }
@@ -498,12 +498,12 @@ Double_t TDecompLU::Condition()
 //______________________________________________________________________________
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
-  if ( !( fStatus & kDetermined ) ) {
-    if ( !( fStatus & kDecomposed ) )
+  if ( !TestBit(kDetermined) ) {
+    if ( !TestBit(kDecomposed) )
       Decompose();
     TDecompBase::Det(d1,d2);
     fDet1 *= fSign;
-    fStatus |= kDetermined;
+    SetBit(kDetermined);
   }
   d1 = fDet1;
   d2 = fDet2;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.5 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.6 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 class TDecompBase : public TObject
 {
 protected :
-  Int_t    fStatus;    // decomposition status
   Double_t fTol;       // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
   Double_t fDet1;      // determinant mantissa
   Double_t fDet2;      // determinant exponent for powers of 2
@@ -43,15 +42,23 @@ protected :
   virtual const TMatrixDBase &GetDecompMatrix() const = 0;
 
 public :
-  enum EMatrixDecompStat { kInit=0,kPatternSet=1,kValuesSet=2,kMatrixSet=4,
-                           kDecomposed=8,kDetermined=16,kCondition=32,kSingular=64 };
+  enum EMatrixDecompStat {
+    kInit       = BIT(14),
+    kPatternSet = BIT(15),
+    kValuesSet  = BIT(16),
+    kMatrixSet  = BIT(17),
+    kDecomposed = BIT(18),
+    kDetermined = BIT(19),
+    kCondition  = BIT(20),
+    kSingular   = BIT(21)
+  };
+
   enum {kWorkMax = 100}; // size of work array's in several routines
 
   TDecompBase();
   TDecompBase(const TDecompBase &another);
   virtual ~TDecompBase() {};
 
-          inline Int_t    GetStatus    () const { return fStatus; }
           inline Double_t GetTol       () const { return fTol; }
           inline Double_t GetDet1      () const { return fDet1; }
           inline Double_t GetDet2      () const { return fDet2; }
@@ -81,7 +88,7 @@ public :
 
   TDecompBase &operator= (const TDecompBase &source);
 
-  ClassDef(TDecompBase,1) // Matrix Decompositition Base
+  ClassDef(TDecompBase,2) // Matrix Decompositition Base
 };
 
 Double_t TDecompBase::SetTol(Double_t newTol) 

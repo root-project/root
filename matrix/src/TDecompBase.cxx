@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.10 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.12 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -133,7 +133,6 @@ ClassImp(TDecompBase)
 //______________________________________________________________________________
 TDecompBase::TDecompBase()
 {
-  fStatus    = kInit;
 //  fTol       = std::numerical_limits<double>::epsilon();
   fTol       = DBL_EPSILON;
   fDet1      = 0;
@@ -252,11 +251,11 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 //______________________________________________________________________________
 Double_t TDecompBase::Condition()
 {
-  if ( !(fStatus & kCondition) ) {
+  if ( !TestBit(kCondition) ) {
     fCondition = -1;
-    if (fStatus & kSingular)
+    if (TestBit(kSingular))
       return fCondition; 
-    if ( !( fStatus & kDecomposed ) ) {
+    if ( !TestBit(kDecomposed) ) {
       if (!Decompose())
         return fCondition;
     }
@@ -265,7 +264,7 @@ Double_t TDecompBase::Condition()
       fCondition *= invNorm;
     else // no convergence in Hager
       Error("Condition()","Hager procedure did NOT converge");
-    fStatus |= kCondition;
+    SetBit(kCondition);
   }
   return fCondition;
 }
@@ -350,10 +349,10 @@ TMatrixD TDecompBase::Invert()
 //______________________________________________________________________________
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
-  if ( !(fStatus & kDetermined) ) {
-    if ( !(fStatus & kDecomposed) )
+  if ( !TestBit(kDetermined) ) {
+    if ( !TestBit(kDecomposed) )
       Decompose();
-    if ( fStatus & kSingular ) {
+    if (TestBit(kSingular) ) {
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else {
@@ -364,7 +363,7 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
         diagv(i) = m(i,i);
       DiagProd(diagv,fTol,fDet1,fDet2);
     }
-    fStatus |= kDetermined;
+    SetBit(kDetermined);
   }
   d1 = fDet1;
   d2 = fDet2;
@@ -375,7 +374,6 @@ TDecompBase &TDecompBase::operator=(const TDecompBase &source)
 {
   if (this != &source) {
     TObject::operator=(source);
-    fStatus    = source.fStatus;
     fTol       = source.fTol;
     fDet1      = source.fDet1;
     fDet2      = source.fDet2;

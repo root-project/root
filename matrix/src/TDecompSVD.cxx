@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.11 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.13 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -101,7 +101,7 @@ TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompSVD::Decompose()
 {
-  if ( !( fStatus & kMatrixSet ) )
+  if ( !TestBit(kMatrixSet) )
     return kFALSE;
 
   const Int_t nCol   = this->GetNcols();
@@ -125,7 +125,7 @@ Bool_t TDecompSVD::Decompose()
   SortSingular(fV,fU,fSig);
   fV.ResizeTo(nCol,nCol); fV.Shift(0,colLwb);
   fU.Transpose(fU);       fU.Shift(rowLwb,0);
-  fStatus |= kDecomposed;
+  SetBit(kDecomposed);
 
   return kTRUE;
 }
@@ -505,9 +505,9 @@ const TMatrixD TDecompSVD::GetMatrix()
 {
 // Reconstruct the original matrix using the decomposition parts
 
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return TMatrixD();
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return TMatrixD();
   }
@@ -529,7 +529,7 @@ void TDecompSVD::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kMatrixSet;
+  SetBit(kMatrixSet);
   fCondition = -1.0;
 
   fRowLwb = a.GetRowLwb();
@@ -555,9 +555,9 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -619,9 +619,9 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 { 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());    
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -669,9 +669,9 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 // Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
 
   Assert(b.IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -727,9 +727,9 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  if (fStatus & kSingular)
+  if (TestBit(kSingular))
     return kFALSE;
-  if ( !( fStatus & kDecomposed ) ) {
+  if ( !TestBit(kDecomposed) ) {
     if (!Decompose())
       return kFALSE;
   }
@@ -771,18 +771,18 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 Double_t TDecompSVD::Condition()
 {
-  if ( !(fStatus & kCondition) ) {
+  if ( !TestBit(kCondition) ) {
     fCondition = -1;
-    if (fStatus & kSingular)
+    if (TestBit(kSingular))
       return fCondition;
-    if ( !( fStatus & kDecomposed ) ) {
+    if ( !TestBit(kDecomposed) ) {
       if (!Decompose())
         return fCondition;
     }
     const Double_t max = fSig(0);
     const Double_t min = fSig(fSig.GetNrows()-1);
     fCondition = (min > 0.0) ? max/min : -1.0;
-    fStatus |= kCondition;
+    SetBit(kCondition);
   }
   return fCondition;
 }
@@ -790,17 +790,17 @@ Double_t TDecompSVD::Condition()
 //______________________________________________________________________________
 void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 {
-  if ( !(fStatus & kDetermined) ) {
-    if ( !( fStatus & kDecomposed ) )
+  if ( !TestBit(kDetermined) ) {
+    if ( !TestBit(kDecomposed) )
       Decompose();
-    if ( fStatus & kSingular ) {
+    if (TestBit(kSingular)) {
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else {
       Assert(fSig.IsValid());
       DiagProd(fSig,fTol,fDet1,fDet2);
     }
-    fStatus |= kDetermined;
+    SetBit(kDetermined);
   }
   d1 = fDet1;
   d2 = fDet2;

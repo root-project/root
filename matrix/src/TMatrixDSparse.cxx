@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.10 2004/05/19 15:47:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.11 2004/05/20 14:50:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -230,6 +230,7 @@ void TMatrixDSparse::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t co
     return;
   }
   
+  SetBit(kStatus);
   fNrows     = no_rows;
   fNcols     = no_cols;
   fRowLwb    = row_lwb;
