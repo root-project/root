@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.51 2004/08/02 11:20:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.52 2004/08/11 09:39:16 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -323,7 +323,7 @@ namespace TMath {
           Double_t  Gamma(Double_t a,Double_t x);
           Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
           Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
-          Double_t  Landau(Double_t x, Double_t mean=0, Double_t sigma=1);
+          Double_t  Landau(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
           Double_t  LnGamma(Double_t z);
           Double_t  Poisson(Double_t x, Double_t par);
           Double_t  PoissonI(Double_t x, Double_t par);

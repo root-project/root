@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.81 2004/08/12 11:41:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.82 2004/08/13 16:41:16 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -511,10 +511,11 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
+Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma, Bool_t norm)
 {
    // The LANDAU function with mpv(most probable value) and sigma.
    // This function has been adapted from the CERNLIB routine G110 denlan.
+   // If norm=kTRUE (default is kFALSE) the result is divided by sigma
 
    Double_t p1[5] = {0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253};
    Double_t q1[5] = {1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063};
@@ -573,7 +574,8 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
        u   = 1/(v-v*TMath::Log(v)/(v+1));
        den = u*u*(1+(a2[0]+a2[1]*u)*u);
    }
-   return den;
+   if (!norm) return den;
+   return den/sigma;
 }
 
 //______________________________________________________________________________
