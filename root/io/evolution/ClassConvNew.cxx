@@ -4,4 +4,6 @@
 #pragma link C++ namespace MyLib;
 #pragma link C++ class MyLib::Inside+;
 #pragma link C++ class TopLevel+;
+#pragma link C++ class MyLib::Typedefed+;
+#pragma link C++ typedef Typedefed;
 #endif

@@ -3,6 +3,10 @@ namespace MyLib {
 #elif VERSION==3
 namespace OtherLib {
 #endif
+   class Typedefed {
+   public:
+      int var;
+   };
    class Inside {
       int i;
    public:
@@ -13,6 +17,12 @@ namespace OtherLib {
 } // namespace MyLib
 #endif
 
+#if VERSION==2
+typedef MyLib::Typedefed Typedefed;
+#elif VERSION==3
+typedef OtherLib::Typedefed Typedefed;
+#endif
+
 class TopLevel {
 #if VERSION==2
    MyLib::Inside in;
@@ -20,6 +30,11 @@ class TopLevel {
    OtherLib::Inside in;
 #else
    Inside in;
+#endif
+#if VERSION==2
+   MyLib::Typedefed t;
+#else
+   Typedefed t;
 #endif
 public:
    TopLevel(int input = 99) : in(input) {}
