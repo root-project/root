@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.22 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.23 2004/09/29 06:55:13 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0), fTessObj(0
 
    gVirtualGL = this;
    gROOT->GetListOfSpecials()->Add(this);
-   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+   //glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 }
 
 //______________________________________________________________________________
