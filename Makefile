@@ -395,7 +395,7 @@ distclean:: clean
 	-@mv -f include/config.h include/config.hh
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	-@mv -f include/config.hh include/config.h
-	@rm -f build/dummy.d bin/*.dll bin/*.exp bin/*.lib lib/*.def lib/*.exp lib/*.lib .def
+	@rm -f bin/*.dll bin/*.exp bin/*.lib lib/*.def lib/*.exp lib/*.lib .def
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
@@ -404,7 +404,7 @@ distclean:: clean
 	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
-	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
+	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean

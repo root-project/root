@@ -71,7 +71,7 @@ all-freetype:   $(FREETYPELIB)
 
 clean-freetype:
 ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc) ]; then \
+		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc ]; then \
 			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc; \
 			unset MAKEFLAGS; \
 			nmake -nologo -f freetype.mak \

@@ -41,6 +41,7 @@ clean-utils:
 clean::         clean-utils
 
 distclean-utils: clean-utils
-		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMP) $(ROOTCINT) $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
+		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMP) $(ROOTCINT) \
+		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
 
 distclean::     distclean-utils
