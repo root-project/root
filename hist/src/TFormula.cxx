@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.12 2001/02/09 10:02:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.13 2001/02/14 07:37:27 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1804,7 +1804,7 @@ void TFormula::SetParameter(const char *name, Double_t value)
 //*-*-*-*-*-*-*-*Initialize parameter number ipar*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ================================
 
-   Int_t ipar = GetParameter(name);
+   Int_t ipar = GetParNumber(name);
    if (ipar <0 || ipar >= fNpar) return;
    fParams[ipar] = value;
    Update();
