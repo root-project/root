@@ -291,6 +291,10 @@ N: Anne-Sylvie Nicollerat
 E: Anne-Sylvie.Nicollerat@cern.ch
 D: improvements in tutorial hadd.C to take into account Trees
 
+N: Maxim Nikulin
+E: nikulin@gorodok.net
+D: improvements in the TGraph suite memory management functions
+
 N: John Odonnell
 E: odonnell@lanl.gov
 D: contributed to TFormula the support for recursive functions definitions
