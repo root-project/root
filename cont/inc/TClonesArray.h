@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.3 2001/01/20 21:12:55 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.4 2001/02/21 07:36:35 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
    enum {
       kForgetBits     = BIT(0),        // Do not create branches for fBits, fUniqueID
       kNoSplit        = BIT(1),        // array not split by TTree::Branch
-      kBypassStreamer = BIT(14)};      // class Streamer not called (default)
+      kBypassStreamer = BIT(12)};      // class Streamer not called (default)
       
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
@@ -69,7 +69,7 @@ public:
    TObject         *AddrAt(Int_t i);
    TObject         *&operator[](Int_t i);
 
-   ClassDef(TClonesArray,3)  //An array of clone objects
+   ClassDef(TClonesArray,4)  //An array of clone objects
 };
 
 inline TObject *TClonesArray::AddrAt(Int_t i)

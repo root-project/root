@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.8 2001/02/19 07:13:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.9 2001/02/21 07:36:36 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -123,7 +123,7 @@ TClonesArray::~TClonesArray()
 void TClonesArray::BypassStreamer(Bool_t Bypass)
 {
 //  When the kBypassStreamer bit is set, the automatically
-//  generated Streamer cannot call directly TClass::WriteBuffer
+//  generated Streamer can call directly TClass::WriteBuffer
 
    if (Bypass) SetBit(kBypassStreamer);
    else        ResetBit(kBypassStreamer);
@@ -378,6 +378,10 @@ void TClonesArray::Streamer(TBuffer &b)
 
    if (b.IsReading()) {
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v == 3) {
+         const Int_t kOldBypassStreamer = BIT(14);
+         if (TestBit(kOldBypassStreamer)) BypassStreamer();
+      }
       if (v > 2)
          TObject::Streamer(b);
       if (v > 1)
