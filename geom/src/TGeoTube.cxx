@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.16 2003/02/07 13:46:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.17 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -537,7 +537,7 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
 {
    if (rmin>=0) {
       if (rmax>0) {
-         if (rmin<rmax) {
+         if (rmin<=rmax) {
          // normal rmin/rmax
             fRmin = rmin;
             fRmax = rmax;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.16 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.17 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -580,7 +580,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
 {
    if (rmin1>=0) {
       if (rmax1>0) {
-         if (rmin1<rmax1) {
+         if (rmin1<=rmax1) {
          // normal rmin/rmax
             fRmin1 = rmin1;
             fRmax1 = rmax1;
@@ -602,7 +602,7 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    }               
    if (rmin2>=0) {
       if (rmax2>0) {
-         if (rmin2<rmax2) {
+         if (rmin2<=rmax2) {
          // normal rmin/rmax
             fRmin2 = rmin2;
             fRmax2 = rmax2;
