@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.9 2000/09/05 09:15:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.10 2000/09/08 16:05:22 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -169,6 +169,7 @@ Bool_t TCint::IsLoaded(const char* filename) const
    char *next = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
    if (next) {
      file.Init(next);
+     delete [] next;
      if (file.IsValid()) { return kTRUE; };
    }
 
@@ -183,12 +184,14 @@ Bool_t TCint::IsLoaded(const char* filename) const
    next = gSystem->Which(incPath, filename, kReadPermission);
    if (next) {
      file.Init(next);
+     delete [] next;
      if (file.IsValid()) { return kTRUE; };
    }
 
    next = gSystem->DynamicPathName(filename,kTRUE);
    if (next) {
      file.Init(next);
+     delete [] next;
      if (file.IsValid()) { return kTRUE; };
    }
 
