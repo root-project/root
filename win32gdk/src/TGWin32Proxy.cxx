@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.3 2003/08/11 11:45:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.4 2003/08/11 14:55:32 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -229,7 +229,6 @@ RETURN_METHOD_ARG0(TGWin32,Window_t,GetInputFocus)
 RETURN_METHOD_ARG0(TGWin32,Window_t,GetPrimarySelectionOwner)
 RETURN_METHOD_ARG0(TGWin32,Region_t,CreateRegion)
 RETURN_METHOD_ARG0(TGWin32,Int_t,glGetError)
-RETURN_METHOD_ARG0_CONST(TGWin32,Float_t,GetTextSize)
 RETURN_METHOD_ARG0_CONST(TGWin32,Display_t,GetDisplay)
 RETURN_METHOD_ARG0_CONST(TGWin32,Visual_t,GetVisual)
 RETURN_METHOD_ARG0_CONST(TGWin32,Int_t,GetScreen)
