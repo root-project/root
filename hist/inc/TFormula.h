@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.13 2001/06/22 09:48:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.14 2002/01/19 08:25:12 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -67,15 +67,15 @@ public:
  virtual Int_t      DefinedVariable(TString &variable);
  virtual Double_t   Eval(Double_t x, Double_t y=0, Double_t z=0);
  virtual Double_t   EvalPar(const Double_t *x, const Double_t *params=0);
-         Int_t      GetNdim() const {return fNdim;}
-         Int_t      GetNpar() const {return fNpar;}
-         Int_t      GetNumber() const {return fNumber;}
+ virtual Int_t      GetNdim() const {return fNdim;}
+ virtual Int_t      GetNpar() const {return fNpar;}
+ virtual Int_t      GetNumber() const {return fNumber;}
  Double_t           GetParameter(Int_t ipar) const;
  Double_t           GetParameter(const char *name) const;
  virtual Double_t  *GetParameters() const {return fParams;}
  virtual void       GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
  virtual const char *GetParName(Int_t ipar) const;
-         Int_t      GetParNumber(const char *name) const;
+ virtual Int_t      GetParNumber(const char *name) const;
  virtual void       Print(Option_t *option="") const; // *MENU*
  virtual void       SetNumber(Int_t number) {fNumber = number;}
  virtual void       SetParameter(const char *name, Double_t parvalue);
