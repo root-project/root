@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.18 2002/07/27 11:09:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.19 2003/02/14 08:23:14 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -260,7 +260,7 @@ void TCollection::Print(Option_t *option) const
    // with names xxx*.
 
    TRegexp re(option,kTRUE);
-   Int_t nch = strlen(option);
+   Int_t nch = (option ? strlen(option) : 0);
    TIter next(this);
    TObject *object;
 
