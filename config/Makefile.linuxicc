@@ -24,6 +24,7 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
 
+# Compiler version:
 ICC_MAJOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $8 }' | \
                 cut -d'.' -f1)
 ICC_MINOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $8 }' | \
