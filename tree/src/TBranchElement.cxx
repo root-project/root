@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.62 2001/10/02 16:56:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.63 2001/10/09 07:52:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -490,7 +490,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
 //  Fill buffers of this branch
 
   if (!fObject) return;
-  if (TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
+  if (fType <= 2 && TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
 
   if (fType == 4) {           // STL vector/list of objects
      //printf ("STL split mode not yet implemented\n");
@@ -841,7 +841,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      }
   }
 
-  if (TestBit(kBranchObject)) {
+  if (fType <=2 && TestBit(kBranchObject)) {
      b.MapObject((TObject*)fObject);
   }
 
@@ -881,7 +881,9 @@ void TBranchElement::Reset(Option_t *option)
 //
 
    TBranch::Reset(option);
-
+   
+   fInfo           = gROOT->GetClass(fClassName.Data())->GetStreamerInfo(fClassVersion);
+      
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
