@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.17 2003/03/14 11:33:30 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.18 2003/06/05 14:22:51 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1709,7 +1709,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             // Add all classes to pList that contain the prefix, i.e. are in the
             // specified namespace.
             const TSeqCol *tmp = GetListOfClasses();
-            for (Int_t i = 0; i < tmp->GetSize(); i++) {
+            Int_t i;
+            for (i = 0; i < tmp->GetSize(); i++) {
                TString str = ((TObjString *) tmp->At(i))->String();
                TString rxp = "^";
                rxp += prefix;
@@ -1724,7 +1725,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                }
             }
             // Add all the sub-namespaces in the specified namespace.
-            for (Int_t i = 0; i < fpNamespaces->GetSize(); i++) {
+            for (i = 0; i < fpNamespaces->GetSize(); i++) {
                TString str =
                    ((TObjString *) fpNamespaces->At(i))->String();
                TString rxp = "^";
