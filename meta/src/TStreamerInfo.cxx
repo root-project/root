@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.80 2001/07/02 08:53:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.81 2001/07/09 21:41:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -447,7 +447,8 @@ void TStreamerInfo::BuildOld()
          //offset += asize*alength;
          offset += asize;
          //align to pointer boundaries (important on 64 bit machines)
-         if (offset%sp != 0) offset = offset - offset%sp + sp;
+         //align only the non-basic data types
+         if (element->GetType() > 30 && offset%sp != 0) offset = offset - offset%sp + sp;
          if (element->GetType() == kObject || element->GetType() == kTString) {
             //element->SetOffset(kMissing);
             //element->SetNewType(-1);
