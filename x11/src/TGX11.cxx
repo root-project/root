@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.34 2003/08/23 00:08:13 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.35 2003/12/16 16:22:56 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3286,8 +3286,8 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
 //______________________________________________________________________________
 Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   // If id is NULL - loads the specified gif file at position [x0,y0] in the 
-   // current window. Otherwise creates pixmap from gif file 
+   // If id is NULL - loads the specified gif file at position [x0,y0] in the
+   // current window. Otherwise creates pixmap from gif file
 
    FILE  *fd;
    Seek_t filesize;
@@ -3308,24 +3308,36 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 
    if (!(GIFarr = (unsigned char *) calloc(filesize+256,1))) {
       Error("ReadGIF", "unable to allocate array for gif");
+      fclose(fd);
       return pic;
    }
 
    if (fread(GIFarr, filesize, 1, fd) != 1) {
       Error("ReadGIF", "GIF file read failed");
+      free(GIFarr);
+      fclose(fd);
+      return pic;
+   }
+   fclose(fd);
+
+   irep = GIFinfo(GIFarr, &width, &height, &ncolor);
+   if (irep != 0) {
+      free(GIFarr);
       return pic;
    }
 
-   irep = GIFinfo(GIFarr, &width, &height, &ncolor);
-   if (irep != 0) return pic;
-
    if (!(PIXarr = (unsigned char *) calloc((width*height),1))) {
       Error("ReadGIF", "unable to allocate array for image");
+      free(GIFarr);
       return pic;
    }
 
    irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
-   if (irep != 0) return pic;
+   if (irep != 0) {
+      free(GIFarr);
+      free(PIXarr);
+      return pic;
+   }
 
    // S E T   P A L E T T E
 
@@ -3351,7 +3363,12 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    if (id) pic = CreatePixmap(id, width, height);
    PutImage(offset,-1,x0,y0,width,height,0,0,width-1,height-1,PIXarr,pic);
 
-   if (pic) return pic;
-   else if (gCws->drawing) return  (Pixmap_t)gCws->drawing;
-   else return 0;
+   free(GIFarr);
+   free(PIXarr);
+
+   if (pic)
+      return pic;
+   else if (gCws->drawing)
+      return (Pixmap_t)gCws->drawing;
+   return 0;
 }
