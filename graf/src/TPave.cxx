@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.6 2000/11/21 20:26:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -561,8 +561,11 @@ void TPave::SavePrimitive(ofstream &out, Option_t *)
       out<<"pave = new TPave("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
          <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<endl;
    }
+   if (strcmp(GetName(),"TPave")) {
+      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   }
    if (fCornerRadius) {
-      out<<"pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
+      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
    }
    SaveFillAttributes(out,"pave",0,1001);
    SaveLineAttributes(out,"pave",1,1,1);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.2 2000/06/13 11:14:08 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -134,6 +134,15 @@ void TPavesText::SavePrimitive(ofstream &out, Option_t *)
    out<<"pst = new TPavesText("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<endl;
 
+   if (strcmp(GetName(),"TPave")) {
+      out<<"   pst->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   }
+   if (fLabel.Length() > 0) {
+      out<<"   pst->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;
+   }
+   if (fBorderSize != 4) {
+      out<<"   pst->SetBorderSize("<<fBorderSize<<");"<<endl;
+   }
    SaveFillAttributes(out,"pst",0,1001);
    SaveLineAttributes(out,"pst",1,1,1);
    SaveTextAttributes(out,"pst",22,0,1,62,0);
