@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.75 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.76 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -3008,6 +3008,18 @@ void TMatrixD::Streamer(TBuffer &R__b)
       R__b >> fColLwb;
       fNelems = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
+    }
+    // in version <=2 , the matrix was stored column-wise
+    if (R__v <= 2) {
+      for (Int_t i = 0; i < fNrows; i++) {
+        const Int_t off_i = i*fNrows;
+        for (Int_t j = i+1; j < fNcols; j++) {
+          const Int_t off_j = j*fNcols;
+          const Double_t tmp = fElements[off_i+j];
+          fElements[off_i+j] = fElements[off_j+i];
+          fElements[off_j+i] = tmp;
+        }
+      }
     }
     if (fNelems > 0 && fNelems <= kSizeMax) {
       memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));

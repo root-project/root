@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.21 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.22 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -842,6 +842,8 @@ Double_t TMatrixDSym::Determinant() const
   TDecompLU lu(tmp,fTol);
   Double_t d1,d2;
   lu.Det(d1,d2);
+  if (TMath::Abs(d2) > 52.0)
+   ::Warning("TMatrixDSym::Determinant","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
   return d1*TMath::Power(2.0,d2);
 }
 
@@ -857,6 +859,9 @@ void TMatrixDSym::Determinant(Double_t &d1,Double_t &d2) const
 TMatrixDSym &TMatrixDSym::Invert(Double_t *det)
 {     
   // Invert the matrix and calculate its determinant
+  // Notice that we need to invoke an additional LU decomposition in order to
+  // calculate the determinant beacuse the Bunch-Kaufman does not result in a
+  // convenient triagularr matrix .
     
   if (det)
     *det = this->Determinant();
