@@ -772,7 +772,6 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
       sumw2 += ez*ez;
    }
 //*-*- Perform minimization
-   if (!InheritsFrom("TGraph2DErrors")) SetBit(kFitInit);
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = sumw2*TVirtualFitter::GetPrecision();
    grFitter->ExecuteCommand("MIGRAD",arglist,2);

@@ -64,10 +64,6 @@ protected:
    void     Build(Int_t n);
 
 public:
-    // TGraph2D status bits
-   enum {
-      kFitInit = BIT(19)
-   };
 
    TGraph2D();
    TGraph2D(Int_t n);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.41 2005/01/03 08:58:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.42 2005/02/16 08:39:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -65,8 +65,7 @@ public:
     // TGraph status bits
     enum {
        kClipFrame     = BIT(10),  // clip to the frame boundary
-       kNotEditable   = BIT(18),  // bit set if graph is non editable
-       kFitInit       = BIT(19)
+       kNotEditable   = BIT(18)   // bit set if graph is non editable
     };
 
         TGraph();

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.148 2005/02/14 15:12:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.149 2005/02/16 08:39:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1252,7 +1252,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       sumw2 += ey*ey;
    }
 //*-*- Perform minimization
-   if (!InheritsFrom("TGraphErrors")) SetBit(kFitInit);
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = sumw2*TVirtualFitter::GetPrecision();
    grFitter->ExecuteCommand("MIGRAD",arglist,2);
