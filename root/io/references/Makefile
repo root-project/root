@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.o
 
 #Set the list of target to make while testing
-TEST_TARGETS += referencesTest
+TEST_TARGETS += lotsRef referencesTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -32,3 +32,11 @@ MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTSYS)/bin/rootcint
 
 libmaster.$(DllSuf): MasterDict.o MyClass.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+
+lotsRef.root: lotsRef_C.$(DllSuf)
+	$(CMDECHO) (root -q -b -l 'lotsRef.C+(300)' && root -q -b -l 'lotsRef.C+(2)' && root -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 
+
+lotsRef.log: lotsRef.root lotsRef_C.$(DllSuf)
+
+lotsRef: lotsRef.log
+	$(TestDiff)
