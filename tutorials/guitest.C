@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.50 2005/01/21 15:19:02 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.51 2005/02/15 17:01:39 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -403,6 +403,7 @@ RQ_OBJECT("TestFileList")
 protected:
    TGTransientFrame *fMain;
    TGFileContainer  *fContents;
+   TGPopupMenu      *fMenu;
 
    virtual void DisplayFile(const TString &fname);
    virtual void DisplayDirectory(const TString &fname);
@@ -1901,14 +1902,14 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
    fMain->AddFrame(mb, lo);
 
-   TGPopupMenu *menu = mb->AddPopup("&View");
-   menu->AddEntry("Lar&ge Icons",kLVLargeIcons);
-   menu->AddEntry("S&mall Icons",kLVSmallIcons);
-   menu->AddEntry("&List",       kLVList);
-   menu->AddEntry("&Details",    kLVDetails);
-   menu->AddSeparator();
-   menu->AddEntry("&Close",      10);
-   menu->Connect("Activated(Int_t)","TestFileList",this,"DoMenu(Int_t)");
+   fMenu = mb->AddPopup("&View");
+   fMenu->AddEntry("Lar&ge Icons",kLVLargeIcons);
+   fMenu->AddEntry("S&mall Icons",kLVSmallIcons);
+   fMenu->AddEntry("&List",       kLVList);
+   fMenu->AddEntry("&Details",    kLVDetails);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("&Close",      10);
+   fMenu->Connect("Activated(Int_t)","TestFileList",this,"DoMenu(Int_t)");
 
    TGListView* lv = new TGListView(fMain, w, h);
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
@@ -1938,6 +1939,8 @@ TestFileList::~TestFileList()
 {
    // Cleanup.
 
+   delete fContents;
+   delete fMenu; 
    delete fMain;
 }
 

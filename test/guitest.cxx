@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.48 2005/01/21 15:19:02 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.49 2005/02/15 17:01:39 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -352,6 +352,7 @@ class TestFileList  : public TGTransientFrame {
 
 protected:
    TGFileContainer  *fContents;
+   TGPopupMenu      *fMenu;
 
    virtual void DisplayFile(const TString &fname);
    virtual void DisplayDirectory(const TString &fname);
@@ -1799,14 +1800,14 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
    AddFrame(mb, lo);
 
-   TGPopupMenu *menu = mb->AddPopup("&View");
-   menu->AddEntry("Lar&ge Icons",kLVLargeIcons);
-   menu->AddEntry("S&mall Icons",kLVSmallIcons);
-   menu->AddEntry("&List",       kLVList);
-   menu->AddEntry("&Details",    kLVDetails);
-   menu->AddSeparator();
-   menu->AddEntry("&Close",      10);
-   menu->Associate(this);
+   fMenu = mb->AddPopup("&View");
+   fMenu->AddEntry("Lar&ge Icons",kLVLargeIcons);
+   fMenu->AddEntry("S&mall Icons",kLVSmallIcons);
+   fMenu->AddEntry("&List",       kLVList);
+   fMenu->AddEntry("&Details",    kLVDetails);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("&Close",      10);
+   fMenu->Associate(this);
 
    TGListView* lv = new TGListView(this, w, h);
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
@@ -1835,6 +1836,8 @@ TestFileList::~TestFileList()
 {
    // dtor.
 
+   delete fMenu;
+   delete fContents;
 }
 
 void TestFileList::DisplayFile(const TString &fname)
