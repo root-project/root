@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.13 2002/08/14 06:48:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.14 2002/08/15 18:15:44 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -420,23 +420,28 @@ void TUUID::GetNodeIdentifier()
    // Get node identifier. Try first to get network address, if no
    // network interface try random info based on some machine parameters.
 
+   static UInt_t adr = 0;
    if (gSystem) {
-      static UInt_t adr = 0;
       if (!adr) {
          TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
          if (addr.IsValid())
             adr = addr.GetAddress();
+         else
+            adr = 1;  // illegal address
       }
-      if (adr) {
+      if (adr > 2) {
          memcpy(fNode, &adr, 4);
          fNode[4] = 0xbe;
          fNode[5] = 0xef;
          return;
       }
    }
-   UChar_t seed[16];
-   GetRandomInfo(seed);
-   seed[0] |= 0x80;
+   static UChar_t seed[16];
+   if (adr < 2) {
+      GetRandomInfo(seed);
+      seed[0] |= 0x80;
+      if (gSystem) adr = 2;  // illegal address
+   }
    memcpy(fNode, seed, sizeof(fNode));
    fTimeHiAndVersion |= (3 << 12);    // version == 3: random node info
 }
