@@ -119,7 +119,6 @@ endif
 ifeq ($(GCCVERS),3)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
-#CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 
 CINTS        := $(CINTS1) $(CINTS2)
