@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d
 
 #Set the list of target to make while testing
-TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest
+TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest relationsTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
