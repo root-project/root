@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.90 2004/10/06 14:18:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.91 2004/10/06 14:38:19 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -931,9 +931,31 @@ void TGCompositeFrame::SetCleanup(Int_t on)
    // if on is ZERO - no automatic cleanup
    // if on > 0 - non-propagative cleanup
    // if on < 0 - propagate Cleanup to all child_composite frames (hierarchical)
+   //
+   // Attention!
+   //    Hierarchical cleaning is dangerous and must be used with caution.
+   //    There are many GUI components (in ROOT and in user code) which do not
+   //    use Clean method in destructor ("custom deallocation").
+   //    Adding such component to GUI container which is using hierarchical
+   //    cleaning will produce seg. violation when container is deleted.
+   //    The reason is double deletion: first whem Clean method is invoked, 
+   //    then at "custom deallocation". 
+   //    We are going to correct all ROOT code to make it to be 
+   //    consitent with hierarchical cleaning scheeme.
 
    if (on == fMustCleanup) return;
    fMustCleanup = on;
+
+   if (fMustCleanup < 0) {
+      TGFrameElement *el;
+      TIter next(fList);
+
+      while ((el = (TGFrameElement *) next())) {
+         if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
+            el->fFrame->SetCleanup(-1);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
