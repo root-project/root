@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.4 2002/10/25 23:49:14 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.5 2003/01/14 00:07:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,6 +50,7 @@ protected:
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  virtual void printCompactTreeHook(const char* indent="") ;
 
   RooArgSet*  _normSet ;
   RooArgSet*  _pdfCloneSet ;

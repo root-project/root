@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.10 2003/02/26 02:18:33 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.11 2003/04/01 22:34:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -210,6 +210,17 @@ Bool_t RooAbsOptGoodnessOfFit::redirectServersHook(const RooAbsCollection& newSe
   Bool_t ret = _pdfClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
   return ret ;
 }
+
+
+void RooAbsOptGoodnessOfFit::printCompactTreeHook(const char* indent) 
+{
+  RooAbsGoodnessOfFit::printCompactTreeHook(indent) ;
+  if (operMode()!=Slave) return ;
+  TString indent2(indent) ;
+  indent2 += ">>" ;
+  _pdfClone->printCompactTree(indent2) ;
+}
+
 
 
 void RooAbsOptGoodnessOfFit::constOptimize(ConstOpCode opcode) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.34 2002/11/27 07:27:52 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.35 2003/01/14 00:07:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,6 +52,7 @@ protected:
   //friend class RooAbsPdf ;
 
   Bool_t initNumIntegrator() const;
+  void autoSelectDirtyMode() ;
 
   virtual Double_t sum() const ;
   virtual Double_t integrate() const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.23 2003/04/07 21:39:19 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.24 2003/04/09 01:33:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -95,7 +95,7 @@ public:
 
 protected:
  
-  void initialize() ;
+  void initialize(Bool_t fillTree=kTRUE) ;
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;

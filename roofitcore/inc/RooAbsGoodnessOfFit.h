@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.4 2003/01/14 00:07:42 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.5 2003/04/01 22:34:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,6 +46,8 @@ public:
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
 
 protected:
+
+  virtual void printCompactTreeHook(const char* indent="") ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual Double_t evaluate() const ;

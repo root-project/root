@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.6 2003/01/14 00:07:42 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.7 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -208,6 +208,26 @@ Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServe
     // WVE implement this
   }
   return kFALSE ;
+}
+
+
+void RooAbsGoodnessOfFit::printCompactTreeHook(const char* indent) 
+{
+  if (_gofOpMode==SimMaster) {
+    // Forward to slaves
+    Int_t i ;
+    cout << indent << "RooAbsGoodnessOfFit begin GOF contents" << endl ;
+    for (i=0 ; i<_nGof ; i++) {
+      if (_gofArray[i]) {
+	TString indent2(indent) ;
+	indent2 += Form("[%d] ",i) ;
+	_gofArray[i]->printCompactTreeHook(indent2) ;
+      }
+    }
+    cout << indent << "RooAbsGoodnessOfFit end GOF contents" << endl ;
+  } else if (_gofOpMode==MPMaster) {
+    // WVE implement this
+  }
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.34 2003/04/09 01:33:58 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.35 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -305,7 +305,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 
 
-void RooDataHist::initialize()
+void RooDataHist::initialize(Bool_t fillTree)
 {
   // Initialization procedure: allocate weights array, calculate
   // multipliers needed for N-space to 1-dim array jump table,
@@ -343,6 +343,15 @@ void RooDataHist::initialize()
     _sumw2[i] = 0 ;
   }
 
+  // Save real dimensions of dataset separately
+  RooAbsArg* real ;
+  _iterator->Reset() ;
+  while(real=(RooAbsArg*)_iterator->Next()) {
+    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real) ;
+  }
+  _realIter = _realVars.createIterator() ;
+
+  if (!fillTree) return ;
 
   // Fill TTree with bin center coordinates
   // Calculate plot bins of components from master index
@@ -363,13 +372,6 @@ void RooDataHist::initialize()
     Fill() ;
   }
 
-  // Save real dimensions of dataset separately
-  RooAbsArg* real ;
-  _iterator->Reset() ;
-  while(real=(RooAbsArg*)_iterator->Next()) {
-    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real) ;
-  }
-  _realIter = _realVars.createIterator() ;
 }
 
 
@@ -427,7 +429,18 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
 
-  initialize() ;
+  initialize(kFALSE) ;
+
+  // Copy weight array etc
+  Int_t i ;
+  for (i=0 ; i<_arrSize ; i++) {
+    _wgt[i] = h->_wgt[i] ;
+    _errLo[i] = h->_errLo[i] ;
+    _errHi[i] = h->_errHi[i] ;
+    _sumw2[i] = h->_sumw2[i] ;
+    _binv[i] = h->_binv[i] ;
+  }  
+
   appendToDir(this,kTRUE) ;
 }
 
