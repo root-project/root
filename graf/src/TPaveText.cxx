@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.8 2001/05/31 15:45:45 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.9 2001/06/05 11:32:59 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -426,7 +426,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
    }
    Double_t yfont;
    if (GetTextFont()%10 > 2)
-      yfont = (gPad->PixeltoY(-textsize)-gPad->PixeltoY(0))/(y2-y1)*dy;
+      yfont = (gPad->PixeltoY(Int_t(-textsize))-gPad->PixeltoY(0))/(y2-y1)*dy;
    else
       yfont = textsize*dy;
    Double_t ytext = fY2 + 0.5*yspace;
