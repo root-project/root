@@ -871,9 +871,21 @@ if test ! "$platform" = "win32"; then
 	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
 	/usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
-
+    
     if test "x$found_lib" = "x" ; then
 	echo "`basename $0`: libX11 MUST be installed"
+        exit 1
+    fi
+
+    check_header "X11/Xlib.h" \
+	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+	/usr/local/include /usr/local/include/X11 /use/local/X11R6/include \
+	/usr/X11/include /usr/include/X11R5
+    x11inc=$found_hdr
+    x11incdir=$found_dir
+
+    if test "x$x11incdir" = "x" ; then
+	echo "`basename $0`: X11 headers (x11-devel) MUST be installed"
         exit 1
     fi
 
