@@ -4,7 +4,7 @@ SHELL=/bin/bash
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
 
 #Set the list of target to make while testing
-TEST_TARGETS += stlIoTest 
+TEST_TARGETS += emptyCollection stlIoTest 
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -113,6 +113,7 @@ endif
 LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
 LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
+
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.so/ > $@
 
@@ -162,4 +163,10 @@ package:
    )
 endif
 
+samplerootfile.root: $(LIBDIR)/sample_bx_classes_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l sample_writer.C > samplerootfile.log
 
+emptyCollection.log: samplerootfile.root $(LIBDIR)/sample_bx_classes_C.$(DllSuf) sample_reader.C
+
+emptyCollection: emptyCollection.log
+	$(TestDiff)
