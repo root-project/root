@@ -22,6 +22,7 @@ public :
    // Declaration of leave types
    Event           *event;
    Char_t          fType[20];
+   Char_t          *fEventName;
    Int_t           fNtrack;
    Int_t           fNseg;
    Int_t           fNvertex;
@@ -31,16 +32,21 @@ public :
    Double32_t      fMatrix[4][4];
    Double32_t      fClosestDistance[21];   //[fNvertex]
    EventHeader     fEvtHdr;
-   TClonesArray*   fTracks;
+   TClonesArray    *fTracks;
+   TRefArray       *fHighPt;
+   TRefArray       *fMuons;
    TRef            fLastTrack;
    TRef            fWebHistogram;
+   TH1F            *fH;
    TBits           fTriggerBits;
 
    //Output hist
-   TH1F* fHist;
+   TH1F* fPtHist;
+   TH1I* fNTracksHist;
 
    // List of branches
    TBranch        *b_event_fType;   //!
+   TBranch        *b_fEventName;   //!
    TBranch        *b_event_fNtrack;   //!
    TBranch        *b_event_fNseg;   //!
    TBranch        *b_event_fNvertex;   //!
@@ -51,8 +57,11 @@ public :
    TBranch        *b_fClosestDistance;   //!
    TBranch        *b_event_fEvtHdr;   //!
    TBranch        *b_fTracks;   //!
+   TBranch        *b_fHighPt;   //!
+   TBranch        *b_fMuons;   //!
    TBranch        *b_event_fLastTrack;   //!
    TBranch        *b_event_fWebHistogram;   //!
+   TBranch        *b_fH;   //!
    TBranch        *b_event_fTriggerBits;   //!
 
    EventTree_ProcOpt(TTree *) { }
@@ -86,12 +95,16 @@ void EventTree_ProcOpt::Init(TTree *tree)
    // Init() will be called many times when running with PROOF.
 
    // Set branch addresses
+   fEventName=0;
    fTracks=0;
+   fHighPt=0;
+   fMuons=0;
    if (tree == 0) return;
    fChain = tree;
    fChain->SetMakeClass(1);
 
    fChain->SetBranchAddress("fType[20]",fType);
+   fChain->SetBranchAddress("fEventName",fEventName);
    fChain->SetBranchAddress("fNtrack",&fNtrack);
    fChain->SetBranchAddress("fNseg",&fNseg);
    fChain->SetBranchAddress("fNvertex",&fNvertex);
@@ -102,8 +115,11 @@ void EventTree_ProcOpt::Init(TTree *tree)
    fChain->SetBranchAddress("fClosestDistance",fClosestDistance);
    fChain->SetBranchAddress("fEvtHdr",&fEvtHdr);
    fChain->SetBranchAddress("fTracks",&fTracks);
+   fChain->SetBranchAddress("fHighPt",&fHighPt);
+   fChain->SetBranchAddress("fMuons",&fMuons);
    fChain->SetBranchAddress("fLastTrack",&fLastTrack);
    fChain->SetBranchAddress("fWebHistogram",&fWebHistogram);
+   fChain->SetBranchAddress("fH",&fH);
    fChain->SetBranchAddress("fTriggerBits",&fTriggerBits);
 
 }
@@ -119,6 +135,7 @@ Bool_t EventTree_ProcOpt::Notify()
 
    // Get branch pointers
    b_event_fType = fChain->GetBranch("fType[20]");
+   b_fEventName = fChain->GetBranch("fEventName");
    b_event_fNtrack = fChain->GetBranch("fNtrack");
    b_event_fNseg = fChain->GetBranch("fNseg");
    b_event_fNvertex = fChain->GetBranch("fNvertex");
@@ -129,8 +146,11 @@ Bool_t EventTree_ProcOpt::Notify()
    b_fClosestDistance = fChain->GetBranch("fClosestDistance");
    b_event_fEvtHdr = fChain->GetBranch("fEvtHdr");
    b_fTracks = fChain->GetBranch("fTracks");
+   b_fHighPt = fChain->GetBranch("fHighPt");
+   b_fMuons = fChain->GetBranch("fMuons");
    b_event_fLastTrack = fChain->GetBranch("fLastTrack");
    b_event_fWebHistogram = fChain->GetBranch("fWebHistogram");
+   b_fH = fChain->GetBranch("fH");
    b_event_fTriggerBits = fChain->GetBranch("fTriggerBits");
 
    return kTRUE;

@@ -37,6 +37,7 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    TList* l = gProof->GetSlaveInfo();
    for(Int_t i=0; i<l->GetSize(); i++) {
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
+      if (si->fStatus != TSlaveInfo::kActive) continue;
       slavemacro << "   if (hn == \"";
       slavemacro << si->fHostName;
       slavemacro << "\") { nslaves++; if (ord == ";

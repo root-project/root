@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.9 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.10 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -100,6 +100,12 @@ public:
    virtual Bool_t      IsMaster() const = 0;
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
+
+   virtual void        AddFeedback(const char *name) = 0;
+   virtual void        RemoveFeedback(const char *name) = 0;
+   virtual void        ClearFeedback() = 0;
+   virtual void        ShowFeedback() const = 0;
+   virtual TList      *GetFeedbackList() const = 0;
 
    virtual void        SetActive(Bool_t active = kTRUE) = 0;
 

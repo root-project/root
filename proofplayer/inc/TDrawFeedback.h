@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.1 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -36,7 +36,7 @@ private:
    THashList     *fNames;  //selected objects
 
 public:
-   TDrawFeedback(TProof *proof, TSeqCollection *names = 0);
+   TDrawFeedback(TVirtualProof *proof = 0, TSeqCollection *names = 0);
    ~TDrawFeedback();
 
    void Feedback(TList *objs);

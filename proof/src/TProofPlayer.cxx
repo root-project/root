@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.38 2004/07/09 01:34:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.39 2004/07/29 10:54:54 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -240,6 +240,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       if (gROOT->IsInterrupted()) break;
    }
 
+   HandleTimer(0);
+
    StopFeedback();
 
    delete fEvIter; fEvIter = 0;
@@ -442,6 +444,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    PDB(kGlobal,1) Info("Process","Calling Collect");
    fProof->Collect();
+
+   HandleTimer(0);
 
    StopFeedback();
 

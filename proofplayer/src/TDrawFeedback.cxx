@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.1 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.2 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TProof.h"
 #include "TROOT.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TError.h"
 #include "TSeqCollection.h"
 #include "TVirtualPad.h"
@@ -33,9 +34,17 @@ ClassImp(TDrawFeedback)
 
 
 //______________________________________________________________________________
-TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
+TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
+   if (proof == 0) proof = gProof;
+
+   TProof *p = dynamic_cast<TProof*>(proof);
+   if (p == 0) {
+      Error("TDrawFeedback","no valid proof session found");
+      return;
+   }
+
    proof->Connect("Feedback(TList *objs)", "TDrawFeedback",
                   this, "Feedback(TList *objs)");
 
@@ -72,6 +81,14 @@ void TDrawFeedback::Feedback(TList *objs)
    {
       TString name = o->GetName();
       if ( (fAll || fNames->FindObject(name.Data())) && o->InheritsFrom("TH1")) {
+
+         TH2 *h2 = dynamic_cast<TH2*>(o);
+         if (h2 != 0) {
+            h2->SetMarkerStyle(4);
+         } else {
+            TH1 *h = dynamic_cast<TH1*>(o);
+            h->SetMinimum(0);
+         }
 
          name += "_canvas";
 

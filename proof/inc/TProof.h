@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.46 2004/10/13 15:34:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.47 2004/10/15 23:54:07 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -145,7 +145,8 @@ private:
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
    TPluginHandler *fProgressDialog; //progress dialog plugin
    TProofPlayer   *fPlayer;         //current player
-   TCondor  *fCondor;               //proxy for our Condor pool
+   TCondor        *fCondor;         //proxy for our Condor pool
+   TList          *fFeedback;       //List of names to be returned as feedback
    struct MD5Mod_t {
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
@@ -273,6 +274,12 @@ public:
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
+
+   void        AddFeedback(const char *name);
+   void        RemoveFeedback(const char *name);
+   void        ClearFeedback();
+   void        ShowFeedback() const;
+   TList      *GetFeedbackList() const;
 
    void        SetActive(Bool_t active = kTRUE);
 

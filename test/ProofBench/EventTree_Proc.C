@@ -49,12 +49,19 @@ void EventTree_Proc::SlaveBegin(TTree *tree)
 
    TString option = GetOption();
 
-   fHist = new TH1F("outdist","",100,0,5);
-   fHist->SetDirectory(0);
-   fHist->GetXaxis()->SetTitle("p_{T}");
-   fHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
+   fPtHist = new TH1F("pt_dist","p_{T} Distribution",100,0,5);
+   fPtHist->SetDirectory(0);
+   fPtHist->GetXaxis()->SetTitle("p_{T}");
+   fPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
 
-   fOutput->Add(fHist);
+   fOutput->Add(fPtHist);
+
+   fNTracksHist = new TH1I("ntracks_dist","N_{Tracks} per Event Distribution",5,0,5);
+   fNTracksHist->SetDirectory(0);
+   fNTracksHist->GetXaxis()->SetTitle("N_{Tracks}");
+   fNTracksHist->GetYaxis()->SetTitle("N_{Events}");
+
+   fOutput->Add(fNTracksHist);
 
 }
 
@@ -79,9 +86,12 @@ Bool_t EventTree_Proc::Process(Long64_t entry)
    //  use fChain->GetTree()->GetEntry(entry).
 
    fChain->GetTree()->GetEntry(entry);
+
+   fNTracksHist->Fill(fNtrack);
+
    for(Int_t j=0;j<fTracks->GetEntries();j++){
      Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
-     fHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+     fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
    }
    fTracks->Clear("C");
 
@@ -105,8 +115,8 @@ void EventTree_Proc::Terminate()
    TCanvas* canvas = new TCanvas("can","can",800,600);
    canvas->SetBorderMode(0);
    canvas->SetLogy();
-   TH1F* h = dynamic_cast<TH1F*>(fOutput->FindObject("outdist"));
+   TH1F* h = dynamic_cast<TH1F*>(fOutput->FindObject("pt_dist"));
    if (h) h->DrawCopy();
-   else Warning("Terminate", "no outdist found");
+   else Warning("Terminate", "no pt dist found");
 
 }

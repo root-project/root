@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.2 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.1 2004/06/13 16:26:35 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -111,12 +111,14 @@ TPerfStats::TPerfStats(Int_t nslaves, TList *input, TList *output)
 
    Bool_t doHist = (input->FindObject("PROOF_StatsHist") != 0);
    Bool_t doTrace = (input->FindObject("PROOF_StatsTrace") != 0);
+   Bool_t doSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
 
-   if (doTrace) {
+   if ((gProofServ->IsMaster() && doTrace) ||
+       (!gProofServ->IsMaster() && doSlaveTrace)) {
       // Construct tree
-      fTrace = new TTree("PerfStats","PROOF Statistics");
+      fTrace = new TTree("PROOF_PerfStats", "PROOF Statistics");
       fTrace->SetDirectory(0);
-      fTrace->Bronch("PerfEvents","TPerfEvent",&fPerfEvent,64000,0);
+      fTrace->Bronch("PerfEvents", "TPerfEvent", &fPerfEvent, 64000, 0);
       output->Add(fTrace);
    }
 
@@ -124,40 +126,43 @@ TPerfStats::TPerfStats(Int_t nslaves, TList *input, TList *output)
       // Make Histograms
       Double_t time_per_bin = 1e-3; // 10ms
       Double_t min_time = 0;
-      Int_t ntime_bins = 2000;
+      Int_t ntime_bins = 1000;
 
-      fPacketsHist = new TH1D("PacketsHist", "Packets processed per Slave",
+      fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Slave",
                               nslaves, 0, nslaves);
       fPacketsHist->SetDirectory(0);
       output->Add(fPacketsHist);
 
-      fEventsHist = new TH1D("EventsHist","Events processed per Slave",
+      fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Slave",
                              nslaves, 0, nslaves);
       fEventsHist->SetDirectory(0);
       output->Add(fEventsHist);
 
-      fNodeHist = new TH1D("NodeHist","Slaves per Fileserving Node",
-                             nslaves, 0, nslaves);
+      fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
+                           nslaves, 0, nslaves);
       fNodeHist->SetDirectory(0);
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
 
-      fLatencyHist = new TH2D("LatencyHist","GetPacket Latency per Slave",
+      fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Slave",
                               nslaves, 0, nslaves,
-                              ntime_bins, min_time, time_per_bin*ntime_bins);
+                              ntime_bins, min_time, time_per_bin);
       fLatencyHist->SetDirectory(0);
+      fLatencyHist->SetBit(TH1::kCanRebin);
       output->Add(fLatencyHist);
 
-      fProcTimeHist = new TH2D("ProcTimeHist","Packet Processing Time per Slave",
+      fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Slave",
                                nslaves, 0, nslaves,
-                               ntime_bins, min_time, time_per_bin*ntime_bins);
+                               ntime_bins, min_time, time_per_bin);
       fProcTimeHist->SetDirectory(0);
+      fProcTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fProcTimeHist);
 
-      fCpuTimeHist = new TH2D("CpuTimeHist","Packet CPU Time per Slave",
+      fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Slave",
                               nslaves, 0, nslaves,
-                              ntime_bins, min_time, time_per_bin*ntime_bins);
+                              ntime_bins, min_time, time_per_bin);
       fCpuTimeHist->SetDirectory(0);
+      fCpuTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fCpuTimeHist);
    }
 }
@@ -302,11 +307,26 @@ void TPerfStats::Setup(TList *input)
 {
    // Setup the PROOF input list with requested statistics and tracing options.
 
-   if (gEnv->GetValue("Proof.StatsHist", 0)) {
-      input->Add(new TNamed("PROOF_StatsHist",""));
-   }
-   if (gEnv->GetValue("Proof.StatsTrace", 0)) {
-      input->Add(new TNamed("PROOF_StatsTrace",""));
+   const Int_t ntags=3;
+   const Char_t *tags[ntags] = {"StatsHist",
+                                "StatsTrace",
+                                "SlaveStatsTrace"};
+
+   for (Int_t i=0; i<ntags; i++) {
+      TString envvar = "Proof.";
+      envvar += tags[i];
+      TString inputname = "PROOF_";
+      inputname += tags[i];
+      TObject* obj = input->FindObject(inputname.Data());
+      if (gEnv->GetValue(envvar.Data(), 0)) {
+         if (!obj)
+            input->Add(new TNamed(inputname.Data(),""));
+      } else {
+         if (obj) {
+            input->Remove(obj);
+            delete obj;
+         }
+      }
    }
 }
 

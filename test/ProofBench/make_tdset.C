@@ -28,6 +28,7 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    TList* l = gProof->GetSlaveInfo();
    for(Int_t i=0 ; i < l->GetSize() ; i++){
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
+      if (si->fStatus != TSlaveInfo::kActive) continue;
       TObjString* host = 0;
       if(host = dynamic_cast<TObjString*>(nodelist.FindObject(si->fHostName.Data()))) {
          Int_t index = nodelist.IndexOf(host);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.71 2004/10/13 15:34:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.72 2004/10/15 23:54:07 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -173,6 +173,7 @@ TProof::~TProof()
    SafeDelete(fUniqueMonitor);
    SafeDelete(fCondor);
    SafeDelete(fSlaveInfo);
+   SafeDelete(fFeedback);
 
    if (gProof == this) {
       gProof = 0;
@@ -218,6 +219,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fStatus         = 0;
    fParallel       = 0;
    fSlaveInfo      = 0;
+   fFeedback       = 0;
    fPlayer         = 0;
    fCondor         = 0;
    fSecContext     = 0;
@@ -1382,8 +1384,10 @@ void TProof::ClearInput()
 {
    // Clear input object list.
 
-   if (fPlayer)
+   if (fPlayer) {
       fPlayer->ClearInput();
+      if (fFeedback != 0) AddInput(fFeedback);
+   }
 }
 
 //______________________________________________________________________________
@@ -2187,4 +2191,54 @@ void TProof::Feedback(TList *objs)
    }
 
    Emit("Feedback(TList *objs)", (Long_t) objs);
+}
+
+//______________________________________________________________________________
+void TProof::AddFeedback(const char *name)
+{
+   if (fFeedback == 0) {
+      fFeedback = new TList;
+      fFeedback->SetOwner();
+      fFeedback->SetName("FeedbackList");
+      AddInput(fFeedback);
+   }
+
+   if (fFeedback->FindObject(name) == 0) fFeedback->Add(new TObjString(name));
+}
+
+//______________________________________________________________________________
+void TProof::RemoveFeedback(const char *name)
+{
+   if (fFeedback == 0) return;
+
+   TObject *obj = fFeedback->FindObject(name);
+   if (obj != 0) {
+      fFeedback->Remove(obj);
+      delete obj;
+   }
+}
+
+//______________________________________________________________________________
+void TProof::ClearFeedback()
+{
+   if (fFeedback == 0) return;
+
+   fFeedback->Delete();
+}
+
+//______________________________________________________________________________
+void TProof::ShowFeedback() const
+{
+   if (fFeedback == 0 || fFeedback->GetSize() == 0) {
+      Info("","no feedback requested");
+      return;
+   }
+
+   fFeedback->Print();
+}
+
+//______________________________________________________________________________
+TList*  TProof::GetFeedbackList() const
+{
+   return fFeedback;
 }
