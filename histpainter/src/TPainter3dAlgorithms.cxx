@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.3 2002/05/29 18:39:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.4 2002/06/17 15:34:27 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3259,6 +3259,7 @@ void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 //______________________________________________________________________________
 void TPainter3dAlgorithms::SetF3(TF3 *f3)
 {
+   // static function
    // Store pointer to current implicit function
    gCurrentF3 = f3;
 }
@@ -3267,6 +3268,7 @@ void TPainter3dAlgorithms::SetF3(TF3 *f3)
 //______________________________________________________________________________
 void TPainter3dAlgorithms::SetF3ClippingBoxOff()      
 {
+   // static function
    // Set the implicit function clipping box "off".
    gF3Clipping = 0;
 }
@@ -3276,6 +3278,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
                                               Double_t yclip, Double_t zclip)
 {
+   // static function
    // Set the implicit function clipping box "on" and define the clipping box.
    // xclip, yclip and zclip is a point within the function range. All the 
    // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
