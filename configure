@@ -610,10 +610,10 @@ fi
 ### echo %%% X11 and XPM Library - Mandatory lib on Unix
 #
 # Mandatory test, must succeed
-# Check for X11 and Xpm library
+# Check for X11 and Xpm library (for X11 use always shared lib)
 #
 if test ! "$platform" = "win32"; then
-    check_library "libX11" "$enable_shared" "$x11libdir" \
+    check_library "libX11" "yes" "$x11libdir" \
 	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
 	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
 	/usr/X11/lib /usr/lib32 /usr/lib/X11R5
