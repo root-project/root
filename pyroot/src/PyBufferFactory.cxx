@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -20,7 +20,12 @@ namespace {
    PySequenceMethods PyFloatBuffer_SeqMethods    = *(PyBuffer_Type.tp_as_sequence);
 
 
-// implement 'get' funtions
+// implement 'length' and 'get' functions
+   template< typename T >
+   int buffer_length( PyObject* self ) {
+      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / sizeof( T );
+   }
+
    PyObject* long_buffer_item( PyObject* self, int idx ) {
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
@@ -63,15 +68,19 @@ PyROOT::PyBufferFactory* PyROOT::PyBufferFactory::getInstance() {
 //- constructor/destructor ------------------------------------------------------
 PyROOT::PyBufferFactory::PyBufferFactory() {
    PyLongBuffer_SeqMethods.sq_item      = (intargfunc) long_buffer_item;
+   PyLongBuffer_SeqMethods.sq_length    = (inquiry) &buffer_length< long >;
    PyLongBuffer_Type.tp_as_sequence     = &PyLongBuffer_SeqMethods;
 
    PyIntBuffer_SeqMethods.sq_item       = (intargfunc) int_buffer_item;
+   PyIntBuffer_SeqMethods.sq_length     = (inquiry) &buffer_length< int >;
    PyIntBuffer_Type.tp_as_sequence      = &PyIntBuffer_SeqMethods;
 
    PyDoubleBuffer_SeqMethods.sq_item    = (intargfunc) double_buffer_item;
+   PyDoubleBuffer_SeqMethods.sq_length  = (inquiry) &buffer_length< double >;
    PyDoubleBuffer_Type.tp_as_sequence   = &PyDoubleBuffer_SeqMethods;
 
    PyFloatBuffer_SeqMethods.sq_item     = (intargfunc) float_buffer_item;
+   PyFloatBuffer_SeqMethods.sq_length   = (inquiry) &buffer_length< float >;
    PyFloatBuffer_Type.tp_as_sequence    = &PyFloatBuffer_SeqMethods;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.13 2004/08/02 21:00:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.14 2004/08/04 04:45:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -28,6 +28,7 @@
 // Standard
 #include <assert.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 #include <map>
 #include <string>
@@ -460,16 +461,35 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple, int offset ) {
 
    int argc = PyTuple_GET_SIZE( aTuple );
 
+   int argGiven = argc - offset;
+   int argRequired = m_method->GetNargs() - m_method->GetNargsOpt();
+   int argMax = m_argsBuffer.size();
+
 // argc must be between min and max number of arguments
-   if ( argc - offset < int( m_method->GetNargs() - m_method->GetNargsOpt() ) ||
-        int( m_argsBuffer.size() ) < argc - offset )
+   if ( argGiven < argRequired ) {
+      char txt[ 256 ];
+      sprintf( txt, "%s() takes at least %d arguments (%d given)",
+         m_method->GetName(), argRequired, argGiven );
+      PyErr_SetString( PyExc_TypeError, txt );
       return false;
+   }
+   else if ( argMax < argGiven ) {
+      char txt[ 256 ];
+      sprintf( txt, "%s() takes at most %d arguments (%d given)",
+         m_method->GetName(), argMax, argGiven );
+      PyErr_SetString( PyExc_TypeError, txt );
+      return false;
+   }
 
 // convert the arguments to the method call array
    for ( int i = offset; i < argc; i++ ) {
       if ( ! m_argsConverters[ i - offset ](
-              PyTuple_GET_ITEM( aTuple, i ), m_methodCall, m_argsBuffer[ i - offset ] ) )
+              PyTuple_GET_ITEM( aTuple, i ), m_methodCall, m_argsBuffer[ i - offset ] ) ) {
+         char txt[ 64 ];
+         sprintf( txt, "could not convert argument %d", i );
+         PyErr_SetString( PyExc_TypeError, txt );
          return false;
+      }
    }
 
    return true;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.9 2004/07/30 06:31:18 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.10 2004/08/04 04:45:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -289,10 +289,7 @@ PyObject* PyROOT::makeRootClass( PyObject*, PyObject* args ) {
 
 PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 // retrieve ROOT class (this verifies className)
-   TClass* cls = gROOT->GetClass( className, 0 );
-   if ( cls == 0 && gInterpreter->AutoLoad( className ) != 0 )
-      cls = gROOT->GetClass( className );
-
+   TClass* cls = gROOT->GetClass( className );
    if ( cls == 0 ) {
       PyErr_SetString( PyExc_TypeError,
          ( "requested class " + std::string( className ) + " does not exist" ).c_str() );
