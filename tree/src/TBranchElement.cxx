@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.103 2003/02/22 13:27:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.104 2003/03/04 22:24:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1502,6 +1502,36 @@ void TBranchElement::SetBranchCount(TBranchElement *bre)
    TLeafElement *lfc  = (TLeafElement *)bre->GetListOfLeaves()->At(0);
    TLeafElement *leaf = (TLeafElement *)GetListOfLeaves()->At(0);
    if (lfc && leaf) leaf->SetLeafCount(lfc);
+}
+
+//______________________________________________________________________________
+void TBranchElement::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TBranchElement.
+
+   if (R__b.IsReading()) {
+      TBranchElement::Class()->ReadBuffer(R__b, this);
+   } else {
+      TBranchElement::Class()->WriteBuffer(R__b, this);
+
+      // make sure that all TStreamerInfo objects referenced by
+      // this class are written to the file
+      fInfo->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      
+      // if branch is in a separate file save this branch
+      // as an independent key
+      TBranch *mother = GetMother();
+      TDirectory *pdirectory = fTree->GetDirectory();
+      if (mother) pdirectory = mother->GetDirectory();
+      if (fDirectory && fDirectory != pdirectory) {
+         TDirectory *cursav = gDirectory;
+         fDirectory->cd();
+         fDirectory = 0;  // to avoid recursive calls
+         Write();
+         fDirectory = gDirectory;
+         cursav->cd();
+      }
+   }
 }
 
 //______________________________________________________________________________

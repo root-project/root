@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.21 2002/05/07 16:46:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.22 2002/05/09 20:16:02 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TRealData.h"
 #include "TDataType.h"
 #include "TDataMember.h"
+#include "TStreamerInfo.h"
 #include "TBrowser.h"
 
 R__EXTERN  TTree *gTree;
@@ -423,6 +424,36 @@ void TBranchObject::SetBasketSize(Int_t buffsize)
    for (i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
       branch->SetBasketSize(fBasketSize);
+   }
+}
+
+//______________________________________________________________________________
+void TBranchObject::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TBranchObject.
+
+   if (R__b.IsReading()) {
+      TBranchObject::Class()->ReadBuffer(R__b, this);
+   } else {
+      TBranchObject::Class()->WriteBuffer(R__b, this);
+
+      // make sure that all TStreamerInfo objects referenced by
+      // this class are written to the file
+      gROOT->GetClass(fClassName.Data())->GetStreamerInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+
+         // if branch is in a separate file save this branch
+         // as an independent key
+      TBranch *mother = GetMother();
+      TDirectory *pdirectory = fTree->GetDirectory();
+      if (mother) pdirectory = mother->GetDirectory();
+      if (fDirectory && fDirectory != pdirectory) {
+         TDirectory *cursav = gDirectory;
+         fDirectory->cd();
+         fDirectory = 0;  // to avoid recursive calls
+         Write();
+         fDirectory = gDirectory;
+         cursav->cd();
+      }
    }
 }
 
