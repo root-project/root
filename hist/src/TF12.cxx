@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.1 2003/04/05 16:53:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.2 2003/05/06 08:23:42 rdm Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -149,12 +149,12 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
   if (fCase == 0) {
      xx[0] = x[0];
      xx[1] = fXY;
-     return fF2->EvalPar(xx,params);
   } else {
      xx[0] = fXY;
      xx[1] = x[0];
-     return fF2->EvalPar(xx,params);
   }
+  fF2->InitArgs(xx,params);
+  return fF2->EvalPar(xx,params);
 }
 
 
