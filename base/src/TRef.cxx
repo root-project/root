@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.18 2002/07/29 09:04:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.19 2002/08/04 22:00:57 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -206,7 +206,10 @@ TRef::TRef(TObject *obj)
    // Create a ref to obj.
 
    *this = obj;
-   if (!obj) return;
+   if (!obj) {
+      fPID = 0;
+      return;
+   }
    if (obj->TestBit(kHasUUID)) {
       fPID = gROOT->GetUUIDs();
       obj->SetBit(kIsReferenced);
@@ -231,6 +234,7 @@ void TRef::operator=(TObject *obj)
    // Assign object to reference.
 
    UInt_t uid = 0;
+   fPID = 0;
    if (obj) {
       if (obj->IsA()->CanIgnoreTObjectStreamer()) {
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
