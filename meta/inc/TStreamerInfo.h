@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.13 2001/01/20 21:21:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.14 2001/01/28 13:55:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -97,6 +97,7 @@ public:
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    void                SetClass(TClass *cl) {fClass = cl;}
+   void                TagFile();
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    
