@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.11 2001/05/15 14:17:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.12 2001/09/26 13:23:22 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -814,6 +814,27 @@ void TGClient::WaitForUnmap(TGWindow *w)
 
    fWaitForWindow = wsave;
    fWaitForEvent  = esave;
+}
+
+//______________________________________________________________________________
+Bool_t TGClient::ProcessEventsFor(TGWindow *w)
+{
+   // Like gSystem->ProcessEvents() but then only allow events for w to
+   // be processed. For example to interrupt the processing and destroy
+   // the window, call gROOT->SetInterrupt() before destroying the window.
+
+   Window_t wsave    = fWaitForWindow;
+   EGEventType esave = fWaitForEvent;
+
+   fWaitForWindow = w->GetId();
+   fWaitForEvent  = kDestroyNotify;
+
+   Bool_t intr = gSystem->ProcessEvents();
+
+   fWaitForWindow = wsave;
+   fWaitForEvent  = esave;
+
+   return intr;
 }
 
 //______________________________________________________________________________
