@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.18 2002/02/18 10:19:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.19 2002/02/18 18:09:30 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -421,6 +421,15 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
    }
    Double_t v = sum*Exp(-x+a*Log(x)-gln);
    return v;
+}
+
+//______________________________________________________________________________
+Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
+{
+   // Calculate a Breit Wigner function with mean and gamma
+
+   Double_t bw = gamma/((x-mean)*(x-mean) + gamma*gamma/4);
+   return bw/(2*Pi());
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.14 2002/02/05 22:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.15 2002/02/18 10:06:34 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -165,6 +165,7 @@ public:
    static Double_t  Freq(Double_t x);
    static Double_t  Gamma(Double_t z);
    static Double_t  Gamma(Double_t a,Double_t x);
+   static Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
    static Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1);
    static Double_t  Landau(Double_t x, Double_t mean=0, Double_t sigma=1);
    static Double_t  LnGamma(Double_t z);
