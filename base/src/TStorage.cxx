@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.2 2000/06/09 14:56:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.3 2000/08/20 14:49:21 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -58,6 +58,12 @@
 #   define storage_size(p) ((size_t)0)
 #endif
 
+#ifndef NOCINT
+#define G__PVOID (-1)
+#ifndef WIN32
+extern long G__globalvarpointer;
+#endif
+#endif
 
 ULong_t       TStorage::fgHeapBegin = (ULong_t)-1L;
 ULong_t       TStorage::fgHeapEnd;
@@ -205,7 +211,23 @@ void *TStorage::ObjectAlloc(size_t sz)
    // TStorage::IsOnHeap() to find out if the just created object is on
    // the heap.
 
-   ULong_t space = (ULong_t) ::operator new(sz);
+   ULong_t space;
+
+#ifndef NOCINT
+   // to handle new with placement called via CINT
+#ifndef WIN32
+   if (G__globalvarpointer != G__PVOID) {
+      space = G__globalvarpointer;
+      G__globalvarpointer = G__PVOID;
+   } else
+#else
+   space = G__getgvp();
+   if ((long)space != G__PVOID) {
+      G__setgvp(G__PVOID);
+   } else
+#endif
+#endif
+   space = (ULong_t) ::operator new(sz);
    AddToHeap(space, space+sz);
    return (void*) space;
 }
@@ -225,6 +247,17 @@ void TStorage::ObjectDealloc(void *vp)
 {
    // Used to deallocate a TObject on the heap (via TObject::operator delete()).
 
+#ifndef NOCINT
+   // to handle delete with placement called via CINT
+#ifndef WIN32
+   if ((long)vp == G__globalvarpointer && G__globalvarpointer != G__PVOID)
+      return;
+#else
+   long gvp = G__getgvp();
+   if ((long)vp == gvp && gvp != G__PVOID)
+      return;
+#endif
+#endif
    ::operator delete(vp);
 }
 
