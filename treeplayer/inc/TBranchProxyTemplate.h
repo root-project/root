@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.2 2004/06/25 22:45:41 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.3 2004/06/28 16:38:00 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -42,8 +42,8 @@ namespace ROOT {
 
       void Print() {
          obj.Print();
-         cout << "fWhere " << obj.fWhere << endl;
-         if (obj.fWhere) cout << "address? " << (T*)obj.fWhere << endl;
+         cout << "fWhere " << obj.GetWhere() << endl;
+         if (obj.GetWhere()) cout << "address? " << (T*)obj.GetWhere() << endl;
       }
 
       T* ptr() {
@@ -80,8 +80,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << obj.fWhere << endl;
-         if (obj.fWhere) cout << "value? " << *(T*)obj.fWhere << endl;
+         cout << "fWhere " << obj.GetWhere() << endl;
+         if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
       }
 
       const array_t &at(int i) {
@@ -107,8 +107,8 @@ namespace ROOT {
 
       void Print() {
          obj.Print();
-         cout << "obj.fWhere " << obj.fWhere << endl;
-         //if (obj.fWhere) cout << "value? " << *(T*)obj.fWhere << endl;
+         cout << "obj.GetWhere() " << obj.GetWhere() << endl;
+         //if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
       }
 
       TClaObjProxy() : obj() {};
@@ -123,7 +123,7 @@ namespace ROOT {
       const T* at(int i) {
          static T default_val;
          if (!obj.Read()) return &default_val;
-         if (obj.fWhere==0) return &default_val;
+         if (obj.GetWhere()==0) return &default_val;
 
          T* temp = (T*)obj.GetClaStart(i);
          if (temp) return temp;

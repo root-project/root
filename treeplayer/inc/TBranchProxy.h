@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.3 2004/06/28 16:38:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.4 2004/07/29 18:09:40 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -157,6 +157,8 @@ namespace ROOT {
          }
          return fClass;
       }
+
+      void* GetWhere() const { return fWhere; } // intentionally non-virtual
 
       // protected:
       virtual  void *GetStart(int /*i*/=0) {
