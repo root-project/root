@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.67 2001/11/28 16:05:42 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.68 2001/12/04 14:40:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2845,8 +2845,12 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    }
 
    // loop on all selected entries
+   const char *aresult;
+   Int_t len;
+   char *arow = new char[ncols*50];
    fSelectedRows = 0;
    Int_t tnumber = -1;
+   Int_t *fields = new Int_t[ncols];
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
@@ -2860,11 +2864,18 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
          if (fSelect->EvalInstance(0) == 0) continue;
       }
 
-      TTreeRow *row = new TTreeRow(ncols);
       for (i=0;i<ncols;i++) {
-         row->AddField(i, var[i]->PrintValue(0));
+         aresult = var[i]->PrintValue(0);
+         len = strlen(aresult)+1;
+         if (i == 0) {
+            memcpy(arow,aresult,len);
+            fields[i] = len;
+         } else {
+            memcpy(arow+fields[i-1],aresult,len);
+            fields[i] = fields[i-1] + len;
+         }
       }
-      res->AddRow(row);
+      res->AddRow(new TTreeRow(ncols,fields,arow));
       fSelectedRows++;
    }
 
@@ -2873,6 +2884,8 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    for (i=0;i<ncols;i++) {
       delete var[i];
    }
+   delete [] fields;
+   delete [] arow;
    delete [] var;
    delete [] cnames;
    delete [] index;
