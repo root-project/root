@@ -1,7 +1,12 @@
 #ifndef ROOT_TBENCH
 #define ROOT_TBENCH
 
+#if defined(R__SGI) && !defined(R__KCC) && !defined(R__GNU)
+#include <vector.h>
+#else
 #include <vector>
+#endif
+   
 #include "TClonesArray.h"
       
 //-------------------------------------------------------------
