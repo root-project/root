@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.60 2002/05/01 17:48:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.61 2002/05/08 07:23:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1564,6 +1564,10 @@ void TFile::ReadStreamerInfo()
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
       list = (TList*)key->ReadObj();
+      if (!list) {
+         gDirectory->GetListOfKeys()->Remove(key);
+         MakeZombie();
+      }
       delete [] buffer;
       delete key;
    } else {
