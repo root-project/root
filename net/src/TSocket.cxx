@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.19 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.20 2004/05/27 09:03:05 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -1014,14 +1014,14 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureSend(const char *in, Int_t keyType)
+Int_t TSocket::SecureSend(const char *in, Int_t enc, Int_t ktyp)
 {
    // If authenticated and related SecContext is active
    // secure-sends "in" to host using RSA "keyType" stored in TAuthenticate.
    // Returns # bytes send or -1 in case of error.
 
-   if (IsAuthenticated() && fSecContext->IsActive())
-      return TAuthenticate::SecureSend(this, keyType, in);
+   if (IsAuthenticated() && fSecContext->IsActive() )
+      return TAuthenticate::SecureSend(this, enc, ktyp, in);
    return -1;
 }
 
@@ -1169,12 +1169,12 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureRecv(TString &str, Int_t key)
+Int_t TSocket::SecureRecv(TString &str, Int_t dec, Int_t key)
 {
    // Receive encoded string and decode it with 'key' type
 
    char *buf = 0;
-   Int_t rc = TAuthenticate::SecureRecv(this, key, &buf);
+   Int_t rc = TAuthenticate::SecureRecv(this, dec, key, &buf);
    str = TString(buf);
    if (buf) delete[] buf;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.3 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.4 2004/02/19 00:11:18 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -114,7 +114,7 @@ public:
    TSecContext *CreateSecContext(const char *user, const char *host, Int_t meth, 
                                  Int_t offset, const char *details,
                                  const char *token, TDatime expdate = kROOTTZERO,
-                                 void *ctx = 0, Int_t key = 1);   
+                                 void *ctx = 0, Int_t key = -1);   
 
    ClassDef(THostAuth,0)  // Class providing host specific authentication information
 };

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.17 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.18 2004/05/30 16:13:05 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -170,6 +170,7 @@ bool RpdCheckToken(char *tknin, char *tknref);
 int  RpdCleanupAuthTab(const char *Host, int RemId, int OffSet);
 void RpdDefaultAuthAllow();
 int  RpdDeleteKeyFile(int ofs);
+void RpdFreeKeys();
 int  RpdGetAuthMethod(int kind);
 char *RpdGetIP(const char *host);
 char *RpdGetRandString(int Opt, int Len);

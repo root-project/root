@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.15 2004/03/23 00:12:42 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.16 2004/05/10 16:00:02 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -70,7 +70,8 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,usr);
 
      // Create Options string
-     int Opt = ReUse * kAUTH_REUSE_MSK;
+     int Opt = ReUse * kAUTH_REUSE_MSK +
+               auth->GetRSAKeyType() * kAUTH_RSATY_MSK;
      TString Options(Form("%d %d %s",Opt,strlen(usr),usr));
 
      // Now we are ready to send a request to the rootd/proofd
@@ -215,14 +216,14 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      Int_t  RSAKey = 0;
      if (ReUse == 1) {
 
-       if (kind != kROOTD_RSAKEY)
+       if (kind != kROOTD_RSAKEY || stat < 1 || stat > 2)
           Warning("SRPAuthenticate",
                   "problems recvn RSA key flag: got message %d, flag: %d",
                   kind,RSAKey);
-       RSAKey = 1;
+       RSAKey = stat - 1;
 
        // Send the key securely
-       TAuthenticate::SendRSAPublicKey(sock);
+       TAuthenticate::SendRSAPublicKey(sock,RSAKey);
 
        // Receive result of the overall process
        sock->Recv(stat, kind);
@@ -244,7 +245,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        // Decode Token
        char *Token = 0;
        if (ReUse == 1 && OffSet > -1) {
-         if (TAuthenticate::SecureRecv(sock,RSAKey,&Token) == -1) {
+         if (TAuthenticate::SecureRecv(sock,1,RSAKey,&Token) == -1) {
            Warning("SRPAuthenticate",
                    "Problems secure-receiving Token - may result in corrupted Token");
          }

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.73 2004/05/18 11:56:38 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.74 2004/06/21 09:49:28 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -226,6 +226,15 @@ Globus.ProxyKeyBits:     1024
 SSH.ErrorRetry:     "Connection closed by remote host"
 # Max number of retries for SSH in case of retry error (see above)
 SSH.MaxRetry:     100
+
+# Type of key to be used for RSA encryption:
+# 0 = local; 1 = SSL (default if openssl available)
+RSA.KeyType:  1
+
+# In case of 'RSA.KeyType: 1' this specifies the number of bits to
+# be used for the Blowfish key used to encrypt the exchanged information
+# Default 256, minimum 128, maximum 15912.
+# SSL.BFBits:   256
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or

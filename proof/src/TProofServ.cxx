@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.71 2004/05/18 11:32:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.72 2004/06/13 16:26:36 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1472,14 +1472,14 @@ void TProofServ::Setup()
    fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
 
    // First receive, decode and store the public part of RSA key
-   int retval, kind;
+   Int_t retval, kind;
    fSocket->Recv(retval,kind);
 
+   Int_t RSAKey = 0;
    TApplication *lApp = gROOT->GetApplication();
    if (kind == kROOTD_RSAKEY) {
 
       if (retval > -1) {
-
          if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv(3)) > 0 &&
              gROOT->IsProofServ()) {
             // We got a file name ... extract the tmp directory path
@@ -1492,16 +1492,17 @@ void TProofServ::Setup()
             if (!gSystem->AccessPathName(KeyFile.Data(), kReadPermission)) {
                fKey = fopen(KeyFile.Data(), "r");
                if (fKey) {
-                  fgets(PubKey, sizeof(PubKey), fKey);
+                  Int_t klen = fread((void *)PubKey,1,sizeof(PubKey),fKey);
                   // Set RSA key
-                  TAuthenticate::SetRSAPublic(PubKey);
+                  RSAKey = TAuthenticate::SetRSAPublic(PubKey,klen);
                   fclose(fKey);
                }
             }
          }
 
          // Receive passwd
-         fSocket->SecureRecv(fPasswd, 2);
+         fSocket->SecureRecv(fPasswd, 2, RSAKey);
+
       } else if (retval == -1) {
 
          // Receive inverted passwd
@@ -1535,6 +1536,7 @@ void TProofServ::Setup()
    TAuthenticate::SetGlobalPasswd(fPasswd);
    TAuthenticate::SetGlobalPwHash(fPwHash);
    TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
+   TAuthenticate::SetDefaultRSAKeyType(RSAKey);
    if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv(7)) > 0) {
       Bool_t rha = (Bool_t)atoi(lApp->Argv(7));
       TAuthenticate::SetReadHomeAuthrc(rha);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.27 2004/05/27 08:39:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.28 2004/05/27 09:02:01 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -155,7 +155,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             }
             srppwd = fSecContext->IsA("SRP");
 
-            if (fSocket->SecureSend(passwd) == -1) {
+            if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
                if (RemoteOffSet > -1)
                   Warning("TSlave","problems secure-sending pass hash %s",
                           "- may result in failures");

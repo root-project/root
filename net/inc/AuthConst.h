@@ -27,6 +27,7 @@ const Int_t       kMAXSECBUF      = 2048;
 const Int_t       kAUTH_REUSE_MSK = 0x1;
 const Int_t       kAUTH_CRYPT_MSK = 0x2;
 const Int_t       kAUTH_SSALT_MSK = 0x4;
+const Int_t       kAUTH_RSATY_MSK = 0x8;
 const Int_t       kMAXRSATRIES    = 100;
 
 #endif

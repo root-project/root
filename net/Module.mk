@@ -23,8 +23,18 @@ NETO         := $(NETS:.cxx=.o)
 
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
+# Add SSL flags, if required
+ifneq ($(SSLLIB),)
+SSLFLAGS     := -I$(SSLINCDIR)
+ifneq ($(CRYPTLIBS),)
+CRYPTLIBS    += $(SSLLIBDIR) $(SSLLIB)
+else
+CRYPTLIBS     = $(SSLLIBDIR) $(SSLLIB)
+endif
+endif
+
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)
@@ -38,10 +48,12 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
 $(NETO):        %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -I. -o $@ -c $<
+		$(CXX) $(OPT) $(CXXFLAGS) $(SSLFLAGS) $(EXTRA_AUTHFLAGS) -I. \
+		   -o $@ -c $<
 
 $(NETDO):       $(NETDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(SSLFLAGS) $(EXTRA_AUTHFLAGS) -I. \
+		   -o $@ -c $<
 
 all-net:        $(NETO) $(NETDO)
 

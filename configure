@@ -49,6 +49,7 @@ options="                 \
    enable_shared          \
    enable_soversion       \
    enable_srp             \
+   enable_ssl             \
    enable_table           \
    enable_thread          \
    enable_venus           \
@@ -96,6 +97,7 @@ ASIMAGE          \
 LDAP             \
 GLOBUS_LOCATION  \
 SRP              \
+SSL              \
 AFS              \
 TABLE            \
 XMLDIR           \
@@ -576,6 +578,7 @@ enable/disable options, prefix with either --enable- or --disable-
    shared          Use shared 3rd party libraries if possible
    soversion       Set version number in sonames (recommended)
    srp             SRP support, requires SRP source tree
+   ssl             SSL encryption support, requires openssl
    table           Build libTable contrib library
    thread          Thread support (currently only POSIX threads)
    venus           Venus EG support, requires libVenus
@@ -614,6 +617,8 @@ with options, prefix with --with-, enables corresponding support
    srp             Secure Remote Passwd support, location of SRP distribution
    srp-incdir      SRP support, location header of t_server.h
    srp-libdir      SRP support, location header of libsrp.a
+   ssl-incdir      OpenSSL support, location of openssl headers
+   ssl-libdir      OpenSSL support, location of libssl
    sys-iconpath    Extra icon path
    thread-libdir   Thread support, path to libpthread
    venus-libdir    VENUS support, location of libVenus
@@ -676,6 +681,9 @@ if test "x$arch" = "xsgicc" ; then
 fi
 if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
    checklib64="yes"
+fi
+if test "x$platform" = "macosx" ; then
+   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
 fi
 
 ######################################################################
@@ -741,6 +749,8 @@ if test $# -gt 0 ; then
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
+      --with-ssl-incdir=*)     sslincdir=$optarg     ; enable_ssl="yes"     ;;
+      --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
@@ -1411,8 +1421,6 @@ if test "x$platform" = "xwin32"; then
     enable_asimage="no"
 fi
 if test ! "x$enable_asimage" = "xno" ; then
-    #Figure out where fink on Mac OS X is installed (if any)
-    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
        /usr/local/include /usr/include /opt/include $finkdir/include
     asjpegincdir=$found_dir
@@ -1959,9 +1967,89 @@ fi
 
 ######################################################################
 #
+### echo %%% SSL Support - Third party libraries
+#
+# (See www.openssl.org)
+#
+# For public and symmetric key encryption. If missing, the local rsa
+# simple implementation is used to protect password exchange.
+# If configured with support for Globus/GSI authentication,
+# use the SSL libraries coming with the globus tool kit to avoid
+# conflicts.
+#
+if test "x$enable_ssl" = "xyes" ; then
+    libssl="libssl libcrypto"
+    if test "x$enable_globus" = "xyes" ; then
+        libssl="libssl_$flavour libcrypto_$flavour"
+        tmpglbslibdir="$globusdir/lib"
+    else
+        tmpglbslibdir=$ssllibdir
+    fi
+
+    for i in $libssl ; do
+        check_library "$i" "$enable_shared" "$tmpglbslibdir" \
+            $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+        if test "x$found_lib" = "x" ; then
+            ssllib=""
+            ssllibdir=""
+            enable_ssl="no"
+            break
+        fi
+        if test "x$ssllib" = "x" ; then
+            ssllib="$found_lib"
+            ssllibdir="$found_dir"
+        else
+            ssllib="$ssllib $found_lib"
+            ssllibdir="$ssllibdir $found_dir"
+        fi
+    done
+fi
+
+if test "x$enable_ssl" = "xyes" ; then
+    incssl="bio.h blowfish.h err.h pem.h rand.h rsa.h"
+    if test "x$enable_globus" = "xyes" ; then
+        tmpglbsincdir="$globusdir/include/$flavour"
+    else
+        tmpglbsincdir=$sslincdir
+    fi
+
+    for i in $incssl ; do
+        check_header "openssl/$i" "$tmpglbsincdir" $SSL $SSL/include \
+           /usr/include /usr/local/include /opt/include $finkdir/include
+        if test "x$found_hdr" = "x" ; then
+            ssl_incdir=""
+            enable_ssl="no"
+            break
+        fi
+        if test "x$ssl_incdir" = "x" ; then
+            ssl_incdir=$found_dir
+        else
+            for i in $ssl_incdir ; do
+                if test "x$i" != "x$found_dir" ; then
+                    if test "x$i" != "x-I$found_dir" ; then
+                        ssl_incdir="$found_dir -I$ssl_incdir"
+                    fi
+                fi
+            done
+        fi
+    done
+fi
+
+if test "x$enable_ssl" = "xno" ; then
+    ssllib=""
+    ssllibdir=""
+    sslincdir=""
+    sslextracflags=""
+else
+    sslincdir=$ssl_incdir
+    sslextracflags="-DR__SSL"
+fi
+
+######################################################################
+#
 ### echo %%% SRP Support - Third party libraries
 #
-# (see  http://srp.stanford.edu/srp)
+# (See http://srp.stanford.edu/srp)
 # Note: You can not make do with the libsrp package. You need the full
 # source for this add-on.
 #
@@ -2609,6 +2697,10 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@srputillib@|$srputillib|"            \
     -e "s|@srputillibdir@|$srputillibdir|"      \
     -e "s|@srpextracflags@|$srpextracflags|"    \
+    -e "s|@sslincdir@|$sslincdir|"              \
+    -e "s|@ssllib@|$ssllib|"                    \
+    -e "s|@ssllibdir@|$ssllibdir|"              \
+    -e "s|@sslextracflags@|$sslextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \

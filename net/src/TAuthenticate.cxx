@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.55 2004/05/27 08:36:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.56 2004/05/30 16:15:00 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -62,6 +62,15 @@ extern "C" char *crypt(const char *, const char *);
 #   include <sys/shm.h>
 #endif
 
+#ifdef R__SSL
+// SSL specific headers
+#   include <openssl/bio.h>
+#   include <openssl/err.h>
+#   include <openssl/pem.h>
+#   include <openssl/rand.h>
+#   include <openssl/rsa.h>
+#endif
+
 // Statics initialization
 TList         *TAuthenticate::fgAuthInfo = 0;
 TString        TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5",
@@ -79,10 +88,14 @@ TList         *TAuthenticate::fgProofAuthInfo = 0;
 Bool_t         TAuthenticate::fgPwHash;
 Bool_t         TAuthenticate::fgReadHomeAuthrc = kTRUE; // on/off search for $HOME/.rootauthrc
 TString        TAuthenticate::fgRootAuthrc;    // Path to last rootauthrc-like file read
+Int_t          TAuthenticate::fgRSAKey  = -1;  // Default RSA key type to be used
 Int_t          TAuthenticate::fgRSAInit = 0;
 rsa_KEY        TAuthenticate::fgRSAPriKey;
-rsa_KEY_export TAuthenticate::fgRSAPubExport = { 0, 0 };
+rsa_KEY_export TAuthenticate::fgRSAPubExport[2] = {{0,0},{0,0}};
 rsa_KEY        TAuthenticate::fgRSAPubKey;
+#ifdef R__SSL
+BF_KEY         TAuthenticate::fgBFKey;
+#endif
 SecureAuth_t   TAuthenticate::fgSecAuthHook;
 Bool_t         TAuthenticate::fgSRPPwd;
 TString        TAuthenticate::fgUser;
@@ -99,6 +112,9 @@ Int_t TAuthenticate::fgClientProtocol = 11;  // increase when client protocol ch
 // Standar version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TSecContext *);
 
+// ID of the main thread as unique identifier
+static Int_t gProcessID = -1;
+
 ClassImp(TAuthenticate)
 
 //______________________________________________________________________________
@@ -107,11 +123,14 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
 {
    // Create authentication object.
 
+   // Use the ID of the starting thread as unique identifier
+   if (gProcessID < 0)
+      gProcessID = gSystem->GetPid();
+
    fSocket   = sock;
    fRemote   = remote;
    fHostAuth = 0;
    fVersion  = 4;                // The latest, by default
-   fRSAKey   = 0;
    fSecContext = 0;
 
    if (gDebug > 2)
@@ -175,6 +194,21 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fPasswd = "";
    fPwHash = kFALSE;
    fSRPPwd = kFALSE;
+
+   // Type of RSA key
+   if (fgRSAKey < 0) {
+      fgRSAKey  = 0;                // Default key
+#if R__SSL
+      // Another choice possible: check user preferences
+      if (gEnv->GetValue("RSA.KeyType",0) == 1)
+         fgRSAKey = 1;
+#endif
+   }
+   // This is the key actually used: we propose the default
+   // to the server, and behave according to its reply
+   fRSAKey = fgRSAKey;
+   if (gDebug > 3)
+      Info("TAuthenticate","RSA key: default type %d", fgRSAKey);
 
    // RSA key generation (one per session)
    if (!fgRSAInit) {
@@ -243,29 +277,29 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
 
    // If a specific method has been requested via the protocol
    // set it as first
-   Int_t Sec = -1;
-   TString Tmp = fProtocol;
-   Tmp.ReplaceAll("root",4,"",0);
-   Tmp.ReplaceAll("proof",5,"",0);
-   if (!strncmp(Tmp.Data(),"up",2))
-      Sec = 0;
-   else if (!strncmp(Tmp.Data(),"s",1))
-      Sec = 1;
-   else if (!strncmp(Tmp.Data(),"k",1))
-      Sec = 2;
-   else if (!strncmp(Tmp.Data(),"g",1))
-      Sec = 3;
-   else if (!strncmp(Tmp.Data(),"h",1))
-      Sec = 4;
-   else if (!strncmp(Tmp.Data(),"ug",2))
-      Sec = 5;
-   if (Sec > -1 && Sec < kMAXSEC) {
-      if (fHostAuth->HasMethod(Sec)) {
-         fHostAuth->SetFirst(Sec);
+   Int_t sec = -1;
+   TString tmp = fProtocol;
+   tmp.ReplaceAll("root",4,"",0);
+   tmp.ReplaceAll("proof",5,"",0);
+   if (!strncmp(tmp.Data(),"up",2))
+      sec = 0;
+   else if (!strncmp(tmp.Data(),"s",1))
+      sec = 1;
+   else if (!strncmp(tmp.Data(),"k",1))
+      sec = 2;
+   else if (!strncmp(tmp.Data(),"g",1))
+      sec = 3;
+   else if (!strncmp(tmp.Data(),"h",1))
+      sec = 4;
+   else if (!strncmp(tmp.Data(),"ug",2))
+      sec = 5;
+   if (sec > -1 && sec < kMAXSEC) {
+      if (fHostAuth->HasMethod(sec)) {
+         fHostAuth->SetFirst(sec);
       } else {
-         char *dtmp = GetDefaultDetails(Sec, 1, CheckUser); 
-         TString Det(dtmp);
-         fHostAuth->AddFirst(Sec, Det);
+         char *dtmp = GetDefaultDetails(sec, 1, CheckUser);
+         TString det(dtmp);
+         fHostAuth->AddFirst(sec, det);
          if (dtmp)
             delete[] dtmp;
       }
@@ -1252,11 +1286,12 @@ GlobusAuth_t TAuthenticate::GetGlobusAuthHook()
 }
 
 //______________________________________________________________________________
-const char *TAuthenticate::GetRSAPubExport()
+const char *TAuthenticate::GetRSAPubExport(Int_t key)
 {
    // Static method returning the RSA public keys.
 
-   return fgRSAPubExport.keys;
+   key = (key >= 0 && key <= 1) ? key : 0;
+   return fgRSAPubExport[key].keys;
 }
 
 //______________________________________________________________________________
@@ -1265,6 +1300,15 @@ Int_t TAuthenticate::GetRSAInit()
    // Static method returning the RSA initialization flag.
 
    return fgRSAInit;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetDefaultRSAKeyType(Int_t key)
+{
+   // Static method setting the default type of RSA key.
+
+   if (key >= 0 && key <= 1)
+      fgRSAKey = key;
 }
 
 //______________________________________________________________________________
@@ -1539,7 +1583,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
             + User;
 
    // Create Options string
-   int Opt = ReUse * kAUTH_REUSE_MSK;
+   int Opt = ReUse * kAUTH_REUSE_MSK + fRSAKey * kAUTH_RSATY_MSK;
    TString Options(Form("%d none %ld %s %d", Opt,
                        (Long_t)User.Length(),User.Data(),sshproto));
 
@@ -1568,24 +1612,38 @@ Int_t TAuthenticate::SshAuth(TString &User)
 
    // Wait for the server to communicate remote pid and location
    // of command to execute
-   char CmdInfo[kMAXPATHLEN] = { 0 };
+   char cmdinfo[kMAXPATHLEN] = { 0 };
    Int_t reclen = (retval+1 > kMAXPATHLEN) ? kMAXPATHLEN : retval+1 ;
-   if (fSocket->Recv(CmdInfo, reclen, kind) < 0)
+   if (fSocket->Recv(cmdinfo, reclen, kind) < 0)
       return 0;
    if (kind != kROOTD_SSH)
       return 0;                 // something went wrong
    if (gDebug > 3)
-      Info("SshAuth", "received from server command info: %s", CmdInfo);
+      Info("SshAuth", "received from server command info: %s", cmdinfo);
 
    int rport = -1;
-   char *pp = 0;
-   if ((pp = strstr(CmdInfo, "p:")) != 0) {
-      int clen = (int) (pp - CmdInfo);
-      rport = atoi(pp + 5);
-      CmdInfo[clen] = '\0';
-      if (gDebug > 3)
-         Info("SshAuth", "using port: %d, command info: %s", rport,
-              CmdInfo);
+   char *pd = 0;
+   if ((pd = strstr(cmdinfo, ":")) != 0) {
+      Int_t clen = (Int_t) (pd - cmdinfo) - 1;
+      cmdinfo[clen] = '\0';
+      char ss[2][20] = {{0},{0}};
+      Int_t ns = sscanf(pd-1,"%s %s",ss[0],ss[1]);
+      Int_t i = 0;
+      for( ; i < ns; i++ ) {
+         if (strlen(ss[i])) {
+            if (!strncmp(ss[i],"p:",2)) {
+               char *pp = (char *)(ss[i])+2;
+               rport = atoi(pp);
+            }
+#ifdef R__SSL
+            if (!strncmp(ss[i],"k:",2)) {
+               char *pk = (char *)(ss[i])+2;
+               if (atoi(pk) == 1)
+                  fRSAKey = 1;
+            }
+#endif
+         }
+      }
    }
 
    // If we are a non-interactive session we cannot reply
@@ -1616,7 +1674,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                           gSshExe, User.Data(), noPrompt.Data()));
       if (rport != -1)
          sshcmd += TString(Form(" -p %d",rport));
-      sshcmd += TString(Form(" %s %s",fRemote.Data(), CmdInfo));
+      sshcmd += TString(Form(" %s %s",fRemote.Data(), cmdinfo));
       sshcmd += TString(Form(" 1> /dev/null 2> %s",fileErr.Data()));
 
       // Execute command
@@ -1627,7 +1685,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
             again = SshError(fileErr);
             if (gDebug > 3)
                Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                         gSystem->GetPid(), ssh_rc, again, ntry);
+                         gProcessID, ssh_rc, again, ntry);
             if (again)
                gSystem->Sleep(1);
          }
@@ -1650,10 +1708,11 @@ Int_t TAuthenticate::SshAuth(TString &User)
             ssh_rc = 2;
          } else {
             floc = fopen(fileLoc, "w");
-            if (ReUse == 1)
+            if (ReUse == 1) {
                // Send our public key
-               fprintf(floc,"k: %s\n",fgRSAPubExport.keys);
-            else
+               fprintf(floc,"k: %d\n",fRSAKey+1);
+               fwrite(fgRSAPubExport[fRSAKey].keys,1,fgRSAPubExport[fRSAKey].len,floc);
+            } else
                // Just a notification
                fprintf(floc,"k: -1\n");
             fclose(floc);
@@ -1666,7 +1725,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                sshcmd += TString(Form(" -P %d",rport));
             sshcmd += TString(Form(" %s",fileLoc.Data()));
             sshcmd += TString(Form(" %s@%s:%s 1> /dev/null",
-                                   User.Data(),fRemote.Data(),CmdInfo));
+                                   User.Data(),fRemote.Data(),cmdinfo));
             sshcmd += TString(Form(" 2> %s",fileErr.Data()));
             // Execute command
             ssh_rc = 1;
@@ -1677,7 +1736,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                   again = SshError(fileErr);
                   if (gDebug > 3)
                      Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                               gSystem->GetPid(), ssh_rc, again, ntry);
+                               gProcessID, ssh_rc, again, ntry);
                   if (again)
                      // Wait 1 sec before retry
                      gSystem->Sleep(1000);
@@ -1698,7 +1757,8 @@ Int_t TAuthenticate::SshAuth(TString &User)
       gSystem->Unlink(fileErr);
    }
    if (gDebug > 3)
-      Info("SshAuth", "%d: system return code: %d (%d)", gSystem->GetPid(), ssh_rc, ntry+1);
+      Info("SshAuth", "%d: system return code: %d (%d)",
+                      gProcessID, ssh_rc, ntry+1);
 
    if (ssh_rc && sshproto == 0) {
 
@@ -1729,9 +1789,9 @@ Int_t TAuthenticate::SshAuth(TString &User)
          // prepare info to send
          char cd1[1024], pipe[1024], dum[1024];
          Int_t id3;
-         sscanf(CmdInfo, "%s %d %s %s", cd1, &id3, pipe, dum);
+         sscanf(cmdinfo, "%s %d %s %s", cd1, &id3, pipe, dum);
          snprintf(SecName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
-                  -gSystem->GetPid(), pipe,
+                  -gProcessID, pipe,
                  (int)strlen(User), User.Data(), fgClientProtocol);
          newsock->Send(SecName, kROOTD_SSH);
          if (level > 1) {
@@ -1804,15 +1864,15 @@ Int_t TAuthenticate::SshAuth(TString &User)
    if (ReUse == 1 && sshproto == 0) {
 
       // Save type of key
-      if (kind != kROOTD_RSAKEY)
+      if (kind != kROOTD_RSAKEY  || retval < 1 || retval > 2)
          Warning("SshAuth",
                  "problems recvn RSA key flag: got message %d, flag: %d",
-                 kind, fRSAKey);
+                 kind, retval);
 
-      fRSAKey = 1;
+      fRSAKey = retval - 1;
 
       // Send the key securely
-      if (SendRSAPublicKey(fSocket) < 0)
+      if (SendRSAPublicKey(fSocket,fRSAKey) < 0)
          return 0;
 
       // Receive username used for login
@@ -1848,7 +1908,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
    // Receive Token
    char *Token = 0;
    if (ReUse == 1 && OffSet > -1) {
-      if (SecureRecv(fSocket, 1, &Token) == -1) {
+      if (SecureRecv(fSocket, 1, fRSAKey, &Token) == -1) {
          Warning("SshAuth", "problems secure-receiving token -"
                             " may result in corrupted token");
          return 0;
@@ -2080,8 +2140,8 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
    fDetails = TString(Form("pt:%d ru:%d cp:%d us:",
                            fgPromptUser, fgAuthReUse, fgUsrPwdCrypt)) + User;
    if (gDebug > 2)
-      Info("ClearAuth", "ru:%d pt:%d cp:%d ns:%d",
-           fgAuthReUse,fgPromptUser,fgUsrPwdCrypt,NeedSalt);
+      Info("ClearAuth", "ru:%d pt:%d cp:%d ns:%d rk:%d",
+           fgAuthReUse,fgPromptUser,fgUsrPwdCrypt,NeedSalt,fgRSAKey);
 #ifdef R__WIN32
    Crypt = 0;
 #endif
@@ -2107,7 +2167,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       // Create Options string
       int Opt = (ReUse * kAUTH_REUSE_MSK) + (Crypt * kAUTH_CRYPT_MSK) +
-                (NeedSalt * kAUTH_SSALT_MSK);
+                (NeedSalt * kAUTH_SSALT_MSK) + (fRSAKey * kAUTH_RSATY_MSK);
       TString Options(Form("%d %ld %s %ld %s", Opt,
                           (Long_t)User.Length(), User.Data(),
                           (Long_t)EffUser.Length(), EffUser.Data()));
@@ -2140,7 +2200,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       if (Anon == 0 && Crypt == 1) {
 
          // Check that we got the right thing ..
-         if (kind != kROOTD_RSAKEY) {
+         if (kind != kROOTD_RSAKEY || stat < 1 || stat > 2 ) {
             // Check for errors
             if (kind == kROOTD_ERR) {
                AuthError("ClearAuth", stat);
@@ -2155,17 +2215,17 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
             Info("ClearAuth", "get key request ...");
 
          // Save type of key
-         fRSAKey = 1;
+         fRSAKey = stat - 1;
 
          // Send the key securely
-         if (SendRSAPublicKey(fSocket) < 0)
+         if (SendRSAPublicKey(fSocket,fRSAKey) < 0)
             return 0;
 
          int Slen = 0;
          if (NeedSalt) {
             // Receive password salt
             char *TmpSalt = 0;
-            if ((Slen = SecureRecv(fSocket, 1, &TmpSalt)) == -1) {
+            if ((Slen = SecureRecv(fSocket, 1, fRSAKey, &TmpSalt)) == -1) {
                Warning("ClearAuth", "problems secure-receiving salt -"
                        " may result in corrupted salt");
                Warning("ClearAuth", "switch off reuse for this session");
@@ -2271,7 +2331,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          // Needs to send this for consistency
          if (fSocket->Send("\0", kROOTD_PASS) < 0)
             return 0;
-         if (SecureSend(fSocket, 1, PasHash.Data()) == -1) {
+         if (SecureSend(fSocket, 1, fRSAKey, PasHash.Data()) == -1) {
             Warning("ClearAuth", "problems secure-sending pass hash"
                     " - may result in authentication failure");
             return 0;
@@ -2336,7 +2396,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       if (ReUse == 1) {
          // Receive Token
          if (Crypt == 1) {
-            if (SecureRecv(fSocket, 1, &Token) == -1) {
+            if (SecureRecv(fSocket, 1, fRSAKey, &Token) == -1) {
                Warning("ClearAuth",
                        "problems secure-receiving token -"
                        " may result in corrupted token");
@@ -2886,7 +2946,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
    }
 
    // Prepare string to be sent to the server
-   TString sstr(Form("%d %d %s", gSystem->GetPid(), OffSet, Options));
+   TString sstr(Form("%d %d %s", gProcessID, OffSet, Options));
 
    // Send Message
    if (fSocket->Send(sstr, *Message) < 0)
@@ -2917,9 +2977,9 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
          if (gDebug > 2)
             Info("AuthExists", "key type: %d", RSAKey);
 
-         if (RSAKey > 0) {
+         if (RSAKey > -1) {
             // Send Token encrypted
-            if (SecureSend(fSocket, 1, Token) == -1) {
+            if (SecureSend(fSocket, 1, RSAKey, Token) == -1) {
                Warning("AuthExists", "problems secure-sending Token %s",
                        "- may trigger problems in proofing Id ");
                return -2;
@@ -3013,6 +3073,33 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
 }
 
 //______________________________________________________________________________
+void TAuthenticate::InitRandom()
+{
+   // Initialize random machine using seed from /dev/urandom
+   // (or current time if /dev/urandom not available).
+
+   static Bool_t notinit = kTRUE;
+
+   if (notinit) {
+      const char *randdev = "/dev/urandom";
+      Int_t fd;
+      UInt_t seed;
+      if ((fd = open(randdev, O_RDONLY)) != -1) {
+         if (gDebug > 2)
+            ::Info("InitRandom", "taking seed from %s", randdev);
+         read(fd, &seed, sizeof(seed));
+         close(fd);
+      } else {
+         if (gDebug > 2)
+            ::Info("InitRandom", "%s not available: using time()", randdev);
+         seed = time(0);   //better use times() + win32 equivalent
+      }
+      srand(seed);
+      notinit = kFALSE;
+   }
+}
+
+//______________________________________________________________________________
 Int_t TAuthenticate::GenRSAKeys()
 {
    // Generate a valid pair of private/public RSA keys to protect for
@@ -3043,23 +3130,44 @@ Int_t TAuthenticate::GenRSAKeys()
    }
 
    // Init random machine
-   const char *randdev = "/dev/urandom";
-   Int_t fd;
-   UInt_t seed;
-   if ((fd = open(randdev, O_RDONLY)) != -1) {
+   TAuthenticate::InitRandom();
+
+#ifdef R__SSL
+   if (fgRSAKey == 1) {
+      // Generate also the SSL key
       if (gDebug > 2)
-         Info("GenRSAKeys", "taking seed from %s", randdev);
-      read(fd, &seed, sizeof(seed));
-      close(fd);
-   } else {
+         Info("GenRSAKeys","SSL: Generate Blowfish key");
+
+      // Number of bits for key
+      Int_t nbits = gEnv->GetValue("SSL.BFBits",256);
+
+      // Minimum is 128
+      nbits = (nbits >= 128) ? nbits : 128;
+
+      // Max to limit size of buffers to 15912 (internal limitation)
+      nbits = (nbits <= 15912) ? nbits : 15912;
+
+      // Closer Number of chars
+      Int_t klen = nbits / 8 ;
+
+      // Init random engine
+      char *rbuf = GetRandString(0,klen);
+      RAND_seed(rbuf,strlen(rbuf));
+
+      // This is what we export
+      fgRSAPubExport[1].len = klen;
+      fgRSAPubExport[1].keys = rbuf;
       if (gDebug > 2)
-         Info("GenRSAKeys", "%s not available: using time()", randdev);
-      seed = time(0);   //better use times() + win32 equivalent
+         Info("GenRSAKeys","SSL: BF key length: %d", fgRSAPubExport[1].len);
+
+      // Now set the key locally in BF form
+      BF_set_key(&fgBFKey, klen, (const unsigned char *)rbuf);
    }
-   srand(seed);
+#endif
 
    // Sometimes some bunch is not decrypted correctly
-   // That's why we make retries to make sure that encryption/decryption works as expected
+   // That's why we make retries to make sure that encryption/decryption
+   // works as expected
    Bool_t NotOk = 1;
    rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
    Int_t l_n = 0, l_e = 0, l_d = 0;
@@ -3198,25 +3306,25 @@ Int_t TAuthenticate::GenRSAKeys()
    }
 #endif
    // Export form
-   if (fgRSAPubExport.keys) {
-      delete[] fgRSAPubExport.keys;
-      fgRSAPubExport.len = 0;
+   if (fgRSAPubExport[0].keys) {
+      delete[] fgRSAPubExport[0].keys;
+      fgRSAPubExport[0].len = 0;
    }
-   fgRSAPubExport.len = l_n + l_d + 4;
-   fgRSAPubExport.keys = new char[fgRSAPubExport.len];
+   fgRSAPubExport[0].len = l_n + l_d + 4;
+   fgRSAPubExport[0].keys = new char[fgRSAPubExport[0].len];
 
-   fgRSAPubExport.keys[0] = '#';
-   memcpy(fgRSAPubExport.keys + 1, buf_n, l_n);
-   fgRSAPubExport.keys[l_n + 1] = '#';
-   memcpy(fgRSAPubExport.keys + l_n + 2, buf_d, l_d);
-   fgRSAPubExport.keys[l_n + l_d + 2] = '#';
-   fgRSAPubExport.keys[l_n + l_d + 3] = 0;
+   fgRSAPubExport[0].keys[0] = '#';
+   memcpy(fgRSAPubExport[0].keys + 1, buf_n, l_n);
+   fgRSAPubExport[0].keys[l_n + 1] = '#';
+   memcpy(fgRSAPubExport[0].keys + l_n + 2, buf_d, l_d);
+   fgRSAPubExport[0].keys[l_n + l_d + 2] = '#';
+   fgRSAPubExport[0].keys[l_n + l_d + 3] = 0;
 #if R__RSADEB
    if (gDebug > 2)
-      Info("GenRSAKeys", "local: export pub: '%s'", fgRSAPubExport.keys);
+      Info("GenRSAKeys", "local: export pub: '%s'", fgRSAPubExport[0].keys);
 #else
    if (gDebug > 2)
-      Info("GenRSAKeys", "local: export pub length: %d bytes", fgRSAPubExport.len);
+      Info("GenRSAKeys", "local: export pub length: %d bytes", fgRSAPubExport[0].len);
 #endif
 
    // Set availability flag
@@ -3255,14 +3363,8 @@ char *TAuthenticate::GetRandString(Int_t Opt, Int_t Len)
    // Allocate buffer
    char *Buf = new char[Len + 1];
 
-   // Get current time as seed for rand().
-   time_t curtime;
-   time(&curtime);
-   int seed = (int) curtime;
-
-   // feed seed
-   if (seed)
-      srand(seed);
+   // Init random machine (if needed)
+   TAuthenticate::InitRandom();
 
    // randomize
    Int_t k = 0;
@@ -3291,218 +3393,370 @@ char *TAuthenticate::GetRandString(Int_t Opt, Int_t Len)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
+Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
+                                Int_t key, const char *str)
 {
-   // Encode null terminated Str using the session private key indcated by Key
+   // Encode null terminated str using the session private key indcated by enc
    // and sends it over the network
    // Returns number of bytes sent, or -1 in case of error.
-   // Key = 1 for private encoding, Key = 2 for public encoding
+   // enc = 1 for private encoding, enc = 2 for public encoding
 
-   char BufTmp[kMAXSECBUF];
-   char BufLen[20];
+   char buftmp[kMAXSECBUF];
+   char buflen[20];
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::SecureSend", "local: enter ... (key: %d)", Key);
+      ::Info("TAuthenticate::SecureSend", "local: enter ... (enc: %d)", enc);
 
-   Int_t sLen = strlen(Str) + 1;
-   Int_t Ttmp = 0;
-   Int_t Nsen = -1;
+   Int_t slen = strlen(str) + 1;
+   Int_t ttmp = 0;
+   Int_t nsen = -1;
 
-   if (Key == 1) {
-      strncpy(BufTmp, Str, sLen);
-      BufTmp[sLen] = 0;
-      Ttmp =
-          rsa_fun::fg_rsa_encode(BufTmp, sLen, fgRSAPriKey.n,
-                                 fgRSAPriKey.e);
-      sprintf(BufLen, "%d", Ttmp);
-      if (Socket->Send(BufLen, kROOTD_ENCRYPT) < 0)
-         return -1;
-      Nsen = Socket->SendRaw(BufTmp, Ttmp);
-      if (gDebug > 3)
-         ::Info("TAuthenticate::SecureSend",
-                "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
-   } else if (Key == 2) {
-      strncpy(BufTmp, Str, sLen);
-      BufTmp[sLen] = 0;
-      Ttmp =
-          rsa_fun::fg_rsa_encode(BufTmp, sLen, fgRSAPubKey.n,
-                                 fgRSAPubKey.e);
-      sprintf(BufLen, "%d", Ttmp);
-      if (Socket->Send(BufLen, kROOTD_ENCRYPT) < 0)
-         return -1;
-      Nsen = Socket->SendRaw(BufTmp, Ttmp);
-      if (gDebug > 3)
-         ::Info("TAuthenticate::SecureSend",
-                "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
+   if (key == 0) {
+      strncpy(buftmp, str, slen);
+      buftmp[slen] = 0;
+      if (enc == 1)
+         ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, fgRSAPriKey.n,
+                                                     fgRSAPriKey.e);
+      else if (enc == 2)
+         ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, fgRSAPubKey.n,
+                                                     fgRSAPubKey.e);
+      else
+         return nsen;
+   } else if (key == 1) {
+#ifdef R__SSL
+      ttmp = strlen(str);
+      if ((ttmp % 8) > 0)           // It should be a multiple of 8!
+         ttmp = ((ttmp + 8)/8) * 8;
+      unsigned char iv[8];
+      memset((void *)&iv[0],0,8);
+      BF_cbc_encrypt((const unsigned char *)str, (unsigned char *)buftmp,
+                     strlen(str), &fgBFKey, iv, BF_ENCRYPT);
+#else
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SecureSend","not compiled with SSL support:"
+                " you should not have got here!");
+#endif
    } else {
-      ::Info("TAuthenticate::SecureSend",
-             "unknown key option (%d) - return", Key);
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SecureSend","unknown key type (%d)",key);
+      return nsen;
    }
-   return Nsen;
+
+   snprintf(buflen,20,"%d",ttmp);
+   if (sock->Send(buflen, kROOTD_ENCRYPT) < 0)
+      return -1;
+   nsen = sock->SendRaw(buftmp, ttmp);
+   if (gDebug > 3)
+      ::Info("TAuthenticate::SecureSend",
+             "local: sent %d bytes (expected: %d)", nsen,ttmp);
+
+
+   return nsen;
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
+Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
 {
-   // Receive Str from Socket and decode it using key indicated by Key type
+   // Receive str from sock and decode it using key indicated by key type
    // Return number of received bytes or -1 in case of error.
-   // Key = 1 for private decoding, Key = 2 for public decoding
+   // dec = 1 for private decoding, dec = 2 for public decoding
 
-   char BufTmp[kMAXSECBUF];
-   char BufLen[20];
+   char buftmp[kMAXSECBUF];
+   char buflen[20];
 
-   Int_t Nrec = -1;
+   Int_t nrec = -1;
    // We must get a pointer ...
-   if (!Str)
-      return Nrec;
+   if (!str)
+      return nrec;
 
    Int_t kind;
-   if (Socket->Recv(BufLen, 20, kind) < 0)
+   if (sock->Recv(buflen, 20, kind) < 0)
       return -1;
-   Int_t Len = atoi(BufLen);
+   Int_t len = atoi(buflen);
    if (gDebug > 3)
       ::Info("TAuthenticate::SecureRecv", "got len '%s' %d (msg kind: %d)",
-             BufLen, Len, kind);
-   if (Len == 0) {
-      return Len;
+             buflen, len, kind);
+   if (len == 0) {
+      return len;
    }
-   if (!strncmp(BufLen, "-1", 2))
-      return Nrec;
+   if (!strncmp(buflen, "-1", 2))
+      return nrec;
 
-   // Now proceed
-   if (Key == 1) {
-      if ((Nrec = Socket->RecvRaw(BufTmp, Len)) < 0)
-         return Nrec;
-      rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPriKey.n, fgRSAPriKey.e);
-      if (gDebug > 3)
-         ::Info("TAuthenticate::SecureRecv",
-                "local: decoded string is %d bytes long ", strlen(BufTmp));
-   } else if (Key == 2) {
-      if ((Nrec = Socket->RecvRaw(BufTmp, Len)) < 0)
-         return Nrec;
-      rsa_fun::fg_rsa_decode(BufTmp, Len, fgRSAPubKey.n, fgRSAPubKey.e);
-      if (gDebug > 3)
-         ::Info("TAuthenticate::SecureRecv",
-                "local: decoded string is %d bytes long ", strlen(BufTmp));
+   // Receive buffer
+   if ((nrec = sock->RecvRaw(buftmp, len)) < 0)
+      return nrec;
+   if (key == 0) {
+      if (dec == 1)
+         rsa_fun::fg_rsa_decode(buftmp, len, fgRSAPriKey.n, fgRSAPriKey.e);
+      else if (dec == 2)
+         rsa_fun::fg_rsa_decode(buftmp, len, fgRSAPubKey.n, fgRSAPubKey.e);
+      else
+         return -1;
+
+      // Prepare output
+      *str = new char[strlen(buftmp) + 1];
+      strcpy(*str, buftmp);
+
+   } else if (key == 1) {
+#ifdef R__SSL
+      unsigned char iv[8];
+      memset((void *)&iv[0],0,8);
+      *str = new char[nrec + 1];
+      BF_cbc_encrypt((const unsigned char *)buftmp, (unsigned char *)(*str),
+                      nrec, &fgBFKey, iv, BF_DECRYPT);
+      (*str)[nrec] = '\0';
+#else
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SecureRecv","not compiled with SSL support:"
+                " you should not have got here!");
+#endif
    } else {
-      ::Info("TAuthenticate::SecureRecv",
-             "unknown key option (%d) - return", Key);
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SecureRecv","unknown key type (%d)",key);
+      return -1;
    }
 
-   *Str = new char[strlen(BufTmp) + 1];
-   strcpy(*Str, BufTmp);
-
-   return Nrec;
+   return nrec;
 }
 
 //______________________________________________________________________________
-void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
-                                    rsa_NUMBER &RSA_d)
+Int_t TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
+                                     rsa_NUMBER &RSA_d, void **RSASSL)
 {
    // Store RSA public keys from export string RSAPubExport.
 
    if (!RSAPubExport)
-      return;
+      return -1;
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::DecodeRSAPublic","enter: string length: %d bytes", strlen(RSAPubExport));
+      ::Info("TAuthenticate::DecodeRSAPublic",
+             "enter: string length: %d bytes", strlen(RSAPubExport));
 
-   char Str[kMAXPATHLEN] = { 0 };
-   strcpy(Str, RSAPubExport);
-
-   if (strlen(Str) > 0) {
-      // The format is #<hex_n>#<hex_d>#
-      char *pd1 = strstr(Str, "#");
-      char *pd2 = strstr(pd1 + 1, "#");
-      char *pd3 = strstr(pd2 + 1, "#");
-      if (pd1 && pd2 && pd3) {
-         // Get <hex_n> ...
-         int l1 = (int) (pd2 - pd1 - 1);
-         char *RSA_n_exp = new char[l1 + 1];
-         strncpy(RSA_n_exp, pd1 + 1, l1);
-         RSA_n_exp[l1] = 0;
-         if (gDebug > 2)
-            ::Info("TAuthenticate::DecodeRSAPublic","got %d bytes for RSA_n_exp", strlen(RSA_n_exp));
-         // Now <hex_d>
-         int l2 = (int) (pd3 - pd2 - 1);
-         char *RSA_d_exp = new char[l2 + 1];
-         strncpy(RSA_d_exp, pd2 + 1, l2);
-         RSA_d_exp[l2] = 0;
-         if (gDebug > 2)
-            ::Info("TAuthenticate::DecodeRSAPublic","got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
-
-         rsa_fun::fg_rsa_num_sget(&RSA_n, RSA_n_exp);
-         rsa_fun::fg_rsa_num_sget(&RSA_d, RSA_d_exp);
-
-         if (RSA_n_exp)
-            if (RSA_n_exp) delete[] RSA_n_exp;
-         if (RSA_d_exp)
-            if (RSA_d_exp) delete[] RSA_d_exp;
-
-      } else
-         ::Info("TAuthenticate::DecodeRSAPublic","bad format for input string");
+   char str[kMAXPATHLEN] = { 0 };
+   Int_t klen = strlen(RSAPubExport);
+   if (klen > kMAXPATHLEN - 1) {
+      ::Info("TAuthenticate::DecodeRSAPublic",
+             "key too long (%d): truncate to %d",klen,kMAXPATHLEN);
+      klen = kMAXPATHLEN - 1;
    }
+   memcpy(str, RSAPubExport, klen);
+   str[klen] ='\0';
+
+   Int_t keytype = -1;
+
+   if (klen > 0) {
+
+      // Skip spaces at beginning, if any
+      int k = 0;
+      while (str[k] == 32) k++;
+
+      if (str[k] == '#') {
+
+         keytype = 0;
+
+         // The format is #<hex_n>#<hex_d>#
+         char *pd1 = strstr(str, "#");
+         char *pd2 = strstr(pd1 + 1, "#");
+         char *pd3 = strstr(pd2 + 1, "#");
+         if (pd1 && pd2 && pd3) {
+            // Get <hex_n> ...
+            int l1 = (int) (pd2 - pd1 - 1);
+            char *RSA_n_exp = new char[l1 + 1];
+            strncpy(RSA_n_exp, pd1 + 1, l1);
+            RSA_n_exp[l1] = 0;
+            if (gDebug > 2)
+               ::Info("TAuthenticate::DecodeRSAPublic",
+                      "got %d bytes for RSA_n_exp", strlen(RSA_n_exp));
+            // Now <hex_d>
+            int l2 = (int) (pd3 - pd2 - 1);
+            char *RSA_d_exp = new char[l2 + 1];
+            strncpy(RSA_d_exp, pd2 + 1, l2);
+            RSA_d_exp[l2] = 0;
+            if (gDebug > 2)
+               ::Info("TAuthenticate::DecodeRSAPublic",
+                      "got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
+
+            rsa_fun::fg_rsa_num_sget(&RSA_n, RSA_n_exp);
+            rsa_fun::fg_rsa_num_sget(&RSA_d, RSA_d_exp);
+
+            if (RSA_n_exp)
+               if (RSA_n_exp) delete[] RSA_n_exp;
+            if (RSA_d_exp)
+               if (RSA_d_exp) delete[] RSA_d_exp;
+
+         } else
+            ::Info("TAuthenticate::DecodeRSAPublic","bad format for input string");
+#ifdef R__SSL
+      } else {
+         // try SSL
+         keytype = 1;
+
+         RSA *RSAtmp;
+
+         // Bio for exporting the pub key
+         BIO *bpub = BIO_new(BIO_s_mem());
+
+         // Write key from kbuf to BIO
+         BIO_write(bpub,(void *)str,strlen(str));
+
+         // Read pub key from BIO
+         if (!(RSAtmp = PEM_read_bio_RSAPublicKey(bpub, 0, 0, 0))) {
+            if (gDebug > 0)
+              ::Info("TAuthenticate::DecodeRSAPublic",
+                     "unable to read pub key from bio");
+         } else
+            *RSASSL = (void *)RSAtmp;
+      }
+#else
+      } else {
+         if (gDebug > 0)
+            ::Info("TAuthenticate::DecodeRSAPublic","not compiled with SSL support:"
+                      " you should not have got here!");
+      }
+#endif
+   }
+
+   return keytype;
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SetRSAPublic(const char *RSAPubExport)
+Int_t TAuthenticate::SetRSAPublic(const char *RSAPubExport, Int_t klen)
 {
    // Store RSA public keys from export string RSAPubExport.
+   // Returns type of stored key, or -1 is not recognized
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::SetRSAPublic","enter: string length %d bytes", strlen(RSAPubExport));
+      ::Info("TAuthenticate::SetRSAPublic",
+             "enter: string length %d bytes", strlen(RSAPubExport));
 
+   Int_t RSAKey = -1;
    if (!RSAPubExport)
-      return;
+      return RSAKey;
 
-   // Decode input string
-   rsa_NUMBER RSA_n, RSA_d;
-   TAuthenticate::DecodeRSAPublic(RSAPubExport,RSA_n,RSA_d);
+   if (klen > 0) {
 
-   // Save Public key
-   rsa_fun::fg_rsa_assign(&fgRSAPubKey.n, &RSA_n);
-   rsa_fun::fg_rsa_assign(&fgRSAPubKey.e, &RSA_d);
+      // Skip spaces at beginning, if any
+      int k = 0;
+      while (RSAPubExport[k] == 32) k++;
+
+      if (RSAPubExport[k] == '#') {
+
+         // Decode input string
+         rsa_NUMBER RSA_n, RSA_d;
+         RSAKey = TAuthenticate::DecodeRSAPublic(RSAPubExport,RSA_n,RSA_d);
+
+         // Save Public key
+         rsa_fun::fg_rsa_assign(&fgRSAPubKey.n, &RSA_n);
+         rsa_fun::fg_rsa_assign(&fgRSAPubKey.e, &RSA_d);
+
+      } else {
+         RSAKey = 1;
+#ifdef R__SSL
+         // Now set the key locally in BF form
+         BF_set_key(&fgBFKey, klen, (const unsigned char *)RSAPubExport);
+#else
+         if (gDebug > 0)
+            ::Info("TAuthenticate::SetRSAPublic",
+                   "not compiled with SSL support:"
+                   " you should not have got here!");
+#endif
+      }
+   }
+
+   return RSAKey;
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SendRSAPublicKey(TSocket *Socket)
+Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 {
    // Receives Server RSA Public key
-   // Sends local RSA public key encodded
+   // Sends local RSA public key encoded
 
    // Receive server public key
-   char ServerPubKey[kMAXSECBUF];
+   char serverPubKey[kMAXSECBUF];
    int kind, nr = 0;
-   if ((nr = Socket->Recv(ServerPubKey, kMAXSECBUF, kind)) < 0)
+   if ((nr = socket->Recv(serverPubKey, kMAXSECBUF, kind)) < 0)
       return nr;
    if (gDebug > 3)
       ::Info("TAuthenticate::SendRSAPublicKey",
-             "received key from server %d bytes",
-             strlen(ServerPubKey));
+             "received key from server %d bytes", strlen(serverPubKey));
 
    // Decode it
    rsa_NUMBER RSA_n, RSA_d;
-   TAuthenticate::DecodeRSAPublic(ServerPubKey,RSA_n,RSA_d);
+#ifdef R__SSL
+   RSA *RSASSLServer = 0;
+   if (TAuthenticate::DecodeRSAPublic(serverPubKey,RSA_n,RSA_d,
+                                      (void **)&RSASSLServer) != key) {
+      if (RSASSLServer)
+         RSA_free(RSASSLServer);
+      return -1;
+   }
+#else
+   if (TAuthenticate::DecodeRSAPublic(serverPubKey,RSA_n,RSA_d) != key)
+      return -1;
+#endif
 
    // Send local public key, encodes
-   char BufTmp[kMAXSECBUF];
-   Int_t sLen = fgRSAPubExport.len;
-   strncpy(BufTmp,fgRSAPubExport.keys,sLen);
-   BufTmp[sLen] = 0;
-   Int_t Ttmp =
-        rsa_fun::fg_rsa_encode(BufTmp, sLen, RSA_n, RSA_d);
+   char buftmp[kMAXSECBUF];
+   char buflen[20];
+   Int_t slen = fgRSAPubExport[key].len;
+   Int_t ttmp = 0;
+   if (key == 0) {
+      strncpy(buftmp,fgRSAPubExport[key].keys,slen);
+      buftmp[slen] = 0;
+      ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, RSA_n, RSA_d);
+      sprintf(buflen, "%d", ttmp);
+   } else if (key == 1) {
+#ifdef R__SSL
+      Int_t lcmax = RSA_size(RSASSLServer) - 11;
+      Int_t kk = 0;
+      Int_t ke = 0;
+      Int_t ns = slen;
+      while (ns > 0) {
+         Int_t lc = (ns > lcmax) ? lcmax : ns ;
+         if ((ttmp = RSA_public_encrypt(lc,
+                    (unsigned char *)&fgRSAPubExport[key].keys[kk],
+                    (unsigned char *)&buftmp[ke],
+                     RSASSLServer,RSA_PKCS1_PADDING)) < 0) {
+            char cerr[120];
+            ERR_error_string(ERR_get_error(), cerr);
+            ::Info("TAuthenticate::SendRSAPublicKey","SSL: error: '%s' ",cerr);
+         }
+         kk += lc;
+         ke += ttmp;
+         ns -= lc;
+      }
+      ttmp = ke;
+      sprintf(buflen, "%d", ttmp);
+#else
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SendRSAPublicKey","not compiled with SSL support:"
+                " you should not have got here!");
+      return -1;
+#endif
+   } else {
+      if (gDebug > 0)
+         ::Info("TAuthenticate::SendRSAPublicKey","unknown key type (%d)",key);
+#ifdef R__SSL
+      if (RSASSLServer)
+         RSA_free(RSASSLServer);
+#endif
+      return -1;
+   }
 
    // Send length first
-   char BufLen[20];
-   sprintf(BufLen, "%d", Ttmp);
-   if ((nr = Socket->Send(BufLen, kROOTD_ENCRYPT)) < 0)
+   if ((nr = socket->Send(buflen, kROOTD_ENCRYPT)) < 0)
       return nr;
    // Send Key. second ...
-   Int_t Nsen = Socket->SendRaw(BufTmp, Ttmp);
+   Int_t nsen = socket->SendRaw(buftmp, ttmp);
    if (gDebug > 3)
          ::Info("TAuthenticate::SendRSAPublicKey",
-                "local: sent %d bytes (expected: %d)", Nsen,Ttmp);
-   return Nsen;
+                "local: sent %d bytes (expected: %d)", nsen,ttmp);
+#ifdef R__SSL
+   if (RSASSLServer)
+      RSA_free(RSASSLServer);
+#endif
+   return nsen;
 }
 
 //______________________________________________________________________________
@@ -3543,9 +3797,12 @@ void TAuthenticate::CleanupSecContextAll(Option_t *opt)
 
    if (opt && !strncasecmp(opt,"k",1)) {
       // We are quitting, so cleanup memory also memory
-      if (fgRSAPubExport.keys)
-         delete[] fgRSAPubExport.keys;
-      fgRSAPubExport.len = 0;
+      Int_t i = 2;
+      while (i--) {
+         if (fgRSAPubExport[i].keys)
+            delete[] fgRSAPubExport[i].keys;
+         fgRSAPubExport[i].len = 0;
+      }
    }
 }
 //______________________________________________________________________________
@@ -3591,14 +3848,18 @@ Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
             } else
                news->SetOption(kNoDelay, 0);
 
+            // Backward compatibility: send socket size
+            if (srvtyp == TSocket::kROOTD && level == 1)
+               news->Send((Int_t)0, (Int_t)0);
+
             if (all || level == 1) {
-               news->Send(Form("%d",gSystem->GetPid()),
+               news->Send(Form("%d",gProcessID),
                                kROOTD_CLEANUP);
                cleaned = kTRUE;
             } else {
-               news->Send(Form("%d %d %d %s",gSystem->GetPid(),ctx->GetMethod(),
+               news->Send(Form("%d %d %d %s",gProcessID,ctx->GetMethod(),
                                ctx->GetOffSet(),ctx->GetUser()),kROOTD_CLEANUP);
-               if (TAuthenticate::SecureSend(news, 1,
+               if (TAuthenticate::SecureSend(news, 1, ctx->GetRSAKey(),
                   (char *)ctx->GetToken()) == -1) {
                   ::Info("CleanupSecContext", "problems securesending token");
                } else {

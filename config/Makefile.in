@@ -12,7 +12,7 @@ EXTRA_CXXFLAGS := -Iinclude @cflags@
 EXTRA_LDFLAGS  := @ldflags@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@
+EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
@@ -146,6 +146,10 @@ CRYPTOLIBDIR   := @cryptolibdir@
 GLOBUSLIB      := @globuslib@
 GLOBUSLIBDIR   := @globuslibdir@
 GLOBUSINCDIR   := @globusincdir@
+
+SSLLIB         := @ssllib@
+SSLLIBDIR      := @ssllibdir@
+SSLINCDIR      := @sslincdir@
 
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=

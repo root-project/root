@@ -53,7 +53,7 @@ endif
 
 # Combined...
 AUTHFLAGS     := $(EXTRA_AUTHFLAGS) $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) \
-                 $(KRB5FLAGS) $(GLBSFLAGS)
+                 $(KRB5FLAGS) $(GLBSFLAGS) $(SSLFLAGS)
 AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
                  $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
                  $(CRYPTOLIBDIR) $(CRYPTOLIB)

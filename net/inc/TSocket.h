@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.12 2004/05/05 14:43:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.13 2004/05/27 09:03:05 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -95,8 +95,8 @@ private:
    void         operator=(const TSocket &);  // not implemented
    Option_t    *GetOption() const { return TObject::GetOption(); }
    Int_t        RecvHostAuth(Option_t *opt, const char *proofconf = 0);
-   Int_t        SecureRecv(TString &str, Int_t key = 1);
-   Int_t        SecureSend(const char *in, Int_t keyType = 1);
+   Int_t        SecureRecv(TString &out, Int_t dec, Int_t key = 1);
+   Int_t        SecureSend(const char *in, Int_t enc, Int_t keyType = 1);
    Int_t        SendHostAuth();
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
 
