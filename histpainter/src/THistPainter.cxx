@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.34 2001/02/24 20:54:27 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.35 2001/03/07 12:57:02 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -185,7 +185,6 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
    Double_t binval = fH->GetBinContent(bin);
    Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
-   if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
 // special case if more than one bin for the pixel
    if (binsup-bin>1) {
       Double_t binvalmin, binvalmax;
@@ -200,6 +199,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       Int_t pybinmax = gPad->YtoAbsPixel(gPad->YtoPad(binvalmin));
       if (py<pybinmax+kMaxDiff/2 && py>pybinmin-kMaxDiff/2) pybin = py;
    }
+   if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
 //*-*- Loop on the list of associated functions and user objects
    TObject *f;
    TIter   next(fFunctions);
