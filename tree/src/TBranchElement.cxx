@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.37 2001/05/16 07:41:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.38 2001/05/17 10:58:03 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -541,7 +541,6 @@ TStreamerInfo *TBranchElement::GetInfo()
    
    if (fInfo) {
       if (!fInfo->GetOffsets()) {
-//printf("Branch=%s, recompiling info for class=%s, version=%d\n",GetName(),fInfo->GetName(),fClassVersion);
          TStreamerInfo::Optimize(kFALSE);
          fInfo->Compile();
          TStreamerInfo::Optimize(kTRUE);
@@ -553,7 +552,6 @@ TStreamerInfo *TBranchElement::GetInfo()
       TStreamerInfo::Optimize(kFALSE);
       fInfo = cl->GetStreamerInfo();
       if (fInfo && !fInfo->GetOffsets()) {
-//printf("Branch=%s, building info for class=%s, version=%d\n",GetName(),cl->GetName(),fClassVersion);
          fInfo->Compile();
       }
       TStreamerInfo::Optimize(kTRUE);
@@ -864,7 +862,7 @@ void TBranchElement::SetAddress(void *add)
       return;
    }
    fReadEntry = -1;
-      
+
    //build the StreamerInfo if first time for the class
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!fInfo ) GetInfo();
@@ -879,7 +877,6 @@ void TBranchElement::SetAddress(void *add)
       return;
    }
    if (fID < 0) {
-      TStreamerInfo::Optimize(kFALSE);
       if (fAddress) {
          char **ppointer = (char**)add;
          fObject = *ppointer;
@@ -902,7 +899,6 @@ void TBranchElement::SetAddress(void *add)
          if (!fObject) fAddress = 0;
       }
       if (!fAddress) {
-         TStreamerInfo::Optimize(kFALSE);
          TClass *clm = gROOT->GetClass(fClonesName.Data());
          if (clm) clm->GetStreamerInfo();
          fObject = (char*)new TClonesArray(fClonesName.Data());
@@ -998,7 +994,9 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 // unroll base classes and loop on all elements of class cl
 
    if (cl == TObject::Class() && cltop->CanIgnoreTObjectStreamer()) return 0;
+   if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *info = cl->GetStreamerInfo();
+   TStreamerInfo::Optimize(kTRUE);
    if (!info) return 0;
    Int_t ndata = info->GetNdata();
    ULong_t *elems = info->GetElems();
@@ -1017,7 +1015,6 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
          Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
       } else {
          if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
-         //if (strlen(name)) sprintf(branchname,"%s_%s",name,elem->GetFullName());
          else              sprintf(branchname,"%s",elem->GetFullName());
 //printf("Making branch: %s, jd=%d, info=%s\n",branchname,jd,info->GetName());
          TBranchElement *branch = new TBranchElement(branchname,info,jd,0,basketsize,splitlevel-1);
