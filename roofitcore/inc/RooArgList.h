@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooArgList.rdl,v 1.1 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@ public:
   // Constructors, assignment etc.
   RooArgList();
   RooArgList(const RooArgSet& set) ;
+  RooArgList(const TCollection& tcoll, const char* name="") ;
   RooArgList(const char *name);
   RooArgList(const RooAbsArg& var1, 
 	     const char *name="");

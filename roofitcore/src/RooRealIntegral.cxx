@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.40 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.41 2001/09/26 18:29:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,6 +53,29 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
 {
+  // Constructor - Performs structural analysis of the integrand
+
+  //   A) Check that all dependents are lvalues 
+  //
+  //   B) Check if list of dependents can be re-expressed in        
+  //      lvalues that are higher in the expression tree            
+  //
+  //   C) Check for dependents that the PDF insists on integrating  
+  //      analytically iself                                        
+  //
+  //   D) Make list of servers that can be integrated analytically  
+  //      Add all parameters/dependents as value/shape servers      
+  //
+  //   E) Interact with function to make list of objects actually integrated analytically   
+  //
+  //   F) Make list of numerical integration variables consisting of:               
+  //     - Category dependents of RealLValues in analytical integration             
+  //     - Leaf nodes server lists of function server that are not analytically integrated   
+  //     - Make Jacobian list for analytically integrated RealLValues            
+  //
+  //   G) Split numeric list in integration list and summation list   
+  //
+
   // Save private copy of funcNormSet, if supplied
   _funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
   
@@ -66,16 +89,16 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     delete iter ;
   }
 
-  // Constructor
-  RooArgSet intDepList ;
+  // Make internal copy of dependent list
+  RooArgSet intDepList(depList) ;
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * 0) Check that all dependents are lvalues and filter out any
+  // * A) Check that all dependents are lvalues and filter out any
   //      dependents that the PDF doesn't explicitly depend on
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   
-  TIterator* depIter = depList.createIterator() ;
+  TIterator* depIter = intDepList.createIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if(!arg->isLValue()) {
       cout << ClassName() << "::" << GetName() << ": cannot integrate non-lvalue ";
@@ -87,15 +110,91 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       addServer(*arg,kFALSE,kTRUE) ;
     }
   }
-  delete depIter ;
+
+
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * B) Check if list of dependents can be re-expressed in       *
+  // *    lvalues that are higher in the expression tree           *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+
+  // Initial fill of list of LValue branches
+  RooArgSet exclLVBranches("exclLVBranches") ;
+  RooArgSet branchList ;
+  function.branchNodeServerList(&branchList) ;
+  TIterator* bIter = branchList.createIterator() ;
+  RooAbsArg* branch ;
+  while(branch=(RooAbsArg*)bIter->Next()) {
+    RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(branch) ;
+    RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(branch) ;
+    if ((realArgLV && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
+      exclLVBranches.add(*branch) ;
+    }
+  }
+  delete bIter ;
+  cout << "Initial LVBranch list: " ; exclLVBranches.Print("v") ;
+
+  // Initial fill of list of LValue leaf servers (put in intDepList)
+  RooArgSet exclLVServers("exclLVServers") ;
+  exclLVServers.add(intDepList) ;
+  cout << "Initial LVServer list: " ; exclLVServers.Print("v") ;
+
+  // Obtain mutual exclusive dependence by iterative reduction
+  TIterator *sIter = exclLVServers.createIterator() ;
+  bIter = exclLVBranches.createIterator() ;
+  RooAbsArg *server ;
+  Bool_t converged(kFALSE) ;
+  while(!converged) {
+    converged=kTRUE ;
+
+    // Reduce exclLVServers to only those serving exclusively exclLVBranches
+    sIter->Reset() ;
+    while (server=(RooAbsArg*)sIter->Next()) {
+      if (!servesExclusively(server,exclLVBranches)) {
+	cout << "removing LVServer " << server->GetName() << endl ;
+	exclLVServers.remove(*server) ;
+	converged=kFALSE ;
+      }
+    }
+    
+    // Reduce exclLVBranches to only those depending exclusisvely on exclLVservers
+    bIter->Reset() ;
+    while(branch=(RooAbsArg*)bIter->Next()) {
+      RooArgSet* brDepList = branch->getDependents(&intDepList) ;
+      RooArgSet bsList(*brDepList,"bsList") ;
+      delete brDepList ;
+      bsList.remove(exclLVServers) ;
+      bsList.Print("v") ;
+      if (bsList.getSize()>0) {
+	exclLVBranches.remove(*branch) ;
+	cout << "removing LVBranch " << branch->GetName() << endl ;
+	converged=kFALSE ;
+      }
+    }
+  }
+  delete sIter ;
+  delete bIter ;
+     
+  // Replace exclusive lvalue branch servers with lvalue branches
+  if (exclLVServers.getSize()>0) {
+    intDepList.remove(exclLVServers) ;
+    intDepList.add(exclLVBranches) ;
+  }
+    
+  cout << "exclLVServers: " ; exclLVServers.Print("v") ;
+  cout << "exclLVBranches: " ; exclLVBranches.Print("v") ;
+  
+  cout << "depList:" ; depList.Print("v") ;
+  cout << "intDepList: " ; intDepList.Print("v") ;
+
  
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * 1) Check for dependents that the PDF insists on integrating *
+  // * C) Check for dependents that the PDF insists on integrating *
   //      analytically iself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntOKDepList ;
-  depIter = depList.createIterator() ;
+  depIter = intDepList.createIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if (function.forceAnalyticalInt(*arg)) {
       anIntOKDepList.add(*arg) ;
@@ -104,15 +203,15 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   delete depIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * A) Make list of servers that can be integrated analytically *
+  // * D) Make list of servers that can be integrated analytically *
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   
-  TIterator *sIter = function.serverIterator() ;
+  sIter = function.serverIterator() ;
   while(arg=(RooAbsArg*)sIter->Next()) {
 
     // Dependent or parameter?
-    if (!arg->dependsOn(depList)) {
+    if (!arg->dependsOn(intDepList)) {
 
       // Add parameter as value server
       addServer(*arg,kTRUE,kFALSE) ;
@@ -143,7 +242,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     if (arg->isDerived()) {
       RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
       RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
-      if ((realArgLV && (realArgLV->isJacobianOK(depList)!=0)) || catArgLV) {
+      if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
 	
 	// Derived LValue with valid jacobian
 	depOK = kTRUE ;
@@ -174,7 +273,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * B) interact with function to make list of objects actually integrated analytically  *
+  // * E) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
@@ -184,7 +283,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   function.getVal(funcNormSet) ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * C) Make list of numerical integration variables consisting of:            *  
+  // * F) Make list of numerical integration variables consisting of:            *  
   // *   - Category dependents of RealLValues in analytical integration          *  
   // *   - Expanded server lists of server that are not analytically integrated  *
   // *    Make Jacobian list with analytically integrated RealLValues            *
@@ -204,7 +303,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add category dependent of LValueReal used in integration
       RooAbsArg *argDep ;
-      RooArgSet *argDepList = arg->getDependents(&depList) ;
+      RooArgSet *argDepList = arg->getDependents(&intDepList) ;
       TIterator *adIter = argDepList->createIterator() ;
       while (argDep=(RooAbsArg*)adIter->Next()) {
 	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
@@ -222,28 +321,37 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   while(arg=(RooAbsArg*)sIter->Next()) {
 
     // Process only servers that are not treated analytically
-    if (!_anaList.find(arg->GetName()) && arg->dependsOn(depList)) {
+    if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
 
-      // Expand server in final dependents 
-      RooArgSet *argDeps = arg->getDependents(&depList) ;
+      cout << "considering " << arg->GetName() << " for numeric integration" << endl ;
 
-      // Add final dependents, that are not forcibly integrated analytically, 
-      // to numerical integration list      
-      TIterator* iter = argDeps->createIterator() ;
-      RooAbsArg* dep ;
-      while(dep=(RooAbsArg*)iter->Next()) {
-	if (!_anaList.find(dep->GetName())) {
-	  numIntDepList.add(*dep) ;
-	}
-      }      
-      delete iter ;
-      delete argDeps ; 
+      // Process only derived RealLValues
+      if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived()) {
+	numIntDepList.add(*arg) ;	
+      } else {
+	
+	// Expand server in final dependents 
+	RooArgSet *argDeps = arg->getDependents(&intDepList) ;
+	
+	// Add final dependents, that are not forcibly integrated analytically, 
+	// to numerical integration list      
+	TIterator* iter = argDeps->createIterator() ;
+	RooAbsArg* dep ;
+	while(dep=(RooAbsArg*)iter->Next()) {
+	  if (!_anaList.find(dep->GetName())) {
+	    numIntDepList.add(*dep) ;
+	  }
+	}      
+	delete iter ;
+	delete argDeps ; 
+      }
+
     }
   }
   delete sIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * D) Split numeric list in integration list and summation list  *
+  // * G) Split numeric list in integration list and summation list  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   // Split numeric integration list in summation and integration lists
@@ -270,6 +378,47 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     _operMode = PassThrough ;
   }
 }
+
+
+Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches) const
+{  
+  // Determine if given server serves exclusively exactly one of the given nodes in exclLVBranches
+
+  // Special case, no LV servers available
+  if (exclLVBranches.getSize()==0) return kFALSE ;
+
+  // If server has no clients and is not an LValue itself, return false
+   if (server->_clientList.GetSize()==0 && exclLVBranches.find(server->GetName())) {
+     cout << server->GetName() << ": non-lvalue endpoint, returning kFALSE" << endl ;
+     return kFALSE ;
+   }
+
+   // Loop over all clients
+   Bool_t ret(kTRUE) ;
+   Int_t numLVServ(0) ;
+   RooAbsArg* client ;
+   TIterator* cIter = server->clientIterator() ;
+   while(client=(RooAbsArg*)cIter->Next()) {
+     // If client is not an LValue, recurse
+     if (!exclLVBranches.find(client->GetName())) {
+       if (!servesExclusively(client,exclLVBranches)) {
+	 // Client is a non-LValue that doesn't have an exclusive LValue server
+	 cout << client->GetName() << ": non-lvalue chain, returning kFALSE" << endl ;
+	 ret = kFALSE ;
+       }
+     } else {
+       // Client is an LValue       
+       cout << server->GetName() << "  numLVServ++ (B) for client " << client->GetName() << endl ;
+       numLVServ++ ;
+     }
+   }
+
+   delete cIter ;
+   cout << server->GetName() << ": numLVServ = " << numLVServ << endl ;
+   return (numLVServ==1) ;
+}
+
+
 
 
 Bool_t RooRealIntegral::initNumIntegrator() const

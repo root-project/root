@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.9 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.10 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -93,7 +93,7 @@ void RooLinearVar::setVal(Double_t value)
 {
   // Assign given value to linear transformation: set input variable to (value-offset)/slope
 
-  cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
+  //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
 
   // Prevent DIV0 problems
   if (_slope == 0.) {

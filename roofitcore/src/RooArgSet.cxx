@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.37 2001/09/17 18:48:12 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.38 2001/09/24 23:05:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -131,6 +131,24 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   RooAbsCollection(name)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
+}
+
+
+
+RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
+  RooAbsCollection(name)
+{
+  TIterator* iter = tcoll.MakeIterator() ;
+  TObject* obj ;
+  while(obj=iter->Next()) {
+    if (!dynamic_cast<RooAbsArg*>(obj)) {
+      cout << "RooArgSet::RooArgSet(TCollection) element " << obj->GetName() 
+	   << " is not a RooAbsArg, ignored" << endl ;
+      continue ;
+    }
+    add(*(RooAbsArg*)obj) ;
+  }
+  delete iter ;
 }
 
 
