@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.2 2000/06/16 12:24:47 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -115,6 +115,7 @@ public:
    Int_t               Kill();
    Int_t               Run(void *arg = 0);
    void                SetPriority(EPriority pri);
+   void                Delete(Option_t *option="") { TObject::Delete(option); }
    EPriority           GetPriority() const { return fPriority; }
    EState              GetState() const { return fState; }
    Int_t               GetId() const { return fId; }
