@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:$:$Id:$
+// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.1 2001/02/06 19:12:35 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <errno.h>
 
 #if defined(linux)
@@ -49,22 +50,132 @@
 
 int gParallel = 0;
 
+static int    gMaxFd;
 static int   *gPSockFd;
 static int   *gWriteBytesLeft;
 static int   *gReadBytesLeft;
 static char **gWritePtr;
 static char **gReadPtr;
+static fd_set gFdSet;
+
+//______________________________________________________________________________
+static void InitSelect(int nsock)
+{
+   // Setup select masks.
+
+   FD_ZERO(&gFdSet);
+   gMaxFd = -1;
+   for (int i = 0; i < nsock; i++) {
+      FD_SET(gPSockFd[i], &gFdSet);
+      if (gPSockFd[i] > gMaxFd)
+         gMaxFd = gPSockFd[i];
+   }
+}
 
 //______________________________________________________________________________
 int NetParSend(const void *buf, int len)
 {
-   return 0;
+   // Send buffer of specified length over the parallel sockets.
+   // Returns len in case of success and -1 in case of error.
+
+   int i, alen = len, nsock = gParallel;
+
+   // If data buffer is < 4K use only one socket
+   if (len < 4096)
+      nsock = 1;
+
+   for (i = 0; i < nsock; i++) {
+      gWriteBytesLeft[i] = len/nsock;
+      gWritePtr[i] = (char *)buf + (i*gWriteBytesLeft[i]);
+   }
+   gWriteBytesLeft[i-1] += len%nsock;
+
+   InitSelect(nsock);
+
+   ErrorInfo("NetParSend: sending %d bytes using %d sockets", len, nsock);
+
+   // Send the data on the parallel sockets
+   while (len > 0) {
+
+      fd_set writeReady = gFdSet;
+
+      int isel = select(gMaxFd+1, 0, &writeReady, 0, 0);
+      if (isel < 0) {
+         ErrorInfo("NetParSend: error on select");
+         return -1;
+      }
+
+      for (i = 0; i < nsock; i++) {
+         if (FD_ISSET(gPSockFd[i], &writeReady)) {
+            if (gWriteBytesLeft[i] > 0) {
+               int ilen = send(gPSockFd[i], gWritePtr[i], gWriteBytesLeft[i], 0);
+               if (ilen < 0) {
+                  ErrorInfo("NetParSend: error sending for socket %d (%d)",
+                            i, gPSockFd[i]);
+                  ilen = 0;
+               }
+               gWriteBytesLeft[i] -= ilen;
+               gWritePtr[i] += ilen;
+               len -= ilen;
+            }
+         }
+      }
+   }
+
+   return alen;
 }
 
 //______________________________________________________________________________
 int NetParRecv(void *buf, int len)
 {
-   return 0;
+   // Receive buffer of specified length over parallel sockets.
+   // Returns len in case of success and -1 in case of error.
+
+   int i, alen = len, nsock = gParallel;
+
+   // If data buffer is < 4K use only one socket
+   if (len < 4096)
+      nsock = 1;
+
+   for (i = 0; i < nsock; i++) {
+      gReadBytesLeft[i] = len/nsock;
+      gReadPtr[i] = (char *)buf + (i*gReadBytesLeft[i]);
+   }
+   gReadBytesLeft[i-1] += len%nsock;
+
+   InitSelect(nsock);
+
+   ErrorInfo("NetParRecv: receiving %d bytes using %d sockets", len, nsock);
+
+   // Recieve the data on the parallel sockets
+   while (len > 0) {
+
+      fd_set readReady = gFdSet;
+
+      int isel = select(gMaxFd+1, &readReady, 0, 0, 0);
+      if (isel < 0) {
+         ErrorInfo("NetParRecv: error on select");
+         return -1;
+      }
+
+      for (i = 0; i < nsock; i++) {
+         if (FD_ISSET(gPSockFd[i], &readReady)) {
+            if (gReadBytesLeft[i] > 0) {
+               int ilen = recv(gPSockFd[i], gReadPtr[i], gReadBytesLeft[i], 0);
+               if (ilen < 0) {
+                  ErrorInfo("NetParRecv: error receiving for socket %d (%d)",
+                            i, gPSockFd[i]);
+                  ilen = 0;
+               }
+               gReadBytesLeft[i] -= ilen;
+               gReadPtr[i] += ilen;
+               len -= ilen;
+            }
+         }
+      }
+   }
+
+   return alen;
 }
 
 //______________________________________________________________________________
@@ -102,7 +213,12 @@ int NetParOpen(int port, int size)
                      i, gPSockFd[i]);
 
          // Set non-blocking
-
+         int val;
+         if ((val = fcntl(gPSockFd[i], F_GETFL, 0)) < 0)
+            ErrorSys(kErrFatal, "NetParOpen: can't get control flags");
+         val |= O_NONBLOCK;
+         if (fcntl(gPSockFd[i], F_SETFL, val) < 0)
+            ErrorSys(kErrFatal, "NetParOpen: can't make socket non blocking");
       }
 
       gWriteBytesLeft = new int[size];
@@ -110,10 +226,10 @@ int NetParOpen(int port, int size)
       gWritePtr       = new char*[size];
       gReadPtr        = new char*[size];
 
-      gParallel = size;
-
       // Close initial setup socket
       NetClose();
+
+      gParallel = size;
 
       if (gDebug > 0)
          ErrorInfo("NetParOpen: %d parallel connections established", size);

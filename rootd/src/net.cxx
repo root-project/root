@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.10 2001/01/26 16:44:35 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.11 2001/02/06 19:12:35 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -117,13 +117,25 @@ int NetSendRaw(const void *buf, int len)
 {
    // Send buffer of len bytes.
 
-   if (gSockFd == -1) return -1;
+   if (gParallel > 0) {
 
-   if (Sendn(gSockFd, buf, len) != len) {
-      ErrorInfo("NetSendRaw: Sendn error");
-      RootdClose();
-      exit(1);
+      if (NetParSend(buf, len) != len) {
+         ErrorInfo("NetSendRaw: NetParSend error");
+         RootdClose();
+         exit(1);
+      }
+
+   } else {
+
+      if (gSockFd == -1) return -1;
+
+      if (Sendn(gSockFd, buf, len) != len) {
+         ErrorInfo("NetSendRaw: Sendn error");
+         RootdClose();
+         exit(1);
+      }
    }
+
    return len;
 }
 
@@ -185,13 +197,25 @@ int NetRecvRaw(void *buf, int len)
 {
    // Receive a buffer of maximum len bytes.
 
-   if (gSockFd == -1) return -1;
+   if (gParallel > 0) {
 
-   if (Recvn(gSockFd, buf, len) < 0) {
-      ErrorInfo("NetRecvRaw: Recvn error");
-      RootdClose();
-      exit(1);
+      if (NetParRecv(buf, len) != len) {
+         ErrorInfo("NetRecvRaw: NetParRecv error");
+         RootdClose();
+         exit(1);
+      }
+
+   } else {
+
+      if (gSockFd == -1) return -1;
+
+      if (Recvn(gSockFd, buf, len) < 0) {
+         ErrorInfo("NetRecvRaw: Recvn error");
+         RootdClose();
+         exit(1);
+      }
    }
+
    return len;
 }
 
@@ -417,13 +441,20 @@ void NetClose()
 {
    // Close the network connection.
 
-   close(gSockFd);
+   if (gParallel > 0) {
 
-   if (gDebug > 0)
-      ErrorInfo("NetClose: host = %s, fd = %d, file = %s", openhost, gSockFd,
-                gFile);
+      NetParClose();
 
-   gSockFd = -1;
+   } else {
+
+      close(gSockFd);
+
+      if (gDebug > 0)
+         ErrorInfo("NetClose: host = %s, fd = %d, file = %s", openhost, gSockFd,
+                   gFile);
+
+      gSockFd = -1;
+   }
 }
 
 //______________________________________________________________________________
