@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.16 2002/10/21 16:47:02 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.17 2002/11/18 21:52:01 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -34,11 +34,11 @@
 #include "TGraph.h"
 #include "TMath.h"
 int Error;   //to be removed soon
-#define PAWC_SIZE 5000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
 #ifndef WIN32
+#define PAWC_SIZE 5000000
 #  define pawc pawc_
 #  define quest quest_
 #  define hcbits hcbits_
@@ -50,6 +50,8 @@ int hcbits[37];
 int hcbook[51];
 int rzcl[11];
 #else
+// on windows /pawc/ must have the same length as in libPacklib.a !!
+#define PAWC_SIZE 2000000
 #  define pawc   PAWC
 #  define quest  QUEST
 #  define hcbits HCBITS
