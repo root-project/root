@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.11 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.12 2002/01/18 14:24:09 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
    TList    *fBadSlaves;     //dead slaves (subset of all slaves)
    TMonitor *fAllMonitor;    //monitor activity on all valid slave sockets
    TMonitor *fActiveMonitor; //monitor activity on all active slave sockets
+   TMonitor *fUniqueMonitor; //monitor activity on all unique slave sockets
    Double_t  fBytesRead;     //bytes read by all slaves during the session
    Float_t   fRealTime;      //realtime spent by all slaves during the session
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
