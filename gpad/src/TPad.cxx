@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.132 2004/05/19 14:38:32 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.133 2004/07/08 07:39:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -339,7 +339,7 @@ void TPad::AutoExec()
 {
 // Execute the list of Execs when a pad event occurs.
 
-   if (fCrosshair) DrawCrosshair();
+   if (GetCrosshair()) DrawCrosshair();
 
    if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
@@ -4545,6 +4545,24 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 }
 
 //______________________________________________________________________________
+Bool_t TPad::HasCrosshair() const
+{
+   // return kTRUE if the crosshair has been activated (via SetCrosshair)
+   
+   return (Bool_t)GetCrosshair();
+}
+
+//______________________________________________________________________________
+Int_t TPad::GetCrosshair() const
+{
+   // return the crosshair type (from the mother canvas)
+   // crosshair type = o means no crosshair
+   
+   if (this == (TPad*)fCanvas) return fCrosshair;
+   return fCanvas->GetCrosshair();
+}
+
+//______________________________________________________________________________
 void TPad::SetCrosshair(Int_t crhair)
 {
    // set crosshair active/inactive
@@ -4553,14 +4571,7 @@ void TPad::SetCrosshair(Int_t crhair)
    fCrosshair = crhair;
    fCrosshairPos = 0;
 
-   TObject *obj;
-   TIter    next(GetListOfPrimitives());
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         TPad *pad = (TPad*)obj;
-         pad->SetCrosshair(crhair);
-      }
-   }
+   if (this != (TPad*)fCanvas) fCanvas->SetCrosshair(crhair);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.22 2002/11/25 16:27:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.23 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -178,7 +178,7 @@ public:
    virtual void      UseCurrentStyle();  // *MENU*
    virtual Short_t   GetBorderMode() const { return fBorderMode;}
    virtual Short_t   GetBorderSize() const { return fBorderSize;}
-   Int_t             GetCrosshair() const {return fCrosshair;}
+   Int_t             GetCrosshair() const;
    virtual Int_t     GetCanvasID() const;
    TFrame           *GetFrame();
    virtual Int_t     GetEvent() const;
@@ -236,7 +236,7 @@ public:
    Int_t             GetPadPaint() const {return fPadPaint;}
    Int_t             GetPixmapID() const {return fPixmapID;}
    ULong_t           Hash() const { return fName.Hash(); }
-   virtual Bool_t    HasCrosshair() const {return (Bool_t)fCrosshair;}
+   virtual Bool_t    HasCrosshair() const;
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
    Bool_t            HasFixedAspectRatio() const { return fFixedAspectRatio; }
    virtual Bool_t    IsBatch() const;
