@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.10 2001/05/16 16:23:22 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.11 2001/05/21 11:20:07 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -329,6 +329,7 @@ public:
                               UInt_t w, UInt_t h);
    void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    void         SelectInput(Window_t id, UInt_t evmask);
+   Window_t     GetInputFocus();
    void         SetInputFocus(Window_t id);
    Window_t     GetPrimarySelectionOwner();
    void         SetPrimarySelectionOwner(Window_t id);

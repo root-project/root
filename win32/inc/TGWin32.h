@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.9 2001/05/29 15:25:27 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.10 2001/06/29 06:40:28 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -358,6 +358,7 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
+   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);

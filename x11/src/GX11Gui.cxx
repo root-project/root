@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.17 2001/05/11 17:20:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.18 2001/06/22 16:10:23 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1952,6 +1952,18 @@ void TGX11::SelectInput(Window_t id, UInt_t evmask)
    MapEventMask(evmask, xevmask);
 
    XSelectInput(fDisplay, (Window) id, xevmask);
+}
+
+//______________________________________________________________________________
+Window_t TGX11::GetInputFocus()
+{
+   // Returns the window id of the window having the input focus.
+
+   Window focus;
+   int    return_to;
+
+   XGetInputFocus(fDisplay, &focus, &return_to);
+   return (Window_t) focus;
 }
 
 //______________________________________________________________________________

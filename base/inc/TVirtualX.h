@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.8 2001/04/11 15:19:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.9 2001/05/29 10:22:02 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -249,6 +249,7 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
+   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);
