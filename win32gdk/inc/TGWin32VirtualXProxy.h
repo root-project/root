@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.1 2003/11/24 10:51:55 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.2 2003/12/15 16:37:49 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -60,7 +60,6 @@ public:
    const char *DisplayName(const char * = 0);
    Handle_t  GetNativeEvent() const;
    ULong_t   GetPixel(Color_t cindex);
-   ULong_t   GetPixel(Drawable_t id, Int_t x, Int_t y);
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

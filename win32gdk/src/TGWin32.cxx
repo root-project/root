@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.49 2004/02/26 13:38:37 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.50 2004/03/03 13:26:40 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -665,6 +665,63 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
    return 1;
 }
 
+//______________________________________________________________________________
+static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
+{
+   //
+
+   GdkImage *image = (GdkImage *)id;
+   ULong_t pixel;
+
+   if (image->depth == 1) {
+      pixel = (((char *) image->mem)[y * image->bpl + (x >> 3)] & (1 << (7 - (x & 0x7)))) != 0;
+   } else {
+      UChar_t *pixelp = (UChar_t *) image->mem + y * image->bpl + x * image->bpp;
+      switch (image->bpp) {
+         case 1:
+            pixel = *pixelp;
+            break;
+         // Windows is always LSB, no need to check image->byte_order.
+         case 2:
+            pixel = pixelp[0] | (pixelp[1] << 8);
+            break;
+         case 3:
+            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
+            break;
+         case 4:
+            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
+            break;
+      }
+   }
+   return pixel;
+}
+
+//______________________________________________________________________________
+static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
+                                 Int_t & ncolors, Int_t & maxcolors)
+{
+   // Collect in orgcolors all different original image colors.
+
+   if (maxcolors == 0) {
+      ncolors = 0;
+      maxcolors = 100;
+      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
+   }
+
+   for (int i = 0; i < ncolors; i++) {
+      if (pixel == orgcolors[i]) return;
+   }
+   if (ncolors >= maxcolors) {
+      orgcolors = (ULong_t *) TStorage::ReAlloc(orgcolors,
+                                                maxcolors * 2 *
+                                                sizeof(ULong_t),
+                                                maxcolors *
+                                                sizeof(ULong_t));
+      maxcolors *= 2;
+   }
+   orgcolors[ncolors++] = pixel;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32RefreshTimer : public TTimer {
 
@@ -1234,7 +1291,7 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
          dotcnt = 0;
          for (y = 0; y < (int) source->rows; y++) {
             for (x = 0; x < (int) source->width; x++, bc++) {
-               bc->pixel = GetPixel((Drawable_t)xim, bx + x, by + y);
+               bc->pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
                if (++dotcnt >= maxdots) break;
             }
          }
@@ -1427,7 +1484,7 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 
       for (int yp = 0; yp < (int) bim->height; yp++) {
          for (int xp = 0; xp < (int) bim->width; xp++) {
-            pixel = GetPixel((Drawable_t)bim, xp, yp);
+            pixel = GetPixelImage((Drawable_t)bim, xp, yp);
             PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
          }
       }
@@ -1442,7 +1499,7 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
       if (!bim) {
          pixel = gcvals.background.pixel;
       } else {
-         pixel = GetPixel((Drawable_t)bim, 0, 0);
+         pixel = GetPixelImage((Drawable_t)bim, 0, 0);
       }
       Int_t xo = 0, yo = 0;
       if (x1 < 0) xo = -x1;
@@ -1515,21 +1572,6 @@ void TGWin32::SetTextSize(Float_t textsize)
 
    fTextSize = textsize;
    TTF::SetTextSize(textsize);
-}
-
-//______________________________________________________________________________
-void TGWin32::ClearPixmap(GdkDrawable * pix)
-{
-   // Clear the pixmap pix.
-
-   int x, y;
-   int w, h;
-
-   gdk_drawable_get_size(pix, &w, &h);
-   SetColor(gGCpxmp, 0);
-   gdk_win32_draw_rectangle(pix, (GdkGC *)gGCpxmp, kTRUE, 0, 0, w, h);
-   SetColor(gGCpxmp, 1);
-   GdiFlush();
 }
 
 //______________________________________________________________________________
@@ -1616,21 +1658,6 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
    gTws = &fWindows[wid];
    gdk_window_copy_area(gCws->drawing, gGCpxmp, xpos, ypos, gTws->drawing,
                         0, 0, gTws->width, gTws->height);
-   GdiFlush();
-}
-
-//______________________________________________________________________________
-void TGWin32::CopyWindowtoPixmap(GdkDrawable * pix, int xpos, int ypos)
-{
-   // Copy area of current window in the pixmap pix.
-
-   GdkWindow root;
-   int xx, yy;
-   int ww, hh, border, depth;
-
-   gdk_drawable_get_size((GdkDrawable *)pix, &ww, &hh);
-   gdk_window_copy_area((GdkDrawable *)pix, (GdkGC*)gGCpxmp, xpos, ypos,
-                        (GdkDrawable *)gCws->drawing, 0, 0, ww, hh);
    GdiFlush();
 }
 
@@ -3716,7 +3743,7 @@ void TGWin32::SetOpacity(Int_t percent)
    int x, y;
    for (y = 0; y < (int) gCws->height; y++) {
       for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
    }
@@ -3731,7 +3758,7 @@ void TGWin32::SetOpacity(Int_t percent)
    // put opaque colors in image
    for (y = 0; y < (int) gCws->height; y++) {
       for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
          PutPixel((Drawable_t)image, x, y, gCws->new_colors[idx]);
       }
@@ -3749,32 +3776,6 @@ void TGWin32::SetOpacity(Int_t percent)
    }
    gdk_image_unref(image);
    ::operator delete(orgcolors);
-}
-
-//______________________________________________________________________________
-void TGWin32::CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
-                                 Int_t & ncolors, Int_t & maxcolors)
-{
-   // Collect in orgcolors all different original image colors.
-
-   if (maxcolors == 0) {
-      ncolors = 0;
-      maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
-   }
-
-   for (int i = 0; i < ncolors; i++) {
-      if (pixel == orgcolors[i]) return;
-   }
-   if (ncolors >= maxcolors) {
-      orgcolors = (ULong_t *) TStorage::ReAlloc(orgcolors,
-                                                maxcolors * 2 *
-                                                sizeof(ULong_t),
-                                                maxcolors *
-                                                sizeof(ULong_t));
-      maxcolors *= 2;
-   }
-   orgcolors[ncolors++] = pixel;
 }
 
 //______________________________________________________________________________
@@ -4044,7 +4045,7 @@ static void GetPixel(int y, int width, Byte_t * scline)
    // Get pixels in line y and put in array scline.
 
    for (int i = 0; i < width; i++) {
-       scline[i] = Byte_t(TGWin32::GetPixel((Drawable_t)gGifImage, i, y));
+       scline[i] = Byte_t(GetPixelImage((Drawable_t)gGifImage, i, y));
    }
 }
 
@@ -4075,7 +4076,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    int x, y;
    for (x = 0; x < (int) gCws->width; x++) {
       for (y = 0; y < (int) gCws->height; y++) {
-         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
    }
@@ -4112,7 +4113,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    // update image with indices (pixels) into the new RGB colormap
    for (x = 0; x < (int) gCws->width; x++) {
       for (y = 0; y < (int) gCws->height; y++) {
-         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
          PutPixel((Drawable_t)image, x, y, idx);
       }
@@ -6890,37 +6891,6 @@ void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
             pixelp[0] = (pixel & 0xFF);
       }
    }
-}
-
-//______________________________________________________________________________
-ULong_t TGWin32::GetPixel(Drawable_t id, Int_t x, Int_t y)
-{
-   //
-
-   GdkImage *image = (GdkImage *)id;
-   ULong_t pixel;
-
-   if (image->depth == 1) {
-      pixel = (((char *) image->mem)[y * image->bpl + (x >> 3)] & (1 << (7 - (x & 0x7)))) != 0;
-   } else {
-      UChar_t *pixelp = (UChar_t *) image->mem + y * image->bpl + x * image->bpp;
-      switch (image->bpp) {
-         case 1:
-            pixel = *pixelp;
-            break;
-         // Windows is always LSB, no need to check image->byte_order.
-         case 2:
-            pixel = pixelp[0] | (pixelp[1] << 8);
-            break;
-         case 3:
-            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
-            break;
-         case 4:
-            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
-            break;
-      }
-   }
-   return pixel;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.16 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.17 2003/12/16 16:22:56 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -88,8 +88,6 @@ private:
    GdkCursor       *fCursors[kNumCursors];  //List of cursors
 
    void  CloseWindow1();
-   void  ClearPixmap(GdkDrawable *pix);
-   void  CopyWindowtoPixmap(GdkDrawable *pix, Int_t xpos, Int_t ypos);
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
@@ -97,8 +95,6 @@ private:
    void  SetColor(GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
    void  SetMarkerType(Int_t type, Int_t n, GdkPoint *xy);
-   void  CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                            Int_t &maxcolors);
    void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
    Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
    void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
@@ -185,7 +181,6 @@ public:
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    const char *DisplayName(const char *dpyName = 0);
    ULong_t   GetPixel(Color_t cindex);
-   static ULong_t   GetPixel(Drawable_t id, Int_t x, Int_t y);
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.1 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.2 2004/02/02 15:32:57 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -301,20 +301,6 @@ Window_t TGWin32VirtualXProxy::GetParent(Window_t id) const
    // might be thread unsafe (?)
 
    return (Window_t)gdk_window_get_parent((GdkWindow *) id);
-}
-
-//______________________________________________________________________________
-ULong_t TGWin32VirtualXProxy::GetPixel(Drawable_t id, Int_t x, Int_t y)
-{
-   // static method
-
-   ULong_t ret;
-   DEBUG_PROFILE_PROXY_START(GetPixel)
-   Lock();
-   ret =  TGWin32::GetPixel(id,x,y);
-   DEBUG_PROFILE_PROXY_STOP(GetPixel)
-   Unlock();
-   return ret;
 }
 
 //______________________________________________________________________________
