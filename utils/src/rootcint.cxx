@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.90 2002/07/11 19:45:14 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.91 2002/07/11 21:40:48 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1354,18 +1354,18 @@ void WriteClassInit(G__ClassInfo &cl)
    //fprintf(fp, "      static ROOT::ClassInfo< %s > \n",cl.Fullname());
    fprintf(fp, "      static ROOT::TGenericClassInfo \n");
 
-   fprintf(fp, "         instance(\"%s\",",cl.Fullname());
+   fprintf(fp, "         instance(\"%s\", ",cl.Fullname());
    if (cl.HasMethod("Class_Version")) {
-      fprintf(fp, "%s::Class_Version(),",cl.Fullname());
+      fprintf(fp, "%s::Class_Version(), ",cl.Fullname());
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
       long offset;
-      const char* VersionFunc = "GetClassVersion";
+      const char *VersionFunc = "GetClassVersion";
       char *funcname= new char[strlen(cl.Fullname())+strlen(VersionFunc)+5];
       sprintf(funcname,"%s<%s >",VersionFunc,cl.Fullname());
-      char* proto = new char[strlen(cl.Fullname())+ 10 ];
+      char *proto = new char[strlen(cl.Fullname())+ 10 ];
       sprintf(proto,"%s*",cl.Fullname());
       G__MethodInfo methodinfo = gcl.GetMethod(VersionFunc,proto,&offset);
       delete [] funcname;
@@ -1387,7 +1387,7 @@ void WriteClassInit(G__ClassInfo &cl)
    for (unsigned int i=0; i<strlen(filename); i++) {
      if (filename[i]=='\\') filename[i]='/';
    }
-   fprintf(fp, "\"%s\",%d,\n",filename,cl.LineNumber());
+   fprintf(fp, "\"%s\", %d,\n", filename,cl.LineNumber());
    fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",cl.Fullname());
    //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", cl.Fullname(),cl.RootFlag());
    fprintf(fp, "                  ");
@@ -1426,7 +1426,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (!cl.HasMethod("IsA")) {
       fprintf(fp, "   // Return the actual TClass for the object argument\n");
-      fprintf(fp, "   TClass *%s_IsA(const void* obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "      return gROOT->GetClass(typeid(*(%s*)obj));\n",cl.Fullname());
       fprintf(fp, "   }\n");
    }

@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.1 2002/05/27 16:26:59 rdm Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.2 2002/06/26 15:43:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: Ttypes.h,v 1.2 2002/06/26 15:43:22 rdm Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -128,17 +128,19 @@ namespace ROOT {
    template <class T> class TTableInitBehavior: public TDefaultInitBehavior {
    public:
       static const char* fgStructName; // Need to be instantiated
-      virtual TClass* CreateClass(const char *cname, Version_t id,
+      virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, IsAFunc_t isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
-         TClass * cl = TDefaultInitBehavior::CreateClass(cname, id, info, isa, show,
-                                                              dfil, ifil,dl, il);
+                                  Int_t dl, Int_t il) const
+      {
+         TClass *cl = TDefaultInitBehavior::CreateClass(cname, id, info, isa, show,
+                                                        dfil, ifil,dl, il);
          fgStructName = T::TableDictionary();
          return cl;
       }
-      virtual void Unregister(const char* classname) const {
+      virtual void Unregister(const char* classname) const
+      {
          TDefaultInitBehavior::Unregister(classname);
          TDefaultInitBehavior::Unregister(fgStructName);
       }
@@ -149,7 +151,7 @@ namespace ROOT {
 class TTable;
 namespace ROOT {
    template <class RootClass>
-      const ROOT::TTableInitBehavior<RootClass>* DefineBehavior( TTable*, RootClass*)
+      const ROOT::TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
       {
          static ROOT::TTableInitBehavior<RootClass> behave;
          return &behave;

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.28 2002/06/17 15:38:46 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.29 2002/06/17 18:14:23 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -151,7 +151,7 @@ namespace ROOT {
       // This class defines the interface for the class registration and
       // the TClass creation. To modify the default behavior, one would
       // inherit from this class and overload ROOT::DefineBehavior().
-      // See TQObject.h and star/inc/Ttypes.h for examples.
+      // See TQObject.h and table/inc/Ttypes.h for examples.
    public:
       virtual void Register(const char *cname, Version_t id, const type_info &info,
                             VoidFuncPtr_t dict, Int_t pragmabits) const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.17 2002/05/10 21:32:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.18 2002/05/17 20:40:01 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -200,7 +200,7 @@ public:
            ShowMembersFunc_t showmembers,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
-           TQObject(), 
+           TQObject(),
            TClass(name, cversion, info,isa,showmembers, dfil, ifil, dl, il) { }
 
    virtual ~TQClass() { Disconnect(); }
@@ -243,12 +243,13 @@ namespace ROOT {
                                   const type_info &info, IsAFunc_t isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
+                                  Int_t dl, Int_t il) const
+      {
          return new TQClass(cname, id, info, isa, show, dfil, ifil,dl, il);
       }
    };
 
-   inline const TQObjectInitBehavior *DefineBehavior(TQObject *, TQObject *)
+   inline const TQObjectInitBehavior *DefineBehavior(TQObject*, TQObject*)
    {
       TQObjectInitBehavior *Default = new TQObjectInitBehavior;
       return Default;
