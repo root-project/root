@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.9 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.10 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@ ClassImp(RooLinkedList)
 ;
 
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-    _size(0), _first(0), _last(0), _htable(0) 
+  _size(0), _first(0), _last(0), _htableName(0), _htablePtr(0)
 {
   setHashTableSize(htsize) ;
 }
@@ -38,11 +38,12 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 
 
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
-    _size(0), _first(0), _last(0), _htable(0) 
+  _size(0), _first(0), _last(0), _htableName(0), _htablePtr(0) 
 {
   // Copy constructor
 
-  if (other._htable) _htable = new RooHashTable(other._htable->size()) ;
+  if (other._htableName) _htableName = new RooHashTable(other._htableName->size()) ;
+  if (other._htablePtr)  _htableName = new RooHashTable(other._htablePtr->size()) ;
   RooLinkedListElem* elem = other._first ;
   while(elem) {
     Add(elem->_arg, elem->_refCount) ;
@@ -78,24 +79,29 @@ void RooLinkedList::setHashTableSize(Int_t size)
     return ;
   }
   if (size==0) {
-    if (!_htable) {
+    if (!_htableName) {
       // No hash table present
       return ;
     } else {
       // Remove existing hash table
-      delete _htable ;
-      _htable = 0 ;
+      delete _htableName ;
+      delete _htablePtr ;
+      _htableName = 0 ;
+      _htablePtr = 0 ;
     }
   } else {
-    // (Re)create hash table
-    if (_htable) delete _htable ;
-    _htable = new RooHashTable(size) ;
+    // (Re)create hash tables
+    if (_htableName) delete _htableName ;
+    if (_htablePtr) delete _htablePtr ;
+    _htableName = new RooHashTable(size) ;
+    _htablePtr = new RooHashTable(size,kTRUE) ;
     
     // Fill hash table with existing entries
     RooLinkedListElem* ptr = _first ;
     while(ptr) {
       // 	cout << "setHashTableSize:: filling arg " << ptr->_arg << endl ;
-      _htable->add(ptr->_arg) ;
+      _htableName->add(ptr->_arg) ;
+      _htablePtr->add(ptr->_arg) ;
       ptr = ptr->_next ;
     }      
   }
@@ -107,8 +113,11 @@ RooLinkedList::~RooLinkedList()
 {
   // Destructor
   Clear() ;
-  if (_htable) {
-    delete _htable ;
+  if (_htableName) {
+    delete _htableName ;
+  }
+  if (_htablePtr) {
+    delete _htablePtr ;
   }
 }
 
@@ -119,8 +128,11 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (!arg) return ;
   
   // Add to hash table 
-  if (_htable) _htable->add(arg) ;
-  
+  if (_htableName){
+    _htableName->add(arg) ;
+    _htablePtr->add(arg) ;
+  }
+
   if (_last) {
     // Append element at end of list
     _last = new RooLinkedListElem(arg,_last) ;
@@ -144,7 +156,10 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   if (!elem) return kFALSE ;
   
   // Remove from hash table
-  if (_htable) _htable->remove(arg) ;
+  if (_htableName) {
+    _htableName->remove(arg) ;
+    _htablePtr->remove(arg) ;
+  }
   
   // Update first,last if necessary
   if (elem==_first) _first=elem->_next ;
@@ -181,7 +196,11 @@ Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   RooLinkedListElem* elem = findLink(oldArg) ;
   if (!elem) return kFALSE ;
   
-  if (_htable) _htable->replace(oldArg,newArg) ;
+  if (_htableName) {
+    _htableName->replace(oldArg,newArg) ;
+    _htablePtr->replace(oldArg,newArg) ;
+  }
+
   elem->_arg = (TObject*)newArg ;
   return kTRUE ;
 }
@@ -193,8 +212,11 @@ TObject* RooLinkedList::FindObject(const char* name) const
 }
 
 
+// WVE rewrite with ptr hash
 TObject* RooLinkedList::FindObject(const TObject* obj) const 
 {
+  if (_htablePtr) return _htablePtr->find(obj) ;
+
   RooLinkedListElem *elem = findLink((TObject*)obj) ;
   return elem ? elem->_arg : 0 ;
 }
@@ -212,15 +234,18 @@ void RooLinkedList::Clear(Option_t *o)
   _last = 0 ;
   _size = 0 ;
   
-  if (_htable) {
-    Int_t hsize = _htable->size() ;
-    delete _htable ;
-    _htable = new RooHashTable(hsize) ;   
+  if (_htableName) {
+    Int_t hsize = _htableName->size() ;
+    delete _htableName ;
+    delete _htablePtr ;
+    _htableName = new RooHashTable(hsize) ;   
+    _htablePtr = new RooHashTable(hsize,kTRUE) ;   
   }
 }
 
 
 
+// WVE need to delete hash too?
 void RooLinkedList::Delete(Option_t *o) 
 {
   RooLinkedListElem* elem = _first;
@@ -239,7 +264,7 @@ void RooLinkedList::Delete(Option_t *o)
   
 TObject* RooLinkedList::find(const char* name) const 
 {
-  if (_htable) return _htable->find(name) ;
+  if (_htableName) return _htableName->find(name) ;
   RooLinkedListElem* ptr = _first ;
   while(ptr) {
     if (!strcmp(ptr->_arg->GetName(),name)) {

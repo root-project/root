@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.rdl,v 1.10 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.11 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,7 @@ public:
   RooLinkedList& operator=(const RooLinkedList& other) ;
 
   Int_t getHashTableSize() const {
-    return _htable ? _htable->size() : 0 ;
+    return _htableName ? _htableName->size() : 0 ;
   }
 
   void setHashTableSize(Int_t size) ;
@@ -84,7 +84,8 @@ protected:
   Int_t _size ;                //  Current size of list
   RooLinkedListElem*  _first ; //! Link to first element of list
   RooLinkedListElem*  _last ;  //! Link to last element of list
-  RooHashTable*       _htable ; //! Hash table 
+  RooHashTable*       _htableName ; //! Hash table by name 
+  RooHashTable*       _htablePtr ; //! Hash table pointer
 
   ClassDef(RooLinkedList,1) // TList with extra support for Option_t associations
 };

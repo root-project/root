@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.7 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.8 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +23,8 @@
 ClassImp(RooHashTable)
 ;
 
-RooHashTable::RooHashTable(Int_t capacity) 
+RooHashTable::RooHashTable(Int_t capacity, Bool_t hashByPtr) :
+  _hashByPtr(hashByPtr)
 {
   if (capacity <= 0) {
     capacity = TCollection::kInitHashTableCapacity;
@@ -38,7 +39,8 @@ RooHashTable::RooHashTable(Int_t capacity)
 
 
 RooHashTable::RooHashTable(const RooHashTable& other) :
-  _usedSlots(other._usedSlots), _entries(other._entries), _size(other._size)
+  _usedSlots(other._usedSlots), _entries(other._entries), _size(other._size),
+  _hashByPtr(other._hashByPtr)
 {
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));  
@@ -53,7 +55,7 @@ RooHashTable::RooHashTable(const RooHashTable& other) :
 
 void RooHashTable::add(TObject* arg) 
 {
-  Int_t slot = arg->Hash() % _size ;
+  Int_t slot = hash(arg) % _size ;
   if (!_arr[slot]) {
     _arr[slot] = new RooLinkedList(kFALSE) ;
     _usedSlots++ ;
@@ -66,7 +68,7 @@ void RooHashTable::add(TObject* arg)
 
 Bool_t RooHashTable::remove(TObject* arg)
 {
-  Int_t slot = arg->Hash() % _size ;
+  Int_t slot = hash(arg) % _size ;
   if (_arr[slot]) {
     if (_arr[slot]->Remove(arg)) {
       _entries-- ;
@@ -110,7 +112,7 @@ Double_t RooHashTable::avgCollisions() const
 
 Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg) 
 {
-  Int_t slot = oldArg->Hash() % _size ;
+  Int_t slot = hash(oldArg) % _size ;
   if (_arr[slot]) {
     return _arr[slot]->Replace(oldArg,newArg) ;
   }
@@ -120,8 +122,21 @@ Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg)
 
 TObject* RooHashTable::find(const char* name) const 
 {
+  if (_hashByPtr) return 0 ;
+
   Int_t slot = TString(name).Hash() % _size ;
   if (_arr[slot]) return _arr[slot]->find(name) ;
+  return 0;  
+}
+
+
+TObject* RooHashTable::find(const TObject* arg) const 
+{
+  if (!_hashByPtr) return 0 ;
+
+  Int_t slot = hash(arg) % _size ;
+  //cout << "RooHashTable::find(" << arg << ") hash = " << hash(arg) << " slot = " << slot << endl ;
+  if (_arr[slot]) return _arr[slot]->FindObject(arg) ;
   return 0;  
 }
 
