@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.30 2001/05/24 16:34:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.31 2001/06/01 11:02:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "TMethodCall.h"
 #include "TRealData.h"
 
-static char gIncludeName[256];
+const Int_t kMaxLen = 512;
+static char gIncludeName[kMaxLen];
 
 ClassImp(TStreamerElement)
 
@@ -110,8 +111,8 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should may be copy the result.
    
-   static char name[128];
-   char cdim[8];
+   static char name[kMaxLen];
+   char cdim[20];
    sprintf(name,GetName());
    for (Int_t i=0;i<fArrayDim;i++) {
       sprintf(cdim,"[%d]",fMaxIndex[i]);
@@ -1050,8 +1051,8 @@ Int_t TStreamerSTL::GetSize() const
 //______________________________________________________________________________
 void TStreamerSTL::ls(Option_t *) const
 {
-   char name[128];
-   char cdim[8];
+   char name[kMaxLen];
+   char cdim[20];
    sprintf(name,GetName());
    for (Int_t i=0;i<fArrayDim;i++) {
       sprintf(cdim,"[%d]",fMaxIndex[i]);
