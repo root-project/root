@@ -88,6 +88,7 @@ QTROOTLIBEXTRA      = lib/libGQt.lib lib/libGui.lib $(QTLIB)
 QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
 QTGUILIBEXTRA       = lib/libGraf.lib lib/libGpad.lib lib/libGQt.lib \
                       lib/libGui.lib $(QTLIB)
+XMLLIBEXTRA         = $(XMLDIR)/lib/iconv_a.lib Ws2_32.lib
 
 else
 

@@ -114,7 +114,7 @@ PYTHONINCDIR   := @pythonincdir@
 PYTHONLIBFLAGS := @pythonlibflags@
 
 XMLLIBDIR      := @xmllibdir@
-XMLLIB         := @xmllib@
+XMLCLILIB      := @xmllib@
 XMLINCDIR      := @xmlincdir@
 
 SRPLIBDIR      := @srplibdir@
