@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.7 2001/02/12 14:30:02 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.8 2001/02/17 11:44:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1199,20 +1199,14 @@ int TVmsSystem::ConnectService(const char *servername, int port,
 //______________________________________________________________________________
 int TVmsSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
-   // Open a connection to a service on a server. Try 3 times with an
-   // interval of 1 second.
+   // Open a connection to a service on a server. Returns -1 in case
+   // connection cannot be opened.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   for (int i = 0; i < 3; i++) {
-      int fd = ConnectService(server, port, tcpwindowsize);
-      if (fd >= 0)
-         return fd;
-      sleep(1);
-   }
-   return -1;
+   return ConnectService(server, port, tcpwindowsize);
 }
 
 //______________________________________________________________________________

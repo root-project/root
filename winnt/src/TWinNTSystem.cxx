@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.15 2001/03/10 18:40:36 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.16 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2188,20 +2188,14 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
 //______________________________________________________________________________
 int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
-   // Open a connection to a service on a server. Try 3 times with an
-   // interval of 1 second.
+   // Open a connection to a service on a server. Returns -1 in case
+   // connection cannot be opened.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   for (int i = 0; i < 3; i++) {
-      int fd = ConnectService(server, port, tcpwindowsize);
-      if (fd >= 0)
-         return fd;
-      Sleep(1000);
-   }
-   return -1;
+   return ConnectService(server, port, tcpwindowsize);
 }
 
 //______________________________________________________________________________
