@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.12 2004/06/11 13:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.13 2004/06/11 15:59:10 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -42,31 +42,34 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                    UInt_t border, Int_t depth, UInt_t clss, void *visual,
                    SetWindowAttributes_t *attr, UInt_t wtype)
 {
-   // Create a new window. Parent p must exist. No specified arguments
-   // result in values from parent to be taken (or defaults).
+   // Create a new window. Parent p must exist otherwise the root window
+   // is taken as parent. No arguments specified results in values from
+   // parent to be taken (or defaults).
+
+   // this can only happen when libGui was loaded at program startup
+   // but not initialized because application is in batch mode
+   if (!gClient) new TGClient();
 
    UInt_t type = wtype;
 
-   if (!p && gClient) p = gClient->GetRoot();
-   if (p) {
-      fClient = p->fClient;
-      if (fClient->IsEditable()) type = wtype & ~1;
+   if (!p)
+      p = gClient->GetRoot();
 
-      fParent = p;
-      fId = gVirtualX->CreateWindow(fParent->fId, x, y,
-                                    TMath::Max(w, (UInt_t) 1),
-                                    TMath::Max(h, (UInt_t) 1), border,
-    			            depth, clss, visual, attr, type);
-      fClient->RegisterWindow(this);
-      fNeedRedraw = kFALSE;
+   fClient = p->fClient;
+   if (fClient->IsEditable()) type = wtype & ~1;
 
-      // name will be used in SavePrimitive methods
-      fgCounter++;
-      fName = "frame";
-      fName += fgCounter;
-   } else {
-      Error("TGWindow", "no parent specified");
-   }
+   fParent = p;
+   fId = gVirtualX->CreateWindow(fParent->fId, x, y,
+                                 TMath::Max(w, (UInt_t) 1),
+                                 TMath::Max(h, (UInt_t) 1), border,
+                                 depth, clss, visual, attr, type);
+   fClient->RegisterWindow(this);
+   fNeedRedraw = kFALSE;
+
+   // name will be used in SavePrimitive methods
+   fgCounter++;
+   fName = "frame";
+   fName += fgCounter;
 }
 
 //______________________________________________________________________________
