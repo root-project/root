@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooResolutionModel.cc,v 1.26 2002/09/05 04:33:55 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -218,7 +218,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
     _value = evaluate() ; 
 
     // WVE insert traceEval traceEval
-    if (_verboseDirty>1) cout << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
+    if (_verboseDirty) cout << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
 
     clearValueDirty() ; 
     clearShapeDirty() ; 

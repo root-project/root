@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.cc,v 1.4 2002/09/05 22:29:48 verkerke Exp $
+ *    File: $Id: RooGraphNode.cc,v 1.5 2002/09/09 21:43:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -79,14 +79,13 @@ void RooGraphNode::paint()
   TEllipse *e = new TEllipse(fX1,fY1,fR1,fR2);
   e->Paint();
   TText *t = new TText(fX1,fY1,ftext);
-  t->SetTextSize(0.02);
+  t->SetTextSize(0.02F);
   t->Paint();
   char text[20];
   int precision = 5;
-  int decimal, sign;
   gcvt (fnumber, 7, text);
   TText *n = new TText(fX1,fY1,text);
-  n->SetTextSize(0.03);
+  n->SetTextSize(0.03F);
   n->Draw();
 }
 
@@ -99,16 +98,15 @@ void RooGraphNode::draw()
   if (ftext != "0")
     {
       TText *t = new TText(fX1,y,ftext);
-      t->SetTextSize(0.03);
+      t->SetTextSize(0.03F);
       t->Draw();
     }
   if (fnumber != 0)
     { char text[20];
     int precision = 5;
-    int decimal, sign;
     gcvt (fnumber, 7, text);
     TText *n = new TText(fX1,fY1,text);
-    n->SetTextSize(0.03);
+    n->SetTextSize(0.03F);
     n->Draw();
     }
 }
@@ -122,16 +120,15 @@ void RooGraphNode::draw(int color)
   double y = fY1 + fR1;
   if (ftext != "0")
     { TText *t = new TText(fX1,y,ftext);
-    t->SetTextSize(0.03);
+    t->SetTextSize(0.03F);
     t->Draw();
     }
   if (fnumber != 0)
     { char text[20];
     int precision = 5;
-    int decimal, sign;
     gcvt (fnumber, 7, text);
     TText *n = new TText(fX1,fY1,text);
-    n->SetTextSize(0.03);
+    n->SetTextSize(0.03F);
     n->Draw();
     }
 }
@@ -151,7 +148,6 @@ void RooGraphNode::read(ifstream &file)
   double iw;
   double il;
   TString itext;
-  int i;
   char eol;
   file.seekg(4, ios::cur);
   file >> ix >> iy >> iw >> il >> itext;
@@ -203,10 +199,9 @@ void RooGraphNode::GetNumber(double number)
   //This is a number or value associated with the node.
   char text[20];
   int precision = 5;
-  int decimal, sign;
   gcvt (number, 7, text);
   TText *t = new TText(fX1,fY1,text);
-  t->SetTextSize(0.03);
+  t->SetTextSize(0.03F);
   t->Draw();
 }
 
@@ -225,18 +220,21 @@ TEllipse *RooGraphNode::GetEllipse(TList *padlist)
   //Returns the ellipse that was created by drawing this ellipse to the current
   //canvas by finding it from the list of canvas objects.
   TObject *obj = padlist->First();
+  TEllipse *e = 0;
   while(obj != 0)
     {
       if (obj->InheritsFrom("TEllipse"))
 	{ 
-	  TEllipse *e = dynamic_cast<TEllipse*>(obj);
+	  e = dynamic_cast<TEllipse*>(obj);
 	  double x = e->GetX1();
 	  double y = e->GetY1();
 	  if (x==fX1&&y==fY1)
-	    { return e; }
+	    { break; }
 	}
       obj = padlist->After(obj);
     }
+
+	return e;
 }
 
 void RooGraphNode::RemoveT(TList *padlist)
@@ -391,14 +389,18 @@ double RooGraphNode::GetTotalE(TList *nodessprings, char m)
       tey = tey + ey;
       spring = dynamic_cast<RooGraphSpring*>(nodessprings->After(spring));
     }
+
+  double return_value = 0;
   if (m=='x')
     {
-      return tex;
+      return_value = tex;
     }
   if (m=='y')
     {
-      return tey;
+      return_value = tey;
     }
+
+	return return_value;
 }
 
 double RooGraphNode::GetTotalE2(TList *nodessprings, char m)
@@ -416,14 +418,18 @@ double RooGraphNode::GetTotalE2(TList *nodessprings, char m)
       tey = tey + ey;
       spring = dynamic_cast<RooGraphSpring*>(nodessprings->After(spring));
     }
+
+  double return_value = 0;
   if (m=='x')
     {
-      return tex;	  
+      return_value = tex;	  
     }
   if (m=='y')
     {
-      return tey;	  
+      return_value = tey;	  
     }
+
+	return return_value;
 }
 
 double RooGraphNode::GetTotalExy(TList *nodessprings)

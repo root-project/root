@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.7 2002/09/05 04:33:33 verkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.8 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,10 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <string.h>
+
+#ifndef _WIN32
 #include <strings.h>
+#endif
 
 const Int_t   kSpaceNum      = 1;
 const char   *formatStr      = "%12s %5s %s";
@@ -85,8 +88,16 @@ void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUp
   // Write a custom html footer for RooFit class documentation to the specified output stream.  
 
   // lastUpdate will be the CVS tag in case of .rdl and .cc files: clean it up a bit
-  const char *comma= index(lastUpdate,',');
+
+// Matthew D. Langston  <langston@SLAC.Stanford.EDU>
+// There is no index function in Windows (nor is there a strings.h).
+#ifndef _WIN32
+   const char *comma= index(lastUpdate,',');
   TString update = comma ? comma+1 : lastUpdate;
+#else
+  TString update = lastUpdate;
+#endif
+
   if(update.EndsWith(" Exp $")) update.Remove(update.Length()-6,6);
 
   out << "<center><table BORDER=0 CELLSPACING=0 COLS=2 WIDTH=\"100%\" BGCOLOR=\"" << _hfColor << "\" NOSAVE >" << endl

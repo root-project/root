@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooStreamParser.cc,v 1.19 2002/09/05 04:33:59 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,11 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#ifndef _WIN32
 #include <strings.h>
+#endif
+
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooNumber.hh"
 

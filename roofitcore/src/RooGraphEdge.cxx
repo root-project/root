@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphEdge.cc,v 1.4 2002/09/05 22:29:47 verkerke Exp $
+ *    File: $Id: RooGraphEdge.cc,v 1.5 2002/09/09 21:43:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -102,7 +102,7 @@ void RooGraphEdge::Connect()
     l->Draw();
   }
   if (fes=="Arrow"){
-    TArrow *a = new TArrow(x1,y1,x2,y2,0.02,"|>");
+    TArrow *a = new TArrow(x1,y1,x2,y2,0.02F,"|>");
     a->Draw();
   }
 }
@@ -119,7 +119,7 @@ void RooGraphEdge::Connect(int color)
     l->Draw();
   }
   if (fes=="Arrow"){
-    TArrow *a = new TArrow(x1,y1,x2,y2,0.02,"|>");
+    TArrow *a = new TArrow(x1,y1,x2,y2,0.02F,"|>");
     a->SetLineColor(color);
     a->Draw();
   }
@@ -139,7 +139,7 @@ void RooGraphEdge::Connect(RooGraphNode *n1, RooGraphNode *n2)
     l->Draw();
   }
   if (fes=="Arrow"){
-    TArrow *a = new TArrow(x1,y1,x2,y2,0.02,"|>");
+    TArrow *a = new TArrow(x1,y1,x2,y2,0.02F,"|>");
     a->Draw();
   }
 }
@@ -174,7 +174,7 @@ TObject *RooGraphEdge::GetType(TList *padlist)
 	  double X2 = fn2->GetX1();
 	  double Y2 = fn2->GetY1();
 	  if (x1==X1&&y1==Y1&&x2==X2&&y2==Y2)
-	    { return line; }
+	    { obj = line; break; }
 	}
       if (obj->InheritsFrom("TArrow"))
 	{
@@ -188,10 +188,12 @@ TObject *RooGraphEdge::GetType(TList *padlist)
 	  double X2 = fn2->GetX1();
 	  double Y2 = fn2->GetY1();
 	  if (x1==X1&&y1==Y1&&x2==X2&&y2==Y2)
-	    { return arrow; }
+	    { obj = arrow; break; }
 	}
       obj = padlist->After(obj);
     }
+
+	return obj;
 }
 
 double RooGraphEdge::GetX1()

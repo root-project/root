@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.22 2002/09/05 04:33:57 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -415,7 +415,16 @@
 
 #define _REENTRANT
 #include <string.h>
+
+// Matthew D. Langston  <langston@SLAC.Stanford.EDU>
+//
+// Microsoft doesn't supply strings.h.  However, strings.h is only
+// required for strtok_r (a reentrant version of strtok), and
+// Microsoft's version of strtok is already thread safe.
+#ifndef _WIN32
 #include <strings.h>
+#endif
+
 #include "RooFitCore/RooSimPdfBuilder.hh"
 
 #include "RooFitCore/RooRealVar.hh"
@@ -581,9 +590,16 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     // Chop off optional list of selected states
     char* tokenPtr(0) ;
     if (strchr(catName,'(')) {
+
+#ifndef _WIN32
       catName = strtok_r(catName,"(",&tokenPtr) ;
       stateList = strtok_r(0,")",&tokenPtr) ;
-    } else {
+#else
+      catName = strtok(catName,"(") ;
+      stateList = strtok(0,")") ;
+#endif
+
+	} else {
       stateList = 0 ;
     }
 
@@ -605,7 +621,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       slist->SetName(catName) ;
       splitStateList.Add(slist) ;
 
+#ifndef _WIN32
       char* stateLabel = strtok_r(stateList,",",&tokenPtr) ;
+#else
+      char* stateLabel = strtok(stateList,",") ;
+#endif
+
       while(stateLabel) {
 	// Lookup state label and require it exists
 	const RooCatType* type = splitCat->lookupType(stateLabel) ;
@@ -616,7 +637,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	  return 0 ;
 	}
 	slist->Add((TObject*)type) ;
-	stateLabel = strtok_r(0,",",&tokenPtr) ;	  
+
+#ifndef _WIN32
+	stateLabel = strtok_r(0,",",&tokenPtr) ;
+#else
+	stateLabel = strtok(0,",") ;
+#endif
       }
     }
     
@@ -691,7 +717,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       strcpy(buf,ruleStr->getVal()) ;
 
       char *tokenPtr(0) ;
+
+#ifndef _WIN32
       char* token = strtok_r(buf,spaceChars,&tokenPtr) ;
+#else
+      char* token = strtok(buf,spaceChars) ;
+#endif
       
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
@@ -713,8 +744,14 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	      TString origCompCatName(splitCatName) ;
 	      if (!splitCat) {
 		// Build now
-		char *tokptr(0) ;
+
+#ifndef _WIN32
+		char *tokptr = 0;
 		char *catName = strtok_r(token,",",&tokptr) ;
+#else
+		char *catName = strtok(token,",") ;
+#endif
+
 		RooArgSet compCatSet ;
 		while(catName) {
 		  RooAbsArg* cat = splitCatSet.find(catName) ;
@@ -734,7 +771,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		    return 0 ;
 		  }
 		  compCatSet.add(*cat) ;
+
+#ifndef _WIN32
 		  catName = strtok_r(0,",",&tokptr) ;
+#else
+		  catName = strtok(0,",") ;
+#endif
 		}		
 		splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
 		_compSplitCatSet.addOwned(*splitCat) ;
@@ -788,16 +830,28 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    paramList->add(*compList) ;
 	    delete compList ;
 
-	    char *tokptr(0) ;
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
+
+#ifndef _WIN32
+	    char *tokptr = 0 ;
 	    char *paramName = strtok_r(token,",",&tokptr) ;
+#else
+	    char *tokptr(0) ;
+	    char *paramName = strtok(token,",") ;
+#endif
 
 	    // Check for fractional split option 'param_name[remainder_state]'
-	    char *tokptr2(0) ;
 	    char *remainderState = 0 ;
+#ifndef _WIN32
+	    char *tokptr2 = 0 ;
 	    if (paramName && strtok_r(paramName,"[",&tokptr2)) {
 	      remainderState = strtok_r(0,"]",&tokptr2) ;
 	    }
+#else
+	    if (paramName && strtok(paramName,"[")) {
+	      remainderState = strtok(0,"]") ;
+	    }
+#endif
 
 	    while(paramName) {
 
@@ -882,10 +936,17 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	      }
 
 	      // Parse next parameter name
+#ifndef _WIN32
 	      paramName = strtok_r(0,",",&tokptr) ;
 	      if (paramName && strtok_r(paramName,"[",&tokptr2)) {
 		remainderState = strtok_r(0,"]",&tokptr2) ;
 	      }
+#else
+	      paramName = strtok(0,",") ;
+	      if (paramName && strtok(paramName,"[")) {
+		remainderState = strtok(0,"]") ;
+	      }
+#endif
 	    }
 
 	    // Add the rule to the appropriate customizer ;
@@ -897,7 +958,13 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    break ;
 	  }
 	}
+
+#ifndef _WIN32
 	token = strtok_r(0,spaceChars,&tokenPtr) ;
+#else
+	token = strtok(0,spaceChars) ;
+#endif
+
       }
       if (mode!=SplitCat) {
 	cout << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected " 

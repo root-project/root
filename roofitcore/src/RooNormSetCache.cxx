@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNormSetCache.cc,v 1.4 2002/09/05 04:33:46 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,8 +65,6 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
-  Int_t i,j ;
-
   // If code list array has never been used, allocate and initialize here
   if (!_asArr1) {
     _asArr1 = new pRooArgSet[_regSize] ;

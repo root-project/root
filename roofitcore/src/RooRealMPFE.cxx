@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealMPFE.cc,v 1.3 2002/09/05 04:33:53 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,9 @@
 // The forked calculation process is terminated when the front-end object
 // is deleted
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include "RooFitCore/RooRealMPFE.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -48,6 +50,9 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _verboseServer(kFALSE),
   _inlineMode(calcInline)
 {  
+#ifdef _WIN32
+  _inlineMode = kTRUE;
+#endif
   initVars() ;
   _sentinel.add(*this) ;
 }
@@ -113,6 +118,7 @@ void RooRealMPFE::initialize() {
     return ;
   }
 
+#ifndef _WIN32
   // Fork server process and setup IPC
   
   // Make client/server pipes
@@ -144,12 +150,14 @@ void RooRealMPFE::initialize() {
     cout << "RooRealMPFE::initialize(" << GetName() << ") ERROR fork() failed" << endl ; 
     _state = Inline ;
   }
+#endif // _WIN32
 }
 
 
 
 void RooRealMPFE::serverLoop() 
 {
+#ifndef _WIN32
   Bool_t doLoop(kTRUE) ;
   Message msg ;
 
@@ -221,6 +229,7 @@ void RooRealMPFE::serverLoop()
       break ;
     }
   }
+#endif // _WIN32
 }
 
 
@@ -238,6 +247,7 @@ void RooRealMPFE::calculate() const
     _value = _arg ;
   }
 
+#ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
     Int_t i ;
@@ -284,6 +294,7 @@ void RooRealMPFE::calculate() const
     cout << "RooRealMPFE::calculate(" << GetName() 
 	 << ") ERROR not in Client or Inline mode" << endl ;
   }
+#endif // _WIN32
 }
 
 
@@ -310,9 +321,11 @@ Double_t RooRealMPFE::getVal(const RooArgSet* nset) const
 Double_t RooRealMPFE::evaluate() const
 {
   // Retrieve value of arg
+  Double_t return_value = 0;
   if (_state==Inline) {
-    return _arg ; 
+    return_value = _arg ; 
   } else if (_state==Client) {
+#ifndef _WIN32
     Message msg ;
     Double_t value ;
 
@@ -332,13 +345,17 @@ Double_t RooRealMPFE::evaluate() const
 
     // Mark end of calculation in progress 
     _calcInProgress = kFALSE ;
-    return value ;
+    return_value = value ;
+#endif // _WIN32
   }
+
+  return return_value;
 }
 
 
 void RooRealMPFE::standby()
 {
+#ifndef _WIN32
   if (_state==Client) {
 
     // Terminate server process ;
@@ -356,12 +373,13 @@ void RooRealMPFE::standby()
     // Revert to initialize state 
     _state = Initialize ;
   }
-
+#endif // _WIN32
 }
 
 
 void RooRealMPFE::constOptimize(ConstOpCode opcode) 
 {
+#ifndef _WIN32
   if (_state==Client) {
     Message msg = ConstOpt ;
     write(_pipeToServer[1],&msg,sizeof(msg)) ;
@@ -371,6 +389,7 @@ void RooRealMPFE::constOptimize(ConstOpCode opcode)
 
     initVars() ;
   }
+#endif // _WIN32
 
   if (_state==Inline) {
     ((RooAbsReal&)_arg.arg()).constOptimize(opcode) ;
@@ -381,6 +400,7 @@ void RooRealMPFE::constOptimize(ConstOpCode opcode)
 
 void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag) 
 {
+#ifndef _WIN32
   if (_state==Client) {
     Message msg = Verbose ;
     write(_pipeToServer[1],&msg,sizeof(msg)) ;
@@ -388,5 +408,6 @@ void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag)
     if (_verboseServer) cout << "RooRealMPFE::setVerbose(" << GetName() 
 			     << ") IPC toServer> Verbose " << (serverFlag?1:0) << endl ;      
   }
+#endif // _WIN32
   _verboseClient = clientFlag ; _verboseServer = serverFlag ;
 }
