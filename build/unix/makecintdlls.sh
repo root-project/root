@@ -265,7 +265,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" exception.$SOEXT \
    $CINTDIRS/exception.$SOEXT $STLDIR/G__cpp_exception.o
 rename $CINTDIRS/exception
 
-rm -f $STLDIR/G__*
+#rm -f $STLDIR/G__*
 
 exit 0
 
