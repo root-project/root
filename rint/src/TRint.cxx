@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.27 2004/02/09 09:50:17 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.28 2004/03/15 15:01:41 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -376,8 +376,8 @@ Bool_t TRint::HandleTermInput()
 
       if (!gInterpreter->GetMore() && !sline.IsNull()) fNcmd++;
 
-      // prevent recursive calling of this routine
-      fInputHandler->Remove();
+      // prevent recursive calling of this input handler
+      fInputHandler->DeActivate();
 
       if (gROOT->Timer()) timer.Start();
 
@@ -406,7 +406,7 @@ Bool_t TRint::HandleTermInput()
       if (gROOT->Timer()) timer.Print();
 
       // enable again intput handler
-      fInputHandler->Add();
+      fInputHandler->Activate();
 
       if (!sline.BeginsWith(".reset"))
          gInterpreter->EndOfLineAction();

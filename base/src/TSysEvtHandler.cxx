@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.2 2000/11/17 10:26:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.3 2002/02/06 11:51:00 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -23,6 +23,32 @@
 
 ClassImp(TSysEvtHandler)
 ClassImp(TFileHandler)
+ClassImp(TSignalHandler)
+
+
+//______________________________________________________________________________
+void TSysEvtHandler::Activate()
+{
+   // Activate a system event handler. All handlers are by default
+   // activated. Use this method to activate a de-activated handler.
+
+   fIsActive = kTRUE;
+   Activated();      // emit Activated() signal
+}
+
+//______________________________________________________________________________
+void TSysEvtHandler::DeActivate()
+{
+   // De-activate a system event handler. Use this method to temporarily
+   // disable an event handler to avoid it from being recursively called.
+   // Use DeActivate() / Activate() instead of Remove() / Add() for this
+   // purpose, since the Add() will add the handler back to the end of
+   // the list of handlers and cause it to be called again for the same,
+   // already handled, event.
+
+   fIsActive = kFALSE;
+   DeActivated();    // emit DeActivated() signal
+}
 
 
 //______________________________________________________________________________
@@ -106,8 +132,6 @@ void TFileHandler::Remove()
    }
 }
 
-
-ClassImp(TSignalHandler)
 
 //______________________________________________________________________________
 TSignalHandler::TSignalHandler(ESignals sig, Bool_t sync)

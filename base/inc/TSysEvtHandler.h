@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.2 2000/11/17 10:26:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.3 2002/02/03 18:34:16 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -32,19 +32,27 @@
 class TSysEvtHandler : public TObject, public TQObject {
 
 private:
+   Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
+
    void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
-   TSysEvtHandler() { }
+   TSysEvtHandler() : fIsActive(kTRUE) { }
    virtual ~TSysEvtHandler() { }
+
+   void             Activate();
+   void             DeActivate();
+   Bool_t           IsActive() const { return fIsActive; }
 
    virtual void     Add()    = 0;
    virtual void     Remove() = 0;
    virtual Bool_t   Notify() = 0;
 
-   virtual void     Notified() { Emit("Notified()"); }  //*SIGNAL*
-   virtual void     Added()    { Emit("Added()"); }     //*SIGNAL*
-   virtual void     Removed()  { Emit("Removed()"); }   //*SIGNAL*
+   virtual void     Activated()   { Emit("Activated()"); }   //*SIGNAL*
+   virtual void     DeActivated() { Emit("DeActivated()"); } //*SIGNAL*
+   virtual void     Notified()    { Emit("Notified()"); }    //*SIGNAL*
+   virtual void     Added()       { Emit("Added()"); }       //*SIGNAL*
+   virtual void     Removed()     { Emit("Removed()"); }     //*SIGNAL*
 
    ClassDef(TSysEvtHandler,0)  //ABC for handling system events
 };

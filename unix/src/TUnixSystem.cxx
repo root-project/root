@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.92 2004/04/06 22:55:36 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.93 2004/04/16 17:03:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -786,7 +786,8 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
                   sigdone = sig;
                   fSigcnt--;
                }
-               sh->Notify();
+              if (sh->IsActive())
+                 sh->Notify();
             }
          }
       }
@@ -843,7 +844,8 @@ Bool_t TUnixSystem::CheckDescriptors()
             read = kTRUE;
             fNfd--;
          }
-         fh->ReadNotify();
+         if (fh->IsActive())
+            fh->ReadNotify();
       }
       if ((fd <= fMaxwfd && fWriteready->IsSet(fd) && fddone == -1) ||
           (fddone == fd && !read)) {
@@ -853,7 +855,8 @@ Bool_t TUnixSystem::CheckDescriptors()
             read = kFALSE;
             fNfd--;
          }
-         fh->WriteNotify();
+         if (fh->IsActive())
+            fh->WriteNotify();
       }
    }
    if (fddone != -1)
