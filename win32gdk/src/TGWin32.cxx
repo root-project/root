@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.5 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.6 2002/08/17 16:29:31 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1894,7 +1894,7 @@ void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
 }
 
 //______________________________________________________________________________
-ULong_t TGX11::GetPixel(Color_t ci)
+ULong_t TGWin32::GetPixel(Color_t ci)
 {
    // Return pixel value associated to specified ROOT color number.
 
