@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.149 2004/07/19 19:48:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.150 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -318,8 +318,9 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code) {
-  // This method is used internally to decode the dimensions of the variables
+Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code) 
+{
+   // This method is used internally to decode the dimensions of the variables
 
    // We assume that there are NO white spaces in the info string
    const char * current;
@@ -369,6 +370,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
    // This method is used internally to decode the dimensions of the variables
 
    Int_t ndim, size, current, vardim;
+   vardim = 0;
 
    const TStreamerElement * elem = leafinfo->fElement;
 
@@ -381,8 +383,15 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
    }
    if (elem->IsA() == TStreamerBasicPointer::Class()) {
 
-      ndim = 1;
-      size = -1;
+      if (elem->GetArrayDim()>0) {
+         
+         ndim = elem->GetArrayDim();
+         size = elem->GetMaxIndex(0);
+         vardim += RegisterDimensions(code, -1);
+      } else {
+         ndim = 1;
+         size = -1;
+      }
 
       TStreamerBasicPointer *array = (TStreamerBasicPointer*)elem;
       TClass * cl = leafinfo->fClass;
@@ -425,7 +434,6 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo) {
    } else return 0;
 
    current = 0;
-   vardim = 0;
    do {
       vardim += RegisterDimensions(code, size);
 
@@ -490,6 +498,11 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
       if (!branch_dim || strncmp(branch_dim,leaf_dim,strlen(branch_dim))) {
          // then both are NOT the same so do the leaf title first:
          numberOfVarDim += RegisterDimensions( leaf_dim, code);
+      } else if (branch_dim && strncmp(branch_dim,leaf_dim,strlen(branch_dim))==0
+                 && strlen(leaf_dim)>strlen(branch_dim) 
+                 && (leaf_dim+strlen(branch_dim))[0]=='[') {
+         // we have extra info in the leaf title
+         numberOfVarDim += RegisterDimensions( leaf_dim+strlen(branch_dim)+1, code);
       }
    }
    if (branch_dim) {
@@ -2544,7 +2557,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          result in the branch being potentially not read in. */                                 \
       if (haveSeenBooleanOptimization) {                                                        \
          TBranch *br = leaf->GetBranch();                                                       \
-         Long64_t treeEntry = br->GetTree()->GetReadEntry();                                       \
+         Long64_t treeEntry = br->GetTree()->GetReadEntry();                                    \
          if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
       }                                                                                         \
       if (real_instance>fNdata[code]) return 0;                                                 \

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.200 2004/05/08 05:53:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.201 2004/06/22 18:11:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1377,7 +1377,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
 }
 
 //______________________________________________________________________________
-Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, int k)
+Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
 {
    switch (type) {
       // basic types
@@ -1419,24 +1419,40 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, int k)
       case kOffsetL + kULong64:{ULong64_t *val= (ULong64_t*)ladd; return Double_t(val[k]);}
 #endif
 
+#define READ_ARRAY(TYPE_t)                               \
+         {                                               \
+            Int_t sub_instance, index;                   \
+            Int_t instance = k;                          \
+            if (len) {                                   \
+               index = instance / len;                   \
+               sub_instance = instance % len;            \
+            } else {                                     \
+               index = instance;                         \
+               sub_instance = 0;                         \
+            }                                            \
+            TYPE_t **val =(TYPE_t**)(ladd);              \
+            return Double_t((val[sub_instance])[index]); \
+         }
+
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:    {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kShort:   {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kInt:     {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[k]);}
-      case kOffsetP + kLong:    {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kLong64:  {Long64_t **val = (Long64_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kFloat:   {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kDouble:  {Double_t **val = (Double_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kDouble32:{Double_t **val = (Double_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kUChar:   {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kUShort:  {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
-      case kOffsetP + kUInt:    {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
-      case kOffsetP + kULong:   {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kChar_t:    READ_ARRAY(Char_t)
+      case kOffsetP + kShort_t:   READ_ARRAY(Short_t)
+      case kOffsetP + kInt_t:     READ_ARRAY(Int_t)
+      case kOffsetP + kLong_t:    READ_ARRAY(Long_t)
+      case kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
+      case kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
+      case kOffsetP + kDouble32_t:
+      case kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
+      case kOffsetP + kUChar_t:   READ_ARRAY(UChar_t)
+      case kOffsetP + kUShort_t:  READ_ARRAY(UShort_t)
+      case kOffsetP + kUInt_t:    READ_ARRAY(UInt_t)
+      case kOffsetP + kULong_t:   READ_ARRAY(ULong_t)
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
-      case kOffsetP + kULong64: {Long64_t **val = (Long64_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kULong64_t: READ_ARRAY(Long64_t)
 #else
-      case kOffsetP + kULong64: {ULong64_t **val= (ULong64_t**)ladd; return Double_t((*val)[k]);}
+      case kOffsetP + kULong64_t: READ_ARRAY(ULong64_t)
 #endif
+
           // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }
@@ -1462,8 +1478,9 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       if (i < 0) return 0;
       ladd  = pointer + fOffset[i];
       atype = fNewType[i];
+      len = ((TStreamerElement*)fElem[i])->GetArrayLength();
    }
-   return GetValueAux(atype,ladd,j);
+   return GetValueAux(atype,ladd,j,len);
    
 }
 
@@ -1481,7 +1498,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
    if (bOffset > 0) eoffset += bOffset;
    char *pointer = (char*)clones->UncheckedAt(j);
    char *ladd    = pointer + eoffset + fOffset[i];
-   return GetValueAux(fType[i],ladd,k);
+   return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -1497,7 +1514,7 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
    if (bOffset > 0) eoffset += bOffset;
    char *pointer = (char*)cont->At(j);
    char *ladd    = pointer + eoffset + fOffset[i];
-   return GetValueAux(fType[i],ladd,k);
+   return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
 }
 //______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const

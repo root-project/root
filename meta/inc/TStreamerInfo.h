@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.50 2004/06/09 16:22:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.51 2004/06/22 18:47:16 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -76,7 +76,7 @@ private:
    static  Bool_t    fgOptimize;      //True if optimization on
    static TStreamerElement *fgElement; //Pointer to current TStreamerElement
    void              BuildUserInfo(const char *info);
-   static Double_t   GetValueAux(Int_t type, void *ladd, int k);
+   static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 //VP   Int_t             ReadBufferAux       (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 //VP   Int_t             WriteBufferClonesAux      (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
