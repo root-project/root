@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.13 2004/09/30 11:58:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.14 2004/10/08 05:21:52 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -27,6 +27,10 @@
 #include "TMethodArg.h"
 #include "TBaseClass.h"
 #include "TInterpreter.h"
+#include "TGlobal.h"
+
+// CINT
+#include "Api.h"
 
 // Standard
 #include <assert.h>
@@ -125,12 +129,7 @@ void PyROOT::initRoot() {
 // bind ROOT globals (ObjectHolder instances will be properly destroyed)
    addToScope( "gROOT", gROOT, gROOT->IsA() );
    addToScope( "gSystem", gSystem, gSystem->IsA() );
-   addToScope( "gRandom", gRandom, gRandom->IsA() );
    addToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
-
-// the following are safer, done this way
-   addToScope( "gBenchmark", gBenchmark, TBenchmark::Class() );
-   addToScope( "gStyle", gStyle, TStyle::Class() );
 
 // memory management
    gROOT->GetListOfCleanups()->Add( new MemoryRegulator() );
@@ -208,7 +207,17 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
       if ( !( mb->Property() & kIsPublic ) )
          continue;
 
-      PropertyHolder::addToClass( new PropertyHolder( mb ), pyclass );
+   // enums
+      if ( mb->IsEnum() ) {
+         long offset = 0;
+         G__DataMemberInfo dmi = cls->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
+         PyObject* val = PyInt_FromLong( *((int*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
+         PyObject_SetAttrString( pyclass, const_cast< char* >( mb->GetName() ), val );
+      }
+
+   // property object
+      else
+         PropertyHolder::addToClass( new PropertyHolder( mb ), pyclass );
    }
 
 // all ok, done
@@ -334,6 +343,29 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 
 // all done
    return pyclass;
+}
+
+
+PyObject* PyROOT::getRootGlobalEnum( PyObject*, PyObject* args ) {
+// get the requested name
+   std::string ename = PyString_AsString( PyTuple_GetItem( args, 0 ) );
+   if ( PyErr_Occurred() )
+      return 0;
+
+// loop over globals to find this enum
+   TIter nextGlobal( gROOT->GetListOfGlobals( kTRUE ) );
+   while ( TGlobal* gb = (TGlobal*)nextGlobal() ) {
+      if ( gb->GetName() == ename && gb->GetAddress() ) {
+         if ( G__TypeInfo( gb->GetTypeName() ).Property() & G__BIT_ISENUM )
+            return PyInt_FromLong( *((int*)gb->GetAddress()) );
+         else
+            break;
+      }
+   }
+
+// nothing found
+   Py_INCREF( Py_None );
+   return Py_None;
 }
 
 

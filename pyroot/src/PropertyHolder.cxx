@@ -12,7 +12,6 @@
 // Standard
 #include <string.h>
 #include <string>
-#include <iostream>
 
 
 //- protected class members --------------------------------------------------
@@ -81,8 +80,13 @@ PyObject* PyROOT::PropertyHolder::get( PyObject* args, PyObject* ) {
 
    switch ( m_dataType ) {
    case Utility::kInt:
-   case Utility::kLong: {
+   case Utility::kLong:
+   case Utility::kEnum: {
       return PyLong_FromLong( *((int*)((int)obj+offset)) );
+   }
+   case Utility::kUInt:
+   case Utility::kULong: {
+      return PyLong_FromLong( *((unsigned*)((int)obj+offset)) );
    }
    case Utility::kFloat: {
       return PyFloat_FromDouble( *((float*)((int)obj+offset)) );

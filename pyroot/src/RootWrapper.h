@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.3 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.4 2004/08/12 20:55:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -26,6 +26,9 @@ namespace PyROOT {
 // construct a Python shadow class for the named ROOT class
    PyObject* makeRootClass( PyObject* self, PyObject* args );
    PyObject* makeRootClassFromString( const char* className );
+
+// convenience function to retrieve global enums
+   PyObject* getRootGlobalEnum( PyObject* self, PyObject* args );
 
 // bind a held ROOT object into a Python object (if force is false, allow recycle)
    PyObject* bindRootObject( ObjectHolder* obj, bool force = false );

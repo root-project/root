@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.22 2004/10/08 05:21:52 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.23 2004/10/24 06:08:14 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -151,7 +151,16 @@ namespace {
          return true;
       }
 
-   // don't handle strings here (they're buffers, but not quite)
+   // special case: allow null pointer
+      long val = PyLong_AsLong( obj );
+      if ( PyErr_Occurred() )
+         PyErr_Clear();
+      else if ( val == 0 ) {
+         func->SetArg( val );
+         return true;
+      }
+
+   // special case: don't handle strings here (they're buffers, but not quite)
       if ( PyString_Check( obj ) )
          return false;
       
@@ -179,7 +188,7 @@ namespace {
 
    template< class aType >
    bool carray_convert( PyObject* obj, G__CallFunc* func, void*& ) {
-   // don't handle strings here (they're buffers, but not quite)
+   // special case: don't handle strings here (they're buffers, but not quite)
       if ( PyString_Check( obj ) )
          return false;
 
@@ -579,7 +588,11 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
    case Utility::kChar:
    case Utility::kShort:
    case Utility::kInt:
-   case Utility::kUInt:
+   case Utility::kUInt: {
+      long returnValue = 0;
+      execute( self, returnValue );
+      return PyInt_FromLong( returnValue );
+   }
    case Utility::kLong:
    case Utility::kULong: {
       long returnValue = 0;

@@ -6,13 +6,11 @@
 
 // ROOT
 #include "TClass.h"
-#include "TObject.h"
 
 // CINT
 #include "Api.h"
 
 // Standard
-#include <iostream>
 #include <string>
 
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.3 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.4 2004/07/17 06:32:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -64,7 +64,7 @@ namespace {
 
 
 //- static public members ----------------------------------------------------
-bool TPython::Initialize()  {
+Bool_t TPython::Initialize()  {
 // Private initialization method: setup the python interpreter and load the
 // ROOT module.
 
@@ -88,7 +88,7 @@ bool TPython::Initialize()  {
       PyRun_SimpleString( const_cast< char* >( "import ROOT" ) );
    }
 
-   if ( g_maindict == 0 ) {
+   if ( ! g_maindict ) {
    // initialize some handy strings
       g_pystr_class  = PyString_FromString( "__class__" );
       g_pystr_name   = PyString_FromString( "__name__" );
@@ -195,7 +195,7 @@ const TPyReturn& TPython::Eval( const char* expr ) {
 }
 
 
-bool TPython::Bind( TObject* obj, const char* label ) {
+Bool_t TPython::Bind( TObject* obj, const char* label ) {
 // Bind a ROOT object with, at the python side, the name "label".
 
 // check given address and setup
@@ -209,7 +209,7 @@ bool TPython::Bind( TObject* obj, const char* label ) {
          PyROOT::bindRootObject( new PyROOT::ObjectHolder( (void*)obj, cls, false ) );
 
       if ( bound ) {
-         bool bOk = PyDict_SetItemString( g_maindict, const_cast< char* >( label ), bound ) == 0;
+         Bool_t bOk = PyDict_SetItemString( g_maindict, const_cast< char* >( label ), bound ) == 0;
          Py_DECREF( bound );
 
          return bOk;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.8 2004/08/11 20:12:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.9 2004/08/12 20:55:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -70,7 +70,11 @@ void* PyROOT::Utility::getObjectFromHolderFromArgs( PyObject* argsTuple ) {
 PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& typeName ) {
    EDataType effType = kOther;
 
-   std::string shortName = TClassEdit::ShortType( G__TypeInfo( typeName.c_str() ).TrueName(), 1 );
+   G__TypeInfo ti( typeName.c_str() );
+   if ( ti.Property() & G__BIT_ISENUM )
+      return EDataType( (int) kEnum );
+
+   std::string shortName = TClassEdit::ShortType( ti.TrueName(), 1 );
 
    int mask = isPointer( typeName ) == 1 ? 0x10000 : 0;
 

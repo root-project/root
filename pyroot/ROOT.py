@@ -1,18 +1,18 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.10 2004/09/30 11:58:06 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.11 2004/09/30 16:48:22 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/30/04
+# Last: 10/28/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
 
 ## system modules
-import sys, exceptions, inspect, string, re
+import os, sys, exceptions, inspect, string, re
 import thread, time
 
 ## there's no version_info (nor inspect module) in 1.5.2
-if sys.version[0:3] < '2.1':
-    raise ImportError, 'Python Version 2.1 or above is required.'
+if sys.version[0:3] < '2.2':
+    raise ImportError, 'Python Version 2.2 or above is required.'
 
 ## readline support, if available
 try:
@@ -31,18 +31,24 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '2.0.0'
+__version__ = '2.1.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__all__ = [ 'makeRootClass',
-            'gROOT', 'gSystem', 'gRandom', 'gInterpreter', 'gBenchmark', 'gStyle' ]
+__all__ = [ 'makeRootClass', 'gROOT', 'gSystem', 'gInterpreter', 'gPad' ]
 
 _NAME = 'name'
 _NAMEREX = re.compile( r"named? '?(?P<%s>[\w\d]+)'?" % _NAME )
 
 _orig_ehook = sys.excepthook
 
-kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan = range( 0, 8 )
+
+### helpers ---------------------------------------------------------------------
+def split( str ):
+   npos = string.find( str, ' ' )
+   if 0 <= npos:
+      return str[:npos], str[npos+1:]
+   else:
+      return str, ''
 
 
 ### special case for gPad (is a C++ macro) --------------------------------------
@@ -65,15 +71,17 @@ gPad = _TVirtualPad()
 
 ### exeption hook replacement ---------------------------------------------------
 def _excepthook( exctype, value, traceb ):
-   name = ''
-
  # catch name errors starting and fix if they are requests for ROOT classes
    if isinstance( value, exceptions.NameError ) or isinstance( value, exceptions.ImportError ):
-      res = _NAMEREX.search( str(value) )
-      if res:
-         name = res.group( _NAME )
+      try:
+         name = _NAMEREX.search( str(value) ).group( _NAME )
+      except AttributeError:
+         name = ''
 
-   if name:
+      if not name:
+         _orig_ehook( exctype, value, traceb )
+         return
+
     # get last frame from the exception stack (for its dictionaries and code)
       lfr = inspect.getinnerframes( traceb )[-1][0]
 
@@ -83,15 +91,19 @@ def _excepthook( exctype, value, traceb ):
          glbdct = sys.modules[ __name__ ].__dict__
          locdct = glbdct
 
-     # attempt to construct a ROOT class ...
+    # attempt to construct a ROOT class ...
       if glbdct.has_key( 'makeRootClass' ) or locdct.has_key( 'makeRootClass' ):
          try:
           # construct the ROOT shadow class in the current and the ROOT module (may throw)
             try:
                exec '%s = makeRootClass( "%s" )' % (name,name) in glbdct, locdct
             except:
+             # try global variables and global enums
                gGlobal = gROOT.GetGlobal( name, 1 )
-               if gGlobal:
+               if not gGlobal:
+                  gGlobal = getRootGlobalEnum( name )
+
+               if gGlobal != None:
                   glbdct[ name ] = gGlobal
                else:
                   raise NameError
@@ -111,6 +123,19 @@ def _excepthook( exctype, value, traceb ):
 
       del lfr                                # no cycles, please ...
       return
+
+ # catch syntax errors to mimic ROOT commands
+   elif isinstance( value, exceptions.SyntaxError ):
+      cmd, arg = split( value.text[:-1] )
+
+      if cmd == '.q':
+         sys.exit( 0 )
+      elif cmd == '.!':
+         return os.system( arg )
+      elif cmd == '.x':
+         import __main__
+         execfile( arg, __main__.__dict__, __main__.__dict__ )
+         return
 
  # normal exception processing
    _orig_ehook( exctype, value, traceb )
@@ -172,6 +197,9 @@ class ModuleFacade:
             exec 'global %s; %s = makeRootClass( "%s" )' % (name,name,name)
          except:
             aGlobal = gROOT.GetGlobal( name, 1 )
+            if aGlobal == None:
+               aGlobal = getRootGlobalEnum( name )
+
             if aGlobal:
                _thismodule.__dict__[ name ] = aGlobal
       return getattr( _thismodule, name )

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.4 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.5 2004/07/17 06:32:15 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython
@@ -25,7 +25,7 @@
 class TPython {
 
 private:
-   static bool Initialize();
+   static Bool_t Initialize();
 
 public:
 // execute a python statement (e.g. "import ROOT" )
@@ -35,12 +35,12 @@ public:
    static const TPyReturn& Eval( const char *expr );
 
 // bind a ROOT object with, at the python side, the name "label"
-   static bool Bind( TObject* obj, const char* label );
+   static Bool_t Bind( TObject* obj, const char* label );
 
 // enter an interactive python session (exit with ^D)
    static void Prompt();
 
-   ClassDef(TPython,0)
+   ClassDef(TPython,0)   //Access to the python interpreter
 };
 
 #endif

@@ -1,19 +1,16 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.2 2004/04/28 22:04:06 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.3 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
-#include "ObjectHolder.h"
 #include "RootWrapper.h"
-
-// ROOT
-#include "TObject.h"
-#include "TGlobal.h"
 
 
 //------------------------------------------------------------------------------
 static PyMethodDef PyROOTMethods[] = {
    { (char*) "makeRootClass", (PyCFunction) PyROOT::makeRootClass,
+     METH_VARARGS, (char*) "PyROOT internal function" },
+   { (char*) "getRootGlobalEnum", (PyCFunction) PyROOT::getRootGlobalEnum,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { NULL, NULL, 0, NULL }
 };
