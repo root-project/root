@@ -1,0 +1,16 @@
+*Branch  :event                                                              *
+*Entries :        0 : BranchElement (see below)                              *
+*Br    0 :fArr      : fArr_                                                  *
+*Br    1 :fArr.fUniqueID : fUniqueID[fArr_]                                  *
+*Br    2 :fArr.fBits : fBits[fArr_]                                          *
+*Br    3 :fArr.fMyClArr : fMyClArr[fArr_]                                    *
+*Br    4 :fArr.fMyObjArr : fMyObjArr[fArr_]                                  *
+*Br    5 :fArr.fValid : fValid[fArr_]                                        *
+*Br    6 :fArr.fValue : fValue[fArr_]                                        *
+*Br    7 :fCol      :                                                        *
+*Br    8 :fCol.fUniqueID :                                                   *
+*Br    9 :fCol.fBits :                                                       *
+*Br   10 :fCol.fMyClArr :                                                    *
+*Br   11 :fCol.fMyObjArr :                                                   *
+*Br   12 :fCol.fValid :                                                      *
+*Br   13 :fEventNum :                                                        *
