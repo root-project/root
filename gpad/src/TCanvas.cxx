@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.68 2004/06/03 10:03:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.69 2004/06/03 10:20:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1265,7 +1265,7 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 }
 
 //______________________________________________________________________________
-void TCanvas::Selected(TPad *pad, TObject *obj, Int_t event)
+void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
 {
    // Emit Selected() signal.
 
@@ -1275,7 +1275,7 @@ void TCanvas::Selected(TPad *pad, TObject *obj, Int_t event)
    args[1] = (Long_t) obj;
    args[2] = event;
 
-   Emit("Selected(TPad*,TObject*,Int_t)", args);
+   Emit("Selected(TVirtualPad*,TObject*,Int_t)", args);
 }
 
 //______________________________________________________________________________
