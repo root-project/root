@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.16 2000/09/16 19:36:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.17 2000/09/29 07:39:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1251,29 +1251,42 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
 
 //*-*-           Draw the Axis with a fixed number of division: 510
 
-  Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum;
+  Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
 
   if (OptionAxis) {
 
-     rwxmin = rwxmax = x[0];
-     rwymin = rwymax = y[0];
-     for (i=1;i<npoints;i++) {
-        if (x[i] < rwxmin) rwxmin = x[i];
-        if (x[i] > rwxmax) rwxmax = x[i];
-        if (y[i] < rwymin) rwymin = y[i];
-        if (y[i] > rwymax) rwymax = y[i];
+     if (fHistogram) {
+        rwxmin    = gPad->GetUxmin();
+        rwxmax    = gPad->GetUxmax();
+        rwymin    = gPad->GetUymin();
+        rwymax    = gPad->GetUymax();
+        minimum   = fHistogram->GetMinimumStored();
+        maximum   = fHistogram->GetMaximumStored();
+        if (minimum == -1111) minimum = fHistogram->GetYaxis()->GetXmin();
+        if (maximum == -1111) maximum = fHistogram->GetYaxis()->GetXmax();
+        uxmin     = gPad->PadtoX(rwxmin);
+        uxmax     = gPad->PadtoX(rwxmax);
+     } else {
+        rwxmin = rwxmax = x[0];
+        rwymin = rwymax = y[0];
+        for (i=1;i<npoints;i++) {
+           if (x[i] < rwxmin) rwxmin = x[i];
+           if (x[i] > rwxmax) rwxmax = x[i];
+           if (y[i] < rwymin) rwymin = y[i];
+           if (y[i] > rwymax) rwymax = y[i];
+        }
+
+        ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
+
+        if (rwxmin == rwxmax) rwxmax += 1.;
+        if (rwymin == rwymax) rwymax += 1.;
+        dx = 0.1*(rwxmax-rwxmin);
+        dy = 0.1*(rwymax-rwymin);
+        uxmin    = rwxmin - dx;
+        uxmax    = rwxmax + dx;
+        minimum  = rwymin - dy;
+        maximum  = rwymax + dy;
      }
-
-     ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
-
-     if (rwxmin == rwxmax) rwxmax += 1.;
-     if (rwymin == rwymax) rwymax += 1.;
-     Double_t dx = 0.1*(rwxmax-rwxmin);
-     Double_t dy = 0.1*(rwymax-rwymin);
-     uxmin    = rwxmin - dx;
-     uxmax    = rwxmax + dx;
-     minimum  = rwymin - dy;
-     maximum  = rwymax + dy;
      if (fMinimum != -1111) rwymin = minimum = fMinimum;
      if (fMaximum != -1111) rwymax = maximum = fMaximum;
      if (uxmin < 0 && rwxmin >= 0) {
@@ -1297,21 +1310,19 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
         if (uxmax > 1000) uxmin = 1;
         else              uxmin = 0.001*uxmax;
      }
-     rwxmin = uxmin;
-     rwxmax = uxmax;
      rwymin = minimum;
      rwymax = maximum;
      if (fHistogram) {
        fHistogram->SetMinimum(rwymin);
        fHistogram->SetMaximum(rwymax);
-       fHistogram->GetXaxis()->SetLimits(rwxmin,rwxmax);
-       fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
      }
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {
       // the graph is created with at least as many channels as there are points
       // to permit zooming on the full range
+      rwxmin = uxmin;
+      rwxmax = uxmax;
       npt = 100;
       if (fNpoints > npt) npt = fNpoints;
       fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
@@ -1324,6 +1335,7 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
    }
    fHistogram->Paint();
   }
+  
   TF1 *fit = 0;
   if (fFunctions) fit = (TF1*)fFunctions->First();
   if (fit) {
@@ -2449,6 +2461,10 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
 
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   graph->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
+   }
+   if (strstr(option,"multigraph")) {
+      out<<"   multigraph->Add(graph);"<<endl;
+      return;
    }
    out<<"   graph->Draw("
       <<quote<<option<<quote<<");"<<endl;
