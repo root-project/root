@@ -5,6 +5,7 @@ TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR)
 
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
+CLEAN_TARGETS += 
 
 tests: $(TEST_TARGETS)
 	@echo "All test succeeded in `pwd`"
@@ -16,7 +17,7 @@ $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; gmake clean)
 
 clean:  $(CLEAN_TARGETS_DIR)
-	rm -f main *Dict* Event.root *~ $(CLEAN_TARGET)
+	rm -f main *Dict* Event.root *~ $(CLEAN_TARGETS)
 
 
 # here we guess the platform
@@ -65,4 +66,25 @@ ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o 
 endif
+
+ifeq ($(ARCH),linuxicc)
+# Linux with linuxicc
+CXX = icc
+LD  = icc
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS += -g
+else
+CXXFLAGS += -O
+endif
+SOFLAGS  = -shared
+DllSuf   = so
+ExeSuf   = 
+OutPutOpt     = -o 
+endif
+
+%.o: %.C
+	$(CXX) $(CXXFLAGS) -c $^
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS) -c $^
 
