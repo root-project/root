@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:$:$Id:$
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.1 2002/02/18 18:02:57 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -21,12 +21,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
-#include "TFile.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 
-class THbookFile : public TFile {
+class THbookFile : public TNamed {
 
 protected:
    Int_t         fLun;     //Fortran logical unit for this file
@@ -40,29 +40,18 @@ public:
    THbookFile(const char *fname, Int_t lrecl=1024);
    virtual ~THbookFile();
    virtual Bool_t    cd(const char *dirname="");
-   virtual void      Close(Option_t *option="") {;}
+   virtual void      Close(Option_t *option="");
    virtual TObject  *ConvertCWN(Int_t id);
    virtual TObject  *ConvertRWN(Int_t id);
    virtual TObject  *ConvertProfile(Int_t id);
    virtual TObject  *Convert1D(Int_t id);
    virtual TObject  *Convert2D(Int_t id);
-   virtual void      Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
-   virtual void      Delete(const char *namecycle="") {;}
            void      DeleteID(Int_t id);
-   virtual void      Flush() {;}
    TObject          *Get(Int_t id);
-   Int_t             GetBestBuffer() const {return 1024;}
-   TArrayC          *GetClassIndex() const { return 0; }
-   Int_t             GetCompressionLevel() const { return 0; }
-   Float_t           GetCompressionFactor() {return 1;}
    Int_t             GetEntry(Int_t entry,Int_t id, Int_t atype, Float_t *x);
    Int_t             GetEntryBranch(Int_t entry,Int_t id, const char *blockname, const char *branchname);
-   Int_t             GetVersion() const { return 1; }
    Seek_t            GetSize() const {return 0;}
-   virtual Bool_t    IsOpen() const {return kTRUE;}
    virtual void      ls(Option_t *option="") const;
-   virtual void      Map() {;}
-   virtual void      Print(Option_t *option="") const {;}
 
    ClassDef(THbookFile,1)  //ROOT interface to Hbook/PAW files
 };

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.2 2002/02/18 18:15:39 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -231,13 +231,13 @@ R__EXTERN TTree *gTree;
 ClassImp(THbookFile)
 
 //______________________________________________________________________________
-THbookFile::THbookFile() : TFile()
+THbookFile::THbookFile() : TNamed()
 {
 }
 
 //1_____________________________________________________________________________
 THbookFile::THbookFile(const char *fname, Int_t lrecl)
-           :TFile()
+           :TNamed(fname,"")
 {
 //  Constructor for an HBook TFile object
 
@@ -254,7 +254,6 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   }
 
   //find a free logical unit (max 10)
-  SetName(fname);
   fLun = 0;
   for (Int_t i=0;i<10;i++) {
      if (fgLuns[i] == 0) {
@@ -285,7 +284,8 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 //______________________________________________________________________________
 THbookFile::~THbookFile()
 {
-// here one should close the Hbook file (fortran)
+
+   Close();
 }
 
 
@@ -300,6 +300,12 @@ Bool_t THbookFile::cd(const char *dirname)
   hcdir(PASSCHAR(dirname),PASSCHAR(" "));
 #endif
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void THbookFile::Close(Option_t *)
+{
+// here one should close the Hbook file (fortran)
 }
 
 //______________________________________________________________________________
