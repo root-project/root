@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.35 2004/03/26 13:00:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.36 2004/04/22 16:28:29 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -302,6 +302,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 {
    // Create the actual canvas.
 
+   Int_t i;
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fLockState = 0;
@@ -449,7 +450,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 0);
 
    int spacing = 6;
-   for (int i = 0; gToolBarData[i].fPixmap; i++) {
+   for (i = 0; gToolBarData[i].fPixmap; i++) {
       if (strlen(gToolBarData[i].fPixmap) == 0) {
          spacing = 6;
          continue;
@@ -461,7 +462,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fToolBar->AddFrame(new TGVertical3DLine(fToolBar), new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0));
 
    spacing = 6;
-   for (int i = 0; gToolBarData1[i].fPixmap; i++) {
+   for (i = 0; gToolBarData1[i].fPixmap; i++) {
       if (strlen(gToolBarData1[i].fPixmap) == 0) {
          spacing = 6;
          continue;
