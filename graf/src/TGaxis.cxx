@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.47 2003/04/10 09:05:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.48 2003/04/12 17:14:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1325,7 +1325,9 @@ L110:
                   timed = Wlabel + (int)(timeoffset);
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = localtime(&timelabel);
-                  TString timeformattmp = timeformat;
+                  TString timeformattmp;
+                  if (timeformat.Length() < 220) timeformattmp = timeformat;
+                  else timeformattmp = "#splitline{Format}{too long}";
 
 //*-*-              Appends fractionnal part if seconds displayed
                   if (DWlabel<0.9) {
@@ -1345,7 +1347,7 @@ L110:
 
                   }
                   
-                  strftime(LABEL,36,timeformattmp.Data(),utctis);
+                  strftime(LABEL,256,timeformattmp.Data(),utctis);
                   strcpy(CHTEMP,&LABEL[0]);
                   first = 0; last=strlen(LABEL)-1;
 
