@@ -206,7 +206,9 @@ int G__pragma()
 
 #ifndef G__OLDIMPLEMENTATION467
   else if(strcmp(command,"setstdstruct")==0) {
+#ifndef G__TESTMAIN
     G__c_setupG__stdstrct();
+#endif
   }
 #endif
 

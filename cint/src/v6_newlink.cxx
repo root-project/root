@@ -40,14 +40,14 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 *  Following macro G__BUILTIN must not be defined at normal cint
 * installation. This macro must be deleted only when you generate following
 * source files. 
-*     src/libstrm.cxx in lib/stream
-*     src/vcstrm.cxx  in lib/vcstream
-*     src/bcstrm.cxx  in lib/bcstream
-*     src/cbstrm.cpp  in lib/cbstream
-*     src/sunstrm.cxx in lib/snstream
+*     src/libstrm.cxx in lib/stream    'make'
+*     src/vcstrm.cxx  in lib/vcstream  'make'
+*     src/bcstrm.cxx  in lib/bcstream  'make'
+*     src/cbstrm.cpp  in lib/cbstream  'make'
+*     src/sunstrm.cxx in lib/snstream  'make'
 *     src/kccstrm.cxx (lib/kcc_work not included in the package)
-*     src/stdstrct.c  in lib/stdstrct
-*     src/Apiif.cxx   in src
+*     src/stdstrct.c  in lib/stdstrct  'make'
+*     src/Apiif.cxx   in src           'make -f Makeapi'
 * g++ has a bug of distinguishing 'static operator delete(void* p)' in
 * different file scope. Deleting this macro will avoid this problem.
 **************************************************************************/
@@ -550,13 +550,13 @@ FILE *fp;
     fprintf(fp,"#ifndef G__ROOT\n");
     fprintf(fp,"  return(malloc(size));\n");
     fprintf(fp,"#else\n");
-    fprintf(fp,"  return new char[size];\n");
+    fprintf(fp,"  return(::operator new(size));\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"}\n\n");
 
 #ifndef G__OLDIMPLEMENTATION1431
     fprintf(fp,"/* dummy, for exception */\n");
-    fprintf(fp,"#if !defined(__BCPLUSPLUS__)\n");
+    fprintf(fp,"#ifdef G__EH_DUMMY_DELETE\n");
     if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
       fprintf(fp,"static ");
     fprintf(fp,"void operator delete(void *p,G__%s_tag* x) {\n",G__NEWID);
@@ -564,7 +564,7 @@ FILE *fp;
     fprintf(fp,"#ifndef G__ROOT\n");
     fprintf(fp,"  free(p);\n");
     fprintf(fp,"#else\n");
-    fprintf(fp,"  delete[] p;\n");
+    fprintf(fp,"  ::operator delete(p);\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"}\n");
     fprintf(fp,"#endif\n\n");
@@ -575,7 +575,7 @@ FILE *fp;
     fprintf(fp,"#ifndef G__ROOT\n");
     fprintf(fp,"  free(p);\n");
     fprintf(fp,"#else\n");
-    fprintf(fp,"  delete[] p;\n");
+    fprintf(fp,"  ::operator delete(p);\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"}\n\n");
     

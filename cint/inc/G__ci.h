@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014063
-#define G__CINTVERSIONSTR  "5.14.63, Nov 19 2000"
+#define G__CINTVERSION      5014064
+#define G__CINTVERSIONSTR  "5.14.64, Nov 26 2000"
 
 
 /**********************************************************************
@@ -167,7 +167,7 @@
 #define G__VMS
 #endif
 
-#if defined(__BORLANDC__) || defined(__BCPLUSPLUS)
+#if defined(__BORLANDC__) || defined(__BCPLUSPLUS) || defined(__BCPLUSPLUS__)
 #ifndef G__BORLAND
 #define G__BORLAND
 #endif
@@ -180,11 +180,19 @@
 #endif
   
 /* added by Fons Radamakers in 2000 Oct 2 */
-#if defined(linux)
+#if defined(__linux) || defined(__linux__)
 #   include <features.h>
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define G__NONSCALARFPOS2
 #   endif
+#endif
+
+/***********************************************************************
+ * Define G__EH_DUMMY_DELETE in order to avoid some compiler dependency
+ * about 'void operator delete(void*,[DLLID]_tag*);'
+ ***********************************************************************/
+#if defined(__HP_aCC)
+#define G__EH_DUMMY_DELETE
 #endif
 
 #ifdef __CINT__

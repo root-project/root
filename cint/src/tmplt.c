@@ -1708,6 +1708,9 @@ int parent_tagnum;
 #ifndef G__PHILIPPE13
   int store_memberfunc_tagnum;
 #endif
+#ifndef G__PHILIPPE29
+  int store_globalcomp;
+#endif
 
   /*******************************************************************
    * open macro and template substitution file and get ready for
@@ -1984,6 +1987,9 @@ int parent_tagnum;
 #ifndef G__PHILIPPE13
   store_memberfunc_tagnum = G__memberfunc_tagnum;
 #endif
+#ifndef G__PHILIPPE29
+  store_globalcomp = G__globalcomp;
+#endif
 
   G__prerun=1;
   G__tagnum = -1;
@@ -2069,6 +2075,9 @@ int parent_tagnum;
 #endif
 #ifndef G__PHILIPPE13
   G__memberfunc_tagnum = store_memberfunc_tagnum;
+#endif
+#ifndef G__PHILIPPE29
+  G__globalcomp = store_globalcomp;
 #endif
 
   /* restore input file */

@@ -31,7 +31,7 @@ void* operator new(size_t size,G__bcstrmdOcxx_tag* p) {
 }
 
 /* dummy, for exception */
-#if !defined(__BCPLUSPLUS__)
+#ifdef G__EH_DUMMY_DELETE
 void operator delete(void *p,G__bcstrmdOcxx_tag* x) {
   if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
 #ifndef G__ROOT

@@ -612,11 +612,20 @@ int type;
 #endif
     }
     else {
-#ifndef G__OLDIMPLEMENTATION1388
-      if(G__iscpp) G__struct.parent_tagnum[i]=G__get_envtagnum();
+#ifndef G__OLDIMPLEMENTATION1446
+      if(G__iscpp) {
+	int env_tagnum;
+	if(-1!=G__def_tagnum) {
+	  if(G__tagdefining!=G__def_tagnum) env_tagnum=G__tagdefining;
+	  else                              env_tagnum=G__def_tagnum;
+	}
+	else env_tagnum = -1;
+	G__struct.parent_tagnum[i]=env_tagnum;
+      }
       else         G__struct.parent_tagnum[i]= -1;
 #else
-      G__struct.parent_tagnum[i]=G__get_envtagnum();
+      if(G__iscpp) G__struct.parent_tagnum[i]=G__get_envtagnum();
+      else         G__struct.parent_tagnum[i]= -1;
 #endif
       strcpy(atom_tagname,temp);
     }

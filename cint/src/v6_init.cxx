@@ -657,6 +657,7 @@ char *argv[] ;
   /*************************************************************
    * Set stderr,stdin,stdout,NULL pointer values to global
    *************************************************************/
+  G__macros[0]='\0';
   G__set_stdio();
 
   /* Signal handling moved after getopt to enable core dump with 'E' */
@@ -677,7 +678,6 @@ char *argv[] ;
    *************************************************************/
   G__breakline[0]='\0';
   G__breakfile[0]='\0';
-  G__macros[0]='\0';
 #ifndef G__OLDIMPLEMENTATION928
   if(G__allincludepath) free(G__allincludepath);
   G__allincludepath=(char*)malloc(1);
@@ -1917,85 +1917,86 @@ int G__init_globals()
 ******************************************************************/
 void G__platformMacro() 
 {
+  char *p;
   char temp[G__ONELINE];
 #ifdef G__CINTVERSION
-  sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION); G__getexpr(temp);
+  sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION); G__add_macro(temp);
 #endif
 #ifdef __linux__
-  sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__getexpr(temp);
+  sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
 #endif
 #ifdef __FreeBSD__
-  sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__getexpr(temp);
+  sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
 #endif
 #ifdef __GNUC__
-  sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__getexpr(temp);
+  sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
 #endif
 #ifdef __GNUC_MINOR__
-  sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__getexpr(temp);
+  sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__add_macro(temp);
 #endif
 #ifdef __GLIBC__
-  sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__getexpr(temp);
+  sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__add_macro(temp);
 #endif
 #ifdef __GLIBC_MINOR__
-  sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__getexpr(temp);
+  sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__add_macro(temp);
 #endif
 #ifdef __hpux
-  sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__getexpr(temp);
+  sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
 #endif
 #ifdef __HP_aCC
-  sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__getexpr(temp);
+  sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
 #endif
 #ifdef __sun
-  sprintf(temp,"G__SUN=%ld",(long)__sun); G__getexpr(temp);
+  sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
 #endif
 #ifdef __sparc
-  sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__getexpr(temp);
+  sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
 #endif
 #ifdef __SUNPRO_CC
-  sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__getexpr(temp);
+  sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
 #endif
 #ifdef __SUNPRO_C
-  sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__getexpr(temp);
+  sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__add_macro(temp);
 #endif
 #ifdef _WIN32
-  sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__getexpr(temp);
+  sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
 #endif
 #ifdef _WINDOWS_
-  sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__getexpr(temp);
+  sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
 #endif
 #ifdef G__VISUAL
-  sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__getexpr(temp);
+  sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
 #endif
 #ifdef _MSC_VAR
-  sprintf(temp,"G__MSC_VAR=%ld",(long)_MSC_VAR); G__getexpr(temp);
+  sprintf(temp,"G__MSC_VAR=%ld",(long)_MSC_VAR); G__add_macro(temp);
 #endif
 #ifdef __SC__
-  sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__getexpr(temp);
+  sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__add_macro(temp);
 #endif
 #ifdef __BORLANDC__
-  sprintf(temp,"G__BORLAND=%ld",(long)__BORLANDC__); G__getexpr(temp);
+  sprintf(temp,"G__BORLAND=%ld",(long)__BORLANDC__); G__add_macro(temp);
 #endif
 #ifdef __BCPLUSPLUS__
-  sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__getexpr(temp);
+  sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
 #if defined(__alpha) && !defined(__linux)
-  sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__getexpr(temp);
+  sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
 #endif
 #ifdef __VMS
-  sprintf(temp,"G__VMS=%ld",(long)__VMS); G__getexpr(temp);
+  sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
 #endif
 #ifdef _AIX
-  sprintf(temp,"G__AIX=%ld",(long)_AIX); G__getexpr(temp);
+  sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
 #endif
 #ifdef __KCC 
-  sprintf(temp,"G__KCC=%ld",(long)__KCC); G__getexpr(temp);
+  sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
 #ifdef G__ROOT
-  sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__getexpr(temp);
+  sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__add_macro(temp);
 #endif
 #ifdef G__CONSTNESSFLAG
 /*
-  sprintf(temp,"G__CONSTNESSFLAG=1"); G__getexpr(temp);
+  sprintf(temp,"G__CONSTNESSFLAG=1"); G__add_macro(temp);
 */
 #endif
 }

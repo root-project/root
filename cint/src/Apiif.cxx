@@ -21,18 +21,18 @@ void* operator new(size_t size,G__ApiifdOcxx_tag* p) {
 #ifndef G__ROOT
   return(malloc(size));
 #else
-  return new char[size];
+  return(::operator new(size));
 #endif
 }
 
 /* dummy, for exception */
-#if !defined(__BCPLUSPLUS__)
+#ifdef G__EH_DUMMY_DELETE
 void operator delete(void *p,G__ApiifdOcxx_tag* x) {
   if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
 #ifndef G__ROOT
   free(p);
 #else
-  delete[] p;
+  ::operator delete(p);
 #endif
 }
 #endif
@@ -42,7 +42,7 @@ static void G__operator_delete(void *p) {
 #ifndef G__ROOT
   free(p);
 #else
-  delete[] p;
+  ::operator delete(p);
 #endif
 }
 

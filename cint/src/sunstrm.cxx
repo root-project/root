@@ -15,14 +15,38 @@ extern "C" void G__set_cpp_environmentG__stream() {
   G__add_compiledheader("sstrm.h");
   G__cpp_reset_tagtableG__stream();
 }
-static void* operator new(size_t size) {
-  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());
+class G__sunstrmdOcxx_tag {};
+
+void* operator new(size_t size,G__sunstrmdOcxx_tag* p) {
+  if(p && G__PVOID!=G__getgvp()) return((void*)p);
 #ifndef G__ROOT
   return(malloc(size));
 #else
-  return new char[size];
+  return(::operator new(size));
 #endif
 }
+
+/* dummy, for exception */
+#ifdef G__EH_DUMMY_DELETE
+void operator delete(void *p,G__sunstrmdOcxx_tag* x) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+#ifndef G__ROOT
+  free(p);
+#else
+  ::operator delete(p);
+#endif
+}
+#endif
+
+static void G__operator_delete(void *p) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+#ifndef G__ROOT
+  free(p);
+#else
+  ::operator delete(p);
+#endif
+}
+
 #include "dllrev.h"
 extern "C" int G__cpp_dllrevG__stream() { return(G__CREATEDLLREV); }
 
@@ -151,7 +175,7 @@ static int G__ios_basecLcLInit_getinit_cnt__0_0(G__value *result7,G__CONST char 
 static int G__ios_basecLcLInit_Init_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    ios_base::Init *p=NULL;
    if(G__getaryconstruct()) {p=0;G__genericerror("Error: Array construction with private/protected destructor is illegal");}
-   else                    p=new ios_base::Init;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) ios_base::Init;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -253,7 +277,7 @@ static int G__char_traitslEchargR_assign_3_1(G__value *result7,G__CONST char *fu
 static int G__char_traitslEchargR_char_traitslEchargR_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    char_traits<char> *p;
    if(G__getaryconstruct()) p=new char_traits<char>[G__getaryconstruct()];
-   else                    p=new char_traits<char>;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) char_traits<char>;
    result7->obj.i = (long)p;
    result7->ref = (long)p;
    result7->type = 'u';
@@ -274,15 +298,18 @@ static int G__char_traitslEchargR_char_traitslEchargR_5_1(G__value *result7,G__C
 }
 
 // automatic destructor
+typedef char_traits<char> G__Tchar_traitslEchargR;
 static int G__char_traitslEchargR_wAchar_traitslEchargR_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (char_traits<char> *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((char_traits<char> *)((G__getstructoffset())+sizeof(char_traits<char>)*i))->~char_traits<char>();
-   else if(G__PVOID==G__getgvp()) delete (char_traits<char> *)(G__getstructoffset());
-   else ((char_traits<char> *)(G__getstructoffset()))->~char_traits<char>();
+         ((char_traits<char> *)((G__getstructoffset())+sizeof(char_traits<char>)*i))->~G__Tchar_traitslEchargR();
+   else {
+     ((char_traits<char> *)(G__getstructoffset()))->~G__Tchar_traitslEchargR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -291,7 +318,7 @@ static int G__char_traitslEchargR_wAchar_traitslEchargR_6_1(G__value *result7,G_
 /* basic_istream<char,char_traits<char> > */
 static int G__basic_istreamlEcharcOchar_traitslEchargRsPgR_basic_istreamlEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_istream<char,char_traits<char> > *p=NULL;
-      p = new basic_istream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -455,15 +482,18 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgR_gcount_1_2(G__value *
 }
 
 // automatic destructor
+typedef basic_istream<char,char_traits<char> > G__Tbasic_istreamlEcharcOchar_traitslEchargRsPgR;
 static int G__basic_istreamlEcharcOchar_traitslEchargRsPgR_wAbasic_istreamlEcharcOchar_traitslEchargRsPgR_3_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_istream<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_istream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_istream<char,char_traits<char> >)*i))->~basic_istream<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_istream<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_istream<char,char_traits<char> > *)(G__getstructoffset()))->~basic_istream<char,char_traits<char> >();
+         ((basic_istream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_istream<char,char_traits<char> >)*i))->~G__Tbasic_istreamlEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_istream<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_istreamlEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -472,7 +502,7 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgR_wAbasic_istreamlEchar
 /* basic_ios<char,char_traits<char> > */
 static int G__basic_ioslEcharcOchar_traitslEchargRsPgR_basic_ioslEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ios<char,char_traits<char> > *p=NULL;
-      p = new basic_ios<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ios<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -595,15 +625,18 @@ static int G__basic_ioslEcharcOchar_traitslEchargRsPgR_widen_1_2(G__value *resul
 }
 
 // automatic destructor
+typedef basic_ios<char,char_traits<char> > G__Tbasic_ioslEcharcOchar_traitslEchargRsPgR;
 static int G__basic_ioslEcharcOchar_traitslEchargRsPgR_wAbasic_ioslEcharcOchar_traitslEchargRsPgR_6_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_ios<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_ios<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ios<char,char_traits<char> >)*i))->~basic_ios<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_ios<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_ios<char,char_traits<char> > *)(G__getstructoffset()))->~basic_ios<char,char_traits<char> >();
+         ((basic_ios<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ios<char,char_traits<char> >)*i))->~G__Tbasic_ioslEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_ios<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_ioslEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -708,15 +741,18 @@ static int G__basic_streambuflEcharcOchar_traitslEchargRsPgR_basic_streambuflEch
 }
 
 // automatic destructor
+typedef basic_streambuf<char,char_traits<char> > G__Tbasic_streambuflEcharcOchar_traitslEchargRsPgR;
 static int G__basic_streambuflEcharcOchar_traitslEchargRsPgR_wAbasic_streambuflEcharcOchar_traitslEchargRsPgR_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_streambuf<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_streambuf<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_streambuf<char,char_traits<char> >)*i))->~basic_streambuf<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_streambuf<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_streambuf<char,char_traits<char> > *)(G__getstructoffset()))->~basic_streambuf<char,char_traits<char> >();
+         ((basic_streambuf<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_streambuf<char,char_traits<char> >)*i))->~G__Tbasic_streambuflEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_streambuf<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_streambuflEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -725,7 +761,7 @@ static int G__basic_streambuflEcharcOchar_traitslEchargRsPgR_wAbasic_streambuflE
 /* basic_ostream<char,char_traits<char> > */
 static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgR_basic_ostreamlEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ostream<char,char_traits<char> > *p=NULL;
-      p = new basic_ostream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -780,15 +816,18 @@ static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgR_tellp_7_0(G__value *r
 }
 
 // automatic destructor
+typedef basic_ostream<char,char_traits<char> > G__Tbasic_ostreamlEcharcOchar_traitslEchargRsPgR;
 static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ostreamlEcharcOchar_traitslEchargRsPgR_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_ostream<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_ostream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ostream<char,char_traits<char> >)*i))->~basic_ostream<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_ostream<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_ostream<char,char_traits<char> > *)(G__getstructoffset()))->~basic_ostream<char,char_traits<char> >();
+         ((basic_ostream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ostream<char,char_traits<char> >)*i))->~G__Tbasic_ostreamlEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_ostream<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_ostreamlEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -797,7 +836,7 @@ static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ostreamlEchar
 /* basic_ostream<char,char_traits<char> >::sentry */
 static int G__basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry_sentry_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ostream<char,char_traits<char> >::sentry *p=NULL;
-      p = new basic_ostream<char,char_traits<char> >::sentry(*(basic_ostream<char,char_traits<char> >*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostream<char,char_traits<char> >::sentry(*(basic_ostream<char,char_traits<char> >*)libp->para[0].ref);
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -816,10 +855,10 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry_sentry_0_0(
    basic_istream<char,char_traits<char> >::sentry *p=NULL;
    switch(libp->paran) {
    case 2:
-      p = new basic_istream<char,char_traits<char> >::sentry(*(basic_istream<char,char_traits<char> >*)libp->para[0].ref,(bool)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istream<char,char_traits<char> >::sentry(*(basic_istream<char,char_traits<char> >*)libp->para[0].ref,(bool)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_istream<char,char_traits<char> >::sentry(*(basic_istream<char,char_traits<char> >*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istream<char,char_traits<char> >::sentry(*(basic_istream<char,char_traits<char> >*)libp->para[0].ref);
       break;
    }
       result7->obj.i = (long)p;
@@ -851,7 +890,7 @@ static int G__basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry_sentry_3_0(
 static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_basic_filebuflEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_filebuf<char,char_traits<char> > *p=NULL;
    if(G__getaryconstruct()) p=new basic_filebuf<char,char_traits<char> >[G__getaryconstruct()];
-   else                    p=new basic_filebuf<char,char_traits<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_filebuf<char,char_traits<char> >;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -861,7 +900,7 @@ static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_basic_filebuflEcharcO
 
 static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_basic_filebuflEcharcOchar_traitslEchargRsPgR_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_filebuf<char,char_traits<char> > *p=NULL;
-      p = new basic_filebuf<char,char_traits<char> >((int)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_filebuf<char,char_traits<char> >((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -910,15 +949,18 @@ static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_basic_filebuflEcharcO
 }
 
 // automatic destructor
+typedef basic_filebuf<char,char_traits<char> > G__Tbasic_filebuflEcharcOchar_traitslEchargRsPgR;
 static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_wAbasic_filebuflEcharcOchar_traitslEchargRsPgR_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_filebuf<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_filebuf<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_filebuf<char,char_traits<char> >)*i))->~basic_filebuf<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_filebuf<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_filebuf<char,char_traits<char> > *)(G__getstructoffset()))->~basic_filebuf<char,char_traits<char> >();
+         ((basic_filebuf<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_filebuf<char,char_traits<char> >)*i))->~G__Tbasic_filebuflEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_filebuf<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_filebuflEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -928,7 +970,7 @@ static int G__basic_filebuflEcharcOchar_traitslEchargRsPgR_wAbasic_filebuflEchar
 static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ifstream<char,char_traits<char> > *p=NULL;
    if(G__getaryconstruct()) p=new basic_ifstream<char,char_traits<char> >[G__getaryconstruct()];
-   else                    p=new basic_ifstream<char,char_traits<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -940,15 +982,15 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEchar
    basic_ifstream<char,char_traits<char> > *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new basic_ifstream<char,char_traits<char> >(
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >(
 (const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1])
 ,(long)G__int(libp->para[2]));
       break;
    case 2:
-      p = new basic_ifstream<char,char_traits<char> >((const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >((const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_ifstream<char,char_traits<char> >((const char*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >((const char*)G__int(libp->para[0]));
       break;
    }
       result7->obj.i = (long)p;
@@ -960,7 +1002,7 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEchar
 
 static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEcharcOchar_traitslEchargRsPgR_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ifstream<char,char_traits<char> > *p=NULL;
-      p = new basic_ifstream<char,char_traits<char> >((int)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -970,7 +1012,7 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEchar
 
 static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_basic_ifstreamlEcharcOchar_traitslEchargRsPgR_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ifstream<char,char_traits<char> > *p=NULL;
-      p = new basic_ifstream<char,char_traits<char> >(
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ifstream<char,char_traits<char> >(
 (int)G__int(libp->para[0]),(basic_ifstream<char,char_traits<char> >::char_type*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1016,15 +1058,18 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_close_8_0(G__value *
 }
 
 // automatic destructor
+typedef basic_ifstream<char,char_traits<char> > G__Tbasic_ifstreamlEcharcOchar_traitslEchargRsPgR;
 static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ifstreamlEcharcOchar_traitslEchargRsPgR_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_ifstream<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_ifstream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ifstream<char,char_traits<char> >)*i))->~basic_ifstream<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_ifstream<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_ifstream<char,char_traits<char> > *)(G__getstructoffset()))->~basic_ifstream<char,char_traits<char> >();
+         ((basic_ifstream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ifstream<char,char_traits<char> >)*i))->~G__Tbasic_ifstreamlEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_ifstream<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_ifstreamlEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1034,7 +1079,7 @@ static int G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ifstreamlEch
 static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ofstream<char,char_traits<char> > *p=NULL;
    if(G__getaryconstruct()) p=new basic_ofstream<char,char_traits<char> >[G__getaryconstruct()];
-   else                    p=new basic_ofstream<char,char_traits<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >;
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1046,15 +1091,15 @@ static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEchar
    basic_ofstream<char,char_traits<char> > *p=NULL;
    switch(libp->paran) {
    case 3:
-      p = new basic_ofstream<char,char_traits<char> >(
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >(
 (const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1])
 ,(long)G__int(libp->para[2]));
       break;
    case 2:
-      p = new basic_ofstream<char,char_traits<char> >((const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >((const char*)G__int(libp->para[0]),(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_ofstream<char,char_traits<char> >((const char*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >((const char*)G__int(libp->para[0]));
       break;
    }
       result7->obj.i = (long)p;
@@ -1066,7 +1111,7 @@ static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEchar
 
 static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEcharcOchar_traitslEchargRsPgR_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ofstream<char,char_traits<char> > *p=NULL;
-      p = new basic_ofstream<char,char_traits<char> >((int)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >((int)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1076,7 +1121,7 @@ static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEchar
 
 static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_basic_ofstreamlEcharcOchar_traitslEchargRsPgR_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_ofstream<char,char_traits<char> > *p=NULL;
-      p = new basic_ofstream<char,char_traits<char> >(
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ofstream<char,char_traits<char> >(
 (int)G__int(libp->para[0]),(basic_ofstream<char,char_traits<char> >::char_type*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2]));
       result7->obj.i = (long)p;
@@ -1122,15 +1167,18 @@ static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_close_8_0(G__value *
 }
 
 // automatic destructor
+typedef basic_ofstream<char,char_traits<char> > G__Tbasic_ofstreamlEcharcOchar_traitslEchargRsPgR;
 static int G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR_wAbasic_ofstreamlEcharcOchar_traitslEchargRsPgR_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_ofstream<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_ofstream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ofstream<char,char_traits<char> >)*i))->~basic_ofstream<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_ofstream<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_ofstream<char,char_traits<char> > *)(G__getstructoffset()))->~basic_ofstream<char,char_traits<char> >();
+         ((basic_ofstream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_ofstream<char,char_traits<char> >)*i))->~G__Tbasic_ofstreamlEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_ofstream<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_ofstreamlEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1141,11 +1189,11 @@ static int G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_
    basic_stringbuf<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = new basic_stringbuf<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringbuf<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new basic_stringbuf<char,char_traits<char>,allocator<char> >[G__getaryconstruct()];
-   else                    p=new basic_stringbuf<char,char_traits<char>,allocator<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringbuf<char,char_traits<char>,allocator<char> >;
       break;
    }
       result7->obj.i = (long)p;
@@ -1159,10 +1207,10 @@ static int G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_
    basic_stringbuf<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 2:
-      p = new basic_stringbuf<char,char_traits<char>,allocator<char> >(*(basic_stringbuf<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringbuf<char,char_traits<char>,allocator<char> >(*(basic_stringbuf<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_stringbuf<char,char_traits<char>,allocator<char> >(*(basic_stringbuf<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringbuf<char,char_traits<char>,allocator<char> >(*(basic_stringbuf<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
       break;
    }
       result7->obj.i = (long)p;
@@ -1201,15 +1249,18 @@ static int G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_
 }
 
 // automatic destructor
+typedef basic_stringbuf<char,char_traits<char>,allocator<char> > G__Tbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 static int G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_wAbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_stringbuf<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_stringbuf<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_stringbuf<char,char_traits<char>,allocator<char> >)*i))->~basic_stringbuf<char,char_traits<char>,allocator<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_stringbuf<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
-   else ((basic_stringbuf<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~basic_stringbuf<char,char_traits<char>,allocator<char> >();
+         ((basic_stringbuf<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_stringbuf<char,char_traits<char>,allocator<char> >)*i))->~G__Tbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+   else {
+     ((basic_stringbuf<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~G__Tbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1220,11 +1271,11 @@ static int G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
    basic_istringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = new basic_istringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new basic_istringstream<char,char_traits<char>,allocator<char> >[G__getaryconstruct()];
-   else                    p=new basic_istringstream<char,char_traits<char>,allocator<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istringstream<char,char_traits<char>,allocator<char> >;
       break;
    }
       result7->obj.i = (long)p;
@@ -1238,10 +1289,10 @@ static int G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
    basic_istringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 2:
-      p = new basic_istringstream<char,char_traits<char>,allocator<char> >(*(basic_istringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istringstream<char,char_traits<char>,allocator<char> >(*(basic_istringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_istringstream<char,char_traits<char>,allocator<char> >(*(basic_istringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_istringstream<char,char_traits<char>,allocator<char> >(*(basic_istringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
       break;
    }
       result7->obj.i = (long)p;
@@ -1273,15 +1324,18 @@ static int G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
 }
 
 // automatic destructor
+typedef basic_istringstream<char,char_traits<char>,allocator<char> > G__Tbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 static int G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_wAbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_istringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_istringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_istringstream<char,char_traits<char>,allocator<char> >)*i))->~basic_istringstream<char,char_traits<char>,allocator<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_istringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
-   else ((basic_istringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~basic_istringstream<char,char_traits<char>,allocator<char> >();
+         ((basic_istringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_istringstream<char,char_traits<char>,allocator<char> >)*i))->~G__Tbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+   else {
+     ((basic_istringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~G__Tbasic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1292,11 +1346,11 @@ static int G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
    basic_ostringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = new basic_ostringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new basic_ostringstream<char,char_traits<char>,allocator<char> >[G__getaryconstruct()];
-   else                    p=new basic_ostringstream<char,char_traits<char>,allocator<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostringstream<char,char_traits<char>,allocator<char> >;
       break;
    }
       result7->obj.i = (long)p;
@@ -1310,10 +1364,10 @@ static int G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
    basic_ostringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 2:
-      p = new basic_ostringstream<char,char_traits<char>,allocator<char> >(*(basic_ostringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostringstream<char,char_traits<char>,allocator<char> >(*(basic_ostringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_ostringstream<char,char_traits<char>,allocator<char> >(*(basic_ostringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_ostringstream<char,char_traits<char>,allocator<char> >(*(basic_ostringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
       break;
    }
       result7->obj.i = (long)p;
@@ -1345,15 +1399,18 @@ static int G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRs
 }
 
 // automatic destructor
+typedef basic_ostringstream<char,char_traits<char>,allocator<char> > G__Tbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 static int G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_wAbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_ostringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_ostringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_ostringstream<char,char_traits<char>,allocator<char> >)*i))->~basic_ostringstream<char,char_traits<char>,allocator<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_ostringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
-   else ((basic_ostringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~basic_ostringstream<char,char_traits<char>,allocator<char> >();
+         ((basic_ostringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_ostringstream<char,char_traits<char>,allocator<char> >)*i))->~G__Tbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+   else {
+     ((basic_ostringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~G__Tbasic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1364,11 +1421,11 @@ static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsP
    basic_stringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = new basic_stringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringstream<char,char_traits<char>,allocator<char> >((ios_base::openmode)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new basic_stringstream<char,char_traits<char>,allocator<char> >[G__getaryconstruct()];
-   else                    p=new basic_stringstream<char,char_traits<char>,allocator<char> >;
+   else p=new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringstream<char,char_traits<char>,allocator<char> >;
       break;
    }
       result7->obj.i = (long)p;
@@ -1382,10 +1439,10 @@ static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsP
    basic_stringstream<char,char_traits<char>,allocator<char> > *p=NULL;
    switch(libp->paran) {
    case 2:
-      p = new basic_stringstream<char,char_traits<char>,allocator<char> >(*(basic_stringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringstream<char,char_traits<char>,allocator<char> >(*(basic_stringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref,(ios_base::openmode)G__int(libp->para[1]));
       break;
    case 1:
-      p = new basic_stringstream<char,char_traits<char>,allocator<char> >(*(basic_stringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_stringstream<char,char_traits<char>,allocator<char> >(*(basic_stringstream<char,char_traits<char>,allocator<char> >::string_type*)libp->para[0].ref);
       break;
    }
       result7->obj.i = (long)p;
@@ -1417,15 +1474,18 @@ static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsP
 }
 
 // automatic destructor
+typedef basic_stringstream<char,char_traits<char>,allocator<char> > G__Tbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_wAbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_stringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_stringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_stringstream<char,char_traits<char>,allocator<char> >)*i))->~basic_stringstream<char,char_traits<char>,allocator<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_stringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset());
-   else ((basic_stringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~basic_stringstream<char,char_traits<char>,allocator<char> >();
+         ((basic_stringstream<char,char_traits<char>,allocator<char> > *)((G__getstructoffset())+sizeof(basic_stringstream<char,char_traits<char>,allocator<char> >)*i))->~G__Tbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+   else {
+     ((basic_stringstream<char,char_traits<char>,allocator<char> > *)(G__getstructoffset()))->~G__Tbasic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
@@ -1434,7 +1494,7 @@ static int G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsP
 /* basic_iostream<char,char_traits<char> > */
 static int G__basic_iostreamlEcharcOchar_traitslEchargRsPgR_basic_iostreamlEcharcOchar_traitslEchargRsPgR_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    basic_iostream<char,char_traits<char> > *p=NULL;
-      p = new basic_iostream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
+      p = new((G__sunstrmdOcxx_tag*)G__getgvp()) basic_iostream<char,char_traits<char> >((basic_streambuf<char,char_traits<char> >*)G__int(libp->para[0]));
       result7->obj.i = (long)p;
       result7->ref = (long)p;
       result7->type = 'u';
@@ -1443,15 +1503,18 @@ static int G__basic_iostreamlEcharcOchar_traitslEchargRsPgR_basic_iostreamlEchar
 }
 
 // automatic destructor
+typedef basic_iostream<char,char_traits<char> > G__Tbasic_iostreamlEcharcOchar_traitslEchargRsPgR;
 static int G__basic_iostreamlEcharcOchar_traitslEchargRsPgR_wAbasic_iostreamlEcharcOchar_traitslEchargRsPgR_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
        delete[] (basic_iostream<char,char_traits<char> > *)(G__getstructoffset());
      else
        for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((basic_iostream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_iostream<char,char_traits<char> >)*i))->~basic_iostream<char,char_traits<char> >();
-   else if(G__PVOID==G__getgvp()) delete (basic_iostream<char,char_traits<char> > *)(G__getstructoffset());
-   else ((basic_iostream<char,char_traits<char> > *)(G__getstructoffset()))->~basic_iostream<char,char_traits<char> >();
+         ((basic_iostream<char,char_traits<char> > *)((G__getstructoffset())+sizeof(basic_iostream<char,char_traits<char> >)*i))->~G__Tbasic_iostreamlEcharcOchar_traitslEchargRsPgR();
+   else {
+     ((basic_iostream<char,char_traits<char> > *)(G__getstructoffset()))->~G__Tbasic_iostreamlEcharcOchar_traitslEchargRsPgR();
+     G__operator_delete((void*)G__getstructoffset());
+   }
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
