@@ -472,7 +472,8 @@ install:
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
-	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
+	   if [ x"$(ARCH)" = x"win32gcc" ] || \
+              [ x"$(PLATFORM)" = x"win32" ]; then \
 	      vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
 	      for lib in $(ALLLIBS) $(CINTLIB); do \
 		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
