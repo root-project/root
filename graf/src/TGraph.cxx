@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.111 2003/09/27 17:48:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.112 2003/10/07 08:58:16 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1179,7 +1179,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
          while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) delete obj;
+            if (obj->InheritsFrom(TF1::Class())) {
+               fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
       fnew1 = new TF1();
