@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.25 2001/12/10 14:42:47 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.26 2002/01/02 21:43:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -293,8 +293,7 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Char_t (content);}
+    virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
@@ -329,8 +328,7 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Short_t (content);}
+    virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
@@ -367,8 +365,7 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Float_t (content);}
+    virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
@@ -405,8 +402,7 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Double_t (content);}
+    virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
