@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.85 2004/05/10 17:31:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.86 2004/05/17 12:13:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1202,7 +1202,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       l.Remove(idx+1);
    if (libs.Index(l) != kNPOS)
       return 1;
-   l.Remove(idx);
+   if (idx != kNPOS) 
+      l.Remove(idx);
    if (l.BeginsWith("lib"))
       l.Replace(0, 3, "-l");
    if (libs.Index(l) != kNPOS)
