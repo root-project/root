@@ -3069,6 +3069,10 @@ G__value G__exec_statement()
   int add_fake_space = 0;
   int fake_space = 0;
 #endif
+#ifndef G__PHILIPPE33
+  int discard_space = 0;
+  int discarded_space = 0;
+#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -3088,6 +3092,9 @@ G__value G__exec_statement()
     } else 
 #endif
       c=G__fgetc();
+#ifndef G__PHILIPPE33
+    discard_space = 0;
+#endif
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3108,6 +3115,9 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
       }
       else {
+#ifndef G__PHILIPPE33
+        discard_space = 1;
+#endif
 	if(spaceflag==1) {
 	  statement[iout] = '\0' ;
 	  /* search keyword */
@@ -4513,7 +4523,14 @@ G__value G__exec_statement()
       
     default:
       /* G__CHECK(G__SECURE_BUFFER_SIZE,iout==G__LONGLINE,return(G__null)); */
+#ifndef G__PHILIPPE33
+      if (discarded_space && iout) {
+         /* since the character following a discarded space is NOT a
+            separator, we have to keep the space */
+         statement[iout++] = ' ';
+      }
       statement[iout++] = c ;
+#endif
       spaceflag |= 1;
 #ifdef G__MULTIBYTE
       if(G__IsDBCSLeadByte(c)) {
@@ -4524,6 +4541,9 @@ G__value G__exec_statement()
 #endif
       break;
     } /* end of switch */
+#ifndef G__PHILIPPE33
+    discarded_space = discard_space;
+#endif
   } /* end of infinite loop */
   
 }
