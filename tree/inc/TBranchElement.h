@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.26 2002/11/13 17:32:05 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.27 2003/03/04 22:24:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
     TBranchElement  *GetBranchCount2() const {return fBranchCount2;}
     virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}
+            Int_t    GetDataMemberOffset(const TClass *cl, const char *name);
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
             const char  *GetIconName() const;
             Int_t    GetID() const {return fID;}

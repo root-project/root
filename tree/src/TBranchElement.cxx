@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.106 2003/03/06 21:53:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.107 2003/04/04 14:58:14 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -848,6 +848,42 @@ void TBranchElement::FillLeaves(TBuffer &b)
 }
 
 //______________________________________________________________________________
+Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
+{
+// return offset od member name in class cl
+// check for the following cases Otto and Axel
+//
+// case Otto
+//    class TUsrSevtData2:public TMrbSubevent_Caen {
+//    class TMrbSubevent_Caen:public TObject {
+//       TUsrHitBuffer fHitBuffer;
+//    class TUsrHitBuffer:public TObject {
+//       Int_t fHighWater;
+//       TClonesArray *fHits;
+//    code below to get the correct address for fHitBuffer.fHits
+//
+// case Axel
+//    class jet: public TLorentzVector {
+//    TClonesArray* caJet=new TClonesArray("jet");
+//    TTree* tree=new TTree("test","test",99);
+//    tree->Branch("jet", "TClonesArray",&caJet, 32000);
+
+   TRealData *rd = cl->GetRealData(name);
+   if (!rd) {
+      char aname[512];
+      strcpy(aname,name);
+      char *dot = (char*)strchr(aname,'.');
+      if (!dot) return 0;
+      *dot = 0;
+      rd = cl->GetRealData(aname);
+      if (rd) return -rd->GetThisOffset();
+   } else {
+     return rd->GetThisOffset();
+   }
+   return 0;
+} 
+  
+//______________________________________________________________________________
 Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 {
 //*-*-*-*-*Read all branches of a BranchElement and return total number of bytes
@@ -1395,6 +1431,7 @@ void TBranchElement::SetAddress(void *add)
 
    TClass *clparent = gROOT->GetClass(GetParentName());
    TClass *clm = gROOT->GetClass(GetClassName());
+   Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
    if (fType == 31) {
       if (fClassName != fParentName) {
          if (clparent != clm) {
@@ -1403,9 +1440,9 @@ void TBranchElement::SetAddress(void *add)
             else       clast  = strchr(GetName(),'.');
             if (clast) {
                if (!clparent || !clm) return;
-               Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
-               fOffset = clparent->GetDataMemberOffset(clast+1) - offsets[fID];
-               //printf("clast+1=%s, fOffset=%d, offsets[%d]=%d, parentname=%s\n",clast,fOffset,fID,offsets[fID],fBranchCount->GetName());
+               Int_t mOffset  = GetDataMemberOffset(clparent,clast+1);
+               if (mOffset > 0) fOffset = mOffset -offsets[fID];
+               else             fOffset = -mOffset;
             }
          }
       }
@@ -1413,31 +1450,14 @@ void TBranchElement::SetAddress(void *add)
    }
    if (nbranches == 0) {
       if (clparent) {
-         Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
          if (clparent != clm) {
             const char *clast = strstr(GetName(),Form("%s.",fParentName.Data()));
             if (clast) {
                fObject += clparent->GetDataMemberOffset(clast+1) -offsets[fID];
             } else {
-               TRealData *rd = clparent->GetRealData(GetName());
-               if (!rd) {
-                  //Otto case
-                  //class TUsrSevtData2:public TMrbSubevent_Caen {
-                  //class TMrbSubevent_Caen:public TObject {
-                  //   TUsrHitBuffer fHitBuffer;
-                  //class TUsrHitBuffer:public TObject {
-                  //   Int_t fHighWater;
-                  //   TClonesArray *fHits;
-                  // code below to get the correct address for fHitBuffer.fHits
-                  char aname[512];
-                  strcpy(aname,GetName());
-                  char *dot = (char*)strchr(aname,'.');
-                  *dot = 0;
-                  rd = clparent->GetRealData(aname);
-                  if (rd) fObject += rd->GetThisOffset();
-               } else {
-                  fObject += rd->GetThisOffset() -offsets[fID];
-               }
+               Int_t mOffset  = GetDataMemberOffset(clparent,GetName());
+               if (mOffset > 0) fObject += mOffset -offsets[fID];
+               else             fObject -= mOffset;
             }
          }
       }
@@ -1459,22 +1479,11 @@ void TBranchElement::SetAddress(void *add)
 
       if (nb2 > 0) {
          if (info) {
-            TRealData *rd = clparent->GetRealData(branch->GetName());
-            Int_t mOffset = 0;
-            if (!rd) {
-               //Otto case (see above)
-               char aname[512];
-               strcpy(aname,branch->GetName());
-               char *dot = (char*)strchr(aname,'.');
-               if (dot) {
-                  *dot = 0;
-                  rd = clparent->GetRealData(aname);
-                  if (rd) mOffset = rd->GetThisOffset();
-               }
-            }
             Int_t *leafOffsets = info->GetOffsets();
+            Int_t mOffset  = GetDataMemberOffset(clparent,branch->GetName());
+            if (mOffset > 0) mOffset = 0;
             if (leafOffsets) {
-               branch->SetAddress(fObject + mOffset + leafOffsets[id]);
+               branch->SetAddress(fObject - mOffset + leafOffsets[id]);
             } else {
                Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
             }
@@ -1599,7 +1608,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
       elem = (TStreamerElement*)elems[i];
       Int_t offset = elem->GetOffset();
       char *oldPointer = fBranchPointer;
-      if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%x \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer);
+      if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%lx \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer);
       if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
          //here one should consider the case of a TClonesArray with a class
