@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.11 2004/03/05 11:13:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.12 2004/03/05 11:29:02 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -89,7 +89,7 @@ public:
    Bool_t    IsEditable() const { return fRoot != fDefaultRoot; }
    TGWindow *GetWindowById(Window_t sw) const;
 
-   FontStruct_t GetFontByName(const char *name) const;
+   FontStruct_t GetFontByName(const char *name, Bool_t fixedDefault = kTRUE) const;
    Bool_t  GetColorByName(const char *name, Pixel_t &pixel) const;
    Pixel_t GetHilite(Pixel_t base_color) const;
    Pixel_t GetShadow(Pixel_t base_color) const;
@@ -121,7 +121,7 @@ public:
    void             FreeGC(GContext_t gc);
 
    TGFontPool      *GetFontPool() const { return fFontPool; }
-   TGFont          *GetFont(const char *font);
+   TGFont          *GetFont(const char *font, Bool_t fixedDefault = kTRUE);
    TGFont          *GetFont(const TGFont *font);
    void             FreeFont(const TGFont *font);
 

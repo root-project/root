@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.1 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.2 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -101,9 +101,11 @@ TGFontPool::~TGFontPool()
 }
 
 //______________________________________________________________________________
-TGFont *TGFontPool::GetFont(const char *font)
+TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
 {
    // Get the specified font. Returns 0 if error or no font can be found.
+   // If fixedDefault is false the "fixed" font will not be substituted
+   // as fallback when the asked for font does not exist.
 
    if (!font || !*font) {
       Error("GetFont", "argument may not be 0 or empty");
@@ -117,7 +119,7 @@ TGFont *TGFontPool::GetFont(const char *font)
       return f;
    }
 
-   FontStruct_t fs = fClient->GetFontByName(font);
+   FontStruct_t fs = fClient->GetFontByName(font, fixedDefault);
    if (fs) {
       f = new TGFont(font);
       f->fFontStruct = fs;

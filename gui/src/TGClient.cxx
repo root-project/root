@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.32 2004/03/05 11:29:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.33 2004/03/15 17:13:58 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -246,12 +246,15 @@ void TGClient::FreeGC(GContext_t gc)
 }
 
 //______________________________________________________________________________
-TGFont *TGClient::GetFont(const char *font)
+TGFont *TGClient::GetFont(const char *font, Bool_t fixedDefault)
 {
    // Get a font from the font pool. Fonts must be freed via
-   // TGClient::FreeFont().
+   // TGClient::FreeFont(). Returns 0 in case of error or if font
+   // does not exist. If fixedDefault is false the "fixed" font
+   // will not be substituted as fallback when the asked for font
+   // does not exist.
 
-   return fFontPool->GetFont(font);
+   return fFontPool->GetFont(font, fixedDefault);
 }
 
 //______________________________________________________________________________
@@ -307,21 +310,27 @@ Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
 }
 
 //______________________________________________________________________________
-FontStruct_t TGClient::GetFontByName(const char *name) const
+FontStruct_t TGClient::GetFontByName(const char *name, Bool_t fixedDefault) const
 {
    // Get a font by name. If font is not found, fixed font is returned,
    // if fixed font also does not exist return 0 and print error.
    // The loaded font needs to be freed using TVirtualX::DeleteFont().
+   // If fixedDefault is false the "fixed" font will not be substituted
+   // as fallback when the asked for font does not exist.
 
    FontStruct_t font = gVirtualX->LoadQueryFont(name);
 
-   if (!font) {
+   if (!font && fixedDefault) {
       font = gVirtualX->LoadQueryFont("fixed");
       if (font)
          Warning("GetFontByName", "couldn't retrieve font %s, using \"fixed\"", name);
    }
-   if (!font)
-      Error("GetFontByName", "couldn't retrieve font %s nor backup font \"fixed\"", name);
+   if (!font) {
+      if (fixedDefault)
+         Error("GetFontByName", "couldn't retrieve font %s nor backup font \"fixed\"", name);
+      else
+         Warning("GetFontByName", "couldn't retrieve font %s", name);
+   }
 
    return font;
 }

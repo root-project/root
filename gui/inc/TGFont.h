@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.1 2003/05/28 11:55:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.2 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    TGFontPool(TGClient *client);
    virtual ~TGFontPool();
 
-   TGFont  *GetFont(const char *font);
+   TGFont  *GetFont(const char *font, Bool_t fixedDefault = kTRUE);
    TGFont  *GetFont(const TGFont *font);
 
    void     FreeFont(const TGFont *font);
