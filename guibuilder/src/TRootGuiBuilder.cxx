@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.23 2004/10/14 07:23:06 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.24 2004/10/14 10:09:30 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 
-#include "TGuiBuilder.h"
+#include "TRootGuiBuilder.h"
 #include "TGuiBldDragManager.h"
 #include "TGuiBldEditor.h"
 
@@ -38,7 +38,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //
-// TGuiBuilder
+// TRootGuiBuilder
 //
 //
 //  ************************************************
@@ -211,25 +211,25 @@ static ToolBarData_t gToolBarData[] = {
 };
 
 
-ClassImp(TGuiBuilder)
+ClassImp(TRootGuiBuilder)
 
 ////////////////////////////////////////////////////////////////////////////////
-class TGuiBuilderContainer : public TGMdiContainer {
+class TRootGuiBuilderContainer : public TGMdiContainer {
 
 public:
-   TGuiBuilderContainer(const TGMdiMainFrame *p) :
+   TRootGuiBuilderContainer(const TGMdiMainFrame *p) :
          TGMdiContainer(p, 10, 10, kOwnBackground) {
       const TGPicture *pbg = fClient->GetPicture("bld_bg.xpm");
       if (pbg) SetBackgroundPixmap(pbg->GetPicture());
       //SetEditDisabled(kFALSE);
    }
-   virtual ~TGuiBuilderContainer() {}
+   virtual ~TRootGuiBuilderContainer() {}
    void SetEditable(Bool_t) {}
    Bool_t HandleEvent(Event_t*) { return kFALSE; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
+TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
              TGMainFrame(p ? p : gClient->GetDefaultRoot(), 1, 1)
 {
    // ctor
@@ -239,8 +239,10 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
 
    if (gDragManager) {
       fManager = (TGuiBldDragManager *)gDragManager;
-      fManager->SetBuilder(this);
+   } else {
+      fManager = new TGuiBldDragManager();
    }
+   fManager->SetBuilder(this);
 
    fMenuBar = new TGMdiMenuBar(this, 10, 10);
    AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -266,8 +268,8 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
       TGPictureButton *pb = (TGPictureButton*)fToolBar->AddButton(this, &gToolBarData[i], spacing);
       TGToolTip *tip = pb->GetToolTip();
       if (tip) {
-         tip->Connect("Reset()", "TGuiBuilder", this, "UpdateStatusBar()");
-         tip->Connect("Hide()", "TGuiBuilder", this, "EraseStatusBar()");
+         tip->Connect("Reset()", "TRootGuiBuilder", this, "UpdateStatusBar()");
+         tip->Connect("Hide()", "TRootGuiBuilder", this, "EraseStatusBar()");
       }
 
       TString pname = gToolBarData[i].fPixmap;
@@ -308,7 +310,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    delete fMain->GetContainer();
-   fMain->SetContainer(new TGuiBuilderContainer(fMain));
+   fMain->SetContainer(new TRootGuiBuilderContainer(fMain));
 
    if (fManager) {
       fEditor = new TGuiBldEditor(cf);
@@ -419,12 +421,12 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    AddAction(act, "Containers");
 
    act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
-   act->fAct = "TGuiBuilder::VSplitter()";
+   act->fAct = "TRootGuiBuilder::VSplitter()";
    act->fPic = "bld_hpaned.xpm";
    AddAction(act, "Containers");
 
    act = new TGuiBldAction("TGHSplitter", "Vertical Panes", kGuiBldFunc);
-   act->fAct = "TGuiBuilder::HSplitter()";
+   act->fAct = "TRootGuiBuilder::HSplitter()";
    act->fPic = "bld_vpaned.xpm";
    AddAction(act, "Containers");
 
@@ -444,28 +446,28 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    fSelected = 0;
    Update();
 
-   fMenuFile->Connect("Activated(Int_t)", "TGuiBuilder", this,
+   fMenuFile->Connect("Activated(Int_t)", "TRootGuiBuilder", this,
                       "HandleMenu(Int_t)");
-   fMenuWindow->Connect("Activated(Int_t)", "TGuiBuilder", this,
+   fMenuWindow->Connect("Activated(Int_t)", "TRootGuiBuilder", this,
                         "HandleMenu(Int_t)");
-   fMenuHelp->Connect("Activated(Int_t)", "TGuiBuilder", this,
+   fMenuHelp->Connect("Activated(Int_t)", "TRootGuiBuilder", this,
                       "HandleMenu(Int_t)");
 
-   fMain->Connect("FrameClosed(Int_t)", "TGuiBuilder", this, "HandleWindowClosed(Int_t)");
+   fMain->Connect("FrameClosed(Int_t)", "TRootGuiBuilder", this, "HandleWindowClosed(Int_t)");
 
    BindKeys();
    MapRaised();
 }
 
 //______________________________________________________________________________
-TGuiBuilder::~TGuiBuilder()
+TRootGuiBuilder::~TRootGuiBuilder()
 {
    // destructor
 
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
+void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 {
    //
 
@@ -490,7 +492,7 @@ void TGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 
    btn->SetToolTipText(act->GetTitle());
    btn->SetUserData((void*)act);
-   btn->Connect("Clicked()", "TGuiBuilder", this, "HandleButtons()");
+   btn->Connect("Clicked()", "TRootGuiBuilder", this, "HandleButtons()");
 
    hf->AddFrame(btn, new TGLayoutHints(kLHintsTop | kLHintsCenterY, 1, 1, 1, 1));
 
@@ -505,7 +507,7 @@ void TGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::AddSection(const char *sect)
+void TRootGuiBuilder::AddSection(const char *sect)
 {
    //
 
@@ -515,7 +517,7 @@ void TGuiBuilder::AddSection(const char *sect)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::HandleButtons()
+void TRootGuiBuilder::HandleButtons()
 {
    //
 
@@ -529,7 +531,7 @@ void TGuiBuilder::HandleButtons()
 }
 
 //______________________________________________________________________________
-TGFrame *TGuiBuilder::ExecuteAction()
+TGFrame *TRootGuiBuilder::ExecuteAction()
 {
    //
 
@@ -553,7 +555,7 @@ TGFrame *TGuiBuilder::ExecuteAction()
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::InitMenu()
+void TRootGuiBuilder::InitMenu()
 {
    //
 
@@ -592,7 +594,7 @@ void TGuiBuilder::InitMenu()
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::ChangeSelected(TGFrame *f)
+void TRootGuiBuilder::ChangeSelected(TGFrame *f)
 {
    //
 
@@ -601,7 +603,7 @@ void TGuiBuilder::ChangeSelected(TGFrame *f)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::EnableLassoButtons(Bool_t on)
+void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 {
    //
 
@@ -634,7 +636,7 @@ void TGuiBuilder::EnableLassoButtons(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::EnableSelectedButtons(Bool_t on)
+void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 {
    //
 
@@ -677,7 +679,7 @@ void TGuiBuilder::EnableSelectedButtons(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::EnableEditButtons(Bool_t on)
+void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 {
    //
 
@@ -725,7 +727,7 @@ void TGuiBuilder::EnableEditButtons(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::Update()
+void TRootGuiBuilder::Update()
 {
    //
 
@@ -735,7 +737,7 @@ void TGuiBuilder::Update()
 }
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::IsSelectMode() const
+Bool_t TRootGuiBuilder::IsSelectMode() const
 {
    //
 
@@ -748,7 +750,7 @@ Bool_t TGuiBuilder::IsSelectMode() const
 }
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::IsGrabButtonDown() const
+Bool_t TRootGuiBuilder::IsGrabButtonDown() const
 {
    //
 
@@ -771,7 +773,7 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
                                          0,             0 };
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::HandleKey(Event_t *event)
+Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 {
    // keys handling
 
@@ -797,7 +799,7 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::NewProject(Event_t *)
+Bool_t TRootGuiBuilder::NewProject(Event_t *)
 {
    // create a new project
 
@@ -827,7 +829,7 @@ public:
 };
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::OpenProject(Event_t *event)
+Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
    //
 
@@ -868,7 +870,7 @@ Bool_t TGuiBuilder::OpenProject(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGuiBuilder::SaveProject(Event_t *event)
+Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
    //
 
@@ -927,7 +929,7 @@ Bool_t TGuiBuilder::SaveProject(Event_t *event)
 }
 
 //______________________________________________________________________________
-TGMdiFrame *TGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
+TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 {
    //
 
@@ -944,7 +946,7 @@ TGMdiFrame *TGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::HandleMenu(Int_t id)
+void TRootGuiBuilder::HandleMenu(Int_t id)
 {
    // Handle menu items.
 
@@ -1016,7 +1018,7 @@ void TGuiBuilder::HandleMenu(Int_t id)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::HandleWindowClosed(Int_t id)
+void TRootGuiBuilder::HandleWindowClosed(Int_t id)
 {
    //
 
@@ -1031,7 +1033,7 @@ void TGuiBuilder::HandleWindowClosed(Int_t id)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::CloseWindow()
+void TRootGuiBuilder::CloseWindow()
 {
    //
 
@@ -1039,7 +1041,7 @@ void TGuiBuilder::CloseWindow()
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::UpdateStatusBar(const char *txt)
+void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 {
    //
 
@@ -1061,7 +1063,7 @@ void TGuiBuilder::UpdateStatusBar(const char *txt)
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::EraseStatusBar()
+void TRootGuiBuilder::EraseStatusBar()
 {
    //
 
@@ -1071,7 +1073,7 @@ void TGuiBuilder::EraseStatusBar()
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::BindKeys()
+void TRootGuiBuilder::BindKeys()
 {
    //
 
@@ -1167,7 +1169,7 @@ void TGuiBuilder::BindKeys()
 }
 
 //______________________________________________________________________________
-TGFrame *TGuiBuilder::VSplitter()
+TGFrame *TRootGuiBuilder::VSplitter()
 {
    //
 
@@ -1190,7 +1192,7 @@ TGFrame *TGuiBuilder::VSplitter()
 }
 
 //______________________________________________________________________________
-TGFrame *TGuiBuilder::HSplitter()
+TGFrame *TRootGuiBuilder::HSplitter()
 {
    //
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.5 2004/09/21 10:09:18 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.7 2004/09/22 09:28:47 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGuiBuilder
-#define ROOT_TGuiBuilder
+#ifndef ROOT_TRootGuiBuilder
+#define ROOT_TRootGuiBuilder
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGuiBuilder                                                          //
+// TRootGuiBuilder                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
-#ifndef ROOT_TVirtualGuiBld
-#include "TVirtualGuiBld.h"
+#ifndef ROOT_TGuiBuilder
+#include "TGuiBuilder.h"
 #endif
 
 
@@ -38,7 +38,7 @@ class TGToolBar;
 class TGMdiFrame;
 class TGuiBldEditor;
 
-class TGuiBuilder : public TVirtualGuiBld, public TGMainFrame {
+class TRootGuiBuilder : public TGuiBuilder, public TGMainFrame {
 
 private:
    TGuiBldDragManager *fManager;    // drag and drop manager
@@ -64,8 +64,8 @@ private:
    void BindKeys();
 
 public:
-   TGuiBuilder(const TGWindow *p = 0);
-   virtual ~TGuiBuilder();
+   TRootGuiBuilder(const TGWindow *p = 0);
+   virtual ~TRootGuiBuilder();
 
    virtual void      AddAction(TGuiBldAction *act, const char *sect);
    virtual void      AddSection(const char *sect);
@@ -92,7 +92,7 @@ public:
    static TGFrame   *HSplitter();
    static TGFrame   *VSplitter();
 
-   ClassDef(TGuiBuilder,0)  // ROOT GUI Builder
+   ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };
 
 

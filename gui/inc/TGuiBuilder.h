@@ -1,4 +1,4 @@
-// $Id: TVirtualGuiBld.h,v 1.4 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.57 2004/10/07 09:56:53 rdm Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TVirtualGuiBld
-#define ROOT_TVirtualGuiBld
+#ifndef ROOT_TGuiBuilder
+#define ROOT_TGuiBuilder
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TVirtualGuiBld                                                       //
+// TGuiBuilder                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -24,19 +24,22 @@
 #include "TNamed.h"
 #endif
 
-enum EGuiBldAction { kGuiBldNone, kGuiBldCtor,  kGuiBldProj, 
+enum EGuiBldAction { kGuiBldNone, kGuiBldCtor,  kGuiBldProj,
                      kGuiBldMacro, kGuiBldFunc };
 
 class TGFrame;
+class TGLayoutHints;
 //////////////////////////////////////////////////////////////////////////
 class TGuiBldAction : public TNamed {
 
 public:
-   Int_t       fType;   // type of action
-   TString     fAct;    // action
-   const char *fPic;    // picture name
+   Int_t          fType;   // type of action
+   TString        fAct;    // action, after action execution new frame is created
+   const char    *fPic;    // picture name
+   TGLayoutHints *fHints;  // layout hints for frame created by action
 
-   TGuiBldAction(const char *name = 0, const char *title = 0, Int_t type = kGuiBldCtor);
+   TGuiBldAction(const char *name = 0, const char *title = 0,
+                 Int_t type = kGuiBldCtor, TGLayoutHints *hints = 0);
    virtual ~TGuiBldAction();
 
    ClassDef(TGuiBldAction,0)  // gui builder action
@@ -44,29 +47,29 @@ public:
 
 
 //////////////////////////////////////////////////////////////////////////
-class TVirtualGuiBld {
+class TGuiBuilder {
 
 protected:
    TGuiBldAction *fAction;   // current action
 
 public:
-   TVirtualGuiBld();
-   virtual ~TVirtualGuiBld();
+   TGuiBuilder();
+   virtual ~TGuiBuilder();
 
-   virtual void      AddAction(TGuiBldAction *, const char * /*section*/) = 0;
-   virtual void      AddSection(const char * /*section*/) = 0;
+   virtual void      AddAction(TGuiBldAction *, const char * /*section*/) {}
+   virtual void      AddSection(const char * /*section*/) {}
    virtual TGFrame  *ExecuteAction() { return 0; }
    virtual void      SetAction(TGuiBldAction *act) { fAction = act; }
    TGuiBldAction    *GetAction() const { return fAction; }
    virtual Bool_t    IsExecutalble() const  { return fAction && !fAction->fAct.IsNull(); }
-   virtual void      Show() = 0;
-   virtual void      Hide() = 0;
+   virtual void      Show() {}
+   virtual void      Hide() {}
 
-   static  TVirtualGuiBld  *Instance();
+   static  TGuiBuilder  *Instance();
 
-   ClassDef(TVirtualGuiBld,0)  // ABC for gui builder
+   ClassDef(TGuiBuilder,0)  // ABC for gui builder
 };
 
-R__EXTERN TVirtualGuiBld *gGuiBuilder; // global gui builder
+R__EXTERN TGuiBuilder *gGuiBuilder; // global gui builder
 
 #endif
