@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.4 2000/08/04 13:21:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.5 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -59,6 +59,7 @@
 #include "TGListTree.h"
 #include "TGTextEdit.h"
 #include "TGToolTip.h"
+#include "TGProgressBar.h"
 
 
 static Pixmap_t checkered, checkered1;
@@ -206,6 +207,10 @@ FontStruct_t TGTreeLBEntry::fgDefaultFontStruct;
 TGGC TGStatusBar::fgDefaultGC;
 FontStruct_t TGStatusBar::fgDefaultFontStruct;
 
+TGGC TGProgressBar::fgDefaultBarColorGC;
+TGGC TGProgressBar::fgDefaultGC;
+FontStruct_t TGProgressBar::fgDefaultFontStruct;
+
 FontStruct_t TGListTree::fgDefaultFontStruct;
 
 ULong_t TGToolTip::fgLightYellowPixel;
@@ -347,6 +352,7 @@ TGClient::TGClient(const char *dpyName)
    TGCheckButton::fgDefaultFontStruct =
    TGTextButton::fgDefaultFontStruct =
    TGMenuTitle::fgDefaultFontStruct =
+   TGProgressBar::fgDefaultFontStruct =
    TGPopupMenu::fgDefaultFontStruct = GetFontByName(norm_font);
    TGPopupMenu::fgHilightFontStruct = GetFontByName(bold_font);
 
@@ -406,6 +412,7 @@ TGClient::TGClient(const char *dpyName)
    TGTextLBEntry::fgDefaultGC.SetAttributes(&gval);
    TGTreeLBEntry::fgDefaultGC.SetAttributes(&gval);
    TGTextView::fgDefaultGC.SetAttributes(&gval);
+   TGProgressBar::fgDefaultGC.SetAttributes(&gval);
 
    TGFrame::fgDefaultFrameBackground = fBackColor;
    TGFrame::fgDefaultSelectedBackground = gval.fForeground = fSelBackColor;
@@ -413,6 +420,7 @@ TGClient::TGClient(const char *dpyName)
    TGTextEntry::fgDefaultSelectedBackgroundGC =
    TGTextView::fgDefaultSelectedBackgroundGC =
    TGPopupMenu::fgDefaultSelectedBackgroundGC;
+   TGProgressBar::fgDefaultBarColorGC.SetAttributes(&gval);
 
    TGLVEntry::fgSelPixel =
    TGTextLBEntry::fgSelPixel =

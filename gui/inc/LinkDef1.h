@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.2 2000/06/27 15:12:23 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.3 2000/09/29 08:57:05 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -82,5 +82,8 @@
 #pragma link C++ class TGVertical3DLine;
 #pragma link C++ class TGGC;
 #pragma link C++ class TGGCPool;
+#pragma link C++ class TGProgressBar;
+#pragma link C++ class TGHProgressBar;
+#pragma link C++ class TGVProgressBar;
 
 #endif
