@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.43 2001/05/24 16:37:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.44 2001/05/25 09:45:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -926,7 +926,8 @@ void TBranchElement::SetAddress(void *add)
          strcpy(ename,lastdot+1);
          TStreamerInfo *einfo = clparent->GetStreamerInfo();
          TStreamerElement *elem = (TStreamerElement*)einfo->GetElements()->FindObject(ename);
-         if (elem) fOffset = elem->GetOffset();         
+         if (!elem) return;
+         fOffset = elem->GetOffset();         
          TClass *clabove = elem->GetClassPointer();
          if (!clabove) return;
          Int_t baseOffset = 0;
