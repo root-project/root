@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.97 2005/01/04 11:36:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.98 2005/01/08 16:09:02 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2311,7 +2311,7 @@ void TF1::Paint(Option_t *option)
 //*-*- Copy Function attributes to histogram attributes
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
-   if (minimum <= 0 && gPad->GetLogy()) minimum = -1111; //this can happen when switching from lin to log scale
+   if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; //this can happen when switching from lin to log scale
    if (minimum == -1111) { //this can happen after unzooming
       if (fHistogram->TestBit(TH1::kIsZoomed)) {
          minimum = fHistogram->GetYaxis()->GetXmin();
@@ -2323,7 +2323,7 @@ void TF1::Paint(Option_t *option)
                Double_t hmax = fHistogram->GetMaximum();
                hmin -= 0.05*(hmax-hmin);
                if (hmin < 0) hmin = 0;
-               if (hmin <= 0 && gPad->GetLogy()) hmin = 0.001*hmax;
+               if (hmin <= 0 && gPad && gPad->GetLogy()) hmin = 0.001*hmax;
                minimum = hmin;
             }
          }
