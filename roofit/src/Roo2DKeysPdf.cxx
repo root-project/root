@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.7 2001/12/09 00:34:37 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -12,8 +12,6 @@
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
-
 #include "RooFitModels/Roo2DKeysPdf.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "TH2.h"
@@ -39,6 +37,8 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
   x("x", this, other.x),
   y("y", this, other.y)
 {
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::Roo2DKeysPdf copy ctor" << endl; }
+
   _xMean   = other._xMean;
   _xSigma  = other._xSigma;
   _yMean   = other._yMean;
@@ -53,13 +53,16 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
   _sqrt2pi = other._sqrt2pi;
   _nEvents = other._nEvents;
   _n16     = other._n16;
+  _debug   = other._debug;
+  _verbosedebug   = other._verbosedebug;
+  _vverbosedebug  = other._vverbosedebug;
 
   _lox       = other._lox;
   _hix       = other._hix;
   _loy       = other._loy;
   _hiy       = other._hiy;
-  _xbinWidth = other._xbinWidth;
-  _ybinWidth = other._ybinWidth;
+  _xoffset   = other._xoffset;
+  _yoffset   = other._yoffset;
 
   _x  = new Double_t[_nEvents];
   _y  = new Double_t[_nEvents];
@@ -74,37 +77,43 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
     _hx[iEvt] = other._hx[iEvt];
     _hy[iEvt] = other._hy[iEvt];
   }
-
-  //copy the PDF LUT
-  for (Int_t _ix=0;_ix<_nPoints;++_ix) 
-  {
-    for (Int_t _iy=0;_iy<_nPoints;++_iy) 
-    {
-      _p[_ix][_iy] = other._p[_ix][_iy];
-    }
-  }
 }
 
 Roo2DKeysPdf::~Roo2DKeysPdf() {
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::Roo2KeysPdf dtor" << endl; }
     delete[] _x;
     delete[] _hx;
     delete[] _y;
     delete[] _hy;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Load a new data set into the class instance.  If the calculation fails, //
+//    return 1                                                             //
+//    return 0 indicates a success                                         //
+/////////////////////////////////////////////////////////////////////////////
 Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 {
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet" << endl; }
+
+  setOptions(options);
+
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)" << endl; }
+
   _2pi       = 2.0*M_PI;   //use pi from math.h
   _sqrt2pi   = sqrt(_2pi);
   _nEvents   = (Int_t)data.numEntries();
+  if(_nEvents == 0) 
+  {
+    cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
+    return 1;
+  }
   _n16       =  pow (_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
 
   _lox       = x.min();
   _hix       = x.max();
   _loy       = y.min();
   _hiy       = y.max();
-  _xbinWidth = (_hix-_lox)/(_nPoints-1);
-  _ybinWidth = (_hiy-_loy)/(_nPoints-1);
 
   _x  = new Double_t[_nEvents];
   _y  = new Double_t[_nEvents];
@@ -113,10 +122,10 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
   Double_t x0 = 0.0;
   Double_t x1 = 0.0;
-  Double_t x2 = 0.0;
+  Double_t x_2 = 0.0;
   Double_t y0 = 0.0;
   Double_t y1 = 0.0;
-  Double_t y2 = 0.0;
+  Double_t y_2 = 0.0;
 
   //check that the data contain the variable we are interested in  
   Int_t bad = 0;
@@ -151,8 +160,8 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
     _x[j] = X->getVal() ;
     _y[j] = Y->getVal() ;
 
-    x0+=1; x1+=_x[j]; x2+=_x[j]*_x[j];
-    y0+=1; y1+=_y[j]; y2+=_y[j]*_y[j];
+    x0+=1; x1+=_x[j]; x_2+=_x[j]*_x[j];
+    y0+=1; y1+=_y[j]; y_2+=_y[j]*_y[j];
   }
 
   //==========================================//
@@ -164,14 +173,12 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   }
 
   _xMean  = x1/x0;
-  _xSigma = sqrt(x2/_nEvents-_xMean*_xMean);
+  _xSigma = sqrt(x_2/_nEvents-_xMean*_xMean);
   
   _yMean  = y1/y0;
-  _ySigma = sqrt(y2/_nEvents-_yMean*_yMean);
+  _ySigma = sqrt(y_2/_nEvents-_yMean*_yMean);
 
   _n=Double_t(1)/(_2pi*_nEvents*_xSigma*_ySigma);
-
-  setOptions(options);
 
   //calculate the PDF
   return calculateBandWidth(_BandWidthType);
@@ -179,13 +186,41 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
 void Roo2DKeysPdf::setOptions(TString options)
 {
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::setOptions" << endl; }
+
   options.ToLower(); 
-  if(options.Contains("a"))      _BandWidthType    = 0;
-  else                           _BandWidthType    = 1;
-  if(options.Contains("n"))      _BandWidthType    = 1;
-  else                           _BandWidthType    = 0;
-  if(options.Contains("m"))      _MirrorAtBoundary = 1;
-  else                           _MirrorAtBoundary = 0;
+  if( options.Contains("a") )   _BandWidthType    = 0;
+  else                          _BandWidthType    = 1;
+  if( options.Contains("n") )   _BandWidthType    = 1;
+  else                          _BandWidthType    = 0;
+  if( options.Contains("m") )   _MirrorAtBoundary = 1;
+  else                          _MirrorAtBoundary = 0;
+  if( options.Contains("d") )   _debug            = 1;
+  else                          _debug            = 0;
+  if( options.Contains("v") )   { _debug         = 1; _verbosedebug = 1; }
+  else                            _verbosedebug  = 0;
+  if( options.Contains("vv") )  { _vverbosedebug = 1; }
+  else                            _vverbosedebug = 0;
+
+  if( _debug )
+  {
+    cout << "Roo2DKeysPdf::setOptions(TString options)    options = "<< options << endl;
+    cout << "\t_BandWidthType    = " << _BandWidthType    << endl;
+    cout << "\t_MirrorAtBoundary = " << _MirrorAtBoundary << endl;
+    cout << "\t_debug            = " << _debug            << endl;
+    cout << "\t_verbosedebug     = " << _verbosedebug     << endl;
+    cout << "\t_vverbosedebug    = " << _vverbosedebug    << endl;
+  }
+}
+
+void Roo2DKeysPdf::getOptions(void) const
+{
+  cout << "Roo2DKeysPdf::getOptions(void)" << endl;
+  cout << "\t_BandWidthType                           = " << _BandWidthType    << endl;
+  cout << "\t_MirrorAtBoundary                        = " << _MirrorAtBoundary << endl;
+  cout << "\t_debug                                   = " << _debug            << endl;
+  cout << "\t_verbosedebug                            = " << _verbosedebug     << endl;
+  cout << "\t_vverbosedebug                           = " << _vverbosedebug    << endl;
 }
 
 //=====================================================//
@@ -194,6 +229,7 @@ void Roo2DKeysPdf::setOptions(TString options)
 //=====================================================//
 Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 {
+  if(_verbosedebug) { cout << "Roo2DKeysPdf::calculateBandWidth(Int_t kernel)" << endl; }
   if(kernel != -999)
   {
     _BandWidthType = kernel;
@@ -215,6 +251,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   Double_t hYSigma = h * _ySigma; 
   Double_t xhmin   = hXSigma * sqrt(2)/10;  //smallest anticipated bandwidth
   Double_t yhmin   = hYSigma * sqrt(2)/10;
+
   //////////////////////////////////////
   //calculate bandwidths from the data//
   //////////////////////////////////////
@@ -248,19 +285,6 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
     }
   }
 
-  ////////////////////////
-  //build the PDF table //
-  ////////////////////////
-  Double_t thisX, thisY;
-  for (Int_t _ix=0;_ix<_nPoints;++_ix) 
-  {
-    for (Int_t _iy=0;_iy<_nPoints;++_iy) 
-    {
-      thisX        = _lox + _ix * _xbinWidth;
-      thisY        = _loy + _iy * _ybinWidth;
-      _p[_ix][_iy] = evaluateFull(thisX, thisY);
-    }
-  }
   return 0;
 }
 
@@ -269,37 +293,11 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 //=======================================================================================//
 Double_t Roo2DKeysPdf::evaluate() const
 {
-  Int_t ix = (Int_t)((x-_lox)/_xbinWidth);
-  Int_t iy = (Int_t)((y-_loy)/_ybinWidth);
-
-  //check x,y is in the valid domain
-  if (ix<0) 
-  {
-    cerr << "got point below lower bound:" << x << " < " << _lox << " -- performing linear extrapolation..." << endl;
-    ix=0;
-  }
-  if (ix>_nPoints-1) 
-  {
-    cerr << "got point above upper bound:" << x << " > " << _hix << " -- performing linear extrapolation..." << endl;
-    ix=_nPoints-1;
-  }
-  if (iy<0) 
-  {
-    cerr << "got point below lower bound:"  << y << " < " << _loy << " -- performing linear extrapolation..." << endl;
-    iy=0;
-  }
-  if (iy>_nPoints-1) 
-  {
-    cerr << "got point above upper bound:"  << y << " > " << _hiy << " -- performing linear extrapolation..." << endl;
-    iy=_nPoints-1;
-  }
-  Double_t dfdx = (_p[ix+1][iy] - _p[ix][iy])/_xbinWidth;
-  Double_t dfdy = (_p[ix][iy+1] - _p[ix][iy])/_ybinWidth;
-
-  Double_t dx = (x-( _lox + (Double_t)ix * _xbinWidth));
-  Double_t dy = (y-( _loy + (Double_t)iy * _ybinWidth));
-
-  return ( _p[ix][iy] + dx*dfdx + dy*dfdy );
+  // use the cacheing intrinsic in RFC to bypass the grid and remove
+  // the grid and extrapolation approximation in the kernel estimation method 
+  //implementation - cheers Wouter :)
+  if(_vverbosedebug) { cout << "Roo2DKeysPdf::evaluate()" << endl; }
+  return evaluateFull(x,y);
 }
 
 /////////////////////////////////////////////////////////
@@ -308,9 +306,11 @@ Double_t Roo2DKeysPdf::evaluate() const
 // given the bandwiths _hx[j] and _hy[j]               //
 /////////////////////////////////////////////////////////
 // _n is calculated once in the constructor
-Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
+Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
 {
-  Double_t f=0;
+  if( _vverbosedebug ) { cout << "Roo2DKeysPdf::evaluateFull()" << endl; }
+
+  Double_t f=0.0;
 
   Double_t rx2, ry2, zx, zy;
   if( _MirrorAtBoundary )
@@ -328,7 +328,6 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
  	 +   lowBoundaryCorrection(thisX, _hx[j], x.min(), _x[j]);
       zy += highBoundaryCorrection(thisY, _hy[j], y.max(), _y[j])
  	 +   lowBoundaryCorrection(thisY, _hy[j], y.min(), _y[j]);
-
       f += _n * zy * zx;
     }
   }
@@ -351,15 +350,19 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
 // Apply the mirror at boundary correction to a dimension given the space position to evaluate 
 // at (thisVar), the bandwidth at this position (thisH), the boundary (high/low) and the
 // value of the data kernal that this correction is being applied to  tVar (i.e. the _x[ix] etc.)
-Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar)
+Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const
 {
+  if(_vverbosedebug) { cout << "Roo2DKeysPdf::highBoundaryCorrection" << endl; }
+
   if(thisH == 0.0) return 0.0;
   Double_t correction = (thisVar + tVar - 2.0* high )/thisH;
   return exp(-0.5*correction*correction)/thisH;
 }
 
-Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar)
+Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar) const
 {
+  if(_vverbosedebug) { cout << "Roo2DKeysPdf::lowBoundaryCorrection" << endl; }
+
   if(thisH == 0.0) return 0.0;
   Double_t correction = (thisVar + tVar - 2.0* low )/thisH;
   return exp(-0.5*correction*correction)/thisH;
@@ -371,7 +374,7 @@ Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, D
 // g = 1/(Nevt * sigma_j * sqrt2pi)*sum_{all evts}{prod d K[ exp{-(xd - ti)/sigma_jd^2} ]}  //
 //                                                                                          //
 //==========================================================================================//
-Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, Double_t varMean2, Double_t * _var2, Double_t sigma2) 
+Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, Double_t varMean2, Double_t * _var2, Double_t sigma2) const
 {
   if((_nEvents == 0.0) || (sigma1 == 0.0) || (sigma2 == 0)) return 0.0;
 
@@ -390,7 +393,7 @@ Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, D
   return z;
 }
 
-Int_t Roo2DKeysPdf::getBandWidthType()
+Int_t Roo2DKeysPdf::getBandWidthType() const
 {
   if(_BandWidthType == 1)  cout << "The Bandwidth Type selected is Trivial" << endl;
   else                     cout << "The Bandwidth Type selected is Adaptive" << endl;
@@ -398,7 +401,7 @@ Int_t Roo2DKeysPdf::getBandWidthType()
   return _BandWidthType;
 }
 
-Double_t Roo2DKeysPdf::getMean(const char * axis)
+Double_t Roo2DKeysPdf::getMean(const char * axis) const
 {
   if((axis == x.GetName()) || (axis == "x") || (axis == "X"))      return _xMean;
   else if((axis == y.GetName()) || (axis == "y") || (axis == "Y")) return _yMean;
@@ -409,7 +412,7 @@ Double_t Roo2DKeysPdf::getMean(const char * axis)
   return 0.0;
 }
 
-Double_t Roo2DKeysPdf::getSigma(const char * axis)
+Double_t Roo2DKeysPdf::getSigma(const char * axis) const
 {
   if((axis == x.GetName()) || (axis == "x") || (axis == "X"))      return _xSigma;
   else if((axis == y.GetName()) || (axis == "y") || (axis == "Y")) return _ySigma;
@@ -421,7 +424,7 @@ Double_t Roo2DKeysPdf::getSigma(const char * axis)
 }
 
 
-void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name)
+void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 {
   TString histName = name;
   histName        += "_hist";
@@ -434,7 +437,7 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name)
 // plot the PDf as a histogram and save to file
 // so that it can be loaded in as a Roo2DHist Pdf in the future to 
 // save on calculation time
-void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
+void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) const
 {
   TFile * file = 0;
   cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
@@ -446,15 +449,17 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
     return;
   }
 
-  RooAbsReal & xArg = (RooAbsReal&)x.arg();
-  RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
-  // make the histogram with a normalization of 1
-  //  xArg.setPlotBins(_nPoints); yArg.setPlotBins(_nPoints); 
-  //TH2F * hist = xArg.createHistogram(histName, yArg,"Probability");
-  //  TH2F * hist = this->fillHistogram(xArg, yArg, 1.0, _nPoints, _nPoints);
-  //  hist->SetName(histName);
-  //this->fillHistogram(hist, RooArgSet( xArg, yArg ));
+  const RooAbsReal & xx = x.arg();
+  const RooAbsReal & yy = y.arg();
+  RooArgSet values( RooArgList( xx, yy ));
+  RooRealVar * xArg = ((RooRealVar*)(values.find(xx.GetName())) ) ;
+  RooRealVar * yArg = ((RooRealVar*)(values.find(yy.GetName())) ) ;
+
+  TH2F * hist = (TH2F*)xArg->createHistogram("hist", *yArg);
+  hist = (TH2F*)this->fillHistogram(hist, RooArgList(*xArg, *yArg) ); 
+  hist->SetName(histName);
+
   file->Write();
   file->Close();
 }
@@ -462,7 +467,7 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
 // save the data and calculated bandwidths to file
 // as a record of what produced the PDF and to give a reduced
 // data set in order to facilitate re-calculation in the future
-void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name)
+void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 {
   TFile * file = 0;
 
@@ -492,7 +497,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name)
   TBranch * b_x  = _theTree->Branch(xname, &theX, " x/D");
   TBranch * b_y  = _theTree->Branch(yname, &theY, " y/D");
   TBranch * b_hx = _theTree->Branch("hx",  &hx,   " hx/D");
-  TBranch * b_hy = _theTree->Branch("hy",   &hx,  " hy/D");
+  TBranch * b_hy = _theTree->Branch("hy",  &hx,  " hy/D");
 
   for(Int_t iEvt = 0; iEvt < _nEvents; iEvt++)
   {
@@ -506,6 +511,25 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name)
   file->Close();
 }
 
+/////////////////////////////////////////////////////
+// print out _p[_nPoints][_nPoints] indicating the //
+// domain limits                                   //
+/////////////////////////////////////////////////////
+void Roo2DKeysPdf::PrintInfo(ostream & out) const
+{
+  out << "Roo2DKeysPDF instance domain information:"<<endl;
+  out << "\tX_min          = " << _lox <<endl;
+  out << "\tX_max          = " << _hix <<endl;
+  out << "\tY_min          = " << _loy <<endl;
+  out << "\tY_max          = " << _hiy <<endl;
 
+  out << "Data information:" << endl;
+  out << "\t<x>             = " << _xMean <<endl;
+  out << "\tsigma(x)       = " << _xSigma <<endl;
+  out << "\t<y>             = " << _yMean <<endl;
+  out << "\tsigma(y)       = " << _ySigma <<endl;
+
+  out << "END of info for Roo2DKeys pdf instance"<< endl;
+}
 
 
