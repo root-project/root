@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.20 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.21 2001/10/08 05:20:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -80,7 +80,8 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
   _convSet("convSet",this,other._convSet),
   _convNormSet(new RooArgSet(*other._convNormSet)),
   _convSetIter(_convSet.createIterator()),
-  _codeReg(other._codeReg)
+  _codeReg(other._codeReg),
+  _basisList(other._basisList)
 {
   // Copy constructor
 }
@@ -106,8 +107,6 @@ RooConvolutedPdf::~RooConvolutedPdf()
     delete iter ;
   }
 
-  // Delete all basis functions we created 
-  _basisList.Delete() ;
 }
 
 
@@ -143,7 +142,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   RooArgSet basisArgs(*_convVar) ;
   basisArgs.add(params) ;
   RooFormulaVar* basisFunc = new RooFormulaVar(expression,expression,basisArgs) ;
-  _basisList.Add(basisFunc) ;
+  _basisList.addOwned(*basisFunc) ;
 
   // Instantiate resModel x basisFunc convolution
   RooAbsReal* conv = _model->convolution(basisFunc,this) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.rdl,v 1.2 2001/10/01 22:04:20 verkerke Exp $
+ *    File: $Id: RooArgList.rdl,v 1.3 2001/10/03 21:53:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -67,7 +67,7 @@ public:
   RooArgList(const RooArgList& other, const char *name="");
   virtual TObject* clone(const char* newname) const { return new RooArgList(*this,newname); }
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
-  RooArgList& operator=(const RooArgList& other) { return (RooArgList&) RooAbsCollection::operator=(other) ; }
+  RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
 
   inline void sort(Bool_t reverse=kFALSE) { _list.Sort(!reverse) ; }
   inline Int_t index(const RooAbsArg* arg) const { return _list.IndexOf(arg) ; }

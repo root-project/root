@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooCustomizer.cc,v 1.1 2001/10/09 01:41:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -323,7 +323,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 	// Add to one-time use list and life-time use list
 	clonedMasterLeafs.add(*clone) ;
-	_cloneLeafList->add(*clone) ;	
+	_cloneLeafList->addOwned(*clone) ;	
       }
       masterLeafsToBeSplit.add(*leaf) ;     
     }
@@ -346,7 +346,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       masterReplacementLeafs.add(*substArg) ;
     }
   }
-  if (!_sterile) _cloneLeafList->add(clonedMasterLeafs) ;
+  if (!_sterile) _cloneLeafList->addOwned(clonedMasterLeafs) ;
 
 
   // Find branches that are affected by splitting and must be cloned

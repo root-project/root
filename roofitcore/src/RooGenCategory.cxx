@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.8 2001/10/05 01:26:32 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.9 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -90,6 +90,8 @@ RooGenCategory::~RooGenCategory()
   if (_serverList.FindObject(&_superCat)) {
     removeServer(_superCat) ;
   }
+
+  if (_map) delete[] _map ;
 }
 
 

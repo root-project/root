@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooQuasiRandomGenerator.rdl,v 1.1 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,7 @@
 class RooQuasiRandomGenerator {
 public:
   RooQuasiRandomGenerator();
-  ~RooQuasiRandomGenerator();
+  virtual ~RooQuasiRandomGenerator();
   void reset();
   Bool_t generate(UInt_t dimension, Double_t vector[]);
   enum { MaxDimension = 12 , NBits = 31 , MaxDegree = 50 , MaxPrimitiveDegree = 5 };

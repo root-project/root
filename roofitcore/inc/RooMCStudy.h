@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMCStudy.rdl,v 1.1 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -28,7 +28,7 @@ public:
   RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
 	     const RooArgSet& dependents, const char* genOptions="",
 	     const char* fitOptions="", const RooDataSet* genProtoData=0) ;
-  ~RooMCStudy() ;
+  virtual ~RooMCStudy() ;
   
   // Run methods
   Bool_t generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.55 2001/10/08 21:22:50 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.56 2001/10/11 01:28:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -706,6 +706,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
       // Check if any match was found
       if (tmp->getSize()==0) {
+	delete tmp ;
 	return 0 ;
       }
 

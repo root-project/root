@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooComplex.rdl,v 1.2 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooComplex.rdl,v 1.3 2001/07/31 05:54:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,7 @@ class RooComplex {
 public:
   inline RooComplex(Double_t a=0, Double_t b=0) : _re(a), _im(b) { }
   inline RooComplex& operator=(const RooComplex& other) {
+    if (&other==this) return *this ;
     this->_re= other._re;
     this->_im= other._im;
     return(*this);

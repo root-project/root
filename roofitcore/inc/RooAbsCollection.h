@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.5 2001/10/09 00:44:00 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.6 2001/10/11 01:28:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -78,6 +78,7 @@ public:
 
   void setName(const char *name) { _name= name; }
   const char* GetName() const { return _name.Data() ; }
+  Bool_t isOwning() const { return _ownCont ; }
 
 protected:
 

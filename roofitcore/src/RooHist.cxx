@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.9 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.10 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -15,8 +15,6 @@
 // TGraphAsymmErrors class. Error bars are calculated using either Poisson
 // or Binomial statistics.
 
-// #include "BaBar/BaBar.hh"
-
 #include "RooFitCore/RooHist.hh"
 //#include "RooFitTools/RooMath.hh"
 
@@ -28,7 +26,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.9 2001/09/27 18:22:29 verkerke Exp $";
+"$Id: RooHist.cc,v 1.10 2001/10/08 05:20:16 verkerke Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.12 2001/10/11 01:28:51 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.13 2001/10/12 01:48:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -157,10 +157,11 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
+  RooArgSet* cloneVarSet(0) ;
   RooFormulaVar* cloneVar(0) ;
   if (cutVar) {
-    RooArgSet* tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
-    cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
+    cloneVarSet = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
+    cloneVar = (RooFormulaVar*) cloneVarSet->find(cutVar->GetName()) ;
     cloneVar->attachDataSet(*t) ;
   }
 
@@ -170,7 +171,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   
   loadValues(t->_tree,cloneVar);
 
-  if (cloneVar) delete cloneVar ;
+  if (cloneVarSet) delete cloneVarSet ;
 }
 
 

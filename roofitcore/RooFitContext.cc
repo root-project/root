@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.29 2001/10/08 05:20:15 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.30 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -125,7 +125,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
   pdf->leafNodeServerList(&_origLeafNodeList) ;  
 
   // Store normalization set
-  _normSet = (RooArgSet*) data->get()->Clone() ;
+  _normSet = (RooArgSet*) data->get()->snapshot(kFALSE) ;
 }
 
 

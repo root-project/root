@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.7 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.8 2001/10/12 01:48:45 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -297,7 +297,7 @@ RooDataHist::~RooDataHist()
 {
   // Destructor
 
-  if (_wgt) delete _wgt ;
+  if (_wgt) delete[] _wgt ;
   if (_idxMult) delete[] _idxMult ;
   delete _realIter ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.8 2001/10/09 00:44:00 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.9 2001/10/11 01:28:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -107,6 +107,7 @@ void RooAbsCollection::safeDeleteList()
       if (!arg->dependsOn(*this,arg)) {
 	// Otherwise leave it our and delete it
 	remove(*arg) ;
+	delete arg ;
 	working = kTRUE ;
       }
     }
@@ -204,6 +205,7 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other) {
 
   // The assignment operator sets the value of any argument in our set
   // that also appears in the other set.
+  if (&other==this) return *this ;
 
   RooAbsArg *elem, *theirs ;
   Int_t index(getSize());
