@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.169 2004/06/22 18:47:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.170 2004/06/22 21:55:59 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2994,11 +2994,14 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 //           G__map_cpp_name((char *)cl.Fullname()));
 //   fprintf(fp, "#else\n");
 
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
+   string mappedname = G__map_cpp_name((char*)classname.c_str());
+
    if (outside || cl.IsTmplt()) {
       fprintf(fp, "namespace ROOT {\n");
 
       fprintf(fp, "   void %s_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)\n   {\n",
-              G__map_cpp_name((char *)cl.Fullname()));
+              mappedname.c_str());
 //   fprintf(fp, "#endif\n");
 
 //  if (outside || cl.IsTmplt()) {
@@ -3029,7 +3032,10 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       if (!cl.IsTmplt()) {
          WriteBodyShowMembers(cl, outside);
       } else {
-         fprintf(fp, "   ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",G__map_cpp_name((char *)cl.Fullname()));
+         string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
+         string mappedname = G__map_cpp_name((char*)classname.c_str());
+
+         fprintf(fp, "   ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",mappedname.c_str());
       }
       fprintf(fp, "}\n\n");
    }
