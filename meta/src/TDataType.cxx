@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.7 2003/04/13 17:38:40 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.8 2003/12/26 18:38:21 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -90,7 +90,7 @@ const char *TDataType::AsString(void *buf) const
    // Return string containing value in buffer formatted according to
    // the basic data type. The result needs to be used or copied immediately.
 
-   static char line[80];
+   static char line[81];
    const char *name;
 
    if (fInfo)
@@ -116,11 +116,11 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("short", name))
       sprintf(line, "%hd", *(short *)buf);
    else if (!strcmp("unsigned char", name))
-      sprintf(line, "%u", *(unsigned char *)buf);
+      snprintf(line,80, "%u", *(unsigned char *)buf);
    else if (!strcmp("bool", name))
-      sprintf(line, "%u", *(unsigned char *)buf);
+      snprintf(line,80, "%u", *(unsigned char *)buf);
    else if (!strcmp("char", name))
-      sprintf(line, "%d", *(char *)buf);
+      snprintf(line,80, "%d", *(char *)buf);
    else if (!strcmp("float", name))
       sprintf(line, "%g", *(float *)buf);
    else if (!strcmp("double", name))

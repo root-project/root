@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.40 2004/01/05 08:18:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.41 2004/01/19 07:55:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 TDirectory    *gDirectory;      //Pointer to current directory in memory
 
 const UInt_t kIsBigFile = BIT(16);
+const Int_t  kMaxLen = 2048;
 
 //______________________________________________________________________________
 //Begin_Html
@@ -200,7 +201,7 @@ Int_t TDirectory::AppendKey(TKey *key)
 //______________________________________________________________________________
 void TDirectory::Browse(TBrowser *b)
 {
-   Char_t name[128];
+   Char_t name[kMaxLen];
 
    if (b) {
       TObject *obj = 0;
@@ -360,7 +361,7 @@ Bool_t TDirectory::cd1(const char *apath)
       delete [] path; return kTRUE;
    }
 
-   char subdir[128];
+   char subdir[kMaxLen];
    strcpy(subdir,path);
    slash = (char*)strchr(subdir,'/');
    *slash = 0;
@@ -472,7 +473,7 @@ Bool_t TDirectory::Cd1(const char *apath)
       delete [] path; return kTRUE;
    }
 
-   char subdir[128];
+   char subdir[kMaxLen];
    strcpy(subdir,path);
    slash = strchr(subdir,'/');
    *slash = 0;
@@ -595,7 +596,7 @@ void TDirectory::Delete(const char *namecycle)
    cd();
 
    Short_t  cycle;
-   char     name[256];
+   char     name[kMaxLen];
    DecodeNameCycle(namecycle, name, cycle);
 
    Int_t deleteall    = 0;
@@ -704,7 +705,7 @@ TKey *TDirectory::FindKey(const char *keyname) const
    // Find key with name keyname in the current directory
 
    Short_t  cycle;
-   char     name[256];
+   char     name[kMaxLen];
 
    DecodeNameCycle(keyname, name, cycle);
    return GetKey(name,cycle);
@@ -720,7 +721,7 @@ TKey *TDirectory::FindKeyAny(const char *keyname) const
 
    TDirectory *dirsav = gDirectory;
    Short_t  cycle;
-   char     name[256];
+   char     name[kMaxLen];
 
    DecodeNameCycle(keyname, name, cycle);
 
@@ -776,7 +777,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 
    TDirectory *dirsav = gDirectory;
    Short_t  cycle;
-   char     name[256];
+   char     name[kMaxLen];
 
    DecodeNameCycle(aname, name, cycle);
 
@@ -832,7 +833,7 @@ TObject *TDirectory::Get(const char *namecycle)
 //  Of course, dynamic_cast<> can also be used in the example 1.
 
    Short_t  cycle;
-   char     name[256];
+   char     name[kMaxLen];
 
    TDirectory *cursav = gDirectory;
    cd();
