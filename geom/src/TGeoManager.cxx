@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.89 2004/09/16 16:53:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.90 2004/09/20 14:32:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1939,7 +1939,7 @@ void TGeoManager::DefaultColors()
    Int_t col[nmax];
    for (Int_t i=0;i<nmax;i++) col[i] = 18;
         
-   //here we should create a new TColor with the same rgb as in the default\
+   //here we should create a new TColor with the same rgb as in the default
    //ROOT colors used below
    col[  8] = 15;
    col[  9] = 16;
