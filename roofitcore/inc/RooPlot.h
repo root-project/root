@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.18 2001/11/09 03:12:08 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.19 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,6 +42,8 @@ public:
   // container management
   const char* nameOf(Int_t idx) const ;
   TObject *findObject(const char *name, const TClass* clas=0) const;
+  Stat_t numItems() const {return _items.GetSize();}
+
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "");
   void addObject(TObject* obj, Option_t* drawOptions= "");
   void addTH1(TH1 *hist, Option_t* drawOptions= "");
