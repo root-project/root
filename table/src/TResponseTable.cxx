@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.3 2003/01/14 14:26:14 fisyak Exp $
+// @(#)root/star:$Name:  $Id: TResponseTable.cxx,v 1.1 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/04/2002
 // Copyright(c) 2002 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov)
 // All right reserved
@@ -12,7 +12,7 @@ TableClassStreamerImp(TResponseTable)
 TResponseTable::TResponseTable():TGenericTable(), fResponseLocation(-1){}
 
 //______________________________________________________________________________
-TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t allocSize) 
+TResponseTable::TResponseTable(const char *name,const char *volumePath, const char *responseDefinition, Int_t /*allocSize*/) 
  :  TGenericTable(), fResponseLocation(-1)
 {
    // Set an empty descriptor

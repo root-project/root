@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
-// $Id: TPointsArray3D.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// $Id: TPointsArray3D.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
 #include "Riostream.h"
 
 #include "TPointsArray3D.h"
@@ -140,7 +140,7 @@ TPointsArray3D::~TPointsArray3D()
 
 
 //______________________________________________________________________________
-TPointsArray3D::TPointsArray3D(const TPointsArray3D &point)
+TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point)
 {
    ((TPointsArray3D&)point).Copy(*this);
 }

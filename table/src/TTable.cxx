@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.4 2003/01/14 14:26:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -2088,6 +2088,7 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
   if (b.IsReading())
   {
    Long_t rbytes;
+   if (version) { }   // version to remove compiler warning
 #ifdef __STAR__
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)

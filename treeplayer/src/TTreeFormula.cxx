@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.109 2003/01/30 06:40:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.110 2003/02/07 23:46:43 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -852,7 +852,7 @@ public:
 //______________________________________________________________________________
 //
 // This class is a small helper class to implement executing a method of an
-// object stored in a TTre
+// object stored in a TTree
 
 class TFormLeafInfoMethod : public TFormLeafInfo {
    TMethodCall *fMethod;
@@ -952,7 +952,7 @@ public:
       return TFormLeafInfo::GetLocalValuePointer( from, instance);
    }
 
-   virtual void *GetLocalValuePointer(char *from, Int_t instance = 0) {
+   virtual void *GetLocalValuePointer(char *from, Int_t /*instance*/ = 0) {
 
       void *thisobj = from;
       if (!thisobj) return 0;
