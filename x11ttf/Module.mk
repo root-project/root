@@ -40,7 +40,7 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
 		   "$(X11TTFO) $(X11TTFDO)" \
-		   "$(X11TTFLIBEXTRA) $(TTFLIBDIR)/libttf.a"
+		   "$(X11TTFLIBEXTRA) $(TTFLIBDIR) $(TTFLIB)"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

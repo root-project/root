@@ -39,7 +39,7 @@ include/%.h:    $(MYSQLDIRI)/%.h
 $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMySQL.$(SOEXT) $@ "$(MYSQLO) $(MYSQLDO)" \
-		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR)/libmysqlclient.a"
+		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR) $(MYSQLCLILIB)"
 
 $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
