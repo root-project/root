@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.18 2001/06/17 23:08:45 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.19 2001/09/20 17:07:23 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -644,7 +644,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
 {
  // Dispatch a single event via Command thread
 
-  if (!gApplication()->HandleTermInput()) {
+  if (!gApplication->HandleTermInput()) {
      // wait ExitLoop()
      WaitForSingleObject(fhTermInputEvent,INFINITE);
      ResetEvent(fhTermInputEvent);
