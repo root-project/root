@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.2 2004/08/03 05:25:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.3 2004/08/12 04:33:45 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1407,11 +1407,11 @@ TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
             fCopyFormat += rtype;
             fCopyFormat += "(*(";
             fCopyFormat += rtype;
-            fCopyFormat += "*)%p)";
+            fCopyFormat += "*)0x%x)";
 
             fDeleteFormat  = "delete (";
             fDeleteFormat += rtype;
-            fDeleteFormat += "*)%p;";
+            fDeleteFormat += "*)0x%x;";
 
             fIsByValue = kTRUE;
          }
