@@ -1823,8 +1823,6 @@ gdk_window_set_icon(GdkWindow * window,
 
    DeleteObject(old_bitmap_dst);
    DeleteObject(old_bitmap_src);
-   DeleteObject(GDK_DRAWABLE_XID(pixmap));
-   DeleteObject(GDK_DRAWABLE_XID(mask));
 
    // Delete dc's
    DeleteDC(hdc_dst);
