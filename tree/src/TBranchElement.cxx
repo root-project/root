@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.25 2001/04/23 14:03:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.26 2001/04/24 14:30:21 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -99,7 +99,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          strcat(countname,bp->GetCountName());
          brcount = (TBranchElement *)fTree->GetBranch(countname);
          sprintf(countname,"%s[%s]",name,bp->GetCountName());
-         printf("found bcount:%s\n",countname);
          SetTitle(countname);
       }
    } else {
