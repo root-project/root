@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.23 2002/05/03 14:30:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.25 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -102,6 +102,7 @@ public:
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
    Int_t            GetSize() const;
    virtual void     Init(TObject *obj=0);
+   virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
    virtual void     Update(TClass *oldClass, TClass *newClass);

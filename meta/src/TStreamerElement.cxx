@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.44 2002/05/03 14:30:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.46 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -367,6 +367,12 @@ const char *TStreamerBase::GetInclude() const
    if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",fBaseClass->GetDeclFileName());
    else                            sprintf(gIncludeName,"\"%s.h\"",GetName());
    return gIncludeName;
+}
+
+//______________________________________________________________________________
+void TStreamerBase::ls(Option_t *) const
+{
+   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",GetFullName(),GetTypeName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
