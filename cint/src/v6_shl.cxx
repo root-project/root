@@ -960,7 +960,11 @@ int* pindex;
   ifunc=p_ifunc;
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
-      if(ifunc->pentry[ig15]->tp2f==p2f) {
+      if(
+#ifndef G__OLDIMPLEMENTATION1478
+	 ifunc->pentry[ig15] && 
+#endif
+	 ifunc->pentry[ig15]->tp2f==p2f) {
 	*pindex = ig15;
 	return(ifunc);
       }

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014071
-#define G__CINTVERSIONSTR  "5.14.71, Jan 18 2001"
+#define G__CINTVERSION      5014072
+#define G__CINTVERSIONSTR  "5.14.72, Jan 20 2001"
 
 
 /**********************************************************************
@@ -1580,7 +1580,7 @@ struct G__va_list_para {
 
 void G__va_arg_setalign G__P((int n));
 void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
-void G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
 
 #endif /* 1473 */
 

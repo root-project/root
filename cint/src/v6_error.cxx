@@ -325,7 +325,7 @@ char *message;
 int G__shl_load_error(shlname,message)
 char *shlname,*message;
 {
-  fprintf(G__serr,"%s: Dynamic link library %s can not load\n",message,shlname);
+  fprintf(G__serr,"%s: Failed to load Dynamic link library %s\n",message,shlname);
   G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;

@@ -2451,6 +2451,13 @@ struct G__ifunc_table *ifunc;
 #else
   fprintf(fp,"   %s *p;\n",G__type2string('u',tagnum,-1,0,0));
 #endif
+#ifndef G__VAARG_COPYFUNC
+  if(2==ifunc->ansi[ifn]) {
+    fprintf(fp,"  G__va_arg_buf G__va_arg_bufobj;\n");
+    fprintf(fp,"  G__va_arg_put(&G__va_arg_bufobj,libp,%d);\n"
+	    ,ifunc->para_nu[ifn]);
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION573
   G__if_ary_union(fp,ifn,ifunc);
@@ -5000,15 +5007,20 @@ FILE *fp;
 	    if(0>ifunc->para_nu[j]) fprintf(fp,"0,");
 	    else                    fprintf(fp,"%d,",ifunc->para_nu[j]);
 
-#ifndef G__OLDIMPLEMENTATION1287
+#if !defined(G__OLDIMPLEMENTATION1479)
+	    if(2==ifunc->ansi[j]) 
+	      fprintf(fp,"%d," ,8 + ifunc->staticalloc[j]*2
+		      + ifunc->isexplicit[j]*4);
+	    else 
+	      fprintf(fp,"%d," ,ifunc->ansi[j] + ifunc->staticalloc[j]*2
+		      + ifunc->isexplicit[j]*4);
+#elif !defined(G__OLDIMPLEMENTATION1287)
 	    fprintf(fp,"%d," ,ifunc->ansi[j] + ifunc->staticalloc[j]*2
 		    + ifunc->isexplicit[j]*4);
-#else
-#ifndef G__OLDIMPLEMENTATION1269
+#elif !defined(G__OLDIMPLEMENTATION1269)
 	    fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
 #else
 	    fprintf(fp,"%d,",ifunc->ansi[j]);
-#endif
 #endif
 	    fprintf(fp,"%d,",ifunc->access[j]);
 	    fprintf(fp,"%d,",ifunc->isconst[j]);
@@ -5632,7 +5644,12 @@ FILE *fp;
 	if(0>ifunc->para_nu[j]) fprintf(fp,"0,");
 	else                    fprintf(fp,"%d,",ifunc->para_nu[j]);
 
-#ifndef G__OLDIMPLEMENTATION1269
+#if !defined(G__OLDIMPLEMENTATION1479)
+	if(2==ifunc->ansi[j]) 
+	  fprintf(fp,"%d,",8 + ifunc->staticalloc[j]*2);
+	else
+	  fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
+#elif !defined(G__OLDIMPLEMENTATION1269)
 	fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
 #else
 	fprintf(fp,"%d,",ifunc->ansi[j]);
@@ -6026,7 +6043,10 @@ int isvirtual;
   G__p_ifunc->reftype[G__func_now] = reftype;
 
   G__p_ifunc->para_nu[G__func_now] = para_nu;
-#ifndef G__OLDIMPLEMENTATION1269
+#if !defined(G__OLDIMPLEMENTATION1479)
+  if(ansi&8) G__p_ifunc->ansi[G__func_now] = 2;
+  else if(ansi&1) G__p_ifunc->ansi[G__func_now] = 1;
+#elif !defined(G__OLDIMPLEMENTATION1269)
   G__p_ifunc->ansi[G__func_now] = ansi&1;
 #else
   G__p_ifunc->ansi[G__func_now] = ansi;
@@ -6039,15 +6059,13 @@ int isvirtual;
   G__p_ifunc->access[G__func_now] = accessin;
 
   G__p_ifunc->globalcomp[G__func_now] = G__NOLINK;
-#ifndef G__OLDIMPLEMENTATION1287
+#if !defined(G__OLDIMPLEMENTATION1287)
   G__p_ifunc->isexplicit[G__func_now] = (ansi&4)/4;
   G__p_ifunc->staticalloc[G__func_now] = (ansi&2)/2;
-#else
-#ifndef G__OLDIMPLEMENTATION1269
+#elif !defined(G__OLDIMPLEMENTATION1269)
   G__p_ifunc->staticalloc[G__func_now] = ansi/2;
 #else
   G__p_ifunc->staticalloc[G__func_now] = 0;
-#endif
 #endif
 #ifdef G__TRUEP2F
   G__p_ifunc->isvirtual[G__func_now] = isvirtual&0x01;
