@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.8 2000/07/12 15:14:57 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.9 2000/07/13 09:04:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4256,7 +4256,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    //   c1.GetPrimitive("Arc");  // Set the editor in mode "Arc". Returns
    //                            // as soon as a TArc object is created.
    //   c1.GetPrimitive("lat","Text"); // Set the editor in Text/Latex mode.
-   //                            // Create a text object, then Set its anme to "lat"
+   //                            // Create a text object, then Set its name to "lat"
    //
    // The following macro waits for 10 primitives of any type to be created.
    //{
