@@ -607,6 +607,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
 
+   l = strstr(chopt,"TF3");
+   if (l) {
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+   }
+
    l = strstr(chopt,"TRI");
    if (l) {
       Hoption.Scat = 0;

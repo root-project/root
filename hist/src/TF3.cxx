@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.16 2003/11/27 11:45:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.17 2004/08/16 09:31:13 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 #include "TRandom.h"
 #include "TVectorD.h"
 #include "TPainter3dAlgorithms.h"
+#include "Riostream.h"
+#include "TColor.h"
+
 
 ClassImp(TF3)
 
@@ -320,7 +323,12 @@ void TF3::Paint(Option_t *option)
    }
 
    fHistogram->GetPainter()->ProcessMessage("SetF3",this);
-   fHistogram->Paint("tf3");
+   if (opt.Length() == 0 ) {
+      fHistogram->Paint("tf3");
+   } else {
+      opt += "tf3";
+      fHistogram->Paint(opt.Data());
+   }
 }
 
 //______________________________________________________________________________
@@ -335,6 +343,55 @@ void TF3::SetClippingBoxOff()
       fHistogram->SetDirectory(0);
    }
    fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOff",0);
+}
+
+//______________________________________________________________________________
+void TF3::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TF3::Class())) {
+       out<<"   ";
+   } else {
+       out<<"   TF3 *";
+   }
+   if (!fMethodCall) {
+      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<endl;
+   } else {
+      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<endl;
+   }
+
+   if (GetFillColor() != 0) {
+      if (GetFillColor() > 228) {
+         TColor::SaveColor(out, GetFillColor());
+         out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+   }
+   if (GetLineColor() != 1) {
+      if (GetLineColor() > 228) {
+         TColor::SaveColor(out, GetLineColor());
+         out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+   }
+   if (GetNpz() != 100) {
+      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<endl;
+   }
+   if (GetChisquare() != 0) {
+      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
+   }
+   Double_t parmin, parmax;
+   for (Int_t i=0;i<fNpar;i++) {
+      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
+      GetParLimits(i,parmin,parmax);
+      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
+   }
+   out<<"   "<<GetName()<<"->Draw("
+      <<quote<<option<<quote<<");"<<endl;
 }
 
 //______________________________________________________________________________
