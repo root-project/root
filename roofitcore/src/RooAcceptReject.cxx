@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.16 2001/10/17 05:03:58 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.17 2001/11/02 03:05:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.16 2001/10/17 05:03:58 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.17 2001/11/02 03:05:10 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -191,6 +191,17 @@ void RooAcceptReject::printToStream(ostream &os, PrintOption opt, TString indent
   oneLinePrint(os,*this);
 }
 
+
+
+void RooAcceptReject::attachParameters(const RooArgSet& vars) 
+{
+  // Reattach original parameters to function clone
+  RooArgSet newParams(vars) ;
+  newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
+  _funcClone->recursiveRedirectServers(newParams) ;
+}
+
+
 const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
   // Return a pointer to a generated event. The caller does not own the event and it
   // will be overwritten by a subsequent call. The input parameter 'remaining' should
@@ -250,6 +261,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
       _cache->reset() ;
       _eventsUsed = 0 ;
     }
+
   }
   return event;
 }
@@ -261,9 +273,9 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   // if we use up the cache before we accept an event. The caller does
   // not own the event and it will be overwritten by a subsequent call.
 
-  
   const RooArgSet *event(0);
-  while(event= _cache->get(_eventsUsed++)) {    
+  while(event= _cache->get(_eventsUsed)) {    
+    _eventsUsed++ ;
     // accept this cached event?
     Double_t r= RooRandom::uniform();
     if(r*_maxFuncVal > _funcValPtr->getVal()) continue;
@@ -273,7 +285,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
 	   << _cache->numEntries() << " so far)" << endl;
     }
     break;
-  }
+  }  
   return event;
 }
 
@@ -306,9 +318,19 @@ void RooAcceptReject::addEventToCache() {
   _totalEvents++;
 
   if (_verbose &&_totalEvents%10000==0) {
-    cerr << "RooAccepReject: generated " << _totalEvents << " events so far." << endl ;
+    cerr << "RooAcceptReject: generated " << _totalEvents << " events so far." << endl ;
   }
+
 }
+
+Double_t RooAcceptReject::getFuncMax() 
+{
+  // Generate the minimum required number of samples for a reliable maximum estimate
+  while(_totalEvents < _minTrials) addEventToCache();
+  
+  return _maxFuncVal ;
+}
+
 
 const int RooAcceptReject::_maxSampleDim= 3,
   RooAcceptReject::_minTrialsArray[]= { 0,1000,100000,10000000 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.51 2001/10/30 07:29:14 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.52 2001/11/01 22:52:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -643,6 +643,11 @@ Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedV
   // matchArgs() methods to advertise the algorithms they provide.
 
   return 0;
+}
+
+void RooAbsPdf::initGenerator(Int_t code) 
+{  
+  // One-time initialization to setup the generator for the specified code.
 }
 
 void RooAbsPdf::generateEvent(Int_t code) {

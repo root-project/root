@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.42 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.43 2001/10/27 22:28:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -60,6 +60,7 @@ public:
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
 
   // Interactions with a dataset  

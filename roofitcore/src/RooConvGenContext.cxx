@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvGenContext.cc,v 1.1 2001/10/17 05:03:58 verkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.2 2001/11/02 03:05:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -61,8 +61,10 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
   _convVarName = modelClone->convVar().GetName() ;
   _modelGen = modelClone->genContext(*_modelVars,prototype,verbose) ;
 
-  _pdfVars->add(*prototype->get()) ;
-  _modelVars->add(*prototype->get()) ;  
+  if (prototype) {
+    _pdfVars->add(*prototype->get()) ;
+    _modelVars->add(*prototype->get()) ;  
+  }
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.9 2001/10/27 22:28:23 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.10 2001/10/31 07:19:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -131,6 +131,77 @@ Double_t RooTruthModel::evaluate() const
   }
   }
 }
+
+
+
+Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+{
+  switch(_basisCode) {
+
+  // Analytical integration capability of raw PDF
+  case noBasis:
+    if (matchArgs(allVars,analVars,convVar())) return 1 ;
+    break ;
+
+  // Analytical integration capability of convoluted PDF
+  case expBasisPlus:
+  case expBasisMinus:
+  case expBasisSum:
+  case sinBasisPlus:
+  case sinBasisMinus:
+  case sinBasisSum:
+  case cosBasisPlus:
+  case cosBasisMinus:
+  case cosBasisSum:
+    if (matchArgs(allVars,analVars,convVar())) return 1 ;
+    break ;
+  }
+
+  return 0 ;
+}
+
+
+Double_t RooTruthModel::analyticalIntegral(Int_t code) const 
+{
+  // Code must be 1
+  assert(code==1) ;
+
+  // Unconvoluted PDF
+  if (_basisCode==noBasis) return 1 ;
+
+  // Precompiled basis functions
+  BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
+  BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
+
+  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  switch (basisType) {
+  case expBasis:
+    {
+      Double_t result(0) ;
+      if (basisSign != Minus) result += tau*(1-exp(-x.max()/tau)) ;
+      if (basisSign != Plus) result += tau*(1-exp(x.min()/tau)) ;
+      return result ;
+    }
+  case sinBasis:
+    {
+      Double_t result(0) ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + 1/tau;
+      if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + 1/tau ;
+      return result / (1/(tau*tau) + dm*dm) ;
+    }
+  case cosBasis:
+    {
+      Double_t result(0) ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*cos(dm*x.max()) + dm*sin(dm*x.max())) + 1/tau ;
+      if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
+      return result / (1/(tau*tau) + dm*dm) ;
+    }
+  }
+  
+}
+
 
 
 Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const

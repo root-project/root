@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.22 2001/10/19 21:32:22 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.23 2001/11/02 18:27:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -20,6 +20,8 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooAcceptReject.hh"
+#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooDataHist.hh"
 
 #include "TString.h"
 #include "TIterator.h"
@@ -28,13 +30,14 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.22 2001/10/19 21:32:22 david Exp $";
+"$Id: RooGenContext.cc,v 1.23 2001/11/02 18:27:51 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
 			     const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,verbose),
-  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0)
+  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
+  _maxVar(0)
 {
   // Initialize a new context for generating events with the specified
   // variables, using the specified PDF model. A prototype dataset (if provided)
@@ -128,10 +131,31 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   nname.Append("Reduced") ;
   TString ntitle(_pdfClone->GetTitle()) ;
   ntitle.Append(" (Accept/Reject)") ;
-  _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
+
+  if (_protoVars.getSize()==0) {
+
+    // No prototype variables
+    _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
+
+  } else {
+
+    // Generation with prototype variable
+    depList->remove(_protoVars,kTRUE,kTRUE) ;
+    _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
+
+    // First find maximum in other+proto space
+    RooArgSet otherAndProto(_otherVars) ;
+    otherAndProto.add(_protoVars) ;
+
+    RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
+    Double_t max = maxFinder.getFuncMax() ;
+    _maxVar = new RooRealVar("funcMax","function maximum",max) ;
+  }
+
+  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_maxVar,_verbose);
+
   delete depList;
   _otherVars.add(_uniformVars);
-  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,0,_verbose);
 }
 
 RooGenContext::~RooGenContext() {
@@ -142,6 +166,7 @@ RooGenContext::~RooGenContext() {
   // Clean up our accept/reject generator
   delete _generator;
   delete _acceptRejectFunc;
+  if (_maxVar) delete _maxVar ;
 }
 
 void RooGenContext::initGenerator(const RooArgSet &theEvent) {
@@ -149,8 +174,16 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent) {
   // Attach the cloned model to the event buffer we will be filling.
   _pdfClone->recursiveRedirectServers(theEvent,kFALSE);
 
+  // Attach the RooAcceptReject generator the event buffer
+  _generator->attachParameters(theEvent) ;
+
   // Reset the cloned model's error counters.
   _pdfClone->resetErrorCounters();
+
+  // Initialize the PDFs internal generator
+  if (_directVars.getSize()>0) {
+    _pdfClone->initGenerator(_code) ;
+  }
 }
 
 void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
