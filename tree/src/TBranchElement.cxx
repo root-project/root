@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.3 2001/01/16 17:22:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.4 2001/01/17 08:28:19 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TDataType.h"
 #include "TDataMember.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "TBrowser.h"
 
 R__EXTERN  TTree *gTree;
@@ -48,7 +49,7 @@ TBranchElement::TBranchElement(): TBranch()
 
 
 //______________________________________________________________________________
-TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, Int_t basketsize, Int_t splitlevel, Int_t compress)
     :TBranch()
 {
 // Create a BranchElement
@@ -74,7 +75,7 @@ TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id,
    }
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
-   fAddress        = (char*)addobj;
+   //fAddress        = (char*)addobj;
    fClassName      = cl->GetName();
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
@@ -85,27 +86,57 @@ TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id,
 
    TLeaf *leaf     = new TLeafElement(name,fID, fType);
    leaf->SetBranch(this);
-   leaf->SetAddress(addobj);
    fNleaves = 1;
    fLeaves.Add(leaf);
    gTree->GetListOfLeaves()->Add(leaf);
 
-// Set the bit kAutoDelete to specify that when reading
-// in TLeafElement::ReadBasket, the object should be deleted
-// before calling Streamer.
-// It is foreseen to not set this bit in a future version.
+   // Set the bit kAutoDelete to specify that when reading
+   // in TLeafElement::ReadBasket, the object should be deleted
+   // before calling Streamer.
+   // It is foreseen to not set this bit in a future version.
    SetAutoDelete(kTRUE);
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
 
-//*-*-  Create the first basket
-   if (splitlevel > 0) return;
+   // create sub branches if requested by splitlevel
+   char branchname[128];
+   if (splitlevel > 0) {
+      TObjArray *elements = sinfo->GetElements();
+      TStreamerElement *element = (TStreamerElement *)elements->At(id);
+      if (!strchr(element->GetTypeName(),'*') && (fType == TStreamerInfo::kObject || fType == TStreamerInfo::kAny)) {
+         TClass *cl = gROOT->GetClass(element->GetTypeName());
+         TStreamerInfo *info = cl->GetStreamerInfo();
+         TIter next(info->GetElements());
+         TStreamerElement *elem;
+         Int_t jd = 0;
+         while ((elem = (TStreamerElement*)next())) {
+            if (!strcmp(elem->GetTypeName(),"BASE")) {
+               TClass *cl2 = gROOT->GetClass(elem->GetName());
+               if (cl2->Property() & kIsAbstract) {
+                  jd = -1;
+                  break;
+               }
+            }
+            sprintf(branchname,"%s.%s",name,elem->GetName());
+            TBranch *branch = new TBranchElement(branchname,info,jd,basketsize,splitlevel-1);
+            fBranches.Add(branch);
+            jd++;
+         }
+         if (jd) return;
+         fBranches.Delete();
+      }
+      if (!strcmp(element->GetTypeName(),"TClonesArray*")) {
+         printf("will split this clonesarray: %s\n",name);
+         //return;
+      }
+   }
+
+   // Create a basket for the terminal branch
    TBasket *basket = new TBasket(name,fTree->GetName(),this);
    fBaskets.Add(basket);
 }
-
 
 //______________________________________________________________________________
 TBranchElement::~TBranchElement()
@@ -207,9 +238,11 @@ void TBranchElement::Print(Option_t *option) const
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
-      Printf("*Branch  :%-9s : %-54s *",GetName(),GetTitle());
-      Printf("*Entries : %8d : BranchElement (see below)                               *",Int_t(fEntries));
-      Printf("*............................................................................*");
+      if (fID < 0) {
+         Printf("*Branch  :%-9s : %-54s *",GetName(),GetTitle());
+         Printf("*Entries : %8d : BranchElement (see below)                               *",Int_t(fEntries));
+         Printf("*............................................................................*");
+      }
       for (i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches.At(i);
          branch->Print(option);
@@ -253,37 +286,45 @@ void TBranchElement::SetAddress(void *add)
    }
    fReadEntry = -1;
    
-   fAddress = (char*)add;
-   void **ppointer = (void**)add;
-   TObject *obj = (TObject*)(*ppointer);
    TClass *cl = gROOT->GetClass(fClassName.Data());
-   if (!obj && cl) {
-      obj = (TObject*)cl->New();
-      *ppointer = (void*)obj;
+   fAddress = (char*)add;
+   char *objadd = (char*)add;
+   if (fID < 0) {
+      char **ppointer = (char**)add;
+      objadd = *ppointer;
+      if (!objadd && cl) {
+         objadd = (char*)cl->New();
+         *ppointer = objadd;
+      }
    }
    Int_t *leafOffsets;
    if (!fInfo) {
       TStreamerInfo::Optimize(kFALSE);
-      cl->BuildRealData((void*)obj);
+      cl->BuildRealData(objadd);
       fInfo = cl->GetStreamerInfo(fClassVersion);
       leafOffsets = fInfo->GetOffsets();
       if (!leafOffsets || fInfo->IsOptimized()) fInfo->BuildOld();
    }
+   leafOffsets = fInfo->GetOffsets();
       
    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
    if (leaf) {
       if (fID >= 0) {
          leafOffsets = fInfo->GetOffsets();
-         char *absaddr = (char*)obj + leafOffsets[fID];
-         leaf->SetAddress((void*)absaddr);
+         leaf->SetAddress(objadd + leafOffsets[fID]);
       }
    }
 
-   Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
-   for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetAddress(add);
+   for (Int_t i=0;i<nbranches;i++)  {
+      TBranchElement *branch = (TBranchElement*)fBranches[i];
+      Int_t nb2 = branch->GetListOfBranches()->GetEntries();
+      if (nb2 > 0) {
+         Int_t id = branch->GetID();
+         branch->SetAddress(objadd + leafOffsets[id]);
+      } else {
+         branch->SetAddress(objadd);
+      }
    }
 }
 
