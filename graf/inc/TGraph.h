@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.15 2001/11/07 16:54:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.16 2001/11/30 15:46:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -95,11 +95,13 @@ public:
         virtual void     InitExpo();
         virtual void     InitGaus();
         virtual void     InitPolynom();
+        virtual Int_t    InsertPoint(); // *MENU*
         virtual void     Paint(Option_t *chopt="");
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     Print(Option_t *chopt="") const;
         static  void     RemoveFunction(TGraph *gr, TObject *obj);
+        virtual Int_t    RemovePoint(); // *MENU*
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*

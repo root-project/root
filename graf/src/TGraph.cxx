@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.53 2001/12/10 21:11:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.54 2001/12/14 13:32:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1252,6 +1252,57 @@ void TGraph::InitPolynom()
    LeastSquareFit( nchanx, npar, fitpar);
 
    for (Int_t i=0;i<npar;i++) grF1->SetParameter(i, fitpar[i]);
+}
+
+//______________________________________________________________________________
+Int_t TGraph::InsertPoint()
+{
+// Insert a new point at the mouse position
+   
+   Int_t px = gPad->GetEventX();
+   Int_t py = gPad->GetEventY();
+
+   //localize point where to insert
+   Int_t ipoint = -2;
+   Int_t i,d=0;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i=0;i<fNpoints-1;i++) {
+      d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
+      if (d < 5) {ipoint = i+1; break;}
+   }
+   if (ipoint == -2) {
+      //may be we are far from one point, try again with a larger window
+      for (i=0;i<fNpoints-1;i++) {
+         d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
+         if (d < 10) {ipoint = i+1; break;}
+      }
+   }
+   if (ipoint == -2) {
+      //distinguish between first and last point
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[0]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->XtoPad(fY[0]));
+      if (dpx*dpx+dpy*dpy < 25) ipoint = 0;
+      else                      ipoint = fNpoints;
+   }
+   fNpoints++;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   for (i=0;i<ipoint;i++) {
+      newX[i] = fX[i];
+      newY[i] = fY[i];
+   }
+   newX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   newY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   for (i=ipoint+1;i<fNpoints;i++) {
+      newX[i] = fX[i-1];
+      newY[i] = fY[i-1];
+   }
+   delete [] fX;
+   delete [] fY;
+   fX = newX;
+   fY = newY;
+   gPad->Modified();
+   return ipoint;
 }
 
 //______________________________________________________________________________
@@ -2669,6 +2720,42 @@ void TGraph::RemoveFunction(TGraph *gr, TObject *obj)
 //   this function is called by TF1 destructor
 
    gr->GetListOfFunctions()->Remove(obj);
+}
+
+//______________________________________________________________________________
+Int_t TGraph::RemovePoint()
+{
+// Delete point close to the mouse position
+   
+   Int_t px = gPad->GetEventX();
+   Int_t py = gPad->GetEventY();
+
+   //localize point to be deleted
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i=0;i<fNpoints;i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
+   }
+   if (ipoint == -2) return -1;
+   fNpoints--;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   Int_t j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newX[j] = fX[i];
+      newY[j] = fY[i];
+   }
+   delete [] fX;
+   delete [] fY;
+   fX = newX;
+   fY = newY;
+   gPad->Modified();
+   return ipoint;
 }
 
 //______________________________________________________________________________

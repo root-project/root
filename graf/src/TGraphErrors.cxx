@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.17 2001/12/10 21:11:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.18 2001/12/18 15:43:05 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -229,6 +229,33 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
 }
 
 //______________________________________________________________________________
+Int_t TGraphErrors::InsertPoint()
+{
+// Insert a new point at the mouse position
+   
+   Int_t ipoint = TGraph::InsertPoint();
+   
+   Double_t *newEX = new Double_t[fNpoints];
+   Double_t *newEY = new Double_t[fNpoints];
+   Int_t i;
+   for (i=0;i<ipoint;i++) {
+      newEX[i] = fEX[i];
+      newEY[i] = fEY[i];
+   }
+   newEX[ipoint] = 0;
+   newEY[ipoint] = 0;
+   for (i=ipoint+1;i<fNpoints;i++) {
+      newEX[i] = fEX[i-1];
+      newEY[i] = fEY[i-1];
+   }
+   delete [] fEX;
+   delete [] fEY;
+   fEX = newEX;
+   fEY = newEY;
+   return ipoint;
+}
+
+//______________________________________________________________________________
 void TGraphErrors::Paint(Option_t *option)
 {
    // Paint this TGraphErrors with its current attributes
@@ -364,6 +391,30 @@ void TGraphErrors::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
+Int_t TGraphErrors::RemovePoint()
+{
+// Delete point close to the mouse position
+   
+   Int_t ipoint = TGraph::RemovePoint();
+   if (ipoint < 0) return ipoint;
+
+   Double_t *newEX = new Double_t[fNpoints];
+   Double_t *newEY = new Double_t[fNpoints];
+   Int_t i, j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newEX[j] = fEX[i];
+      newEY[j] = fEY[i];
+   }
+   delete [] fEX;
+   delete [] fEY;
+   fEX = newEX;
+   fEY = newEY;
+   return ipoint;
+}
+
+//______________________________________________________________________________
 void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -475,6 +526,31 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    fX[i] = x;
    fY[i] = y;
+}
+
+//______________________________________________________________________________
+void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
+{
+//*-*-*-*-*-*-*Set ex and ey values for point pointed by the mouse*-*-*-*
+//*-*          ===================================================
+
+   Int_t px = gPad->GetEventX();
+   Int_t py = gPad->GetEventY();
+
+   //localize point to be deleted
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i=0;i<fNpoints;i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
+   }
+   if (ipoint == -2) return;
+   
+   fEX[ipoint] = ex;
+   fEY[ipoint] = ey;
+   gPad->Modified();
 }
 
 //______________________________________________________________________________
