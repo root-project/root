@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.48 2004/07/13 12:46:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.49 2004/08/03 16:01:18 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -276,8 +276,8 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t heig
 
    CreateCanvas(name);
 
-   ShowToolBar(c->GetShowToolBar());
-   ShowEditor(c->GetShowEditor());
+   ShowToolBar(kFALSE);
+   ShowEditor(kFALSE);
 
    Resize(width, height);
 }
@@ -290,8 +290,8 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t 
 
    CreateCanvas(name);
 
-   ShowToolBar(c->GetShowToolBar());
-   ShowEditor(c->GetShowEditor());
+   ShowToolBar(kFALSE);
+   ShowEditor(kFALSE);
 
    MoveResize(x, y, width, height);
    SetWMPosition(x, y);
@@ -527,8 +527,8 @@ void TRootCanvas::CreateCanvas(const char *name)
    HideFrame(fToolBarSep);
    HideFrame(fHorizontal1);
 
-   ShowToolBar(fCanvas->GetShowToolBar());
-   ShowEditor(fCanvas->GetShowEditor());
+   ShowToolBar(kFALSE);
+   ShowEditor(kFALSE);
 
    // we need to use GetDefaultSize() to initialize the layout algorithm...
    Resize(GetDefaultSize());
@@ -823,7 +823,6 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kViewEditor:
                      fCanvas->ToggleEditor();
                      if (!fEditor) CreateEditor();
-                     //ShowEditor(fCanvas->GetShowEditor());
                      break;
                   case kViewToolbar:
                      fCanvas->ToggleToolBar();
@@ -1183,11 +1182,8 @@ void TRootCanvas::CreateEditor()
 
    fEditorFrame->SetEditable();
    gPad = Canvas();
-   TString show = gEnv->GetValue("Canvas.ShowEditor","false");
-   gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditorFrame->SetEditable(0);
-   if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
 }
 
 //______________________________________________________________________________

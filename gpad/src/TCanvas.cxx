@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.74 2004/07/30 10:53:19 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.75 2004/08/21 07:09:31 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -440,16 +440,6 @@ void TCanvas::Build()
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
    else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
 
-   // transient canvases have typically no menubar and should not get
-   // by default the event status bar (if set by default)
-   if (fShowEventStatus && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowStatusBar(fShowEventStatus);
-   // ... and toolbar + editor
-   if (fShowToolBar && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowToolBar(fShowToolBar);
-   if (fShowEditor && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowEditor(fShowEditor);
-
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
       gVirtualX->SelectWindow(fCanvasID);
@@ -501,6 +491,16 @@ void TCanvas::Build()
       gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
       PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
+
+   // transient canvases have typically no menubar and should not get
+   // by default the event status bar (if set by default)
+   if (fShowEventStatus && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowStatusBar(fShowEventStatus);
+   // ... and toolbar + editor
+   if (fShowToolBar && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowToolBar(fShowToolBar);
+   if (fShowEditor && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowEditor(fShowEditor);
 
 #if defined(WIN32) && !defined(GDK_WIN32)
    if (!strcmp(gVirtualX->GetName(), "Win32"))
@@ -1466,12 +1466,12 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    h = UInt_t((fWindowHeight)/cx);
    topx = GetWindowTopX();
    topy = GetWindowTopY();
-   
+
    if (w == 0) {
       w = GetWw()+4; h = GetWh()+4;
       topx = 1;    topy = 1;
    }
-   
+
    out <<"{"<<endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<endl;
    out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<endl;
@@ -1485,7 +1485,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 //   Write canvas parameters (TCanvas case)
       out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote;
-      if (!HasMenuBar()) 
+      if (!HasMenuBar())
          out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
       else
          out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
