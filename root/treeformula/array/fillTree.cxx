@@ -16,6 +16,11 @@ int fillTree() {
 
 		for(Int_t ins=0; ins<3; ins++) {
          pData->ns[ins].orient = ins;
+         for(Int_t isubs; isubs<2; isubs++) {
+            for(Int_t iefg=0;iefg<5;iefg++) {
+               (pData->ns[ins]).subs[isubs].efg[iefg] = random() / 10000;
+            }
+         }
 			for(Int_t ich=0; ich<49; ich++) {
 				(pData->ns[ins]).adc[ich] = random() / 1000 ;
 			}

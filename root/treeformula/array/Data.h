@@ -6,10 +6,18 @@
 #include <iostream>
 #include "TObject.h"
 
+
+class SubChild : public TObject {
+public:
+   Float_t efg[5];
+   ClassDef(SubChild,1);
+};
+
 class NSChild : public TObject {
  public:
 
    int orient;
+   SubChild subs[2];
 	Float_t adc[49];            // adc count
 
 	NSChild() {}

@@ -1,5 +1,5 @@
 {
-if (!gSystem->CompileMacro("Data.cxx","kf")) gApplication->Terminate(1);
-if (!gSystem->CompileMacro("fillTree.cxx","kf")) gApplication->Terminate(1);
+if (!gSystem->CompileMacro("Data.cxx","k")) gApplication->Terminate(1);
+if (!gSystem->CompileMacro("fillTree.cxx","k")) gApplication->Terminate(1);
 fillTree();
 }

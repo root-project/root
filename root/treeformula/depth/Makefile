@@ -9,10 +9,11 @@ TEST_TARGETS += depthTest
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
 
-depthTest: depth.root
 ifneq ($(FAIL),)
+depthTest: depth.root
 	$(CMDECHO) root.exe -q -l -b Read.C 
 else
+depthTest: 
 	$(CMDECHO) echo depthTest known to fail
 endif
 
