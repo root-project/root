@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.61 2001/12/02 16:50:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.62 2001/12/03 09:04:42 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -628,7 +628,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
 
    if (!fClassInfo) {
       TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
-      if (!sinfo) return 0;
+      if (!sinfo) return -1;
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
       Int_t offset = 0;
@@ -640,7 +640,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
             offset += baseclass->Size();
          }
       }
-      return 0;
+      return -1;
    }
 
    TClass     *c;
@@ -650,7 +650,9 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
 
    // otherwise look at inheritance tree
    while ((inh = (TBaseClass *) next())) {
-      c = inh->GetClassPointer();
+      //use option load=kFALSE to avoid a warning like:
+      //"Warning in <TClass::TClass>: no dictionary for class TRefCnt is available"
+      c = inh->GetClassPointer(kFALSE);
       if (c) {
          if (cl == c) return inh->GetDelta();
          off = c->GetBaseClassOffset(cl);
