@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.32 2003/06/25 14:34:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.33 2003/06/25 18:06:44 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -121,6 +121,7 @@ protected:
                    TROOT();               //Only used by Dictionary
    void            InitSystem();          //Operating System interface
    void            InitThreads();         //Initialize threads library
+   void            AuthCleanup();         //Cleanup remote auth info
 
    void           *operator new(size_t l) { return TObject::operator new(l); }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.44 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.45 2003/07/01 14:18:27 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -78,9 +78,7 @@ const char* const kUNTAR  = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
 
-
 TProofServ *gProofServ;
-
 
 //______________________________________________________________________________
 static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
@@ -317,6 +315,9 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    TAuthenticate::SetGlobalUser(fUser);
    TAuthenticate::SetGlobalPasswd(fPasswd);
+
+   // Read info transmitted from the client ...
+   ReadProofAuth();
 
    // if master, start slave servers
    if (IsMaster()) {
@@ -1566,6 +1567,46 @@ void TProofServ::Terminate(Int_t status)
 {
    // Terminate the proof server.
 
+   // Cleanup auth tab
+   TApplication *lApp = gROOT->GetApplication();
+   if (lApp) {
+      if (strstr(lApp->Argv()[1],"proof") != 0 && lApp->Argc() > 5) {
+         // Prepare the call
+         char *Host = StrDup(lApp->Argv()[4]);
+         int   rPid;
+         sscanf(lApp->Argv()[5],"%d",&rPid);
+         PDB(kGlobal,3)
+            Info("Terminate"," host is: %s, rPid: %d (port: %d)",Host,rPid,fSocket->GetLocalPort());
+         if (rPid > 0) {
+            // Create a socket to our parent proofd
+            TSocket *newsock = new TSocket("127.0.0.1",fSocket->GetLocalPort(),-1);
+            if (newsock->IsValid()) {
+               newsock->SetOption(kNoDelay, 1);
+               newsock->Send("Inquiring PROTOCOL for remote cleaning: ignore next error message (if any)");
+               newsock->Send(kROOTD_PROTOCOL);
+               int proto, kind;
+               newsock->Recv(proto, kind);
+               if (proto > 6) {
+                  newsock->Send(Form("%d %s", rPid, Host), kROOTD_CLEANUP);
+               }
+            } else {
+               PDB(kGlobal,3)
+                  Info("Terminate","unable to open socket to local proofd for auth cleanup");
+            }
+            if (newsock) delete newsock;
+         }
+      }
+   }
+
+   // Cleanup local Globus stuff (shm's and allocated memory) if needed
+   GlobusAuth_t GlobusAuthHook = TAuthenticate::GetGlobusAuthHook();
+   PDB(kGlobal,3) Info("Terminate","GlobusAuthHook 0x%lx ",GlobusAuthHook);
+   if (GlobusAuthHook != 0) {
+      TString det, us;
+      TAuthenticate *auth = new TAuthenticate(0,0,"cleanup",0);
+      (*GlobusAuthHook)(auth,us,det);
+   }
+
    // Cleanup session directory
    if (status == 0) {
       gSystem->ChangeDirectory("/"); // make sure we remain in a "connected" directory
@@ -1594,3 +1635,144 @@ TProofServ *TProofServ::This()
    return gProofServ;
 }
 
+//______________________________________________________________________________
+void TProofServ::ReadProofAuth()
+{
+   // Read the content of a proofauth.xxx file, if exists, create related
+   // THostAuth and add them to the authInfo list.
+
+   TList     *authInfo = 0;
+   THostAuth *hostAuth = 0;
+
+   PDB(kGlobal,2) Info("ReadProofAuth","enter ...");
+
+   // Get pointer to list with authentication info
+   authInfo = TAuthenticate::GetAuthInfo();
+
+   // Check if we got a file name from the calling process
+   TApplication *lApp = gROOT->GetApplication();
+   if (lApp) {
+      if (strstr(lApp->Argv()[1],"proof") != 0 && strlen(lApp->Argv()[3]) > 0) {
+         // We got a file name ...
+         char *FilePA = StrDup(lApp->Argv()[3]);
+         PDB(kGlobal,3) Info("ReadProofAuth","filename is: %s", FilePA);
+
+         // Check accessibility ...
+         if (!gSystem->AccessPathName(FilePA, kReadPermission)) {
+            // Now open it
+            FILE *fpa = fopen(FilePA, "r");
+            if (fpa) {
+               // now read it
+               char  line[1024];
+               int   i, nmet, meth[kMAXSEC], len;
+               char *ptr, *pend, *host, *user, *rest, *det[kMAXSEC];
+               while (fgets(line, sizeof(line),fpa)) {
+                  // Reset entry
+                  for (i = 0; i < kMAXSEC; i++) { meth[i]= -1; det[i]= 0; }
+                  // get read of CR ... if any
+                  if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+                  // Now decode
+                  rest = new char[strlen(line)+1]; rest[0]='\0';
+                  ptr  = line;
+
+                  host = new char[strlen(line)+1]; host[0]='\0';
+                  sscanf(ptr+2, "%s %s", host, rest);
+                  ptr = strstr(ptr, rest);
+
+                  user = new char[strlen(line)+1]; user[0]='\0';
+                  sscanf(ptr+2, "%s %s", user, rest);
+                  if (!strcmp(user, "any")) user[0] = '\0';
+                  ptr = strstr(ptr, rest);
+
+                  sscanf(ptr+2, "%d %s", &nmet, rest);
+                  PDB(kGlobal,3) Info("ReadProofAuth","host user nmet: %s %s %d",host,user,nmet);
+
+                  ptr = strstr(ptr, rest);
+                  for (i = 0; i < nmet; i++) {
+                     sscanf(ptr+1, "%d %s", &meth[i], rest);
+                     ptr = strstr(ptr, rest);
+
+                     PDB(kGlobal,3) Info("ReadProofAuth","meth[%d]: %d (%s)",i,meth[i]);
+
+                     pend = strstr(ptr+1,"'");
+                     len = pend-ptr;
+                     det[i] = new char[len+5];
+                     strncpy(det[i], ptr, len);
+                     det[i][len]='\0';
+                     // Turn off prompt
+                     char *ppt = strstr(det[i], "pt:");
+                     if (ppt) {
+                        if (!strncmp(ppt+3,"yes",3)) {
+                           ppt[3]='n'; ppt[4]='o'; ppt[5]=' ';
+                        }
+                        if (!strncmp(ppt+3,"1",1)) {
+                           ppt[3]='0';
+                        }
+                     }
+                     PDB(kGlobal,3) Info("ReadProofAuth", "det[%d]: %s",i,det[i]);
+                     ptr = strstr(pend+1, "'");
+                  }
+                  // Check if a HostAuth object for this (host,user) pair already exists
+                  hostAuth = TAuthenticate::GetHostAuth(host,user);
+                  if (!hostAuth) {
+                     // Create HostAuth object ...
+                     hostAuth = new THostAuth(host,user,nmet,meth,(char **)det);
+                     PDB(kGlobal,3) hostAuth->Print();
+
+                     // ... and add it to the list (static in TAuthenticate)
+                     authInfo->Add(hostAuth);
+                  } else {
+                     PDB(kGlobal,3) {
+                        Info("ReadProofAuth", "updating existing THostAuth for (%s,%s)",host,user);
+                        hostAuth->Print();
+                     }
+
+                    int nold = hostAuth->NumMethods();
+                    int i,j;
+                    for (i = 0; i < nmet; i++ ) {
+                       int jm = -1;
+                       for (j = 0; j < nold; j++ ) {
+                          if (meth[i] == hostAuth->GetMethods(j)) {
+                             jm= j; break;
+                          }
+                       }
+                       if (jm == -1) {
+                          // Add a method ...
+                          hostAuth->AddMethod(meth[i], det[i]);
+		       } else {
+                          // Set a new details string ...
+                          hostAuth->SetDetails(meth[i], det[i]);
+                       }
+                    }
+                 }
+                 // Delete allocate memory
+                 if (host) delete[] host;
+                 if (user) delete[] user;
+                 if (rest) delete[] rest;
+                 for (i = 0; i < kMAXSEC; i++) {
+                    if (det[i]) delete[] det[i];
+                    det[i] = 0; meth[i] = -1;
+                  }
+                  nmet = 0;
+	       }
+               // Close the file
+               fclose(fpa);
+               // Unlink (=delete) the file
+               gSystem->Unlink(FilePA);
+            } else {
+               PDB(kGlobal,3)
+                  Info("ReadProofAuth","file %s cannot be opened", FilePA);
+            }
+         } else {
+            PDB(kGlobal,3)
+               Info("ReadProofAuth","file %s either non existing or not readable", FilePA);
+         }
+         delete [] FilePA;
+      } else {
+         PDB(kGlobal,3)
+            Info("ReadProofAuth","no file name received from calling process");
+      }
+   } else {
+      PDB(kGlobal,3) Info("ReadProofAuth","unable to access calling arguments");
+   }
+}

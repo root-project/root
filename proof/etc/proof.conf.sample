@@ -2,7 +2,7 @@
 #
 # node <hostname> [image=<imagename>]
 # slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
-#                  [srp | krb5]
+#                  [usrpwd | srp | krb5 | globus | ssh | uidgid]
 # user <username> on <hostname>
 #
 # For each unique node in the cluster add a "node" line.

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.53 2003/07/18 23:40:12 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.54 2003/08/19 20:22:01 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -118,16 +118,16 @@ Gui.DocumentBackgroundColor: white
 Gui.DocumentForegroundColor: black
 Gui.TooltipBackgroundColor:  LightYellow
 Gui.TooltipForegroundColor:  black
-Gui.IconPath:               $(HOME)/icons:@iconpath@:.
-Gui.MimeTypeFile:           $(HOME)/.root.mimes
+Gui.IconPath:                $(HOME)/icons:@iconpath@:.
+Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
-#Gui.MimeTypeFile:           @etcdir@/root.mimes
+#Gui.MimeTypeFile:            @etcdir@/root.mimes
 # Can be either small, big, list, details
-Browser.IconStyle:          small
+Browser.IconStyle:           small
 # Can be either name, type, size, date
-Browser.SortBy:             name
-Browser.GroupView:          1000
-Browser.ShowHidden:         no
+Browser.SortBy:              name
+Browser.GroupView:           1000
+Browser.ShowHidden:          no
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros
 Rint.Load:               rootalias.C
@@ -145,12 +145,53 @@ ACLiC.Linkdef:          _linkdef
 # Add additional include directives for ACLiC compilations
 #ACLiC.IncludePaths:     -I/where/the/includes/are
 
-# Default authentication method for rootd (0=clear, 1=SRP, 2=Krb5)
+# Variables related to remote authentication
+# Default authentication method for rootd (0=UsrPwd, 1=SRP, 2=Krb5, 3=Globus,
+# 4=SSH, 5=UidGid)
 Rootd.Authentication:   0
 
-# Default authentication method for proofd (0=clear, 1=SRP, 2=Krb5)
+# Default authentication method for proofd (0=UsrPwd, 1=SRP, 2=Krb5, 3=Globus,
+# 4=SSH, 5=UidGid)
 Proofd.Authentication:  0
 Proofd.StaticSlaves:    yes
+
+# Default login name (if not defined is taken from $(HOME))
+# UsrPwd.Login:           qwerty
+# SRP.Login:              qwerty
+# Krb5.Login:             qwerty@LOCAL.DOM.AIN
+# Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem  ad:/etc/grid-security/certificates
+# Ssh.Login:              qwerty
+# UidGid.Login:           qwerty
+
+# To be prompted for login information
+# UsrPwd.LoginPrompt:     yes
+# SRP.LoginPrompt:        no
+# Krb5.LoginPrompt:       no
+# Globus.LoginPrompt:     yes
+# Ssh.LoginPrompt:        yes
+# UidGid.LoginPrompt:     no
+
+# To reuse established security context
+UsrPwd.ReUse:         yes
+SRP.ReUse:            yes
+Krb5.ReUse:           no
+Globus.ReUse:         yes
+Ssh.ReUse:            yes
+
+# To control password encryption for UsrPwd authentication
+# (secure, but slightly slower)
+UsrPwd.Crypt:         yes
+
+# Globus miscellanea
+# Globus Proxy duration: HH:MM (ex 12:15 for 12 hours and 15 min)
+# 'default' for system default
+Globus.ProxyDuration:    default
+# Globus.ProxyDuration:    14
+# Number of bits for the initial key
+Globus.ProxyKeyBits:     1024
+
+# Path to alternative 'ssh' (to override $PATH if ever needed)
+# Ssh.ExecDir:      /usr/bin
 
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"

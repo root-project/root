@@ -25,6 +25,7 @@ enable_asimage=yes
 enable_cern=yes
 enable_chirp=yes
 enable_dcache=yes
+enable_globus=yes
 enable_krb5=yes
 enable_ldap=yes
 enable_mysql=yes
@@ -52,8 +53,9 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_qt enable_rfio enable_dcache \
          enable_rpath enable_sapdb enable_shadowpw enable_shared \
          enable_soversion enable_srp enable_table enable_thread enable_venus \
-         enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
-         enable_asimage enable_chirp enable_explicitlink"
+         enable_krb5 enable_ldap enable_openiv enable_alien enable_asimage \
+         enable_chirp enable_globus \
+         enable_exceptions enable_explicitlink "
 
 
 ######################################################################
@@ -238,6 +240,7 @@ check_header()  {
 
     # Loop over the list of possible directories, and see if we can
     # find any of the library files as determind above.
+
     for i in $hdrdirs; do
         for j in ${hdrs} ; do
 	    # if we found the file (it's readable by user), we set the
@@ -395,6 +398,7 @@ enable/disable options, prefix with either --enable- or --disable-
    dcache          dCache support, requires libdcap from DESY
    exceptions      Turn on compiler exception handling capability
    explicitlink    Explicitly link with all dependent libraries
+   globus          Globus authentication support, requires Globus toolkit
    krb5            Kerberos5 support, requires Kerberos libs
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
@@ -423,6 +427,8 @@ with options, prefix with --with-, enables corresponding support
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
    krb5            Kerberos5 support, location of Kerberos distribution
+   globus          Globus support, path to what should be GLOBUS_LOCATION
+   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.globus)
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -521,6 +527,8 @@ if test $# -gt 0 ; then
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
+      --with-globus-patch=*)   globuspatchdir=$optarg ; enable_globus="yes" ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
@@ -1274,6 +1282,129 @@ if test ! "x$enable_ldap" = "xno"; then
     fi
 fi
 
+######################################################################
+#
+### echo %%% Globus Support - Third party libraries
+#
+# (See www.globus.org)
+#
+# If the user has set the flags "--disable-globus", we don't check for
+# Globus at all.
+#
+glbextracflags=""
+glbpatchcflags=""
+if test ! "x$enable_globus" = "xno"; then
+    # Check if the GLOBUS_lOCATION variable is set
+    if test "x$globusdir" = "x" ; then
+        if test "x$GLOBUS_LOCATION" = "x" ; then
+            globusdir=""
+            enable_globus="no"
+            break
+        else
+            globusdir=$GLOBUS_LOCATION
+        fi
+    fi
+
+    pthr="pthr"
+    #determine flavour tag of the building
+    flavour=""
+    if test -d $globusdir/include/gcc32; then
+        flavour="gcc32"
+    else
+        flavour="gcc32dbg"
+    fi
+    globusincdir=""
+    globuslibdir=""
+    searchincdir=$globusdir/include
+
+    for i in "openssl/x509.h" "openssl/pem.h" "globus_gss_assist.h" ; do
+        check_header $i "" "$searchincdir/$flavour $searchincdir/$flavour$pthr"
+        if test "x$found_hdr" = "x" ; then
+            globusinc=""
+            globusincdir=""
+            enable_globus="no"
+            break
+        fi
+        globusinc="$globusinc $found_hdr"
+        if test "x$globusincdir" = "x" ; then
+            globusincdir=$found_dir
+        else
+            for k in $globusincdir ; do
+                if test "x$k" != "x$found_dir" ; then
+                    if test "x$k" != "x-I$found_dir" ; then
+                        globusincdir="$found_dir -I$globusincdir"
+                    fi
+                 fi
+            done
+        fi
+    done
+
+    globuslib=""
+    if test ! "x$globusdir" = "x" ; then
+        searchlibdir=$globusdir/lib
+    fi
+
+    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
+       libssl_$flavour libcrypto_$flavour ; do
+       check_library $i "$enable_shared" "$searchlibdir" /usr/lib \
+          /usr/local/lib
+          if test "x$found_lib" = "x" ; then
+              globuslib=""
+              globuslibdir=""
+              enable_globus="no"
+              break
+          fi
+          globuslib="$globuslib $found_lib"
+          if test "x$globuslibdir" = "x" ; then
+              globuslibdir=$found_dir
+          else
+              for k in $globuslibdir ; do
+                  if test "x$k" != "x$found_dir" ; then
+                      globuslibdir="$found_dir $globuslibdir"
+                  fi
+              done
+          fi
+    done
+
+    sourcepath=""
+    if test -s $globusdir/etc/globus-user-env.sh ; then
+        sourcepath="$globusdir/etc"
+    fi
+    if test "x$sourcepath" = "x" ; then
+        echo "Checking for globus-user-env.sh ... no (cannot run as client)"
+    else
+        echo "Checking for globus-user-env.sh ... $sourcepath"
+    fi
+
+    initpath=""
+    if test -s $globusdir/bin/grid-proxy-init ; then
+        initpath="$globusdir/bin"
+    fi
+    if test "x$sourcepath" = "x" ; then
+        echo "Checking for grid-proxy-init ... no (cannot run as client)"
+    else
+        echo "Checking for grid-proxy-init ... $initpath"
+    fi
+
+    if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
+        enable_globus="no"
+    fi
+
+    if test "x$enable_globus" = "xyes"; then
+        glbextracflags="-DR__GLBS -I$globusincdir"
+        if test ! "x$globuspatchdir" = "x" ; then
+            glbpatchcflags="-DR__GLBCPATCH -I$globusincdir \
+                            -I$globuspatchdir/globus_gsi_credential-0.5/library/ \
+                            -I$globuspatchdir/globus_gssapi_gsi-3.6/library/ \
+                            -I$globuspatchdir/globus_gsi_credential-0.5/ \
+                            -I$globuspatchdir/globus_openssl-0.10/crypto/ \
+                            -I$globuspatchdir/globus_gsi_sysconfig-0.3/library/"
+            echo "Applying experimental patch to globus_gsi_system_config.c"
+        fi
+    else
+        glbextracflags=" "
+    fi
+fi
 
 ######################################################################
 #
@@ -1285,6 +1416,7 @@ fi
 #
 # Check for SRP (libsrp.a)
 #
+srpextracflags=""
 if test ! "x$enable_srp" = "xno" ; then
     if test "x$srpincdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srpincdir=$srpdir/include
@@ -1292,6 +1424,7 @@ if test ! "x$enable_srp" = "xno" ; then
             srpincdir=$srpdir/libsrp
         fi
     fi
+
     check_header "t_server.h" "$srpincdir" $SRP/include $SRP/libsrp \
         /usr/srp/include /usr/include /usr/local/include /usr/local/srp/include
     srpinc=$found_hdr
@@ -1314,6 +1447,7 @@ if test ! "x$enable_srp" = "xno" ; then
     check_library "libsrp" "no" "$srplibdir" $srplibdirs
     srplib=$found_lib
     srplibdir=$found_dir
+
 
     check_symbol BN_new "$srplib" "$srplibdir"
 
@@ -1360,6 +1494,7 @@ if test ! "x$enable_srp" = "xno" ; then
 	srputillibdir="$srputillibdir $found_dir"
     done
 
+
     if test ! "x$srpdir" = "x" ; then
 	srputilincdir=$srpdir/base/lib
     fi
@@ -1374,7 +1509,10 @@ if test ! "x$enable_srp" = "xno" ; then
     if test "x$enable_srp" = "xno" ; then
 	srplib=""
 	srputillib=""
+    else
+        srpextracflags="-DR__SRP"
     fi
+
 fi
 
 ######################################################################
@@ -1408,6 +1546,14 @@ if test ! "x$enable_afs" = "xno" ; then
 	afslib="$afslib $found_lib"
 	afslibdir="$afslibdir $found_dir"
     done
+
+    # on linux, the resolver lives in a separate library
+    if test ! "x$afslibdir" = "x" ; then
+	case $arch in
+	    linux*) afslibdir="$afslibdir -lresolv" ;;
+	esac
+    fi
+
     if test "x$afslib" = "x" ; then
         enable_afs="no"
     fi
@@ -1420,12 +1566,15 @@ fi
 #
 # Check for krb5 (libkrb5.a)
 #
+krb5extracflags=""
 if test ! "x$enable_krb5" = "xno" ; then
     krb5incdir=""
     krb5libdirorg=""
+    krb5bindir=""
     if test ! "x$krb5dir" = "x" ; then
 	krb5incdir=$krb5dir/include
 	krb5libdirorg=$krb5dir/lib
+	krb5bindir=$krb5dir/bin
     fi
     check_header "krb5.h" "$krb5incdir" /usr/athena/include \
 	    /usr/local/athena/include /usr/kerberos/include \
@@ -1473,6 +1622,24 @@ if test ! "x$enable_krb5" = "xno" ; then
 	done
     fi
 
+
+    krb5init=""
+    for i in "$krb5bindir" /usr/athena/bin \
+             /usr/local/athena/bin /usr/kerberos/bin \
+             /usr/krb5/bin /usr/local/kerberos/bin \
+             /usr/bin /usr/local/bin ; do
+        if test -r $i/kinit ; then
+            krb5init=$i/kinit
+            break
+        fi
+    done
+
+    if test "x$krb5init" = "x" ; then
+        echo "Checking for kinit ... no"
+    else
+        echo "Checking for kinit ... $krb5init"
+    fi
+
     # on linux, the resolver lives in a separate library
     if test ! "x$krb5lib" = "x" ; then
 	case $arch in
@@ -1482,6 +1649,10 @@ if test ! "x$enable_krb5" = "xno" ; then
 
     if test "x$krb5lib" = "x" || test "x$krb5incdir" = "x" ; then
         enable_krb5="no"
+    fi
+
+    if test ! "x$enable_krb5" = "x" ; then
+        krb5extracflags="-DR__KRB5"
     fi
 fi
 
@@ -1654,8 +1825,13 @@ if test ! "x$haveconfig" = "x" ; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
-            sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+           if test "x$enable_globus" = "xyes" ; then
+             sed -e "s|@ldflags@|-Wl,-rpath,$libdir -Wl,-rpath,$GLOBUS_LOCATION/lib @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
+           else
+             sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+                    < Makefile.tmp > Makefile.tmpp
+           fi
         fi
         mv Makefile.tmpp Makefile.tmp
     fi
@@ -1748,11 +1924,17 @@ sed \
     -e "s|@etcdir@|$etcdir|"                    \
     -e "s|@exceptions@|$enable_exceptions|"     \
     -e "s|@explicitlink@|$enable_explicitlink|" \
+    -e "s|@globusincdir@|$globusincdir|"        \
+    -e "s|@globuslib@|$globuslib|"              \
+    -e "s|@globuslibdir@|$globuslibdir|"        \
+    -e "s|@glbextracflags@|$glbextracflags|"    \
+    -e "s|@glbpatchcflags@|$glbpatchcflags|"    \
     -e "s|@iconpath@|$iconpath|"                \
     -e "s|@incdir@|$incdir|"                    \
     -e "s|@krb5incdir@|$krb5incdir|"            \
     -e "s|@krb5lib@|$krb5lib|"                  \
     -e "s|@krb5libdir@|$krb5libdir|"            \
+    -e "s|@krb5extracflags@|$krb5extracflags|"  \
     -e "s|@ldapincdir@|$ldapincdir|"            \
     -e "s|@ldaplib@|$ldaplib|"                  \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
@@ -1796,6 +1978,7 @@ sed \
     -e "s|@srputilincdir@|$srputilincdir|"      \
     -e "s|@srputillib@|$srputillib|"            \
     -e "s|@srputillibdir@|$srputillibdir|"      \
+    -e "s|@srpextracflags@|$srpextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \
@@ -1836,6 +2019,7 @@ sed \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@setresuid@|$setresuid|"         \
+    -e "s|@krb5init@|$krb5init|"           \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 echo "done"

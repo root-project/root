@@ -46,11 +46,11 @@ Here's a short summary:
 2a) Get a specific version (>= 2.25/00), e.g.: version 2.25/03:
 
      prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs export \
-                -r v2-25-03 root
+                -P -r v2-25-03 root
 
 2b) Alternatively, checkout the head (development version) of the sources:
 
-     prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs co root
+     prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs export -P root
 
 In both cases you should have a subdirectory called "root" in the
 directory you ran the above commands in.
@@ -427,7 +427,7 @@ The flags consist of two classes:
      proper OpenGL interface for your graphics system. This requires
      the third party libraries libGL and libGLU - or libMesaGL and
      libMesaGLU, as well header files for these libraries. For
-     platforms with native OpenGL suppport (Windows), this is always
+     platforms with native OpenGL support (Windows), this is always
      enabled, even if the --disable-opengl flag is set. Default is true.
    * cern
      Build h2root and g2root utilities to convert ZEBRA files with
@@ -521,7 +521,7 @@ The flags consist of two classes:
      Directory containing libpacklib.{so,a} and libkernlib.{so,a},
      needed by feature cern, for the ZEBRA file converters.
    * shift-libdir
-     Directory containing libshift.a, needed for feature shify.
+     Directory containing libshift.a, needed for feature shift.
    * srp-incdir
      Path to header files for regular SRP library (not utilities)
      This is needed for building the daemons rootd and proofd with
@@ -561,7 +561,28 @@ The flags consist of two classes:
           lib/afs/util.a
      This is needed for building the daemons rootd and proofd with
      AFS support (authentication).
-
+   * globus-dir
+     Path to Globus Tool Kit installation, usually pointed to by the
+     variable GLOBUS_LOCATION; the specification of this path supersedes
+     the one defined by such variable.
+     This directory must contain:
+          include/openssl/x509.h
+          include/openssl/pem.h
+          include/globus_gss_assist.h
+          lib/libglobus_gss_assist_<flavour>
+          lib/libglobus_gssapi_gsi_<flavour>
+          lib/libssl_<flavour>
+          lib/libcrypto_<flavour>
+     'configure' will also look for
+          etc/globus-user-env.sh
+          bin/grid-proxy-init
+     and issue a warning if they are missing, since in such a case
+     automatic credential initialization will not be available.
+   * globus-patch-dir
+     Path to Globus Tool Kit sources; need for applying the experimental
+     patch (see README.GLOBUS)
+   * ssh-dir
+     Specifies the path containing the 'ssh' executable
 
 Information on third party software
 ===================================
@@ -695,5 +716,49 @@ distributions avaliable.
   IBMs commercial AFS ditribution - see
 
     http://www.transarc.ibm.com/Support/afs
+
+Kerberos Authentication
+-------------------------------------------
+To build the Kerberos authentication module used by rootd and proofd,
+you first have to install Kerberos V on your machine. See:
+
+   http://web.mit.edu/kerberos/www/
+
+for details and downloads.
+If the installation directory is different from the standard ones
+(typically /usr/kerberos) the --with-krb5=<krb5_dir> flag must be
+ used to tell configure where to look for Kerberos.
+
+Globus Authentication
+-------------------------------------------
+To build the Globus authentication module used by rootd and proofd,
+you first have to make sure that the Globus Tool Kit is installed
+on the machine. See:
+
+   http://www.globus.org/
+
+for details and downloads.
+Globus Tool Kit is available only for a subset of Unix platforms.
+The variable GLOBUS_LOCATION should be defined as the directory
+containing Globus lib, include and bin. For compilation purposes
+you can pass this directory to the configure script with the option
+--with-globus-dir=<globus_dir>. An experimental path is available
+for versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small
+bug preventing full fonctionallity of the root implementation; this
+is activated by setting --with-globus-patch-dir=<globus_src_dir>
+where <globus_src_dir> is the globus tool kit source,
+
+SSH Authentication
+-------------------------------------------
+There is no need to build special modules for SSH authentication;
+you need, however, to specify the dir path of the 'ssh' executable
+if not standard ( /usr/bin/ssh or /usr/local/bin ) with
+--with-ssh-dir=<ssh_path_dir>. On the server side, 'rootd' and 'proofd'
+will test the presence of the 'sshd' daemon on port 22 (or on the
+one specified by option -s; see 'rootd.cxx'/'proofd.cxx' headers).
+
+
+
+
 
 

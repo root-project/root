@@ -18,8 +18,10 @@ CLIBDO       := $(CLIBDS:.cxx=.o)
 CLIBDH       := $(CLIBDS:.cxx=.h)
 
 CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-CLIBS        := $(wildcard $(MODDIRS)/*.c)
-CLIBO        := $(CLIBS:.c=.o)
+CLIBS1       := $(wildcard $(MODDIRS)/*.c)
+CLIBS2       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+CLIBO        := $(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o)
+RSAO         := $(CLIBDIRS)/rsaaux.o $(CLIBDIRS)/rsalib.o $(CLIBDIRS)/rsafun.o
 
 CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
 

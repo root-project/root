@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.13 2003/08/22 12:39:03 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.14 2003/08/23 00:08:13 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TError.h"
+#include "NetErrors.h"
 
 #if defined(R__UNIX)
 #define HAVE_MMAP
@@ -127,12 +128,11 @@ again:
    Recv(fProtocol, kind);
 
    // Authenticate to remote rootd server
+
    sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
-   if (!strcmp(url.GetProtocol(), "roots"))
-      sec = TAuthenticate::kSRP;
-   if (!strcmp(url.GetProtocol(), "rootk"))
-      sec = TAuthenticate::kKrb5;
-   auth = new TAuthenticate(fSocket, url.GetHost(), "rootd", sec);
+   auth = new TAuthenticate(fSocket, url.GetHost(),
+                            Form("%s:%d", url.GetProtocol(), fProtocol),
+                            url.GetUser());
    if (!auth->Authenticate()) {
       if (sec == TAuthenticate::kSRP)
          Error("TFTP", "SRP authentication failed for host %s", url.GetHost());

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.2 2000/12/19 14:35:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.3 2001/01/26 16:44:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -22,35 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Varargs.h"
-#include "MessageTypes.h"
-
-extern int  gInetdFlag;
-extern int  gPort;
-extern int  gDebug;
-extern int  gSockFd;
-extern int  gAuth;
-
-void DaemonStart(int ignsigcld);
-
-void ErrorInit(const char *ident);
-void ErrorInfo(const char *va_(fmt), ...);
-void ErrorSys(const char *va_(fmt), ...);
-void ErrorFatal(const char *va_(fmt), ...);
-int  GetErrno();
-void ResetErrno();
-
-void NetInit(const char *service, int port, int tcpwindowsize);
-int  NetOpen(int inetdflag);
-void NetClose();
-void NetSetOptions(int sock, int tcpwindowsize);
-int  NetSendRaw(const void *buf, int len);
-int  NetSend(const void *buf, int len, EMessageTypes kind);
-int  NetSend(int code, EMessageTypes kind);
-int  NetSend(const char *msg, EMessageTypes kind = kMESS_STRING);
-int  NetRecvRaw(void *buf, int len);
-int  NetRecv(void *&buf, int &len, EMessageTypes &kind);
-int  NetRecv(char *msg, int len, EMessageTypes &kind);
-int  NetRecv(char *msg, int len);
+#ifndef ROOT_rpdp
+#include "rpdp.h"
+#endif
 
 #endif

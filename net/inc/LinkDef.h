@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.5 2001/02/22 09:41:40 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.6 2002/05/13 10:38:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,5 +36,7 @@
 #pragma link C++ class TSQLRow;
 #pragma link C++ class TGrid;
 #pragma link C++ class TGridResult;
+#pragma link C++ class THostAuth;
+#pragma link C++ class TAuthDetails;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.9 2001/06/26 14:24:24 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.10 2002/12/10 02:19:46 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -37,7 +37,7 @@ class TSocket;
 
 class TNetFile : public TFile {
 
-private:
+protected:
    TUrl      fUrl;        //URL of file
    TString   fUser;       //remote user name
    Seek_t    fOffset;     //seek offset
@@ -47,7 +47,10 @@ private:
 
    static Int_t fgClientProtocol;  //client protocol level
 
-   TNetFile() : fUrl("dummy") { fSocket = 0; }
+   virtual void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
+                              Int_t tcpwindowsize, Bool_t forceOpen,
+                              Bool_t forceRead);
+   void   Create(const char *url, Option_t *option, Int_t netopt);
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
    void   PrintError(const char *where, Int_t err);
@@ -59,6 +62,8 @@ private:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
+   TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
+   TNetFile() : fUrl("dummy") { fSocket = 0; }
    virtual ~TNetFile();
 
    void    Close(Option_t *option=""); // *MENU*
@@ -70,9 +75,9 @@ public:
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
 
+   static  Int_t GetClientProtocol();
+
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
-
-R__EXTERN const char *gRootdErrStr[];
 
 #endif

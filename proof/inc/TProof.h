@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.35 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.36 2003/06/27 11:02:33 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -97,6 +97,7 @@ private:
    TString   fUser;          //user under which to run
    TString   fPasswd;        //user password
    TString   fImage;         //master's image name
+   TString   fUrlProt;       //net protocol name
    Int_t     fPort;          //port we are connected to (proofd = 1093)
    Int_t     fSecurity;      //security level used to connect to master server
    Int_t     fProtocol;      //remote PROOF server protocol version number
@@ -139,6 +140,7 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
+   Int_t    CheckAuth(Int_t sec, char **det);
    Long_t   CheckFile(const char *file, TSlave *sl);
    Int_t    SendFile(const char *file, Bool_t bin = kTRUE);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
@@ -229,7 +231,9 @@ public:
    const char *GetUser() const { return fUser; }
    const char *GetWorkDir() const { return fWorkDir; }
    const char *GetImage() const { return fImage; }
+   const char *GetUrlProt() const { return fUrlProt; }
    Int_t       GetPort() const { return fPort; }
+   Int_t       GetSecurity() const { return fSecurity; }
    Int_t       GetRemoteProtocol() const { return fProtocol; }
    Int_t       GetClientProtocol() const { return kPROOF_Protocol; }
    Int_t       GetStatus() const { return fStatus; }

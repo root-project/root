@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.32 2003/07/27 10:45:58 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.33 2003/08/07 00:21:47 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -59,6 +59,26 @@
 //    /usr/local/root                                                   //
 //                                                                      //
 // Force inetd to reread its conf file with "kill -HUP <pid inetd>".    //
+//                                                                      //
+// If xinetd is used instead, a file named 'proofd' should be created   //
+// under /etc/xinetd.d with content                                     //
+//                                                                      //
+// # default: off                                                       //
+// # description: The proof daemon                                      //
+// #                                                                    //
+// service proofd                                                       //
+// {                                                                    //
+//      disable         = no                                            //
+//      flags           = REUSE                                         //
+//      socket_type     = stream                                        //
+//      wait            = no                                            //
+//      user            = root                                          //
+//      server          = /usr/local/bin/proofd                         //
+//      server_args     = -i -d 0 /usr/local/root                       //
+// }                                                                    //
+//                                                                      //
+// and xinetd restarted (/sbin/service xinetd restart).                 //
+//                                                                      //
 // You can also start proofd by hand running directly under your        //
 // private account (no root system priviliges needed). For example to   //
 // start proofd listening on port 5252 just type:                       //
@@ -80,8 +100,27 @@
 //                     2 = medium                                       //
 //                     3 = maximum                                      //
 //   -f                do not run as daemon, run in the foreground      //
+//   -S keytabfile     use this keytab file, instead of the default     //
+//                     (option only supported when compiled with        //
+//                     Kerberos5 support)                               //
+//   -T <tmpdir>       specifies the directory path to be used to place //
+//                     temporary files; default is /usr/tmp.            //
+//                     Useful if not running as root.                   //
+//   -t period         defines the period (in hours) for cleaning of    //
+//                     the authentication table <tmpdir>/rpdauthtab     //
+//   -G gridmapfile    defines the gridmap file to be used for globus   //
+//                     authentication if different from globus default  //
+//                     (/etc/grid-security/gridmap); (re)defines the    //
+//                     GRIDMAP environment variable.                    //
+//   -C hostcertfile   defines a file where to find information for the //
+//                     local host Globus information (see GLOBUS.README //
+//                     for details)                                     //
+//   -s <sshd_port>    specifies the port number for the sshd daemon    //
+//                     (deafult is 22)                                  //
 //   rootsys_dir       directory which must contain bin/proofserv and   //
-//                     proof/etc/proof.conf                             //
+//                     proof/etc/proof.conf. If not specified ROOTSYS   //
+//                     or built-in (as specified to ./configure) is     //
+//                     tried.                                           //
 //                                                                      //
 //  When your system uses shadow passwords you have to compile proofd   //
 //  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
@@ -103,10 +142,13 @@
 //  with the SRP and gmp libraries. See the Makefile for more details.  //
 //  SRP is described at: http://srp.stanford.edu/.                      //
 //                                                                      //
+//  See README.AUTH for more details on the authentication features.    //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 // Protocol changes (see gProtocol):
 // 6: added support for kerberos5 authentication
+// 7: added support for Globus, SSH and uid/gid authentication and negotiation
 
 #include "config.h"
 #include "RConfig.h"
@@ -118,6 +160,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -125,6 +168,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+#include <sys/un.h>
 
 #if defined(linux)
 #   include <features.h>
@@ -142,8 +186,8 @@
 #if defined(__FreeBSD__) && (__FreeBSD__ < 4)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
-#define	F_LOCK             (LOCK_EX | LOCK_NB)
-#define	F_ULOCK             LOCK_UN
+#define F_LOCK             (LOCK_EX | LOCK_NB)
+#define F_ULOCK             LOCK_UN
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
@@ -221,30 +265,38 @@ extern krb5_deltat krb5_clockskew;
 
 #include "proofdp.h"
 
+#ifdef R__KRB5
+extern krb5_keytab  gKeytab; // to allow specifying on the command line
+extern krb5_context gKcontext;
+#endif
 
 //--- Globals ------------------------------------------------------------------
 
-const char kProofdService[] = "proofd";
-const char kRootdPass[]     = ".rootdpass";
-const char kSRootdPass[]    = ".srootdpass";
-const int  kMaxSlaves       = 32;
-const int  kMAXPATHLEN      = 1024;
+const char  kRootdPass[]     = ".rootdpass";
+const char  kSRootdPass[]    = ".srootdpass";
+const int   kMaxSlaves       = 32;
+const char *gAuthMeth[kMAXSEC]= {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
 
-int  gInetdFlag             = 0;
-int  gForegroundFlag        = 0;
-int  gPort                  = 0;
-int  gDebug                 = 0;
-int  gSockFd                = -1;
-int  gAuth                  = 0;
-int  gProtocol              = 6;       // increase when protocol changes
-char gUser[64]              = { 0 };
-char gPasswd[64]            = { 0 };
-char gConfDir[kMAXPATHLEN]  = { 0 };
+char    gFilePA[40]              = { 0 };
 
-#ifdef R__KRB5
-krb5_keytab  gKeytab        = 0;      // to allow specifying on the command line
-krb5_context gKcontext;
+int     gAuthListSent            = 0;
+int     gCleaningPeriod          = 24;       // period for Auth table cleanup (default 1 day = 24 hours)
+char    gConfDir[kMAXPATHLEN]    = { 0 };
+int     gDebug                   = 0;
+int     gForegroundFlag          = 0;
+int     gInetdFlag               = 0;
+int     gMaster                  =-1;
+int     gPort                    = 0;
+int     gProtocol                = 7;       // increase when protocol changes
+char    gRcFile[kMAXPATHLEN]     = { 0 };
+int     gRootLog                 = 0;
+char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
+
+#ifdef R__GLBS
+  int          gShmIdCred        = -1;     // global, to pass the shm ID to proofserv
 #endif
+
+using namespace ROOT;
 
 //--- Machine specific routines ------------------------------------------------
 
@@ -271,6 +323,29 @@ extern "C" {
 }
 #endif
 
+//
+//--- Error handlers -----------------------------------------------------------
+
+//______________________________________________________________________________
+void Err(int level, const char *msg)
+{
+   Perror((char *)msg);
+   if (level > -1) NetSend(level, kROOTD_ERR);
+}
+//______________________________________________________________________________
+void ErrFatal(int level, const char *msg)
+{
+   Perror((char *)msg);
+   if (level > -1) NetSend(msg, kMESS_STRING);
+   exit(1);
+}
+//______________________________________________________________________________
+void ErrSys(int level, const char *msg)
+{
+   Perror((char *)msg);
+   ErrFatal(level, msg);
+}
+
 //--- Proofd routines ----------------------------------------------------------
 
 //______________________________________________________________________________
@@ -286,301 +361,52 @@ void ProofdLogin()
 {
    // Authentication was successful, set user environment.
 
+   if (gDebug > 2) ErrorInfo("ProofdLogin: enter ... gUser: %s", gUser);
+
    struct passwd *pw = getpwnam(gUser);
 
-   gAuth = 1;
-
    if (chdir(pw->pw_dir) == -1)
-      ErrorFatal("ProofdLogin: can't change directory to %s", pw->pw_dir);
+      Error(ErrFatal,-1,"ProofdLogin: can't change directory to %s", pw->pw_dir);
 
    if (getuid() == 0) {
 
+#ifdef R__GLBS
+      // We need to change the ownership of the shared memory segments used
+      // for credential export to allow proofserv to destroy them
+      struct shmid_ds shm_ds;
+      if (gShmIdCred > 0) {
+        if ( shmctl(gShmIdCred,IPC_STAT,&shm_ds) == -1)
+           Error(ErrFatal,-1,"ProofdLogin: can't get info about shared memory segment %d", gShmIdCred);
+        shm_ds.shm_perm.uid = pw->pw_uid;
+        shm_ds.shm_perm.gid = pw->pw_gid;
+        if ( shmctl(gShmIdCred,IPC_SET,&shm_ds) == -1)
+           Error(ErrFatal,-1,"ProofdLogin: can't change ownership of shared memory segment %d", gShmIdCred);
+      }
+#endif
       // set access control list from /etc/initgroup
       initgroups(gUser, pw->pw_gid);
 
+      // set uid and gid
       if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         ErrorFatal("ProofdLogin: can't setgid for user %s", gUser);
-
+         Error(ErrFatal,-1,"ProofdLogin: can't setgid for user %s", gUser);
       if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         ErrorFatal("ProofdLogin: can't setuid for user %s", gUser);
-
+         Error(ErrFatal,-1,"ProofdLogin: can't setuid for user %s", gUser);
    }
 
+   // set HOME env
    char *home = new char[6+strlen(pw->pw_dir)];
    sprintf(home, "HOME=%s", pw->pw_dir);
    putenv(home);
 
    umask(022);
 
+  // Notify authentication to client ...
    NetSend(gAuth, kROOTD_AUTH);
+   // Send also new offset if it changed ...
+   if (gAuth==2) NetSend(gOffSet, kROOTD_AUTH);
 
    if (gDebug > 0)
       ErrorInfo("ProofdLogin: user %s authenticated", gUser);
-}
-
-//______________________________________________________________________________
-void ProofdUser(const char *user)
-{
-   // Check user id. If user id is not equal to proofd's effective uid, user
-   // will not be allowed access, unless effective uid = 0 (i.e. root).
-   // Code almost identical to RootdUser().
-
-   if (!*user)
-      ErrorFatal("ProofdUser: bad user name");
-
-   struct passwd *pw;
-   if ((pw = getpwnam(user)) == 0)
-      ErrorFatal("ProofdUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started proofd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal("ProofdUser: user not same as effective user of proofd");
-
-   strcpy(gUser, user);
-
-   NetSend(gAuth, kROOTD_AUTH);
-}
-
-//______________________________________________________________________________
-void ProofdKrb5Auth()
-{
-   // Authenticate via Kerberos.
-
-#ifdef R__KRB5
-   NetSend(1, kROOTD_KRB5);
-   // TAuthenticate will respond to our encouragement by sending krb5
-   // authentication through the socket
-#else
-   NetSend(0, kROOTD_KRB5);
-   return;
-#endif
-
-#ifdef R__KRB5
-   int retval;
-
-   // get service principal
-   krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, "proofd",
-                                         KRB5_NT_SRV_HST, &server)))
-      ErrorFatal("while generating service name (%s): %s",
-                 "proofd", error_message(retval));
-
-   // listen for authentication from the client
-   krb5_auth_context auth_context = 0;
-   krb5_ticket *ticket;
-   char proto_version[100] = "krootd_v_1";
-   int sock = gSockFd;
-   if ((retval = krb5_recvauth(gKcontext, &auth_context, (krb5_pointer)&sock,
-                               proto_version, server,
-                               0,
-                               gKeytab,    // default gKeytab is 0
-                               &ticket)))
-      ErrorFatal("recvauth failed--%s", error_message(retval));
-
-   // get client name
-   char *cname;
-   if ((retval = krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname)))
-      ErrorFatal("unparse failed: %s", error_message(retval));
-   using std::string;
-   string user = cname;
-   free(cname);
-   string reply = "authenticated as ";
-   reply += user;
-
-   NetSend(reply.c_str(), kMESS_STRING);
-
-   krb5_auth_con_free(gKcontext, auth_context);
-
-   // set user name
-   user = user.erase(user.find("@"));        // cut off realm
-   string::size_type pos = user.find("/");   // see if there is an instance
-   if (pos != string::npos)
-      user = user.erase(pos);                // drop the instance
-   NetSend(user.c_str(), kMESS_STRING);
-
-   strncpy(gUser, user.c_str(), 64);
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdKrb5Auth: user %s authenticated", gUser);
-
-   ProofdLogin();
-#endif
-}
-
-//______________________________________________________________________________
-void ProofdSRPUser(const char *user)
-{
-   // Use Secure Remote Password protocol.
-   // Check user id in $HOME/.srootdpass file.
-   // Code almost identical to RootdSRPUsr().
-
-   if (!*user)
-      ErrorFatal("ProofdSRPUser: bad user name");
-
-   if (kSRootdPass[0]) { }  // remove compiler warning
-
-#ifdef R__SRP
-
-   char srootdpass[kMAXPATHLEN], srootdconf[kMAXPATHLEN];
-
-   struct passwd *pw = getpwnam(user);
-   if (!pw)
-      ErrorFatal("ProofdSRPUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started proofd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal("ProofdSRPUser: user not same as effective user of proofd");
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   strcpy(gUser, user);
-
-   sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
-   sprintf(srootdconf, "%s/%s.conf", pw->pw_dir, kSRootdPass);
-
-   FILE *fp1 = fopen(srootdpass, "r");
-   if (!fp1) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: error opening %s", srootdpass);
-      return;
-   }
-   FILE *fp2 = fopen(srootdconf, "r");
-   if (!fp2) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: error opening %s", srootdconf);
-      if (fp1) fclose(fp1);
-      return;
-   }
-
-   struct t_pw *tpw = t_openpw(fp1);
-   if (!tpw) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: unable to open password file %s", srootdpass);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-   struct t_conf *tcnf = t_openconf(fp2);
-   if (!tcnf) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("ProofdSRPUser: unable to open configuration file %s", srootdconf);
-      t_closepw(tpw);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
-   struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
-   if (!ts)
-      ErrorFatal("ProofdSRPUser: user %s not found SRP password file", gUser);
-
-   if (tcnf) t_closeconf(tcnf);
-   if (tpw)  t_closepw(tpw);
-   if (fp2)  fclose(fp2);
-   if (fp1)  fclose(fp1);
-
-   char hexbuf[MAXHEXPARAMLEN];
-
-   // send n to client
-   NetSend(t_tob64(hexbuf, (char*)ts->n.data, ts->n.len), kROOTD_SRPN);
-   // send g to client
-   NetSend(t_tob64(hexbuf, (char*)ts->g.data, ts->g.len), kROOTD_SRPG);
-   // send salt to client
-   NetSend(t_tob64(hexbuf, (char*)ts->s.data, ts->s.len), kROOTD_SRPSALT);
-
-   struct t_num *B = t_servergenexp(ts);
-
-   // receive A from client
-   EMessageTypes kind;
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal("ProofdSRPUser: error receiving A from client");
-   if (kind != kROOTD_SRPA)
-      ErrorFatal("ProofdSRPUser: expected kROOTD_SRPA message");
-
-   unsigned char buf[MAXPARAMLEN];
-   struct t_num A;
-   A.data = buf;
-   A.len  = t_fromb64((char*)A.data, hexbuf);
-
-   // send B to client
-   NetSend(t_tob64(hexbuf, (char*)B->data, B->len), kROOTD_SRPB);
-
-   t_servergetkey(ts, &A);
-
-   // receive response from client
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal("ProofdSRPUser: error receiving response from client");
-   if (kind != kROOTD_SRPRESPONSE)
-      ErrorFatal("ProofdSRPUser: expected kROOTD_SRPRESPONSE message");
-
-   unsigned char cbuf[20];
-   t_fromhex((char*)cbuf, hexbuf);
-
-   if (!t_serververify(ts, cbuf)) {
-      // authentication successful
-
-      if (gDebug > 0)
-         ErrorInfo("ProofdSRPUser: user %s authenticated", gUser);
-
-      ProofdLogin();
-
-   } else
-      ErrorFatal("ProofdSRPUser: authentication failed for user %s", gUser);
-
-   t_serverclose(ts);
-
-#else
-   NetSend(2, kROOTD_AUTH);
-#endif
-}
-
-//______________________________________________________________________________
-int ProofdCheckSpecialPass(const char *passwd)
-{
-   // Check user's password against password in $HOME/.rootdpass. If matches
-   // skip other authentication mechanism. Returns 1 in case of success
-   // authentication, 0 otherwise. Almost identical to RootdCheckSpecialPass().
-
-   char rootdpass[kMAXPATHLEN];
-
-   struct passwd *pw = getpwnam(gUser);
-
-   sprintf(rootdpass, "%s/%s", pw->pw_dir, kRootdPass);
-
-   int fid = open(rootdpass, O_RDONLY);
-   if (fid == -1)
-      return 0;
-
-   int n;
-   if ((n = read(fid, rootdpass, sizeof(rootdpass)-1)) <= 0) {
-      close(fid);
-      return 0;
-   }
-   close(fid);
-
-   rootdpass[n] = 0;
-   char *s = strchr(rootdpass, '\n');
-   if (s) *s = 0;
-
-   char *pass_crypt = crypt(passwd, rootdpass);
-   n = strlen(rootdpass);
-
-   if (strncmp(pass_crypt, rootdpass, n+1) != 0)
-      return 0;
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdCheckSpecialPass: user %s authenticated via ~/.rootdpass", gUser);
-
-   return 1;
 }
 
 //______________________________________________________________________________
@@ -588,78 +414,300 @@ void ProofdPass(const char *pass)
 {
    // Check user's password.
 
-   char   passwd[64];
-   char  *passw;
-   char  *pass_crypt;
-   struct passwd *pw;
-#ifdef R__SHADOWPW
-   struct spwd *spw;
+   // Evaluate credentials ...
+   RpdPass(pass);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+   return;
+}
+
+//______________________________________________________________________________
+void ProofdUser(const char *sstr)
+{
+   // Check user's password.
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdUser(sstr);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+   return;
+}
+
+//______________________________________________________________________________
+void ProofdKrb5Auth(const char *sstr)
+{
+   // Authenticate via Kerberos.
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdKrb5Auth(sstr);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+}
+
+//______________________________________________________________________________
+void ProofdSshAuth(const char *sstr)
+{
+   // Authenticate via SSH.
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdSshAuth(sstr);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+   return;
+}
+
+//______________________________________________________________________________
+void ProofdSRPUser(const char *sstr)
+{
+   // Use Secure Remote Password protocol.
+   // Check user id in $HOME/.srootdpass file.
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdSRPUser(sstr);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+   return;
+}
+
+//______________________________________________________________________________
+void ProofdRfioAuth(const char *sstr)
+{
+   // Authenticate via Rfio
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdRfioAuth(sstr);
+
+   // ... and login
+   if (gAuth==1) ProofdLogin();
+
+}
+
+//______________________________________________________________________________
+void ProofdGlobusAuth(const char *sstr){
+   // Authenticate via Globus
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdGlobusAuth(sstr);
+
+   // Login, if ok ...
+   if (gAuth==1) ProofdLogin();
+
+   return;
+}
+
+//______________________________________________________________________________
+void CheckGlobus(char *rcfile)
+{
+   // Create a resource table and read the (possibly) three resource files, i.e
+   // $ROOTSYS/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
+   // ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+   // read additional user defined resource files by creating addtional TEnv
+   // object.
+
+   char line[kMAXPATHLEN];
+   int  sGlobus =-1, uGlobus =-1, lGlobus =-1, pGlobus=-1;
+   char lRcFile[kMAXPATHLEN] = { 0 }, uRcFile[kMAXPATHLEN] = { 0 },
+        sRcFile[kMAXPATHLEN] = { 0 }, ProofCf[kMAXPATHLEN] = { 0 };
+   char namenv[256], valenv[256], dummy[512];
+   char sname[128] = "system";
+   char s[kMAXPATHLEN] = { 0 };
+
+   if (gDebug > 2) ErrorInfo("CheckGlobus: Enter: rcfile: %s", s);
+
+   strcat(sname, rcfile);
+#ifdef ROOTETCDIR
+   strcat(s, sname);
+   sprintf(s, "%s/%s", ROOTETCDIR, sname);
+#else
+   char etc[kMAXPATHLEN];
+   sprintf(etc, "%s/etc", gConfDir);
+   sprintf(s, "%s/%s", etc, sname);
+   // Check file existence and readibility
+   if (access(s, F_OK) || access(s, R_OK)) {
+      // for backward compatibility check also $ROOTSYS/system<name> if
+      // $ROOTSYS/etc/system<name> does not exist
+      sprintf(s, "%s/%s", gConfDir, sname);
+      if (access(s, F_OK) || access(s, R_OK)) {
+         // for backward compatibility check also $ROOTSYS/<name> if
+         // $ROOTSYS/system<name> does not exist
+         sprintf(s, "%s/%s", gConfDir, rcfile);
+      }
+   }
 #endif
-#ifdef R__AFS
-   char  *reason;
-   int    afs_auth = 0;
-#endif
+   // Check in the system environment ...
+   if (gDebug > 2) ErrorInfo("CheckGlobus: checking system: %s", s);
+   if (!access(s, F_OK) && !access(s, R_OK)) {
+      FILE *fs = fopen(s, "r");
+      while (fgets(line, sizeof(line), fs)) {
+         if (line[0] == '#') continue;   // skip comment lines
+         sscanf(line, "%s %s %s", namenv, valenv, dummy);
+         if (!strcmp(namenv, "Proofd.Authentication:")) {
+            int sec = atoi(valenv);
+            if (gDebug > 2) ErrorInfo("CheckGlobus: %s: %s (%d)", namenv, valenv, sec);
+            if ((sGlobus != 1) && (sec == 3)) sGlobus = 1;
+         }
+      }
+      fclose(fs);
+      strcpy(sRcFile, s);
+   }
+   if (gDebug > 2) ErrorInfo("CheckGlobus: system: %d: %s", sGlobus, sRcFile);
 
-   if (!*gUser)
-      ErrorFatal("ProofdPass: user needs to be specified first");
+   // Check in the user environment ...
+   if (getenv("HOME")) {
+      sprintf(s, "%s/%s", getenv("HOME"), rcfile);
+      if (gDebug > 2) ErrorInfo("CheckGlobus: checking user: %s", s);
+      if (!access(s, F_OK) && !access(s, R_OK)) {
+         FILE *fs= fopen(s, "r");
+         while (fgets(line, sizeof(line), fs)) {
+            if (line[0] == '#') continue;   // skip comment lines
+            sscanf(line, "%s %s %s", namenv, valenv, dummy);
+            if (!strcmp(namenv, "Proofd.Authentication:")) {
+               int sec = atoi(valenv);
+               if (gDebug > 2) ErrorInfo("CheckGlobus: %s: %s (%d)", namenv, valenv, sec);
+               if ((uGlobus != 1) && (sec == 3)) uGlobus = 1;
+            }
+         }
+         fclose(fs);
+         strcpy(uRcFile, s);
+      }
+   }
+   if (gDebug > 2) ErrorInfo("CheckGlobus: user: %d: %s", uGlobus, uRcFile);
 
-   int i;
-   int n = strlen(pass);
+   // Check in the local environment ...
+   sprintf(s,"%s",rcfile);
+   if (gDebug > 2) ErrorInfo("CheckGlobus: checking local: %s", s);
 
-   if (!n)
-      ErrorFatal("ProofdPass: null passwd not allowed");
+   if (!access(s, F_OK) && !access(s, R_OK)) {
+      FILE *fs = fopen(s, "r");
+      while (fgets(line, sizeof(line), fs)) {
+         if (line[0] == '#') continue;   // skip comment lines
+         sscanf(line, "%s %s %s", namenv, valenv, dummy);
+         if (!strcmp(namenv, "Proofd.Authentication:")) {
+            int sec = atoi(valenv);
+            if (gDebug > 2) ErrorInfo("CheckGlobus: %s: %s (%d)", namenv, valenv, sec);
+            if ((lGlobus != 1) && (sec == 3)) lGlobus = 1;
+         }
+      }
+      fclose(fs);
+      strcpy(lRcFile,s);
+   }
+   if (gDebug > 2) ErrorInfo("CheckGlobus: local: %d: %s", lGlobus, lRcFile);
 
-   if (n > (int)sizeof(passwd))
-      ErrorFatal("ProofdPass: passwd too long");
+   // Check finally, the proof.conf files to see if there are any
+   // specific instructions there. The system one first:
+   sprintf(s, "%s/proof/etc/proof.conf", gConfDir);
+   if (gDebug > 2) ErrorInfo("CheckGlobus: checking system proof.conf: %s", s);
 
-   for (i = 0; i < n; i++)
-      passwd[i] = ~pass[i];
-   passwd[i] = '\0';
-
-   pw = getpwnam(gUser);
-
-   if (ProofdCheckSpecialPass(passwd)) {
-      ProofdLogin();
-      return;
+   if (!access(s, F_OK) && !access(s, R_OK)) {
+      pGlobus = 0;
+      FILE *fs = fopen(s,"r");
+      while (fgets(line, sizeof(line), fs)) {
+         if (line[0] == '#') continue;   // skip comment lines
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+         char wd[12][64];
+         int nw = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                         wd[0],wd[1],wd[2],wd[3],wd[4],wd[5],wd[6],wd[7],
+                         wd[8],wd[9],wd[10],wd[11]);
+         // find all slave servers
+         if (nw >= 2 && !strcmp(wd[0], "slave" )) {
+            for (int i = 2; i < nw; i++) {
+               if (!strncmp(wd[i],"globus", 6)) pGlobus = 1;
+            }
+            if (gDebug > 2) ErrorInfo("CheckGlobus: %s", line);
+         }
+      }
+      fclose(fs);
+      strcpy(ProofCf, s);
    }
 
-#ifdef R__AFS
-   afs_auth = !ka_UserAuthenticateGeneral(
-        KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-        gUser,             //user name
-        (char *) 0,        //instance
-        (char *) 0,        //realm
-        passwd,            //password
-        0,                 //default lifetime
-        0, 0,              //two spares
-        &reason);          //error string
+   // Now the user one:
+   if (getenv("HOME")) {
+      sprintf(s, "%s/.proof.conf", getenv("HOME"));
+      if (gDebug > 2) ErrorInfo("CheckGlobus: checking user proof.conf: %s", s);
 
-   if (!afs_auth) {
-      ErrorInfo("ProofdPass: AFS login failed for user %s: %s", gUser, reason);
-      // try conventional login...
-#endif
+      if (!access(s, F_OK) && !access(s, R_OK)) {
+         pGlobus = 0;
+         FILE *fs = fopen(s, "r");
+         while (fgets(line, sizeof(line), fs)) {
+            if (line[0] == '#') continue;   // skip comment lines
+            if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+            char wd[12][64];
+            int nw = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                            wd[0],wd[1],wd[2],wd[3],wd[4],wd[5],wd[6],wd[7],
+                            wd[8],wd[9],wd[10],wd[11]);
+            // find all slave servers
+            if (nw >= 2 && !strcmp(wd[0], "slave" )) {
+               for (int i = 2; i < nw; i++) {
+                  if (!strncmp(wd[i], "globus", 6)) pGlobus = 1;
+               }
+               if (gDebug > 2) ErrorInfo("CheckGlobus: %s", line);
+            }
+         }
+         fclose(fs);
+         strcpy(ProofCf, s);
+      }
+   }
 
-#ifdef R__SHADOWPW
-   // System V Rel 4 style shadow passwords
-   if ((spw = getspnam(gUser)) == 0) {
-      ErrorInfo("ProofdPass: Shadow passwd not available for user %s", gUser);
-      passw = pw->pw_passwd;
-   } else
-      passw = spw->sp_pwdp;
-#else
-   passw = pw->pw_passwd;
-#endif
-   pass_crypt = crypt(passwd, passw);
-   n = strlen(passw);
+   if (gDebug > 2) ErrorInfo("CheckGlobus: proof.conf: %d: %s", pGlobus, ProofCf);
 
-   if (strncmp(pass_crypt, passw, n+1) != 0)
-      ErrorFatal("ProofdPass: invalid password for user %s", gUser);
+   // Now fill the globals ...
+   if (lGlobus != -1) {
+      gGlobus = lGlobus; strcpy(gRcFile, lRcFile);
+   } else if (uGlobus != -1) {
+      gGlobus = uGlobus; strcpy(gRcFile, uRcFile);
+   } else if (sGlobus != -1) {
+      gGlobus = sGlobus; strcpy(gRcFile, sRcFile);
+   } else if (pGlobus != -1) {
+      gGlobus = pGlobus; strcpy(gRcFile, ProofCf);
+   }
 
-#ifdef R__AFS
-   }  // afs_auth
-#endif
+   if (gDebug > 2) ErrorInfo("CheckGlobus: exit: %d: %s", gGlobus, gRcFile);
 
-   ProofdLogin();
+   return;
+}
+
+//______________________________________________________________________________
+bool ProofdReUseAuth(const char *sstr, int kind)
+{
+   // Check the requiring subject has already authenticated during this session
+   // and its 'ticket' is still valid.
+   // Not implemented for SRP and Krb5 (yet)
+
+   if (RpdReUseAuth(sstr, kind)) {
+
+      // Already authenticated ...we can login now
+      ProofdLogin();
+      return 1;
+
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -670,10 +718,51 @@ void Authenticate()
    const int kMaxBuf = 1024;
    char recvbuf[kMaxBuf];
    EMessageTypes kind;
+   int           Meth;
 
    while (!gAuth) {
+
       if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
-         ErrorFatal("Authenticate: error receiving message");
+         Error(ErrFatal,-1,"Authenticate: error receiving message");
+
+      // Decode the method ...
+      Meth = RpdGetAuthMethod(kind);
+
+      if (gDebug > 2) {
+         if (kind != kROOTD_PASS) {
+            ErrorInfo("Authenticate got: %d -- %s", kind, recvbuf);
+         } else {
+            ErrorInfo("Authenticate got: %d ", kind);
+         }
+      }
+
+      // Guess the client procotol
+      gClientProtocol = RpdGuessClientProt(recvbuf,kind);
+
+      // If authentication required, check if we accept the method proposed; if not
+      // send back the list of accepted methods, if any ...
+      if (Meth != -1  && gClientProtocol > 8 ) {
+
+         // Check if accepted ...
+         if (RpdCheckAuthAllow(Meth, gOpenHost)) {
+            if (gNumAllow>0) {
+               if (gAuthListSent == 0) {
+                  if (gDebug > 0) ErrorInfo("Authenticate: %s method not accepted from host: %s", gAuthMeth[Meth], gOpenHost);
+                  NetSend(kErrNotAllowed,kROOTD_ERR);
+                  RpdSendAuthList();
+                  gAuthListSent = 1;
+                  goto next;
+               } else {
+                  Error(ErrFatal,kErrNotAllowed, "Authenticate: method not in the list sent to the client");
+               }
+            } else
+               Error(ErrFatal,kErrConnectionRefused, "Authenticate: connection refused from host %s",gOpenHost);
+         }
+
+         // Then check if a previous authentication exists and is valid
+         // ReUse does not apply for RFIO
+         if (kind != kROOTD_RFIO && ProofdReUseAuth(recvbuf,kind)) goto recvauth;
+      }
 
       switch (kind) {
          case kROOTD_USER:
@@ -686,14 +775,89 @@ void Authenticate()
             ProofdPass(recvbuf);
             break;
          case kROOTD_KRB5:
-            ProofdKrb5Auth();
+            ProofdKrb5Auth(recvbuf);
             break;
          case kROOTD_PROTOCOL:
             ProofdProtocol();
             break;
+         case kROOTD_GLOBUS:
+            ProofdGlobusAuth(recvbuf);
+            break;
+         case kROOTD_SSH:
+            ProofdSshAuth(recvbuf);
+            break;
+         case kROOTD_RFIO:
+            ProofdRfioAuth(recvbuf);
+            break;
+         case kROOTD_CLEANUP:
+            RpdCleanup(recvbuf);
+            ErrorInfo("Authenticate: authentication stuff cleaned - exit");
+            exit(1);
+            break;
          default:
-            ErrorFatal("Authenticate: received bad opcode %d", kind);
+            Error(ErrFatal,-1,"Authenticate: received bad opcode %d", kind);
       }
+
+      if (gClientProtocol > 8) {
+
+         if (gDebug > 2)
+            ErrorInfo("Authenticate: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", kind, Meth, gAuth, gNumLeft);
+
+         // If authentication failure, check if other methods could be tried ...
+         if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
+            if (gNumLeft > 0) {
+               if (gAuthListSent == 0) {
+                  RpdSendAuthList();
+                  gAuthListSent = 1;
+               } else
+                  NetSend(-1,kROOTD_NEGOTIA);
+            } else
+               Error(ErrFatal,-1, "Authenticate: authentication failed");
+         }
+      }
+
+recvauth:
+      // If authentication successfull, receive info for later authentications
+      if (gAuth == 1 && gClientProtocol > 8) {
+
+         sprintf(gFilePA,"%s/proofauth.%d",gTmpDir,getpid());
+         if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s",gFilePA);
+
+         FILE *fpa = fopen(gFilePA, "w");
+         if (fpa == 0) {
+            ErrorInfo("Authenticate: error creating file: %s",gFilePA);
+            goto next;
+         }
+
+         // Receive buffer
+         EMessageTypes kindauth;
+         int nr = NetRecv(recvbuf, kMaxBuf, kindauth);
+         if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
+            ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)",kindauth,nr);
+         if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s",nr,recvbuf);
+         while (strcmp(recvbuf,"END")) {
+            // Clean buffer
+            recvbuf[nr+1]= '\0';
+            // Write it to file
+            fprintf(fpa,"%s\n",recvbuf);
+            // Get the next one
+            nr = NetRecv(recvbuf, kMaxBuf, kindauth);
+            if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
+               ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)",kindauth,nr);
+            if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s",nr,recvbuf);
+         }
+         // Close suth file
+         fclose(fpa);
+      }
+next:
+      continue;
+   }
+
+   if (gMaster == 1 && gAuth == 1 && gGlobus != -1 && kind != kROOTD_GLOBUS &&
+       gClientProtocol > 8) {
+      ErrorInfo("Authenticate: WARNING: got non-Globus authentication request");
+      ErrorInfo("Authenticate: while later actions MAY need Globus credentials...");
+      ErrorInfo("Authenticate: (source: %s)",gRcFile);
    }
 }
 
@@ -787,10 +951,14 @@ void ProofdExec()
    // Authenticate the user and exec the proofserv program.
    // gConfdir is the location where the PROOF config files and binaries live.
 
-   char *argvv[4];
+#ifdef R__GLBS
+   char *argvv[12];
+#else
+   char *argvv[8];
+#endif
    char  arg0[256];
    char  msg[80];
-   int   master;
+   char  rpid[20] = {0};
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -798,14 +966,29 @@ void ProofdExec()
       ;
 #endif
 
+   // Set debug level in RPDUtil ...
+   RpdSetDebugFlag(gDebug);
+
+   // CleanUp authentication table, if needed or required ...
+   RpdCheckSession(gCleaningPeriod);
+
+   // Get Host name
+   const char *OpenHost = NetRemoteHost();
+   strcpy(gOpenHost, OpenHost);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: gOpenHost = %s", gOpenHost);
+
+   // Set auth tab flag in RPDUtil ...
+   RpdSetAuthTabFile(gRpdAuthTab);
+
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
 
    // find out if we are supposed to be a master or a slave server
    if (NetRecv(msg, sizeof(msg)) < 0)
-      ErrorFatal("Cannot receive master/slave status");
+      Error(ErrFatal,-1,"Cannot receive master/slave status");
 
-   master = !strcmp(msg, "master") ? 1 : 0;
+   gMaster = !strcmp(msg, "master") ? 1 : 0;
 
    if (gDebug > 0)
       ErrorInfo("ProofdExec: master/slave = %s", msg);
@@ -815,7 +998,7 @@ void ProofdExec()
 
    // only reroute in case of master server
    const char *node_name;
-   if (master && (node_name = RerouteUser()) != 0) {
+   if (gMaster && (node_name = RerouteUser()) != 0) {
       // send a reroute request to the client passing the IP address
 
       char host_name[32];
@@ -850,16 +1033,39 @@ void ProofdExec()
       }
    }
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: send Okay");
+      ErrorInfo("ProofdExec: send Okay (gSockFd: %d)",gSockFd);
 
    NetSend("Okay");
+
+#ifdef R__GLBS
+   // to pass over shm id to proofserv
+   char  cShmIdCred[16];
+   sprintf(cShmIdCred,"%d",gShmIdCred);
+#endif
 
    // start server version
    sprintf(arg0, "%s/bin/proofserv", gConfDir);
    argvv[0] = arg0;
-   argvv[1] = (char *)(master ? "proofserv" : "proofslave");
+   argvv[1] = (char *)(gMaster ? "proofserv" : "proofslave");
    argvv[2] = gConfDir;
-   argvv[3] = 0;
+   argvv[3] = gFilePA;
+   argvv[4] = gOpenHost;
+   sprintf(rpid, "%d", gRemPid);
+   argvv[5] = rpid;
+   argvv[6] = gUser;
+#ifdef R__GLBS
+   argvv[7] = cShmIdCred;
+   argvv[8] = 0;
+   argvv[9] = 0;
+   argvv[10] = 0;
+   if (getenv("X509_CERT_DIR")!=0)  argvv[8] = strdup(getenv("X509_CERT_DIR"));
+   if (getenv("X509_USER_CERT")!=0) argvv[9] = strdup(getenv("X509_USER_CERT"));
+   if (getenv("X509_USER_KEY")!=0)  argvv[10] = strdup(getenv("X509_USER_KEY"));
+   argvv[11] = 0;
+#else
+   argvv[7] = 0;
+#endif
+
 #ifndef ROOTPREFIX
    char *rootsys = new char[9+strlen(gConfDir)];
    sprintf(rootsys, "ROOTSYS=%s", gConfDir);
@@ -878,7 +1084,15 @@ void ProofdExec()
 #endif
 
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: execv(%s, %s, %s)", argvv[0], argvv[1], argvv[2]);
+#ifdef R__GLBS
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s,\n %s, %s, %s, %s, %s, %s, %s)",
+                argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
+                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9], argvv[10]);
+#else
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s)",
+                argvv[0], argvv[1], argvv[2], argvv[3],
+                argvv[4], argvv[5], argvv[6]);
+#endif
 
    if (!gInetdFlag) {
       // Duplicate the socket onto the descriptors 0, 1 and 2
@@ -889,11 +1103,11 @@ void ProofdExec()
       dup2(0, 2);
    }
 
+   // Start proofserv
    execv(arg0, argvv);
 
    // tell client that exec failed
-   sprintf(msg,
-   "Cannot start PROOF server --- make sure %s exists!", arg0);
+   sprintf(msg, "Cannot start PROOF server --- make sure %s exists!", arg0);
    NetSend(msg);
 }
 
@@ -903,6 +1117,11 @@ int main(int argc, char **argv)
    char *s;
    int   tcpwindowsize = 65535;
 
+   // Error Handlers
+   gErrSys   = ErrSys;
+   gErrFatal = ErrFatal;
+   gErr      = Err;
+
    ErrorInit(argv[0]);
 
 #ifdef R__KRB5
@@ -910,9 +1129,15 @@ int main(int argc, char **argv)
 
    int retval = krb5_init_context(&gKcontext);
    if (retval)
-      ErrorFatal("%s while initializing krb5",
-                 error_message(retval));
+      Error(ErrFatal, -1, "%s while initializing krb5", error_message(retval));
 #endif
+
+#ifdef R__GLBS
+   char GridMap[kMAXPATHLEN] = { 0 };
+#endif
+
+   // Define service
+   strcpy(gService, "proofd");
 
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
@@ -929,7 +1154,7 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-p requires a port number as argument\n");
-                  ErrorFatal("-p requires a port number as argument");
+                  Error(ErrFatal, -1, "-p requires a port number as argument");
                }
                gPort = atoi(*++argv);
                break;
@@ -938,7 +1163,7 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-d requires a debug level as argument\n");
-                  ErrorFatal("-d requires a debug level as argument");
+                  Error(ErrFatal, -1, "-d requires a debug level as argument");
                }
                gDebug = atoi(*++argv);
                break;
@@ -947,9 +1172,36 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
-                  ErrorFatal("-b requires a buffersize in bytes as argument");
+                  Error(ErrFatal, -1, "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
+               break;
+
+            case 't':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-t requires as argument a period (in hours) as argument of cleaning for the auth table\n");
+                  Error(ErrFatal, -1, "-t requires as argument a period (in hours) as argument of cleaning for the auth table");
+               }
+               gCleaningPeriod = atoi(*++argv);
+               break;
+
+            case 'T':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-T requires a dir path for temporary files [/usr/tmp]\n");
+                  Error(ErrFatal, kErrFatal, "-T requires a dir path for temporary files [/usr/tmp]");
+               }
+               sprintf(gTmpDir, "%s", *++argv);
+               break;
+
+            case 's':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-s requires as argument a port number for the sshd daemon\n");
+                  Error(ErrFatal, kErrFatal, "-s requires as argument a port number for the sshd daemon");
+               }
+               gSshdPort = atoi(*++argv);
                break;
 
 #ifdef R__KRB5
@@ -957,29 +1209,101 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-S requires a path to your keytab\n");
-                  ErrorFatal("-S requires a path to your keytab\n");
+                  Error(ErrFatal,-1,"-S requires a path to your keytab\n");
                }
                kt_fname = *++argv;
                if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
-                  ErrorFatal("%s while resolving keytab file %s",
-                             error_message(retval), kt_fname);
+                  Error(ErrFatal, -1, "%s while resolving keytab file %s",
+                        error_message(retval), kt_fname);
                break;
 #endif
 
+#ifdef R__GLBS
+            case 'G':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-G requires a file name for the gridmap file\n");
+                  Error(ErrFatal, -1, "-G requires a file name for the gridmap file");
+               }
+               sprintf(GridMap, "%s", *++argv);
+               if (setenv("GRIDMAP",GridMap,1) ){
+                  Error(ErrFatal, -1, "%s while setting the GRIDMAP environment variable");
+               }
+               break;
+
+            case 'C':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-C requires a file name for the host certificates file location\n");
+                  Error(ErrFatal, -1, "-C requires a file name for the host certificates file location");
+               }
+               sprintf(gHostCertConf, "%s", *++argv);
+               break;
+#endif
             default:
                if (!gInetdFlag)
                   fprintf(stderr, "unknown command line option: %c\n", *s);
-               ErrorFatal("unknown command line option: %c", *s);
+               Error(ErrFatal, -1, "unknown command line option: %c", *s);
          }
 
    if (argc > 0) {
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
+      sprintf(gExecDir, "%s/bin", gConfDir);
+      sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
    } else {
-      if (!gInetdFlag)
-         fprintf(stderr, "no config directory specified\n");
-      ErrorFatal("no config directory specified");
+      // try to guess the config directory...
+#ifndef ROOTPREFIX
+      if (getenv("ROOTSYS")) {
+         strcpy(gConfDir, getenv("ROOTSYS"));
+         sprintf(gExecDir, "%s/bin", gConfDir);
+         sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+         if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+      } else {
+         if (!gInetdFlag)
+            fprintf(stderr, "no config directory specified\n");
+         Error(ErrFatal, -1, "no config directory specified");
+      }
+#else
+      strcpy(gConfDir, ROOTPREFIX);
+#endif
+#ifdef ROOTBINDIR
+      strcpy(gExecDir, ROOTBINDIR);
+#endif
+#ifdef ROOTETCDIR
+      sprintf(gAuthAllow, "%s/rpdauth.allow", ROOTETCDIR);
+#endif
    }
+
+   // make sure needed files exist
+   char arg0[256];
+   sprintf(arg0, "%s/bin/proofserv", gConfDir);
+   if (access(arg0, X_OK) == -1) {
+      if (!gInetdFlag)
+         fprintf(stderr, "incorrect config directory specified (%s)\n", gConfDir);
+      Error(ErrFatal, -1, "incorrect config directory specified (%s)", gConfDir);
+   }
+
+   // dir for temporary files
+   if (strlen(gTmpDir) <= 0) {
+      sprintf(gTmpDir, "/usr/tmp");
+      if (access(gTmpDir, R_OK) || access(gTmpDir, W_OK)) {
+         sprintf(gTmpDir, "/tmp");
+      }
+   }
+
+   // authentication tab file
+   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
+
+   // Log to stderr if not started as daemon ...
+   if (gForegroundFlag) RpdSetRootLogFlag(1);
+
+   // Check if at any level there is request for Globus Authetication
+   // for proofd or rootd
+   sprintf(gRcFile, "%s", ".rootrc");
+   CheckGlobus(gRcFile);
+   if (gDebug > 0)
+      ErrorInfo("main: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
 
    if (!gInetdFlag) {
 
@@ -987,9 +1311,9 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      if(!gForegroundFlag) DaemonStart(1);
+      if (!gForegroundFlag) DaemonStart(1, 0, kPROOFD);
 
-      NetInit(kProofdService, gPort, tcpwindowsize);
+      NetInit(gService, gPort, tcpwindowsize);
    }
 
    if (gDebug > 0)
@@ -1001,7 +1325,7 @@ int main(int argc, char **argv)
    // the parent from NetOpen() never returns.
 
    while (1) {
-      if (NetOpen(gInetdFlag) == 0) {
+      if (NetOpen(gInetdFlag,kPROOFD) == 0) {
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done
          exit(0);
@@ -1015,5 +1339,4 @@ int main(int argc, char **argv)
    // never called... needed?
    krb5_free_context(gKcontext);
 #endif
-
 }

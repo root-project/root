@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.17 2003/03/04 17:06:03 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.18 2003/05/01 17:51:42 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -58,6 +58,7 @@ enum EMessageTypes {
    kPROOF_PROGRESS,                      //event loop progress
    kPROOF_FEEDBACK,                      //intermediate version of objects
    kPROOF_STOPPROCESS,                   //stop or abort the current process call
+   kPROOF_SENDHOSTAUTH,                  //HostAuth info follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
@@ -92,7 +93,14 @@ enum EMessageTypes {
    kROOTD_CHMOD,                         //change permission
    kROOTD_KRB5,                          //krb5 authentication follows
    kROOTD_PROTOCOL2,                     //client proto follows, returns rootd proto
-   kROOTD_BYE                            //terminate rootd
+   kROOTD_BYE,                           //terminate rootd
+   kROOTD_GLOBUS,                        //Globus authetication follows
+   kROOTD_CLEANUP,                       //Cleanup things
+   kROOTD_SSH,                           //SSH-like authentication follows
+   kROOTD_RFIO,                          //RFIO-like authentication follows
+   kROOTD_NEGOTIA,                       //Negotiation follows
+   kROOTD_RSAKEY,                        //RSA public key exchange
+   kROOTD_ENCRYPT                        //An encrypted message follows
 };
 
 #endif

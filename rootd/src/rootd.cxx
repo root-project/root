@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.51 2003/07/27 10:45:58 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.52 2003/08/20 07:17:38 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -56,6 +56,26 @@
 // rootd stream tcp nowait root /user/rdm/root/bin/rootd rootd -i       //
 //                                                                      //
 // Force inetd to reread its conf file with "kill -HUP <pid inetd>".    //
+//                                                                      //
+// If xinetd is used instead, a file named 'rootd' should be created    //
+// under /etc/xinetd.d with content:                                    //
+//                                                                      //
+// # default: off                                                       //
+// # description: The root daemon                                       //
+// #                                                                    //
+// service rootd                                                        //
+// {                                                                    //
+//      disable         = no                                            //
+//      flags           = REUSE                                         //
+//      socket_type     = stream                                        //
+//      wait            = no                                            //
+//      user            = root                                          //
+//      server          = /usr/local/bin/rootd                          //
+//      server_args     = -i -d 0                                       //
+// }                                                                    //
+//                                                                      //
+// and xinetd restarted (/sbin/service xinetd restart).                 //
+//                                                                      //
 // You can also start rootd by hand running directly under your private //
 // account (no root system priviliges needed). For example to start     //
 // rootd listening on port 5151 just type:                              //
@@ -78,15 +98,36 @@
 //                     http://www.psc.edu/networking/perf_tune.html)    //
 //                     Default is 65535. Only change default for pipes  //
 //                     with a high bandwidth*delay product.             //
-//   -P file           use this password file, instead of .srootdpass   //
-//   -S keytabfile     use this keytab file, instead of the default     //
-//                     (option only supported when compiled with        //
-//                     Kerberos5 support)                               //
 //   -d level          level of debug info written to syslog            //
 //                     0 = no debug (default)                           //
 //                     1 = minimum                                      //
 //                     2 = medium                                       //
 //                     3 = maximum                                      //
+//   -r                files can only be opened in read-only mode       //
+//   -f                do not run as daemon, run in the foreground      //
+//   -P file           use this password file, instead of .srootdpass   //
+//   -R bitmask        bit mask specifies which methods will allow      //
+//                     authentication to be re-used                     //
+//   -S keytabfile     use this keytab file, instead of the default     //
+//                     (option only supported when compiled with        //
+//                     Kerberos5 support)                               //
+//   -T <tmpdir>       specifies the directory path to be used to place //
+//                     temporary files; default is /usr/tmp.            //
+//                     Useful if not running as root.                   //
+//   -t period         defines the period (in hours) for cleaning of    //
+//                     the authentication table <tmpdir>/rpdauthtab     //
+//   -G gridmapfile    defines the gridmap file to be used for globus   //
+//                     authentication if different from globus default  //
+//                     (/etc/grid-security/gridmap); (re)defines the    //
+//                     GRIDMAP environment variable.                    //
+//   -C hostcertfile   defines a file where to find information for the //
+//                     local host Globus information (see GLOBUS.README //
+//                     for details)                                     //
+//   -s <sshd_port>    specifies the port number for the sshd daemon    //
+//                     (default is 22)                                  //
+//   rootsys_dir       directory containing the ROOT etc and bin        //
+//                     directories. Superseeds ROOTSYS or built-in      //
+//                     (as specified to ./configure).                   //
 //                                                                      //
 // Rootd can also be configured for anonymous usage (like anonymous     //
 // ftp). To setup rootd to accept anonymous logins do the following     //
@@ -151,6 +192,8 @@
 //  with the SRP and gmp libraries. See the Makefile for more details.  //
 //  SRP is described at: http://srp.stanford.edu/.                      //
 //                                                                      //
+//  See README.AUTH for more details on the authentication features.    //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 // Protocol changes (see gProtocol):
@@ -159,6 +202,7 @@
 // 4 -> 5: added support for "+read" to allow readers when file is opened for writing
 // 5 -> 6: added support for kerberos5 authentication
 // 6 -> 7: added support for kROOTD_BYE and kROOTD_PROTOCOL2
+// 7 -> 8: added support for Globus, SSH and Rfio authentication and negotiation
 
 #include "config.h"
 
@@ -174,6 +218,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <netdb.h>
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
@@ -239,21 +284,22 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #if defined(cygwingcc)
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
-int fcntl_lockf(int fd, int op, off_t off) {
+int fcntl_lockf(int fd, int op, off_t off)
+{
    flock fl;
-   fl.l_whence=SEEK_SET;
-   fl.l_start=off;
-   fl.l_len=0; // whole file
-   fl.l_pid=getpid();
-   fl.l_type=op;
-   return fcntl(fd,F_SETLK, &fl);
-} 
+   fl.l_whence = SEEK_SET;
+   fl.l_start  = off;
+   fl.l_len    = 0;       // whole file
+   fl.l_pid    = getpid();
+   fl.l_type   = op;
+   return fcntl(fd, F_SETLK, &fl);
+}
 #define lockf fcntl_lockf
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__) || defined(cygwingcc) 
+    defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -321,46 +367,45 @@ extern "C" {
 extern krb5_deltat krb5_clockskew;
 #endif
 
+// Local include
 #include "rootdp.h"
 
 
 //--- Globals ------------------------------------------------------------------
 
-const int  kMAXPATHLEN     = 1024;
-const char kRootdService[] = "rootd";
-const char kRootdTab[]     = "/usr/tmp/rootdtab";
-const char kRootdPass[]    = ".rootdpass";
-const char kSRootdPass[]   = ".srootdpass";
 enum { kBinary, kAscii };
 
-int     gInetdFlag               = 0;
-int     gPort1                   = 0;
-int     gPort2                   = 0;
-int     gDebug                   = 0;
-int     gSockFd                  = -1;
-int     gAuth                    = 0;
-int     gAnon                    = 0;
-int     gAltSRP                  = 0;
-int     gFd                      = -1;
-int     gWritable                = 0;
-int     gProtocol                = 7;       // increase when protocol changes
-int     gClientProtocol          = 0;
-int     gUploaded                = 0;
-int     gDownloaded              = 0;
-int     gReadOnly                = 0;
-int     gFtp                     = 0;
+const char *gAuthMeth[kMAXSEC]= {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
+
+int     gAuthListSent            = 0;
 double  gBytesRead               = 0;
 double  gBytesWritten            = 0;
-char    gUser[64]                = { 0 };
-char    gPasswd[64]              = { 0 };   // only used for anonymous access
+int     gCleaningPeriod          = 24;       // period for Auth table cleanup (default 1 day = 24 hours)
+char    gConfDir[kMAXPATHLEN]    = { 0 };    // Needed to localize root stuff if not running as root
+int     gDebug                   = 0;
+int     gDownloaded              = 0;
+int     gFd                      = -1;
+int     gForegroundFlag          = 0;
+int     gFtp                     = 0;
+int     gInetdFlag               = 0;
 char    gOption[32]              = { 0 };
-char    gFile[kMAXPATHLEN]       = { 0 };
-char    gAltSRPPass[kMAXPATHLEN] = { 0 };
+int     gPort1                   = 0;
+int     gPort2                   = 0;
+int     gProtocol                = 8;       // increase when protocol changes
+int     gRootLog                 = 0;
+char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
+int     gUploaded                = 0;
+int     gWritable                = 0;
+int     gReadOnly                = 0;
+
+char    kRootdTab[kMAXPATHLEN]   = "/usr/tmp/rootdtab";
 
 #ifdef R__KRB5
-krb5_keytab  gKeytab             = 0; // to allow specifying on the command line
-krb5_context gKcontext;
+extern krb5_keytab  gKeytab;      // to allow specifying on the command line
+extern krb5_context gKcontext;
 #endif
+
+using namespace ROOT;
 
 //--- Machine specific routines ------------------------------------------------
 
@@ -385,6 +430,31 @@ extern "C" {
    int setresuid(uid_t r, uid_t e, uid_t s);
 }
 #endif
+
+
+//--- Error handlers -----------------------------------------------------------
+
+//______________________________________________________________________________
+void Err(int level,const char *msg)
+{
+   Perror((char *)msg);
+   if (level > -1) NetSendError((ERootdErrors)level);
+}
+//______________________________________________________________________________
+void ErrFatal(int level,const char *msg)
+{
+   Perror((char *)msg);
+   if (level > -1) NetSendError((ERootdErrors)level);
+   RootdAuthCleanup("0",0);
+   RootdClose();
+   exit(1);
+}
+//______________________________________________________________________________
+void ErrSys(int level,const char *msg)
+{
+   Perror((char *)msg);
+   ErrFatal(level,msg);
+}
 
 //--- Rootd routines -----------------------------------------------------------
 
@@ -413,6 +483,47 @@ static int EscChar(const char *src, char *dst, int dstlen, const char *specchars
    if (*p != 0)
       return -1;
    return q-dst;
+}
+
+//______________________________________________________________________________
+void SigPipe(int)
+{
+   // After SO_KEEPALIVE times out we probably get a SIGPIPE.
+
+   ErrorInfo("SigPipe: rootd.cxx: got a SIGPIPE");
+
+   // Treminate properly
+   RootdAuthCleanup(0, 0);
+   RootdClose();
+   exit(1);
+}
+
+//______________________________________________________________________________
+void RootdAuthCleanup(const char *sstr, int opt)
+{
+   // Terminate correctly by cleaning up the auth table (and shared memories
+   // in case of Globus) and closing the file.
+   // Called upon receipt of a kROOTD_CLOSE and on SIGPIPE.
+
+   int rpid = 0;
+   if (sstr) sscanf(sstr, "%d", &rpid);
+
+   // Turn back to superuser for cleaning, if the case
+   if (gRootLog == 0) {
+     if (setresgid(0, 0, 0) == -1)
+        if (gDebug > 0)
+           ErrorInfo("RootdAuthCleanup: can't setgid to superuser");
+     if (setresuid(0, 0, 0) == -1)
+        if (gDebug > 0)
+           ErrorInfo("RootdAuthCleanup: can't setuid to superuser");
+   }
+   if (opt == 0) {
+      RpdCleanupAuthTab("all", 0);            // Cleanup everything (SIGPIPE)
+      ErrorInfo("RootdAuthCleanup: cleanup ('all',0) done");
+   } else if (opt == 1) {
+      RpdCleanupAuthTab(gOpenHost, rpid);    // Cleanup only specific host (kROOTD_CLOSE)
+      ErrorInfo("RootdAuthCleanup: cleanup ('%s',%d) done", gOpenHost, rpid);
+   }
 }
 
 //______________________________________________________________________________
@@ -488,10 +599,11 @@ needshell:
             strcat(cmd, hd);
             strcat(cmd, p);
          }
-      } else {
+
+    } else {
          hd = HomeDirectory(0);
          if (hd == 0) {
-            ErrorSys(kErrFatal, "RootdExpandPathName: no home directory");
+            Error(ErrSys, kErrFatal, "RootdExpandPathName: no home directory");
             return 0;
          }
          strcat(cmd, hd);
@@ -502,7 +614,7 @@ needshell:
 
    FILE *pf;
    if ((pf = ::popen(&cmd[0], "r")) == 0) {
-      ErrorSys(kErrFatal, "RootdExpandPathName: error in popen(%s)", cmd);
+      Error(ErrSys, kErrFatal, "RootdExpandPathName: error in popen(%s)", cmd);
       return 0;
    }
 
@@ -516,13 +628,14 @@ again:
    }
    // this will be true if forked process was not yet ready to be read
    if (cnt == 0 && ch == EOF) goto again;
+   expPatbuf[cnt] = '\0';
 
    // skip rest of pipe
    while (ch != EOF) {
       ch = fgetc(pf);
       if (ch == ' ' || ch == '\t') {
          ::pclose(pf);
-         ErrorFatal(kErrFatal, "RootdExpandPathName: expression ambigous");
+         Error(ErrFatal, kErrFatal, "RootdExpandPathName: expression ambigous");
          return 0;
       }
    }
@@ -575,7 +688,7 @@ again:
          sfile = kRootdTab+4;
          goto again;
       }
-      ErrorSys(kErrFatal, "RootdCheckTab: error opening %s", sfile);
+      Error(ErrSys, kErrFatal, "RootdCheckTab: error opening %s", sfile);
    }
 
    // lock the file
@@ -586,7 +699,7 @@ again:
          sfile = kRootdTab+4;
          goto again;
       }
-      ErrorSys(kErrFatal, "RootdCheckTab: error locking %s", sfile);
+      Error(ErrSys, kErrFatal, "RootdCheckTab: error locking %s", sfile);
    }
    if (gDebug > 2)
       ErrorInfo("RootdCheckTab: file %s locked", sfile);
@@ -663,7 +776,7 @@ again:
    // unlock the file
    lseek(fid, 0, SEEK_SET);
    if (lockf(fid, F_ULOCK, (off_t)1) == -1)
-      ErrorSys(kErrFatal, "RootdCheckTab: error unlocking %s", sfile);
+      Error(ErrSys, kErrFatal, "RootdCheckTab: error unlocking %s", sfile);
    if (gDebug > 2)
       ErrorInfo("RootdCheckTab: file %s unlocked", sfile);
 
@@ -824,7 +937,7 @@ void RootdFlush()
    if (RootdIsOpen() && gWritable) {
 #ifndef WIN32
       if (fsync(gFd) < 0)
-         ErrorSys(kErrFatal, "RootdFlush: error flushing file %s", gFile);
+         Error(ErrSys, kErrFatal, "RootdFlush: error flushing file %s", gFile);
 #endif
    }
 
@@ -902,135 +1015,109 @@ void RootdLogin()
    // Authentication was successful, set user environment.
 
    struct passwd *pw = getpwnam(gUser);
+   if (gDebug > 2) ErrorInfo("RootdLogin: login dir: %s (uid: %d)",pw->pw_dir, getuid());
 
-   gAuth = 1;
+   if (chdir(pw->pw_dir) == -1) {
+      ErrorInfo("RootdLogin: can't change directory to %s",pw->pw_dir);
+      return;
+   }
 
-   if (chdir(pw->pw_dir) == -1)
-      ErrorFatal(kErrFatal, "RootdLogin: can't change directory to %s",
-                 pw->pw_dir);
-
+   if (gDebug > 2) ErrorInfo("RootdLogin: gid: %d, uid: %d",pw->pw_gid,pw->pw_uid);
    if (getuid() == 0) {
-      if (gAnon && chroot(pw->pw_dir) == -1)
-         ErrorFatal(kErrFatal, "RootdLogin: can't chroot to %s", pw->pw_dir);
 
-      // set access control list from /etc/initgroup
-      initgroups(gUser, pw->pw_gid);
+     if (gAnon && chroot(pw->pw_dir) == -1) {
+         ErrorInfo("RootdLogin: can't chroot to %s", pw->pw_dir);
+         return;
+     }
 
-      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         ErrorFatal(kErrFatal, "RootdLogin: can't setgid for user %s", gUser);
+     // set access control list from /etc/initgroup
+     initgroups(gUser, pw->pw_gid);
 
-      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         ErrorFatal(kErrFatal, "RootdLogin: can't setuid for user %s", gUser);
+     // set gid
+     if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
+        ErrorInfo("RootdLogin: can't setgid for user %s", gUser);
+        return;
+     }
+     // set uid
+     if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
+        ErrorInfo("RootdLogin: can't setuid for user %s", gUser);
+        return;
+     }
    }
 
    umask(022);
 
+   // Notify authentication to client ...
    NetSend(gAuth, kROOTD_AUTH);
+
+   // Send also new offset if it changed ...
+   if (gAuth == 2) NetSend(gOffSet, kROOTD_AUTH);
 
    if (gDebug > 0) {
       if (gAnon)
-         ErrorInfo("RootdLogin: user %s/%s authenticated", gUser, gPasswd);
+         ErrorInfo("RootdLogin: user %s/%s authenticated (OffSet: %d)", gUser, gPasswd, gOffSet);
       else
-         ErrorInfo("RootdLogin: user %s authenticated", gUser);
+         ErrorInfo("RootdLogin: user %s authenticated (OffSet: %d)", gUser, gOffSet);
    }
 }
 
 //______________________________________________________________________________
-void RootdUser(const char *user)
+void RootdUser(const char *sstr)
 {
-   // Check user id. If user id is not equal to rootd's effective uid, user
-   // will not be allowed access, unless effective uid = 0 (i.e. root).
+   // Check user's UID.
 
-   if (!*user)
-      ErrorFatal(kErrBadUser, "RootdUser: bad user name");
+   gAuth = 0;
 
-   ERootdErrors err = kErrNoUser;
+   // Evaluate credentials ...
+   RpdUser(sstr);
 
-   if (!strcmp(user, "anonymous") || !strcmp(user, "rootd")) {
-      user  = "rootd";
-      err   = kErrNoAnon;
-      gAnon = 1;
-   }
-
-   struct passwd *pw;
-   if ((pw = getpwnam(user)) == 0)
-      ErrorFatal(err, "RootdUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started rootd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal(kErrBadUser, "RootdUser: user not same as effective user of rootd");
-
-   strcpy(gUser, user);
-
-   NetSend(gAuth, kROOTD_AUTH);
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
 }
 
 //______________________________________________________________________________
-void RootdKrb5Auth()
+void RootdPass(const char *pass)
+{
+   // Check user's password.
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdPass(pass);
+
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
+}
+
+//______________________________________________________________________________
+void RootdRfioAuth(const char *sstr)
+{
+   // Authenticate via UID/GID (Rfio).
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdRfioAuth(sstr);
+
+   // ... and login
+   if (gAuth == 1) RootdLogin();
+}
+
+//______________________________________________________________________________
+void RootdKrb5Auth(const char *sstr)
 {
    // Authenticate via Kerberos.
 
-#ifdef R__KRB5
-   NetSend(1, kROOTD_KRB5);
-   // TAuthenticate will respond to our encouragement by sending krb5
-   // authentication through the socket
-#else
-   NetSend(0, kROOTD_KRB5);
-   return;
-#endif
+   // Reset global variable
+   gAuth = 0;
 
-#ifdef R__KRB5
-   int retval;
+   // Evaluate credentials ...
+   RpdKrb5Auth(sstr);
 
-   // get service principal
-   krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, "rootd",
-                                         KRB5_NT_SRV_HST, &server)))
-      ErrorFatal(kErrFatal, "while generating service name (%s): %s",
-                 "rootd", error_message(retval));
-
-   // listen for authentication from the client
-   krb5_auth_context auth_context = 0;
-   krb5_ticket *ticket;
-   char proto_version[100] = "krootd_v_1";
-   int sock = gSockFd;
-   if ((retval = krb5_recvauth(gKcontext, &auth_context, (krb5_pointer)&sock,
-                               proto_version, server,
-                               0,
-                               gKeytab,    // default gKeytab is 0
-                               &ticket)))
-      ErrorFatal(kErrFatal, "recvauth failed--%s", error_message(retval));
-
-   // get client name
-   char *cname;
-   if ((retval = krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname)))
-      ErrorFatal(kErrFatal, "unparse failed: %s", error_message(retval));
-   using std::string;
-   string user = cname;
-   free(cname);
-   string reply = "authenticated as ";
-   reply += user;
-
-   NetSend(reply.c_str(), kMESS_STRING);
-
-   krb5_auth_con_free(gKcontext, auth_context);
-
-   // set user name
-   user = user.erase(user.find("@"));        // cut off realm
-   string::size_type pos = user.find("/");   // see if there is an instance
-   if (pos != string::npos)
-      user = user.erase(pos);                // drop the instance
-   NetSend(user.c_str(), kMESS_STRING);
-
-   strncpy(gUser, user.c_str(), 64);
-
-   if (gDebug > 0)
-      ErrorInfo("RootdKrb5Auth: user %s authenticated", gUser);
-
-   RootdLogin();
-#endif
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
 }
 
 //______________________________________________________________________________
@@ -1039,261 +1126,44 @@ void RootdSRPUser(const char *user)
    // Use Secure Remote Password protocol.
    // Check user id in $HOME/.srootdpass file.
 
-   if (!*user)
-      ErrorFatal(kErrBadUser, "RootdSRPUser: bad user name");
+   // Reset global variable
+   gAuth = 0;
 
-   if (kSRootdPass[0]) { }  // remove compiler warning
+   // Evaluate credentials ...
+   RpdSRPUser(user);
 
-#ifdef R__SRP
-
-   char srootdpass[kMAXPATHLEN], srootdconf[kMAXPATHLEN];
-
-   struct passwd *pw = getpwnam(user);
-   if (!pw)
-      ErrorFatal(kErrNoUser, "RootdSRPUser: user %s unknown", user);
-
-   // If server is not started as root and user is not same as the
-   // one who started rootd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid)
-      ErrorFatal(kErrBadUser, "RootdSRPUser: user not same as effective user of rootd");
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   strcpy(gUser, user);
-
-   if (!gAltSRP) {
-      sprintf(srootdpass, "%s/%s", pw->pw_dir, kSRootdPass);
-      sprintf(srootdconf, "%s/%s.conf", pw->pw_dir, kSRootdPass);
-   } else {
-      sprintf(srootdpass, "%s", gAltSRPPass);
-      sprintf(srootdconf, "%s.conf", gAltSRPPass);
-   }
-
-   FILE *fp1 = fopen(srootdpass, "r");
-   if (!fp1) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("RootdSRPUser: error opening %s", srootdpass);
-      return;
-   }
-   FILE *fp2 = fopen(srootdconf, "r");
-   if (!fp2) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("RootdSRPUser: error opening %s", srootdconf);
-      if (fp1) fclose(fp1);
-      return;
-   }
-
-   struct t_pw *tpw = t_openpw(fp1);
-   if (!tpw) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("RootdSRPUser: unable to open password file %s", srootdpass);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-   struct t_conf *tcnf = t_openconf(fp2);
-   if (!tcnf) {
-      NetSend(2, kROOTD_AUTH);
-      ErrorInfo("RootdSRPUser: unable to open configuration file %s", srootdconf);
-      t_closepw(tpw);
-      fclose(fp1);
-      fclose(fp2);
-      return;
-   }
-
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
-   struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
-   if (!ts)
-      ErrorFatal(kErrNoUser, "RootdSRPUser: user %s not found SRP password file", gUser);
-
-   if (tcnf) t_closeconf(tcnf);
-   if (tpw)  t_closepw(tpw);
-   if (fp2)  fclose(fp2);
-   if (fp1)  fclose(fp1);
-
-   char hexbuf[MAXHEXPARAMLEN];
-
-   // send n to client
-   NetSend(t_tob64(hexbuf, (char*)ts->n.data, ts->n.len), kROOTD_SRPN);
-   // send g to client
-   NetSend(t_tob64(hexbuf, (char*)ts->g.data, ts->g.len), kROOTD_SRPG);
-   // send salt to client
-   NetSend(t_tob64(hexbuf, (char*)ts->s.data, ts->s.len), kROOTD_SRPSALT);
-
-   struct t_num *B = t_servergenexp(ts);
-
-   // receive A from client
-   EMessageTypes kind;
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal(kErrFatal, "RootdSRPUser: error receiving A from client");
-   if (kind != kROOTD_SRPA)
-      ErrorFatal(kErrFatal, "RootdSRPUser: expected kROOTD_SRPA message");
-
-   unsigned char buf[MAXPARAMLEN];
-   struct t_num A;
-   A.data = buf;
-   A.len  = t_fromb64((char*)A.data, hexbuf);
-
-   // send B to client
-   NetSend(t_tob64(hexbuf, (char*)B->data, B->len), kROOTD_SRPB);
-
-   t_servergetkey(ts, &A);
-
-   // receive response from client
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0)
-      ErrorFatal(kErrFatal, "RootdSRPUser: error receiving response from client");
-   if (kind != kROOTD_SRPRESPONSE)
-      ErrorFatal(kErrFatal, "RootdSRPUser: expected kROOTD_SRPRESPONSE message");
-
-   unsigned char cbuf[20];
-   t_fromhex((char*)cbuf, hexbuf);
-
-   if (!t_serververify(ts, cbuf)) {
-      // authentication successful
-
-      if (gDebug > 0)
-         ErrorInfo("RootdSRPUser: user %s authenticated", gUser);
-
-      RootdLogin();
-
-   } else
-      ErrorFatal(kErrBadPasswd, "RootdSRPUser: authentication failed for user %s", gUser);
-
-   t_serverclose(ts);
-
-#else
-   NetSend(2, kROOTD_AUTH);
-#endif
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
 }
 
 //______________________________________________________________________________
-int RootdCheckSpecialPass(const char *passwd)
+void RootdGlobusAuth(const char *sstr)
 {
-   // Check user's password against password in $HOME/.rootdpass. If matches
-   // skip other authentication mechanism. Returns 1 in case of success
-   // authentication, 0 otherwise.
+   // Authenticate via Globus.
 
-   char rootdpass[kMAXPATHLEN];
+   // Reset global variable
+   gAuth = 0;
 
-   struct passwd *pw = getpwnam(gUser);
+   // Evaluate credentials ...
+   RpdGlobusAuth(sstr);
 
-   sprintf(rootdpass, "%s/%s", pw->pw_dir, kRootdPass);
-
-   int fid = open(rootdpass, O_RDONLY);
-   if (fid == -1)
-      return 0;
-
-   int n;
-   if ((n = read(fid, rootdpass, sizeof(rootdpass)-1)) <= 0) {
-      close(fid);
-      return 0;
-   }
-   close(fid);
-
-   rootdpass[n] = 0;
-   char *s = strchr(rootdpass, '\n');
-   if (s) *s = 0;
-
-   char *pass_crypt = crypt(passwd, rootdpass);
-   n = strlen(rootdpass);
-
-   if (strncmp(pass_crypt, rootdpass, n+1) != 0)
-      return 0;
-
-   if (gDebug > 0)
-      ErrorInfo("RootdCheckSpecialPass: user %s authenticated via ~/.rootdpass", gUser);
-
-   return 1;
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
 }
 
 //______________________________________________________________________________
-void RootdPass(const char *pass)
+void RootdSshAuth(const char *sstr)
 {
-   // Check user's password.
+   // Authenticate via SSH.
 
-   char   passwd[64];
-   char  *passw;
-   char  *pass_crypt;
-   struct passwd *pw;
-#ifdef R__SHADOWPW
-   struct spwd *spw;
-#endif
-#ifdef R__AFS
-   char  *reason;
-   int    afs_auth = 0;
-#endif
+   // Reset global variable
+   gAuth = 0;
 
-   if (!*gUser)
-      ErrorFatal(kErrFatal, "RootdPass: user needs to be specified first");
+   // Evaluate credentials ...
+   RpdSshAuth(sstr);
 
-   int i;
-   int n = strlen(pass);
-
-   if (!n)
-      ErrorFatal(kErrBadPasswd, "RootdPass: null passwd not allowed");
-
-   if (n > (int)sizeof(passwd))
-      ErrorFatal(kErrBadPasswd, "RootdPass: passwd too long");
-
-   for (i = 0; i < n; i++)
-      passwd[i] = ~pass[i];
-   passwd[i] = '\0';
-
-   pw = getpwnam(gUser);
-
-   if (gAnon) {
-      strcpy(gPasswd, passwd);
-      RootdLogin();
-      return;
-   }
-
-   if (RootdCheckSpecialPass(passwd)) {
-      RootdLogin();
-      return;
-   }
-
-#ifdef R__AFS
-   afs_auth = !ka_UserAuthenticateGeneral(
-        KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-        gUser,             //user name
-        (char *) 0,        //instance
-        (char *) 0,        //realm
-        passwd,            //password
-        0,                 //default lifetime
-        0, 0,              //two spares
-        &reason);          //error string
-
-   if (!afs_auth) {
-      ErrorInfo("RootdPass: AFS login failed for user %s: %s", gUser, reason);
-      // try conventional login...
-#endif
-
-#ifdef R__SHADOWPW
-   // System V Rel 4 style shadow passwords
-   if ((spw = getspnam(gUser)) == 0) {
-      ErrorInfo("RootdPass: Shadow passwd not available for user %s", gUser);
-      passw = pw->pw_passwd;
-   } else
-      passw = spw->sp_pwdp;
-#else
-   passw = pw->pw_passwd;
-#endif
-   pass_crypt = crypt(passwd, passw);
-   n = strlen(passw);
-
-   if (strncmp(pass_crypt, passw, n+1) != 0)
-      ErrorFatal(kErrBadPasswd, "RootdPass: invalid password for user %s", gUser);
-
-#ifdef R__AFS
-   }  // afs_auth
-#endif
-
-   RootdLogin();
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
 }
 
 //______________________________________________________________________________
@@ -1312,6 +1182,8 @@ void RootdOpen(const char *msg)
       strcpy(gFile, &file[1]);
    else
       strcpy(gFile, file);
+
+   gFile[strlen(file)] = '\0';
 
    strcpy(gOption, option);
 
@@ -1337,15 +1209,17 @@ void RootdOpen(const char *msg)
       read = 1;
       strcpy(gOption, "read");
    }
-   if ((read==0) && (gReadOnly==1))
-       ErrorFatal(kErrNoAccess,"RootdOpen: file %s can not be opened in \"Read Only\" mode", gFile);
+
+   if (!read && gReadOnly)
+      Error(ErrFatal, kErrNoAccess, "RootdOpen: file %s can only be opened in \"READ\" mode", gFile);
+
    if (!gAnon) {
       char *fname;
       if ((fname = RootdExpandPathName(gFile))) {
          strcpy(gFile, fname);
          free(fname);
       } else
-         ErrorFatal(kErrBadFile, "RootdOpen: bad file name %s", gFile);
+         Error(ErrFatal, kErrBadFile, "RootdOpen: bad file name %s", gFile);
    }
 
    if (forceOpen)
@@ -1353,7 +1227,7 @@ void RootdOpen(const char *msg)
 
    if (recreate) {
       if (!RootdCheckTab(-1))
-         ErrorFatal(kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
+         Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
       if (!access(gFile, F_OK))
          unlink(gFile);
       recreate = 0;
@@ -1362,28 +1236,22 @@ void RootdOpen(const char *msg)
    }
 
    if (create && !access(gFile, F_OK))
-      ErrorFatal(kErrFileExists, "RootdOpen: file %s already exists", gFile);
+      Error(ErrFatal, kErrFileExists, "RootdOpen: file %s already exists", gFile);
 
-   // via ucreate we pass info back that update is actually a create
-   // instead of an update of an existing file, in that case return stat=2
-   // (only if the client supports it, i.e. gClientProtocol >= 8)
-   int ucreate = 0;
    if (update) {
       if (access(gFile, F_OK)) {
-         update  = 0;
-         create  = 1;
-         if (gClientProtocol >= 8)
-            ucreate = 1;
+         update = 0;
+         create = 1;
       }
       if (update && access(gFile, W_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
+         Error(ErrFatal, kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
    }
 
    if (read) {
       if (access(gFile, F_OK))
-         ErrorFatal(kErrNoFile, "RootdOpen: file %s does not exist", gFile);
+         Error(ErrFatal, kErrNoFile, "RootdOpen: file %s does not exist (errno: 0x%x)", gFile, errno);
       if (access(gFile, R_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no read permission for file %s", gFile);
+         Error(ErrFatal, kErrNoAccess, "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
    }
 
    if (create || update) {
@@ -1403,11 +1271,11 @@ void RootdOpen(const char *msg)
       gFd = open(gFile, O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (gFd == -1)
-         ErrorSys(kErrFileOpen, "RootdOpen: error opening file %s in write mode", gFile);
+         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in write mode", gFile);
 
       if (!RootdCheckTab(1)) {
          close(gFd);
-         ErrorFatal(kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
+         Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
       }
 
       gWritable = 1;
@@ -1419,12 +1287,12 @@ void RootdOpen(const char *msg)
       gFd = open(gFile, O_RDONLY | O_BINARY);
 #endif
       if (gFd == -1)
-         ErrorSys(kErrFileOpen, "RootdOpen: error opening file %s in read mode", gFile);
+         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in read mode", gFile);
 
       if (!RootdCheckTab(0)) {
          if (!forceRead) {
             close(gFd);
-            ErrorFatal(kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
+            Error(ErrFatal, kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
          }
       }
 
@@ -1432,16 +1300,16 @@ void RootdOpen(const char *msg)
 
    }
 
-   NetSend(gWritable+ucreate, kROOTD_OPEN);
+   NetSend(gWritable, kROOTD_OPEN);
 
    if (gDebug > 0)
       ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
    else {
       if (gAnon)
-         ErrorInfo("Rootd: file %s (%s) opened by %s/%s", gFile, gOption,
+         ErrorInfo("RootdOpen: file %s (%s) opened by %s/%s", gFile, gOption,
                    gUser, gPasswd);
       else
-         ErrorInfo("Rootd: file %s (%s) opened by %s", gFile, gOption, gUser);
+         ErrorInfo("RootdOpen: file %s (%s) opened by %s", gFile, gOption, gUser);
    }
 }
 
@@ -1463,20 +1331,20 @@ void RootdPut(const char *msg)
    NetRecvRaw(buf, len);
 
    if (!RootdIsOpen() || !gWritable)
-      ErrorFatal(kErrNoAccess, "RootdPut: file %s not opened in write mode", gFile);
+      Error(ErrFatal, kErrNoAccess, "RootdPut: file %s not opened in write mode", gFile);
 
    if (lseek(gFd, offset, SEEK_SET) < 0)
-      ErrorSys(kErrFilePut, "RootdPut: cannot seek to position %d in file %s", offset, gFile);
+      Error(ErrSys, kErrFilePut, "RootdPut: cannot seek to position %d in file %s", offset, gFile);
 
    ssize_t siz;
    while ((siz = write(gFd, buf, len)) < 0 && GetErrno() == EINTR)
       ResetErrno();
 
    if (siz < 0)
-      ErrorSys(kErrFilePut, "RootdPut: error writing to file %s", gFile);
+      Error(ErrSys, kErrFilePut, "RootdPut: error writing to file %s", gFile);
 
    if (siz != len)
-      ErrorFatal(kErrFilePut, "RootdPut: error writing all requested bytes to file %s, wrote %d of %d",
+      Error(ErrFatal, kErrFilePut, "RootdPut: error writing all requested bytes to file %s, wrote %d of %d",
                  gFile, siz, len);
 
    NetSend(0, kROOTD_PUT);
@@ -1507,25 +1375,29 @@ void RootdGet(const char *msg)
    char *buf = new char[len];
 
    if (!RootdIsOpen())
-      ErrorFatal(kErrNoAccess, "RootdGet: file %s not open", gFile);
+      Error(ErrFatal, kErrNoAccess, "RootdGet: file %s not open", gFile);
 
    if (lseek(gFd, offset, SEEK_SET) < 0)
-      ErrorSys(kErrFileGet, "RootdGet: cannot seek to position %d in file %s", offset, gFile);
+      Error(ErrSys, kErrFileGet, "RootdGet: cannot seek to position %d in file %s", offset, gFile);
 
    ssize_t siz;
    while ((siz = read(gFd, buf, len)) < 0 && GetErrno() == EINTR)
       ResetErrno();
 
    if (siz < 0)
-      ErrorSys(kErrFileGet, "RootdGet: error reading from file %s", gFile);
+      Error(ErrSys, kErrFileGet, "RootdGet: error reading from file %s", gFile);
 
    if (siz != len)
-      ErrorFatal(kErrFileGet, "RootdGet: error reading all requested bytes from file %s, got %d of %d",
+      Error(ErrFatal, kErrFileGet, "RootdGet: error reading all requested bytes from file %s, got %d of %d",
                  gFile, siz, len);
 
    NetSend(0, kROOTD_GET);
 
    NetSendRaw(buf, len);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdGet deb: read %d bytes from file \n ----> buf: %s",
+                len, buf);
 
    delete [] buf;
 
@@ -1562,11 +1434,11 @@ void RootdPutFile(const char *msg)
    struct stat st;
    if (!stat(gFile, &st)) {
       if (gAnon) {
-         Error(kErrFileExists, "RootdPutFile: anonymous users may not overwrite existing file %s", gFile);
+         Error(Err, kErrFileExists, "RootdPutFile: anonymous users may not overwrite existing file %s", gFile);
          return;
       }
    } else if (GetErrno() != ENOENT) {
-      Error(kErrFatal, "RootdPutFile: can't check for file presence");
+      Error(Err, kErrFatal, "RootdPutFile: can't check for file presence");
       return;
    }
 
@@ -1585,7 +1457,7 @@ void RootdPutFile(const char *msg)
       fd = open(gFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fd < 0) {
-         Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
+         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
          return;
       }
 
@@ -1594,7 +1466,7 @@ void RootdPutFile(const char *msg)
       // check if file is not in use by somebody and prevent from somebody
       // using it before upload is completed
       if (!RootdCheckTab(1)) {
-         Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
          return;
       }
 
@@ -1618,12 +1490,12 @@ void RootdPutFile(const char *msg)
          fd = open(gFile, O_WRONLY, S_IREAD | S_IWRITE);
 #endif
       if (fd < 0) {
-         Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
+         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
          return;
       }
       if (!RootdCheckTab(1)) {
          close(fd);
-         Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
          return;
       }
    }
@@ -1639,7 +1511,7 @@ void RootdPutFile(const char *msg)
          double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
          if (space < size - restartat) {
-            Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
+            Error(Err, kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
             close(fd);
             return;
          }
@@ -1649,7 +1521,7 @@ void RootdPutFile(const char *msg)
    // seek to restartat position
    if (restartat) {
       if (lseek(fd, restartat, SEEK_SET) < 0) {
-         Error(kErrRestartSeek, "RootdPutFile: cannot seek to position %ld in file %s",
+         Error(Err, kErrRestartSeek, "RootdPutFile: cannot seek to position %ld in file %s",
                (long)restartat, gFile);
          close(fd);
          return;
@@ -1698,11 +1570,11 @@ void RootdPutFile(const char *msg)
       }
 
       if (siz < 0)
-         ErrorSys(kErrFilePut, "RootdPutFile: error writing to file %s", gFile);
+         Error(ErrSys, kErrFilePut, "RootdPutFile: error writing to file %s", gFile);
 
       if (siz != n)
-         ErrorFatal(kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
-                    gFile, siz, int(left-skip));
+         Error(ErrFatal, kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
+               gFile, siz, int(left-skip));
 
       gBytesWritten += n;
 
@@ -1776,7 +1648,7 @@ void RootdGetFile(const char *msg)
    int fd = open(gFile, O_RDONLY | O_BINARY);
 #endif
    if (fd < 0) {
-      Error(kErrFileOpen, "RootdGetFile: cannot open file %s", gFile);
+      Error(Err, kErrFileOpen, "RootdGetFile: cannot open file %s", gFile);
       return;
    }
 
@@ -1784,20 +1656,20 @@ void RootdGetFile(const char *msg)
    // using it before download is completed
    if (!RootdCheckTab(0)) {
       close(fd);
-      Error(kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
+      Error(Err, kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
       return;
    }
 
    struct stat st;
    if (fstat(fd, &st)) {
-      Error(kErrFatal, "RootdGetFile: cannot get size of file %s", gFile);
+      Error(Err, kErrFatal, "RootdGetFile: cannot get size of file %s", gFile);
       close(fd);
       return;
    }
    long size = st.st_size;
 
    if (!S_ISREG(st.st_mode)) {
-      Error(kErrBadFile, "RoodGetFile: not a regular file %s", gFile);
+      Error(Err, kErrBadFile, "RoodGetFile: not a regular file %s", gFile);
       close(fd);
       return;
    }
@@ -1832,13 +1704,13 @@ void RootdGetFile(const char *msg)
       char *buf = (char*) mmap(0, (size_t) left, PROT_READ, MAP_FILE | MAP_SHARED,
                                fd, (off_t) pos);
       if (buf == (char *) -1)
-         ErrorFatal(kErrFileGet, "RootdGetFile: mmap of file %s failed", gFile);
+         Error(ErrFatal, kErrFileGet, "RootdGetFile: mmap of file %s failed", gFile);
 #else
       int siz;
       while ((siz = read(fd, buf, (int)left)) < 0 && GetErrno() == EINTR)
          ResetErrno();
       if (siz < 0 || siz != (int)left)
-         ErrorFatal(kErrFileGet, "RootdGetFile: error reading from file %s", gFile);
+         Error(ErrFatal, kErrFileGet, "RootdGetFile: error reading from file %s", gFile);
 #endif
 
       NetSendRaw(buf+skip, int(left-skip));
@@ -2110,7 +1982,7 @@ void RootdParallel()
 
    int buf[3];
    if (NetRecvRaw(buf, sizeof(buf)) < 0)
-      ErrorFatal(kErrFatal, "RootdParallel: error receiving message");
+      Error(ErrFatal, kErrFatal, "RootdParallel: error receiving message");
 
    int size = ntohl(buf[1]);
    int port = ntohl(buf[2]);
@@ -2123,26 +1995,103 @@ void RootdParallel()
 }
 
 //______________________________________________________________________________
+bool RootdReUseAuth(const char *sstr, int kind)
+{
+   // Check the requiring subject has already authenticated during this session
+   // and its 'ticket' is still valid
+   // Not implemented for SRP and Krb5 (yet)
+
+   if (RpdReUseAuth(sstr, kind)) {
+
+      // Already authenticated ... we can login now
+      RootdLogin();
+      return 1;
+
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+static void RootdTerm(int)
+{
+   // Termination upon receipt of a SIGTERM.
+
+   ErrorInfo("RootdTerm: rootd.cxx: got a SIGTERM");
+   // Terminate properly
+   RootdAuthCleanup(0,0);
+   // Trim Auth Table
+   RpdUpdateAuthTab(0,0,0);
+}
+
+//______________________________________________________________________________
 void RootdLoop()
 {
    // Handle all rootd commands. Returns after file close command.
 
-   const int kMaxBuf = 1024;
-   char recvbuf[kMaxBuf];
+   const int     kMaxBuf = 1024;
+   char          recvbuf[kMaxBuf];
    EMessageTypes kind;
+   int           Meth;
+
+   // Set debug level in RPDUtil ...
+   RpdSetDebugFlag(gDebug);
+
+   // CleanUp authentication table, if needed or required ...
+   RpdCheckSession(gCleaningPeriod);
+
+   // Get Host name
+   const char *OpenHost = NetRemoteHost();
+   strcpy(gOpenHost, OpenHost);
+
+   // Set auth tab file in RPDUtil ...
+   RpdSetAuthTabFile(gRpdAuthTab);
 
    while (1) {
-      if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
-         ErrorFatal(kErrFatal, "RootdLoop: error receiving message");
 
-      if (kind != kROOTD_USER     && kind != kROOTD_PASS      &&
-          kind != kROOTD_SRPUSER  && kind != kROOTD_KRB5      &&
-          kind != kROOTD_PROTOCOL && kind != kROOTD_PROTOCOL2 &&
-          gAuth == 0)
-         ErrorFatal(kErrNoUser, "RootdLoop: not authenticated");
+      if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
+         Error(ErrFatal, kErrFatal, "RootdLoop: error receiving message");
 
       if (gDebug > 2 && kind != kROOTD_PASS)
-         ErrorInfo("RootdLoop: %d -- %s", kind, recvbuf);
+         ErrorInfo("RootdLoop: kind:%d -- buf:'%s' (len:%d) -- Auth:%d",
+                   kind, recvbuf, strlen(recvbuf), gAuth);
+
+      // For gClientProtocol >= 9:
+      // if authentication required, check if we accept the method proposed;
+      // if not send back the list of accepted methods, if any ...
+      if ((Meth = RpdGetAuthMethod(kind)) != -1) {
+
+         if (gClientProtocol == 0)
+            gClientProtocol = RpdGuessClientProt(recvbuf, kind);
+
+         if (gClientProtocol > 8) {
+
+            // Check if accepted ...
+            if (RpdCheckAuthAllow(Meth, gOpenHost)) {
+               if (gNumAllow > 0) {
+                  if (gAuthListSent == 0) {
+                     if (gDebug > 0)
+                        ErrorInfo("RootdLoop: %s method not accepted from host: %s",gAuthMeth[Meth], gOpenHost);
+                     NetSend(kErrNotAllowed, kROOTD_ERR);
+                     RpdSendAuthList();
+                     gAuthListSent = 1;
+                     goto next;
+                  } else {
+                     Error(ErrFatal, kErrNotAllowed, "RootdLoop: method not in the list sent to client");
+                  }
+               } else
+                  Error(ErrFatal, kErrConnectionRefused, "RootdLoop: connection refused from host %s", gOpenHost);
+            }
+
+            // Then check if a previous authentication exists and is valid
+            // ReUse does not apply for RFIO
+            if (kind != kROOTD_RFIO && RootdReUseAuth(recvbuf,kind)) continue;
+         }
+      }
+
+      if (kind != kROOTD_PASS     && kind != kROOTD_CLEANUP   &&
+          kind != kROOTD_PROTOCOL && kind != kROOTD_PROTOCOL2 &&
+          Meth == -1 && gAuth == 0)
+         Error(ErrFatal, kErrNoUser, "RootdLoop: not authenticated");
 
       switch (kind) {
          case kROOTD_USER:
@@ -2155,8 +2104,20 @@ void RootdLoop()
             RootdPass(recvbuf);
             break;
          case kROOTD_KRB5:
-            RootdKrb5Auth();
+            RootdKrb5Auth(recvbuf);
             break;
+         case kROOTD_GLOBUS:
+            RootdGlobusAuth(recvbuf);
+            break;
+         case kROOTD_SSH:
+            RootdSshAuth(recvbuf);
+            break;
+         case kROOTD_RFIO:
+            RootdRfioAuth(recvbuf);
+            break;
+         case kROOTD_CLEANUP:
+            RootdAuthCleanup(recvbuf,1);
+            return;
          case kROOTD_OPEN:
             RootdOpen(recvbuf);
             break;
@@ -2219,8 +2180,26 @@ void RootdLoop()
          case kROOTD_BYE:
             return;
          default:
-            ErrorFatal(kErrBadOp, "RootdLoop: received bad opcode %d", kind);
+            Error(ErrFatal, kErrBadOp, "RootdLoop: received bad opcode %d", kind);
       }
+
+      if (gClientProtocol > 8) {
+         if (gDebug > 2)
+            ErrorInfo("RootdLoop: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", kind, Meth, gAuth, gNumLeft);
+         // If authentication failure, check if other methods could be tried ...
+         if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
+            if (gNumLeft > 0) {
+               if (gAuthListSent == 0) {
+                  RpdSendAuthList();
+                  gAuthListSent = 1;
+               } else
+                  NetSend(-1,kROOTD_NEGOTIA);
+            } else
+               Error(ErrFatal, kErrFatal, "RootdLoop: authentication failed");
+         }
+      }
+next:
+      continue;
    }
 }
 
@@ -2230,16 +2209,54 @@ int main(int argc, char **argv)
    char *s;
    int   tcpwindowsize = 65535;
 
+   // Error handlers
+   gErrSys   = ErrSys;
+   gErrFatal = ErrFatal;
+   gErr      = Err;
+
+   // function for dealing with SIGPIPE signals (used in NetSetOptions,
+   // rpdutils/net.cxx)
+   gSigPipeHook = SigPipe;
+
    ErrorInit(argv[0]);
+
+   // To terminate correctly ... maybe not needed
+   signal(SIGTERM, RootdTerm);
 
 #ifdef R__KRB5
    const char *kt_fname;
 
    int retval = krb5_init_context(&gKcontext);
    if (retval)
-      ErrorFatal(kErrFatal, "%s while initializing krb5",
-                 error_message(retval));
+      Error(ErrFatal, kErrFatal, "%s while initializing krb5",
+            error_message(retval));
 #endif
+#ifdef R__GLBS
+   char    GridMap[kMAXPATHLEN]         = { 0 };
+#endif
+
+   // Define service
+   strcpy(gService, "rootd");
+
+   // Try determining gExecDir and gConfDir
+   char *exec;
+   exec = RootdExpandPathName(argv[0]);
+   if (exec && exec[0] == '/') {
+      char *pstr = rindex(exec, '/');
+      if (pstr) {
+         int plen = (int)(pstr-exec);
+         strncpy(gExecDir, exec, plen);
+         gExecDir[plen] = 0;
+         pstr--;
+         pstr = rindex(pstr, '/');
+         if (pstr) {
+            plen = (int)(pstr-exec);
+            strncpy(gConfDir, exec, plen);
+            gConfDir[plen] = 0;
+         }
+      }
+      free(exec);
+   }
 
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
@@ -2247,15 +2264,16 @@ int main(int argc, char **argv)
             case 'i':
                gInetdFlag = 1;
                break;
- 
+
             case 'r':
                gReadOnly = 1;
                break;
+
             case 'p':
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-p requires a port number as argument\n");
-                  ErrorFatal(kErrFatal, "-p requires a port number as argument");
+                  Error(ErrFatal, kErrFatal, "-p requires a port number as argument");
                }
                char *p;
                gPort1 = strtol(*++argv, &p, 10);
@@ -2266,7 +2284,7 @@ int main(int argc, char **argv)
                if (*p != '\0' || gPort2 < gPort1 || gPort2 < 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "invalid port number or range: %s\n", *argv);
-                  ErrorFatal(kErrFatal, "invalid port number or range: %s", *argv);
+                  Error(ErrFatal, kErrFatal, "invalid port number or range: %s", *argv);
                }
                break;
 
@@ -2274,7 +2292,7 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-d requires a debug level as argument\n");
-                  ErrorFatal(kErrFatal, "-d requires a debug level as argument");
+                  Error(ErrFatal, kErrFatal, "-d requires a debug level as argument");
                }
                gDebug = atoi(*++argv);
                break;
@@ -2283,19 +2301,59 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
-                  ErrorFatal(kErrFatal, "-b requires a buffersize in bytes as argument");
+                  Error(ErrFatal, kErrFatal, "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
+               break;
+
+            case 'f':
+               gForegroundFlag = 1;
                break;
 
             case 'P':
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-P requires a file name for SRP password file\n");
-                  ErrorFatal(kErrFatal, "-P requires a file name for SRP password file");
+                  Error(ErrFatal, kErrFatal, "-P requires a file name for SRP password file");
                }
                gAltSRP = 1;
                sprintf(gAltSRPPass, "%s", *++argv);
+               break;
+
+            case 'R':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-R requires a hex bit mask as argument\n");
+                  Error(ErrFatal, kErrFatal, "-R requires a hex but mask as argument");
+               }
+               gReUseAllow = strtol(*++argv, (char **)0, 16);
+               break;
+
+            case 'T':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-T requires a dir path for temporary files [/usr/tmp]\n");
+                  Error(ErrFatal, kErrFatal, "-T requires a dir path for temporary files [/usr/tmp]");
+               }
+               sprintf(gTmpDir, "%s", *++argv);
+               break;
+
+            case 't':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-t requires as argument a period (in hours) of cleaning for the auth table\n");
+                  Error(ErrFatal, kErrFatal, "-t requires as argument a period (in hours) of cleaning for the auth table");
+               }
+               gCleaningPeriod = atoi(*++argv);
+               break;
+
+            case 's':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-s requires as argument a port number for the sshd daemon\n");
+                  Error(ErrFatal, kErrFatal, "-s requires as argument a port number for the sshd daemon");
+               }
+               gSshdPort = atoi(*++argv);
                break;
 
 #ifdef R__KRB5
@@ -2303,20 +2361,89 @@ int main(int argc, char **argv)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "-S requires a path to your keytab\n");
-                  ErrorFatal(kErrFatal, "-S requires a path to your keytab\n");
+                  Error(ErrFatal, kErrFatal, "-S requires a path to your keytab\n");
                }
                kt_fname = *++argv;
                if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
-                  ErrorFatal(kErrFatal, "%s while resolving keytab file %s",
-                             error_message(retval), kt_fname);
+                  Error(ErrFatal, kErrFatal, "%s while resolving keytab file %s",
+                        error_message(retval), kt_fname);
+               break;
+#endif
+
+#ifdef R__GLBS
+            case 'G':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-G requires a file name for the gridmap file\n");
+                  Error(ErrFatal, kErrFatal, "-G requires a file name for the gridmap file");
+               }
+               sprintf(GridMap, "%s", *++argv);
+               if (setenv("GRIDMAP",GridMap,1) ) {
+                  Error(ErrFatal, kErrFatal, "while setting the GRIDMAP environment variable");
+               }
+               break;
+
+            case 'C':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-C requires a file name for the host certificates file location\n");
+                  Error(ErrFatal, kErrFatal, "-C requires a file name for the host certificates file location");
+               }
+               sprintf(gHostCertConf, "%s", *++argv);
                break;
 #endif
 
             default:
                if (!gInetdFlag)
                   fprintf(stderr, "unknown command line option: %c\n", *s);
-               ErrorFatal(kErrFatal, "unknown command line option: %c", *s);
+               Error(ErrFatal, kErrFatal, "unknown command line option: %c", *s);
          }
+
+   // dir for temporary files
+   if (strlen(gTmpDir) <= 0) {
+      sprintf(gTmpDir, "/usr/tmp");
+      if (access(gTmpDir, R_OK) || access(gTmpDir, W_OK)) {
+         sprintf(gTmpDir, "/tmp");
+      }
+   }
+
+   // root tab file
+   sprintf(kRootdTab, "%s/rootdtab", gTmpDir);
+
+   // authentication tab file
+   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
+
+   // Log to stderr if not started as daemon ...
+   if (gForegroundFlag) RpdSetRootLogFlag(1);
+
+   if (argc > 0) {
+      strncpy(gConfDir, *argv, kMAXPATHLEN-1);
+      gConfDir[kMAXPATHLEN-1] = 0;
+      sprintf(gExecDir, "%s/bin", gConfDir);
+      sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+   } else {
+      // try to guess the config directory...
+#ifndef ROOTPREFIX
+      if (getenv("ROOTSYS")) {
+         strcpy(gConfDir, getenv("ROOTSYS"));
+         sprintf(gExecDir, "%s/bin", gConfDir);
+         sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+         if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+      } else {
+         if (!gInetdFlag)
+            fprintf(stderr, "no config directory specified\n");
+         Error(ErrFatal, kErrFatal, "no config directory specified");
+      }
+#else
+      strcpy(gConfDir, ROOTPREFIX);
+#endif
+#ifdef ROOTBINDIR
+      strcpy(gExecDir, ROOTBINDIR);
+#endif
+#ifdef ROOTETCDIR
+      sprintf(gAuthAllow, "%s/rpdauth.allow", ROOTETCDIR);
+#endif
+   }
 
    if (!gInetdFlag) {
 
@@ -2324,13 +2451,13 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      int fdkeep = NetInit(kRootdService, gPort1, gPort2, tcpwindowsize);
-      DaemonStart(1, fdkeep);
+      int fdkeep = NetInit(gService, gPort1, gPort2, tcpwindowsize);
+      if (!gForegroundFlag) DaemonStart(1, fdkeep, kROOTD);
    }
 
    if (gDebug > 0)
-      ErrorInfo("main: pid = %d, gInetdFlag = %d, gProtocol = %d",
-                getpid(), gInetdFlag, gProtocol);
+      ErrorInfo("main: pid = %d, ppid = %d, gInetdFlag = %d, gProtocol = %d",
+                getpid(), getppid(), gInetdFlag, gProtocol);
 
    // Concurrent server loop.
    // The child created by NetOpen() handles the client's request.
@@ -2338,7 +2465,8 @@ int main(int argc, char **argv)
    // the parent from NetOpen() never returns.
 
    while (1) {
-      if (NetOpen(gInetdFlag) == 0) {
+
+      if (NetOpen(gInetdFlag,kROOTD) == 0) {
          RootdParallel();  // see if we should use parallel sockets
          RootdLoop();      // child processes client's requests
          NetClose();       // till we are done
@@ -2353,5 +2481,5 @@ int main(int argc, char **argv)
    // never called... needed?
    krb5_free_context(gKcontext);
 #endif
-
 }
+

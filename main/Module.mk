@@ -68,12 +68,19 @@ G2ROOTOLDO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 G2ROOTOLD       := bin/g2rootold$(EXEEXT)
 
+##### ssh2rpd #####
+SSH2RPDS        := $(MODDIRS)/ssh2rpd.cxx
+SSH2RPDO        := $(SSH2RPDS:.cxx=.o)
+SSH2RPDDEP      := $(SSH2RPDO:.o=.d)
+SSH2RPD         := bin/ssh2rpd$(EXEEXT)
+
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
-ifneq ($(CERNLIBS),)
-ALLEXECS     += $(H2ROOT)
+ifneq ($(PLATFORM),win32)
+ALLEXECS     += $(SSH2RPD)
 endif
 ifneq ($(CERNLIBS),)
+ALLEXECS     += $(H2ROOT)
 ifneq ($(PLATFORM),win32)
 ALLEXECS     += $(G2ROOT) $(G2ROOTOLD)
 endif
@@ -102,6 +109,9 @@ $(HADD):        $(HADDO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(RPATH) $(ROOTLIBS) $(SYSLIBS)
 
+$(SSH2RPD):     $(SSH2RPDO)
+		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO)
+
 $(H2ROOT):      $(H2ROOTO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(H2ROOTO) \
@@ -120,19 +130,25 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
 
 ifneq ($(CERNLIBS),)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+ifneq ($(PLATFORM),win32)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT) \
+               $(G2ROOTOLD) $(SSH2RPD)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(SSH2RPD)
+endif
+else
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
 endif
 
 clean-main:
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) $(G2ROOTO) $(G2ROOTOLDO)
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
+		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
-		   $(G2ROOT) $(G2ROOTOLD)
+		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD)
 
 distclean::     distclean-main

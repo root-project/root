@@ -43,4 +43,4 @@ F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c -lnsl
 
 # Extras
-EXTRA_AUTHFLAGS = -DR__SRP_1_1
+EXTRA_AUTHFLAGS += -DR__SRP_1_1

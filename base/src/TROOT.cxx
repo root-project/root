@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.99 2003/08/04 20:07:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.100 2003/08/06 20:25:04 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -102,6 +102,11 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualUtilHist.h"
+#include "TSocket.h"
+#include "TAuthenticate.h"
+#include "TAuthDetails.h"
+#include "THostAuth.h"
+#include "TNetFile.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -112,7 +117,6 @@
 #elif defined(R__VMS)
 #include "TVmsSystem.h"
 #endif
-
 
 //-------- Names of next three routines are a small homage to CMZ --------------
 //______________________________________________________________________________
@@ -473,6 +477,9 @@ TROOT::~TROOT()
       // Return when error occured in TCint, i.e. when setup file(s) are
       // out of date
       if (!fVersionInt) return;
+
+      // Remote cleanup of authentication stuff
+      AuthCleanup();
 
       // ATTENTION!!! Order is important!
 
@@ -1736,3 +1743,103 @@ void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
    fgMakeDefCanvas = makecanvas;
 }
 
+//______________________________________________________________________________
+void TROOT::AuthCleanup()
+{
+   // Cleanup authentication info on remote rootd's.
+
+   // Get list of istantiated THostAuths ...
+   TList *tha = TAuthenticate::GetAuthInfo();
+
+   // Number of HostAuth ...
+   Int_t Nha = tha->GetSize();
+   if (gDebug > 2)
+      Info("AuthCleanup", "found %d THostAuth instantiated ...", Nha);
+
+   if (Nha <= 0) return;
+
+   Int_t   Inot;
+   Int_t   Nnot  = 0;
+   Int_t  *rPnot = new Int_t[Nha];
+   const char **rHnot = new const char *[Nha];
+
+   // Iterator over HostAuths ...
+   TIter      next_ha(tha);
+   THostAuth *ha;
+
+   while ((ha = (THostAuth*) next_ha())) {
+
+      // Get List of Established authentications
+      TList *tai = ha->Established();
+
+      // Number of HostAuth ...
+      Int_t Nai = tai->GetSize();
+      if (gDebug > 2)
+         Info("AuthCleanup", "found %d TAuthDetails instantiated ...", Nai);
+
+      if (Nai > 0) {
+
+         // Iterator over AuthDetails ...
+         TIter next_ai(tai);
+         TAuthDetails *ai;
+
+         while ((ai = (TAuthDetails*) next_ai())) {
+
+            const char *rhost;
+            Int_t       rport, serv;
+
+            // This is host, port, serv
+            rhost = ai->GetHost();
+            rport = ai->GetPort();
+            serv  = ai->GetService();
+            if (gDebug > 3)
+               Info("AuthCleanup", "found entry for h:'%s' p:%d s:%d ...",
+                    rhost, rport, serv);
+
+            // Only rootd needs to be notified (serv==1),
+            // proofd is done via ProofServ
+            if (serv == 1) {
+
+               // make sure is not already been done ...
+               Inot = -1;
+               Int_t i = 0;
+               for ( ; i < Nnot; i++) {
+                  if (rport == rPnot[i] && !strcmp(rhost, rHnot[i])) Inot = i;
+               }
+               if (Inot == -1) {
+                  // Needs to be notified
+                  TSocket *newsock= new TSocket(rhost, rport, -1);
+                  if (newsock->IsValid()) {
+                     newsock->SetOption(kNoDelay, 1);        // Set some socket options
+                     newsock->Send((Int_t) 0, (Int_t) 0);    // Tell rootd we want non parallel connection
+                     // Ask remote protocol
+                     newsock->Send(kROOTD_PROTOCOL);
+                     int proto, kind;
+                     newsock->Recv(proto, kind);
+                     if (proto > 6) {
+                        newsock->Send(Form("%d", TNetFile::GetClientProtocol()), kROOTD_PROTOCOL2);
+                        newsock->Recv(proto, kind);
+                     }
+                     if (proto > 7) {
+                        newsock->Send(Form("%d", gSystem->GetPid()), kROOTD_CLEANUP);
+                        if (gDebug > 2)
+                           Info("AuthCleanup","remote rootd notified for cleanup (%s,%d)", rhost, rport);
+                     }
+                  } else
+                     if (gDebug > 2)
+                        Info("AuthCleanup","unable to open valid socket for cleanup (%s,%d)", rhost, rport);
+                  delete newsock;
+                  // save info
+                  rPnot[Nnot] = rport;
+                  rHnot[Nnot] = rhost;
+                  Nnot++;
+               }
+            }  // serv
+         }  // ai
+      }  // Nai
+   }  // ha
+
+   // cleanup memory
+   delete [] rHnot;
+   delete [] rPnot;
+}

@@ -55,11 +55,11 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
-MODULES      += unix x11 x11ttf x3d rootx rootd proofd
+MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += unix x11 x11ttf x3d rootx rootd proofd
+MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
@@ -136,6 +136,9 @@ ifneq ($(LDAPCLILIB),)
 MODULES      += ldap
 endif
 endif
+ifneq ($(GLOBUSLIB),)
+MODULES      += globusauth
+endif
 ifneq ($(CERNLIBS),)
 MODULES      += hbook
 endif
@@ -146,7 +149,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                krb5auth mlp
+                mlp krb5auth rpdutils globusauth
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -348,7 +351,7 @@ build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA)"
+	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
 
 dist:
 	@$(MAKEDIST)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.8 2002/05/18 08:22:00 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.9 2003/03/05 16:07:30 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -79,6 +79,7 @@ public:
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetPerfIdx() const { return fPerfIdx; }
+   Int_t         GetSecurity() const { return fSecurity; }
    Int_t         GetProtocol() const { return fProtocol; }
    TSocket      *GetSocket() const { return fSocket; }
    TProof       *GetProof() const { return fProof; }
@@ -87,6 +88,7 @@ public:
    Float_t       GetCpuTime() const { return fCpuTime; }
    TFileHandler *GetInputHandler() const { return fInput; }
    void          SetInputHandler(TFileHandler *ih);
+   Int_t         SendHostAuth(TSlave *slave, Int_t opt);
 
    Bool_t        IsValid() const { return fSocket ? kTRUE : kFALSE; }
 

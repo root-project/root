@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.4 2000/12/19 16:19:03 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.5 2001/01/07 15:18:39 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -18,11 +18,15 @@ extern "C" {
 
 #include "TSocket.h"
 #include "TAuthenticate.h"
+#include "THostAuth.h"
 #include "TError.h"
+#include "TSystem.h"
+#include "TEnv.h"
+#include "rpderr.h"
 
 
-Int_t SRPAuthenticate(TSocket *, const char *user, const char *passwd,
-                      const char *remote);
+Int_t SRPAuthenticate(TAuthenticate *, const char *user, const char *passwd,
+                      const char *remote, TString &, Int_t);
 
 class SRPAuthInit {
 public:
@@ -31,9 +35,12 @@ public:
 static SRPAuthInit srpauth_init;
 
 
+TSocket *sock = 0;
+THostAuth *HostAuth = 0;
+Int_t  gRSAKey = 0;
 //______________________________________________________________________________
-Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
-                      const char *remote)
+Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
+                      const char *remote, TString &det, Int_t version)
 {
    // Authenticate to remote rootd/proofd server using the SRP (secure remote
    // password) protocol. Returns 0 if authentication failed, 1 if
@@ -45,23 +52,71 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    char  *psswd = 0;
    Int_t  stat, kind;
 
+   // From the calling TAuthenticate
+   sock = auth->GetSocket();
+   HostAuth = auth->GetHostAuth();
+
    // send user name
    if (user && user[0])
       usr = StrDup(user);
    else
-      usr = TAuthenticate::PromptUser(remote);
+      usr = TAuthenticate::PromptUser(remote); // Should never get here ...
 
-   sock->Send(usr, kROOTD_SRPUSER);
+   Int_t ReUse= 1, Prompt= 0;
+   TString Details;
 
-   sock->Recv(stat, kind);
+   if (version > 1) {
 
-   if (kind == kROOTD_ERR) {
-      TAuthenticate::AuthError("SRPAuthenticate", stat);
-      return result;
+     // Check ReUse
+     char PromptReUse[20];
+     if (gSystem->Getenv("AUTHREUSE") != 0 &&
+         !strcmp(gSystem->Getenv("AUTHREUSE"),"0")) ReUse = 0;
+     if (gSystem->Getenv("PROMPTUSER") != 0 &&
+         !strcmp(gSystem->Getenv("PROMPTUSER"),"1")) Prompt = 1;
+     sprintf(PromptReUse,"pt:%d ru:%d",Prompt,ReUse);
+
+
+
+     // Build auth details
+     Details= Form("%s us:%s",PromptReUse,usr);
+
+     // Create Options string
+     char *Options= new char[strlen(usr)+20];
+     int Opt = ReUse * kAUTH_REUSE_MSK;
+     sprintf(Options,"%d %d %s",Opt,strlen(usr),usr);
+
+
+     // Now we are ready to send a request to the rootd/proofd daemons to check if we have already
+     // a valid security context and eventually to start a negotiation to get one ...
+     kind = kROOTD_SRPUSER;
+     stat = ReUse;
+     int rc = 0;
+     if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kSRP,Details,Options,&kind,&stat)) == 1) {
+       // A valid authentication exists: we are done ...
+       SafeDelete(Options);
+       return 1;
+     }
+     if (rc == -2) {
+       SafeDelete(Options);
+       return rc;
+     }
+
+   } else {
+
+     sock->Send(usr, kROOTD_SRPUSER);
+     sock->Recv(stat, kind);
+
+     // stat == 2 when no SRP support compiled in remote rootd
+     if (kind == kROOTD_SRPUSER && stat == 0)
+        return 2;
+
+     if (kind == kROOTD_ERR) {
+        if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+        if (stat == kErrConnectionRefused) return -2;
+        return 0;
+     }
+
    }
-   // stat == 2 when no SRP support compiled in remote rootd
-   if (kind == kROOTD_AUTH && stat == 2)
-      return 2;
 
    struct t_num     n, g, s, B, *A;
    struct t_client *tc;
@@ -71,7 +126,7 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    // receive n from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
    if (kind != kROOTD_SRPN) {
-      ::Error("SRPAuthenticate", "expected kROOTD_SRPN message");
+      if (gDebug>0) ::Error("SRPAuthenticate", "expected kROOTD_SRPN message");
       goto out;
    }
    n.data = buf1;
@@ -80,7 +135,7 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    // receive g from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
    if (kind != kROOTD_SRPG) {
-      ::Error("SRPAuthenticate", "expected kROOTD_SRPG message");
+      if (gDebug>0) ::Error("SRPAuthenticate", "expected kROOTD_SRPG message");
       goto out;
    }
    g.data = buf2;
@@ -89,7 +144,7 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    // receive salt from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
    if (kind != kROOTD_SRPSALT) {
-      ::Error("SRPAuthenticate", "expected kROOTD_SRPSALT message");
+      if (gDebug>0) ::Error("SRPAuthenticate", "expected kROOTD_SRPSALT message");
       goto out;
    }
    s.data = buf3;
@@ -107,7 +162,7 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    else {
       psswd = TAuthenticate::PromptPasswd("SRP password: ");
       if (!psswd)
-         ::Error("SRPAuthenticate", "password not set");
+         if (gDebug>0) ::Error("SRPAuthenticate", "password not set");
    }
 
    t_clientpasswd(tc, psswd);
@@ -115,7 +170,7 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    // receive B from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);
    if (kind != kROOTD_SRPB) {
-      ::Error("SRPAuthenticate", "expected kROOTD_SRPB message");
+      if (gDebug>0) ::Error("SRPAuthenticate", "expected kROOTD_SRPB message");
       goto out;
    }
    B.data = buf1;
@@ -129,12 +184,88 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
 
    t_clientclose(tc);
 
-   sock->Recv(stat, kind);
-   if (kind == kROOTD_ERR)
-      TAuthenticate::AuthError("SRPAuthenticate", stat);
-   if (kind == kROOTD_AUTH && stat == 1)
-      result = 1;
+   if (version > 1) {
 
+     // Receive result of the overall process
+     sock->Recv(stat, kind);
+     if (kind == kROOTD_ERR) {
+       if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+       goto out;
+     }
+
+     if (ReUse == 1) {
+
+       if (kind != kROOTD_RSAKEY)
+       Warning("SRPAuthenticate", "problems recvn RSA key flag: got message %d, flag: %d",kind,gRSAKey);
+       gRSAKey = 1;
+
+       // RSA key generation (one per session)
+       if (!TAuthenticate::GetRSAInit()) {
+         auth->GenRSAKeys();
+         TAuthenticate::SetRSAInit();
+       }
+
+       if (gDebug > 3) Info("SRPAuthenticate","Sending Local Key:\n '%s'",TAuthenticate::GetRSAPubExport());
+       sock->Send(TAuthenticate::GetRSAPubExport(),kROOTD_RSAKEY);
+
+      // Receive result of the overall process
+      sock->Recv(stat, kind);
+      if (kind == kROOTD_ERR)
+        if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+     }
+
+     if (kind == kROOTD_SRPUSER && stat == 1)
+        result = 1;
+
+     if (kind == kROOTD_SRPUSER && stat > 0) {
+       char *rfrm= new char[stat+1];
+       sock->Recv(rfrm,stat+1, kind);  // receive user,offset) info
+       // Parse answer
+       char *lUser = new char[stat];
+       int OffSet = -1;
+       sscanf(rfrm,"%s %d",lUser,&OffSet);
+
+       // Decode Token
+       char *Token = 0;
+       if (ReUse == 1 && OffSet > -1) {
+         if (TAuthenticate::SecureRecv(sock,gRSAKey,&Token) == -1) {
+           Warning("SRPAuthenticate","Problems secure-receiving Token - may result in corrupted Token");
+         }
+       } else {
+         Token = StrDup("");
+       }
+
+       // Create and save AuthDetails object
+       TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kSRP,OffSet,ReUse,Details,lUser,gRSAKey,Token);
+       det = Details;
+       SafeDelete(Token);
+
+       // Receive result from remote Login process
+       sock->Recv(stat, kind);
+       if (stat==1 && kind==kROOTD_AUTH) {
+         if (gDebug>0) Info("SRPAuthenticate","Remotely authenticated as %s (OffSet:%d)",lUser,OffSet);
+         result = 1;
+       }
+
+     } else {
+       if (kind != kROOTD_ERR )
+         if (gDebug>0) Warning("SRPAuthenticate", "problems recvn (user,offset) length (%d:%d)",kind,stat);
+       TAuthenticate::AuthError("SRPAuthenticate", stat);
+     }
+
+   } else {
+
+     // Old protocol
+
+     // Receive result of the overall process
+     sock->Recv(stat, kind);
+
+     if (kind == kROOTD_ERR)
+       if (gDebug > 0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+
+     if (kind == kROOTD_AUTH && stat == 1)
+        result = 1;
+   }
 out:
    delete [] usr;
    delete [] psswd;

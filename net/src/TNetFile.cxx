@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.33 2003/08/22 12:47:21 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.34 2003/08/23 00:08:13 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -71,37 +71,13 @@
 #include "TSysEvtHandler.h"
 #include "TEnv.h"
 #include "Bytes.h"
-
-// Must match order of ERootdErrors enum defined in rootd.h
-const char *gRootdErrStr[] = {
-   "undefined error",
-   "file not found",
-   "error in file name",
-   "file already exists",
-   "no access to file",
-   "error opening file",
-   "file already opened in read or write mode",
-   "file already opened in write mode",
-   "no more space on device",
-   "bad op code",
-   "bad message",
-   "error writing to file",
-   "error reading from file",
-   "no such user",
-   "remote not setup for anonymous access",
-   "illegal user name",
-   "can't cd to home directory",
-   "can't get passwd info",
-   "wrong passwd",
-   "no SRP support in remote daemon",
-   "fatal error",
-   "cannot seek to restart position"
-};
+#include "NetErrors.h"
 
 // Protocol changes:
 // 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
 // 7 -> 8: added support for update being a create (open stat = 2 and not 1)
-Int_t TNetFile::fgClientProtocol = 8;  // increase when client protocol changes
+// 8 -> 9: added new authentication features (see README.AUTH)
+Int_t TNetFile::fgClientProtocol = 9;  // increase when client protocol changes
 
 
 ClassImp(TNetFile)
@@ -111,183 +87,19 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
-   // Create a NetFile object. A net file is the same as a TFile
-   // except that it is being accessed via a rootd server. The url
-   // argument must be of the form: root[s|k]://host.dom.ain/file.root.
-   // When protocol is "roots" try using SRP authentication.
-   // When protocol is "rootk" try using kerberos5 authentication.
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TNetFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // If the remote daemon thinks the file is still connected, while you are
-   // sure this is not the case you can force open the file by preceding the
-   // option argument with an "-", e.g.: "-recreate". Do this only
-   // in cases when you are very sure nobody else is using the file.
-   // To bypass the writelock on a file, to allow the reading of a file
-   // that is being written by another process, explicitely specify the
-   // "+read" option ("read" being the default option).
-   // The netopt argument can be used to specify the size of the tcp window in
-   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
-   // The default and minimum tcp window size is 65535 bytes.
-   // If netopt < -1 then |netopt| is the number of parallel sockets that will
-   // be used to connect to rootd. This option should be used on fat pipes
-   // (i.e. high bandwidth, high latency links). The ideal number of parallel
-   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
-   // number.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
+   // Create a NetFile object. This is actually done inside Start(), so
+   // for a description of the options and other arguments see Start().
+   // Normally a TNetFile is created via TFile::Open().
 
-   TAuthenticate *auth;
-   EMessageTypes kind;
-   Int_t sec, tcpwindowsize = 65535;
+   Create(url, option, netopt);
+}
+//______________________________________________________________________________
+TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
+         : TFile(url, "NET", ftitle, compress), fUrl(url)
+{
+   //  Create a TNetFile object.
 
-   fSocket    = 0;
-   fOffset    = 0;
-   fErrorCode = -1;
-
-   fOption = option;
-
-   Bool_t forceOpen = kFALSE;
-   if (option[0] == '-') {
-      fOption   = &option[1];
-      forceOpen = kTRUE;
-   }
-   // accept 'f', like 'frecreate' still for backward compatibility
-   if (option[0] == 'F' || option[0] == 'f') {
-      fOption   = &option[1];
-      forceOpen = kTRUE;
-   }
-
-   Bool_t forceRead = kFALSE;
-   if (!strcasecmp(option, "+read")) {
-      fOption   = &option[1];
-      forceRead = kTRUE;
-   }
-
-   fOption.ToUpper();
-
-   if (fOption == "NEW")
-      fOption = "CREATE";
-
-   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
-   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
-   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
-   if (!create && !recreate && !update && !read) {
-      read    = kTRUE;
-      fOption = "READ";
-   }
-
-   if (!fUrl.IsValid()) {
-      Error("TNetFile", "invalid URL specified: %s", url);
-      goto zombie;
-   }
-
-   if (netopt > tcpwindowsize)
-      tcpwindowsize = netopt;
-
-   // Open connection to remote rootd server
-   if (netopt < -1) {
-      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
-                             tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open %d parallel connections to rootd on "
-               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // kNoDelay is internally set by TPSocket
-
-   } else {
-      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
-               fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // Set some socket options
-      fSocket->SetOption(kNoDelay, 1);
-
-      // Tell rootd we want non parallel connection
-      fSocket->Send((Int_t) 0, (Int_t) 0);
-   }
-
-   // Get rootd protocol level
-   fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, kind);
-   if (fProtocol > 6) {
-      fSocket->Send(Form("%d", fgClientProtocol), kROOTD_PROTOCOL2);
-      Recv(fProtocol, kind);
-   }
-
-   // Check if rootd supports new options
-   if (forceRead && fProtocol < 5) {
-      Warning("TNetFile", "rootd does not support \"+read\" option");
-      forceRead = kFALSE;
-   }
-
-   // Authenticate to remote rootd server
-   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
-   if (!strcmp(fUrl.GetProtocol(), "roots"))
-      sec = TAuthenticate::kSRP;
-   if (!strcmp(fUrl.GetProtocol(), "rootk"))
-      sec = TAuthenticate::kKrb5;
-   auth = new TAuthenticate(fSocket, fUrl.GetHost(), "rootd", sec);
-   if (!auth->Authenticate()) {
-      if (sec == TAuthenticate::kSRP)
-         Error("TNetFile", "SRP authentication failed for host %s", fUrl.GetHost());
-      else if (sec == TAuthenticate::kKrb5)
-         Error("TNetFile", "Krb5 authentication failed for host %s", fUrl.GetHost());
-      else
-         Error("TNetFile", "authentication failed for host %s", fUrl.GetHost());
-      delete auth;
-      goto zombie;
-   }
-   fUser = auth->GetUser();
-   delete auth;
-
-   if (forceOpen)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower("f"+fOption).Data()), kROOTD_OPEN);
-   else if (forceRead)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
-   else
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
-
-   int stat;
-   Recv(stat, kind);
-
-   if (kind == kROOTD_ERR) {
-      PrintError("TNetFile", stat);
-      goto zombie;
-   }
-
-   if (recreate) {
-      recreate = kFALSE;
-      create   = kTRUE;
-      fOption  = "CREATE";
-   }
-
-   if (update && stat > 1) {
-      update = kFALSE;
-      create = kTRUE;
-      stat   = 1;
-   }
-
-   if (stat == 1)
-      fWritable = kTRUE;
-   else
-      fWritable = kFALSE;
-
-   Init(create);
-
-   return;
-
-zombie:
-   // error in file opening occured, make this object a zombie
-   MakeZombie();
-   SafeDelete(fSocket);
-   gDirectory = gROOT;
+   fSocket = 0;
 }
 
 //______________________________________________________________________________
@@ -303,6 +115,8 @@ TNetFile::~TNetFile()
 Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 {
    // Open a remote file. Requires fOption to be set correctly.
+
+   if (!fSocket) return -1;
 
    fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
                  kROOTD_OPEN);
@@ -324,7 +138,9 @@ Int_t TNetFile::SysClose(Int_t /*fd*/)
 {
    // Close currently open file.
 
-   fSocket->Send(kROOTD_CLOSE);
+   if (fSocket)
+      fSocket->Send(kROOTD_CLOSE);
+
    return 0;
 }
 
@@ -335,6 +151,8 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *
    // identical to TSystem::GetPathInfo().
 
    if (fProtocol < 3) return 1;
+
+   if (!fSocket) return 1;
 
    fSocket->Send(kROOTD_FSTAT);
 
@@ -598,4 +416,221 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
       break;
    }
+}
+//______________________________________________________________________________
+void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
+                             Int_t tcpwindowsize, Bool_t forceOpen,
+                             Bool_t forceRead)
+{
+   // Connect to remote rootd server.
+
+   TAuthenticate *auth;
+   const char *AuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
+
+   if (netopt < -1) {
+      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
+                             tcpwindowsize);
+      if (!fSocket->IsValid()) {
+         Error("TNetFile", "can't open %d parallel connections to rootd on "
+               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
+         goto zombie;
+      }
+
+      // kNoDelay is internally set by TPSocket
+
+   } else {
+      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
+      if (!fSocket->IsValid()) {
+         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
+               fUrl.GetHost(), fUrl.GetPort());
+         goto zombie;
+      }
+
+      // Set some socket options
+      fSocket->SetOption(kNoDelay, 1);
+
+      // Tell rootd we want non parallel connection
+      fSocket->Send((Int_t) 0, (Int_t) 0);
+   }
+
+   // Get rootd protocol level
+   EMessageTypes tmpkind;
+   fSocket->Send(kROOTD_PROTOCOL);
+   Recv(fProtocol, tmpkind);
+   *kind = tmpkind;
+   if (fProtocol > 6) {
+      fSocket->Send(Form("%d", fgClientProtocol), kROOTD_PROTOCOL2);
+      Recv(fProtocol, tmpkind);
+      *kind = tmpkind;
+   }
+
+   // Check if rootd supports new options
+   if (forceRead && fProtocol < 5) {
+      Warning("TNetFile", "rootd does not support \"+read\" option");
+      forceRead = kFALSE;
+   }
+
+   // Authenticate remotely
+   if (gDebug > 2) Info("Authenticate", "User from Url: %s",fUrl.GetUser());
+   if (!strcmp(fUrl.GetProtocol(), "roots")) {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("roots:%d", fProtocol), fUrl.GetUser());
+   } else if (!strcmp(fUrl.GetProtocol(), "rootk")) {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("rootk:%d", fProtocol), fUrl.GetUser());
+   } else {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("rootd:%d", fProtocol), fUrl.GetUser());
+   }
+   // Attempt authentication
+   if (!auth->Authenticate()) {
+      Error("TNetFile", "%s authentication failed for host %s",AuthMeth[auth->GetSecurity()],fUrl.GetHost());
+      delete auth;
+      goto zombie;
+   }
+   fUser = auth->GetUser();
+   delete auth;
+
+   // Open the file
+   if (forceOpen)
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower("f"+fOption).Data()), kROOTD_OPEN);
+   else if (forceRead)
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
+   else
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
+
+   int  tmpstat;
+   Recv(tmpstat, tmpkind);
+   *stat = tmpstat;
+   *kind = tmpkind;
+
+   return;
+
+zombie:
+   // error in file opening occured, make this object a zombie
+   MakeZombie();
+   SafeDelete(fSocket);
+   gDirectory = gROOT;
+}
+
+//______________________________________________________________________________
+void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
+{
+   // Create a NetFile object. A net file is the same as a TFile
+   // except that it is being accessed via a rootd server. The url
+   // argument must be of the form: root[s|k]://host.dom.ain/file.root.
+   // When protocol is "roots" try using SRP authentication.
+   // When protocol is "rootk" try using kerberos5 authentication.
+   // If the file specified in the URL does not exist, is not accessable
+   // or can not be created the kZombie bit will be set in the TNetFile
+   // object. Use IsZombie() to see if the file is accessable.
+   // If the remote daemon thinks the file is still connected, while you are
+   // sure this is not the case you can force open the file by preceding the
+   // option argument with an "-", e.g.: "-recreate". Do this only
+   // in cases when you are very sure nobody else is using the file.
+   // To bypass the writelock on a file, to allow the reading of a file
+   // that is being written by another process, explicitely specify the
+   // "+read" option ("read" being the default option).
+   // The netopt argument can be used to specify the size of the tcp window in
+   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
+   // The default and minimum tcp window size is 65535 bytes.
+   // If netopt < -1 then |netopt| is the number of parallel sockets that will
+   // be used to connect to rootd. This option should be used on fat pipes
+   // (i.e. high bandwidth, high latency links). The ideal number of parallel
+   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
+   // number.
+   // For a description of the option and other arguments see the TFile ctor.
+   // The preferred interface to this constructor is via TFile::Open().
+
+   EMessageTypes kind;
+   Int_t tcpwindowsize = 65535;
+
+   fSocket    = 0;
+   fOffset    = 0;
+   fErrorCode = -1;
+
+   fOption = option;
+
+   Bool_t forceOpen = kFALSE;
+   if (option[0] == '-') {
+      fOption   = &option[1];
+      forceOpen = kTRUE;
+   }
+   // accept 'f', like 'frecreate' still for backward compatibility
+   if (option[0] == 'F' || option[0] == 'f') {
+      fOption   = &option[1];
+      forceOpen = kTRUE;
+   }
+
+   Bool_t forceRead = kFALSE;
+   if (!strcasecmp(option, "+read")) {
+      fOption   = &option[1];
+      forceRead = kTRUE;
+   }
+
+   fOption.ToUpper();
+
+   if (fOption == "NEW")
+      fOption = "CREATE";
+
+   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
+   if (!create && !recreate && !update && !read) {
+      read    = kTRUE;
+      fOption = "READ";
+   }
+
+   if (!fUrl.IsValid()) {
+      Error("TNetFile", "invalid URL specified: %s", url);
+      goto zombie;
+   }
+
+   if (netopt > tcpwindowsize)
+      tcpwindowsize = netopt;
+
+   // Open connection to remote rootd server
+   Int_t stat;
+   ConnectServer(&stat, &kind, netopt, tcpwindowsize, forceOpen, forceRead);
+   if (gDebug > 2) Info("TNetFile", "TNetFile: got from host %d %d", stat, kind);
+
+   if (kind == kROOTD_ERR) {
+      PrintError("TNetFile", stat);
+      goto zombie;
+   }
+
+   if (recreate) {
+      recreate = kFALSE;
+      create   = kTRUE;
+      fOption  = "CREATE";
+   }
+
+   if (update && stat > 1) {
+      update = kFALSE;
+      create = kTRUE;
+      stat   = 1;
+   }
+
+   if (stat == 1)
+      fWritable = kTRUE;
+   else
+      fWritable = kFALSE;
+
+   Init(create);
+   return;
+
+zombie:
+   // error in file opening occured, make this object a zombie
+   MakeZombie();
+   SafeDelete(fSocket);
+   gDirectory = gROOT;
+}
+
+//______________________________________________________________________________
+Int_t TNetFile::GetClientProtocol()
+{
+   // Static method returning supported rootd client protocol.
+
+   return fgClientProtocol;
 }
