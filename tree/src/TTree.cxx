@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.153 2003/07/17 16:50:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.154 2003/07/24 09:13:53 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1383,6 +1383,10 @@ TFile *TTree::ChangeFile(TFile *file)
   //
   // To process the multiple files created by ChangeFile, one must use
   // a TChain.
+  //
+  // The new file name has a suffix "_N" where N is equal to fFileNumber+1.
+  // By default a Root session starts with fFileNumber=0. One can set
+  // fFileNumber to a different value via TTree::SetFileNumber.
   //
   // fgMaxTreeSize can be set via the static function TTree::SetMaxTreeSize.
   // The default value of fgMaxTreeSize is 1.9 Gigabytes.
@@ -3543,6 +3547,24 @@ void TTree::SetEstimate(Int_t n)
    if (fPlayer) fPlayer->SetEstimate(n);
 }
 
+//_______________________________________________________________________
+void TTree::SetFileNumber(Int_t number)
+{
+// Set fFileNumber to number.
+// fFileNumber is used by TTree::Fill to set the file name
+// for a new file to be created when the current file exceeds fgTreeMaxSize.
+//    (see TTree::ChangeFile)
+// if fFileNumber=10, the new file name will have a suffix "_11",
+// ie, fFileNumber is incremented before setting the file name
+   
+   if (fFileNumber < 0) {
+      Warning("SetFileNumber","file number must be positive. Set to 0");
+      fFileNumber = 0;
+      return;
+   }
+   fFileNumber = number;
+}
+  
 //______________________________________________________________________________
 void TTree::SetMaxTreeSize(Int_t maxsize)
 {

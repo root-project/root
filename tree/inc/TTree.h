@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.48 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.49 2003/07/07 21:08:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -268,6 +268,7 @@ public:
     virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
     virtual void      SetDirectory(TDirectory *dir);
     virtual void      SetEstimate(Int_t nentries=10000);
+    virtual void      SetFileNumber(Int_t number=0);
     virtual void      SetEventList(TEventList *list) {fEventList = list;}
     virtual void      SetMakeClass(Int_t make) {fMakeClass = make;}
     virtual void      SetMaxEntryLoop(Int_t maxev=1000000000) {fMaxEntryLoop = maxev;} // *MENU*
