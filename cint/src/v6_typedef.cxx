@@ -642,7 +642,7 @@ void G__define_type()
           || (strlen(typename)>strlen("double") && (typename[strlen("double")]=='&' || typename[strlen("double")]=='*')) )
      ) {
      if (strlen(typename)>strlen("double")) {
-        // Rewind.
+        /* Rewind. */
         fseek(G__ifile.fp,-1-(strlen(typename) - strlen("double")) ,SEEK_CUR);
      }
 #else
@@ -701,7 +701,7 @@ void G__define_type()
           || (strlen(typename)>=4 && (typename[3]=='&' || typename[3]=='*')) )
      ) {
      if (strlen(typename)>=4) {
-        // Rewind.
+        /* Rewind. */
         fseek(G__ifile.fp,-1-(strlen(typename) - strlen("int")) ,SEEK_CUR);
      }
 #else
