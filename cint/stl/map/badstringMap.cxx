@@ -14,6 +14,7 @@ cout << mm["hello"] << endl;
 
 m.Param()["hello"]=3.14159;
 cout<<m.Param()["hello"];
+cout<<endl;
 
-
+return 0;
 }

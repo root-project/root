@@ -4,7 +4,7 @@
 CLEAN_TARGETS += dict* *.o
 
 #Set the list of target to make while testing
-TEST_TARGETS += mapTest
+TEST_TARGETS += mapTest badOperatorTest stringMapTest badstringMapTest
 
 # adjust the location of Rules.mk as needed.
 include ../../../root/Rules.mk
@@ -23,6 +23,12 @@ badstringMap.log : badstringMap.cxx MyClass_C.$(DllSuf)
 
 badstringMapTest: badstringMap.log
 	$(CMDECHO) diff -b badstringMap.log badstringMap.ref
+
+badOperator.log: badOperator.C MyOpClass_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -l -q badOperator.C > badOperator.log 2>&1
+
+badOperatorTest: badOperator.log
+	$(CMDECHO) diff -b badOperator.log badOperator.ref
 
 testWithFailure:
 ifeq ($(FAIL),)
