@@ -62,7 +62,7 @@ else
 			else \
 				gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
 			fi; \
-			if [ $(ARCH) = "macosx" ]; then \
+			if [ $(PLATFORM) = "macosx" ]; then \
 				PATCH=$(FREETYPEVERS)/include/freetype/config/ftconfig.h; \
 				sed -e "s/define FT_MACINTOSH 1/undef FT_MACINTOSH/" $$PATCH > ftconfig.hh; \
 				mv ftconfig.hh $$PATCH; \
