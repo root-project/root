@@ -134,7 +134,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
@@ -236,7 +236,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -255,7 +255,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -274,7 +274,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
@@ -292,7 +292,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(LD) -bundle -undefined suppress $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
