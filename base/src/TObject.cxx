@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.40 2002/04/08 15:06:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.41 2002/06/16 08:44:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -829,7 +829,10 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
       return 0;
    }
    if (!gFile->IsWritable()) {
-      Error("Write","File %s is not writable", gFile->GetName());
+      if (!gFile->TestBit(TFile::kWriteError)) {
+         // Do not print the error if the file already had a SysError.
+         Error("Write","File %s is not writable", gFile->GetName());
+      }
       return 0;
    }
 

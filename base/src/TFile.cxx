@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.67 2002/07/22 17:04:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.68 2002/08/06 20:50:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1242,7 +1242,10 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 //
 
    if (!IsWritable()) {
-      Warning("Write", "file %s not opened in write mode", GetName());
+      if (!TestBit(kWriteError)) {
+         // Do not print the warning if we already had a SysError.
+         Warning("Write", "file %s not opened in write mode", GetName());
+      }
       return 0;
    }
 
