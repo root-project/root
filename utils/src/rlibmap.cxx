@@ -49,6 +49,9 @@ const char  kDefined = 'T';
 #elif defined(_AIX)
 const char *kNM = "nm -C";
 const char  kDefined = 'T';
+#elif defined (__CYGWIN__) && defined(__GNUC__)
+const char *kNM = "nm --demangle=gnu-v3";
+const char  kDefined = 'T';
 #elif defined(_WIN32)
 const char *kNM = "nm -C";
 const char  kDefined = 'T';
