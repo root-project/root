@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.3 2001/01/25 18:39:42 rdm Exp $
+// @(#)root/net:$Name$:$Id$
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -42,20 +42,19 @@ private:
    TSocket   *fSocket;    //socket being handled
 
 public:
-   TSocketHandler(TMonitor *m, TSocket *s, Int_t interest);
+   TSocketHandler(TMonitor *m, TSocket *s);
    Bool_t   Notify();
    Bool_t   ReadNotify() { return Notify(); }
-   Bool_t   WriteNotify() { return Notify(); }
    TSocket *GetSocket() const { return fSocket; }
 };
 
-TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s, Int_t interest)
-               : TFileHandler(s->GetDescriptor(), interest)
+TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s)
+               : TFileHandler(s->GetDescriptor(), 1)
 {
    fMonitor = m;
    fSocket  = s;
 
-   Add();
+   gSystem->AddFileHandler(this);
 }
 
 Bool_t TSocketHandler::Notify()
@@ -120,14 +119,11 @@ TMonitor::~TMonitor()
 }
 
 //______________________________________________________________________________
-void TMonitor::Add(TSocket *sock, EInterest interest)
+void TMonitor::Add(TSocket *sock)
 {
-   // Add socket to the monitor's active list. If interest=kRead then we
-   // want to monitor the socket for read readiness, if interest=kWrite
-   // then we monitor the socket for write readiness, if interest=kRead|kWrite
-   // then we monitor both read and write readiness.
+   // Add socket to the monitor's active list.
 
-   fActive->Add(new TSocketHandler(this, sock, (Int_t)interest));
+   fActive->Add(new TSocketHandler(this, sock));
 }
 
 //______________________________________________________________________________
@@ -158,15 +154,6 @@ void TMonitor::Remove(TSocket *sock)
 }
 
 //______________________________________________________________________________
-void TMonitor::RemoveAll()
-{
-   // Remove all sockets from the monitor.
-
-   fActive->Delete();
-   fDeActive->Delete();
-}
-
-//______________________________________________________________________________
 void TMonitor::Activate(TSocket *sock)
 {
    // Activate a de-activated socket.
@@ -178,7 +165,7 @@ void TMonitor::Activate(TSocket *sock)
       if (sock == s->GetSocket()) {
          fDeActive->Remove(s);
          fActive->Add(s);
-         s->Add();
+         gSystem->AddFileHandler(s);
          return;
       }
    }
@@ -194,7 +181,7 @@ void TMonitor::ActivateAll()
 
    while ((s = (TSocketHandler *) next())) {
       fActive->Add(s);
-      s->Add();
+      gSystem->AddFileHandler(s);
    }
    fDeActive->Clear();
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.3 2000/08/10 14:03:59 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -54,8 +54,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
 #include "TVirtualPad.h"
@@ -105,7 +105,7 @@ TCutG::TCutG(const char *name, Int_t n)
 }
 
 //______________________________________________________________________________
-TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
+TCutG::TCutG(const char *name, Int_t n, Float_t *x, Float_t *y)
       :TGraph(n,x,y)
 {
    fObjectX  = 0;
@@ -137,7 +137,7 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
 }
 
 //______________________________________________________________________________
-TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
+TCutG::TCutG(const char *name, Int_t n, Double_t *x, Double_t *y)
       :TGraph(n,x,y)
 {
    fObjectX  = 0;
@@ -178,7 +178,7 @@ TCutG::~TCutG()
 }
 
 //______________________________________________________________________________
-Int_t TCutG::IsInside(Double_t x, Double_t y) const
+Int_t TCutG::IsInside(Double_t x, Double_t y)
 {
 //*.         Function which returns 1 if point x,y lies inside the
 //*.              polygon defined by the graph points
@@ -191,7 +191,7 @@ Int_t TCutG::IsInside(Double_t x, Double_t y) const
 //*.     intersects the horizontal line.
 //*.     In this case XINT is set to the X-coordinate of the
 //*.     intersection point.
-//*.     If inter is an odd number, then the point x,y is within
+//*.     If inter is an odd number, then the point x,y is not within
 //*.     the polygon.
 //*.
 //*.         This routine is based on an original algorithm
@@ -203,12 +203,12 @@ Int_t TCutG::IsInside(Double_t x, Double_t y) const
    Int_t inter = 0;
    for (i=0;i<fNpoints-1;i++) {
       if (fY[i] == fY[i+1]) continue;
-      if (y <= fY[i] && y <= fY[i+1]) continue;
+      if (y < fY[i] && y < fY[i+1]) continue;
       if (fY[i] < y && fY[i+1] < y) continue;
       xint = fX[i] + (y-fY[i])*(fX[i+1]-fX[i])/(fY[i+1]-fY[i]);
       if (x < xint) inter++;
    }
-   if (inter%2) return 1;
+   if (inter != 2*(inter/2)) return 1;
    return 0;
 }
 
@@ -254,18 +254,4 @@ void TCutG::SetVarY(const char *vary)
    fVarY = vary;
    delete fObjectY;
    fObjectY = 0;
-}
-
-
-//______________________________________________________________________________
-void TCutG::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TCutG.
-
-   if (R__b.IsReading()) {
-      TCutG::Class()->ReadBuffer(R__b, this);
-      gROOT->GetListOfSpecials()->Add(this);
-   } else {
-      TCutG::Class()->WriteBuffer(R__b, this);
-   }
 }

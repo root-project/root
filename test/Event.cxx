@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.15 2001/11/28 15:00:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.7 2000/09/29 07:47:49 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -14,16 +14,11 @@
 //        Int_t          fNvertex;
 //        UInt_t         fFlag;
 //        Float_t        fTemperature;
-//        Int_t          fMeasures[10];
-//        Float_t        fMatrix[4][4];
-//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
-//        TRefArray     *fHighPt;            //array of High Pt tracks only
-//        TRefArray     *fMuons;             //array of Muon tracks only
-//        TRef           fLastTrack;         //pointer to last track
-//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
+//        Float_t        fMatrix[4][4];
+//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -69,7 +64,6 @@
 
 #include "TRandom.h"
 #include "TDirectory.h"
-#include "TProcessID.h"
 
 #include "Event.h"
 
@@ -91,8 +85,6 @@ Event::Event()
 
    if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
    fTracks = fgTracks;
-   fHighPt = new TRefArray;
-   fMuons  = new TRefArray;
    fNtrack = 0;
    fH      = 0;
    Int_t i0,i1;
@@ -103,8 +95,6 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
-   fEventName = 0;
-   fWebHistogram.SetAction(this);
 }
 
 //______________________________________________________________________________
@@ -112,62 +102,13 @@ Event::~Event()
 {
    Clear();
    if (fH == fgHist) fgHist = 0;
-   delete fH; fH = 0;
-   delete fHighPt; fHighPt = 0;
-   delete fMuons;  fMuons = 0;
+   delete fH;
+   fH = 0;
    delete [] fClosestDistance;
-   if (fEventName) delete [] fEventName;
 }
 
 //______________________________________________________________________________
-void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
-  char etype[20];
-  Float_t sigmat, sigmas;
-  gRandom->Rannor(sigmat,sigmas);
-  Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
-  Float_t random = gRandom->Rndm(1);
-
-  //Save current Object count
-  Int_t ObjectNumber = TProcessID::GetObjectCount();
-  Clear();
-  fHighPt->Delete();
-  fMuons->Delete();
-  
-  Int_t nch = 15;
-  if (ev > 100)   nch += 3;
-  if (ev > 10000) nch += 3;
-  if (fEventName) delete [] fEventName;
-  fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
-  sprintf(etype,"type%d",ev%5);
-  SetType(etype);
-  SetHeader(ev, 200, 960312, random);
-  SetNseg(Int_t(10*ntrack+20*sigmas));
-  SetNvertex(Int_t(1+20*gRandom->Rndm()));
-  SetFlag(UInt_t(random+0.5));
-  SetTemperature(random+20.);
-
-  for(UChar_t m = 0; m < 10; m++) {
-     SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-  }
-  for(UChar_t i0 = 0; i0 < 4; i0++) {
-    for(UChar_t i1 = 0; i1 < 4; i1++) {
-       SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
-    }
-  }
-
-   //  Create and Fill the Track objects
-  for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
-  //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
-  //object count to what it was at the beginning of the event.
-  TProcessID::SetObjectCount(ObjectNumber);
-}  
-
-//______________________________________________________________________________
-Track *Event::AddTrack(Float_t random, Float_t ptmin)
+void Event::AddTrack(Float_t random)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -176,22 +117,13 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    // otherwise the previous Track[i] will be overwritten.
 
    TClonesArray &tracks = *fTracks;
-   Track *track = new(tracks[fNtrack++]) Track(random);
-   //Save reference to last Track in the collection of Tracks
-   fLastTrack = track;
-   //Save reference in fHighPt if track is a high Pt track
-   if (track->GetPt() > ptmin)   fHighPt->Add(track);
-   //Save reference in fMuons if track is a muon candidate
-   if (track->GetMass2() < 0.11) fMuons->Add(track);
-   return track;
+   new(tracks[fNtrack++]) Track(random);
 }
 
 //______________________________________________________________________________
 void Event::Clear(Option_t *option)
 {
    fTracks->Clear(option);
-   fHighPt->Delete();
-   fMuons->Delete();
 }
 
 //______________________________________________________________________________
@@ -199,7 +131,6 @@ void Event::Reset(Option_t *option)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
-
    delete fgTracks; fgTracks = 0;
    fgHist   = 0;
 }
@@ -222,7 +153,7 @@ void Event::SetMeasure(UChar_t which, Int_t what) {
 //______________________________________________________________________________
 void Event::SetRandomVertex() {
    // This delete is to test the relocation of variable length array
-   if (fClosestDistance) delete [] fClosestDistance;
+   delete fClosestDistance;
    if (!fNvertex) {
       fClosestDistance = 0;
       return;
@@ -230,6 +161,44 @@ void Event::SetRandomVertex() {
    fClosestDistance = new Float_t[fNvertex];
    for (Int_t k = 0; k < fNvertex; k++ ) {
       fClosestDistance[k] = gRandom->Gaus(1,1);
+   }
+}
+
+//______________________________________________________________________________
+void Event::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Event.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
+      TObject::Streamer(R__b);
+      R__b.ReadFastArray(fType,20);
+      R__b >> fNtrack;
+      R__b >> fNseg;
+      R__b >> fNvertex;
+      R__b >> fFlag;
+      R__b >> fTemperature;
+      fEvtHdr.Streamer(R__b);
+      fTracks->Clear();
+      fTracks->Streamer(R__b);
+      if (!fH) fH = new TH1F();
+      fH->Streamer(R__b);
+      R__b.ReadFastArray(fMeasures,10);
+      R__b.ReadFastArray((float*)fMatrix,16);
+   } else {
+      R__b.WriteVersion(Event::IsA());
+      TObject::Streamer(R__b);
+      R__b.WriteFastArray(fType,20);
+      R__b << fNtrack;
+      R__b << fNseg;
+      R__b << fNvertex;
+      R__b << fFlag;
+      R__b << fTemperature;
+      fEvtHdr.Streamer(R__b);
+      fTracks->Streamer(R__b);
+      fH->Streamer(R__b);
+      R__b.WriteFastArray(fMeasures,10);
+      R__b.WriteFastArray((float*)fMatrix,16);
    }
 }
 
@@ -245,7 +214,7 @@ Track::Track(Float_t random) : TObject()
    fPy = py;
    fPz = TMath::Sqrt(px*px+py*py);
    fRandom = 1000*random;
-   if (fRandom < 10) fMass2 = 0.106;
+   if (fRandom < 10) fMass2 = 0.08;
    else if (fRandom < 100) fMass2 = 0.8;
    else if (fRandom < 500) fMass2 = 4.5;
    else if (fRandom < 900) fMass2 = 8.9;

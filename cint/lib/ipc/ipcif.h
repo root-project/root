@@ -33,37 +33,12 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
-/* union semun is defined by including <sys/sem.h> */
-#else
-/* according to X/OPEN we have to define it ourselves */
-#ifndef __FreeBSD__
-union semun {
-  int val;                    /* value for SETVAL */
-  struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
-  unsigned short int *array;  /* array for GETALL, SETALL */
-  struct seminfo *__buf;      /* buffer for IPC_INFO */
-};
-#endif
-#endif 
-
 #include <sys/msg.h>
 
 #else /* __MAKECINT__ */
 
 #include <time.h>
 #include <sys/types.h>
-
-struct ipc_parm;
-struct ipc_perm;
-struct shmid_ds;
-struct semid_ds;
-struct msqid_ds;
-
-union semun;
-
-struct sembuf;
-struct msgbuf; /* does not exist in RH7.0 */
 
 /**************************************************************************
  * convert a pathname and a project id to a System V IPC Key
@@ -151,13 +126,15 @@ int shmctl(int shmid,int cmd,struct shmid_ds *buf);
 
 struct semid_ds;
 
-#if defined(G__GNUC)
+#endif /* __MAKECINT__ */
+
+#if defined(G__GNUC) || defined(__GNUC__)
 union semun {
   int val;
   struct semid_ds *buf;
   unsigned short *array;
 };
-#elif defined(G__HPUX)
+#elif defined(G__HPUX) || defined(__hpux)
 // ???
 #else
 union semun {
@@ -167,6 +144,8 @@ union semun {
 };
 #endif
 
+#ifdef __MAKECINT__
+
 struct sembuf {
   ushort sem_num; // semaphore number
   short sem_op;   // semaphore operation
@@ -174,6 +153,7 @@ struct sembuf {
 };
 
 int semget(key_t key, int nsems,int semflg);
+
 #if defined(G__GNUC)
 int semctl(int semid,int semnum,int cmd,union semun arg);
 #elif defined(G__HPUX)
@@ -181,7 +161,9 @@ int semctl(int semid,int semnum,int cmd,void* x);
 #else
 int semctl(int semid,int semnum,int cmd,union semun arg);
 #endif
+
 int semop(int semid,struct sembuf *sops,unsigned int nsops);
+
 
 
 /**************************************************************************
@@ -189,7 +171,7 @@ int semop(int semid,struct sembuf *sops,unsigned int nsops);
  **************************************************************************/
 struct msgbuf {
   long mtype;
-  char mtext[80];  /* This is dummy */
+  char mtext[80];
 };
 
 struct msqid_ds;
@@ -200,8 +182,8 @@ int msgrcv(int msgid,struct msgbuf *msgp,int msgsz,long msgtyp,int msgflg);
 int msgctl(int msgid, int cmd,struct msqid_ds *buf);
 
 
-#pragma link off struct msgbuf;
+#pragma link off class semun;
+
 #endif /* __MAKECINT__ */
 
 #endif /* G__IPC_H */
-

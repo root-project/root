@@ -25,8 +25,6 @@ CUSTOMSHARED=$9
 shift
 CUSTOMEXE=$9
 shift
-ARCH=$9
-shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=%ROOTSYS%/include
@@ -37,13 +35,12 @@ fi
 
 rm -f __compiledata
 
-echo "Running $0"
+echo "Running $COMPILEDATA"
 echo "/* This is file is automatically generated */" > __compiledata
-echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then 
-   echo "#define  MAKESHAREDLIB \"cd \$BuildDir && cl -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib  \$LinkedLibs libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
+   echo "#define  MAKESHAREDLIB \"cl -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib  \$LinkedLibs libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
 else
    echo "#define  MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
@@ -67,7 +64,7 @@ if [ -r $COMPILEDATA ]; then
       echo "Changing $COMPILEDATA"
       mv __compiledata $COMPILEDATA;
    else
-      rm -f __compiledata; fi
+      rm -f __compiledata; fi;
 else
    echo "Making $COMPILEDATA"
    mv __compiledata $COMPILEDATA; fi

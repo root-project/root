@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodArg.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -95,7 +95,7 @@ const char *TMethodArg::GetTitle() const
 }
 
 //______________________________________________________________________________
-Int_t TMethodArg::Compare(const TObject *obj) const
+Int_t TMethodArg::Compare(TObject *obj)
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -107,7 +107,7 @@ Int_t TMethodArg::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-ULong_t TMethodArg::Hash() const
+ULong_t TMethodArg::Hash()
 {
    // Return hash value for TDataType based on its name.
 
@@ -126,7 +126,7 @@ Long_t TMethodArg::Property() const
 }
 
 //______________________________________________________________________________
-TList *TMethodArg::GetOptions() const
+TList *TMethodArg::GetOptions()
 {
    // Returns list of possible options - according to pointed datamember.
    // If there is no datamember field assigned to this methodarg - returns 0.
@@ -135,7 +135,7 @@ TList *TMethodArg::GetOptions() const
 }
 
 //______________________________________________________________________________
-TDataMember *TMethodArg::GetDataMember() const
+TDataMember *TMethodArg::GetDataMember()
 {
    // Returns TDataMember pointed by this methodarg.
    // If you want to specify list of options or current value for your

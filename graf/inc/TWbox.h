@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.2 2000/06/13 11:21:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -44,16 +44,17 @@ public:
         virtual void  DrawWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Color_t color=33 ,Short_t bordersize=5 ,Short_t bordermode=-1);
         virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Short_t       GetBorderMode() const { return fBorderMode;}
-        Short_t       GetBorderSize() const { return fBorderSize;}
-        Int_t         GetDarkColor() const  {return GetFillColor() + 100;}
-        Int_t         GetLightColor() const {return GetFillColor() + 150;}
+        Short_t       GetBorderMode() { return fBorderMode;}
+        Short_t       GetBorderSize() { return fBorderSize;}
+        Int_t         GetDarkColor()  {return GetFillColor() + 100;}
+        Int_t         GetLightColor() {return GetFillColor() + 150;}
         virtual void  Paint(Option_t *option="");
         virtual void  PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                                  Color_t color, Short_t bordersize, Short_t bordermode,
                                  Bool_t tops);
         virtual void  PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
+        virtual void  Print(Option_t *option="");
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
         virtual void  SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*

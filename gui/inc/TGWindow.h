@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.4 2001/04/28 16:30:14 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -31,8 +31,6 @@
 #include "TVirtualX.h"
 #endif
 
-class TTimer;
-
 
 class TGWindow : public TGObject {
 
@@ -46,6 +44,8 @@ protected:
    TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
 
    virtual void DoRedraw() { }
+   virtual const TGWindow *GetMainFrame() const
+      { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
 
 public:
    TGWindow(const TGWindow *p, Int_t x, Int_t y,
@@ -53,15 +53,12 @@ public:
             Int_t depth = 0,
             UInt_t clss = 0,
             void *visual = 0,
-            SetWindowAttributes_t *attr = 0,
-            UInt_t wtype = 0);
+            SetWindowAttributes_t *attr = 0);
    TGWindow(TGClient *c, Window_t id, const TGWindow *parent = 0);
 
    virtual ~TGWindow();
 
    const TGWindow *GetParent() const { return fParent; }
-   virtual const TGWindow *GetMainFrame() const
-      { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
 
    void MapWindow() { gVirtualX->MapWindow(fId); }
    void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
@@ -86,27 +83,6 @@ public:
    virtual Bool_t IsMapped();
 
    ClassDef(TGWindow,0)  // GUI Window base class
-};
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGUnknownWindowHandler                                               //
-//                                                                      //
-// Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Motif (see TRootOIViewer).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TGUnknownWindowHandler : public TObject {
-
-public:
-   TGUnknownWindowHandler() { }
-   virtual ~TGUnknownWindowHandler() { }
-
-   virtual Bool_t HandleEvent(Event_t *) = 0;
-
-   ClassDef(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
 };
 
 #endif

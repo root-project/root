@@ -9,7 +9,7 @@ timeonaxis()
 // information about this format (and others like GPS) may be found at
 // begin_html <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a> end_html
 //  or
-// begin_html <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a> end_html
+// begin_html <a href="http://www.topology.org/time.html">http://www.topology.org/time.html</a> end_html
 
    gROOT->Reset();
 

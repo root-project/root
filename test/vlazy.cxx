@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -10,9 +10,10 @@
 // matrix, by picking every other sample of the latter.
 //
 
+#include "TROOT.h"
 #include "TStopwatch.h"
 #include "TMatrix.h"
-#include "Riostream.h"
+#include <iostream.h>
 
 
 class do_downsample : public TElementPosAction {
@@ -67,6 +68,9 @@ static TMatrix traditional_downsampling(const TMatrix &orig_matrix)
          orig_matrix(2*i+smaller_m.GetRowLwb(),2*j+smaller_m.GetColLwb());
    return smaller_m;
 }
+
+
+TROOT sample("sample","performance sample");
 
 int main()
 {

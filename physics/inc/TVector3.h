@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.5 2001/01/12 11:24:36 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -27,8 +27,8 @@ public:
   TVector3(Double_t x = 0.0, Double_t y = 0.0, Double_t z = 0.0);
   // The constructor.
 
-  TVector3(const Double_t *);
-  TVector3(const Float_t *);
+  TVector3(Double_t *);
+  TVector3(Float_t *);
   // Constructors from an array
 
   TVector3(const TVector3 &);
@@ -45,16 +45,10 @@ public:
   inline Double_t & operator [] (int);
   // Set components by index.
 
-  inline Double_t x()  const;
-  inline Double_t y()  const;
-  inline Double_t z()  const;
-  inline Double_t X()  const;
-  inline Double_t Y()  const;
-  inline Double_t Z()  const;
-  inline Double_t Px() const;
-  inline Double_t Py() const;
-  inline Double_t Pz() const;
- // The components in cartesian coordinate system.
+  inline Double_t X() const;
+  inline Double_t Y() const;
+  inline Double_t Z() const;
+  // The components in cartesian coordinate system.
 
   inline void SetX(Double_t);
   inline void SetY(Double_t);
@@ -62,8 +56,8 @@ public:
   inline void SetXYZ(Double_t x, Double_t y, Double_t z);
   // Set the components in cartesian coordinate system.
 
-  inline void GetXYZ(Double_t *carray) const;
-  inline void GetXYZ(Float_t *carray) const;
+  inline void GetXYZ(Double_t *carray);
+  inline void GetXYZ(Float_t *carray);
   // Get the components into an array
   // not checked!
 
@@ -180,7 +174,7 @@ private:
   Double_t fX, fY, fZ;
   // The components.
 
-  ClassDef(TVector3,3) // A three vector
+  ClassDef(TVector3,2) // A three vector
 
 };
 
@@ -204,15 +198,9 @@ TVector3 operator * (const TMatrix &, const TVector3 &);
 Double_t & TVector3::operator[] (int i)       { return operator()(i); }
 Double_t   TVector3::operator[] (int i) const { return operator()(i); }
 
-inline Double_t TVector3::x()  const { return fX; }
-inline Double_t TVector3::y()  const { return fY; }
-inline Double_t TVector3::z()  const { return fZ; }
-inline Double_t TVector3::X()  const { return fX; }
-inline Double_t TVector3::Y()  const { return fY; }
-inline Double_t TVector3::Z()  const { return fZ; }
-inline Double_t TVector3::Px() const { return fX; }
-inline Double_t TVector3::Py() const { return fY; }
-inline Double_t TVector3::Pz() const { return fZ; }
+inline Double_t TVector3::X() const { return fX; }
+inline Double_t TVector3::Y() const { return fY; }
+inline Double_t TVector3::Z() const { return fZ; }
 
 inline void TVector3::SetX(Double_t x) { fX = x; }
 inline void TVector3::SetY(Double_t y) { fY = y; }
@@ -224,13 +212,13 @@ inline void TVector3::SetXYZ(Double_t x, Double_t y, Double_t z) {
    fZ = z;
 }
 
-inline void TVector3::GetXYZ(Double_t *carray) const {
+inline void TVector3::GetXYZ(Double_t *carray){
   carray[0] = fX;
   carray[1] = fY;
   carray[2] = fZ;
 }
 
-inline void TVector3::GetXYZ(Float_t *carray) const {
+inline void TVector3::GetXYZ(Float_t *carray){
   carray[0] = fX;
   carray[1] = fY;
   carray[2] = fZ;

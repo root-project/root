@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.7 2001/06/26 16:32:36 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@
 #define UTMP_NO_ADDR
 #endif
 #if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
-    defined(__FreeBSD__) || defined(__Lynx__) || defined(__APPLE__)
+    defined(__FreeBSD__) || defined(__Lynx__)
 #define UTMP_NO_ADDR
 #endif
 
@@ -51,7 +51,7 @@
 # include <utmpx.h>
 # define STRUCT_UTMP struct utmpx
 # else
-# if defined(__linux) && defined(__powerpc) && (__GNUC__ == 2) && (__GNUC_MINOR__ < 90)
+# if defined(__linux) && defined(__powerpc) && (__GNUC_MINOR__ < 90)
    extern "C" {
 # endif
 # include <utmp.h>
@@ -217,10 +217,6 @@ static void SetLibraryPath()
 #endif
 }
 
-extern "C" {
-   static void SigUsr1(int);
-}
-
 static void SigUsr1(int)
 {
    // When we get SIGUSR1 from child (i.e. ROOT) then pop down logo.
@@ -241,13 +237,6 @@ static void WaitChild(int childpid)
             break;
          ResetErrno();
       }
-
-      if (WIFEXITED(status))
-         exit(WEXITSTATUS(status));
-
-      if (WIFSIGNALED(status))
-         exit(WTERMSIG(status));
-
       if (WIFSTOPPED(status)) {         // child got ctlr-Z
          raise(SIGTSTP);                // stop also parent
          kill(childpid, SIGCONT);       // if parent wakes up, wake up child
@@ -309,23 +298,25 @@ int main(int argc, char **argv)
 
    struct sigaction ignore, handle, saveintr, savequit, saveusr1;
 
-#if defined(__sun) && !defined(__i386) && !defined(__SVR4)
+#if defined(__sun) && !defined(__i386) && !defined(__SunOS_5_6)
    ignore.sa_handler = (void (*)())SIG_IGN;
-#elif defined(__sun) && defined(__SVR4)
-   ignore.sa_handler = (void (*)(int))SIG_IGN;
 #else
+# if defined(__SunOS_5_6)
+   ignore.sa_handler = (void (*)(int))SIG_IGN;
+# else
    ignore.sa_handler = SIG_IGN;
+# endif
 #endif
    sigemptyset(&ignore.sa_mask);
    ignore.sa_flags = 0;
    handle = ignore;
-#if defined(__sun) && !defined(__i386) && !defined(__SVR4)
+#if defined(__sun) && !defined(__i386) && !defined(__SunOS_5_6)
    handle.sa_handler = (void (*)())SigUsr1;
-#elif defined(__sun) && defined(__SVR4)
-   handle.sa_handler = SigUsr1;
-#elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
+#elif defined(__SunOS_5_6)
+   handle.sa_handler = (void (*)(int))SigUsr1;
+#elif defined(__sgi) && !defined(__KCC)
 #   if defined(IRIX64)
-   handle.sa_handler = SigUsr1;
+   handle.sa_handler = (void (*)(int))SigUsr1;
 #   else
    handle.sa_handler = (void (*)(...))SigUsr1;
 #   endif

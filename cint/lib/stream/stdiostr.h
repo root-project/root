@@ -7,7 +7,7 @@
  * Description:
  *  Stub file for making iostream library
  ************************************************************************
- * Copyright(c) 1991~2001,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1991~1999,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  ************************************************************************/
 
@@ -16,14 +16,10 @@
 
 #ifndef __CINT__
 
-#ifndef G__NEWSTDHEADER
-#if defined(__APPLE__)
-#include <iostream.h>
-#elif defined(_WINDOWS)
-#include <stdiostr.h>
-#else
+#ifndef _WINDOWS
 #include <stdiostream.h>
-#endif
+#else
+#include <stdiostr.h>
 #endif
 
 #else

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.8 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -28,10 +28,9 @@
 #ifndef ROOT_TCollection
 #include "TCollection.h"
 #endif
-#ifndef ROOT_THashTable
-#include "THashTable.h"
-#endif
 
+
+class THashTable;
 class THashTableIter;
 class TMapIter;
 class TBrowser;
@@ -56,8 +55,7 @@ public:
    void              Delete(Option_t *option="");
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
-   TObject          *FindObject(const TObject *key) const;
-   TObject         **GetObjectRef(TObject *obj) const {return fTable->GetObjectRef(obj);}
+   TObject          *FindObject(TObject *key) const;
    TObject          *GetValue(TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
@@ -83,13 +81,13 @@ private:
 
 public:
    TAssoc(TObject *key, TObject *value) : fKey(key), fValue(value) { }
-   TAssoc(const TAssoc &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
+   TAssoc(const TAssoc &a) : fKey(a.fKey), fValue(a.fValue) { }
    virtual               ~TAssoc() { }
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }
-   ULong_t               Hash() const { return fKey->Hash(); }
-   Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
+   ULong_t               Hash() { return fKey->Hash(); }
+   Bool_t                IsEqual(TObject *obj) { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
 };

@@ -14,25 +14,9 @@ N: Maarten Ballintijn
 E: maartenb@xs4all.nl
 D: initial linux port
 
-N: Paul Balm
-E: p.balm@nikhef.nl
-D: implemented TDatabasePDG::ConvertGeant3ToPDG
-
-N: Guy Barrand
-E: barrand@lal.in2p3.fr
-D: contribution to GUI classes
-
-N: Bertrand Bellenot
-E: Bertrand.Bellenot@alcan.com
-D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB.
-
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
-
-N: Denis Bertini
-E: dbertini@lxg0402.gsi.de
-D: changes needed so TCanvas can be embedded in Qt GUI, memory leak checker
 
 N: Nenad Buncic
 E: Nenad.Buncic@epfl.ch
@@ -41,29 +25,15 @@ D: interface to X3D
 
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
-D: LinuxPPC support, contribution to the User's Guide
+D: LinuxPPC support, large part of the User's Guide
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov
 D: interface from ROOT/CINT to native compiler, FNAL support coordinator
-D: support and development of TTreeFormula and TTree query mechanism
 
 N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
-D: TSpline classes
-
-N: Gian Paolo Ciceri
-E: gp.ciceri@acm.org
-D: PostgreSQL interface
-
-N: Olivier Couet
-E: Olivier.Couet@cern.ch
-D: Implement support for CellArrays in TPostScript
-
-N: Ben Cowan
-E: benc@SLAC.Stanford.EDU
-D: port to MacOS X
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
@@ -81,41 +51,27 @@ N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
 
-N: Keisuke Fujii
-E: fujiik@jlcuxf.kek.jp
-D: port to MacOS X
-
 N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
 
 N: Robert Hatcher
 E: rhatcher@slac.stanford.edu
-D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
-D: class TTimeStamp
-
-N: Miroslav Helbich
-E: helbich@mail.desy.de
-D: Apply method in the TGraph classes
+D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
-D: contributions to the thread classes, SapDB interface
+D: contributions to the thread classes
 
 N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
-D: generator, many comments on the Users Guide
+D: generator
 
-N: Christian Holm Christensen
+N: Christian Holm Cristensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
-D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
-
-N: Marian Ivanov
-E: m.ivanov@gsi.de
-D: memory leak checker
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
@@ -125,14 +81,6 @@ N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
-N: Grzegorz Mazur
-E: mazur@mail.desy.de
-D: class TDCacheFile, interface to DESY's dCache system
-
-N: Akiya Miyamoto
-E: akiya.miyamoto@kek.jp
-D: port to IBM AIX with xlC v5.x
-
 N: Dave Morrison
 E: dave@bnl.gov
 D: library load path fixes, some Makefile updates
@@ -140,20 +88,6 @@ D: library load path fixes, some Makefile updates
 N: Pasha Murat
 E: murat@cdfsga.fnal.gov
 D: Lorentz vector classes, PDG interface
-
-N: Axel Naumann
-E: axel@fnal.gov
-D: THtml improvements (namespace, header/footer)
-D: many suggestions for Trees
-
-N: John Odonnell
-E: odonnell@lanl.gov
-D: contributed to TFormula: support for recursive functions definitions.
-
-N: Eddy Offermann
-E: eddy@rentec.com
-D: contributed to the TGraph Paint functions
-D: contributed to the TMatrix classes (InvertPosDef)
 
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
@@ -168,7 +102,6 @@ D: editor of the User's Guide
 N: Victor Perevoztchikov
 E: perev@bnl.gov
 D: optimized hash function, filename expander
-D: testing and comments of the Automatic Schema Evolution system
 
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
@@ -186,27 +119,6 @@ N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
 
-N: Heiko Scheit
-E: Heiko.Scheit@mpi-hd.mpg.de
-D: Improvements in TTreePlayer::DrawSelect
-
-N: Daniel Sigg
-E: sigg_d@ligo.caltech.edu
-D: TGNumberEntry GUI widget
-
-N: Christian Stratowa
-E: cstrato@EUnet.at
-D: Development of class TGraphSmooth + many suggestions
-
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
-
-N: Brett Viren
-E: bv@bnl.gov
-D: contributed the GUI TGTableLayout manager and the Viewer example program
-
-N: Andreas Zoglauer
-E: zog@mpe.mpg.de
-D: contributed to TStyle::CreateGradientColorTable
-

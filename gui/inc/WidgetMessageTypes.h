@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.5 2001/05/08 13:53:53 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.3 2000/07/12 17:58:05 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,7 +47,6 @@ enum EWidgetMessageTypes {
    kC_TEXTENTRY        = 4,
       kTE_TEXTCHANGED     = 1,
       kTE_ENTER           = 2,
-      kTE_TAB             = 3,
    kC_CONTAINER        = 5,
       kCT_ITEMCLICK       = 1,
       kCT_ITEMDBLCLICK    = 2,
@@ -68,7 +67,6 @@ enum EWidgetMessageTypes {
       kTXT_OPEN           = 6,
       kTXT_CLOSE          = 7,
       kTXT_SAVE           = 8,
-   kC_USER             = 1001,
    kC_MSGMAX           = 10000
 };
 
@@ -76,7 +74,7 @@ enum EWidgetMessageTypes {
 // Message cracking routines
 inline Int_t MK_MSG(EWidgetMessageTypes msg, EWidgetMessageTypes submsg)
                                    { return (msg << 8) + submsg; }
-inline Int_t GET_MSG(Long_t val)    { return Int_t(val >> 8); }
+inline Int_t GET_MSG(Long_t val)    { return Int_t((val >> 8) & 255); }
 inline Int_t GET_SUBMSG(Long_t val) { return Int_t(val & 255); }
 
 #endif

@@ -41,7 +41,7 @@ include/%.h:    $(THREADDIRI)/%.h
 $(THREADLIB):   $(THREADO) $(THREADDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libThread.$(SOEXT) $@ "$(THREADO) $(THREADDO)" \
-		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
+		   "$(THREADLIBEXTRA) $(THREAD)"
 
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

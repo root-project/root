@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.8 2001/07/19 17:12:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -52,33 +52,29 @@ public:
    virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t    GetContour(Double_t *levels=0);
-   virtual Double_t GetContourLevel(Int_t level) const;
-          Int_t     GetNpy() const {return fNpy;}
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual Double_t GetContourLevel(Int_t level);
+          Int_t     GetNpy() {return fNpy;}
+   virtual char    *GetObjectInfo(Int_t px, Int_t py);
        Double_t     GetRandom();
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) { TF1::GetRange(xmin, xmax); }
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
-   virtual Double_t GetSave(const Double_t *x);
-   virtual Double_t GetYmin() const {return fYmin;}
-   virtual Double_t GetYmax() const {return fYmax;}
-   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsil=0.000001) {return TF1::Integral(a,b,params,epsil);}
+   virtual Double_t GetYmin() {return fYmin;}
+   virtual Double_t GetYmax() {return fYmax;}
+   virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsil=0.000001) {return TF1::Integral(a,b,params,epsil);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsil=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsil=0.000001)
                             {return TF1::Integral(ax,bx,ay,by,az,bz,epsil);}
-   virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
-   virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetNpy(Int_t npy=100); // *MENU*
-   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels=20, Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    virtual void     SetRange(Double_t xmin, Double_t xmax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax);
 
-   ClassDef(TF2,4)  //The Parametric 2-D function
+   ClassDef(TF2,3)  //The Parametric 2-D function
 };
 
 inline void TF2::SetRange(Double_t xmin, Double_t xmax)

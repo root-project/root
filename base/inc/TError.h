@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,11 +33,10 @@
 #include "Varargs.h"
 #endif
 
-const int kInfo     =   0;
-const int kWarning  =   1000;
-const int kError    =   2000;
-const int kSysError =   3000;
-const int kFatal    =   4000;
+const int kWarning  =   0;
+const int kError    =   1000;
+const int kSysError =   2000;
+const int kFatal    =   3000;
 
 
 typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const char *location,
@@ -52,10 +51,9 @@ extern void DefaultErrorHandler(int level, Bool_t abort, const char *location,
 extern ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler);
 extern ErrorHandlerFunc_t GetErrorHandler();
 
-extern void Info(const char *location, const char *msgfmt, ...);
-extern void Warning(const char *location, const char *msgfmt, ...);
 extern void Error(const char *location, const char *msgfmt, ...);
 extern void SysError(const char *location, const char *msgfmt, ...);
+extern void Warning(const char *location, const char *msgfmt, ...);
 extern void Fatal(const char *location, const char *msgfmt, ...);
 
 extern void AbstractMethod(const char *method);

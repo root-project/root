@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux ( RH5.2 i386 ) with glibc and PGCC
 # ( PGCC i586/i686 RPMs can be found at http://www.foyer.se/PGCC.html )
 
@@ -32,7 +30,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -rdynamic
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = ../lib/libXpm.a -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -ltermcap -lbsd -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
@@ -42,5 +40,4 @@ F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

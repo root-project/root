@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -171,7 +171,7 @@ TObject *THashTable::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *THashTable::FindObject(const TObject *obj) const
+TObject *THashTable::FindObject(TObject *obj) const
 {
    // Find object using its hash value (returned by its Hash() member).
 
@@ -179,18 +179,6 @@ TObject *THashTable::FindObject(const TObject *obj) const
 
    Int_t slot = GetHashValue(obj);
    if (fCont[slot]) return fCont[slot]->FindObject(obj);
-   return 0;
-}
-
-//______________________________________________________________________________
-TObject **THashTable::GetObjectRef(TObject *obj) const
-{
-   // Return address of pointer to obj
-
-   if (IsArgNull("GetObjectRef", obj)) return 0;
-
-   Int_t slot = GetHashValue(obj);
-   if (fCont[slot]) return fCont[slot]->GetObjectRef(obj);
    return 0;
 }
 

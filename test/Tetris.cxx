@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.12 2002/01/04 08:48:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -23,8 +23,6 @@
 #include <TGClient.h>
 #include <KeySymbols.h>
 #include <TRootCanvas.h>
-#include <TApplication.h>
-#include <TList.h>
 #include "Tetris.h"
 
 static Tetris *gTetris;                    // game manager
@@ -497,7 +495,6 @@ TetrisBoard::TetrisBoard(Float_t xlow, Float_t ylow,Float_t xup,Float_t yup) :
 
    fBoard = new TetrisBoxPtr[fWidth*fHeight];
    fIsDropped = kTRUE;
-   fFilledLines = 0;
 }
 
 void TetrisBoard::Clear(Option_t *)
@@ -637,7 +634,7 @@ void TetrisBoard::PieceDropped(TetrisPiece* piece, int height)
    fIsDropped = kFALSE;
 }
 
-void TetrisBoard::Print(const Text_t *) const
+void TetrisBoard::Print(const Text_t *)
 {
    // Used for testing
 
@@ -645,7 +642,7 @@ void TetrisBoard::Print(const Text_t *) const
 
    for (int j = fHeight-1; j > -1; j--) {
       for (int i = 0; i < fWidth; i++)
-         ((TetrisBoard*)this)->IsEmpty(i,j) ? printf("|   ") : printf("| * ") ;
+         IsEmpty(i,j) ? printf("|   ") : printf("| * ") ;
       printf("|\n");
    }
 }
@@ -726,7 +723,7 @@ void QuitButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 {
    // Action after mouse click
 
-   if (event == kButton1Up) gApplication->Terminate(0);  //gTetris->Quit();
+   if (event == kButton1Up) gTetris->Quit();
 }
 
 
@@ -758,8 +755,8 @@ void NewGameButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 ///////////////////////////////////////////////////////////////////
 //  InfoPad -
 ///////////////////////////////////////////////////////////////////
-InfoPad::InfoPad(const char* title, Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
-   : TPad("info_pad",title,xlow,ylow,xup,yup,14,4,-1), TAttText(22,0,2,71,0.65)
+InfoPad::InfoPad(Text_t* title, Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
+   : TPad("info_pad",title,xlow,ylow,xup,yup,14,4,-1), TAttText(22,0,2,77,0.65)
 {
    // InfoPad constructor
 
@@ -800,7 +797,7 @@ void InfoPad::PaintModified()
       text->SetTextAlign(GetTextAlign());
       text->SetTextColor(GetTextColor());
       text->SetTextAngle(GetTextAngle());
-      //TAttText::Modify();
+      TAttText::Modify();
 
       // get text width and height (in pixels)
       gVirtualX->GetTextExtent(w,h,(char*)text->GetTitle());
@@ -830,30 +827,11 @@ KeyHandler::KeyHandler() : TGFrame(gClient->GetRoot(),0,0)
    main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
 }
 
-KeyHandler::~KeyHandler()
-{
-   // Cleanup key handler.
-
-   // get main frame of Tetris canvas
-   TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
-
-   // remove binding of arrow keys and space-bar key
-printf("Remove key bindings\n");
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
-   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
-   // restore key auto repeat functionality, was turned off in TGMainFrame::HandleKey()
-   gVirtualX->SetKeyAutoRepeat(kTRUE);
-}
-
-
 Bool_t KeyHandler::HandleKey(Event_t *event)
 {
    // Handle arrow and spacebar keys
 
-   char tmp[2];
+   char tmp[1];
    UInt_t keysym;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
@@ -916,6 +894,7 @@ Tetris::Tetris() :
    // Tetris constructor
 
    gTetris = this;
+   fIsEditable = kFALSE;
 
    //-----------  play board ------------
    fBoard            = new  TetrisBoard(0.35,0.05,0.7,0.95);
@@ -947,12 +926,11 @@ Tetris::Tetris() :
    fPiecesDropped = 0;
    SetFillColor(31);
 
-   fKeyHandler = new KeyHandler();
+   new KeyHandler();
    fUpdateLevelTimer = new UpdateLevelTimer(60000);  // every  minute
    SetFixedSize();
    Update();
    PrintHelpInfo();
-   fEditable = kFALSE;
 }
 
 void Tetris::PrintHelpInfo()

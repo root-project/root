@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.4 2000/12/18 07:12:58 brun Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,18 +32,6 @@
 #pragma link C++ class TCint;
 #pragma link C++ class TInterpreter;
 
-#pragma link C++ class TStreamerBase-;
-#pragma link C++ class TStreamerBasicPointer-;
-#pragma link C++ class TStreamerLoop-;
-#pragma link C++ class TStreamerBasicType-;
-#pragma link C++ class TStreamerObject-;
-#pragma link C++ class TStreamerObjectAny-;
-#pragma link C++ class TStreamerObjectPointer-;
-#pragma link C++ class TStreamerString-;
-#pragma link C++ class TStreamerSTL-;
-#pragma link C++ class TStreamerSTLstring-;
-#pragma link C++ class TStreamerElement-;
-#pragma link C++ class TStreamerInfo-;
 #pragma link C++ class TToggle;
 #pragma link C++ class TToggleGroup;
 

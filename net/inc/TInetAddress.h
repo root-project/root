@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.3 2001/01/22 09:44:13 rdm Exp $
+// @(#)root/net:$Name$:$Id$
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -39,12 +39,11 @@ friend class TUnixSystem;
 friend class TWinNTSystem;
 friend class TVmsSystem;
 friend class TMacSystem;
-friend class TUUID;
 friend class TSocket;
 friend class TServerSocket;
 
 private:
-   TString fHostname;    // fully qualified hostname
+   TString fHostname;    // full qualified hostname
    UInt_t  fAddress;     // IP address in host byte order
    Int_t   fFamily;      // address family
    Int_t   fPort;        // port through which we are connected
@@ -64,7 +63,7 @@ public:
    Int_t       GetFamily() const { return fFamily; }
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fFamily == -1 ? kFALSE : kTRUE; }
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="");
 
    ClassDef(TInetAddress,1)  //Represents an Internet Protocol (IP) address
 };

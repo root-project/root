@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -175,7 +175,7 @@ void THashList::Clear(Option_t *option)
    // the THashList is the owner (set via SetOwner()).
 
    if (IsOwner())
-      TList::Delete(option);
+      TList::Delete();
    else
       TList::Clear(option);
    fTable->Clear("nodelete");  // any kCanDelete objects have already been deleted
@@ -200,7 +200,7 @@ TObject *THashList::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *THashList::FindObject(const TObject *obj) const
+TObject *THashList::FindObject(TObject *obj) const
 {
    // Find object using its hash value (returned by its Hash() member).
 

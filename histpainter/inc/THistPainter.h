@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.6 2001/12/09 17:33:49 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -28,75 +28,60 @@
 #ifndef ROOT_TH1
 #include "TH1.h"
 #endif
-#ifndef ROOT_TCutG
-#include "TCutG.h"
-#endif
 
 class TGaxis;
 class TLego;
-const Int_t kMaxCuts = 16;
 
 class THistPainter : public TVirtualHistPainter {
 
 protected:
-    TH1        *fH;                 //pointer to histogram to paint
-    TAxis      *fXaxis;             //pointer to X axis
-    TAxis      *fYaxis;             //pointer to Y axis
-    TAxis      *fZaxis;             //pointer to Z axis
-    TList      *fFunctions;         //pointer to histogram list of functions
-    TLego      *fLego;              //pointer to a TLego object
-    Double_t   *fXbuf;              //X buffer coordinates
-    Double_t   *fYbuf;              //Y buffer coordinates
-    Int_t       fNcuts;             //Number of graphical cuts
-    Int_t       fCutsOpt[kMaxCuts]; //sign of each cut
-    TCutG      *fCuts[kMaxCuts];    //Pointers to graphical cuts
-    TObjArray  *fStack;             //Pointer to stack of histograms (if any) 
-       
+    TH1        *fH;               //pointer to histogram to paint
+    TAxis      *fXaxis;           //pointer to X axis
+    TAxis      *fYaxis;           //pointer to Y axis
+    TAxis      *fZaxis;           //pointer to Z axis
+    TList      *fFunctions;       //pointer to histogram list of functions
+    TLego      *fLego;            //pointer to a TLego object
+    Double_t   *fXbuf;            //X buffer coodinates
+    Double_t   *fYbuf;            //Y buffer coodinates
+    Int_t       fNIDS;            //Number of stacked histograms
+
 public:
     THistPainter();
     virtual ~THistPainter();
-    virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
-    virtual void       DrawPanel();
-    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
-    virtual void       FitPanel();
-    virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
-    virtual TObjArray *GetStack() const {return fStack;}
-    virtual Bool_t     IsInside(Int_t x, Int_t y);
-    virtual Bool_t     IsInside(Double_t x, Double_t y);
-    virtual Int_t      MakeChopt(Option_t *option);
-    virtual Int_t      MakeCuts(char *cutsopt);
-    virtual void       Paint(Option_t *option="");
-    virtual void       PaintArrows();
-    virtual void       PaintAxis();
-    virtual void       PaintBar();
-    virtual void       PaintBarH();
-    virtual void       PaintBoxes();
-    virtual void       PaintColorLevels();
-    virtual void       PaintContour();
-    virtual Int_t      PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
+    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
+    virtual void    DrawPanel();
+    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
+    virtual void    FitPanel();
+    virtual char   *GetObjectInfo(Int_t px, Int_t py);
+    virtual Int_t   MakeChopt(Option_t *option);
+    virtual void    Paint(Option_t *option="");
+    virtual void    PaintArrows();
+    virtual void    PaintAxis();
+    virtual void    PaintBoxes();
+    virtual void    PaintColorLevels();
+    virtual void    PaintContour();
+    virtual Int_t   PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                            Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
-                           Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
-    virtual void       PaintErrors();
-    virtual void       PaintFrame();
-    virtual void       PaintFunction();
-    virtual void       PaintHist();
-    virtual void       PaintH3(Option_t *option="");
-    virtual Int_t      PaintInit();
-    virtual Int_t      PaintInitH();
-    virtual void       PaintLego();
-    virtual void       PaintLegoAxis(TGaxis *axis, Double_t ang);
-    virtual void       PaintPalette();
-    virtual void       PaintScatterPlot();
-    virtual void       PaintStat(Int_t dostat, TF1 *fit);
-    virtual void       PaintStat2(Int_t dostat, TF1 *fit);
-    virtual void       PaintSurface();
-    virtual void       PaintTable();
-    virtual void       PaintText();
-    virtual void       PaintTitle();
-    virtual void       RecalculateRange();
-    virtual void       SetHistogram(TH1 *h);
-    virtual void       SetStack(TObjArray *stack) {fStack = stack;}
-    virtual Int_t      TableInit();
+                           Double_t *xarr, Double_t *yarr, Int_t *itarr);
+    virtual void    PaintErrors();
+    virtual void    PaintFrame();
+    virtual void    PaintFunction();
+    virtual void    PaintHist();
+    virtual void    PaintH3(Option_t *option="");
+    virtual Int_t   PaintInit();
+    virtual void    PaintLego();
+    virtual void    PaintLegoAxis(TGaxis *axis, Double_t ang);
+    virtual void    PaintPalette();
+    virtual void    PaintScatterPlot();
+    virtual void    PaintStat(Int_t dostat, TF1 *fit);
+    virtual void    PaintStat2(Int_t dostat, TF1 *fit);
+    virtual void    PaintSurface();
+    virtual void    PaintTable();
+    virtual void    PaintText();
+    virtual void    PaintTitle();
+    virtual void    RecalculateRange();
+    virtual void    SetHistogram(TH1 *h);
+    virtual Int_t   TableInit();
 
     ClassDef(THistPainter,0)  //helper class to draw histograms
 };

@@ -155,18 +155,6 @@ long G__DataMemberInfo::Offset()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::Bitfield() 
-{
-  if(IsValid()) {
-    struct G__var_array *var;
-    var = (struct G__var_array*)handle;
-    return(var->bitfield[index]);
-  }
-  else {
-    return(-1);
-  }
-}
-///////////////////////////////////////////////////////////////////////////
 int G__DataMemberInfo::ArrayDim()
 {
   if(IsValid()) {
@@ -293,7 +281,7 @@ const char* G__DataMemberInfo::FileName() {
     return((char*)NULL);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return((char*)NULL);
 #endif
@@ -315,7 +303,7 @@ int G__DataMemberInfo::LineNumber() {
     return(-1);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return(-1);
 #endif
@@ -450,9 +438,9 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
     } else { // current token is not a digit
       // first let's see if it is a data member:
       int found = 0;
-      G__DataMemberInfo index1 = GetDataMemberFromAll(*belongingclass, current );
-      if ( index1.IsValid() ) {
-	if ( IsInt(index1) ) {
+      G__DataMemberInfo index = GetDataMemberFromAll(*belongingclass, current );
+      if ( index.IsValid() ) {
+	if ( IsInt(index) ) {
 	  found = 1;
 	  // Let's see if it has already been wrote down in the
 	  // Streamer.
@@ -485,9 +473,9 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
       } else {
 	// There is no variable by this name in this class, let see
 	// the base classes!:
-	index1 = GetDataMemberFromAllParents( *belongingclass, current );
-	if ( index1.IsValid() ) {
-	  if ( IsInt(index1) ) {
+	index = GetDataMemberFromAllParents( *belongingclass, current );
+	if ( index.IsValid() ) {
+	  if ( IsInt(index) ) {
 	    found = 1;
 	  } else {
 	    // We found a data member but it is the wrong type
@@ -498,7 +486,7 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
 	    if (errstr) *errstr = current;
 	    return 0;
 	  }
-	  if ( found && (index1.Property() & G__BIT_ISPRIVATE) ) {
+	  if ( found && (index.Property() & G__BIT_ISPRIVATE) ) {
 	    //NOTE: *** Need to print an error;
 	    //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
 	    if (errstr) *errstr = current;

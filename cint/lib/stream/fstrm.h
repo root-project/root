@@ -16,11 +16,7 @@
 
 #ifndef __CINT__
 
-#ifdef G__NEWSTDHEADER
-#include <fstream>
-#else
 #include <fstream.h>
-#endif
 
 #else
 
@@ -65,7 +61,6 @@ public:
   // alpha cxx didn't like below
   //void open(const char* name, int mode, int prot=filebuf::openprot) ;
   void open(const char* name, int mode, int prot) ;
-  int is_open() const { return rdbuf()->is_open(); }
 
   // void		attach(int fd);
   // int		detach();

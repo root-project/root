@@ -226,18 +226,6 @@ char *func;
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1601
-static int G__tempfilenum = G__MAXFILE-1;
-
-/****************************************************************
-* G__gettempfilenum()
-****************************************************************/
-int G__gettempfilenum()
-{
-  return(G__tempfilenum);
-}
-#endif
-
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
@@ -277,9 +265,7 @@ char *file;
 
   int len;
 
-#ifdef G__OLDIMPLEMENTATION1601
   static int filenum = G__MAXFILE-1;
-#endif
   fpos_t pos;
   char store_var_type;
   struct G__input_file ftemp,store_ifile;
@@ -308,15 +294,6 @@ char *file;
   if(ftemp.fp) {
     ftemp.line_number = 1;
     sprintf(ftemp.name,file);
-#ifndef G__OLDIMPLEMENTATION1601
-    ftemp.filenum = G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = ftemp.fp;
-    G__srcfile[G__tempfilenum].filename=ftemp.name;
-    G__srcfile[G__tempfilenum].hash=0;
-    G__srcfile[G__tempfilenum].maxline=0;
-    G__srcfile[G__tempfilenum].breakpoint = (char*)NULL;
-    --G__tempfilenum;
-#else
     ftemp.filenum = filenum;
     G__srcfile[filenum].fp = ftemp.fp;
     G__srcfile[filenum].filename=ftemp.name;
@@ -324,7 +301,6 @@ char *file;
     G__srcfile[filenum].maxline=0;
     G__srcfile[filenum].breakpoint = (char*)NULL;
     --filenum;
-#endif
     if(G__ifile.fp && G__ifile.filenum>=0) {
       fgetpos(G__ifile.fp,&pos);
     }
@@ -422,15 +398,9 @@ char *file;
      * done for 'x' and 'E' command  but not for { } command */
     /* G__security = G__srcfile[G__ifile.filenum].security; */
     fclose(ftemp.fp);
-#ifndef G__OLDIMPLEMENTATION1601
-    ++G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
-    G__srcfile[G__tempfilenum].filename=(char*)NULL;
-#else
     ++filenum;
     G__srcfile[filenum].fp = (FILE*)NULL;
     G__srcfile[filenum].filename=(char*)NULL;
-#endif
 #ifndef G__OLDIMPLEMENTATION630
     if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
 #else
@@ -444,7 +414,7 @@ char *file;
     return(buf);
   }
   else {
-    G__fprinterr(G__serr,"Error: can not open file '%s'\n",file);
+    fprintf(G__serr,"Error: file %s can not open\n",file);
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
 #endif
@@ -456,8 +426,8 @@ char *file;
 /**************************************************************************
 * G__exec_text()
 **************************************************************************/
-G__value G__exec_text(unnamedmacro)
-char *unnamedmacro;
+G__value G__exec_text(text)
+char *text;
 {
 #ifndef G__TMPFILE
   char tname[L_tmpnam+10], sname[L_tmpnam+10];
@@ -472,17 +442,17 @@ char *unnamedmacro;
   int addsemicolumn =0;
 
   i=0;
-  while(unnamedmacro[i] && isspace(unnamedmacro[i])) ++i;
-  if(unnamedmacro[i]!='{') addmparen = 1;
+  while(text[i] && isspace(text[i])) ++i;
+  if(text[i]!='{') addmparen = 1;
 
-  i = strlen(unnamedmacro)-1;
-  while(i && isspace(unnamedmacro[i])) --i;
-  if(unnamedmacro[i]=='}')       addsemicolumn = 0;
-  else if(unnamedmacro[i]==';')  addsemicolumn = 0;
+  i = strlen(text)-1;
+  while(i && isspace(text[i])) --i;
+  if(text[i]=='}')       addsemicolumn = 0;
+  else if(text[i]==';')  addsemicolumn = 0;
   else                   addsemicolumn = 1;
 
-  for(i=0;i<strlen(unnamedmacro);i++) {
-    switch(unnamedmacro[i]) {
+  for(i=0;i<strlen(text);i++) {
+    switch(text[i]) {
     case '(': case '[': case '{':
       if(!single_quote && !double_quote) ++nest; break;
     case ')': case ']': case '}':
@@ -494,7 +464,7 @@ char *unnamedmacro;
     }
   }
   if(nest!=0 || single_quote!=0 || double_quote!=0) {
-    G__fprinterr(G__serr,"!!!Error in given statement!!! \"%s\"\n",unnamedmacro);
+    fprintf(G__serr,"!!!Error in given statement!!! \"%s\"\n",text);
     return(G__null);
   }
   
@@ -502,7 +472,7 @@ char *unnamedmacro;
   fp = fopen(tname,"w");
   if(!fp) return G__null;
   if(addmparen) fprintf(fp,"{\n");
-  fprintf(fp,"%s",unnamedmacro);
+  fprintf(fp,"%s",text);
   if(addsemicolumn) fprintf(fp,";");
   fprintf(fp,"\n");
   if(addmparen) fprintf(fp,"}\n");
@@ -515,45 +485,6 @@ char *unnamedmacro;
   remove(sname);
 
   return(buf);
-}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1546
-/**************************************************************************
-* G__load_text()
-**************************************************************************/
-char* G__load_text(namedmacro)
-char *namedmacro;
-{
-  char* result = (char*)NULL;
-#ifndef G__TMPFILE
-  static char tname[L_tmpnam+10];
-#else
-  static char tname[G__MAXFILENAME];
-#endif
-  FILE *fp;
-  
-  G__tmpnam(tname);
-  strcat(tname,G__NAMEDMACROEXT);
-  fp = fopen(tname,"w");
-  if(!fp) return((char*)NULL);
-  fprintf(fp,"%s",namedmacro);
-  fprintf(fp,"\n");
-  fclose(fp);
-
-  switch(G__loadfile(tname)) {
-  case G__LOADFILE_SUCCESS:
-    result = tname;
-    break;
-  case G__LOADFILE_DUPLICATE:
-  case G__LOADFILE_FAILURE:
-  case G__LOADFILE_FATAL:
-    remove(tname);
-    result = (char*)NULL;
-    break;
-  }
-
-  return(result);
 }
 #endif
 
@@ -618,7 +549,7 @@ void G__EOFfgetc()
 	)&&
        ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
-      G__fprinterr(G__serr,"EOF\n");
+      fprintf(G__serr,"EOF\n");
     }
     if(G__disp_mask>0) G__disp_mask-- ;
   }
@@ -666,7 +597,7 @@ void G__DISPNfgetc()
       )&&
      ((G__prerun)||(G__no_exec==0))&&(G__disp_mask==0)){
     
-    G__fprinterr(G__serr,"\n%-5d",G__ifile.line_number);
+    fprintf(G__serr,"\n%-5d",G__ifile.line_number);
     
   }
   if(G__disp_mask>0) G__disp_mask-- ;
@@ -684,11 +615,7 @@ int c;
 #endif
       )&&
      ((G__prerun!=0)||(G__no_exec==0))&& (G__disp_mask==0)){
-#ifndef G__OLDIMPLEMENTATION1485
-    G__fputerr(c);
-#else
     fputc(c,G__serr);
-#endif
   }
   if(G__disp_mask>0) G__disp_mask-- ;
 }
@@ -700,7 +627,7 @@ int c;
 void G__lockedvariable(item)
 char *item;
 {
-  G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
+  fprintf(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
 	  ,item
 	  ,G__ifile.name,G__ifile.line_number);
 }
@@ -716,7 +643,7 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+  fprintf(G__serr,"Warning: lock variable obsolete feature");
   G__printlinenum();
 #endif
   
@@ -725,12 +652,12 @@ char *varname;
   
   if(var) {
     var->constvar[ig15] |= G__LOCKVAR;
-    G__fprinterr(G__serr,"Variable %s locked FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Variable %s locked FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
-    G__fprinterr(G__serr,"Warining: failed locking %s FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Warining: failed locking %s FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
@@ -746,7 +673,7 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+  fprintf(G__serr,"Warning: lock variable obsolete feature");
   G__printlinenum();
 #endif
   
@@ -755,12 +682,12 @@ char *varname;
   
   if(var) {
     var->constvar[ig15] &= ~G__LOCKVAR;
-    G__fprinterr(G__serr,"Variable %s unlocked FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Variable %s unlocked FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
-    G__fprinterr(G__serr,"Warining: failed unlocking %s FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Warining: failed unlocking %s FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
@@ -781,7 +708,7 @@ char *breakline,*breakfile;
     line=atoi(breakline);
     
     if(NULL==breakfile || '\0'==breakfile[0]) {
-      G__fprinterr(G__serr," -b : break point on line %d every file\n",line);
+      fprintf(G__serr," -b : break point on line %d every file\n",line);
       for(ii=0;ii<G__nfile;ii++) {
 	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
 	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
@@ -798,13 +725,13 @@ char *breakline,*breakfile;
 	   ) break;
       }
       if(ii<G__nfile) {
-	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
+	fprintf(G__serr," -b : break point on line %d file %s\n"
 		,line,breakfile);
 	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
 	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr(G__serr,"File %s is not loaded\n",breakfile);
+	fprintf(G__serr,"File %s not loaded\n",breakfile);
 	return(1);
       }
     }
@@ -813,17 +740,17 @@ char *breakline,*breakfile;
   else {
     if(1<G__findfuncposition(breakline,&line,&ii)) {
       if(G__srcfile[ii].breakpoint) {
-	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
+	fprintf(G__serr," -b : break point on line %d file %s\n"
 		,line,G__srcfile[ii].filename);
 	G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr(G__serr,"unable to put breakpoint in %s (included file)\n"
+	fprintf(G__serr,"function %s in include file, can not put breakpoint\n"
 		,breakline);
       }
     }
     else {
-      G__fprinterr(G__serr,"function %s is not loaded\n",breakline);
+      fprintf(G__serr,"function %s not loaded\n",breakline);
       return(1);
     }
   }

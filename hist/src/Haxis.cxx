@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.2 2000/06/13 10:34:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   18/05/95
 // ---------------------------------- haxis.C
 
@@ -10,7 +10,7 @@
 
 
 //______________________________________________________________________________
-Int_t TH1::AxisChoice( Option_t *axis) const
+Int_t TH1::AxisChoice( Option_t *axis)
 {
    char achoice = toupper(axis[0]);
    if (achoice == 'X') return 1;
@@ -20,7 +20,7 @@ Int_t TH1::AxisChoice( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Int_t TH1::GetNdivisions( Option_t *axis) const
+Int_t TH1::GetNdivisions( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetNdivisions();
@@ -30,7 +30,7 @@ Int_t TH1::GetNdivisions( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Color_t TH1::GetAxisColor( Option_t *axis) const
+Color_t TH1::GetAxisColor( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetAxisColor();
@@ -40,7 +40,7 @@ Color_t TH1::GetAxisColor( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Color_t TH1::GetLabelColor( Option_t *axis) const
+Color_t TH1::GetLabelColor( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelColor();
@@ -50,7 +50,7 @@ Color_t TH1::GetLabelColor( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Style_t TH1::GetLabelFont( Option_t *axis) const
+Style_t TH1::GetLabelFont( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelFont();
@@ -60,7 +60,7 @@ Style_t TH1::GetLabelFont( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Float_t TH1::GetLabelOffset( Option_t *axis) const
+Float_t TH1::GetLabelOffset( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelOffset();
@@ -70,7 +70,7 @@ Float_t TH1::GetLabelOffset( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Float_t TH1::GetLabelSize( Option_t *axis) const
+Float_t TH1::GetLabelSize( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelSize();
@@ -80,7 +80,7 @@ Float_t TH1::GetLabelSize( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Float_t TH1::GetTickLength( Option_t *axis) const
+Float_t TH1::GetTickLength( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTickLength();
@@ -90,7 +90,7 @@ Float_t TH1::GetTickLength( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Float_t TH1::GetTitleOffset( Option_t *axis) const
+Float_t TH1::GetTitleOffset( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleOffset();
@@ -100,7 +100,7 @@ Float_t TH1::GetTitleOffset( Option_t *axis) const
 }
 
 //______________________________________________________________________________
-Float_t TH1::GetTitleSize( Option_t *axis) const
+Float_t TH1::GetTitleSize( Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleSize();

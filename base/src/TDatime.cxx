@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.3 2001/05/29 16:21:35 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -121,10 +121,9 @@ const char *TDatime::AsSQLString() const
 }
 
 //______________________________________________________________________________
-UInt_t TDatime::Convert(Bool_t toGMT) const
+UInt_t TDatime::Convert() const
 {
    // Convert fDatime from TDatime format to the standard time_t format.
-   // If toGMT is true the returned time_t is converted to GMT.
 
    UInt_t year  = fDatime>>26;
    UInt_t month = (fDatime<<6)>>28;
@@ -147,11 +146,6 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
       Error("TDatime::Convert", "error converting fDatime to time_t");
       return 0;
    }
-   if (toGMT) {
-      struct tm *tg;
-      tg = gmtime(&t);
-      t  = mktime(tg);
-   }
    return (UInt_t)t;
 }
 
@@ -160,7 +154,7 @@ void TDatime::Copy(TDatime &datime)
 {
    // Copy this to datime.
 
-   datime.fDatime = fDatime;
+   datime.fDatime  = fDatime;
 }
 
 //______________________________________________________________________________
@@ -172,7 +166,7 @@ void TDatime::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Int_t TDatime::GetDate() const
+Int_t TDatime::GetDate()
 {
    // Return date in form of 19971224 (i.e. 24/12/1997)
 
@@ -183,7 +177,7 @@ Int_t TDatime::GetDate() const
 }
 
 //______________________________________________________________________________
-Int_t TDatime::GetTime() const
+Int_t TDatime::GetTime()
 {
    // Return time in form of 123623 (i.e. 12:36:23)
 
@@ -194,7 +188,7 @@ Int_t TDatime::GetTime() const
 }
 
 //______________________________________________________________________________
-void TDatime::Print(Option_t *) const
+void TDatime::Print(Option_t *)
 {
    // Print date and time.
 
@@ -218,8 +212,9 @@ void TDatime::Set()
    // Time has 1 second precision.
 
 #ifndef WIN32
+   struct tm *tp;
    time_t tloc   = time(0);
-   struct tm *tp = localtime(&tloc);
+   tp            = (tm*)localtime(&tloc);
    UInt_t year   = tp->tm_year;
    UInt_t month  = tp->tm_mon + 1;
    UInt_t day    = tp->tm_mday;
@@ -236,26 +231,6 @@ void TDatime::Set()
    UInt_t min    = tp.wMinute;
    UInt_t sec    = tp.wSecond;
 #endif
-
-   fDatime = (year-95)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
-}
-
-//______________________________________________________________________________
-void TDatime::Set(UInt_t tloc)
-{
-   // The input arg is a time_t value returned by time() or a value
-   // returned by Convert(). This value is the number of seconds since
-   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970).
-
-   time_t t = (time_t) tloc;
-   struct tm *tp = localtime(&t);
-
-   UInt_t year   = tp->tm_year;
-   UInt_t month  = tp->tm_mon + 1;
-   UInt_t day    = tp->tm_mday;
-   UInt_t hour   = tp->tm_hour;
-   UInt_t min    = tp->tm_min;
-   UInt_t sec    = tp->tm_sec;
 
    fDatime = (year-95)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
 }

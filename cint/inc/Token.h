@@ -49,11 +49,11 @@ class G__TokenInfo {
 
   // MakeLocalTable has to be used when entering to a new function
   G__MethodInfo MakeLocalTable(G__ClassInfo& tag_scope
-                              ,const char* fname,const char* paramtype);
+                              ,char* fname,char* paramtype);
 
   // Query has to be used to get information for each token
   int Query(G__ClassInfo& tag_scope,G__MethodInfo& func_scope
-	    ,const char* preopr,const char* name,const char* postopr);
+	                 ,char* preopr,char* name, char* postopr);
 
   // Following functions have to be called after Query 
   enum G__TokenType GetTokenType() { return(tokentype); }
@@ -70,15 +70,13 @@ class G__TokenInfo {
   G__ClassInfo nextscope;
   G__TypeInfo tinfo;
 
-  int SearchTypeName(const char* name,const char* postopr);
-  int SearchLocalVariable(const char* name,G__MethodInfo& func_scope
-			  ,const char* postopr);
-  int SearchDataMember(const char* name,G__ClassInfo& tag_scope
-		       ,const char* postopr);
-  int SearchGlobalVariable(const char* name,const char* postopr);
-  int SearchMemberFunction(const char* name,G__ClassInfo& tag_scope);
-  int SearchGlobalFunction(const char* name);
-  void GetNextscope(const char* name,G__ClassInfo& tag_scope);
+  int SearchTypeName(char* name,char* postopr);
+  int SearchLocalVariable(char* name,G__MethodInfo& func_scope,char* postopr);
+  int SearchDataMember(char* name,G__ClassInfo& tag_scope,char* postopr);
+  int SearchGlobalVariable(char* name,char* postopr);
+  int SearchMemberFunction(char* name,G__ClassInfo& tag_scope);
+  int SearchGlobalFunction(char* name);
+  void GetNextscope(char* name,G__ClassInfo& tag_scope);
 };
 
 /*********************************************************************

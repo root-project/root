@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.1.1.2 2000/12/18 21:05:27 fisyak Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.1.1.2 2000/12/18 21:05:27 fisyak Exp $
+// $Id: TPoints3D.h,v 1.6 1999/12/21 18:57:14 fine Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -64,7 +64,6 @@ public:
         virtual ~TPoints3D();
 
         virtual void      Copy(TObject &points);
-        virtual void      Delete(Option_t *);
         virtual void      Delete();
         virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -77,9 +76,9 @@ public:
         virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
         virtual const Float_t  *GetXYZ(Int_t idx);
         virtual Option_t *GetOption() const ;
-        virtual void      ls(Option_t *option="") const;
+        virtual void      ls(Option_t *option="");
         virtual void      PaintPoints(Int_t, Float_t *,Option_t *){;}
-        virtual void      Print(Option_t *option="") const;
+        virtual void      Print(Option_t *option="");
         virtual Int_t     SetLastPosition(Int_t idx);
         virtual void      SetOption(Option_t *option="");
         virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
@@ -89,7 +88,6 @@ public:
         ClassDef(TPoints3D,1)  // Defines the abstract array of 3D points
 };
 
-inline void      TPoints3D::Delete(Option_t *opt){ TObject::Delete(opt);}
 inline Int_t     TPoints3D::DistancetoPrimitive(Int_t px, Int_t py) {return fPoints?fPoints->DistancetoPrimitive(px,py):99999;}
 inline Int_t     TPoints3D::GetLastPosition()  const   {return fPoints?fPoints->GetLastPosition():0;}
 inline Int_t     TPoints3D::GetN()  const              {return fPoints?fPoints->GetN():0;}

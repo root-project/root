@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.2 2000/11/17 10:26:03 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -28,10 +28,7 @@ ClassImp(TFileHandler)
 //______________________________________________________________________________
 TFileHandler::TFileHandler(int fd, int mask)
 {
-   // Create a file descriptor event handler. If mask=kRead then we
-   // want to monitor the file for read readiness, if mask=kWrite
-   // then we monitor the file for write readiness, if mask=kRead|kWrite
-   // then we monitor both read and write readiness.
+   // Create a file descriptor event handler.
 
    fFileNum = fd;
    if (!mask)
@@ -44,7 +41,6 @@ Bool_t TFileHandler::Notify()
 {
    // Notify when event occured on descriptor associated with this handler.
 
-   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -54,7 +50,6 @@ Bool_t TFileHandler::ReadNotify()
    // Notify when something can be read from the descriptor associated with
    // this handler.
 
-   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -64,7 +59,6 @@ Bool_t TFileHandler::WriteNotify()
    // Notify when something can be written to the descriptor associated with
    // this handler.
 
-   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -85,25 +79,12 @@ Bool_t TFileHandler::HasWriteInterest()
 }
 
 //______________________________________________________________________________
-void TFileHandler::Add()
-{
-   // Add file event handler to system file handler list.
-
-   if (gSystem && fFileNum != -1) {
-      gSystem->AddFileHandler(this);
-      Added();      // emit Added() signal
-   }
-}
-
-//______________________________________________________________________________
 void TFileHandler::Remove()
 {
    // Remove file event handler from system file handler list.
 
-   if (gSystem && fFileNum != -1) {
+   if (gSystem && fFileNum != -1)
       gSystem->RemoveFileHandler(this);
-      Removed();     // emit Removed() signal
-   }
 }
 
 
@@ -124,19 +105,7 @@ Bool_t TSignalHandler::Notify()
 {
    // Notify when signal occurs.
 
-   Notified();       // emit Notified() signal
    return kFALSE;
-}
-
-//______________________________________________________________________________
-void TSignalHandler::Add()
-{
-   // Add signal handler to system signal handler list.
-
-   if (gSystem && fSignal != (ESignals)-1) {
-      gSystem->AddSignalHandler(this);
-      Added();      // emit Added() signal
-   }
 }
 
 //______________________________________________________________________________
@@ -144,8 +113,6 @@ void TSignalHandler::Remove()
 {
    // Remove signal handler from system signal handler list.
 
-   if (gSystem && fSignal != (ESignals)-1) {
+   if (gSystem && fSignal != (ESignals)-1)
       gSystem->RemoveSignalHandler(this);
-      Removed();     // emit Removed() signal
-   }
 }

@@ -1,13 +1,13 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
  * Copyright(c) 1998, FineSoft, All rights reserved. Valery Fine (Faine) *
  *************************************************************************/
 
+#include <iostream.h>
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
@@ -516,9 +516,9 @@ TRotMatrix *TVolume::GetIdentity()
 }
 
 //______________________________________________________________________________
-Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py) const
+Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py)
 {
-   if (!gPad) return 0;
+   if (!gPad) return "";
    static char info[512];
    sprintf(info,"%s/%s",GetName(),GetTitle());
    Double_t x[3];

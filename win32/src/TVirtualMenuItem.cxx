@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TVirtualMenuItem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine   18/03/96
 
 /*************************************************************************
@@ -161,8 +161,6 @@ TVirtualMenuItem::TVirtualMenuItem(char *name, const char *label, Win32BrowserIm
 
    fItem.fItemID       = id;
    fMenuItem.wID       = id;
-
-   fMenuItem.hSubMenu = NULL;
 
    fCanvasCB  = NULL;
    fBrowserCB = callback;

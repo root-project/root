@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.5 2000/12/18 20:09:00 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -39,7 +39,6 @@ TBaseClass::TBaseClass(G__BaseClassInfo *info, TClass *cl) : TDictionary()
    fInfo     = info;
    fClass    = cl;
    fClassPtr = 0;
-   fName = fInfo->Fullname();
 }
 
 //______________________________________________________________________________
@@ -60,11 +59,11 @@ void TBaseClass::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TClass *TBaseClass::GetClassPointer(Bool_t load)
+TClass *TBaseClass::GetClassPointer()
 {
    // Get pointer to the base class TClass.
 
-   if (!fClassPtr) fClassPtr = gROOT->GetClass(fName, load);
+   if (!fClassPtr) fClassPtr = gROOT->GetClass(GetName());
    return fClassPtr;
 }
 
@@ -81,7 +80,7 @@ const char *TBaseClass::GetName() const
 {
    // Get base class name.
 
-   return fName;
+   return fInfo->Name();
 }
 
 //______________________________________________________________________________
@@ -89,26 +88,26 @@ const char *TBaseClass::GetTitle() const
 {
    // Get base class description (comment).
 
-   TClass *c = ((TBaseClass *)this)->GetClassPointer();
-   return c ? c->GetTitle() : "";
+   return ((TBaseClass *)this)->GetClassPointer()->GetTitle();
 }
 
 //______________________________________________________________________________
-Int_t TBaseClass::Compare(const TObject *obj) const
+Int_t TBaseClass::Compare(TObject *obj)
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
    // greater than obj.
 
-   return strcmp(fName, obj->GetName());
+   return strcmp(fInfo->Name(), obj->GetName());
 }
 
 //______________________________________________________________________________
-ULong_t TBaseClass::Hash() const
+ULong_t TBaseClass::Hash()
 {
    // Return hash value for TBaseClass based on its name.
 
-   return fName.Hash();
+   TString s = fInfo->Name();
+   return s.Hash();
 }
 
 //______________________________________________________________________________

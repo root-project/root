@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.7 2001/12/19 07:15:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -56,7 +56,7 @@ private:
    TString         fIncludePath;    //Hold a list of lib include path
 
    TCint() : fMore(-1) { }  //for Dictionary() only
-   virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+   virtual void Execute(TMethod *, TObjArray *) { }
 
 protected:
    virtual void ExecThreadCB(TWin32SendClass *command);
@@ -67,7 +67,6 @@ public:
 
    void    AddIncludePath(const char *path);
    void    ClearFileBusy();
-   void    ClearStack(); // Delete existing temporary values
    void    EndOfLineAction();
    Int_t   GetMore() const { return fMore; }
    char   *GetPrompt() { return fPrompt; }
@@ -75,10 +74,10 @@ public:
    const char *GetIncludePath();
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
-   void    LoadMacro(const char *filename, EErrorCode *error = 0);
-   Int_t   ProcessLine(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineAsynch(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
+   void    LoadMacro(const char *filename);
+   Int_t   ProcessLine(const char *line);
+   Int_t   ProcessLineAsynch(const char *line);
+   Int_t   ProcessLineSynch(const char *line);
    void    PrintIntro();
    void    Reset();
    void    ResetAll();
@@ -90,21 +89,18 @@ public:
    void    UpdateListOfGlobals();
    void    UpdateListOfGlobalFunctions();
    void    UpdateListOfTypes();
-   void    SetClassInfo(TClass *cl, Bool_t reload = kFALSE);
-   Bool_t  CheckClassInfo(const char *name);
-   Long_t  Calc(const char *line, EErrorCode *error = 0);
+   void    SetClassInfo(TClass *cl);
+   Long_t  Calc(const char *line);
    void    CreateListOfBaseClasses(TClass *cl);
    void    CreateListOfDataMembers(TClass *cl);
    void    CreateListOfMethods(TClass *cl);
    void    CreateListOfMethodArgs(TFunction *m);
    void   *GetInterfaceMethod(TClass *cl, char *method, char *params);
    void   *GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *proto);
-   void    Execute(const char *function, const char *params, int *error = 0);
-   void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
-   void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
-   Int_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
-   Bool_t  IsErrorMessagesEnabled();
-   Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
+   void    Execute(const char *function, const char *params);
+   void    Execute(TObject *obj, TClass *cl, const char *method, const char *params);
+   void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params);
+   Int_t   ExecuteMacro(const char *filename);
    const char *TypeName(const char *typeDesc);
 
    static void *FindSpecialObject(char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);

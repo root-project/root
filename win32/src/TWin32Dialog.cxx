@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Dialog.cxx,v 1.1.1.1 2000/11/27 22:57:29 fisyak Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine   19/03/96
 
 /*************************************************************************
@@ -90,14 +90,12 @@ TWin32Dialog::TWin32Dialog()
 {
 //*-*   Default ctor
 
-   fDialogWindows = 0;
-   fDialogResult = -1;
+    fDialogResult = -1;
 }
 
 //______________________________________________________________________________
 TWin32Dialog::TWin32Dialog(HWND hwnd, char *name, const char *title, Int_t itemID) : TNamed(name,title)
 {
-    fDialogWindows = 0;
     fWindow      = hwnd;
     fFirstItemID = itemID;
     fDialogResult=0;
@@ -180,8 +178,7 @@ TWin32Dialog::TWin32Dialog(HWND hwnd, char *name, const char *title, Int_t itemI
 TWin32Dialog::~TWin32Dialog()
 {
     if ( fDialogResult == -1) return;
-    if (fDialogResult && fDialogWindows) 
-       ::EndDialog(fDialogWindows,int(fDialogResult));
+    if (fDialogResult) ::EndDialog(fWindow,int(fDialogResult));
     GlobalFree(fHgbl);
 }
 
@@ -275,7 +272,6 @@ void TWin32Dialog::AttachControlItem(LPPOINT lpPoint,LPSIZE lpSize,
 //______________________________________________________________________________
 BOOL CALLBACK TWin32Dialog::OnInitDialog(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    fDialogWindows = hwnd;
     return TRUE;
 }
 

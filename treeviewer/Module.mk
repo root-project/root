@@ -17,19 +17,8 @@ TREEVIEWERDS := $(MODDIRS)/G__TreeViewer.cxx
 TREEVIEWERDO := $(TREEVIEWERDS:.cxx=.o)
 TREEVIEWERDH := $(TREEVIEWERDS:.cxx=.h)
 
-#TREEVIEWERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-#TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ifeq ($(ARCH),win32)
-TREEVIEWERL  := $(MODDIRI)/LinkDefWin32.h
-TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
-TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx
-else
-TREEVIEWERH  := TTreeViewer.h TTVSession.h TTVLVContainer.h HelpTextTV.h
-TREEVIEWERS  := TTreeViewer.cxx TTVSession.cxx TTVLVContainer.cxx HelpTextTV.cxx
-endif
-TREEVIEWERH  := $(patsubst %,$(MODDIRI)/%,$(TREEVIEWERH))
-TREEVIEWERS  := $(patsubst %,$(MODDIRS)/%,$(TREEVIEWERS))
-
+TREEVIEWERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEVIEWERO  := $(TREEVIEWERS:.cxx=.o)
 
 TREEVIEWERDEP := $(TREEVIEWERO:.o=.d) $(TREEVIEWERDO:.o=.d)

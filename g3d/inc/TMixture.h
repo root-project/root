@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMixture.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -37,11 +37,11 @@ class TMixture  : public TMaterial {
         TMixture();
         TMixture(const char *name, const char *title, Int_t nmixt);
         virtual ~TMixture();
-        virtual void       DefineElement(Int_t n, Float_t a, Float_t z, Float_t w);
-                Int_t      GetNmixt() const {return fNmixt;}
-                Float_t   *GetAmixt() const {return fAmixt;}
-                Float_t   *GetZmixt() const {return fZmixt;}
-                Float_t   *GetWmixt() const {return fWmixt;}
+        virtual void      DefineElement(Int_t n, Float_t a, Float_t z, Float_t w);
+                Int_t     GetNmixt() {return fNmixt;}
+                Float_t   *GetAmixt() {return fAmixt;}
+                Float_t   *GetZmixt() {return fZmixt;}
+                Float_t   *GetWmixt() {return fWmixt;}
 
         ClassDef(TMixture,1)  //Mixtures used in the Geometry Shapes
 };

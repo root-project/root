@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.11 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.2 2000/06/13 10:36:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -36,10 +36,6 @@ protected:
     Double_t    fZmin;            //Lower limit in Z (if set)
     Double_t    fZmax;            //Upper limit in Z (if set)
 
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
    Double_t *GetW()  {return &fArray[0];}
@@ -58,35 +54,21 @@ public:
     virtual void    Add(TH1 *h1, Double_t c1=1);
     virtual void    Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
-    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void    Copy(TObject &hnew);
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(TH1 *h1);
     virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
             Int_t   Fill(Axis_t) {return -1;} //MayNotUse
-            Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
             Int_t   Fill(Axis_t, Stat_t) {return -1; } //MayNotUse
-            Int_t   Fill(Axis_t x, Axis_t y, Axis_t z);
-    virtual Int_t   Fill(Axis_t x, const char *namey, Axis_t z);
-    virtual Int_t   Fill(const char *namex, Axis_t y, Axis_t z);
-    virtual Int_t   Fill(const char *namex, const char *namey, Axis_t z);
+            Int_t   Fill(Axis_t x, Axis_t y, Stat_t z);
     virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-    virtual Stat_t  GetBinContent(Int_t bin) const;
-    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
-    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
-    virtual Stat_t  GetBinError(Int_t bin) const;
-    virtual Stat_t  GetBinError(Int_t binx, Int_t biny) const {return GetBinError(GetBin(binx,biny));}
-    virtual Stat_t  GetBinError(Int_t binx, Int_t biny, Int_t) const {return GetBinError(GetBin(binx,biny));}
-    virtual Stat_t  GetBinEntries(Int_t bin) const;
+    virtual Stat_t  GetBinContent(Int_t bin);
+    virtual Stat_t  GetBinError(Int_t bin);
+    virtual Stat_t  GetBinEntries(Int_t bin);
     Option_t       *GetErrorOption() const;
-    virtual void    GetStats(Stat_t *stats) const;
-    virtual Double_t GetZmin() const {return fZmin;}
-    virtual Double_t GetZmax() const {return fZmax;}
-    virtual void    LabelsDeflate(Option_t *axis="X");
-    virtual void    LabelsInflate(Option_t *axis="X");
-    virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t   Merge(TCollection *list);
+    virtual Double_t GetZmin() {return fZmin;}
+    virtual Double_t GetZmax() {return fZmax;}
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
@@ -99,10 +81,9 @@ public:
     virtual void    SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
             void    SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
                        { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
-    virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile2D,3)  //Profile2D histogram class
+    ClassDef(TProfile2D,2)  //Profile2D histogram class
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.3 2000/11/21 20:50:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -129,7 +129,7 @@ Int_t TNtuple::Fill()
 }
 
 //______________________________________________________________________________
-Int_t TNtuple::Fill(const Float_t *x)
+Int_t TNtuple::Fill(Float_t *x)
 {
 //*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
 //*-*              =====================================
@@ -175,25 +175,22 @@ void TNtuple::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TNtuple::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-      } else {
-         //====process old versions before automatic schema evolution
-         TTree::Streamer(b);
-         b >> fNvar;
-         b.CheckByteCount(R__s, R__c, TNtuple::IsA());
-         //====end of old versions
-      }
+      b.ReadVersion(&R__s, &R__c);
+      TTree::Streamer(b);
+      b >> fNvar;
       if (fNvar <= 0) return;
       fArgs = new Float_t[fNvar];
       for (Int_t i=0;i<fNvar;i++) {
          TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
          if (branch) branch->SetAddress(&fArgs[i]);
-      }      
+      }
+      b.CheckByteCount(R__s, R__c, TNtuple::IsA());
    } else {
-      TNtuple::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TNtuple::IsA(), kTRUE);
+      TTree::Streamer(b);
+      b << fNvar;
+      b.SetByteCount(R__c, kTRUE);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TAttFill.h"
 #include "TVirtualPad.h"
@@ -34,15 +35,12 @@ ClassImp(TAttFill)
 <img src="gif/colors.gif">
 */
 //End_Html
-//
-//  Conventions for fill styles:
-//    0    : hollow
-//    1001 : Solid
-//    2001 : hatch style
-//    3000+pattern_number (see below)
-//    4000 :the window is transparent.
-//    4000 to 4100 the window is 100% transparent to 100% opaque
-//
+//*-*
+//*-*  Conventions for fill styles:
+//*-*    0 = hollow
+//*-*    1001 : Solid
+//*-*    2001 : hatch style
+//*-*    3000+pattern_number (see below)
 //*-*  The following table shows the list of pattern styles.
 //Begin_Html
 /*

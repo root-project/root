@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.4 2001/05/30 06:03:43 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // Description of parameters to position a 3-D geometry object          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-//check
+
 #ifndef ROOT_TVolumePosition
 #define ROOT_TVolumePosition
 
@@ -29,7 +29,7 @@ class TRotMatrix;
 class TVolumePosition  : public TObject {
  protected:
    Double_t        fX[3];        //X offset with respect to parent object
-   TRotMatrix     *fMatrix;      //->Pointer to rotation matrix
+   TRotMatrix     *fMatrix;      //Pointer to rotation matrix
    TVolume        *fNode;        //Refs pointer to the node defined
    UInt_t          fId;          // Unique ID of this position
 
@@ -50,7 +50,7 @@ class TVolumePosition  : public TObject {
         virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual TRotMatrix  *GetMatrix() const {return fMatrix;}
         virtual TVolume     *GetNode() const {return fNode;}
-        virtual Text_t      *GetObjectInfo(Int_t px, Int_t py) const;
+        virtual Text_t      *GetObjectInfo(Int_t px, Int_t py);
         const   Option_t    *GetOption() const { return GetNode()?GetNode()->GetOption():0;}
         virtual const Char_t *GetName() const { return GetNode() ? GetNode()->GetName():IsA()->GetName();}
         Int_t               GetVisibility() const {return GetNode()?GetNode()->GetVisibility():0;}
@@ -59,11 +59,11 @@ class TVolumePosition  : public TObject {
         virtual Double_t    GetZ() const {return fX[2];}
         virtual UInt_t      GetId() const {return fId;}
         Bool_t              IsFolder() const {return GetNode()?kTRUE:kFALSE;}
-        virtual Bool_t      Is3D() const {return kTRUE;}
+        virtual Bool_t      Is3D()  {return kTRUE;}
         virtual Double_t   *Local2Master(const Double_t *local, Double_t *master,Int_t nPoints=1);
         virtual Float_t    *Local2Master(const Float_t *local, Float_t *master,Int_t nPoints=1);
         virtual void        Paint(Option_t *option="");
-        virtual void        Print(Option_t *option="") const;
+        virtual void        Print(Option_t *option="");
         virtual void        UpdatePosition(Option_t *option="");
         virtual TVolumePosition *Reset(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
         virtual void        SavePrimitive(ofstream &out, Option_t *option);
@@ -77,7 +77,7 @@ class TVolumePosition  : public TObject {
         virtual void        SetZ(Double_t z){ fX[2]  =  z;}
         virtual void        SetId(UInt_t id){fId  = id;}
 
-        ClassDef(TVolumePosition,2)  //Description of parameters to position a 3-D geometry object
+        ClassDef(TVolumePosition,1)  //Description of parameters to position a 3-D geometry object
 };
 
 inline TDataSet *TVolumePosition::DefineSet(){ return GetNode(); }

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.3 2000/06/14 16:32:05 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.2 2000/05/31 18:41:37 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -20,8 +20,8 @@ extern "C" {
 
 typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp } EGetLineMode;
 
-char *Getline(const char *prompt);
-char *Getlinem(EGetLineMode mode, const char *prompt);
+char *Getline(char *prompt);
+char *Getlinem(EGetLineMode mode, char *prompt);
 void Gl_config(const char *which, int value);
 void Gl_setwidth(int width);
 void Gl_windowchanged();

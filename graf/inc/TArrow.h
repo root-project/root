@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.2 2000/06/13 10:43:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -48,8 +48,8 @@ public:
         virtual void   Draw(Option_t *option="");
         virtual void   DrawArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                ,Float_t arrowsize=0.05 ,Option_t *option=">");
-        Float_t        GetAngle() const {return fAngle;}
-        Float_t        GetArrowSize() const {return fArrowSize;}
+        Float_t        GetAngle() {return fAngle;}
+        Float_t        GetArrowSize() {return fArrowSize;}
         Option_t      *GetOption() const { return fOption.Data();}
         virtual void   Paint(Option_t *option="");
         virtual void   PaintArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2

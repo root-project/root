@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.9 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.4 2000/06/13 11:09:40 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TPave.h"
 #include "TVirtualPad.h"
@@ -206,7 +207,7 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPave::ls(Option_t *) const
+void TPave::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this pave with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
@@ -535,7 +536,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 }
 
 //______________________________________________________________________________
-void TPave::Print(Option_t *option) const
+void TPave::Print(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this pave with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -560,11 +561,8 @@ void TPave::SavePrimitive(ofstream &out, Option_t *)
       out<<"pave = new TPave("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
          <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<endl;
    }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   }
    if (fCornerRadius) {
-      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
+      out<<"pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
    }
    SaveFillAttributes(out,"pave",0,1001);
    SaveLineAttributes(out,"pave",1,1,1);
@@ -576,29 +574,43 @@ void TPave::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TPave.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TPave::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TBox::Streamer(R__b);
-      Float_t x1ndc,y1ndc,x2ndc,y2ndc,rad;
-      R__b >> x1ndc; fX1NDC = x1ndc;
-      R__b >> y1ndc; fY1NDC = y1ndc;
-      R__b >> x2ndc; fX2NDC = x2ndc;
-      R__b >> y2ndc; fY2NDC = y2ndc;
-      R__b >> fBorderSize;
-      R__b >> fInit;
-      R__b >> rad;   fCornerRadius = rad;
+      if (R__v < 2) {
+         Float_t x1ndc,y1ndc,x2ndc,y2ndc,rad;
+         R__b >> x1ndc; fX1NDC = x1ndc;
+         R__b >> y1ndc; fY1NDC = y1ndc;
+         R__b >> x2ndc; fX2NDC = x2ndc;
+         R__b >> y2ndc; fY2NDC = y2ndc;
+         R__b >> fBorderSize;
+         R__b >> fInit;
+         R__b >> rad;   fCornerRadius = rad;
+      } else {
+         R__b >> fX1NDC;
+         R__b >> fY1NDC;
+         R__b >> fX2NDC;
+         R__b >> fY2NDC;
+         R__b >> fBorderSize;
+         R__b >> fInit;
+         R__b >> fCornerRadius;
+      }
       fOption.Streamer(R__b);
       fName.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPave::IsA());
-      //====end of old versions
-
    } else {
-      TPave::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TPave::IsA(), kTRUE);
+      TBox::Streamer(R__b);
+      R__b << fX1NDC;
+      R__b << fY1NDC;
+      R__b << fX2NDC;
+      R__b << fY2NDC;
+      R__b << fBorderSize;
+      R__b << fInit;
+      R__b << fCornerRadius;
+      fOption.Streamer(R__b);
+      fName.Streamer(R__b);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

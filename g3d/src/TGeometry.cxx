@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.6 2001/06/05 13:13:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.2 2000/09/08 07:36:57 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 #include "TNode.h"
 #include "TMaterial.h"
 #include "TBrowser.h"
-#include "TClass.h"
 
 TGeometry *gGeometry = 0;
 
@@ -188,7 +187,7 @@ void TGeometry::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-TObject *TGeometry::FindObject(const TObject *) const
+TObject *TGeometry::FindObject(TObject *) const
 {
 // find object in a geometry node, material, etc
 
@@ -248,7 +247,7 @@ TObjArray *TGeometry::Get(const char *name)
 }
 
 //______________________________________________________________________________
-TMaterial *TGeometry::GetMaterial(const char *name) const
+TMaterial *TGeometry::GetMaterial(const char *name)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Material with name*-*-*-*-*-*-*-*-*
 //*-*              ====================================
@@ -257,7 +256,7 @@ TMaterial *TGeometry::GetMaterial(const char *name) const
 }
 
 //______________________________________________________________________________
-TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
+TMaterial *TGeometry::GetMaterialByNumber(Int_t number)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Material with number*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -273,7 +272,7 @@ TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 }
 
 //______________________________________________________________________________
-TNode *TGeometry::GetNode(const char *name) const
+TNode *TGeometry::GetNode(const char *name)
 {
 //*-*-*-*-*-*-*Return pointer to node with name in the geometry tree*-*-*-*-*
 //*-*          =====================================================
@@ -285,7 +284,7 @@ TNode *TGeometry::GetNode(const char *name) const
 }
 
 //______________________________________________________________________________
-TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
+TRotMatrix *TGeometry::GetRotMatrix(const char *name)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to RotMatrix with name*-*-*-*-*-*-*-*-*-*
 //*-*              =====================================
@@ -294,7 +293,7 @@ TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
 }
 
 //______________________________________________________________________________
-TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
+TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to RotMatrix with number*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -309,7 +308,7 @@ TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 }
 
 //______________________________________________________________________________
-TShape *TGeometry::GetShape(const char *name) const
+TShape *TGeometry::GetShape(const char *name)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Shape with name*-*-*-*-*-*-*-*-*-*
 //*-*              =================================
@@ -318,7 +317,7 @@ TShape *TGeometry::GetShape(const char *name) const
 }
 
 //______________________________________________________________________________
-TShape *TGeometry::GetShapeByNumber(Int_t number) const
+TShape *TGeometry::GetShapeByNumber(Int_t number)
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Shape with number*-*-*-*-*-*-*-*-*-*
 //*-*              ===================================
@@ -409,7 +408,7 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
 }
 
 //______________________________________________________________________________
-void TGeometry::ls(Option_t *option) const
+void TGeometry::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this geometry*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                   ===================
@@ -520,28 +519,20 @@ void TGeometry::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   Int_t i;
+   TMaterial *onemat;
+   TRotMatrix *onematrix;
+   TShape *oneshape;
 
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TGeometry::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-      } else {
-         //====process old versions before automatic schema evolution
-         TNamed::Streamer(b);
-         fMaterials->Streamer(b);
-         fMatrices->Streamer(b);
-         fShapes->Streamer(b);
-         fNodes->Streamer(b);
-         b >> fBomb;
-         b.CheckByteCount(R__s, R__c, TGeometry::IsA());
-         //====end of old versions
-      }
+      b.ReadVersion(&R__s, &R__c);
+      TNamed::Streamer(b);
+      fMaterials->Streamer(b);
+      fMatrices->Streamer(b);
+      fShapes->Streamer(b);
+
 //*-*- Build direct access pointers to individual materials,matrices and shapes
-      Int_t i;
-      TMaterial *onemat;
-      TRotMatrix *onematrix;
-      TShape *oneshape;
       Int_t nmat = fMaterials->GetSize();
       if (nmat) fMaterialPointer = new TMaterial* [nmat];
       TIter nextmat(fMaterials);
@@ -569,11 +560,26 @@ void TGeometry::Streamer(TBuffer &b)
          i++;
       }
 
+      fNodes->Streamer(b);
+      b >> fBomb;
+
+//*-*- If geometry already exists, delete old version
+      TGeometry *oldgeom = (TGeometry*)gROOT->GetGeometry(GetName());
+      delete oldgeom;
+
       gROOT->GetListOfGeometries()->Add(this);
 
       fCurrentNode = (TNode*)GetListOfNodes()->First();
+      b.CheckByteCount(R__s, R__c, TGeometry::IsA());
    } else {
-      TGeometry::Class()->WriteBuffer(b,this);
+      R__c = b.WriteVersion(TGeometry::IsA(), kTRUE);
+      TNamed::Streamer(b);
+      fMaterials->Streamer(b);
+      fMatrices->Streamer(b);
+      fShapes->Streamer(b);
+      fNodes->Streamer(b);
+      b << fBomb;
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -600,7 +606,7 @@ void TGeometry::UpdateMatrix(TNode *node)
    Int_t saveGeomLevel = fGeomLevel;
    //Update matrices in the hierarchy
    for (fGeomLevel=1;i<=saveGeomLevel;fGeomLevel++) {
-      node = nodes[i-1];
+      node = nodes[i-i];
       UpdateTempMatrix(node->GetX(),node->GetY(),node->GetZ(),node->GetMatrix());
    }
 }

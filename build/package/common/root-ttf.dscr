@@ -1,4 +1,0 @@
-short: True Type Font support in ROOT
-long:
-Using this package, it's possible to use True Type Fonts for plots
-and so on in ROOT, thereby greatly improving the output quality.

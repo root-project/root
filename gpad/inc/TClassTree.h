@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.2 2000/11/21 20:20:30 brun Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -38,17 +38,17 @@ protected:
    Int_t     fShowMul;    //if 1 show multiple inheritance
    Int_t     fShowHas;    //if 1 show "has a" relationship
    Int_t     fShowRef;    //if 1 show classes relationship other than inheritance
-   Int_t    *fCstatus;    //[fNclasses] classes status
-   Int_t    *fNdata;      //[fNclasses] Number of data members per class
-   Int_t    *fParents;    //[fNclasses] parent number of classes (permanent)
-   Int_t    *fCparent;    //!parent number of classes (temporary)
-   char    **fDerived;    //![fNclasses] table to indicate if i derives from j
-   TClass  **fCpointer;   //![fNclasses] pointers to the TClass objects
-   TString **fCnames;     //![fNclasses] class names
-   TString **fCtitles;    //![fNclasses] class titles
-   TString **fOptions;    //![fNclasses] List of options per class
+   Int_t    *fCstatus;    //classes status
+   Int_t    *fNdata;      //Number of data members per class
+   Int_t    *fParents;    //parent number of classes (permanent)
+   Int_t    *fCparent;    //parent number of classes (temporary)
+   char    **fDerived;    //table to indicate if i derives from j
+   TClass  **fCpointer;   //pointers to the TClass objects
+   TString **fCnames;     //class names
+   TString **fCtitles;    //class titles
+   TString **fOptions;    //List of options per class
    TString   fSourceDir;  //Concatenated source directories
-   TList   **fLinks;      //![fNclasses] for each class, the list of referenced(ing) classes
+   TList   **fLinks;      //for each class, the list of referenced(ing) classes
 
    virtual  void FindClassPosition(const char *classname, Float_t &x, Float_t &y);
    virtual  void FindClassesUsedBy(Int_t iclass);
@@ -70,7 +70,7 @@ public:
    virtual Int_t FindClass(const char *classname);
    const char   *GetClasses() const {return fClasses.Data();}
    virtual const char  *GetSourceDir() const {return fSourceDir.Data();}
-   virtual  void ls(Option_t *option="") const;
+   virtual  void ls(Option_t *option="");
    virtual  void Paint(Option_t *option="");
    virtual  void SaveAs(const char *filename="");
    virtual  void SetClasses(const char *classes, Option_t *option="ID");

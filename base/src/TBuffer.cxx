@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.22 2002/02/02 13:19:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.2 2000/09/06 14:15:14 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 
 #include <string.h>
 
-#include "TFile.h"
 #include "TBuffer.h"
 #include "TExMap.h"
 #include "TObjPtr.h"
@@ -29,12 +28,13 @@
 #include "TError.h"
 
 #if defined(__linux) && defined(__i386__)
-//#define USE_BSWAPCPY
+// #define USE_BSWAPCPY
 #endif
 
 #ifdef USE_BSWAPCPY
 #include "Bswapcpy.h"
 #endif
+
 
 
 const UInt_t kNullTag           = 0;
@@ -51,63 +51,23 @@ Int_t TBuffer::fgMapSize   = kMapSize;
 
 
 ClassImp(TBuffer)
-
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
    // TBuffer::kInitialSize (1024) bytes.
 
-   fBufSize  = kInitialSize;
-   fMode     = mode;
-   fVersion  = 0;
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fParent   = 0;
-   fDisplacement = 0;
-   
-   SetBit(kIsOwner);
-
-   fBuffer = new char[fBufSize+kExtraSpace];
-   
-   fBufCur = fBuffer;
-   fBufMax = fBuffer + fBufSize;
-}
-
-//______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz)
-{
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite.
-
-   if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
-   fBufSize  = bufsiz;
-   fMode     = mode;
-   fVersion  = 0;
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fParent   = 0;
-   fDisplacement = 0;
-   
-   SetBit(kIsOwner);
-
-   fBuffer = new char[fBufSize+kExtraSpace];
-   
-   fBufCur = fBuffer;
-   fBufMax = fBuffer + fBufSize;
-}
-
-//______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
-{
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
-   // to TBuffer via the buf argument. By default this buffer will be adopted
-   // unless adopt is false.
+   // Before using the buffer make sure some assumptions are true
+   Assert(sizeof(Short_t) == 2);
+   Assert(sizeof(Int_t) == 4);
+#ifdef R__B64
+   Assert(sizeof(Long_t) == 8);
+#else
+   Assert(sizeof(Long_t) == 4);
+#endif
+   Assert(sizeof(Float_t) == 4);
+   Assert(sizeof(Double_t) == 8);
 
    if (!buf && bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
@@ -115,16 +75,12 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
    fVersion  = 0;
    fMapCount = 0;
    fMapSize  = fgMapSize;
-   fMap      = 0;
-   fParent   = 0;
+   fReadMap  = 0;
    fDisplacement = 0;
-   
-   SetBit(kIsOwner);
 
-   if (buf) {
+   if (buf)
       fBuffer = (char *)buf;
-      if (!adopt) ResetBit(kIsOwner);
-   } else
+   else
       fBuffer = new char[fBufSize+kExtraSpace];
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
@@ -135,77 +91,21 @@ TBuffer::~TBuffer()
 {
    // Delete an I/O buffer object.
 
-   if (TestBit(kIsOwner)) {
-      //printf("Deleting fBuffer=%x\n",fBuffer);
-      delete [] fBuffer;
-   }
+   delete [] fBuffer;
    fBuffer = 0;
-   fParent  = 0;
 
-   delete fMap;
-}
-
-//______________________________________________________________________________
-void frombufOld(char *&buf, Long_t *x)
-{
-// files written with versions older than 3.00/06 had a non-portable
-// implementation of Long_t/ULong_t. These types should not have been used at all.
-// However, because some users had already written many files with these types
-// we provide this dirty patch for "backward compatibility"
-
-#ifdef R__BYTESWAP
-#ifdef R__B64
-   char *sw = (char *)x;
-   sw[0] = buf[7];
-   sw[1] = buf[6];
-   sw[2] = buf[5];
-   sw[3] = buf[4];
-   sw[4] = buf[3];
-   sw[5] = buf[2];
-   sw[6] = buf[1];
-   sw[7] = buf[0];
-#else
-   char *sw = (char *)x;
-   sw[0] = buf[3];
-   sw[1] = buf[2];
-   sw[2] = buf[1];
-   sw[3] = buf[0];
-#endif
-#else
-   memcpy(x, buf, sizeof(Long_t));
-#endif
-   buf += sizeof(Long_t);
-}
-
-//______________________________________________________________________________
-TBuffer &TBuffer::operator>>(Long_t &l)
-{
-   TFile *file = (TFile*)fParent;
-   if (file && file->GetVersion() < 30006) {
-      frombufOld(fBufCur, &l);
-   } else {
-      frombuf(fBufCur, &l);
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
-{
-   // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
-   // new buffer is expected to have the same size as the previous buffer.
-   // The current buffer position is reset to the start of the buffer.
-   // If the TBuffer owned the previous buffer, it will be deleted prior
-   // to accepting the new buffer. By default the new buffer will be
-   // adopted unless adopt is false.
-
-   if (fBuffer && TestBit(kIsOwner))
-      delete [] fBuffer;
-
-   if (adopt)
-      SetBit(kIsOwner);
+   if (IsReading())
+      delete fReadMap;
    else
-      ResetBit(kIsOwner);
+      delete fWriteMap;
+
+   fReadMap = 0;
+}
+
+//______________________________________________________________________________
+void TBuffer::SetBuffer(void *buf, UInt_t newsiz)
+{
+   // Set buffer address
 
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
@@ -240,7 +140,7 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
    Long_t cli;
 
    if (readClass) {
-      if ((cli = fMap->GetValue(offset)) == 0) {
+      if ((cli = fReadMap->GetValue(offset)) == 0) {
          // No class found at this location in map. It might have been skipped
          // as part of a skipped object. Try to explicitely read the class.
 
@@ -251,8 +151,8 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
          TClass *c = ReadClass(cl);
          if (c == (TClass*) -1) {
             // mark class as really not available
-            fMap->Remove(offset);
-            fMap->Add(offset, -1);
+            fReadMap->Remove(offset);
+            fReadMap->Add(offset, -1);
             offset = 0;
             Warning("CheckObject", "reference to unavailable class %s,"
                     " pointers of this type will be 0", cl ? cl->GetName() : "TObject");
@@ -268,7 +168,7 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
 
    } else {
 
-      if ((cli = fMap->GetValue(offset)) == 0) {
+      if ((cli = fReadMap->GetValue(offset)) == 0) {
          // No object found at this location in map. It might have been skipped
          // as part of a skipped object. Try to explicitely read the object.
 
@@ -279,8 +179,8 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
          TObject *obj = ReadObject(cl);
          if (!obj) {
             // mark object as really not available
-            fMap->Remove(offset);
-            fMap->Add(offset, -1);
+            fReadMap->Remove(offset);
+            fReadMap->Add(offset, -1);
             offset = 0;
             Warning("CheckObject", "reference to object of unavailable class %s,"
                     " pointer will be 0", cl ? cl->GetName() : "TObject");
@@ -304,51 +204,40 @@ void TBuffer::Expand(Int_t newsize)
 {
    // Expand the I/O buffer to newsize bytes.
 
-   Int_t l  = Length();
-   fBuffer  = TStorage::ReAllocChar(fBuffer, newsize+kExtraSpace,
-                                    fBufSize+kExtraSpace);
+   Int_t l = Length();
+
+   fBuffer = (char *) TStorage::ReAlloc(fBuffer,
+                                        (newsize+kExtraSpace) * sizeof(char),
+                                        (fBufSize+kExtraSpace) * sizeof(char));
    fBufSize = newsize;
    fBufCur  = fBuffer + l;
    fBufMax  = fBuffer + fBufSize;
 }
 
 //______________________________________________________________________________
-TObject *TBuffer::GetParent() const
-{
-   // return pointer to parent of this buffer
-   
-   return fParent;
-}
-
-
-//______________________________________________________________________________
-void TBuffer::SetParent(TObject *parent)
-{
-   // Set parent owning this buffer
-   
-   fParent = parent;
-}
-
-//______________________________________________________________________________
 void TBuffer::MapObject(const TObject *obj, UInt_t offset)
 {
-   // Add object to the fMap container.
+   // Add object to the fWriteMap or fReadMap containers (depending on the mode).
    // If obj is not 0 add object to the map (in read mode also add 0 objects to
    // the map). This method may only be called outside this class just before
    // calling obj->Streamer() to prevent self reference of obj, in case obj
    // contains (via via) a pointer to itself. In that case offset must be 1
    // (default value for offset).
 
-   if (!fMap) InitMap();
-   
    if (IsWriting()) {
+      if (!fWriteMap)
+         InitMap();
+
       if (obj) {
          CheckCount(offset);
-         fMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
+         fWriteMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
          fMapCount++;
       }
    } else {
-      fMap->Add(offset, (Long_t)obj);
+      if (!fReadMap)
+         InitMap();
+
+      fReadMap->Add(offset, (Long_t)obj);
       fMapCount++;
    }
 }
@@ -367,7 +256,7 @@ void TBuffer::SetReadParam(Int_t mapsize)
    // can be changed using SetGlobalReadParam().
 
    Assert(IsReading());
-   Assert(fMap == 0);
+   Assert(fReadMap == 0);
 
    fMapSize = mapsize;
 }
@@ -387,7 +276,7 @@ void TBuffer::SetWriteParam(Int_t mapsize)
    // can be changed using SetGlobalWriteParam().
 
    Assert(IsWriting());
-   Assert(fMap == 0);
+   Assert(fWriteMap == 0);
 
    fMapSize = mapsize;
 }
@@ -395,18 +284,18 @@ void TBuffer::SetWriteParam(Int_t mapsize)
 //______________________________________________________________________________
 void TBuffer::InitMap()
 {
-   // Create the fMap container and initialize them
+   // Create the fWriteMap or fReadMap containers and initialize them
    // with the null object.
 
    if (IsWriting()) {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
+      if (!fWriteMap) {
+         fWriteMap = new TExMap(fMapSize);
          fMapCount = 0;
       }
    } else {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
+      if (!fReadMap) {
+         fReadMap = new TExMap(fMapSize);
+         fReadMap->Add(0, kNullTag);      // put kNullTag in slot 0
          fMapCount = 1;
       }
    }
@@ -415,10 +304,15 @@ void TBuffer::InitMap()
 //______________________________________________________________________________
 void TBuffer::ResetMap()
 {
-   // Delete existing fMap and reset map counter.
+   // Delete existing fWriteMap or fReadMap and reset map counter.
 
-   delete fMap;
-   fMap = 0;
+   if (IsWriting()) {
+      delete fWriteMap;
+      fWriteMap = 0;
+   } else {
+      delete fReadMap;
+      fReadMap = 0;
+   }
    fMapCount = 0;
    fDisplacement = 0;
 }
@@ -480,8 +374,8 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
          if (Long_t(fBufCur) > endpos)
             Error("CheckByteCount", "object of class %s read too many bytes",
                   clss->GetName());
-            Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
-                    clss->GetName());
+         Printf("*** %s::Streamer() not in sync with data on file, fix Streamer()",
+                clss->GetName());
       }
       offset = Int_t(Long_t(fBufCur) - endpos);
       //gROOT->Message(1005, this);
@@ -666,12 +560,20 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
 
    if (!ll) ll = new Long_t[n];
 
-   TFile *file = (TFile*)fParent;
-   if (file && file->GetVersion() < 30006) {
-      for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
-   } else {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   }
+#ifdef R__BYTESWAP
+# if defined(USE_BSWAPCPY) && !defined(R__B64)
+   bswapcpy32(ll, fBufCur, n);
+   fBufCur += sizeof(Long_t)*n;
+# else
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+# endif
+#else
+   Int_t l = sizeof(Long_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
+
    return n;
 }
 //______________________________________________________________________________
@@ -835,12 +737,20 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
 
    if (!ll) return 0;
 
-   TFile *file = (TFile*)fParent;
-   if (file && file->GetVersion() < 30006) {
-      for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
-   } else {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   }
+#ifdef R__BYTESWAP
+# if defined(USE_BSWAPCPY) && !defined(R__B64)
+   bswapcpy32(ll, fBufCur, n);
+   fBufCur += sizeof(Long_t)*n;
+# else
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+# endif
+#else
+   Int_t l = sizeof(Long_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
+
    return n;
 }
 
@@ -908,7 +818,7 @@ void TBuffer::ReadFastArray(Char_t *c, Int_t n)
 {
    // Read array of n characters from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Char_t)*n;
    memcpy(c, fBufCur, l);
@@ -920,7 +830,7 @@ void TBuffer::ReadFastArray(Short_t *h, Int_t n)
 {
    // Read array of n shorts from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -942,22 +852,22 @@ void TBuffer::ReadFastArray(Int_t *ii, Int_t n)
 {
    // Read array of n ints from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
    bswapcpy32(ii, fBufCur, n);
    fBufCur += sizeof(Int_t)*n;
 # else
-   //char *sw = (char*)ii;
+   char *sw = (char*)ii;
    for (int i = 0; i < n; i++) {
-      frombuf(fBufCur, &ii[i]);
-      //sw[0] = fBufCur[3];
-      //sw[1] = fBufCur[2];
-      //sw[2] = fBufCur[1];
-      //sw[3] = fBufCur[0];
-      //fBufCur += 4;
-      //sw += 4;
+//      frombuf(fBufCur, &ii[i]);
+      sw[0] = fBufCur[3];
+      sw[1] = fBufCur[2];
+      sw[2] = fBufCur[1];
+      sw[3] = fBufCur[0];
+      fBufCur += 4;
+      sw += 4;
    }
 # endif
 #else
@@ -972,14 +882,21 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 {
    // Read array of n longs from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
-   TFile *file = (TFile*)fParent;
-   if (file && file->GetVersion() < 30006) {
-      for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
-   } else {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   }
+#ifdef R__BYTESWAP
+# if defined(USE_BSWAPCPY) && !defined(R__B64)
+   bswapcpy32(ll, fBufCur, n);
+   fBufCur += sizeof(Long_t)*n;
+# else
+   for (int i = 0; i < n; i++)
+      frombuf(fBufCur, &ll[i]);
+# endif
+#else
+   Int_t l = sizeof(Long_t)*n;
+   memcpy(ll, fBufCur, l);
+   fBufCur += l;
+#endif
 }
 
 //______________________________________________________________________________
@@ -987,22 +904,22 @@ void TBuffer::ReadFastArray(Float_t *f, Int_t n)
 {
    // Read array of n floats from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
    bswapcpy32(f, fBufCur, n);
    fBufCur += sizeof(Float_t)*n;
 # else
-//   char *sw = (char*)f;
+   char *sw = (char*)f;
    for (int i = 0; i < n; i++) {
-      frombuf(fBufCur, &f[i]);
-      //sw[0] = fBufCur[3];
-      //sw[1] = fBufCur[2];
-      //sw[2] = fBufCur[1];
-      //sw[3] = fBufCur[0];
-      //fBufCur += 4;
-      //sw += 4;
+//      frombuf(fBufCur, &f[i]);
+      sw[0] = fBufCur[3];
+      sw[1] = fBufCur[2];
+      sw[2] = fBufCur[1];
+      sw[3] = fBufCur[0];
+      fBufCur += 4;
+      sw += 4;
    }
 # endif
 #else
@@ -1017,7 +934,7 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
 {
    // Read array of n doubles from the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -1122,9 +1039,21 @@ void TBuffer::WriteArray(const Long_t *ll, Int_t n)
 
    Assert(ll);
 
-   Int_t l = 8*n;
+   Int_t l = sizeof(Long_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
-   for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
+
+#ifdef R__BYTESWAP
+# if defined(USE_BSWAPCPY) && !defined(R__B64)
+   bswapcpy32(fBufCur, ll, n);
+   fBufCur += l;
+# else
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, ll[i]);
+# endif
+#else
+   memcpy(fBufCur, ll, l);
+   fBufCur += l;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1188,7 +1117,7 @@ void TBuffer::WriteFastArray(const Char_t *c, Int_t n)
 {
    // Write array of n characters into the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Char_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1202,7 +1131,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
 {
    // Write array of n shorts into the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Short_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1225,7 +1154,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
 void TBuffer::WriteFastArray(const Int_t *ii, Int_t n)
 {
    // Write array of n ints into the I/O buffer.
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Int_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1249,12 +1178,23 @@ void TBuffer::WriteFastArray(const Long_t *ll, Int_t n)
 {
    // Write array of n longs into the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
-   Int_t l = 8*n;
+   Int_t l = sizeof(Long_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
-   for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
+#ifdef R__BYTESWAP
+# if defined(USE_BSWAPCPY) && !defined(R__B64)
+   bswapcpy32(fBufCur, ll, n);
+   fBufCur += l;
+# else
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, ll[i]);
+# endif
+#else
+   memcpy(fBufCur, ll, l);
+   fBufCur += l;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1262,7 +1202,7 @@ void TBuffer::WriteFastArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1286,7 +1226,7 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 {
    // Write array of n doubles into the I/O buffer.
 
-   if (n <= 0) return;
+   if (!n) return;
 
    Int_t l = sizeof(Double_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1308,7 +1248,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
 
    Assert(IsReading());
 
-   // make sure fMap is initialized
+   // make sure fReadMap is initialized
    InitMap();
 
    // before reading object save start position
@@ -1322,7 +1262,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    // (this can only happen when called via CheckObject())
    TObject *obj;
    if (fVersion > 0) {
-      obj = (TObject *) fMap->GetValue(startpos+kMapOffset);
+      obj = (TObject *) fReadMap->GetValue(startpos+kMapOffset);
       if (obj) {
          if (obj == (TObject*) -1)
             obj = 0;
@@ -1352,14 +1292,13 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          tag += fDisplacement;
          tag = CheckObject(tag, clReq);
       } else {
-         if (tag > (UInt_t)fMap->GetSize()) {
+         if (tag > (UInt_t)fReadMap->GetSize()) {
             Error("ReadObject", "object tag too large, I/O buffer corrupted");
-            return 0;
             // exception
          }
       }
 
-      obj = (TObject *) fMap->GetValue(tag);
+      obj = (TObject *) fReadMap->GetValue(tag);
       if (obj && clReq && !obj->IsA()->InheritsFrom(clReq)) {
          Error("ReadObject", "got object of wrong class");
          // exception
@@ -1375,20 +1314,14 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          return 0;
       }
 
-      // add to fMap before reading rest of object
+      // add to fReadMap before reading rest of object
       if (fVersion > 0)
          MapObject(obj, startpos+kMapOffset);
       else
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      if (clRef->GetClassInfo()) {
-         obj->Streamer(*this);
-      } else {
-         //fake class has no Streamer
-         if (gDebug > 0) Warning("ReadObject","%s::Streamer not available, using TClass::ReadBuffer instead",clRef->GetName());
-         clRef->ReadBuffer(*this,obj);
-      }
+      obj->Streamer(*this);
 
       CheckByteCount(startpos, tag, clRef);
    }
@@ -1403,7 +1336,7 @@ void TBuffer::WriteObject(const TObject *obj)
 
    Assert(IsWriting());
 
-   // make sure fMap is initialized
+   // make sure fWriteMap is initialized
    InitMap();
 
    ULong_t idx;
@@ -1413,7 +1346,7 @@ void TBuffer::WriteObject(const TObject *obj)
       // save kNullTag to represent NULL pointer
       *this << kNullTag;
 
-   } else if ((idx = (ULong_t)fMap->GetValue(((TObject*)obj)->TObject::Hash(), (Long_t)obj)) != 0) {
+   } else if ((idx = (ULong_t)fWriteMap->GetValue(((TObject*)obj)->TObject::Hash(), (Long_t)obj)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -1479,10 +1412,10 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
       // case object of this class must be skipped)
       cl = TClass::Load(*this);
 
-      // add class to fMap for later reference
+      // add class to fReadMap for later reference
       if (fVersion > 0) {
          // check if class was already read
-         TClass *cl1 = (TClass *)fMap->GetValue(startpos+kMapOffset);
+         TClass *cl1 = (TClass *)fReadMap->GetValue(startpos+kMapOffset);
          if (cl1 != cl)
             MapObject(cl ? cl : (TObject*) -1, startpos+kMapOffset);
       } else
@@ -1497,19 +1430,19 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
       } else {
-         if (clTag == 0 || clTag > (UInt_t)fMap->GetSize()) {
+         if (clTag == 0 || clTag > (UInt_t)fReadMap->GetSize()) {
             Error("ReadClass", "illegal class tag=%d (0<tag<=%d), I/O buffer corrupted",
-                  clTag, fMap->GetSize());
+                  clTag, fReadMap->GetSize());
             // exception
          }
       }
 
       // class can be 0 if dictionary was not found
-      cl = (TClass *)fMap->GetValue(clTag);
+      cl = (TClass *)fReadMap->GetValue(clTag);
    }
 
    if (cl && clReq && !cl->InheritsFrom(clReq)) {
-      Error("ReadClass", "got wrong class: %s",cl->GetName());
+      Error("ReadClass", "got wrong class");
       // exception
    }
 
@@ -1531,7 +1464,7 @@ void TBuffer::WriteClass(const TClass *cl)
 
    ULong_t idx;
 
-   if ((idx = (ULong_t)fMap->GetValue(((TObject *)cl)->TObject::Hash(), (Long_t)cl)) != 0) {
+   if ((idx = (ULong_t)fWriteMap->GetValue(((TObject *)cl)->TObject::Hash(), (Long_t)cl)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -1551,7 +1484,7 @@ void TBuffer::WriteClass(const TClass *cl)
       // write class name
       cl->Store(*this);
 
-      // store new class reference in fMap (+kMapOffset so it's != kNullTag)
+      // store new class reference in fWriteMap (+kMapOffset so it's != kNullTag)
       MapObject(cl, offset+kMapOffset);
    }
 }
@@ -1590,7 +1523,6 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
       }
       *bcnt = (v.cnt & ~kByteCountMask);
       *this >> version;
-//printf("Reading version=%d at pos=%d, bytecount=%d\n",version,*startpos,*bcnt);
 
    } else {
 
@@ -1602,7 +1534,6 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
          *this >> version;
          *this >> version;
       }
-//printf("Reading version=%d at pos=%d\n",version,startpos);
    }
 
    return version;
@@ -1621,7 +1552,6 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
    }
 
    Version_t version = cl->GetClassVersion();
-//printf("Writing version=%d at pos=%d for class:%s\n",version,cntpos,cl->GetName());
    if (version > kMaxVersion) {
       Error("WriteVersion", "version number cannot be larger than %hd)",
             kMaxVersion);

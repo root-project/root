@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLRow.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/mysql:$Name$:$Id$
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -11,15 +11,13 @@
 
 #ifndef ROOT_TMySQLRow
 #define ROOT_TMySQLRow
-
+   
 #ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
 #endif
 
 #if !defined(__CINT__)
-#ifndef R__WIN32
 #include <sys/time.h>
-#endif
 #include <mysql.h>
 #else
 struct MYSQL_RES;
@@ -33,9 +31,9 @@ private:
    MYSQL_RES   *fResult;       // current result set
    MYSQL_ROW    fFields;       // current row
    ULong_t     *fFieldLength;  // length of each field in the row
-
+   
    Bool_t  IsValid(Int_t field);
-
+    
 public:
    TMySQLRow(void *result, ULong_t rowHandle);
    ~TMySQLRow();
@@ -43,7 +41,7 @@ public:
    void        Close(Option_t *opt="");
    ULong_t     GetFieldLength(Int_t field);
    const char *GetField(Int_t field);
-
+   
    ClassDef(TMySQLRow,0)  // One row of MySQL query result
 };
 

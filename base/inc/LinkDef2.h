@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.14 2002/01/27 13:57:01 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.3 2000/10/15 01:27:45 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,7 +18,6 @@
 #pragma link C++ global gTQSlotParams;
 
 #pragma link C++ enum EAccessMode;
-#pragma link C++ enum ESignals;
 
 #pragma link C++ function operator+(const TTime&,const TTime&);
 #pragma link C++ function operator-(const TTime&,const TTime&);
@@ -32,12 +31,6 @@
 #pragma link C++ function operator>(const TTime&,const TTime&);
 #pragma link C++ function operator>=(const TTime&,const TTime&);
 
-#pragma link C++ function operator==(const TMD5&,const TMD5&);
-#pragma link C++ function operator!=(const TMD5&,const TMD5&);
-
-#pragma link C++ function operator==(const TUUID&,const TUUID&);
-#pragma link C++ function operator!=(const TUUID&,const TUUID&);
-
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
 #pragma link C++ class TExec+;
@@ -48,43 +41,34 @@
 #pragma link C++ class TMapFile;
 #pragma link C++ class TMapRec;
 #pragma link C++ class TMath;
-#pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
-#pragma link C++ class TNamed+;
-#pragma link C++ class TObjString+;
+#pragma link C++ class TNamed;
+#pragma link C++ class TObjString;
 #pragma link C++ class TObject-;
-#pragma link C++ class TPoint;
-#pragma link C++ class TProcessID+;
 #pragma link C++ class TProcessEventTimer;
 #pragma link C++ class TRandom+;
 #pragma link C++ class TRandom2+;
-#pragma link C++ class TRandom3-;
-#pragma link C++ class TRef-;
+#pragma link C++ class TRandom3+;
 #pragma link C++ class TROOT;
-#pragma link C++ class TRealData+;
+#pragma link C++ class TRealData;
 #pragma link C++ class TRegexp;
 #pragma link C++ class TSignalHandler;
 #pragma link C++ class TStopwatch+;
 #pragma link C++ class TStorage;
-#pragma link C++ class TString-!;
+#pragma link C++ class TString-;
 #pragma link C++ class TStringLong-;
 #pragma link C++ class TSubString;
 #pragma link C++ class TSysEvtHandler;
-#pragma link C++ class TSystem+;
-#pragma link C++ class TSystemFile+;
-#pragma link C++ class TSystemDirectory+;
+#pragma link C++ class TSystem;
+#pragma link C++ class TSystemFile;
+#pragma link C++ class TSystemDirectory;
 #pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;
-#pragma link C++ class TQObject-;
+#pragma link C++ class TQObject;
 #pragma link C++ class TQObjSender;
 #pragma link C++ class TQClass;
 #pragma link C++ class TQConnection;
-#pragma link C++ class TUUID+;
-#pragma link C++ class TDSet+;
-#pragma link C++ class TDSetElement+;
-#pragma link C++ class TPluginHandler;
-#pragma link C++ class TPluginManager;
 
 #endif

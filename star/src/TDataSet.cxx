@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.11 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,9 +19,9 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.11 2002/01/23 17:52:51 rdm Exp $"
+    "$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $"
 };
-#include "Riostream.h"
+#include <iostream.h>
 #include "TSystem.h"
 #include "TDataSetIter.h"
 #include "TDataSet.h"
@@ -52,7 +52,7 @@ const char *Id = {
 //  to built the containers.                                            //
 //                                                                      //
 //  One may derive the custom container classes from TDataSet.          //
-//  See for example TObjectSet, TTable, TVolume, TFileSet               //
+//  See for example TObjectSet, TTable, TNode, TFileSet                 //
 //  These classes  derived from TDataSet:                               //
 //                                                                      //
 //   Class Name                                                         //
@@ -214,6 +214,7 @@ TDataSet::TDataSet(TNode &)
 {
   assert(0);
 }
+
 //______________________________________________________________________________
 TDataSet::~TDataSet()
 {
@@ -302,7 +303,7 @@ void TDataSet::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TObject *TDataSet::Clone(const char*) const {
+TObject *TDataSet::Clone() {
    return new TDataSet(*this);
 }
 
@@ -357,10 +358,17 @@ TDataSet *TDataSet::Find(const Char_t *path) const
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
+TDataSet  *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
+{
+  // Aliase for TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) method
+  return FindDataSet(name,path,opt);
+}
+
+//______________________________________________________________________________
+TDataSet *TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) const
 {
   //
-  // Full description see: TDataSetIter::Find
+  // Full description see: TDataSetIter::FindDataSet
   //
   // Note. This is method is quite expansive.
   // ----- It is done to simplify the user's code when one wants to find ONLY object.
@@ -369,7 +377,7 @@ TDataSet *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *o
   //
 
   TDataSetIter next((TDataSet*)this);
-  return next.FindByName(name,path,opt);
+  return next.FindDataSet(name,path,opt);
 }
 
 //______________________________________________________________________________
@@ -431,8 +439,8 @@ void TDataSet::ls(Int_t depth) const
  //            No par - ls() prints only level out                  //
  //                                                                 //
  /////////////////////////////////////////////////////////////////////
-  PrintContents();
 
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
   if (!fList || depth == 1 ) return;
   if (!depth) depth = 99999;
 
@@ -445,12 +453,9 @@ void TDataSet::ls(Int_t depth) const
   }
 }
 //______________________________________________________________________________
-TDataSet *TDataSet::Instance() const
+Bool_t TDataSet::IsLocked() const
 {
- // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes
- // derived from TDataSet (to support TDataSetIter::Mkdir for example)
- return instance();
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -506,15 +511,6 @@ Bool_t TDataSet::IsEmpty() const
 {
    // return kTRUE if the "internal" collection has no member
    return First() ? kFALSE : kTRUE ;
-}
-
-//______________________________________________________________________________
-void TDataSet::PrintContents(Option_t *opt) const {
-  // Callback method to complete ls() method recursive loop
-  // This is to allow to sepoarate navigation and the custom invormation
-  // in the derived classes (see; TTable::PrintContents for example
-  if (opt) { /* no used */ }
-  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
 }
 
 //______________________________________________________________________________
@@ -666,6 +662,11 @@ Int_t TDataSet::Purge(Option_t *)
 }
 
 //______________________________________________________________________________
+void  TDataSet::SetLock(int )
+{
+}
+
+//______________________________________________________________________________
 void  TDataSet::SetParent(TDataSet *parent)
 {
 //
@@ -729,8 +730,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
       while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
         // if the "new" set does contain the dataset
         // with the same name as ours update it too
-        // (We do not update itself (oldset == newset)
-        if ( (oldset != newset) && oldset->IsThisDir(newname) ) {
+        if (oldset->IsThisDir(newname)) {
            oldset->Update(newset);
            found = kTRUE;
         }

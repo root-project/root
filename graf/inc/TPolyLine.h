@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -35,13 +35,11 @@
 #include "TAttFill.h"
 #endif
 
-class TCollection;
 
 class TPolyLine : public TObject, public TAttLine, public TAttFill {
 
 protected:
         Int_t        fN;            //Number of points
-        Int_t        fLastPoint;    //The index of the last filled point
         Double_t    *fX;            //[fN] Array of X coordinates
         Double_t    *fY;            //[fN] Array of Y coordinates
         TString      fOption;       //options
@@ -58,27 +56,21 @@ public:
         virtual void    Draw(Option_t *option="");
         virtual void    DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t   GetLastPoint() const { return fLastPoint;}
-        Int_t           GetN() const {return fN;}
-        Double_t       *GetX() const {return fX;}
-        Double_t       *GetY() const {return fY;}
+        Int_t           GetN() {return fN;}
+        Double_t       *GetX() {return fX;}
+        Double_t       *GetY() {return fY;}
         Option_t        *GetOption() const {return fOption.Data();}
-        virtual void    ls(Option_t *option="") const;
-        virtual Int_t   Merge(TCollection *list);
+        virtual void    ls(Option_t *option="");
         virtual void    Paint(Option_t *option="");
         virtual void    PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void    PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-        virtual void    Print(Option_t *option="") const;
+        virtual void    Print(Option_t *option="");
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual Int_t   SetNextPoint(Double_t x, Double_t y); // *MENU*
         virtual void    SetOption(Option_t *option="") {fOption = option;}
         virtual void    SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*
-        virtual void    SetPolyLine(Int_t n);
-        virtual void    SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
-        virtual void    SetPolyLine(Int_t n, Double_t *x, Double_t *y3, Option_t *option="");
-        virtual Int_t   Size() const {return fLastPoint+1;}
+        virtual void    SetPolyLine(Int_t n, Double_t *x=0, Double_t *y=0, Option_t *option="");
 
-        ClassDef(TPolyLine,3)  //A PolyLine
+        ClassDef(TPolyLine,2)  //A PolyLine
 };
 
 #endif

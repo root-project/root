@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for FreeBSD
 
 PLATFORM      = fbsd
@@ -30,7 +28,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lg++ -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lg++
+XLIBS         = -L/usr/X11R6/lib -lXpm -lX11 -lg++
 CILIBS        = -lm -ltermcap -lg++
 
 

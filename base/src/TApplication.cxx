@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.24 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.2 2000/06/12 15:44:09 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "config.h"
 #endif
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TApplication.h"
 #include "TGuiFactory.h"
 #include "TVirtualX.h"
@@ -66,24 +67,6 @@ Bool_t TIdleTimer::Notify()
 ClassImp(TApplication)
 
 //______________________________________________________________________________
-TApplication::TApplication()
-{
-   // Default ctor. Can be used by classes deriving from TApplication.
-
-   fArgc          = 0;
-   fArgv          = 0;
-   fAppImp        = 0;
-   fReturnFromRun = kFALSE;
-   fNoLog         = kFALSE;
-   fNoLogo        = kFALSE;
-   fQuit          = kFALSE;
-   fFiles         = 0;
-   fIdleCommand   = 0;
-   fIdleTimer     = 0;
-   fSigHandler    = 0;
-}
-
-//______________________________________________________________________________
 TApplication::TApplication(const char *appClassName,
                            int *argc, char **argv, void *options,
                            int numOptions)
@@ -95,11 +78,8 @@ TApplication::TApplication(const char *appClassName,
    // line options recogized by TApplication are described in the GetOptions()
    // method. The recognized options are removed from the argument array.
    // The original list of argument options can be retrieved via the Argc()
-   // and Argv() methods. The appClassName "proofserv" is reserved for the
-   // PROOF system. The "options" and "numOptions" arguments are not used,
-   // except if you want to by-pass the argv processing by GetOptions()
-   // in which case you should specify numOptions<0. All options will
-   // still be available via the Argv() method for later use.
+   // and Argv() methods. The "options" and "numOptions" arguments are
+   // not used. The appClassName "proofserv" is reserved for the PROOF system.
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
@@ -114,9 +94,6 @@ TApplication::TApplication(const char *appClassName,
 
    gApplication = this;
    gROOT->SetApplication(this);
-   gROOT->SetName(appClassName);
-
-   if (options) { }  // use unused argument
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
    if (argc && *argc > 0) {
@@ -130,15 +107,7 @@ TApplication::TApplication(const char *appClassName,
    for (int i = 0; i < fArgc; i++)
       fArgv[i] = StrDup(argv[i]);
 
-   fNoLog         = kFALSE;
-   fNoLogo        = kFALSE;
-   fQuit          = kFALSE;
-
-   if (numOptions >= 0)
-      GetOptions(argc, argv);
-
-   if (fArgv)
-      gSystem->SetProgname(fArgv[0]);
+   GetOptions(argc, argv);
 
    fIdleTimer     = 0;
    fIdleCommand   = 0;
@@ -149,7 +118,7 @@ TApplication::TApplication(const char *appClassName,
    LoadGraphicsLibs();
 
    // Create WM dependent application environment
-   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv, options, numOptions);
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
@@ -179,6 +148,8 @@ TApplication::TApplication(const char *appClassName,
    // Hook for further initializing the WM dependent application environment
    Init();
 
+   if (fArgv) gSystem->SetProgname(fArgv[0]);
+
    // Set default screen factor (if not disabled in rc file)
    if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
       Int_t  x, y;
@@ -192,7 +163,6 @@ TApplication::TApplication(const char *appClassName,
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
 
-   // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
@@ -289,7 +259,6 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
-         fNoLogo = kTRUE;
          argv[i] = 0;
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
@@ -297,44 +266,28 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
-         char *arg = strchr(argv[i], '(');
-         if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
-         if (arg) *arg = '(';
-         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
-            if ((flags & 2)) {
-               // if directory make it working directory
-               gSystem->ChangeDirectory(dir);
-               TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
-               TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
-               TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
-               while (lnk) {
-                  if (lnk->GetObject() == w) {
-                     lnk->SetObject(workdir);
-                     lnk->SetOption(gSystem->WorkingDirectory());
-                     break;
-                  }
-                  lnk = lnk->Next();
+         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime) &&
+             (flags & 2)) {  // if directory make it working directory
+            gSystem->ChangeDirectory(dir);
+            TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
+            TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
+            TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
+            while (lnk) {
+               if (lnk->GetObject() == w) {
+                  lnk->SetObject(workdir);
+                  lnk->SetOption(gSystem->WorkingDirectory());
+                  break;
                }
-               delete w;
-            } else if (flags == 0 || flags == 1) {
-               // if file add to list of files to be processed
-               if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(argv[i]));
+               lnk = lnk->Next();
             }
-            argv[i] = 0;
-         } else {
-            char *mac, *s = strtok(dir, "+(");
-            if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
-                                      kReadPermission))) {
-               // if file add to list of files to be processed
-               if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(argv[i]));
-               argv[i] = 0;
-               delete [] mac;
-            }
+            delete w;
+            delete [] dir;
+            continue;
          }
          delete [] dir;
+         if (!fFiles) fFiles = new TObjArray;
+         fFiles->Add(new TObjString(argv[i]));
       }
       // ignore unknown options
    }
@@ -397,7 +350,7 @@ void TApplication::InitializeColors()
       new TColor(10,0.999,0.999,0.999,"white");
       new TColor(11,0.754,0.715,0.676,"editcol");
 
-      // The color white above is defined as being nearly white.
+      // The color cwhite above is defined as being nearly white.
       // Sets the associated dark color also to white.
       TColor *c110 = gROOT->GetColor(110);
       c110->SetRGB(0.999,0.999,.999);
@@ -462,7 +415,7 @@ void TApplication::InitializeColors()
 
       for (i=0 ; i<MaxPretty ; i++) {
          hue = MaxHue-(i+1)*((MaxHue-MinHue)/MaxPretty);
-         TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
+         c110->HLStoRGB(hue, lightness, saturation, r, g, b);
          new TColor(i+51, r, g, b);
       }
 
@@ -474,14 +427,14 @@ void TApplication::InitializeColors()
          if (r == 1) r = 0.9; if (r == 0) r = 0.1;
          if (g == 1) g = 0.9; if (g == 0) g = 0.1;
          if (b == 1) b = 0.9; if (b == 0) b = 0.1;
-         TColor::RGBtoHLS(r,g,b,h,l,s);
-         TColor::HLStoRGB(h,0.6*l,s,r,g,b);
+         s0->RGBtoHLS(r,g,b,h,l,s);
+         s0->HLStoRGB(h,0.6*l,s,r,g,b);
          new TColor(200+4*i-3,r,g,b);
-         TColor::HLStoRGB(h,0.8*l,s,r,g,b);
+         s0->HLStoRGB(h,0.8*l,s,r,g,b);
          new TColor(200+4*i-2,r,g,b);
-         TColor::HLStoRGB(h,1.2*l,s,r,g,b);
+         s0->HLStoRGB(h,1.2*l,s,r,g,b);
          new TColor(200+4*i-1,r,g,b);
-         TColor::HLStoRGB(h,1.4*l,s,r,g,b);
+         s0->HLStoRGB(h,1.4*l,s,r,g,b);
          new TColor(200+4*i  ,r,g,b);
       }
    }
@@ -505,23 +458,15 @@ void TApplication::LoadGraphicsLibs()
    gROOT->ProcessLineFast("new TGX11(\"X11\", \"ROOT interface to X11\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
 #else
-#ifndef GDK_WIN32
    gROOT->LoadClass("TGWin32", "Win32");
 
    gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TWin32GuiFactory();");
-#else
-   gROOT->LoadClass("TGWin32", "Win32gdk");
-   gROOT->LoadClass("TRootGuiFactory", "Gui");
-
-   gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
-   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
-#endif
 #endif
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
+void TApplication::ProcessLine(const char *line, Bool_t sync)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -530,7 +475,6 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    if (!nch) return;
 
    if (!strncmp(line, ".exit", 4) || !strncmp(line, ".quit", 2)) {
-      gInterpreter->ResetGlobals();
       Terminate(0);
       return;
    }
@@ -559,16 +503,16 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
 
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
-      char *s   = strtok(fn, "+(");
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
       if (!mac)
-         Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
+         Printf("No macro %s in path %s", fn, TROOT::GetMacroPath());
       else
          Printf("%s", mac);
       delete [] fn;
       delete [] mac;
       return;
    }
+
 
    if (!strncmp(line, ".L", 2)) {
       char *fn  = Strip(line+3);
@@ -592,11 +536,9 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
                TROOT::GetMacroPath());
       else {
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
-                                          (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix));
          else
-           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix));
       }
 
       delete [] fn;
@@ -605,7 +547,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3,error);
+      ProcessFile(line+3);
       return;
    }
 
@@ -623,13 +565,13 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLineSynch(line);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLine(line);
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessFile(const char *name, int *error)
+void TApplication::ProcessFile(const char *name)
 {
    // Process a file containing a C++ macro.
 
@@ -640,10 +582,7 @@ void TApplication::ProcessFile(const char *name, int *error)
 
    char *fname = Strip(name);
    if (fname[nch-1] == ';') { nch--; fname[nch] = 0; }
-   char *arg = strchr(fname, '(');
-   // special case for $(HOME)/aap.C(10)
-   while (arg && *(arg-1) == '$' && *(arg+1))
-      arg = strchr(arg+1, '(');
+   char *arg = strrchr(fname, '(');
    if (arg) {
       *arg = 0;
       char *t = arg-1;
@@ -770,11 +709,9 @@ void TApplication::ProcessFile(const char *name, int *error)
       }
 
       if (tempfile) {
-         gInterpreter->ProcessLineSynch(Form(".x %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".x %s", exname));
       } else
-         gInterpreter->ProcessLineSynch(Form(".X %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".X %s", exname));
 
       delete [] exname;
    }
@@ -855,8 +792,7 @@ void TApplication::CreateApplication()
 
    if (!gApplication) {
       new TApplication("RootApp", 0, 0, 0, 0);
-      if (gDebug > 0)
-         Printf("<TApplication::CreateApplication>: "
-                "created default TApplication");
+      Printf("<TApplication::CreateApplication>: "
+             "created default TApplication");
    }
 }

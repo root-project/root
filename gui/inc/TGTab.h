@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
                 GContext_t norm, FontStruct_t font,
                 UInt_t options = kRaisedFrame,
-                ULong_t back = GetDefaultFrameBackground());
+                ULong_t back = fgDefaultFrameBackground);
    virtual ~TGTabElement();
 
    virtual void        DrawBorder();
@@ -98,17 +98,16 @@ protected:
    void ChangeTab(Int_t tabIndex);
 
    static FontStruct_t    fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC            fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGTab(const TGWindow *p, UInt_t w, UInt_t h,
-         GContext_t norm = GetDefaultGC()(),
-         FontStruct_t font = GetDefaultFontStruct(),
+         GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
          UInt_t options = kChildFrame,
-         ULong_t back = GetDefaultFrameBackground());
+         ULong_t back = fgDefaultFrameBackground);
    virtual ~TGTab();
 
    virtual TGCompositeFrame *AddTab(TGString *text);
@@ -128,6 +127,9 @@ public:
    Int_t             GetNumberOfTabs() const;
 
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTab,0)  // Tab widget
 };

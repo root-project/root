@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.4 2000/11/10 02:28:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.2 2000/10/17 12:26:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -110,7 +110,7 @@ Bool_t TTimer::Notify()
 
    Timeout();       // emit Timeout() signal
    if (fObject) fObject->HandleTimer(this);
-   if (fCommand && fCommand.Length() > 0)
+   if (fCommand && strlen(fCommand))
       gROOT->ProcessLine(fCommand);
 
    Reset();
@@ -153,16 +153,12 @@ void TTimer::SetObject(TObject *object)
 //___________________________________________________________________
 void TTimer::Start(Int_t milliSec, Bool_t singleShot)
 {
-   // Starts the timer with a milliSec timeout. If milliSec is 0
-   // then the timeout will be the minimum timeout (see TSystem::ESysConstants,
-   // i.e. 10 ms), if milliSec is -1 then the time interval as previously
-   // specified (in ctor or SetTime()) will be used.
+   // Starts the timer with a milliSec timeout.
    // If singleShot is kTRUE, the timer will be activated only once,
    // otherwise it will continue until it is stopped.
    // See also TurnOn(), Stop(), TurnOff().
 
-   if (milliSec >= 0)
-      SetTime(milliSec);
+   SetTime(milliSec);
    Reset();
    TurnOn();
    if (singleShot)

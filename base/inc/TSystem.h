@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.15 2001/10/22 14:54:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -82,15 +82,17 @@ enum ELogFacility {
 
 enum ESysConstants {
   kMAXSIGNALS       = 15,
-  kMAXPATHLEN       = 2048,
+  kMAXPATHLEN       = 1024,
   kBUFFERSIZE       = 8192,
   kItimerResolution = 10      // interval-timer resolution in ms
 };
 
 typedef void* Func_t;
 
+R__EXTERN const char  *gSystemName;
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
+R__EXTERN const char  *gRootName;
 R__EXTERN const char  *gProgPath;
 
 
@@ -107,7 +109,6 @@ R__EXTERN const char  *gProgPath;
 class TProcessEventTimer : public TTimer {
 public:
    TProcessEventTimer(Long_t delay);
-   Bool_t Notify() { return kTRUE; }
    Bool_t ProcessEvents();
    ClassDef(TProcessEventTimer,0)  // Process pending events at fixed time intervals
 };
@@ -166,10 +167,8 @@ protected:
    TSeqCollection  *fFileHandler;      //List of file handlers
    TSeqCollection  *fOnExitList;       //List of items to be cleaned-up on exit
 
-   TString          fListLibs;         //List shared libraries, cache used by GetLibraries
+   TString          fListLibs;         //List shared libraries. Cache used by GetLibraries
 
-   TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
-   TString          fBuildNode;        //Detailed information where ROOT was built
    TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
    TString          fIncludePath;      //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
    TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
@@ -189,7 +188,6 @@ public:
    virtual Bool_t          Init();
    virtual void            SetProgname(const char *name);
    virtual void            SetDisplay();
-   void                    SetErrorStr(const char *errstr) { fLastErrorString = errstr; }
    const char             *GetErrorStr() { return (const char *)fLastErrorString; }
    virtual const char     *GetError();
    void                    RemoveOnExit(TObject *obj);
@@ -202,18 +200,16 @@ public:
    virtual void            Run();
    virtual Bool_t          ProcessEvents();
    virtual void            DispatchOneEvent(Bool_t pendingOnly = kFALSE);
-   virtual void            ExitLoop();
+   void                    ExitLoop();
    Bool_t                  InControl() const { return fInControl; }
-   virtual void            InnerLoop();
+   void                    InnerLoop();
 
    //---- Handling of system events
    virtual void            AddSignalHandler(TSignalHandler *sh);
    virtual TSignalHandler *RemoveSignalHandler(TSignalHandler *sh);
-   virtual void            ResetSignal(ESignals sig, Bool_t reset = kTRUE);
-   virtual void            IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
-   virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
+   virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
 
    //---- Time & Date
    virtual TTime           Now();
@@ -257,7 +253,6 @@ public:
    virtual int             Symlink(const char *from, const char *to);
    virtual int             Unlink(const char *name);
    virtual int             GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
-   virtual int             GetFsInfo(const char *path, Long_t *id, Long_t *bsize, Long_t *blocks, Long_t *bfree);
    virtual int             Umask(Int_t mask);
    virtual const char     *UnixPathName(const char *unixpathname);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
@@ -287,8 +282,8 @@ public:
    virtual TInetAddress    GetSockName(int sock);
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1);
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
+   virtual int             OpenConnection(const char *server, int port);
+   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
    virtual void            CloseConnection(int sock, Bool_t force = kFALSE);
@@ -299,10 +294,8 @@ public:
    virtual int             SetSockOpt(int sock, int kind, int val);
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
-   //---- ACLiC (Automatic Compiler of Shared Library for CINT)
-   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "");
-   virtual const char     *GetBuildArch() const;
-   virtual const char     *GetBuildNode() const;
+   //---- Script Compiler
+   virtual int             CompileMacro(const char *filename, Option_t *opt="");
    virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetMakeExe() const;
    virtual const char     *GetIncludePath();
@@ -321,6 +314,6 @@ public:
 };
 
 R__EXTERN TSystem *gSystem;
-R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
+R__EXTERN TSysEvtHandler *gXDisplay;   // Display server (X11) input event handler
 
 #endif

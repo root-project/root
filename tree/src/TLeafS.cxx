@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.14 2001/04/16 19:15:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -100,7 +100,7 @@ const char *TLeafS::GetTypeName() const
 
 
 //______________________________________________________________________________
-Double_t TLeafS::GetValue(Int_t i) const
+Double_t TLeafS::GetValue(Int_t i)
 {
 //*-*-*-*-*-*-*-*Returns current value of leaf*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            =============================
@@ -127,13 +127,15 @@ void TLeafS::Import(TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafS::PrintValue(Int_t l) const
+void TLeafS::Print(Option_t *option)
 {
-// Prints leaf value
+//*-*-*-*-*-*-*-*-*-*-*Print a description of this leaf*-*-*-*-*-*-*-*-*
+//*-*                  ================================
 
-   Short_t *value = (Short_t *)GetValuePointer();
-   printf("%d",value[l]);
+   TLeaf::Print(option);
+
 }
+
 
 //______________________________________________________________________________
 void TLeafS::ReadBasket(TBuffer &b)
@@ -141,7 +143,7 @@ void TLeafS::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   if (!fLeafCount && fNdata == 1) {
+   if (fNdata == 1) {
       b >> fValue[0];
    }else {
       if (fLeafCount) {
@@ -150,7 +152,6 @@ void TLeafS::ReadBasket(TBuffer &b)
             printf("ERROR leaf:%s, len=%d and max=%d\n",GetName(),len,fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
          }
-         fNdata = len*fLen;
          b.ReadFastArray(fValue,len*fLen);
       } else {
          b.ReadFastArray(fValue,fLen);
@@ -183,25 +184,16 @@ void TLeafS::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) {
-      delete [] fValue;
-   }
+   if (ResetAddress(add)) delete [] fValue;
    if (add) {
       if (TestBit(kIndirectAddress)) {
          fPointer = (Short_t**) add;
-         Int_t ncountmax = fLen;
-         if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
-         if (ncountmax > fNdata || *fPointer == 0) {
-            if (*fPointer) delete [] *fPointer;
-            if (ncountmax > fNdata) fNdata = ncountmax;
-           *fPointer = new Short_t[fNdata];
-         }
+         if (*fPointer==0) *fPointer = new Short_t[fNdata];
          fValue = *fPointer;
       } else {
          fValue = (Short_t*)add;
       }
    } else {
       fValue = new Short_t[fNdata];
-      fValue[0] = 0;
    }
 }

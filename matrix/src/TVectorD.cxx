@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.7 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.1 2000/06/16 15:15:47 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 
 #include "TMatrixD.h"
 #include "TROOT.h"
-#include "TClass.h"
 
 
 
@@ -65,8 +64,7 @@ void TVectorD::Allocate(Int_t nrows, Int_t row_lwb)
    fNmem   = nrows;
    fRowLwb = row_lwb;
 
-   //fElements = new Double_t[fNrows];  because of use of ReAlloc()
-   fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t));
+   fElements = new Double_t[fNrows];
    if (fElements)
       memset(fElements, 0, fNrows*sizeof(Double_t));
 }
@@ -102,7 +100,7 @@ TVectorD::~TVectorD()
    // TVectorD destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      delete [] fElements;
 
    Invalidate();
 }
@@ -112,7 +110,7 @@ void TVectorD::Draw(Option_t *option)
 {
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVectorD" by default and no title
-
+   
    gROOT->ProcessLine(Form("TH1D *R__TV = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
@@ -144,10 +142,10 @@ void TVectorD::ResizeTo(Int_t lwb, Int_t upb)
    // If the vector is to grow, reallocate and clear the newly added elements
    if (fNrows > old_nrows) {
       fElements = (Double_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Double_t),
-                                                fNmem*sizeof(Double_t));
+                                              fNmem*sizeof(Double_t));
       fNmem = fNrows;
-   } else if (old_nrows - fNrows > (old_nrows>>2)) {
-      // Vector is to shrink a lot (more than 1/4 of the original size), reallocate
+   } else if (old_nrows - fNrows < (old_nrows>>3)) {
+      // Vector is to shrink a lot (more than 7/8 of the original size), reallocate
       fElements = (Double_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Double_t));
       fNmem = fNrows;
    }
@@ -270,12 +268,11 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
    }
 
    const Int_t old_nrows = fNrows;
-   Double_t *old_vector = fElements;        // Save the old vector elements
+   Double_t *old_vector = fElements;        // Save the old vector elem
    fRowLwb = a.fRowLwb;
    Assert((fNrows = a.fNrows) > 0);
 
-   //Assert((fElements = new Double_t[fNrows]) != 0);
-   Assert((fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t))) != 0);
+   Assert((fElements = new Double_t[fNrows]) != 0);
    fNmem = fNrows;
 
    Double_t *tp = fElements;                     // Target vector ptr
@@ -289,7 +286,7 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
    }
    Assert(mp == a.fElements + a.fNrows);
 
-   ::operator delete(old_vector);
+   delete [] old_vector;
    return *this;
 }
 
@@ -728,7 +725,7 @@ TVectorD &ElementDiv(TVectorD &target, const TVectorD &source)
 }
 
 //______________________________________________________________________________
-void TVectorD::Print(Option_t *) const
+void TVectorD::Print(Option_t *)
 {
    // Print the vector as a list of elements.
 
@@ -753,21 +750,19 @@ void TVectorD::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVectorD.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TVectorD::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         fNmem = fNrows;
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fRowLwb;
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
    } else {
-      TVectorD::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TVectorD::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fRowLwb;
+      R__b.WriteArray(fElements, fNrows);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -885,7 +880,7 @@ void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2)
 
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#ifdef R__HPUX
 
 //______________________________________________________________________________
 //  These functions should be inline

@@ -1,12 +1,3 @@
 makecint -mk Makefile -dl $CINTSYSDIR/include/sys/ipc.dll -h ipcif.h
 make -f Makefile
-
-if test -r $CINTSYSDIR/include/sys/ipc.dll 
-then
-  echo
-else
-  makecint -mk Makefile -dl $CINTSYSDIR/include/sys/ipc.dll -h ipcif.h.old
-  make -f Makefile
-fi
-
 rm G__* Makefile

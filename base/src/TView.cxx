@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.8 2001/02/28 11:04:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.5 2000/08/21 06:09:31 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -107,7 +107,7 @@ TView::TView(Int_t system)
 
 
 //____________________________________________________________________________
-TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
+TView::TView(Float_t *rmin, Float_t *rmax, Int_t system)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*View constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                            ================
@@ -151,7 +151,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
 
 
 //____________________________________________________________________________
-TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
+TView::TView(Double_t *rmin, Double_t *rmax, Int_t system)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*View constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                            ================
@@ -331,7 +331,7 @@ void TView::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t
 
 
 //______________________________________________________________________________
-void TView::DefineViewDirection(const Double_t *s, const Double_t *c,
+void TView::DefineViewDirection(Double_t *s, Double_t *c,
                                 Double_t cosphi, Double_t sinphi,
                                 Double_t costhe, Double_t sinthe,
                                 Double_t cospsi, Double_t sinpsi,
@@ -596,7 +596,7 @@ void TView::FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1
 //*-*    Input: IOPT    - options: 1 - from BACK to FRONT 'BF'            *
 //*-*                              2 - from FRONT to BACK 'FB'            *
 //*-*           KPHI    - number of phi sectors                           *
-//*-*           APHI(*) - PHI separators (modified internally)            *
+//*-*           APHI(*) - PHI separatrices                                *
 //*-*                                                                     *
 //*-*    Output: IPHI1  - initial sector                                  *
 //*-*            IPHI2  - final sector                                    *
@@ -664,7 +664,7 @@ void TView::FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath
 //*-*                                  2 - from FRONT to BACK 'FB'        *
 //*-*           PHI         - PHI sector                                  *
 //*-*           KTH         - number of THETA sectors                     *
-//*-*           ATH(*)      - THETA separators (modified internally)      *
+//*-*           ATH(*)      - THETA separatrices                          *
 //*-*                                                                     *
 //*-*    Output: ITH1  - initial sector                                   *
 //*-*            ITH2  - final sector                                     *
@@ -839,7 +839,7 @@ void TView::GetRange(Double_t *min, Double_t *max)
 }
 
 //______________________________________________________________________________
-void TView::NDCtoWC(const Float_t* pn, Float_t* pw)
+void TView::NDCtoWC(Float_t* pn, Float_t* pw)
 {
 //*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
 //*-*          ===================================================        *
@@ -855,7 +855,7 @@ void TView::NDCtoWC(const Float_t* pn, Float_t* pw)
 }
 
 //______________________________________________________________________________
-void TView::NDCtoWC(const Double_t* pn, Double_t* pw)
+void TView::NDCtoWC(Double_t* pn, Double_t* pw)
 {
 //*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
 //*-*          ===================================================        *
@@ -871,7 +871,7 @@ void TView::NDCtoWC(const Double_t* pn, Double_t* pw)
 }
 
 //______________________________________________________________________________
-void TView::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
+void TView::NormalWCtoNDC(Float_t *pw, Float_t *pn)
 {
 //*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
 //*-*  ============================================================
@@ -901,7 +901,7 @@ void TView::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
 }
 
 //______________________________________________________________________________
-void TView::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
+void TView::NormalWCtoNDC(Double_t *pw, Double_t *pn)
 {
 //*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
 //*-*  ============================================================
@@ -1020,7 +1020,7 @@ void TView::PadRange(Double_t rback)
 
 
 //______________________________________________________________________________
-void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2)
+void  TView::SetAxisNDC(Double_t *x1, Double_t *x2, Double_t *y1, Double_t *y2, Double_t *z1, Double_t *z2)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Store axis coordinates in the NDC system*-*-*-*
 //*-*                      ========================================
@@ -1073,7 +1073,7 @@ void TView::SetOutlineToCube()
 }
 
 //______________________________________________________________________________
-void TView::SetRange(const Double_t *min, const Double_t *max)
+void TView::SetRange(Double_t *min, Double_t *max)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Set Range function-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                            ==================
@@ -1189,7 +1189,7 @@ void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
 
 
 //______________________________________________________________________________
-void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
+void TView::WCtoNDC(Float_t *pw, Float_t *pn)
 {
 //*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
 //*-*          ===================================================        *
@@ -1213,7 +1213,7 @@ void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
 
 
 //______________________________________________________________________________
-void TView::WCtoNDC(const Double_t *pw, Double_t *pn)
+void TView::WCtoNDC(Double_t *pw, Double_t *pn)
 {
 //*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
 //*-*          ===================================================        *
@@ -1390,18 +1390,11 @@ void TView::Streamer(TBuffer &R__b)
    // Stream an object of class TView.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TView::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) {};
       //unfortunately we forgot to increment the TView version number
       //when the class was upgraded to double precision in version 2.25.
       //we are forced to use the file version number to recognize old files.
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22500) { //old version in single precision
+      if (gFile && gFile->GetVersion() < 22500) { //old version in single precision
          TObject::Streamer(R__b);
          TAttLine::Streamer(R__b);
          Float_t single, sa[12];
@@ -1448,9 +1441,28 @@ void TView::Streamer(TBuffer &R__b)
          R__b >> fDefaultOutline;
          R__b >> fAutoRange;
       }
-      //====end of old versions
-      
    } else {
-      TView::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TView::IsA());
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      R__b << fLatitude;
+      R__b << fLongitude;
+      R__b << fPsi;
+      R__b.WriteArray(fTN, 12);
+      R__b.WriteArray(fTB, 12);
+      R__b.WriteArray(fRmax, 3);
+      R__b.WriteArray(fRmin, 3);
+      R__b.WriteArray(fTnorm, 12);
+      R__b.WriteArray(fTback, 12);
+      R__b.WriteArray(fX1, 3);
+      R__b.WriteArray(fX2, 3);
+      R__b.WriteArray(fY1, 3);
+      R__b.WriteArray(fY2, 3);
+      R__b.WriteArray(fZ1, 3);
+      R__b.WriteArray(fZ2, 3);
+      R__b << fSystem;
+      R__b << fOutline;
+      R__b << fDefaultOutline;
+      R__b << fAutoRange;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.4 2001/02/17 11:42:23 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 // Interface to low level X11 (Xlib). This class gives access to basic  //
 // X11 graphics via the parent class TGX11. However, all text and font  //
 // handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX  //
-// is redirected to point to this class.                                //
+// shared library containing this class is loaded the global gVirtualX is    //
+// redirected to point to this class.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +45,9 @@ const Float_t kScale = 0.7;
 //                                                                      //
 // TTFInit                                                              //
 //                                                                      //
-// Small utility class that takes care of switching the current         //
-// gVirtualX to the new TGX11TTF class as soon as the shared library    //
-// containing this class is loaded.                                     //
+// Small utility class that takes care of switching the current gVirtualX    //
+// to the new TGX11TTF class as soon as the shared library containing   //
+// this class is loaded.                                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -89,8 +89,8 @@ public:
 
    TTChar();
    ~TTChar();
-   Bool_t  IsEqual(const TObject *obj) const ;
-   ULong_t Hash() const;
+   Bool_t  IsEqual(TObject *obj);
+   ULong_t Hash();
 };
 
 TTChar::TTChar()
@@ -104,7 +104,7 @@ TTChar::~TTChar()
    delete [] fBitmap;
 }
 
-Bool_t TTChar::IsEqual(const TObject *obj) const
+Bool_t TTChar::IsEqual(TObject *obj)
 {
    TTChar *c = (TTChar *) obj;
    if (fCode == c->fCode && fSize == c->fSize && fAngle == c->fAngle &&
@@ -112,7 +112,7 @@ Bool_t TTChar::IsEqual(const TObject *obj) const
    return kFALSE;
 }
 
-ULong_t TTChar::Hash() const
+ULong_t TTChar::Hash()
 {
    return fCode ^ fSize;
 }
@@ -268,7 +268,7 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
       return;
    }
 
-
+   
    if (!text || !*text) return;
 
    // angles are between 0<=angle<360 degrees
@@ -1228,11 +1228,11 @@ void TGX11TTF::DrawImage(TTChar *c, ULong_t fore, ULong_t back, XImage *xim,
          for (y = 0; y < (int) c->fHeight; y++) {
             for (x = 0; x < (int) charlen; x++, bc++) {
                bc->pixel = XGetPixel(xim, bx + c->fXoff + x, by - c->fAscent + y);
-               bc->flags = DoRed | DoGreen | DoBlue;
+               bc->flags = DoRed|DoGreen|DoBlue;
                if (++dotcnt >= maxdots) break;
             }
          }
-         QueryColors(fColormap, bcol, dots);
+         XQueryColors(fDisplay, fColormap, bcol, dots);
          r = g = b = 0;
          bc = bcol;
          dotcnt = 0;
@@ -1265,18 +1265,18 @@ void TGX11TTF::DrawImage(TTChar *c, ULong_t fore, ULong_t back, XImage *xim,
          col[4].flags = DoRed|DoGreen|DoBlue;
          if (back != (ULong_t) -1) {
             col[3].pixel = back;
-            col[3].flags = DoRed | DoGreen | DoBlue;
-            QueryColors(fColormap, &col[3], 2);
+            col[3].flags = DoRed|DoGreen|DoBlue;
+            XQueryColors(fDisplay, fColormap, &col[3], 2);
             col[0] = col[3];
          } else
-            QueryColors(fColormap, &col[4], 1);
+            XQueryColor(fDisplay, fColormap, &col[4]);
 
          // interpolate between fore and backgound colors
          for (x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
             col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
-            if (!AllocColor(fColormap, &col[x])) {
+            if (!XAllocColor(fDisplay, fColormap, &col[x])) {
                Warning("DrawImage", "cannot allocate smoothing color");
                col[x].pixel = col[x+1].pixel;
             }

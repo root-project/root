@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -100,7 +100,7 @@ const char *TDataType::GetTitle() const
 }
 
 //______________________________________________________________________________
-Int_t TDataType::Compare(const TObject *obj) const
+Int_t TDataType::Compare(TObject *obj)
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -110,7 +110,7 @@ Int_t TDataType::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-ULong_t TDataType::Hash() const
+ULong_t TDataType::Hash()
 {
    // Return hash value for TDataType based on its name.
 

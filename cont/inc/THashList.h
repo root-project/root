@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.3 2000/09/08 16:41:25 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    void       Delete(Option_t *option="");
 
    TObject   *FindObject(const char *name) const;
-   TObject   *FindObject(const TObject *obj) const;
+   TObject   *FindObject(TObject *obj) const;
 
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);

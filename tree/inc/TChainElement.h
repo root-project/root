@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.4 2000/12/26 14:23:05 brun Exp $
+// @(#)root/tree:$Name$:$Id$
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -32,26 +32,24 @@ protected:
     Int_t         fNPackets;        //Number of packets
     Int_t         fPacketSize;      //Number of events in one packet for parallel root
     Int_t         fStatus;          //branch status when used as a branch
-    void         *fBaddress;        //!branch address when used as a branch
-    char         *fPackets;         //!Packet descriptor string
+    void         *fBaddress;        //branch address when used as a branch
+    char         *fPackets;         //Packet descriptor string
 
 public:
         TChainElement();
         TChainElement(const char *filename, const char *title);
         virtual ~TChainElement();
         virtual void     CreatePackets();
-        virtual void    *GetBaddress() const {return fBaddress;}
-        virtual Int_t    GetEntries() const {return fEntries;}
-        virtual char    *GetPackets() const {return fPackets;}
-        virtual Int_t    GetPacketSize() const {return fPacketSize;}
-        virtual Int_t    GetStatus() const {return fStatus;}
-        virtual void     ls(Option_t *option="") const;
+        virtual void    *GetBaddress() {return fBaddress;}
+        virtual char    *GetPackets() {return fPackets;}
+        virtual Int_t    GetPacketSize() {return fPacketSize;}
+        virtual Int_t    GetStatus() {return fStatus;}
         virtual void     SetBaddress(void *add) {fBaddress = add;}
         virtual void     SetNumberEntries(Int_t n) {fEntries=n;}
         virtual void     SetPacketSize(Int_t size = 100);
         virtual void     SetStatus(Int_t status) {fStatus = status;}
 
-        ClassDef(TChainElement,1)  //A chain element
+        ClassDef(TChainElement,0)  //A chain element
 };
 
 #endif

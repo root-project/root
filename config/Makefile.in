@@ -1,23 +1,17 @@
-# -*- mode: makefile -*-
-#
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
-@rootbuild@
 USECONFIG      := @useconfig@
-MKLIBOPTIONS   := @mkliboption@
 
-EXTRA_CFLAGS   := -Iinclude @cflags@
-EXTRA_CXXFLAGS := -Iinclude @cflags@
+EXTRA_CFLAGS   := -Iinclude @cflags
+EXTRA_CXXFLAGS := -Iinclude @cflags
 EXTRA_LDFLAGS  := @ldflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
 INCDIR         := @incdir@
 ETCDIR         := @etcdir@
-MANDIR         := @mandir@
 DATADIR        := @datadir@
-PROOFDATADIR   := @proofdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
@@ -25,65 +19,29 @@ CINTINCDIR     := @cintincdir@
 DOCDIR         := @docdir@
 TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
-ACLOCALDIR     := @aclocaldir@
 
-XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
-
-OSTHREADLIBDIR := @threadlibdir@
-OSTHREADLIB    := @threadlib@
 
 TTFLIBDIR      := @ttflibdir@
 TTFFONTDIR     := @ttffontdir@
 TTFINCDIR      := @ttfincdir@
-TTFLIB         := @ttflib@
 
-OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
-CERNLIBDIR     := @cernlibdir@
-CERNLIBS       := @cernlibs@
-
-MYSQLLIBDIR    := @mysqllibdir@
-MYSQLCLILIB    := @mysqllib@
 MYSQLINCDIR    := @mysqlincdir@
+MYSQLLIBDIR    := @mysqllibdir@
 
-PGSQLLIBDIR    := @pgsqllibdir@
-PGSQLCLILIB    := @pgsqllib@
-PGSQLINCDIR    := @pgsqlincdir@
+CERNLIBDIR     := @cernlibdir@
+THREAD         := @thread@
+RFIO           := @rfio@
+SRPDIR         := @srpdir@
+AFSDIR         := @afsdir@
 
-SAPDBLIBDIR    := @sapdblibdir@
-SAPDBCLILIB    := @sapdblib@
-SAPDBINCDIR    := @sapdbincdir@
-
-SHIFTLIBDIR    := @shiftlibdir@
-SHIFTLIB       := @shiftlib@
-
-DCAPLIBDIR     := @dcaplibdir@
-DCAPLIB        := @dcaplib@
-
-FPYTHIALIBDIR  := @pythialibdir@
-FPYTHIALIB     := @pythialib@
-
-FPYTHIA6LIBDIR := @pythia6libdir@
-FPYTHIA6LIB    := @pythia6lib@
-
-FVENUSLIBDIR   := @venuslibdir@
-FVENUSLIB      := @venuslib@
-
-SRPLIBDIR      := @srplibdir@
-SRPLIB         := @srplib@
-SRPINCDIR      := @srpincdir@
-SRPUTILLIBDIR  := @srputillibdir@
-SRPUTILLIB     := @srputillib@
-SRPUTILINCDIR  := @srputilincdir@
-
-AFSLIB         := @afslib@
-AFSLIBDIR      := @afslibdir@
-
-STAR           := @enable_star@
+PYTHIA         := @pythialib@
+PYTHIA6        := @pythia6lib@
+VENUS          := @venuslib@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.1.1.3 2001/01/22 12:59:35 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.h,v 1.1.1.1 2000/05/19 12:46:10 fisyak Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
-//  $Id: TTableSorter.h,v 1.1.1.3 2001/01/22 12:59:35 fisyak Exp $
+//  $Id: TTableSorter.h,v 1.1.1.1 2000/05/19 12:46:10 fisyak Exp $
 //
 //  TTableSorter  - Is an "observer" class to sort the TTable objects
 //                    The class provides an interface to the standard "C/C++"
@@ -41,10 +41,6 @@
 
 
 class table_head_st;
-
-  typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-  typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
-
 class TTableSorter : public TNamed {
  private:
    union {  Char_t   fChar;
@@ -55,6 +51,9 @@ class TTableSorter : public TNamed {
          } fValue;
 
  protected:
+     typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
+     typedef Int_t (*SEARCHMETHOD)(const void *, const void **);
+     typedef Int_t (*CALLQSORT)(const void *, const void *);
 //   enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
 //                           ,kULong, kUShort, kUChar, kChar };
     void    **fSortIndex;    // Array of pointers to columns of the sorted table
@@ -67,13 +66,14 @@ class TTableSorter : public TNamed {
     Int_t    *fIndexArray;   // "parsed" indecis
     Int_t     fColDimensions;// The number of the dimensions for array (=-1 means it is a "simple" array)
     const Char_t *fsimpleArray;    // Pointer to the "simple" array;
-    const TTable *fParentTable;    //!- the back pointer to the sorted table
+//#ifndef __CINT__
+//    const TTable &fParentTable;  // the back pointer to the sorted table
+//#else
+    const TTable *fParentTable;  //!- the back pointer to the sorted table
+//#endif
     SEARCHMETHOD  fSearchMethod;   // Function selected to search values
-    COMPAREMETHOD fCompareMethod;  // Function to sort the original array
-    TTable::EColumnType  fColType; // data type of the selected column
-    Long_t  fParentRowSize;        // To be filled from TTable::GetRowSize() method
-    const char *fFirstParentRow;   //! pointer to the internal array of TTable object;
-    
+    TTable::EColumnType  fColType;        // data type of the selected column
+
     static int CompareFloat_t     (const void **, const void **);
     static int CompareInt_t       (const void **, const void **);
     static int CompareLong_t      (const void **, const void **);
@@ -101,9 +101,8 @@ class TTableSorter : public TNamed {
   //  Int_t BSearch(const Char_t *value) const;
   //  Int_t BSearch(TString &value)     ;
 
-    Bool_t FillIndexArray();
-    Long_t GetRowSize();
-    void   QSort();
+    void   FillIndexArray();
+    void   SortArray();
     void   LearnTable();
 
     static int SearchFloat_t     (const void *, const void **);
@@ -131,15 +130,12 @@ class TTableSorter : public TNamed {
     void  SetSearchMethod();
     void  SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRows);
     void  BuildSorter(TString &colName, Int_t firstRow, Int_t numberRows);
-    const char *At(Int_t i) const;
 
  public:
     TTableSorter();
     TTableSorter(const TTable &table, TString &colName, Int_t firstRow=0,Int_t numbeRows=0);
     TTableSorter(const TTable *table, TString &colName, Int_t firstRow=0,Int_t numbeRows=0);
-
-    TTableSorter(const TTable &table, SEARCHMETHOD search, COMPAREMETHOD compare, Int_t firstRow=0,Int_t numbeRows=0);
-    TTableSorter(const TTable *table, SEARCHMETHOD search, COMPAREMETHOD compare, Int_t firstRow=0,Int_t numbeRows=0);
+//    TTableSorter(const table_head_st *header, TString &colName, Int_t firstRow=0,Int_t numbeRows=0);
 
     TTableSorter(const Float_t  *simpleArray, Int_t arraySize, Int_t firstRow=0,Int_t numberRows=0);
     TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t firstRow=0,Int_t numberRows=0);
@@ -162,44 +158,30 @@ class TTableSorter : public TNamed {
     Int_t BinarySearch(Char_t   value ) const;
 
     virtual const Text_t   *GetColumnName() const { return fColName.Data();}
-                  Int_t     GetIndex(UInt_t sortedIndex) const;
+    virtual       Int_t     GetIndex(UInt_t sortedIndex) const;
     virtual const void     *GetKeyAddress(Int_t indx) { return (fSortIndex && indx >= 0) ?fSortIndex[indx]:(void *)(-1);}
     virtual       Int_t     GetLastFound()  const { return fLastFound; }
     virtual const Text_t   *GetTableName()  const;
     virtual const Text_t   *GetTableTitle() const;
     virtual const Text_t   *GetTableType()  const;
-    virtual       TTable   *GetTable()      const;
+    virtual       TTable *GetTable()      const;
     virtual       Int_t     GetNRows()      const { return fNumberOfRows;}
     virtual       Int_t     GetFirstRow()   const { return fFirstRow;}
 
-    Int_t operator[](Int_t value)    const;
-    Int_t operator[](Long_t value)   const;
-    Int_t operator[](Double_t value) const;
-    Int_t operator[](void *value)    const;
-//    Int_t operator[](const Char_t *value) const;
+    Int_t operator[](Int_t value)    const { return BSearch(value); }
+    Int_t operator[](Long_t value)   const { return BSearch(value); }
+    Int_t operator[](Double_t value) const { return BSearch(value); }
+//    Int_t operator[](const Char_t *value) const { return BSearch(value); }
 //    Int_t operator[](TString &value) const { return BSearch(value); }  // to be implemented
 
-    Int_t operator()(Float_t value);
-    Int_t operator()(Int_t value);
-    Int_t operator()(Long_t value);
-    Int_t operator()(Double_t value);
+    Int_t operator()(Float_t value)  { return BinarySearch(value); }
+    Int_t operator()(Int_t value)    { return BinarySearch(value); }
+    Int_t operator()(Long_t value)   { return BinarySearch(value); }
+    Int_t operator()(Double_t value) { return BinarySearch(value); }
 //    Int_t operator()(const Char_t *value) { return BinarySearch(*value); } // to be implemented
 //    Int_t operator()(TString &value)    { return *this(value.Data());  }   // to be implemented
 
     ClassDef(TTableSorter,0) // Is an "observer" class to sort the TTable objects
 };
 
-inline const char *TTableSorter::At(Int_t i) const {return fFirstParentRow + i*fParentRowSize;}
-inline Long_t TTableSorter::GetRowSize() { return fParentRowSize; }
-
-inline Int_t TTableSorter::operator[](Int_t value)    const { return BSearch(value); }
-inline Int_t TTableSorter::operator[](Long_t value)   const { return BSearch(value); }
-inline Int_t TTableSorter::operator[](Double_t value) const { return BSearch(value); }
-inline Int_t TTableSorter::operator[](void *value)    const { return BSearch(value); }
-
-inline Int_t TTableSorter::operator()(Float_t value)  { return BinarySearch(value); }
-inline Int_t TTableSorter::operator()(Int_t value)    { return BinarySearch(value); }
-inline Int_t TTableSorter::operator()(Long_t value)   { return BinarySearch(value); }
-inline Int_t TTableSorter::operator()(Double_t value) { return BinarySearch(value); }
-	       	       
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.2 2000/12/18 21:05:29 fisyak Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -10,8 +10,6 @@
  *************************************************************************/
 #ifndef ROOT_TVolumeView
 #define ROOT_TVolumeView
-
-#include <assert.h>
 
 #include "TVolume.h"
 
@@ -43,7 +41,6 @@ public:
   TVolumeView(TVolume *thisNode,TVolumePosition *nodePosition);
   virtual ~TVolumeView();
   virtual TVolume *AddNode(TVolume *node);
-  virtual void     Add(TDataSet *dataset);
   virtual void     Add(TVolumeView *node);
   virtual void     Add(TShape *shape, Bool_t IsMaster=kFALSE);
   virtual void     Browse(TBrowser *b);
@@ -52,13 +49,13 @@ public:
   virtual TVolumePosition *GetPosition() const { return (TVolumePosition *)GetObject();}
   virtual TVolume *GetNode() const ;
   virtual Int_t    GetGlobalRange(const TVolumeView *rootNode,Float_t *min, Float_t *max);
-  virtual TList   *GetListOfShapes() const;
+  virtual TList   *GetListOfShapes()      const;
   virtual void     GetLocalRange(Float_t *min, Float_t *max);
-  virtual Text_t  *GetObjectInfo(Int_t px, Int_t py) const;
+  virtual Text_t  *GetObjectInfo(Int_t px, Int_t py);
   virtual TShape  *GetShape()  const;
   virtual Int_t    GetVisibility() const;
-  virtual Bool_t   IsMarked() const;
-  virtual Bool_t   Is3D() const {return kTRUE;}
+  virtual Bool_t   IsMarked();
+  virtual Bool_t   Is3D()  {return kTRUE;}
   virtual TVolumePosition  *Local2Master(const TVolumeView *localNode,const TVolumeView *masterNode=0);
   virtual TVolumePosition  *Local2Master(const Char_t *localName, const Char_t *masterName=0);
   virtual Float_t *Local2Master(const Float_t *local, Float_t *master,
@@ -76,9 +73,8 @@ public:
   ClassDef(TVolumeView,1)
 };
 
-inline void    TVolumeView::Add(TDataSet *dataset){ assert(0);}
 inline void    TVolumeView::Add(TVolumeView *node){ TDataSet::Add(node);}
-inline Bool_t  TVolumeView::IsMarked() const { return TestBit(kMark); }
+inline Bool_t  TVolumeView::IsMarked(){ return TestBit(kMark); }
 inline TList  *TVolumeView::GetListOfShapes() const {return fListOfShapes;}
 inline TShape *TVolumeView::GetShape()  const
        {return fListOfShapes ? (TShape *)fListOfShapes->First():0;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.4 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -40,14 +40,14 @@ public:
 
     virtual void    Export(TClonesArray *list, Int_t n);
     virtual void    FillBasket(TBuffer &b);
-    virtual Int_t   GetMaximum() const {return fMaximum;}
-    virtual Int_t   GetMinimum() const {return fMinimum;}
+    virtual Int_t   GetMaximum() {return fMaximum;}
+    virtual Int_t   GetMinimum() {return fMinimum;}
     const char     *GetTypeName() const;
-    Double_t        GetValue(Int_t i=0) const;
-    virtual void   *GetValuePointer() const {return fValue;}
-    char           *GetValueString()  const {return fValue;}
+    Double_t        GetValue(Int_t i=0);
+    virtual void   *GetValuePointer() {return fValue;}
+    char           *GetValueString()  {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
-    virtual void    PrintValue(Int_t i=0) const;
+    virtual void    Print(Option_t *option="");
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
     virtual void    SetAddress(void *add=0);
@@ -55,6 +55,6 @@ public:
     ClassDef(TLeafC,1)  //A TLeaf for a variable length string.
 };
 
-inline Double_t TLeafC::GetValue(Int_t i) const { return fValue[i]; }
+inline Double_t TLeafC::GetValue(Int_t i) { return fValue[i]; }
 
 #endif

@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.1 2000/09/14 06:30:18 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+// $Id: TXTRU.h,v 1.1 2000/09/14 06:30:18 brun Exp $
 //
 // TXTRU
 //
@@ -26,7 +26,7 @@ class TXTRU : public TShape {
  public:
    TXTRU();
    TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
-         Int_t nyx, Int_t nz);
+         const Int_t nyx, const Int_t nz);
    TXTRU(const TXTRU &xtru);
    virtual ~TXTRU();
    TXTRU& operator=(const TXTRU& rhs);
@@ -44,15 +44,15 @@ class TXTRU : public TShape {
    virtual Float_t  GetSectionY0(Int_t secNum) const;
    virtual Float_t  GetSectionScale(Int_t secNum) const;
    virtual Float_t  GetSectionZ(Int_t secNum) const;
-   virtual Float_t *GetXvtx() const {return fXvtx; }
-   virtual Float_t *GetYvtx() const {return fYvtx; }
-   virtual Float_t *GetZ() const {return fZ; }
-   virtual Float_t *GetScale() const {return fScale; }
-   virtual Float_t *GetX0() const {return fX0; }
-   virtual Float_t *GetY0() const {return fY0; }
+   virtual Float_t *GetXvtx() {return fXvtx; }
+   virtual Float_t *GetYvtx() {return fYvtx; }
+   virtual Float_t *GetZ() {return fZ; }
+   virtual Float_t *GetScale() {return fScale; }
+   virtual Float_t *GetX0() {return fX0; }
+   virtual Float_t *GetY0() {return fY0; }
    virtual void     Paint(Option_t *option);
    virtual void     PaintGLPoints(Float_t *buff);
-   virtual void     Print(Option_t *option="") const;
+   virtual void     Print(Option_t *option="");
    virtual void     SetPoints(Float_t *buff);
    virtual void     Sizeof3D() const;
            void     SplitConcavePolygon(Bool_t split = kTRUE);

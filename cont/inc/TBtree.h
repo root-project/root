@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.5 2001/03/30 15:46:09 brun Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -75,12 +75,11 @@ protected:
 public:
 
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
-   virtual     ~TBtree();
+   ~TBtree();
    void        Clear(Option_t *option="");
    void        Delete(Option_t *option="");
    TObject    *FindObject(const char *name) const;
-   TObject    *FindObject(const TObject *obj) const;
-   TObject   **GetObjectRef(TObject *) const { return 0; }
+   TObject    *FindObject(TObject *obj) const;
    TIterator  *MakeIterator(Bool_t dir = kIterForward) const;
 
    void        Add(TObject *obj);
@@ -171,7 +170,7 @@ friend class  TBtInnerNode;
 private:
    Int_t      fNofKeysInTree;   // number of keys in TBtree
    TObject   *fKey;             // key
-   TBtNode   *fTree;            //! sub-tree
+   TBtNode   *fTree;            // sub-tree
 
 public:
    TBtItem();

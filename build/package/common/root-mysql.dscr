@@ -1,7 +1,0 @@
-short: Thin MySQL Client for ROOT 
-long:
-This package provide a thin client (interface) to MySQL
-servers. Using this client, one can obtain information from a MySQL
-database into the ROOT environment. The BRAHMS and STAR
-collaborations at Brookhaven National Laboratory use the to interface
-data  summaries. 

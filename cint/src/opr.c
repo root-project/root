@@ -162,12 +162,6 @@ double val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
-    defined->obj.i = (int)val?1:0;
-    break;
-#endif
   default:
     G__genericerror("Invalid operation and assignment, G__doubleassignbyref");
     break;
@@ -220,12 +214,6 @@ long val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
-    defined->obj.i = (int)val?1:0;
-    break;
-#endif
   case 'd': /* double */
     *(double*)defined->ref = (double)val;
     defined->obj.d = (double)val;
@@ -304,10 +292,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
 	    if(isprint(operator)) 
-	      G__fprinterr(G__serr,"%3x: OP1  '%c' %d\n"
+	      fprintf(G__serr,"%3x: OP1  '%c' %d\n"
 		      ,G__asm_cp,operator,operator);
 	    else
-	      G__fprinterr(G__serr,"%3x: OP1  %d\n"
+	      fprintf(G__serr,"%3x: OP1  %d\n"
 		      ,G__asm_cp,operator);
 	  }
 #endif
@@ -325,10 +313,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
 	  if(isprint(operator)) 
-	    G__fprinterr(G__serr,"%3x: OP2  '%c' %d\n"
+	    fprintf(G__serr,"%3x: OP2  '%c' %d\n"
 		    ,G__asm_cp,operator,operator);
 	  else
-	    G__fprinterr(G__serr,"%3x: OP2  %d\n"
+	    fprintf(G__serr,"%3x: OP2  %d\n"
 		    ,G__asm_cp,operator);
 	}
 #endif
@@ -457,7 +445,7 @@ G__value *defined;
     case '@': /* power */
 #ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
+	fprintf(G__serr,"Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
 #endif
@@ -573,9 +561,9 @@ G__value *defined;
 #endif
     default:
 #ifndef G__OLDIMPLEMENTATION999
-	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
 #else
-	G__fprinterr(G__serr,"Error: %c ",operator);
+	fprintf(G__serr,"Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for real number");
 	break;
@@ -663,9 +651,9 @@ G__value *defined;
 #endif
 	default:
 #ifndef G__OLDIMPLEMENTATION999
-	  G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	  fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
 #else
-	  G__fprinterr(G__serr,"Error: %c ",operator);
+	  fprintf(G__serr,"Error: %c ",operator);
 #endif
 	  G__genericerror("Illegal operator for pointer 1");
 	  break;
@@ -741,9 +729,9 @@ G__value *defined;
 #endif
 	default:
 #ifndef G__OLDIMPLEMENTATION999
-	  G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	  fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
 #else
-	  G__fprinterr(G__serr,"Error: %c ",operator);
+	  fprintf(G__serr,"Error: %c ",operator);
 #endif
 	  G__genericerror("Illegal operator for pointer 2");
 	  break;
@@ -856,9 +844,9 @@ G__value *defined;
 #endif
       default:
 #ifndef G__OLDIMPLEMENTATION999
-	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
 #else
-	G__fprinterr(G__serr,"Error: %c ",operator);
+	fprintf(G__serr,"Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for pointer 3");
 	break;
@@ -886,250 +874,6 @@ G__value *defined;
       unsignedresult = -1;
       break;
     }
-#endif
-#ifndef G__OLDIMPLEMENTATION1491
-    if(unsignedresult) {
-      unsigned long udefined=(unsigned long)G__int(*defined);
-      unsigned long uexpression=(unsigned long)G__int(expressionin);
-      switch(operator) {
-      case '\0':
-	defined->ref=expressionin.ref;
-	G__letint(defined,'h',udefined+uexpression);
-	break;
-      case '+': /* add */
-	G__letint(defined,'h',udefined+uexpression);
-	defined->ref=0;
-	break;
-      case '-': /* subtract */
-	G__letint(defined,'h',udefined-uexpression);
-	defined->ref=0;
-	break;
-      case '*': /* multiply */
-	if(defined->type==G__null.type) udefined=1;
-	G__letint(defined,'h',udefined*uexpression);
-	defined->ref=0;
-	break;
-      case '/': /* divide */
-	if(defined->type==G__null.type) udefined=1;
-	if(uexpression==0) {
-	  if(G__no_exec_compile) G__letdouble(defined,'i',0);
-	  else G__genericerror("Error: operator '/' divided by zero");
-	  return;
-	}
-	G__letint(defined,'h',udefined/uexpression);
-	defined->ref=0;
-	break;
-      case '%': /* modulus */
-	if(uexpression==0) {
-	  if(G__no_exec_compile) G__letdouble(defined,'i',0);
-	  else G__genericerror("Error: operator '%%' divided by zero");
-	  return;
-	}
-	G__letint(defined,'h',udefined%uexpression);
-	defined->ref=0;
-	break;
-      case '&': /* binary and */
-	if(defined->type==G__null.type) {
-	  G__letint(defined,'h',uexpression);
-	}
-	else {
-	  G__letint(defined,'h',udefined&uexpression);
-	}
-	defined->ref=0;
-	break;
-      case '|': /* binary or */
-	G__letint(defined,'h',udefined|uexpression);
-	defined->ref=0;
-	break;
-      case '^': /* binary exclusive or */
-	G__letint(defined,'h',udefined^uexpression);
-	defined->ref=0;
-	break;
-      case '~': /* binary inverse */
-	G__letint(defined,'h',~uexpression);
-	defined->ref=0;
-	break;
-      case 'A': /* logical and */
-	G__letint(defined,'h',udefined&&uexpression);
-	defined->ref=0;
-	break;
-      case 'O': /* logical or */
-	G__letint(defined,'h',udefined||uexpression);
-	defined->ref=0;
-	break;
-      case '>':
-	if(defined->type==G__null.type) 
-	  G__letint(defined,'h',uexpression);
-	else
-	  G__letint(defined,'h',udefined>uexpression);
-	defined->ref=0;
-	break;
-      case '<':
-	if(defined->type==G__null.type) 
-	  G__letint(defined,'h',uexpression);
-	else
-	  G__letint(defined,'h',udefined<uexpression);
-	defined->ref=0;
-	break;
-      case 'R': /* right shift */
-#ifndef G__OLDIMPLEMENTATION977
-	switch(defined->type) {
-	case 'b':
-	case 'r':
-	case 'h':
-	case 'k':
-	  {
-	    unsigned long uudefined=udefined;
-	    G__letint(defined,'k',uudefined>>uexpression);
-	  }
-	  break;
-	default: 
-	  G__letint(defined,'h',udefined>>uexpression);
-	  break;
-	}
-#else
-	G__letint(defined,'h',udefined>>uexpression);
-#endif
-	defined->ref=0;
-	break;
-      case 'L': /* left shift */
-	G__letint(defined,'h',udefined<<uexpression);
-	defined->ref=0;
-	break;
-      case '@': /* power */
-#ifndef G__OLDIMPLEMENTATION1123
-	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
-	  G__printlinenum();
-	}
-#endif
-#ifndef G__OLDIMPLEMENTATION966
-	fdefined=1.0;
-	for(ig2=1;ig2<=uexpression;ig2++) fdefined *= udefined;
-	if(fdefined>(double)LONG_MAX||fdefined<(double)LONG_MIN) {
-	  G__genericerror("Error: integer overflow. Use 'double' for power operator");
-	}
-	lresult = (long)fdefined;
-#else
-	lresult=1;
-	for(ig2=1;ig2<=uexpression;ig2++) lresult *= udefined;
-#endif
-	G__letint(defined,'h',lresult);
-	defined->ref=0;
-	break;
-      case '!': 
-	G__letint(defined,'h',!uexpression);
-	defined->ref=0;
-	break;
-      case 'E': /* == */
-	G__letint(defined,'h',udefined==uexpression);
-	defined->ref=0;
-	break;
-      case 'N': /* != */
-	G__letint(defined,'h',udefined!=uexpression);
-	defined->ref=0;
-	break;
-      case 'G': /* >= */
-	G__letint(defined,'h',udefined>=uexpression);
-	defined->ref=0;
-	break;
-      case 'l': /* <= */
-	G__letint(defined,'h',udefined<=uexpression);
-	defined->ref=0;
-	break;
-#ifndef G__OLDIMPLEMENTATION470
-      case G__OPR_ADDASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined+uexpression);
-	break;
-      case G__OPR_SUBASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined-uexpression);
-	break;
-      case G__OPR_MODASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined%uexpression);
-	break;
-      case G__OPR_MULASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined*uexpression);
-	break;
-      case G__OPR_DIVASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined/uexpression);
-	break;
-      case G__OPR_RSFTASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined>>uexpression);
-	break;
-      case G__OPR_LSFTASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined<<uexpression);
-	break;
-      case G__OPR_BANDASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined&uexpression);
-	break;
-      case G__OPR_BORASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined|uexpression);
-	break;
-      case G__OPR_EXORASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined^uexpression);
-	break;
-      case G__OPR_ANDASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined&&uexpression);
-	break;
-      case G__OPR_ORASSIGN:
-	if(!G__no_exec_compile&&defined->ref) 
-	  G__intassignbyref(defined,udefined||uexpression);
-	break;
-#endif
-#ifndef G__OLDIMPLEMENTATION471
-      case G__OPR_POSTFIXINC:
-	if(!G__no_exec_compile&&expressionin.ref) {
-	  *defined = expressionin;
-	  G__intassignbyref(&expressionin,uexpression+1);
-#ifndef G__OLDIMPLEMENTATION1342
-	  defined->ref = 0;
-#endif
-	}
-	break;
-      case G__OPR_POSTFIXDEC:
-	if(!G__no_exec_compile&&expressionin.ref) {
-	  *defined = expressionin;
-	  G__intassignbyref(&expressionin,uexpression-1);
-#ifndef G__OLDIMPLEMENTATION1342
-	  defined->ref = 0;
-#endif
-	}
-	break;
-      case G__OPR_PREFIXINC:
-      if(!G__no_exec_compile&&expressionin.ref) {
-	G__intassignbyref(&expressionin,uexpression+1);
-	*defined = expressionin;
-      }
-      break;
-      case G__OPR_PREFIXDEC:
-	if(!G__no_exec_compile&&expressionin.ref) {
-	  G__intassignbyref(&expressionin,uexpression-1);
-	  *defined = expressionin;
-	}
-	break;
-#endif
-      default:
-#ifndef G__OLDIMPLEMENTATION999
-	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
-	G__genericerror("Illegal operator for integer");
-	break;
-      }
-    }
-    else {
 #endif
     ldefined=G__int(*defined);
     lexpression=G__int(expressionin);
@@ -1241,7 +985,7 @@ G__value *defined;
     case '@': /* power */
 #ifndef G__OLDIMPLEMENTATION1123
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
+	fprintf(G__serr,"Warning: Power operator, Cint special extension");
 	G__printlinenum();
       }
 #endif
@@ -1363,19 +1107,15 @@ G__value *defined;
 #endif
     default:
 #ifndef G__OLDIMPLEMENTATION999
-	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	fprintf(G__serr,"Error: %s ",G__getoperatorstring(operator));
 #else
-	G__fprinterr(G__serr,"Error: %c ",operator);
+	fprintf(G__serr,"Error: %c ",operator);
 #endif
 	G__genericerror("Illegal operator for integer");
 	break;
     }
-#ifndef G__OLDIMPLEMENTATION1491
-    }
-#else
 #ifndef G__OLDIMPLEMENTATION918
     defined->type += unsignedresult;
-#endif
 #endif
   }
 #ifndef G__OLDIMPLEMENTATION726
@@ -1510,7 +1250,7 @@ int *ptagnum;
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) 
-      G__fprinterr(G__serr,"%3x: ADDSTROS %d\n" ,G__asm_cp,offset_sum);
+      fprintf(G__serr ,"%3x: ADDSTROS %d\n" ,G__asm_cp,offset_sum);
 #endif
     G__asm_inst[G__asm_cp]=G__ADDSTROS;
     G__asm_inst[G__asm_cp+1]=offset_sum;
@@ -1669,7 +1409,7 @@ int *piout,*pspaceflag,*pmparen;
         int itmp=0,ctmp;
 	ctmp = G__getstream(statement,&itmp,temp,"+-*%/&|<>=^!");
         if(ctmp && 0!=strncmp(statement,"case",4)) {
-          G__fprinterr(G__serr,"Error: illegal label name %s",statement) ;
+          fprintf(G__serr,"Error: illegal label name %s",statement) ;
           G__genericerror((char*)NULL);
         }
 #endif
@@ -1727,13 +1467,13 @@ char *buf;
 G__value *preg;
 {
   int nest=0;
-  int c=0;
+  int c;
   int i1=1,i2=0;
   G__value reg;
   char prodpower=0;
   
   *preg=G__null;
-  for(;;) {
+  while(1) {
     c=expression[i1];
     switch(c) {
     case '-':
@@ -1818,8 +1558,8 @@ G__value *pios;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+      fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+      fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
     }
 #endif
   }
@@ -1852,16 +1592,6 @@ G__value *pios;
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1585
-  if(0==ig2) {
-    sprintf(buf,"operator char*()" /* ,pios->obj.i */ );
-    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
-  }
-  if(0==ig2) {
-    sprintf(buf,"operator const char*()" /* ,pios->obj.i */ );
-    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
-  }
-#endif
 
   /* restore environment */
   G__store_struct_offset = store_struct_offset;
@@ -1874,8 +1604,8 @@ G__value *pios;
 #endif
      ) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: OP1 '!'\n",G__asm_cp+1);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: OP1 '!'\n",G__asm_cp+1);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0); 
@@ -2052,8 +1782,8 @@ G__value *defined;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -2075,7 +1805,7 @@ G__value *defined;
 	G__inc_cp_asm(2,1);
 	postfixflag=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx from %lx\n"
+	if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
 			       ,G__asm_cp ,1 ,G__asm_dt);
 #endif
       }
@@ -2092,11 +1822,7 @@ G__value *defined;
     G__store_struct_offset = expressionin.obj.i;
     G__tagnum = expressionin.tagnum;
     
-#ifndef G__OLDIMPLEMENTATION1427
-    buffer = G__getfunction(expr,&ig2,G__TRYUNARYOPR);
-#else
     buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
-#endif
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -2111,12 +1837,12 @@ G__value *defined;
 	  G__inc_cp_asm(-2,-1);
 	  postfixflag=0;
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"LD cancelled\n");
+	  if(G__asm_dbg) fprintf(G__serr,"LD cancelled\n");
 #endif
 	}
 	G__inc_cp_asm(-2,0); 
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
+	if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
 #endif
       }
 #endif /* G__ASM */
@@ -2145,7 +1871,7 @@ G__value *defined;
 	  G__asm_stack[G__asm_dt]=G__one;
 	  G__inc_cp_asm(2,1);
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx from %lx\n"
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
 				 ,G__asm_cp ,1 ,G__asm_dt);
 #endif
 	}
@@ -2174,7 +1900,7 @@ G__value *defined;
 #ifdef G__ASM
     else if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0); 
@@ -2195,7 +1921,7 @@ G__value *defined;
     if(G__asm_noverflow) {
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SWAP\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__SWAP;
       G__inc_cp_asm(1,0);
@@ -2205,8 +1931,8 @@ G__value *defined;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -2261,11 +1987,7 @@ G__value *defined;
       G__store_struct_offset = defined->obj.i;
       G__tagnum = defined->tagnum; 
       
-#ifndef G__OLDIMPLEMENTATION1427
-      buffer = G__getfunction(expr,&ig2,G__TRYBINARYOPR);
-#else
       buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
-#endif
       
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
@@ -2283,7 +2005,7 @@ G__value *defined;
 	G__inc_cp_asm(-2,0); 
 #endif
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
+	if(G__asm_dbg) fprintf(G__serr,"PUSHSTROS,SETSTROS cancelled\n");
 #endif
       }
 #endif /* of G__ASM */
@@ -2350,7 +2072,7 @@ G__value *defined;
 	if('u'==defined->type) {
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SWAP\n",G__asm_cp);
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__SWAP;
 	    G__inc_cp_asm(1,0);
@@ -2358,7 +2080,7 @@ G__value *defined;
 	  lval = G__iosrdstate(defined);
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SWAP\n",G__asm_cp);
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__SWAP;
 	    G__inc_cp_asm(1,0);
@@ -2382,10 +2104,10 @@ G__value *defined;
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
 	    if(isprint(operator)) 
-	      G__fprinterr(G__serr,"%3x: OP2  '%c' %d\n"
+	      fprintf(G__serr,"%3x: OP2  '%c' %d\n"
 		      ,G__asm_cp,operator,operator);
 	    else
-	      G__fprinterr(G__serr,"%3x: OP2  %d\n"
+	      fprintf(G__serr,"%3x: OP2  %d\n"
 		      ,G__asm_cp,operator);
 	  }
 #endif
@@ -2401,14 +2123,14 @@ G__value *defined;
       if(0==ig2) {
 #ifndef G__OLDIMPLEMENTATION1252
 	if(-1!=defined->tagnum) {
-	  G__fprinterr(G__serr,"Error: %s not defined for %s"
+	  fprintf(G__serr,"Error: %s not defined for %s"
 		  ,opr,G__fulltagname(defined->tagnum,1));
 	}
 	else {
-	  G__fprinterr(G__serr,"Error: %s not defined",expr);
+	  fprintf(G__serr,"Error: %s not defined",expr);
 	}
 #else
-	G__fprinterr(G__serr,"Error: %s not defined for %s"
+	fprintf(G__serr,"Error: %s not defined for %s"
 		,opr,G__fulltagname(defined->tagnum,1));
 #endif
 	G__genericerror((char*)NULL);
@@ -2418,7 +2140,7 @@ G__value *defined;
 #ifdef G__ASM
     else if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0); 
@@ -2454,7 +2176,7 @@ int flag;
   int store_memberfunc_struct_offset;
 
 #ifndef G__OLDIMPLEMENTATION745
-  if(strncmp(funcname,"operator",8)==0 || strcmp(funcname,"G__ateval")==0) 
+  if(strncmp(funcname,"operatr",8)==0 || strcmp(funcname,"G__ateval")==0) 
     return(0);
 #endif
 
@@ -2482,8 +2204,8 @@ int flag;
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
-      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
+      fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+      fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
     }
 #endif
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
@@ -2508,7 +2230,7 @@ int flag;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__POPSTROS;
 	G__inc_cp_asm(1,0);
@@ -2528,7 +2250,7 @@ int flag;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0);
@@ -2577,7 +2299,7 @@ int paran,ig25;
     if(paran>1 && paran>ig25) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(G__serr,"%x: REORDER inserted before ST_VAR/MSTR/LD_VAR/MSTR\n"
+	fprintf(G__serr,"%x: REORDER inserted before ST_VAR/MSTR/LD_VAR/MSTR\n"
 		,G__asm_cp-5);
 #endif
       for(i=1;i<=5;i++) G__asm_inst[G__asm_cp-i+3]=G__asm_inst[G__asm_cp-i];
@@ -2599,7 +2321,7 @@ int paran,ig25;
     G__asm_inst[G__asm_cp-3]=ig25;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr(G__serr,"ST_VAR/MSTR replaced to LD_VAR/MSTR, paran=%d -> %d\n"
+      fprintf(G__serr,"ST_VAR/MSTR replaced to LD_VAR/MSTR, paran=%d -> %d\n"
 	      ,paran,ig25);
 #endif
   }
@@ -2611,7 +2333,7 @@ int paran,ig25;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
     G__inc_cp_asm(1,0);
@@ -2636,7 +2358,7 @@ int paran,ig25;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__SETSTROS;
 	G__inc_cp_asm(1,0);
@@ -2692,7 +2414,7 @@ int paran,ig25;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: OP2 +\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: OP2 +\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__OP2;
 	G__asm_inst[G__asm_cp+1] = '+';
@@ -2714,7 +2436,7 @@ int paran,ig25;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0);
@@ -2755,7 +2477,7 @@ G__value *val;
     case G__OPR_PREFIXDEC:  return(G__OPR_PREFIXDEC_D);
     }
   }
-#ifdef G__NEVER /* following change rather slowed down */
+#if 0 /* following change rather slowed down */
   else if('l'==val->type) {
     switch(opr) {
     case G__OPR_POSTFIXINC: return(G__OPR_POSTFIXINC_L);
@@ -2840,49 +2562,23 @@ G__value *rval;
     lispointer = isupper(lval->type);
     rispointer = isupper(rval->type);
     if(0==lispointer && 0==rispointer) {
-#ifndef G__OLDIMPLEMENTATION1491
-      if('k'==lval->type || 'h'==lval->type ||
-	 'k'==rval->type || 'h'==rval->type) {
-	switch(opr) {
-	case G__OPR_ADD: return(G__OPR_ADD_UU);
-	case G__OPR_SUB: return(G__OPR_SUB_UU);
-	case G__OPR_MUL: return(G__OPR_MUL_UU);
-	case G__OPR_DIV: return(G__OPR_DIV_UU);
-	default:
-	  switch(lval->type) {
-	  case 'i':
-	    switch(opr) {
-	    case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_UU);
-	    case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_UU);
-	    case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_UU);
-	    case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_UU);
-	    }
+      switch(opr) {
+      case G__OPR_ADD: return(G__OPR_ADD_II);
+      case G__OPR_SUB: return(G__OPR_SUB_II);
+      case G__OPR_MUL: return(G__OPR_MUL_II);
+      case G__OPR_DIV: return(G__OPR_DIV_II);
+      default:
+	switch(lval->type) {
+	case 'i':
+	  switch(opr) {
+	  case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_II);
+	  case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_II);
+	  case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_II);
+	  case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_II);
 	  }
-	  break;
 	}
+	break;
       }
-      else {
-#endif
-	switch(opr) {
-	case G__OPR_ADD: return(G__OPR_ADD_II);
-	case G__OPR_SUB: return(G__OPR_SUB_II);
-	case G__OPR_MUL: return(G__OPR_MUL_II);
-	case G__OPR_DIV: return(G__OPR_DIV_II);
-	default:
-	  switch(lval->type) {
-	  case 'i':
-	    switch(opr) {
-	    case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_II);
-	    case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_II);
-	    case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_II);
-	    case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_II);
-	    }
-	  }
-	  break;
-	}
-#ifndef G__OLDIMPLEMENTATION1491
-      }
-#endif
     }
   }
   else if(lisdouble && risdouble) {

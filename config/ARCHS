@@ -1,46 +1,38 @@
 Architectures supported:
 
-aix                  for AIX 4.x xlC
-aix5                 for AIX 5.x xlC
-aixegcs              for AIX 4.x egcs 1.1.x
-alphacxx6            for DEC Unix cxx6
-alphaegcs            for DEC Unix egcs 1.1.x
-alphakcc             for DEC Unix KCC
+linux                for Linux gcc 2.7.x.x and glibc
+linuxegcs            for Linux egcs 1.1.x and glibc
+linuxrh42            for Linux gcc 2.7.x.x and libc5
+linuxdeb             for Linux (Debian) egcs and glibc
+linuxdeb2            for Linux (Debian v2.0) egcs and glibc
+linuxkcc             for Linux KCC and glibc
+linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
+linuxpgcc            for Linux pgcc and glibc
+linuxppcegcs         for PPC Linux egcs and glibc
+linuxdeb2ppc         for PPC Linux based on Debian v2.0
+linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
+linuxia64sgi         for Itanium Linux sgiCC and glibc
+linuxalphaegcs       for Alpha Linux egcs and glibc
+mklinux              for MkLinux gcc and glibc
 freebsd              for FreeBSD
 freebsd4             for FreeBSD 4.x
 hpux                 for HP-UX 10.20 CC
 hpuxacc              for HP-UX 10.20 aCC
 hpuxegcs             for HP-UX 10.20 egcs 1.1.x
-hpuxia64acc          for HP-UX 11i v1.5 (IA-64) aCC
-hurddeb              for Debian GNU/Hurd with gcc and glibc
-linux                for Linux egcs 1.1.x, gcc 2.9x, gcc 3.x and glibc
-linuxalphaegcs       for Alpha Linux egcs and glibc
-linuxarm             for ARM Linux egcs and glibc
-linuxdeb             for Debian GNU/Linux v2.1+ gcc and glibc
-linuxdeb2            for Debian GNU/Linux v2.0 egcs and glibc
-linuxdeb2ppc         for PPC Linux based on Debian v2.0
-linuxia64ecc         for Itanium Linux Intel ecc and glibc
-linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
-linuxia64sgi         for Itanium Linux sgiCC and glibc
-linuxicc             for Linux Intel's icc and glibc
-linuxkcc             for Linux KAI's KCC and glibc
-linuxpgcc            for Linux pgcc and glibc
-linuxppcegcs         for PPC Linux egcs and glibc
-linuxrh42            for Linux gcc 2.7.x.x and libc5
-linuxrh51            for Linux gcc 2.7.x.x and glibc
-linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
-lynxos               for LynxOS with gcc
-macosx               for MacOS X with cc
-mklinux              for MkLinux gcc and glibc
-sgicc                for SGI IRIX 6.x CC
-sgiegcs              for SGI IRIX 6.x egcs 1.1.x
-sgikcc               for SGI IRIX 6.x KCC
-sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
+alphacxx6            for DEC Unix cxx6
+alphaegcs            for DEC Unix egcs 1.1.x
+alphakcc             for DEC Unix KCC
 solaris              for Solaris CC
 solarisCC5           for Solaris CC 5.0
 solarisegcs          for Solaris egcs 1.1.x
 solarisgcc           for Solaris gcc 2.8.1
 solariskcc           for Solaris KCC
+sgicc                for SGI IRIX 6.x CC
+sgikcc               for SGI IRIX 6.x KCC
+sgiegcs              for SGI IRIX 6.x egcs 1.1.x
+sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
+aix                  for AIX 4.x xlC
+aixegcs              for AIX 4.x egcs 1.1.x
+lynxos               for lynxos with gcc
 win32                for Win32 with VC++
 win32egcs            for Win32 with egcs (Cygwin)
-win32gdk             for Win32 with VC++ and gdk based GUI

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.4 2000/11/21 20:48:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.h,v 1.2 2000/08/10 06:58:42 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -30,8 +30,8 @@ class TBrowser;
 class TNtuple : public TTree {
 
 protected:
-   Int_t       fNvar;            //  Number of columns
-   Float_t    *fArgs;            //! [fNvar] Array of variables
+   Int_t       fNvar;            //Number of columns
+   Float_t     *fArgs;           //[fNvar] Array of variables
 
    virtual Int_t  Fill();
 
@@ -41,7 +41,7 @@ public:
    virtual ~TNtuple();
 
    virtual void    Browse(TBrowser *b);
-   virtual Int_t   Fill(const Float_t *x);
+   virtual Int_t   Fill(Float_t *x);
    virtual Int_t   Fill(Float_t x0, Float_t x1, Float_t x2=0, Float_t x3=0,
                         Float_t x4=0, Float_t x5=0, Float_t x6=0, Float_t x7=0,
                         Float_t x8=0, Float_t x9=0, Float_t x10=0,
@@ -51,7 +51,7 @@ public:
          Float_t  *GetArgs() const { return fArgs; }
             void   ResetBranchAddresses();
 
-   ClassDef(TNtuple,2)  //A simple tree with branches of floats.
+   ClassDef(TNtuple,1)  //A simple tree with branches of floats.
 };
 
 #endif

@@ -16,12 +16,7 @@
 
 #ifndef __CINT__
 
-#ifdef G__NEWSTDHEADER
-#include <iostream>
-#else
 #include <iostream.h>
-#endif
-
 
 #else
 

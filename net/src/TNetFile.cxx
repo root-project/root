@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.24 2001/08/30 16:37:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.5 2000/07/29 11:04:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -34,8 +34,7 @@
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //
 //   1) Setting it globally via the static functions:                   //
-//         TAuthenticate::SetGlobalUser() and                           //
-//         TAuthenticate::SetGlobalPasswd()                             //
+//          TNetFile::SetUser() and TNetFile::SetPasswd()               //
 //   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
 //   3) Command line prompt                                             //
 // The different methods will be tried in the order given above.        //
@@ -58,19 +57,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef R__LYNXOS
+#include <sys/stat.h>
+#endif
 #include <errno.h>
 
 #include "TNetFile.h"
-#include "TAuthenticate.h"
 #include "TROOT.h"
-#include "TPSocket.h"
+#include "TSocket.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TSysEvtHandler.h"
+#include "Getline.h"
 #include "Bytes.h"
 
-// Must match order of ERootdErrors enum defined in rootd.h
-const char *gRootdErrStr[] = {
+// Must match order of ERootdErrors enum define in rootd.h
+const char *kRootdErrStr[] = {
    "undefined error",
    "file not found",
    "error in file name",
@@ -91,16 +93,18 @@ const char *gRootdErrStr[] = {
    "can't get passwd info",
    "wrong passwd",
    "no SRP support in remote daemon",
-   "fatal error",
-   "cannot seek to restart position"
+   "fatal error"
 };
+
+char *TNetFile::fgUser;
+char *TNetFile::fgPasswd;
+SecureAuth_t TNetFile::fgSecAuthHook;
 
 
 ClassImp(TNetFile)
 
 //______________________________________________________________________________
-TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
-                   Int_t compress, Int_t netopt)
+TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
    // Create a NetFile object. A net file is the same as a TFile
@@ -114,24 +118,10 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // sure this is not the case you can force open the file by preceding the
    // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
    // in cases when you are very sure nobody else is using the file.
-   // The netopt argument can be used to specify the size of the tcp window in
-   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
-   // The default and minimum tcp window size is 65535 bytes.
-   // If netopt < -1 then |netopt| is the number of parallel sockets that will
-   // be used to connect to rootd. This option should be used on fat pipes
-   // (i.e. high bandwidth, high latency links). The ideal number of parallel
-   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
-   // number.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
-   TAuthenticate *auth;
-   EMessageTypes kind;
-   Int_t sec, tcpwindowsize = 65535;
-
-   fSocket    = 0;
-   fOffset    = 0;
-   fErrorCode = -1;
+   fOffset = 0;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -155,65 +145,40 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    }
 
    if (!fUrl.IsValid()) {
-      Error("TNetFile", "invalid URL specified: %s", url);
+      Error("TNetFile", "invalid URL specified: %s", fUrl.GetUrl());
       goto zombie;
    }
 
-   if (netopt > tcpwindowsize)
-      tcpwindowsize = netopt;
-
    // Open connection to remote rootd server
-   if (netopt < -1) {
-      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
-                             tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open %d parallel connections to rootd on "
-               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // kNoDelay is internally set by TPSocket
-
-   } else {
-      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
-               fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // Set some socket options
-      fSocket->SetOption(kNoDelay, 1);
-
-      // Tell rootd we want non parallel connection
-      fSocket->Send((Int_t) 0, (Int_t) 0);
+   fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   if (!fSocket->IsValid()) {
+      Error("TNetFile", "can't open connection to rootd on host %s at port %d",
+            fUrl.GetHost(), fUrl.GetPort());
+      goto zombie;
    }
 
-   // Get rootd protocol level
-   fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, kind);
+   // Set some socket options
+   fSocket->SetOption(kNoDelay, 1);
+   fSocket->SetOption(kSendBuffer, 65536);
+   fSocket->SetOption(kRecvBuffer, 65536);
 
    // Authenticate to remote rootd server
-   sec = !strcmp(fUrl.GetProtocol(), "roots") ?
-         TAuthenticate::kSRP : TAuthenticate::kNormal;
-   auth = new TAuthenticate(fSocket, fUrl.GetHost(), "rootd", sec);
-   if (!auth->Authenticate()) {
-      if (sec == TAuthenticate::kSRP)
+   if (!Authenticate()) {
+      if (!strcmp(fUrl.GetProtocol(), "roots"))
          Error("TNetFile", "secure authentication failed for host %s", fUrl.GetHost());
       else
          Error("TNetFile", "authentication failed for host %s", fUrl.GetHost());
-      delete auth;
       goto zombie;
    }
-   fUser = auth->GetUser();
-   delete auth;
 
    if (forceOpen)
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower("f"+fOption).Data()), kROOTD_OPEN);
    else
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
 
-   int stat;
+   int           stat;
+   EMessageTypes kind;
+
    Recv(stat, kind);
 
    if (kind == kROOTD_ERR) {
@@ -247,25 +212,159 @@ TNetFile::~TNetFile()
 }
 
 //______________________________________________________________________________
-Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime)
+Bool_t TNetFile::Authenticate()
 {
-   // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
+   // Authenticate to remote rootd server. Return kTRUE if authentication
+   // succeeded.
 
-   if (fProtocol < 3) return 1;
+   Bool_t result = kFALSE;
 
-   fSocket->Send(kROOTD_FSTAT);
+   char *user   = 0;
+   char *passwd = 0;
 
-   char  msg[128];
-   Int_t kind;
-   fSocket->Recv(msg, 128, kind);
+   // Get user and passwd set via static functions SetUser and SetPasswd.
+   if (fgUser)
+      user = StrDup(fgUser);
+   if (fgPasswd)
+      passwd = StrDup(fgPasswd);
 
-   sscanf(msg, "%ld %ld %ld %ld", id, size, flags, modtime);
+   // Check ~/.netrc file if user was not set via the static SetUser() method.
+   if (!user)
+      CheckNetrc(user, passwd);
 
-   if (*id == -1)
-      return 1;
+   // If user also not set via ~/.netrc ask user.
+   if (!user) {
+      user = GetUser();
+      if (!user)
+         Error("Authenticate", "user name not set");
+   }
 
-   return 0;
+   fUser = user;
+
+   // if not anonymous login try to use secure authentication
+   if (!strcmp(fUrl.GetProtocol(), "roots") &&
+       fUser.CompareTo("anonymous") && fUser.CompareTo("rootd")) {
+      if (!fgSecAuthHook) {
+         char *p;
+         char *lib = Form("%s/lib/libSRPAuth", gRootDir);
+         if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
+            delete [] p;
+            gSystem->Load(lib);
+         }
+      }
+      if (fgSecAuthHook) {
+         Int_t st = (*fgSecAuthHook)(this);
+         if (st == 0)
+            return kFALSE;
+         if (st == 1)
+            return kTRUE;
+      } else {
+         Error("Authenticate", "no support for secure authentication available");
+         return kFALSE;
+      }
+   }
+
+   fSocket->Send(user, kROOTD_USER);
+
+   Int_t         stat;
+   EMessageTypes kind;
+
+   Recv(stat, kind);
+
+   if (kind == kROOTD_ERR) {
+      PrintError("Authenticate", stat);
+      goto out;
+   }
+   if (kind == kROOTD_AUTH && stat == 1) {
+      result = kTRUE;
+      goto out;
+   }
+
+badpass:
+   if (!passwd) {
+      passwd = GetPasswd();
+      if (!passwd)
+         Error("Authenticate", "password not set");
+   }
+
+   if (!strcmp(fUser, "anonymous") || !strcmp(fUser, "rootd")) {
+      if (!strchr(passwd, '@')) {
+         Warning("Authenticate", "please use passwd of form: user@host.do.main");
+         delete [] passwd;
+         passwd = 0;
+         goto badpass;
+      }
+   }
+
+   if (passwd) {
+      int n = strlen(passwd);
+      for (int i = 0; i < n; i++)
+         passwd[i] = ~passwd[i];
+   }
+
+   fSocket->Send(passwd, kROOTD_PASS);
+
+   Recv(stat, kind);
+   if (kind == kROOTD_ERR)
+      PrintError("Authenticate", stat);
+   if (kind == kROOTD_AUTH && stat == 1)
+      result = kTRUE;
+
+out:
+   delete [] user;
+   delete [] passwd;
+
+   return result;
+}
+
+//______________________________________________________________________________
+Bool_t TNetFile::CheckNetrc(char *&user, char *&passwd)
+{
+   // Try to get user name and passwd from the ~/.netrc file.
+   // This file will only be used when its access mask is 0600.
+   // Returns kTRUE if user and passwd were found for the machine
+   // specified in the URL. User and passwd must be deleted by
+   // the caller. If kFALSE, user and passwd are 0.
+
+#ifdef WIN32
+    return kFALSE;
+#else
+   Bool_t result = kFALSE;
+   user = passwd = 0;
+
+   char *net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
+
+   // Only use file when its access rights are 0600
+   struct stat buf;
+   if (stat(net, &buf) == 0) {
+      if (S_ISREG(buf.st_mode) && !S_ISDIR(buf.st_mode) &&
+          (buf.st_mode & 0777) == (S_IRUSR | S_IWUSR)) {
+         FILE *fd = fopen(net, "r");
+         char line[256];
+         while (fgets(line, sizeof(line), fd) != 0) {
+            if (line[0] == '#') continue;
+            char word[6][64];
+            int nword = sscanf(line, "%s %s %s %s %s %s", word[0], word[1],
+                               word[2], word[3], word[4], word[5]);
+            if (nword != 6) continue;
+            if (strcmp(word[0], "machine"))  continue;
+            if (strcmp(word[2], "login"))    continue;
+            if (strcmp(word[4], "password")) continue;
+
+            if (!strcmp(word[1], fUrl.GetHost())) {
+               user   = StrDup(word[3]);
+               passwd = StrDup(word[5]);
+               result = kTRUE;
+               break;
+            }
+         }
+         fclose(fd);
+      }
+   }
+   delete [] net;
+
+   return result;
+#endif
 }
 
 //______________________________________________________________________________
@@ -289,6 +388,42 @@ void TNetFile::Flush()
 }
 
 //______________________________________________________________________________
+char *TNetFile::GetUser()
+{
+   // Get user name to be used for authentication to rootd.
+   // User is asked to type user name.
+   // Returns user name (which must be deleted by caller) or 0.
+
+   char *usr = Getline(Form("Name (%s:%s): ", fUrl.GetHost(),
+                                              gSystem->Getenv("USER")));
+   if (usr[0]) {
+      usr[strlen(usr)-1] = 0;   // get rid of \n
+      if (strlen(usr))
+         return StrDup(usr);
+      else
+         return StrDup(gSystem->Getenv("USER"));
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+char *TNetFile::GetPasswd(const char *prompt)
+{
+   // Get passwd to be used for authentication to rootd.
+   // Uses non-echoing command line to get passwd.
+   // Returns passwd (which must de deleted by caller) or 0.
+
+   Gl_config("noecho", 1);
+   char *pw = Getline((char*)prompt);
+   Gl_config("noecho", 0);
+   if (pw[0]) {
+      pw[strlen(pw)-1] = 0;   // get rid of \n
+      return StrDup(pw);
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void TNetFile::Init(Bool_t create)
 {
    // Initialize a TNetFile object.
@@ -308,12 +443,12 @@ Bool_t TNetFile::IsOpen() const
 }
 
 //______________________________________________________________________________
-void TNetFile::Print(Option_t *) const
+void TNetFile::Print(Option_t *)
 {
    // Print some info about the net file.
 
    const char *fname = fUrl.GetFile();
-   Printf("URL:           %s", ((TUrl*)&fUrl)->GetUrl());
+   Printf("URL:           %s", fUrl.GetUrl());
    Printf("Remote file:   %s", &fname[1]);
    Printf("Remote user:   %s", fUser.Data());
    Printf("Title:         %s", fTitle.Data());
@@ -327,12 +462,11 @@ void TNetFile::PrintError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   fErrorCode = err;
-   Error(where, gRootdErrStr[err]);
+   Error(where, kRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
+Bool_t TNetFile::ReadBuffer(char *buf, int len)
 {
    // Read specified byte range from remote file via rootd daemon.
    // Returns kTRUE in case of error.
@@ -341,24 +475,10 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Seek_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
-         return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
-         return result;
-      }
-   }
-
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
-   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_GET) < 0) {
+   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_GET) < 0) {
       Error("ReadBuffer", "error sending kROOTD_GET command");
       result = kTRUE;
       goto end;
@@ -367,8 +487,9 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    Int_t         stat, n;
    EMessageTypes kind;
 
-   fErrorCode = -1;
-   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+   n = Recv(stat, kind);
+
+   if (kind == kROOTD_ERR || n < 0) {
       PrintError("ReadBuffer", stat);
       result = kTRUE;
       goto end;
@@ -400,7 +521,7 @@ end:
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t TNetFile::WriteBuffer(const char *buf, int len)
 {
    // Write specified byte range to remote file via rootd daemon.
    // Returns kTRUE in case of error.
@@ -409,23 +530,9 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Seek_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
-         Error("WriteBuffer", "error writing to cache");
-         return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
-         return result;
-      }
-   }
-
    gSystem->IgnoreInterrupt();
 
-   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_PUT) < 0) {
+   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_PUT) < 0) {
       Error("WriteBuffer", "error sending kROOTD_PUT command");
       result = kTRUE;
       goto end;
@@ -436,11 +543,12 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
       goto end;
    }
 
-   Int_t         stat;
+   Int_t         stat, n;
    EMessageTypes kind;
 
-   fErrorCode = -1;
-   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+   n = Recv(stat, kind);
+
+   if (kind == kROOTD_ERR || n < 0) {
       PrintError("WriteBuffer", stat);
       result = kTRUE;
       goto end;
@@ -472,10 +580,19 @@ Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
 
    if (!fSocket) return -1;
 
-   Int_t what;
-   Int_t n = fSocket->Recv(status, what);
-   kind = (EMessageTypes) what;
-   return n;
+   Int_t hdr[3], n;
+   while ((n = fSocket->RecvRaw(hdr, sizeof(hdr))) < 0 && TSystem::GetErrno() == EINTR)
+      TSystem::ResetErrno();
+   if (n <= 0)
+      return -1;
+
+   Int_t len = net2host(hdr[0]);
+   if (len != n - (Int_t)sizeof(Int_t))
+      return -1;
+   kind   = (EMessageTypes) net2host(hdr[1]);
+   status = net2host(hdr[2]);
+
+   return n - sizeof(Int_t);
 }
 
 //______________________________________________________________________________
@@ -491,7 +608,44 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset += offset;
       break;
    case kEnd:
-      fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
+      fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
       break;
    }
+}
+
+//______________________________________________________________________________
+void TNetFile::SetUser(const char *user)
+{
+   // Set user name to be used for authentication to rootd.
+
+   if (fgUser)
+      delete [] fgUser;
+
+   if (!user || !user[0])
+      fgUser = 0;
+   else
+      fgUser = StrDup(user);
+}
+
+//______________________________________________________________________________
+void TNetFile::SetPasswd(const char *passwd)
+{
+   // Set passwd to be used for authentication to rootd.
+
+   if (fgPasswd)
+      delete [] fgPasswd;
+
+   if (!passwd || !passwd[0])
+      fgPasswd = 0;
+   else
+      fgPasswd = StrDup(passwd);
+}
+
+//______________________________________________________________________________
+void TNetFile::SetSecureAuthHook(SecureAuth_t func)
+{
+   // Set secure authorization function. Automatically called when libSRPAuth
+   // is loaded.
+
+   fgSecAuthHook = func;
 }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
 
    TArrayD();
    TArrayD(Int_t n);
-   TArrayD(Int_t n, const Double_t *array);
+   TArrayD(Int_t n, Double_t *array);
    TArrayD(const TArrayD &array);
    TArrayD    &operator=(const TArrayD &rhs);
    virtual    ~TArrayD();
@@ -44,9 +44,9 @@ public:
    void       Copy(TArrayD &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Double_t  *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Double_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void       Reset()  {memset(fArray,0,fN*sizeof(Double_t));}
    void       Set(Int_t n);
-   void       Set(Int_t n, const Double_t *array);
+   void       Set(Int_t n, Double_t *array);
    Double_t  &operator[](Int_t i);
 
    ClassDef(TArrayD,1)  //Array of doubles

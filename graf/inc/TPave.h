@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.2 2000/06/13 11:09:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -62,17 +62,17 @@ public:
           Double_t    GetCornerRadius() {return fCornerRadius;}
           Option_t   *GetName() const {return fName.Data();}
           Option_t   *GetOption() const {return fOption.Data();}
-          Double_t    GetX1NDC() const {return fX1NDC;}
-          Double_t    GetX2NDC() const {return fX2NDC;}
-          Double_t    GetY1NDC() const {return fY1NDC;}
-          Double_t    GetY2NDC() const {return fY2NDC;}
-        virtual void  ls(Option_t *option="") const;
+          Double_t    GetX1NDC() {return fX1NDC;}
+          Double_t    GetX2NDC() {return fX2NDC;}
+          Double_t    GetY1NDC() {return fY1NDC;}
+          Double_t    GetY2NDC() {return fY2NDC;}
+        virtual void  ls(Option_t *option="");
         virtual void  Paint(Option_t *option="");
         virtual void  PaintPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Int_t bordersize=4 ,Option_t *option="br");
         virtual void  PaintPaveArc(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Int_t bordersize=4 ,Option_t *option="br");
-        virtual void  Print(Option_t *option="") const;
+        virtual void  Print(Option_t *option="");
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetBorderSize(Int_t bordersize=4) {fBorderSize = bordersize;} // *MENU*
         virtual void  SetCornerRadius(Double_t rad = 0.2) {fCornerRadius = rad;} // *MENU*

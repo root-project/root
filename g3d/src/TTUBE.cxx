@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -346,25 +346,29 @@ void TTUBE::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TTUBE.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TTUBE::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TShape::Streamer(R__b);
       R__b >> fRmin;
       R__b >> fRmax;
       R__b >> fDz;
       R__b >> fNdiv;
       if (R__v > 1) R__b >> fAspectRatio;
+      //R__b.ReadArray(fSiTab);
+      //R__b.ReadArray(fCoTab);
       R__b.CheckByteCount(R__s, R__c, TTUBE::IsA());
-      //====end of old versions
-      
    } else {
-      TTUBE::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TTUBE::IsA(), kTRUE);
+      TShape::Streamer(R__b);
+      R__b << fRmin;
+      R__b << fRmax;
+      R__b << fDz;
+      R__b << fNdiv;
+      R__b << fAspectRatio;
+      //R__b.WriteArray(fSiTab, __COUNTER__);
+      //R__b.WriteArray(fCoTab, __COUNTER__);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 

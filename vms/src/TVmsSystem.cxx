@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.9 2001/06/07 10:47:09 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -195,23 +195,10 @@ TFileHandler *TVmsSystem::RemoveFileHandler(TFileHandler *h)
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
-      TFileHandler *th;
-      TIter next(fFileHandler);
-      fMaxrfd = 0;
-      fMaxwfd = 0;
-      fReadmask.Zero();
-      fWritemask.Zero();
-      while ((th = (TFileHandler *) next())) {
-         int fd = th->GetFd();
-         if (th->HasReadInterest()) {
-            fReadmask.Set(fd);
-            fMaxrfd = TMath::Max(fMaxrfd, fd);
-         }
-         if (th->HasWriteInterest()) {
-            fWritemask.Set(fd);
-            fMaxwfd = TMath::Max(fMaxwfd, fd);
-         }
-      }
+      fReadmask.Clr(oh->GetFd());
+      fWritemask.Clr(oh->GetFd());
+
+      // need to reset fMaxrfd and fMaxwfd
    }
    return oh;
 }
@@ -246,24 +233,35 @@ void TVmsSystem::IgnoreInterrupt(Bool_t ignore)
 }
 
 //______________________________________________________________________________
-void TVmsSystem::DispatchOneEvent(Bool_t pendingOnly)
+void TVmsSystem::DispatchOneEvent()
 {
    // Dispatch a single event.
+//gROOT->GetApplication()->HandleTermInput();
 
    while (1) {
       // first handle any X11 events
-      if (gXDisplay && gXDisplay->Notify()) {
-         if (fReadready.IsSet(gXDisplay->GetFd())) {
-            fReadready.Clr(gXDisplay->GetFd());
-            fNfd--;
-         }
-         if (!pendingOnly) return;
-      }
+      if (gXDisplay && gXDisplay->Notify())
+         return;
 
       // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0)
-         if (CheckDescriptors())
-            if (!pendingOnly) return;
+      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
+         TFileHandler *fh;
+         TOrdCollectionIter it((TOrdCollection*)fFileHandler);
+
+         while ((fh = (TFileHandler*) it.Next())) {
+            int fd = fh->GetFd();
+            if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
+               fReadready.Clr(fd);
+               if (fh->ReadNotify())
+                  return;
+            }
+            if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
+               fWriteready.Clr(fd);
+               if (fh->WriteNotify())
+                  return;
+            }
+         }
+      }
       fNfd = 0;
       fReadready.Zero();
       fWriteready.Zero();
@@ -271,20 +269,14 @@ void TVmsSystem::DispatchOneEvent(Bool_t pendingOnly)
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
+            return;
       fSigcnt = 0;
       fSignals.Zero();
 
       // check synchronous timers
       if (fTimers && fTimers->GetSize() > 0)
-         if (DispatchTimers(kTRUE)) {
-            // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
-               return;
-         }
-
-      if (pendingOnly) return;
+         if (DispatchTimers(kTRUE))
+            return;
 
       // nothing ready, so setup select call
       fReadready  = fReadmask;
@@ -299,21 +291,21 @@ void TVmsSystem::DispatchOneEvent(Bool_t pendingOnly)
             if (fReadmask.IsSet(fd)) {
                rc = VmsSelect(fd+1, &t, 0, 0);
                if (rc < 0 && rc != -2) {
-                  SysError("DispatchOneEvent", "select: read error on %d\n", fd);
+                  fprintf(stderr, "select: read error on %d\n", fd);
                   fReadmask.Clr(fd);
                }
             }
             if (fWritemask.IsSet(fd)) {
-               rc = VmsSelect(fd+1, 0, &t, 0);
+               rc = VmsSelect(fd+1, &t, 0, 0);
                if (rc < 0 && rc != -2) {
-                  SysError("DispatchOneEvent", "select: write error on %d\n", fd);
+                  fprintf(stderr, "select: write error on %d\n", fd);
                   fWritemask.Clr(fd);
                }
             }
             t.Clr(fd);
          }
       }
-   }
+  }
 }
 
 //______________________________________________________________________________
@@ -367,7 +359,7 @@ void TVmsSystem::DispatchSignals(ESignals sig)
    }
 
    // check a-synchronous signals
-   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+   if (fSigcnt && fSignalHandler->GetSize() > 0)
       CheckSignals(kFALSE);
 }
 
@@ -377,27 +369,24 @@ Bool_t TVmsSystem::CheckSignals(Bool_t sync)
    // Check if some signals were raised and call their Notify() member.
 
    TSignalHandler *sh;
-   Int_t sigdone = -1;
    {
       TOrdCollectionIter it((TOrdCollection*)fSignalHandler);
 
       while ((sh = (TSignalHandler*)it.Next())) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
-               if (sigdone == -1) {
-                  fSignals.Clr(sig);
-                  sigdone = sig;
-                  fSigcnt--;
-               }
-               sh->Notify();
+            if (fSignals.IsSet(sig)) {
+               fSignals.Clr(sig);
+               fSigcnt--;
+               break;
             }
          }
       }
    }
-   if (sigdone != -1)
+   if (sh) {
+      sh->Notify();
       return kTRUE;
-
+   }
    return kFALSE;
 }
 
@@ -418,45 +407,6 @@ void TVmsSystem::CheckChilds()
          }
    }
 #endif
-}
-
-//______________________________________________________________________________
-Bool_t TVmsSystem::CheckDescriptors()
-{
-   // Check if there is activity on some file descriptors and call their
-   // Notify() member.
-
-   TFileHandler *fh;
-   Int_t  fddone = -1;
-   Bool_t read   = kFALSE;
-   TOrdCollectionIter it((TOrdCollection*)fFileHandler);
-   while ((fh = (TFileHandler*) it.Next())) {
-      Int_t fd = fh->GetFd();
-      if ((fd <= fMaxrfd && fReadready.IsSet(fd) && fddone == -1) ||
-          (fddone == fd && read)) {
-         if (fddone == -1) {
-            fReadready.Clr(fd);
-            fddone = fd;
-            read = kTRUE;
-            fNfd--;
-         }
-         fh->ReadNotify();
-      }
-      if ((fd <= fMaxwfd && fWriteready.IsSet(fd) && fddone == -1) ||
-          (fddone == fd && !read)) {
-         if (fddone == -1) {
-            fWriteready.Clr(fd);
-            fddone = fd;
-            read = kFALSE;
-            fNfd--;
-         }
-         fh->WriteNotify();
-      }
-   }
-   if (fddone != -1)
-      return kTRUE;
-
-   return kFALSE;
 }
 
 //---- Directories -------------------------------------------------------------
@@ -584,12 +534,9 @@ int TVmsSystem::GetPathInfo(const char *path, unsigned short *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 1 set executable, bit 2 set directory,
+   //                       bit 3 set regular file
    // Modtime is modification time
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
 
    return VmsFilestat(path, id,  size, flags, modtime);
 }
@@ -1177,7 +1124,7 @@ char *TVmsSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -1186,44 +1133,36 @@ char *TVmsSystem::GetServiceByPort(int port)
 }
 
 //______________________________________________________________________________
-int TVmsSystem::ConnectService(const char *servername, int port,
-                               int tcpwindowsize)
+int TVmsSystem::ConnectService(const char *servername, int port)
 {
    // Connect to service servicename on server servername.
 
    if (!strcmp(servername, "vms"))
       return VmsVmsConnect(port);
-   return VmsTcpConnect(servername, port, tcpwindowsize);
+   return VmsTcpConnect(servername, port);
 }
 
 //______________________________________________________________________________
-int TVmsSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
+int TVmsSystem::OpenConnection(const char *server, int port)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Is called via the TSocket constructor.
+   // Open a connection to a service on a server. Try 3 times with an
+   // interval of 1 second.
 
-   return ConnectService(server, port, tcpwindowsize);
+   for (int i = 0; i < 3; i++) {
+      int fd = ConnectService(server, port);
+      if (fd >= 0)
+         return fd;
+      sleep(1);
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
-int TVmsSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
-                                   int tcpwindowsize)
+int TVmsSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog)
 {
    // Announce TCP/IP service.
-   // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
-   // or -3 if listen() failed.
 
-   return VmsTcpService(port, reuse, backlog, tcpwindowsize);
+   return VmsTcpService(port, reuse, backlog);
 }
 
 //______________________________________________________________________________
@@ -1342,9 +1281,6 @@ int TVmsSystem::RecvRaw(int sock, void *buf, int length, int opt)
    case kPeek:
       flag = MSG_PEEK;
       break;
-   case kDontBlock:
-      flag = -1;
-      break;
    default:
       flag = 0;
       break;
@@ -1356,7 +1292,7 @@ int TVmsSystem::RecvRaw(int sock, void *buf, int length, int opt)
          Error("RecvRaw", "cannot receive buffer");
       return n;
    }
-   return n;
+   return length;
 }
 
 //______________________________________________________________________________
@@ -1364,7 +1300,7 @@ int TVmsSystem::SendRaw(int sock, const void *buf, int length, int opt)
 {
    // Send exactly length bytes from buffer. Use opt to send out-of-band
    // data (see TSocket). Returns the number of bytes sent or -1 in case of
-   // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // error.
 
    int flag;
 
@@ -1375,22 +1311,17 @@ int TVmsSystem::SendRaw(int sock, const void *buf, int length, int opt)
    case kOob:
       flag = MSG_OOB;
       break;
-   case kDontBlock:
-      flag = -1;
-      break;
    case kPeek:            // receive only option (see RecvRaw)
    default:
       flag = 0;
       break;
    }
 
-   int n;
-   if ((n = VmsSend(sock, buf, length, flag)) <= 0) {
-      if (n == -1 && GetErrno() != EINTR)
-         Error("SendRaw", "cannot send buffer");
-      return n;
+   if (VmsSend(sock, buf, length, flag) < 0) {
+      Error("SendRaw", "cannot send buffer");
+      return -1;
    }
-   return n;
+   return length;
 }
 
 //______________________________________________________________________________
@@ -1867,9 +1798,8 @@ int TVmsSystem::VmsFilestat(const char *path, unsigned short *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 0 set executable, bit 1 set directory,
+   //                       bit 2 set regular file
    // Modtime is modification time
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
@@ -1914,18 +1844,15 @@ int TVmsSystem::VmsWaitchild()
 //---- RPC -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int tcpwindowsize)
+int TVmsSystem::VmsTcpConnect(const char *hostname, int port)
 {
    // Open a TCP/IP connection to server and connect to a service (i.e. port).
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -1945,11 +1872,6 @@ int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int tcpwindowsize)
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       ::SysError("TVmsSystem::VmsConnectTcp", "socket");
       return -1;
-   }
-
-   if (tcpwindowsize > 0) {
-      gSystem->SetSockOpt(sock, kRecvBuffer, tcpwindowsize);
-      gSystem->SetSockOpt(sock, kSendBuffer, tcpwindowsize);
    }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
@@ -1996,30 +1918,16 @@ int TVmsSystem::VmsVmsConnect(int port)
 }
 
 //______________________________________________________________________________
-int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
-                              int tcpwindowsize)
+int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog)
 {
    // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted. If port is 0 a port
-   // scan will be done to find a free port. This option is mutual exlusive
-   // with the reuse option.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
-   // or -3 if listen() failed.
+   // on the port. Tries 20 times to bind to the socket with 10 second
+   // intervals. Returns socket fd or -1.
 
-   const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
-   short  sport, tryport = kSOCKET_MINPORT;
+   short  sport;
    struct servent *sp;
 
-   if (port == 0 && reuse) {
-      ::Error("TVmsSystem::VmsTcpService", "cannot do a port scan while reuse is true");
-      return -1;
-   }
-
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2034,11 +1942,6 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
    if (reuse)
       gSystem->SetSockOpt(sock, kReuseAddr, 1);
 
-   if (tcpwindowsize > 0) {
-      gSystem->SetSockOpt(sock, kRecvBuffer, tcpwindowsize);
-      gSystem->SetSockOpt(sock, kSendBuffer, tcpwindowsize);
-   }
-
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
    inserver.sin_family = AF_INET;
@@ -2046,24 +1949,12 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
    inserver.sin_port = sport;
 
    // Bind socket
-   if (port > 0) {
-      for (int retry = 20; bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)); retry--) {
-         if (retry <= 0) {
-            ::SysError("TVmsSystem::VmsTcpService", "bind");
-            return -2;
-         }
-         sleep(10);
+   for (int retry = 20; bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)); retry--) {
+      if (retry <= 0) {
+         ::SysError("TVmsSystem::VmsTcpService", "bind");
+         return -1;
       }
-   } else {
-      int bret;
-      do {
-         inserver.sin_port = htons(tryport++);
-         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
-      } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
-      if (bret < 0) {
-         ::SysError("TVmsSystem::VmsTcpService", "bind (port scan)");
-         return -2;
-      }
+      sleep(10);
    }
 
    // Start accepting connections
@@ -2130,12 +2021,6 @@ int TVmsSystem::VmsRecv(int sock, void *buffer, int length, int flag)
 
    if (sock < 0) return -1;
 
-   int once = 0;
-   if (flag == -1) {
-      flag = 0;
-      once = 1;
-   }
-
    int n, nrecv = 0;
    char *buf = (char *)buffer;
 
@@ -2157,8 +2042,6 @@ int TVmsSystem::VmsRecv(int sock, void *buffer, int length, int flag)
             return -1;
          }
       }
-      if (once)
-         return nrecv;
    }
    return n;
 }
@@ -2167,34 +2050,18 @@ int TVmsSystem::VmsRecv(int sock, void *buffer, int length, int flag)
 int TVmsSystem::VmsSend(int sock, const void *buffer, int length, int flag)
 {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
-   // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // otherwise number of sent bytes.
 
    if (sock < 0) return -1;
-
-   int once = 0;
-   if (flag == -1) {
-      flag = 0;
-      once = 1;
-   }
 
    int n, nsent = 0;
    const char *buf = (const char *)buffer;
 
    for (n = 0; n < length; n += nsent) {
       if ((nsent = send(sock, buf+n, length-n, flag)) <= 0) {
-         if (nsent == 0)
-            break;
-         if (GetErrno() == EWOULDBLOCK)
-            return -4;
-         else {
-            if (GetErrno() != EINTR)
-               ::SysError("TVmsSystem::VmsSend", "send");
-            return -1;
-         }
-      }
-      if (once)
+         ::SysError("TVmsSystem::VmsSend", "send");
          return nsent;
+      }
    }
    return n;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.2 2000/11/21 16:38:31 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -32,7 +32,6 @@ TRealData::TRealData() : TObject()
 //*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
 
-   fIsObject = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -46,8 +45,6 @@ TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
    fDataMember = datamember;
    fThisOffset = offset;
    fName = name;
-   fStreamer = 0;
-   fIsObject = kFALSE;
 }
 
 //______________________________________________________________________________

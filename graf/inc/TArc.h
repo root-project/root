@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.h,v 1.2 2000/06/13 10:42:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
         virtual ~TArc();
                 void Copy(TObject &arc);
         virtual void DrawArc(Double_t x1, Double_t y1, Double_t radius
-                            ,Double_t  phimin=0, Double_t  phimax=360, Option_t *option="");
+                            ,Double_t  phimin=0, Double_t  phimax=360);
         virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
         ClassDef(TArc,1)  //Arc of a circle

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodArg.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -44,18 +44,18 @@ private:
 public:
    TMethodArg(G__MethodArgInfo *info = 0, TFunction *method = 0);
    virtual       ~TMethodArg();
-   Int_t          Compare(const TObject *obj) const;
    const char    *GetDefault() const;
    TFunction     *GetMethod() const { return fMethod; }
    const char    *GetName() const;
    const char    *GetTitle() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
-   ULong_t        Hash() const;
+   Int_t          Compare(TObject *obj);
+   ULong_t        Hash();
    Long_t         Property() const;
 
-   TDataMember   *GetDataMember() const;
-   TList         *GetOptions() const;
+   TDataMember   *GetDataMember();
+   TList         *GetOptions();
 
    ClassDef(TMethodArg,0)  //Dictionary for a method argument
 };

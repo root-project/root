@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.2 2000/06/13 11:13:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -56,17 +56,17 @@ public:
         virtual void     DrawFile(const char *filename, Option_t *option="");
         virtual void     EditText(); // *MENU*
         const  char     *GetLabel() const {return fLabel.Data();}
-        virtual TText   *GetLine(Int_t number) const;
-        virtual TText   *GetLineWith(const char *text) const;
-        virtual TList   *GetListOfLines() const {return fLines;}
-              Float_t    GetMargin() const {return fMargin;}
-        virtual TObject *GetObject(Double_t &ymouse, Double_t &yobj) const;
-        virtual Int_t    GetSize() const;
+        virtual TText   *GetLine(Int_t number);
+        virtual TText   *GetLineWith(const char *text);
+        virtual TList   *GetListOfLines() {return fLines;}
+              Float_t    GetMargin() {return fMargin;}
+        virtual TObject *GetObject(Double_t &ymouse, Double_t &yobj);
+        virtual Int_t    GetSize();
         virtual void     InsertLine(); // *MENU*
         virtual void     InsertText(const char *label); // *MENU*
         virtual void     Paint(Option_t *option="");
         virtual void     PaintPrimitives(Int_t mode);
-        virtual void     Print(Option_t *option="") const;
+        virtual void     Print(Option_t *option="");
         virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
         virtual void     SaveLines(ofstream &out, const char *name);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);

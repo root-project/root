@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.7 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.4 2000/09/06 09:29:20 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -78,7 +78,8 @@
 */
 //End_Html
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TTask.h"
 #include "TBrowser.h"
 #include "TROOT.h"
@@ -280,7 +281,7 @@ void TTask::ExecuteTasks(Option_t *option) {
 }
 
 //______________________________________________________________________________
-void TTask::ls(Option_t *option) const
+void TTask::ls(Option_t *option)
 {
 //  list the tree of tasks
 //  Indentation is used to identify the task tree

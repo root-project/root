@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.5 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -24,8 +24,16 @@
 #ifndef ROOT_Gtypes
 #include "Gtypes.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
 #endif
 
 
@@ -47,20 +55,20 @@ public:
         TAttAxis();
         virtual          ~TAttAxis();
                 void     Copy(TAttAxis &attaxis);
-        virtual Int_t    GetNdivisions()  const {return fNdivisions;}
-        virtual Color_t  GetAxisColor()   const {return fAxisColor;}
-        virtual Color_t  GetLabelColor()  const {return fLabelColor;}
-        virtual Style_t  GetLabelFont()   const {return fLabelFont;}
-        virtual Float_t  GetLabelOffset() const {return fLabelOffset;}
-        virtual Float_t  GetLabelSize()   const {return fLabelSize;}
-        virtual Float_t  GetTitleOffset() const {return fTitleOffset;}
-        virtual Float_t  GetTitleSize()   const {return fTitleSize;}
-        virtual Float_t  GetTickLength()  const {return fTickLength;}
-        virtual Color_t  GetTitleColor()  const {return fTitleColor;}
-        virtual Style_t  GetTitleFont()   const {return fTitleFont;}
+        virtual Int_t    GetNdivisions()  {return fNdivisions;}
+        virtual Color_t  GetAxisColor()   {return fAxisColor;}
+        virtual Color_t  GetLabelColor()  {return fLabelColor;}
+        virtual Style_t  GetLabelFont()   {return fLabelFont;}
+        virtual Float_t  GetLabelOffset() {return fLabelOffset;}
+        virtual Float_t  GetLabelSize()   {return fLabelSize;}
+        virtual Float_t  GetTitleOffset() {return fTitleOffset;}
+        virtual Float_t  GetTitleSize()   {return fTitleSize;}
+        virtual Float_t  GetTickLength()  {return fTickLength;}
+        virtual Color_t  GetTitleColor()  {return fTitleColor;}
+        virtual Style_t  GetTitleFont()   {return fTitleFont;}
         virtual void     ResetAttAxis(Option_t *option="");
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
-        virtual void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
+        virtual void     SetNdivisions(Int_t n=510);           // *MENU*
         virtual void     SetAxisColor(Color_t color=1);        // *MENU*
         virtual void     SetLabelColor(Color_t color=1);       // *MENU*
         virtual void     SetLabelFont(Style_t font=62);        // *MENU*
@@ -72,7 +80,7 @@ public:
         virtual void     SetTitleColor(Color_t color=1);       // *MENU*
         virtual void     SetTitleFont(Style_t font=62);        // *MENU*
 
-        ClassDef(TAttAxis,4)  //Axis attributes
+        ClassDef(TAttAxis,3)  //Axis attributes
 };
 
 #endif

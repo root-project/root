@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-//
+//*
 
 #ifndef ROOT_TPadOpenGLView
 #define ROOT_TPadOpenGLView
@@ -57,7 +57,7 @@ class TPadOpenGLView : public TPadView3D
     virtual void MapOpenGL();
     void         UpdateModelView();
     void         UpdateObjectView();
-    void         MoveModelView(Char_t option,Int_t count=1);
+    void         MoveModelView(const Char_t option,Int_t count=1);
     void         MoveModelView(const Char_t *commands, Int_t display_time=0);
     void         RotateView(Int_t x, Int_t y);
 
@@ -74,10 +74,10 @@ class TPadOpenGLView : public TPadView3D
    TPadOpenGLView(TVirtualPad *pad);
    virtual ~TPadOpenGLView();
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Int_t        GetGLList() const {return fGLList ? fGLList+1 : 0;}
+   Int_t        GetGLList() {return fGLList ? fGLList+1 : 0;}
    UInt_t       GetNextGLList() {return fGLList ? ++fGLLastList : 0;}
-   Float_t      GetSpeedMove() const { return fSpeedMove;}
-   virtual void GetSteps(Float_t *steps) const {if (steps) {steps[0] = fStep[0]; steps[1] = fStep[1]; steps[2] = fStep[2];}; }
+   Float_t      GetSpeedMove() { return fSpeedMove;}
+   virtual void GetSteps(Float_t *steps) {if (steps) {steps[0] = fStep[0]; steps[1] = fStep[1]; steps[2] = fStep[2];}; }
    virtual void Paint(Option_t *option="");
    virtual void Size(Int_t width, Int_t height);
    UInt_t       ReleaseLastGLList() {return fGLList ? --fGLLastList : 0;}

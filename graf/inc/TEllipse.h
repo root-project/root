@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -51,19 +51,19 @@ public:
                 void   Copy(TObject &ellipse);
         virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
         virtual void   Draw(Option_t *option="");
-        virtual void   DrawEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
+        virtual void   DrawEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta);
         virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Double_t       GetX1() const {return fX1;}
-        Double_t       GetY1() const {return fY1;}
-        Double_t       GetR1() const {return fR1;}
-        Double_t       GetR2() const {return fR2;}
-        Double_t       GetPhimin() const {return fPhimin;}
-        Double_t       GetPhimax() const {return fPhimax;}
-        Double_t       GetTheta() const  {return fTheta;}
-        virtual void   ls(Option_t *option="") const;
+        Double_t       GetX1() {return fX1;}
+        Double_t       GetY1() {return fY1;}
+        Double_t       GetR1() {return fR1;}
+        Double_t       GetR2() {return fR2;}
+        Double_t       GetPhimin() {return fPhimin;}
+        Double_t       GetPhimax() {return fPhimax;}
+        Double_t       GetTheta()  {return fTheta;}
+        virtual void   ls(Option_t *option="");
         virtual void   Paint(Option_t *option="");
-        virtual void   PaintEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
-        virtual void   Print(Option_t *option="") const;
+        virtual void   PaintEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta);
+        virtual void   Print(Option_t *option="");
         virtual void   SavePrimitive(ofstream &out, Option_t *option);
         virtual void   SetPhimin(Double_t phi=0)   {fPhimin=phi;} // *MENU*
         virtual void   SetPhimax(Double_t phi=360) {fPhimax=phi;} // *MENU*

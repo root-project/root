@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.9 2002/01/02 21:42:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -34,20 +34,19 @@
 #endif
 
 class TF1;
-class TAxis;
 
 class TGaxis : public TLine, public TAttText {
 
 protected:
     Double_t   fWmin;                //Lowest value on the axis
     Double_t   fWmax;                //Highest value on the axis
+    Int_t      fNdiv;                //Number of divisions
     Float_t    fGridLength;          //Length of the grid in NDC
     Float_t    fTickSize;            //Size of primary tick mark in NDC
     Float_t    fLabelOffset;         //Offset of label wrt axis
     Float_t    fLabelSize;           //Size of labels in NDC
     Float_t    fTitleOffset;         //Offset of title wrt axis
     Float_t    fTitleSize;           //Size of title in NDC
-    Int_t      fNdiv;                //Number of divisions
     Int_t      fLabelColor;          //Color for labels
     Int_t      fLabelFont;           //Font for labels
     TString    fChopt;               //Axis options
@@ -56,15 +55,10 @@ protected:
     TString    fTimeFormat;          //Time format, ex: 09/12/99 12:34:00
     TString    fFunctionName;        //name of mapping function pointed by fFunction
     TF1       *fFunction;            //!Pointer to function computing axis values
-    TAxis     *fAxis;                //!pointer to original TAxis axis (if any)
-    
-  static Int_t fgMaxDigits;          //!Number of digits above which the 10>N notation is used
 
 public:
         // TGaxis status bits
-        enum { kCenterTitle = BIT(12), 
-               kRotateTitle = BIT(15),
-               kNoExponent  = BIT(17)};
+        enum { kCenterTitle = BIT(12), kRotateTitle = BIT(13) };
 
         TGaxis();
         TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
@@ -80,24 +74,24 @@ public:
         virtual void    DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                  Double_t gridlength = 0);
-             Float_t    GetGridLength() const   {return fGridLength;}
-             TF1       *GetFunction() const     {return fFunction;}
-               Int_t    GetLabelColor() const   {return fLabelColor;}
-               Int_t    GetLabelFont() const    {return fLabelFont;}
-             Float_t    GetLabelOffset() const  {return fLabelOffset;}
-             Float_t    GetLabelSize() const    {return fLabelSize;}
-             Float_t    GetTitleOffset() const  {return fTitleOffset;}
-             Float_t    GetTitleSize() const    {return fTitleSize;}
+             Float_t    GetGridLength()   {return fGridLength;}
+             TF1       *GetFunction()     {return fFunction;}
+               Int_t    GetLabelColor()   {return fLabelColor;}
+               Int_t    GetLabelFont()    {return fLabelFont;}
+             Float_t    GetLabelOffset()  {return fLabelOffset;}
+             Float_t    GetLabelSize()    {return fLabelSize;}
+             Float_t    GetTitleOffset()  {return fTitleOffset;}
+             Float_t    GetTitleSize()    {return fTitleSize;}
 virtual const char     *GetName() const  {return fName.Data();}
 virtual const char     *GetOption() const {return fChopt.Data();}
 virtual const char     *GetTitle() const {return fTitle.Data();}
-        static Int_t    GetMaxDigits();
-               Int_t    GetNdiv() const         {return fNdiv;}
-             Double_t   GetWmin() const         {return fWmin;}
-             Double_t   GetWmax()  const        {return fWmax;}
-             Float_t    GetTickSize() const     {return fTickSize;}
-        virtual void    ImportAxisAttributes(TAxis *axis);
-                void    LabelsLimits(const char *label, Int_t &first, Int_t &last);
+               Int_t    GetNdiv()         {return fNdiv;}
+             Double_t   GetWmin()         {return fWmin;}
+             Double_t   GetWmax()         {return fWmax;}
+             Float_t    GetTickSize()     {return fTickSize;}
+                void    LabelsLimits(char *label, Int_t &first, Int_t &last);
+        virtual void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
+                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID);
         virtual void    Paint(Option_t *chopt="");
         virtual void    PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                   Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
@@ -111,9 +105,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetLabelFont(Int_t labelfont) {fLabelFont = labelfont;} // *MENU*
                 void    SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
                 void    SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
-         static void    SetMaxDigits(Int_t maxd=5);
-        virtual void    SetName(const char *name); // *MENU*
-        virtual void    SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
+        virtual void    SetName(char *name); // *MENU*
                 void    SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
                 void    SetGridLength(Float_t gridlength) {fGridLength = gridlength;}
                 void    SetTimeFormat(const char *tformat);
@@ -123,7 +115,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetWmin(Double_t wmin) {fWmin = wmin;}
                 void    SetWmax(Double_t wmax) {fWmax = wmax;}
 
-                ClassDef(TGaxis,5)  //Graphics axis
+                ClassDef(TGaxis,3)  //Graphics axis
 };
 
 #endif

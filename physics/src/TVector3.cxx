@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.3 2000/11/21 20:44:47 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -163,7 +163,6 @@ theta plane) to the (x,y,z) frame.
 
 #include "TVector3.h"
 #include "TRotation.h"
-#include "TClass.h"
 
 ClassImp(TVector3)
 
@@ -173,10 +172,10 @@ TVector3::TVector3(const TVector3 & p)
 TVector3::TVector3(Double_t x, Double_t y, Double_t z)
 : fX(x), fY(y), fZ(z) {}
 
-TVector3::TVector3(const Double_t * x0)
+TVector3::TVector3(Double_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
 
-TVector3::TVector3(const Float_t * x0)
+TVector3::TVector3(Float_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
 
 TVector3::~TVector3() {}
@@ -284,23 +283,20 @@ void TVector3::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVector3.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TVector3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       if (R__v < 2) TObject::Streamer(R__b);
       R__b >> fX;
       R__b >> fY;
       R__b >> fZ;
       R__b.CheckByteCount(R__s, R__c, TVector3::IsA());
-      //====end of old versions
-      
    } else {
-      TVector3::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TVector3::IsA(), kTRUE);
+      R__b << fX;
+      R__b << fY;
+      R__b << fZ;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 

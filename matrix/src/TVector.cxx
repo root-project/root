@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.8 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 
 #include "TMatrix.h"
 #include "TROOT.h"
-#include "TClass.h"
 
 
 ClassImp(TVector)
@@ -64,8 +63,7 @@ void TVector::Allocate(Int_t nrows, Int_t row_lwb)
    fNmem   = nrows;
    fRowLwb = row_lwb;
 
-   //fElements = new Real_t[fNrows];  because of use of ReAlloc()
-   fElements = (Real_t*) ::operator new(fNrows*sizeof(Real_t));
+   fElements = new Real_t[fNrows];
    if (fElements)
       memset(fElements, 0, fNrows*sizeof(Real_t));
 }
@@ -101,7 +99,7 @@ TVector::~TVector()
    // TVector destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      delete [] fElements;
 
    Invalidate();
 }
@@ -111,7 +109,7 @@ void TVector::Draw(Option_t *option)
 {
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
-
+   
    gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
@@ -147,8 +145,8 @@ void TVector::ResizeTo(Int_t lwb, Int_t upb)
                                               fNmem*sizeof(Real_t));
       memset(fElements+old_nrows, 0, (fNrows-old_nrows)*sizeof(Real_t));
       fNmem = fNrows;
-   } else if (old_nrows - fNrows > (old_nrows>>2)) {
-      // Vector is to shrink a lot (more than 1/4 of the original size), reallocate
+   } else if (old_nrows - fNrows < (old_nrows>>3)) {
+      // Vector is to shrink a lot (more than 7/8 of the original size), reallocate
       fElements = (Real_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Real_t));
       fNmem = fNrows;
    }
@@ -275,8 +273,7 @@ TVector &TVector::operator*=(const TMatrix &a)
    fRowLwb = a.fRowLwb;
    Assert((fNrows = a.fNrows) > 0);
 
-   //Assert((fElements = new Real_t[fNrows]) != 0);
-   Assert((fElements = (Real_t*) ::operator new(fNrows*sizeof(Real_t))) != 0);
+   Assert((fElements = new Real_t[fNrows]) != 0);
    fNmem = fNrows;
 
    Real_t *tp = fElements;                     // Target vector ptr
@@ -290,7 +287,7 @@ TVector &TVector::operator*=(const TMatrix &a)
    }
    Assert(mp == a.fElements + a.fNrows);
 
-   ::operator delete(old_vector);
+   delete [] old_vector;
    return *this;
 }
 
@@ -729,7 +726,7 @@ TVector &ElementDiv(TVector &target, const TVector &source)
 }
 
 //______________________________________________________________________________
-void TVector::Print(Option_t *) const
+void TVector::Print(Option_t *)
 {
    // Print the vector as a list of elements.
 
@@ -754,23 +751,19 @@ void TVector::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVector.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TVector::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         fNmem   = fNrows;
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fRowLwb;
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
-      //====end of old versions
-
    } else {
-      TVector::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TVector::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      R__b << fRowLwb;
+      R__b.WriteArray(fElements, fNrows);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
@@ -888,7 +881,7 @@ void VerifyVectorIdentity(const TVector &v1, const TVector &v2)
 
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#ifdef R__HPUX
 
 //______________________________________________________________________________
 //  These functions should be inline

@@ -10,7 +10,6 @@
 #include <math.h>
 #include <string.h>
 #define G__ANSIHEADER
-#define G__DICTIONARY
 /*KEEP,G__ci.*/
 #include "G__ci.h"
 /*KEND.*/

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
 
    TArrayL();
    TArrayL(Int_t n);
-   TArrayL(Int_t n, const Long_t *array);
+   TArrayL(Int_t n, Long_t *array);
    TArrayL(const TArrayL &array);
    TArrayL    &operator=(const TArrayL &rhs);
    virtual    ~TArrayL();
@@ -44,9 +44,9 @@ public:
    void       Copy(TArrayL &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Long_t    *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Long_t val=0) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void       Reset() {memset(fArray,0,fN*sizeof(Long_t));}
    void       Set(Int_t n);
-   void       Set(Int_t n, const Long_t *array);
+   void       Set(Int_t n, Long_t *array);
    Long_t    &operator[](Int_t i);
 
    ClassDef(TArrayL,1)  //Array of longs

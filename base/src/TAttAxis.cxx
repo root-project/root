@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TFile.h"
 #include "TMath.h"
 #include "TAttAxis.h"
@@ -168,17 +169,11 @@ void TAttAxis::SetLabelSize(Float_t size)
 }
 
 //______________________________________________________________________________
-void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
+void TAttAxis::SetNdivisions(Int_t n)
 {
 //   Set the number of divisions for this axis
-//   if optim = kTRUE (default), the number of divisions will be
-//                      optimized around the specified value.
-//   if optim = kFALSE, or n < 0, the axis will be forced to use
-//                      exactly n divisions.
-
 
    fNdivisions = n;
-   if (!optim) fNdivisions = -TMath::Abs(n);
    if (gPad) gPad->Modified();
 }
 
@@ -238,13 +233,7 @@ void TAttAxis::Streamer(TBuffer &R__b)
    // Stream an object of class TAttAxis.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 3) {
-         TAttAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fNdivisions;
       R__b >> fAxisColor;
       R__b >> fLabelColor;
@@ -253,9 +242,8 @@ void TAttAxis::Streamer(TBuffer &R__b)
       R__b >> fLabelSize;
       R__b >> fTickLength;
       R__b >> fTitleOffset;
-      // !file is the case of only TMapFile
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 && (!file || (file && file->GetVersion() > 900)))
+      // !gFile is the case of only TMapFile
+      if (R__v > 1 && (!gFile || (gFile && gFile->GetVersion() > 900)))
          R__b >> fTitleSize;
       else
          fTitleSize = fLabelSize;
@@ -263,9 +251,18 @@ void TAttAxis::Streamer(TBuffer &R__b)
          R__b >> fTitleColor;
          R__b >> fTitleFont;
       }
-      //====end of old versions
-
    } else {
-      TAttAxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TAttAxis::IsA());
+      R__b << fNdivisions;
+      R__b << fAxisColor;
+      R__b << fLabelColor;
+      R__b << fLabelFont;
+      R__b << fLabelOffset;
+      R__b << fLabelSize;
+      R__b << fTickLength;
+      R__b << fTitleOffset;
+      R__b << fTitleSize;
+      R__b << fTitleColor;
+      R__b << fTitleFont;
    }
 }

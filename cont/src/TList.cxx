@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.10 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.4 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -327,7 +327,7 @@ void TList::Clear(Option_t *option)
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    if (!nodel && IsOwner()) {
-      Delete(option);
+      Delete();
       return;
    }
 
@@ -420,7 +420,7 @@ TObject *TList::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TList::FindObject(const TObject *obj) const
+TObject *TList::FindObject(TObject *obj) const
 {
    // Find an object in this list using the object's IsEqual()
    // member function. Requires a sequential scan till the object has
@@ -439,7 +439,7 @@ TObject *TList::FindObject(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
+TObjLink *TList::FindLink(TObject *obj, Int_t &idx) const
 {
    // Returns the TObjLink object that contains object obj. In idx it returns
    // the position of the object in the list.
@@ -469,21 +469,6 @@ TObject *TList::First() const
    // Return the first object in the list. Returns 0 when list is empty.
 
    if (fFirst) return fFirst->GetObject();
-   return 0;
-}
-
-//______________________________________________________________________________
-TObject **TList::GetObjectRef(TObject *obj) const
-{
-   // Return address of pointer to obj
-
-   TObjLink *lnk = FirstLink();
-
-   while (lnk) {
-      TObject *ob = lnk->GetObject();
-      if (ob->IsEqual(obj)) return lnk->GetObjectRef();
-      lnk = lnk->Next();
-   }
    return 0;
 }
 
@@ -558,10 +543,8 @@ TObject *TList::Remove(TObject *obj)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -591,10 +574,8 @@ TObject *TList::Remove(TObjLink *lnk)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -824,68 +805,4 @@ void TListIter::SetOption(Option_t *option)
    // Sets the object option stored in the list.
 
    if (fCurCursor) fCurCursor->SetOption(option);
-}
-
-//_______________________________________________________________________
-void TList::Streamer(TBuffer &b)
-{
-   // Stream all objects in the collection to or from the I/O buffer.
-
-   Int_t nobjects;
-   UChar_t nch;
-   TObject *obj;
-   UInt_t R__s, R__c;
-
-   if (b.IsReading()) {
-      Version_t v = b.ReadVersion(&R__s, &R__c);
-      if (v > 3) {
-         TObject::Streamer(b);
-         fName.Streamer(b);
-         b >> nobjects;
-         char readOption[256];
-         for (Int_t i = 0; i < nobjects; i++) {
-            b >> obj;
-            b >> nch;
-            if (nch) {
-               b.ReadFastArray(readOption,nch);
-               readOption[nch] = 0;
-               Add(obj,readOption);
-            } else {
-               Add(obj);
-            }
-         }
-         b.CheckByteCount(R__s, R__c,TList::IsA());
-         return;
-      }
-
-      //  process old versions when TList::Streamer was in TCollection::Streamer
-      if (v > 2)
-         TObject::Streamer(b);
-      if (v > 1)
-         fName.Streamer(b);
-      b >> nobjects;
-      for (Int_t i = 0; i < nobjects; i++) {
-         b >> obj;
-         Add(obj);
-      }
-      b.CheckByteCount(R__s, R__c,TList::IsA());
-
-   } else {
-      R__c = b.WriteVersion(TList::IsA(), kTRUE);
-      TObject::Streamer(b);
-      fName.Streamer(b);
-      nobjects = GetSize();
-      b << nobjects;
-
-      TObjLink *lnk = fFirst;
-      while (lnk) {
-         obj = lnk->GetObject();
-         b << obj;
-         nch = strlen(lnk->GetAddOption());
-         b << nch;
-         b.WriteFastArray(lnk->GetAddOption(),nch);
-         lnk = lnk->Next();
-      }
-      b.SetByteCount(R__c, kTRUE);
-   }
 }

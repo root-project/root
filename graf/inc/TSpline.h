@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.3 2000/12/11 00:01:22 rdm Exp $
+// @(#)root/graf:$Name$:$Id$
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
 public:
   TSpline() : fDelta(-1), fXmin(0), fXmax(0),
     fNp(0), fKstep(kFALSE), fHistogram(0), fGraph(0), fNpx(100) {}
-  TSpline(const char *title, Double_t delta, Double_t xmin,
+  TSpline(Text_t *title, Double_t delta, Double_t xmin,
 	  Double_t xmax, Int_t np, Bool_t step) :
     TNamed("Spline",title), TAttFill(0,1),
     fDelta(delta), fXmin(xmin),
@@ -54,7 +54,7 @@ public:
   virtual Double_t  Eval(Double_t x) const=0;
            void     SetNpx(Int_t n) {fNpx=n;}
 
-  ClassDef (TSpline,2)
+  ClassDef (TSpline,1)
 };
 
 
@@ -134,34 +134,34 @@ public:
 //________________________________________________________________________
 class TSpline3 : public TSpline {
 private:
-  TSplinePoly3  *fPoly;       //[fNp] Array of polynomial terms
+  TSplinePoly3  *fPoly;       // Array of polynomial terms
   Double_t       fValBeg;     // Initial value of first or second derivative
   Double_t       fValEnd;     // End value of first or second derivative
   Int_t          fBegCond;    // 0=no beg cond, 1=first derivative, 2=second derivative
   Int_t          fEndCond;    // 0=no end cond, 1=first derivative, 2=second derivative
 
   void BuildCoeff();
-  void SetCond(const char *opt);
+  void SetCond(Text_t *opt);
 
 public:
   TSpline3() : fPoly(0), fValBeg(0), fValEnd(0),
     fBegCond(-1), fEndCond(-1) {}
-  TSpline3(const char *title,
-	   Double_t x[], Double_t y[], Int_t n, const char *opt=0,
+  TSpline3(Text_t *title,
+	   Double_t x[], Double_t y[], Int_t n, Text_t *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
-  TSpline3(const char *title,
+  TSpline3(Text_t *title,
 	   Double_t xmin, Double_t xmax,
-	   Double_t y[], Int_t n, const char *opt=0,
+	   Double_t y[], Int_t n, Text_t *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
-  TSpline3(const char *title,
-	   Double_t x[], TF1 *func, Int_t n, const char *opt=0,
+  TSpline3(Text_t *title,
+	   Double_t x[], TF1 *func, Int_t n, Text_t *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
-  TSpline3(const char *title,
+  TSpline3(Text_t *title,
 	   Double_t xmin, Double_t xmax,
-	   TF1 *func, Int_t n, const char *opt=0,
+	   TF1 *func, Int_t n, Text_t *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
-  TSpline3(const char *title,
-	   TGraph *g, const char *opt=0,
+  TSpline3(Text_t *title,
+	   TGraph *g, Text_t *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
   Double_t Eval(Double_t x) const;
   virtual ~TSpline3() {if (fPoly) delete [] fPoly;}
@@ -172,46 +172,44 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline3,2)
+  ClassDef (TSpline3,1)
 };
 
 
 //________________________________________________________________________
 class TSpline5 : public TSpline {
 private:
-  TSplinePoly5  *fPoly;     //[fNp] Array of polynomial terms
+  TSplinePoly5  *fPoly;     // Array of polynomial terms
 
   void BuildCoeff();
-  void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
-			  const char *&cb1, const char *&ce1, const char *&cb2,
-                          const char *&ce2);
+  void BoundaryConditions(Text_t *opt, Int_t &beg, Int_t&end,
+			  char *&cb1, char *&ce1, char *&cb2, char *&ce2);
   void SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-		     const char *cb1, const char *ce1, const char *cb2,
-                     const char *ce2);
+		     char *cb1, char *ce1, char *cb2, char *ce2);
 
 public:
   TSpline5() : fPoly(0) {}
-  TSpline5(const char *title,
+  TSpline5(Text_t *title,
 	   Double_t x[], Double_t y[], Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
+	   Text_t *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
-  TSpline5(const char *title,
+  TSpline5(Text_t *title,
 	   Double_t xmin, Double_t xmax,
 	   Double_t y[], Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
+	   Text_t *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
-  TSpline5(const char *title,
+  TSpline5(Text_t *title,
 	   Double_t x[], TF1 *func, Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
+	   Text_t *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
-  TSpline5(const char *title,
+  TSpline5(Text_t *title,
 	   Double_t xmin, Double_t xmax,
 	   TF1 *func, Int_t n,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
+	   Text_t *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
-  TSpline5(const char *title,
+  TSpline5(Text_t *title,
 	   TGraph *g,
-	   const char *opt=0, Double_t b1=0, Double_t e1=0,
+	   Text_t *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
   Double_t Eval(Double_t x) const;
   ~TSpline5() {if (fPoly) delete [] fPoly;}
@@ -224,7 +222,7 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline5,2)
+  ClassDef (TSpline5,1)
 };
 
 #endif

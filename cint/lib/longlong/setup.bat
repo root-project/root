@@ -1,4 +1,4 @@
-makecint -mk Makefile -dl long.dll -H longlong.h longdbl.h -cint -Z0
+makecint -mk Makefile -dl long.dll -H longlong.h -cint -Z0
 nmake -f Makefile CFG="long - Win32 Release"
 del %cintsysdir%\include\long.dll
 move Release\long.dll %cintsysdir%\include\long.dll

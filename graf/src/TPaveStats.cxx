@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -9,15 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Riostream.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TFile.h"
-#include "TClass.h"
 
 ClassImp(TPaveStats)
 
@@ -110,19 +109,13 @@ void TPaveStats::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TPaveStats.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TPaveStats::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 || (file && file->GetVersion() == 22304)) {
+      if (R__v > 1 || (gFile && gFile->GetVersion() == 22304)) {
          fFitFormat.Streamer(R__b);
          fStatFormat.Streamer(R__b);
       } else {
@@ -130,9 +123,13 @@ void TPaveStats::Streamer(TBuffer &R__b)
          SetStatFormat();
       }
       R__b.CheckByteCount(R__s, R__c, TPaveStats::IsA());
-      //====end of old versions
-
    } else {
-      TPaveStats::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TPaveStats::IsA(), kTRUE);
+      TPaveText::Streamer(R__b);
+      R__b << fOptFit;
+      R__b << fOptStat;
+      fFitFormat.Streamer(R__b);
+      fStatFormat.Streamer(R__b);
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

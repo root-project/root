@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for linuxppc with glibc and gcc2.95
 
 PLATFORM      = linux
@@ -34,8 +32,8 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lSM -lICE
-CILIBS        = -lm -ldl
+XLIBS         = -L/usr/X11R6/lib -lX11 -lSM -lICE -lXpm
+CILIBS        = -lm -ltermcap -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
@@ -44,5 +42,4 @@ F77FLAGS      = -fPIC
 F77LIBS       = -lg2c
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

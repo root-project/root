@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.2 2000/11/21 16:37:43 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
-#include "TClass.h"
 #include "TMath.h"
 
 ClassImp(TRandom3)
@@ -69,7 +68,7 @@ TRandom3::~TRandom3()
 }
 
 //______________________________________________________________________________
-Double_t TRandom3::Rndm(Int_t)
+Float_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
 //  Produces uniformly-distributed floating points between 0 and 1.
@@ -129,29 +128,5 @@ void TRandom3::SetSeed(UInt_t seed)
    Int_t i;
    for(i=1; i<624; i++) {
      fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
-   }
-}
-
-//______________________________________________________________________________
-void TRandom3::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TRandom3.
-
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TRandom3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      TRandom::Streamer(R__b);
-      R__b.ReadStaticArray(fMt);
-      R__b >> fCount624;
-      R__b.CheckByteCount(R__s, R__c, TRandom3::IsA());
-      //====end of old versions
-      
-   } else {
-      TRandom3::Class()->WriteBuffer(R__b,this);
    }
 }

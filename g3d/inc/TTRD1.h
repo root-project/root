@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD1.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -37,7 +37,7 @@ class TTRD1 : public TBRIK {
         TTRD1(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2, Float_t dy, Float_t dz);
         virtual ~TTRD1();
 
-        virtual Float_t GetDx2() const {return fDx2;}
+        virtual Float_t GetDx2() {return fDx2;}
         virtual void    SetPoints(Float_t *buff);
 
         ClassDef(TTRD1,1)  //TRD1 shape

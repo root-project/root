@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    void   SaveMimes();
    Bool_t HasChanged() const { return fChanged; }
    void   AddType(const char *type, const char *pat, const char *icon, const char *sicon, const char *action);
-   void   Print(Option_t *option="") const;
+   void   Print(Option_t *option="");
    Bool_t GetAction(const char *filename, char *action);
    Bool_t GetType(const char *filename, char *type);
    const TGPicture *GetIcon(const char *filename, Bool_t small_icon);

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for AIX 4.x with xlC
 
 PLATFORM      = aix
@@ -23,9 +21,9 @@ CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -DG__REGEXP \
 CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -DG__REGEXP -D_POSIX2_SOURCE \
                 -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
                 -DG__REDIRECTIO $(EXTRA_CFLAGS)
-MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
-                \$$SourceFiles ; /usr/ibmcxx/bin/makeC++SharedLib \
-                -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles
+MAKESHAREDLIB = $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \$$SourceFiles ; \
+                /usr/ibmcxx/bin/makeC++SharedLib -o \$$SharedLib \$$LinkedLibs \
+                -p 0 \$$ObjectFiles
 
 # Linker:
 LD            = xlC
@@ -35,7 +33,7 @@ SOEXT         = a
 
 # System libraries:
 SYSLIBS       = -lm -lld
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -lld
 
 # Fortran:
@@ -61,23 +59,20 @@ PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = -lTree -lHist
 TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TREEPLAYERLIBEXTRA  = -lTree -lProof -lGraf3d -lGraf -lHist
-TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
-TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf -lHist -lGui
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB)
+TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf -lHist
 X3DLIBDEP           = $(G3DLIB) $(GUILIB)
 X3DLIBEXTRA         = -lGraf3d -lGui -lX11
 EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
 EGLIBEXTRA          = -lGraf3d -lGraf
 PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = -lEG -lGraf $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIALIBEXTRA      = -lEG  -lGraf $(PYTHIA)
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = -lEG -lGraf $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+PYTHIA6LIBEXTRA     = -lEG -lGraf $(PYTHIA6)
 VENUSLIBDEP         = $(EGLIB)
-VENUSLIBEXTRA       = -lEG $(FVENUSLIBDIR) $(FVENUSLIB)
+VENUSLIBEXTRA       = -lEG
 X11TTFLIBDEP        = $(X11LIB)
 X11TTFLIBEXTRA      = -lGX11 -L$(TTFLIBDIR) -lttf -lX11
-STARLIBDEP          = $(TREELIB) $(PROOFLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
-                      $(HISTLIB)
-STARLIBEXTRA        = -lTree -lProof -lGpad -lGraf3d -lGraf -lHist
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
-GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
+GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLULIB) \
                       $(OPENGLLIB) -lX11 -lXext -lXmu -lXi

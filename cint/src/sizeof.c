@@ -7,7 +7,7 @@
  * Description:
  *  Getting object size 
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -55,7 +55,7 @@ G__value *object;
     case G__PARAP2P2P:
       break;
     default:
-      G__fprinterr(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
+      fprintf(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
 	     ,object->obj.reftype.reftype);
       break;
     }
@@ -119,7 +119,7 @@ char *memname;
     var=var->next;
   }
 
-  G__fprinterr(G__serr,"Error: member %s not found in %s ",memname,tagname);
+  fprintf(G__serr,"Error: member %s not found in %s ",memname,tagname);
   G__genericerror((char*)NULL);
   return(-1);
 }
@@ -188,9 +188,6 @@ char *typename;
       break;
     case 'h':
     case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g':
-#endif
       result = sizeof(int);
       break;
     case 'r':
@@ -249,18 +246,9 @@ char *typename;
   if((strcmp(typename,"float")==0)||
      (strcmp(typename,"float")==0))
     return(sizeof(float));
-  if((strcmp(typename,"double")==0)
-#ifdef G__OLDIMPLEMENTATION1533
-     ||(strcmp(typename,"longdouble")==0)
-#endif
-     )
+  if((strcmp(typename,"double")==0)||
+     (strcmp(typename,"longdouble")==0))
     return(sizeof(double));
-#ifndef G__OLDIMPLEMENTATION1533
-  if(strcmp(typename,"longdouble")==0) {
-    int tagnum = G__defined_tagname("G__longdouble",2);
-    return(G__struct.size[tagnum]);
-  }
-#endif
   if(strcmp(typename,"void")==0)
 #ifndef G__OLDIMPLEMENTATION930
     return(sizeof(void*));
@@ -419,9 +407,6 @@ char *typenamein;
 	break;
       case 'h':
       case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-      case 'g':
-#endif
 	size = G__INTALLOC;
 	break;
       case 'k':
@@ -1157,193 +1142,6 @@ int tagnum;
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1473
-/**************************************************************************
- * G__va_arg_setalign()
- **************************************************************************/
-#ifdef G__VAARG_INC_COPY_N
-static int G__va_arg_align_size=4;
-#else
-static int G__va_arg_align_size=0;
-#endif
-void G__va_arg_setalign(n)
-int n;
-{
-  G__va_arg_align_size = n;
-}
-
-/**************************************************************************
- * G__va_arg_copyvalue()
- **************************************************************************/
-void G__va_arg_copyvalue(t,p,pval,objsize)
-int t;
-void* p;
-G__value *pval;
-int objsize;
-{
-  switch(t) {
-  case 'c':
-  case 'b':
-    *(char*)(p) = (char)G__int(*pval);
-    break;
-  case 'r':
-  case 's':
-    *(short*)(p) = (short)G__int(*pval);
-    break;
-  case 'h':
-  case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
-    *(int*)(p) = (int)G__int(*pval);
-    break;
-  case 'k':
-  case 'l':
-    *(long*)(p) = (long)G__int(*pval);
-    break;
-  case 'f':
-    *(float*)(p) = (float)G__double(*pval);
-    break;
-  case 'd':
-    *(double*)(p) = (double)G__double(*pval);
-    break;
-  case 'u':
-    memcpy((void*)(p),(void*)pval->obj.i,objsize);
-    break;
-  default:
-    *(long*)(p) = (long)G__int(*pval);
-    break;
-  }
-}
-
-/**************************************************************************
- * G__va_arg_put()
- **************************************************************************/
-void G__va_arg_put(pbuf,libp,n)
-G__va_arg_buf* pbuf;
-struct G__param *libp;
-int n;
-{
-  int i;
-  int j=0;
-  int objsize;
-  int type;
-  int mod;
-#ifdef G__VAARG_NOSUPPORT
-  G__genericerror("Limitation: Variable argument is not supported for this platform");
-#endif
-  for(i=n;i<libp->paran;i++) {
-    objsize = G__sizeof(&libp->para[i]);
-    type = libp->para[i].type;
-    
-    G__va_arg_copyvalue(type,(void*)(&pbuf->d[j]),&libp->para[i],objsize);
-
-#if defined(G__VAARG_INC_COPY_N)
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
-#else
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
-#endif
-
-  }
-}
-
-#ifdef G__VAARG_COPYFUNC
-/**************************************************************************
- * G__va_arg_copyfunc()
- **************************************************************************/
-void G__va_arg_copyfunc(fp,ifunc,ifn)
-FILE* fp;
-struct G__ifunc_table* ifunc;
-int ifn;
-{
-  FILE *xfp;
-  int n;
-  int c;
-  int nest = 0;
-  int double_quote = 0;
-  int single_quote = 0;
-  int flag = 0;
-
-  if(G__srcfile[ifunc->pentry[ifn]->filenum].fp) 
-    xfp = G__srcfile[ifunc->pentry[ifn]->filenum].fp;
-  else {
-    xfp = fopen(G__srcfile[ifunc->pentry[ifn]->filenum].filename,"r");
-    flag = 1;
-  }
-  if(!xfp) return;
-  fsetpos(xfp,&ifunc->pentry[ifn]->pos);
-
-  fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
-				  ,ifunc->p_tagtable[ifn]
-				  ,ifunc->p_typetable[ifn]
-				  ,ifunc->reftype[ifn]
-				  ,ifunc->isconst[ifn]));
-  fprintf(fp,"%s(",ifunc->funcname[ifn]);
-
-  /* print out parameter types */
-  for(n=0;n<ifunc->para_nu[ifn];n++) {
-    
-    if(n!=0) {
-      fprintf(fp,",");
-    }
-
-    if('u'==ifunc->para_type[ifn][n] &&
-       0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][n]],"va_list")) {
-      fprintf(fp,"struct G__param* G__VA_libp,int G__VA_n");
-      break;
-    }
-    /* print out type of return value */
-    fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][n]
-				    ,ifunc->para_p_tagtable[ifn][n]
-				    ,ifunc->para_p_typetable[ifn][n]
-				    ,ifunc->para_reftype[ifn][n]
-				    ,ifunc->para_isconst[ifn][n]));
-    
-    if(ifunc->para_name[ifn][n]) {
-      fprintf(fp," %s",ifunc->para_name[ifn][n]);
-    }
-    if(ifunc->para_def[ifn][n]) {
-      fprintf(fp,"=%s",ifunc->para_def[ifn][n]);
-    }
-  }
-  fprintf(fp,")");
-  if(ifunc->isconst[ifn]&G__CONSTFUNC) {
-    fprintf(fp," const");
-  }
-
-  c = 0;
-  while(c!='{') c = fgetc(xfp);
-  fprintf(fp,"{");
-
-  nest = 1;
-  while(c!='}' || nest) {
-    c = fgetc(xfp);
-    fputc(c,fp);
-    switch(c) {
-    case '"':
-      if(!single_quote) double_quote ^= 1;
-      break;
-    case '\'':
-      if(!double_quote) single_quote ^= 1;
-      break;
-    case '{':
-      if(!single_quote && !double_quote) ++nest;
-      break;
-    case '}':
-      if(!single_quote && !double_quote) --nest;
-      break;
-    }
-  }
-  fprintf(fp,"\n");
-  if(flag && xfp) fclose(xfp);
-}
-#endif
-
-#endif
 
 
 /*

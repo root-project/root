@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.4 2001/03/16 18:03:51 brun Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine   05/01/96
 
 #include "TWin32Canvas.h"
@@ -24,7 +24,6 @@ TWin32Canvas::TWin32Canvas() {
 //______________________________________________________________________________
 TWin32Canvas::TWin32Canvas(TCanvas *c, const char *name, UInt_t width, UInt_t height)
 {
-    fCanvasImpID = -1;
     fCanvas = c;
     SetCanvas(0,0,width,height);
     SetCanvas(name);
@@ -36,7 +35,6 @@ TWin32Canvas::TWin32Canvas(TCanvas *c, const char *name, UInt_t width, UInt_t he
 TWin32Canvas::TWin32Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
 
-    fCanvasImpID = -1;
     fCanvas = c;
     SetCanvas(x,y,width,height);
     SetCanvas(name);
@@ -245,23 +243,16 @@ void   TWin32Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
    W32_GetGeometry(x, y, w, h);
 }
-
 //______________________________________________________________________________
-void   TWin32Canvas::Iconify(){
-  ShowWindow(GetWindow(),SW_MINIMIZE);
-}
-
+void   TWin32Canvas::Iconify(){};
 //______________________________________________________________________________
 Int_t  TWin32Canvas::InitWindow(){
         return fCanvasImpID;}
 
 //______________________________________________________________________________
 void   TWin32Canvas::SetCanvasSize(UInt_t w, UInt_t h){
-   if (fCanvasImpID==-1)
-     SetCanvas(0,0,w,h);
-   else
-     gVirtualX->RescaleWindow(fCanvasImpID, w, h);
-}
+      SetCanvas(0,0,w,h);
+};
 //______________________________________________________________________________
 void   TWin32Canvas::ShowMenuBar(Bool_t show)
 {
@@ -274,13 +265,7 @@ void   TWin32Canvas::ShowStatusBar(Bool_t show)
 }
 
 //______________________________________________________________________________
-void   TWin32Canvas::Show()
-{
-  HWND h = GetWindow();
-  SetWindowPos(h,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-  SetWindowPos(h,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE );
-  ShowWindow(h,SW_SHOWNORMAL);
-}
+void   TWin32Canvas::Show(){;}
 
 //______________________________________________________________________________
 void   TWin32Canvas::CreateStatusBar(Int_t nparts)
@@ -301,18 +286,16 @@ void   TWin32Canvas::CreateStatusBar(Int_t *parts, Int_t nparts)
 //______________________________________________________________________________
 void   TWin32Canvas::SetCanvas(Int_t x, Int_t y,UInt_t w, UInt_t h){
    fCanvasImp = this;
-   if (fCanvasImpID==-1) {
-      CreateWindowsObject((TGWin32 *)gVirtualX, x, y, w, h);
-      TGWin32WindowsObject *winobj = (TGWin32WindowsObject *)this;
-      fCanvasImpID = gVirtualX->InitWindow((ULong_t)winobj);
-   }
+   CreateWindowsObject((TGWin32 *)gVirtualX, x, y, w, h);
+   TGWin32WindowsObject *winobj = (TGWin32WindowsObject *)this;
+   fCanvasImpID = gVirtualX->InitWindow((ULong_t)winobj);
    W32_Set(x, y, w, h);
-}
+};
 
 //______________________________________________________________________________
 void   TWin32Canvas::SetCanvas(const char *title){
    W32_SetTitle(title);
-}
+};
 
 //______________________________________________________________________________
 void   TWin32Canvas::SetStatusText(const char *text, Int_t partidx)
@@ -462,8 +445,9 @@ void TWin32Canvas::SaveAsCB(TWin32Canvas *obj, TVirtualMenuItem *item)
       Int_t lExts = 0;
       for (i=0;i<lFilter;i++) if (!filter[i]) lExts++;
 
+      lExts >> 1;
       // create extensions
-      extensions = new const Char_t *[lExts/2];
+      extensions = new const Char_t *[lExts];
       lFilter--;
       Int_t s = 1;
       lExts = 0;

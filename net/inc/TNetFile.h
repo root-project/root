@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.8 2001/02/22 09:44:41 rdm Exp $
+// @(#)root/net:$Name$:$Id$
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -33,41 +33,51 @@
 #endif
 
 class TSocket;
+class TNetFile;
+
+typedef Int_t (*SecureAuth_t)(TNetFile *);
 
 
 class TNetFile : public TFile {
+
+friend Int_t SRPAuthenticate(TNetFile *);
 
 private:
    TUrl      fUrl;        //URL of file
    TString   fUser;       //remote user name
    Seek_t    fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
-   Int_t     fProtocol;   //rootd protocol level
-   Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
+
+   static char         *fgUser;
+   static char         *fgPasswd;
+   static SecureAuth_t  fgSecAuthHook;
 
    TNetFile() : fUrl("dummy") { fSocket = 0; }
+   Bool_t Authenticate();
+   Bool_t CheckNetrc(char *&user, char *&passwd);
    void   Init(Bool_t create);
-   void   Print(Option_t *option) const;
+   void   Print(Option_t *option);
    void   PrintError(const char *where, Int_t err);
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
+   char  *GetUser();
+   char  *GetPasswd(const char *prompt = "Password: ");
 
 public:
-   TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
-            Int_t compress = 1, Int_t netopt = 0);
+   TNetFile(const char *url, Option_t *option="", const char *ftitle="", Int_t compress=1);
    virtual ~TNetFile();
 
    void    Close(Option_t *option=""); // *MENU*
    void    Flush();
-   Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, int len);
+   Bool_t  WriteBuffer(const char *buf, int len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
+
+   static void SetUser(const char *user);
+   static void SetPasswd(const char *passwd);
+   static void SetSecureAuthHook(SecureAuth_t func);
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
-
-R__EXTERN const char *gRootdErrStr[];
 
 #endif

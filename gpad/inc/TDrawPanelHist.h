@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.h,v 1.2 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -45,8 +45,7 @@ public:
         virtual void  Apply(const char *action="");
         virtual void  BuildStandardButtons();
         virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        TObject       *GetHistogram() const {return fHistogram;}
-        virtual void  RecursiveRemove(TObject *obj);
+        TObject       *GetHistogram() {return fHistogram;}
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetDefaults();
         virtual void  SetSame();

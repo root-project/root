@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.5 2001/01/23 19:16:31 rdm Exp $
+// @(#)root/rfio:$Name$:$Id$
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -44,19 +44,11 @@ private:
    Int_t  SysRead(Int_t fd, void *buf, Int_t len);
    Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
    Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
    Int_t  SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
 
 public:
-   TRFIOFile(const char *url, Option_t *option="",
-             const char *ftitle="", Int_t compress=1);
+   TRFIOFile(const char *url, Option_t *option="", const Text_t *ftitle="", Int_t compress=1);
    ~TRFIOFile();
-
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
-
-   Int_t   GetErrno() const;
-   void    ResetErrno() const;
 
    ClassDef(TRFIOFile,1)  //A ROOT file that reads/writes via a rfiod server
 };

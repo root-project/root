@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -55,14 +55,14 @@ public:
    void      Delete(Option_t *opt = "");
    Int_t     GetSize() const { return fSize; }
    Int_t     Instances() const { return fTally; }
-   void      InstanceStatistics() const;
-   void      Print(Option_t *option="") const;
+   void      InstanceStatistics();
+   void      Print(Option_t *option="");
    Bool_t    PtrIsValid(TObject *obj);
    void      Remove(TObject *obj);
    void      RemoveQuietly(TObject *obj);
    void      Statistics() { Print(); }
    void      Terminate();
-   void      UpdateInstCount() const;
+   void      UpdateInstCount();
 
    static void AddObj(TObject *obj);
 

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.4 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/rootd:$Name$:$Id$
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -60,13 +60,12 @@ void ResetErrno()
 }
 
 //______________________________________________________________________________
-void Perror(char *buf)
+static void Perror(char *buf)
 {
    // Return in buf the message belonging to errno.
 
    int len = strlen(buf);
-#if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
-   defined(_AIX) || defined(__MACH__)
+#if (defined(__sun) && defined (__SVR4)) || defined (__linux) || defined(_AIX)
    sprintf(buf+len, " (%s)", strerror(GetErrno()));
 #else
    if (GetErrno() >= 0 && GetErrno() < sys_nerr)
@@ -132,20 +131,4 @@ void ErrorFatal(ERootdErrors code, const char *va_(fmt), ...)
    NetSendError(code);
    RootdClose();
    exit(1);
-}
-
-//______________________________________________________________________________
-void Error(ERootdErrors code, const char *va_(fmt), ...)
-{
-   // Write fatal message to syslog and exit.
-
-   char    buf[1024];
-   va_list ap;
-
-   va_start(ap,va_(fmt));
-   vsprintf(buf, fmt, ap);
-   va_end(ap);
-
-   syslog(LOG_ERR, buf);
-   NetSendError(code);
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONS.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name$:$Id$
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -40,8 +40,8 @@ class TCONS : public TTUBS {
                           , Float_t phi1, Float_t phi2, Float_t rmax2 = 0);
         virtual ~TCONS();
 
-        virtual Float_t GetRmin2() const {return fRmin2;}
-        virtual Float_t GetRmax2() const {return fRmax2;}
+        virtual Float_t GetRmin2() {return fRmin2;}
+        virtual Float_t GetRmax2() {return fRmax2;}
         virtual void    SetPoints(Float_t *buff);
 
         ClassDef(TCONS,1)  //CONS shape

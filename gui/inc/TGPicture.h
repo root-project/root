@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
    Pixmap_t    GetPicture() const { return fPic; }
    Pixmap_t    GetMask() const { return fMask; }
    Bool_t      IsScaled() const { return fScaled; }
-   ULong_t     Hash() const { return fName.Hash(); }
+   ULong_t     Hash() { return fName.Hash(); }
 
    virtual void Draw(Handle_t id, GContext_t gc, Int_t x, Int_t y) const;
 

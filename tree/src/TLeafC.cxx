@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.11 2001/02/22 13:54:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -106,14 +106,17 @@ void TLeafC::Import(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
-void TLeafC::PrintValue(Int_t) const
-{
-// Prints leaf value
 
-   char *value = (char*)GetValuePointer();
-   printf("%s",value);
+//______________________________________________________________________________
+void TLeafC::Print(Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*Print a description of this leaf*-*-*-*-*-*-*-*-*
+//*-*                  ================================
+
+   TLeaf::Print(option);
+
 }
+
 
 //______________________________________________________________________________
 void TLeafC::ReadBasket(TBuffer &b)
@@ -161,26 +164,16 @@ void TLeafC::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) {
-      delete [] fValue;
-   }
+   if (ResetAddress(add)) delete [] fValue;
    if (add) {
       if (TestBit(kIndirectAddress)) {
          fPointer = (char**)add;
-         Int_t ncountmax = fLen;
-         if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
-         if (ncountmax > fNdata || *fPointer == 0) {
-            if (*fPointer) delete [] *fPointer;
-            if (ncountmax > fNdata) fNdata = ncountmax;
-            *fPointer = new char[fNdata];
-         }
-         fValue = *fPointer;
+          if (*fPointer==0) *fPointer = new char[fNdata];
       } else {
          fValue = (char*)add;
       }
    }
    else {
       fValue = new char[fNdata];
-      fValue[0] = 0;
    }
 }

@@ -1,19 +1,19 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.9 2002/01/23 17:52:47 rdm Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.1 2000/09/14 06:30:19 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
-
+ 
 #include "TView.h"
 #include "TVirtualPad.h"
-
+ 
 #include "TVirtualGL.h"
 #include "GLConstants.h"
-
-#include "Riostream.h"
-
-
+ 
+#include <iostream.h>
+#include <iomanip.h>
+ 
 ClassImp(TXTRU)
-
+ 
 //_____________________________________________________________________________
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/xtru.gif"> </P> End_Html
 //
@@ -60,8 +60,8 @@ ClassImp(TXTRU)
 // and thus it is left to the user to avoid this mistake.
 //
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/polytype.gif"> </P> End_Html
-
-
+ 
+ 
 //______________________________________________________________________________
 TXTRU::TXTRU()
    : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(0), fYvtx(0),
@@ -73,10 +73,10 @@ TXTRU::TXTRU()
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
 }
-
+ 
 //______________________________________________________________________________
 TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
-             Int_t nxy, Int_t nz)
+             const Int_t nxy, const Int_t nz)
    : TShape (name,title,material)
 {
    //
@@ -84,7 +84,7 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
    //
    // Parameters of Nxy positions must be entered via TXTRU::DefineVertex
    // Parameters of Nz  positions must be entered via TXTRU::DefineSection
-
+ 
    // start in a known state even if "Error" is encountered
    fNxy      = 0;
    fNxyAlloc = 0;
@@ -96,10 +96,10 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
    fScale    = 0;
    fX0       = 0;
    fY0       = 0;
-
+ 
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
-
+ 
    if ( nxy < 3 ) {
       Error(name,"number of x-y points for %s must be at least three!",name);
       return;
@@ -108,7 +108,7 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
       Error(name,"number of z points for %s must be at least two!",name);
       return;
    }
-
+ 
    // allocate space for Nxy vertex points
    fNxy       = nxy;
    fNxyAlloc  = nxy;
@@ -120,7 +120,7 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
       fXvtx[i] = 0;
       fYvtx[i] = 0;
    }
-
+ 
    // allocate space for Nz sections
    fNz        = nz;
    fNzAlloc   = nz;
@@ -136,33 +136,33 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
       fX0[j]    = 0;
       fY0[j]    = 0;
    }
-
+ 
 }
-
+ 
 //______________________________________________________________________________
 TXTRU::TXTRU(const TXTRU &xtru)
 {
    // TXTRU copy constructor
-
+ 
    // patterned after other ROOT objects
-
+ 
    ((TXTRU&)xtru).Copy(*this);
 }
-
+ 
 //______________________________________________________________________________
 TXTRU::~TXTRU()
 {
    //
    // TXTRU destructor deallocates arrays
    //
-
+ 
    if (fXvtx) delete [] fXvtx;
    if (fYvtx) delete [] fYvtx;
    fXvtx     = 0;
    fYvtx     = 0;
    fNxy      = 0;
    fNxyAlloc = 0;
-
+ 
    if (fZ)     delete [] fZ;
    if (fScale) delete [] fScale;
    if (fX0)    delete [] fX0;
@@ -173,19 +173,19 @@ TXTRU::~TXTRU()
    fY0       = 0;
    fNz       = 0;
    fNzAlloc  = 0;
-
+ 
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
 }
-
+ 
 //______________________________________________________________________________
 TXTRU& TXTRU::operator=(const TXTRU &rhs)
 {
    // deep assignment operator
-
+ 
    // protect against self-assignment
    if (this == &rhs) return *this;
-
+ 
    if (fNxyAlloc) {
       delete [] fXvtx;
       delete [] fYvtx;
@@ -197,17 +197,17 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
       delete [] fY0;
    }
    ((TXTRU&)rhs).Copy(*this);
-
+ 
    return *this;
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::Copy(TObject &obj)
 {
    // TXTRU Copy method
-
+ 
    // patterned after other ROOT objects
-
+ 
    TObject::Copy(obj);
    ((TXTRU&)obj).fNxy       = fNxy;
    ((TXTRU&)obj).fNxyAlloc  = fNxyAlloc;
@@ -218,7 +218,7 @@ void TXTRU::Copy(TObject &obj)
       ((TXTRU&)obj).fXvtx[i] = fXvtx[i];
       ((TXTRU&)obj).fYvtx[i] = fYvtx[i];
    }
-
+ 
    ((TXTRU&)obj).fNz       = fNz;
    ((TXTRU&)obj).fNzAlloc  = fNzAlloc;
    ((TXTRU&)obj).fZ     = new Float_t [fNzAlloc];
@@ -232,22 +232,22 @@ void TXTRU::Copy(TObject &obj)
       ((TXTRU&)obj).fX0[j]    = fX0[j];
       ((TXTRU&)obj).fY0[j]    = fY0[j];
    }
-
+ 
    ((TXTRU&)obj).fPolygonShape = fPolygonShape;
    ((TXTRU&)obj).fZOrdering    = fZOrdering;
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_t y0)
 {
    // Set z section iz information
    // expand size of array if necessary
-
+ 
    if (iz < 0) return;
-
+ 
    // setting a new section makes things unverified
    fZOrdering  = kUncheckedZ;
-
+ 
    if (!fZ || !fScale || iz >= fNzAlloc) {
       // re-allocate the z positions/scales
       Int_t   newNalloc = iz + 1;
@@ -281,27 +281,27 @@ void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_
       fY0    = newY;
       fNzAlloc = newNalloc;
    }
-
+ 
    // filled z "iz" means indices 0...iz have values -> iz+1 entries
    fNz = TMath::Max(iz+1,fNz);
-
+ 
    fZ[iz]     = z;
    fScale[iz] = scale;
    fX0[iz]    = x0;
    fY0[iz]    = y0;
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
-
+ 
    // Set vertex point ipt to (x,y)
    // expand size of array if necessary
-
+ 
    if (ipt < 0) return;
-
+ 
    // setting a new vertex makes things unverified
    fPolygonShape  = kUncheckedXY;
-
+ 
    if (!fXvtx || !fYvtx || ipt >= fNxyAlloc) {
       // re-allocate the outline points
       Int_t   newNalloc = ipt + 1;
@@ -325,123 +325,123 @@ void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
       fYvtx = newY;
       fNxyAlloc = newNalloc;
    }
-
+ 
    // filled point "ipt" means indices 0...ipt have values -> ipt+1 entries
    fNxy = TMath::Max(ipt+1,fNxy);
-
+ 
    fXvtx[ipt] = x;
    fYvtx[ipt] = y;
 }
-
+ 
 //______________________________________________________________________________
 Int_t TXTRU::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute the distance from point px,py to a TXTRU
    // by calculating the closest approach to each corner
-
+ 
    Int_t numPoints = fNz*fNxy;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetOutlinePointX(Int_t n) const {
-
+ 
    // Return x coordinate of a vertex point
-
+ 
    if ((n < 0) || (n >= fNxy)) {
       Error(fName,"no such point %d [of %d]",n,fNxy);
       return 0.0;
    }
    return fXvtx[n];
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetOutlinePointY(Int_t n) const {
-
+ 
    // Return y coordinate of a vertex point
-
+ 
    if ((n < 0) || (n >= fNxy)) {
       Error(fName,"no such point %d [of %d]",n,fNxy);
       return 0.0;
    }
    return fYvtx[n];
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionX0(Int_t n) const {
-
+ 
    // Return x0 shift of a z section
-
+ 
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
    }
    return fX0[n];
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionY0(Int_t n) const {
-
+ 
    // Return y0 shift of a z section
-
+ 
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
    }
    return fY0[n];
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionScale(Int_t n) const {
-
+ 
    // Return scale factor for a z section
-
+ 
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
    }
    return fScale[n];
 }
-
+ 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionZ(Int_t n) const {
-
+ 
    // Return z of a z section
-
+ 
    if ((n < 0) || (n >= fNz)) {
       Error(fName,"no such section %d [of %d]",n,fNz);
       return 0.0;
    }
    return fZ[n];
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::Paint(Option_t *option)
 {
    // Paint this 3-D shape with its current attributes
-
+ 
    // Check that the polygon is well formed
    // convex vs. concave, z ordered monotonically
-
+ 
    if (fPolygonShape == kUncheckedXY ||
        fZOrdering    == kUncheckedZ     ) CheckOrdering();
-
+ 
    Int_t numpoints = fNz*fNxy;      // each z slice has Nxy points
-
+ 
    // Allocate memory for points (x,y,z) for each
-
+ 
    Float_t *points = new Float_t[3*numpoints];
    if (!points) return;
-
+ 
    SetPoints(points);
-
+ 
    Bool_t rangeView =
       option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
    if (!rangeView  && gPad->GetView3D()) PaintGLPoints(points);
-
+ 
    Int_t c = ((GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
    if (c < 0) c = 0;
-
+ 
    // Create overall structure, fill in counts of points,segments,polygons
    //    float *points :=    x0, y0, z0, x1, y1, z1, ..... ..... ....
    //      int *segs   :=    c0, p0, q0, c1, p1, q1, ..... ..... ....
@@ -451,17 +451,17 @@ void TXTRU::Paint(Option_t *option)
    //            (pj,qj) is a pair of point indices that form a segment
    //            nk is the number of sides to the polygon
    //            (s0k,s1k,...snk) are the edge segments of the polygon
-
+ 
     X3DBuffer *buff = new X3DBuffer;
     if (buff) {
       buff->numPoints = numpoints;       // each z slice has Nxy points
       buff->numSegs   = (2*fNz-1)*fNxy;  // (Nz-1)*Nxy along z + Nz outlines
       buff->numPolys  = (fNz-1)*fNxy+2;  // (Nz-1)*Nxy + 2 endcaps
     }
-
+ 
     // Connect previously allocated(+filled) points with buffer
     buff->points = points;
-
+ 
     // Allocate memory for segments
     buff->segs = new Int_t[buff->numSegs*3];
     if (buff->segs) {
@@ -492,7 +492,7 @@ void TXTRU::Paint(Option_t *option)
           }
        }
     }
-
+ 
     // Allocate memory for polygons:
     // The polygons with z depth are 4-sided and there are fNxy of them
     // for each pair of z's; the two end faces that slice z are fNxy sided.
@@ -503,13 +503,13 @@ void TXTRU::Paint(Option_t *option)
     // if fNxy is even then everything if fine
     // if fNxy is odd then we want to ensure that first and last
     // don't have same color ...punt for now....
-
+ 
     Int_t polysize = 2*(2+fNxy) + (fNz-1)*fNxy*(2+4);
     buff->polys = new Int_t[polysize];
     if (buff->polys) {
-
+ 
        int ioff = 0;
-
+ 
        // do first endcap
        buff->polys[ioff]   = c;
        buff->polys[ioff+1] = fNxy;
@@ -519,7 +519,7 @@ void TXTRU::Paint(Option_t *option)
           buff->polys[ioff] = iseg;
           ioff++;
        }
-
+ 
        int is1, is2, is3, is4, cadd;
        cadd = 1;
        int iz=0;
@@ -540,7 +540,7 @@ void TXTRU::Paint(Option_t *option)
              if (cadd==4) cadd=1;
           }
        }
-
+ 
        // do last endcap
        buff->polys[ioff]   = c;
        buff->polys[ioff+1] = fNxy;
@@ -549,10 +549,10 @@ void TXTRU::Paint(Option_t *option)
        for (jseg=0; jseg<fNxy; jseg++,ioff++)
           buff->polys[ioff] = jseg + 2*(fNz-1)*fNxy;
     }
-
+ 
     // Paint in the pad
     PaintShape(buff,rangeView);
-
+ 
     // Paint in X3D if asked
     if (strstr(option, "x3d")) {
         if(buff && buff->points && buff->segs) {
@@ -563,40 +563,40 @@ void TXTRU::Paint(Option_t *option)
             gSize3D.numPolys  -= buff->numPolys;
         }
     }
-
+ 
     delete [] points;
     if (buff->segs)     delete [] buff->segs;
     if (buff->polys)    delete [] buff->polys;
     if (buff)           delete    buff;
-
+ 
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::PaintGLPoints(Float_t *vertex)
 {
    // Paint TXTRU via OpenGL
-
+ 
    gVirtualGL->PaintXtru(vertex,fNxy,fNz);
-
+ 
 }
-
+ 
 //______________________________________________________________________________
-void TXTRU::Print(Option_t *option) const
+void TXTRU::Print(Option_t *option)
 {
    // Dump the info of this TXTRU shape
    // Option: "xy" to get x-y information
    //         "z"  to get z information
    //         "alloc" to show full allocated arrays (not just used values)
-
+ 
    TString opt = option;
    opt.ToLower();
-
+ 
    printf("TXTRU %s Nxy=%d [of %d] Nz=%d [of %d] Option=%s\n",
           GetName(),fNxy,fNxyAlloc,fNz,fNzAlloc,option);
-
-   const char *shape = 0;
-   const char *zorder = 0;
-
+ 
+   Char_t *shape = 0;
+   Char_t *zorder = 0;
+ 
    switch (fPolygonShape) {
    case kUncheckedXY:   shape = "Unchecked  ";  break;
    case kMalformedXY:   shape = "Malformed  ";  break;
@@ -605,7 +605,7 @@ void TXTRU::Print(Option_t *option) const
    case kConcaveCCW:    shape = "Concave CCW";  break;
    case kConcaveCW:     shape = "Concave CW ";  break;
    }
-
+ 
    switch (fZOrdering) {
    case kUncheckedZ:    zorder = "Unchecked Z";  break;
    case kMalformedZ:    zorder = "Malformed Z";  break;
@@ -614,25 +614,30 @@ void TXTRU::Print(Option_t *option) const
    case kConcaveIncZ:   zorder = "Concave Increasing Z";  break;
    case kConcaveDecZ:   zorder = "Concave Decreasing Z";  break;
    }
-
+ 
    printf("  XY shape '%s', '%s'\n",shape,zorder);
-
-   Int_t       nxy, nz;
-
+ 
+   Int_t   nxy, nz;
+   char *status;
+   char *used  = " ";
+   char *alloc = "  allocated";
+ 
    if (opt.Contains("alloc")) {
+      status = used;
       nxy    = fNxy;
       nz     = fNz;
    } else {
+      status = alloc;
       nxy    = fNxyAlloc;
       nz    = fNzAlloc;
    }
-
-   const char *name;
+ 
    Float_t *p;
+   Char_t  *name;
    Int_t   nlimit;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");
-
+ 
    Int_t ixyz=0;
    for (ixyz=0; ixyz<6; ixyz++) {
       switch (ixyz) {
@@ -646,7 +651,7 @@ void TXTRU::Print(Option_t *option) const
       }
       if (ixyz<=1 && !print_vtx) continue;
       if (ixyz>=2 && !print_z) continue;
-
+ 
       printf(" Float_t %s[] = \n    { %10g",name,*p++);
       Int_t i=1;
       for (i=1;i<nlimit;i++) {
@@ -655,27 +660,27 @@ void TXTRU::Print(Option_t *option) const
       }
       printf(" };\n");
    }
-
+ 
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::SetPoints(Float_t *buff)
 {
    // Create TXTRU points in buffer
    // order as expected by other methods (counterclockwise xy, increasing z)
-
+ 
    if (buff) {
       Int_t ipt, ixy, iz, ioff;
       Float_t x, y;
-
+ 
       // put xy in counterclockwise order
       Bool_t iscw = (fPolygonShape == kConvexCW ||
                      fPolygonShape == kConcaveCW  );
-
+ 
       // put z
       Bool_t reversez = (fZOrdering == kConvexDecZ ||
                          fZOrdering == kConcaveDecZ  );
-
+ 
       ipt = 0; // point number
       Int_t i=0;
       for (i=0; i<fNz; i++) {        // loop over sections
@@ -694,17 +699,17 @@ void TXTRU::SetPoints(Float_t *buff)
       }
    }
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::Sizeof3D() const
 {
    // Return total X3D size of this shape with its attributes
-
+ 
    gSize3D.numPoints += fNz*fNxy;
    gSize3D.numSegs   += (2*fNz-1)*fNxy;
    gSize3D.numPolys  += (fNz-1)*fNxy+2;
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::SplitConcavePolygon(Bool_t split)
 {
@@ -713,23 +718,23 @@ void TXTRU::SplitConcavePolygon(Bool_t split)
    // in solid mode, but introduces extra, potentially confusing, lines
    // in wireframe mode.
    // *** Not yet implemented ***
-
+ 
    fSplitConcave = split;
-
+ 
    // Not implemented yet
    if (split) {
       fSplitConcave = kFALSE;
       cout << TNamed::GetName()
            << " TXTRU::SplitConcavePolygon is not yet implemented" << endl;
    }
-
+ 
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::TruncateNxy(Int_t npts) {
-
+ 
    // Truncate the vertex list
-
+ 
    if ((npts < 0) || (npts > fNxy)) {
       Error(fName,"truncate to %d impossible on %d points",npts,fNxy);
       return;
@@ -737,12 +742,12 @@ void TXTRU::TruncateNxy(Int_t npts) {
    fNxy = npts;
    return;
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::TruncateNz(Int_t nz) {
-
+ 
    // Truncate the z section list
-
+ 
    if ((nz < 0) || (nz > fNz)) {
       Error(fName,"truncate to %d impossible on %d points",nz,fNz);
       return;
@@ -750,16 +755,16 @@ void TXTRU::TruncateNz(Int_t nz) {
    fNz = nz;
    return;
 }
-
+ 
 //_______________________________________________________________________
 void TXTRU::CheckOrdering()
 {
    // Determine ordering over which to process points, segments, surfaces
    // so that they render correctly.  Generally this has to do
    // with getting outward normals in the hidden/solid surface case.
-
+ 
    Float_t plus, minus, zero;
-
+ 
    // Check on polygon's shape
    // Convex vs. Concave and ClockWise vs. Counter-ClockWise
    plus = minus = zero = 0;
@@ -770,14 +775,14 @@ void TXTRU::CheckOrdering()
       // concave polygons have a mixture of + and - values
       Int_t ixyprev = (ixy + fNxy - 1)%fNxy;
       Int_t ixynext = (ixy + fNxy + 1)%fNxy;
-
+ 
       Float_t dxprev = fXvtx[ixy]     - fXvtx[ixyprev];
       Float_t dyprev = fYvtx[ixy]     - fYvtx[ixyprev];
       Float_t dxnext = fXvtx[ixynext] - fXvtx[ixy];
       Float_t dynext = fYvtx[ixynext] - fYvtx[ixy];
-
+ 
       Float_t xprod = dxprev*dynext - dxnext*dyprev;
-
+ 
       if (xprod > 0) {
          plus += xprod;
       } else if (xprod < 0) {
@@ -785,9 +790,9 @@ void TXTRU::CheckOrdering()
       } else {
          zero++;
       }
-
+ 
    }
-
+ 
    if (fNxy<3) {
       // no check yet written for checking that the segments don't cross
       fPolygonShape = kMalformedXY;
@@ -808,7 +813,7 @@ void TXTRU::CheckOrdering()
          }
       }
    }
-
+ 
    // Check on z ordering
    // Convex vs. Concave and increasing or decreasing in z
    plus = minus = zero = 0;
@@ -820,12 +825,12 @@ void TXTRU::CheckOrdering()
       // concave polygons have a mixture of + and - values
       Int_t izprev = (iz + fNz - 1)%fNz;
       Int_t iznext = (iz + fNz + 1)%fNz;
-
+ 
       Float_t dzprev = fZ[iz]         - fZ[izprev];
       Float_t dsprev = fScale[iz]     - fScale[izprev];
       Float_t dznext = fZ[iznext]     - fZ[iz];
       Float_t dsnext = fScale[iznext] - fScale[iz];
-
+ 
       // special cases for end faces
       if (iz==0) {
          dzprev = 0;
@@ -834,9 +839,9 @@ void TXTRU::CheckOrdering()
          dznext = 0;
          dsnext = -fScale[iz];
       }
-
+ 
       Float_t xprod = dznext*dsprev - dzprev*dsnext;
-
+ 
       if (xprod > 0) {
          plus += xprod;
       } else if (xprod < 0) {
@@ -846,9 +851,9 @@ void TXTRU::CheckOrdering()
       }
       // also check for scale factors that change sign...
       if (fScale[iz]*fScale[iznext] < 0) scaleSignChange = kTRUE;
-
+ 
    }
-
+ 
    if (fNz<1 || scaleSignChange) {
       // no check yet written for checking that the segments don't cross
       fZOrdering = kMalformedZ;
@@ -869,14 +874,14 @@ void TXTRU::CheckOrdering()
          }
       }
    }
-
+ 
 }
-
+ 
 //______________________________________________________________________________
 void TXTRU::DumpPoints(int npoints, float *pointbuff) const
 {
    // Dump the vertex points for visual inspection
-
+ 
    cout << "TXTRU::DumpPoints - " << npoints << " points" << endl;
    int ioff = 0;
    float x,y,z;
@@ -892,7 +897,7 @@ void TXTRU::DumpPoints(int npoints, float *pointbuff) const
 void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 {
    // Dump the segment info for visual inspection
-
+ 
    cout << "TXTRU::DumpSegments - " << nsegments << " segments" << endl;
    int ioff = 0;
    int icol, p1, p2;
@@ -908,7 +913,7 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
 {
    // Dump the derived polygon info for visual inspection
-
+ 
    cout << "TXTRU::DumpPolygons - " << npolygons << " polygons" << endl;
    int ioff = 0;
    int icol, nseg, iseg;
@@ -916,12 +921,8 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
    for (ipoly=0; ipoly<npolygons; ipoly++) {
       icol = polybuff[ioff++];
       nseg = polybuff[ioff++];
-#ifndef R__MACOSX
       cout << "  [" << setw(4) << ipoly << "] icol " << setw(3) << icol
            << " nseg " << setw(3) << nseg << "  (";
-#else
-      printf(" [%d4] icol %d3 nseg %d3  (", ipoly, icol, nseg);
-#endif
       for (iseg=0; iseg<nseg-1; iseg++) {
          cout << polybuff[ioff++] << ",";
       }

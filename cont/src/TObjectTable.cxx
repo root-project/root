@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.5 2001/10/17 11:03:04 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -110,33 +110,10 @@ TObjectTable::~TObjectTable()
 }
 
 //______________________________________________________________________________
-void TObjectTable::Print(Option_t *option) const
+void TObjectTable::Print(Option_t *)
 {
    // Print the object table.
-   // If option ="all" prints the list of all objects with the format
-   // object number, pointer, class name, object name
 
-   TString opt = option;
-   opt.ToLower();
-   if (opt.Contains("all")) {
-      TObject *obj;
-      int i, num = 0;
-      Printf("");
-      Printf("List of all objects");
-      Printf("object   address            class                    name");
-      Printf("================================================================================");
-      for (i = 0; i < fSize; i++) {
-         if (!fTable[i]) continue;
-         num++;
-         obj = fTable[i];
-         printf("%-8d 0x%-16lx %-24s %s\n", num, (Long_t)obj, obj->ClassName(),
-                obj->GetName());
-      }
-      Printf("================================================================================");
-      Printf("");
-   }
-
-   //print the number of instances per class
    InstanceStatistics();
 }
 
@@ -333,7 +310,7 @@ void TObjectTable::Expand(Int_t newSize)
 }
 
 //______________________________________________________________________________
-void TObjectTable::InstanceStatistics() const
+void TObjectTable::InstanceStatistics()
 {
    // Print the object table.
 
@@ -346,8 +323,8 @@ void TObjectTable::InstanceStatistics() const
 
    Printf("");
    Printf("Object statistics");
-   Printf("class                         cnt    on heap     size    total size    heap size");
-   Printf("================================================================================");
+   Printf("class                     cnt    on heap     size    total size    heap size");
+   Printf("============================================================================");
    TIter next(gROOT->GetListOfClasses());
    TClass *cl;
    while ((cl = (TClass*) next())) {
@@ -355,7 +332,7 @@ void TObjectTable::InstanceStatistics() const
       h = cl->GetHeapInstanceCount();
       s = cl->Size();
       if (n > 0) {
-         Printf("%-24s %8d%11d%9d%14d%13d", cl->GetName(), n, h, s, n*s, h*s);
+         Printf("%-20s %8d%11d%9d%14d%13d", cl->GetName(), n, h, s, n*s, h*s);
          ncum  += n;
          hcum  += h;
          scum  += s;
@@ -363,14 +340,14 @@ void TObjectTable::InstanceStatistics() const
          thcum += h*s;
       }
    }
-   Printf("--------------------------------------------------------------------------------");
-   Printf("Total:                   %8d%11d%9d%14d%13d", ncum, hcum, scum, tcum, thcum);
-   Printf("================================================================================");
+   Printf("----------------------------------------------------------------------------");
+   Printf("Total:               %8d%11d%9d%14d%13d", ncum, hcum, scum, tcum, thcum);
+   Printf("============================================================================");
    Printf("");
 }
 
 //______________________________________________________________________________
-void TObjectTable::UpdateInstCount() const
+void TObjectTable::UpdateInstCount()
 {
    // Histogram all objects according to their classes.
 

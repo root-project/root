@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TAttParticle.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name$:$Id$
 // Author: Ola Nordmann   29/09/95
 
 /*************************************************************************
@@ -55,20 +55,20 @@ class TAttParticle  : public TNamed {
   static  THashList     *fgList;
   static  Int_t          ConvertISAtoPDG(Int_t isaNumber);
   static  void           DefinePDG();
-  virtual Double_t       GetCharge() const { return fPDGCharge; }
-  virtual Double_t       GetEnergyCut() const { return fEnergyCut; }
-  virtual Double_t       GetEnergyLimit() const { return fEnergyLimit; }
-  virtual Double_t       GetGranularity() const { return fGranularity; }
-  virtual Double_t       GetDecayWidth() const { return fPDGDecayWidth; }
-  virtual Double_t       GetMass() const { return fPDGMass; }
-  virtual Int_t          GetMCNumber() const { return fMCnumberOfPDG; }
+  virtual Double_t       GetCharge() { return fPDGCharge; }
+  virtual Double_t       GetEnergyCut() { return fEnergyCut; }
+  virtual Double_t       GetEnergyLimit() { return fEnergyLimit; }
+  virtual Double_t       GetGranularity() { return fGranularity; }
+  virtual Double_t       GetDecayWidth() { return fPDGDecayWidth; }
+  virtual Double_t       GetMass() { return fPDGMass; }
+  virtual Int_t          GetMCNumber() { return fMCnumberOfPDG; }
   static  TAttParticle  *GetParticle(const char *name);
   static  TAttParticle  *GetParticle(Int_t mcnumber);
   virtual const char    *GetParticleType() const { return fParticleType.Data(); }
-  virtual Bool_t         GetStable() const { return fPDGStable; }
-  virtual void           Print(Option_t *option="") const ;
-  virtual Double_t       SampleMass() const ;
-  virtual Double_t       SampleMass(Double_t widthcut) const ;
+  virtual Bool_t         GetStable() { return fPDGStable; }
+  virtual void           Print(Option_t *option="");
+  virtual Double_t       SampleMass();
+  virtual Double_t       SampleMass(Double_t widthcut);
 
   ClassDef(TAttParticle,1)  //Particle definition
 };

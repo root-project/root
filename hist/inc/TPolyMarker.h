@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.4 2001/09/19 20:05:23 brun Exp $
+// @(#)root/hist:$Name$:$Id$
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -32,41 +32,33 @@
 class TPolyMarker : public TObject, public TAttMarker {
 protected:
         Int_t       fN;            //number of points
-        Int_t       fLastPoint;    //The index of the last filled point
-        Double_t   *fX;            //[fN] Array of X coordinates
-        Double_t   *fY;            //[fN] Array of Y coordinates
+        Float_t     *fX;           //[fN] Array of X coordinates
+        Float_t     *fY;           //[fN] Array of Y coordinates
         TString     fOption;       //options
 
 public:
         TPolyMarker();
         TPolyMarker(Int_t n, Option_t *option="");
         TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
-        TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         TPolyMarker(const TPolyMarker &polymarker);
         virtual ~TPolyMarker();
         virtual void     Copy(TObject &polymarker);
         virtual void     Draw(Option_t *option="");
-        virtual void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
+        virtual void     DrawPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t    GetLastPoint() const { return fLastPoint;}
-        virtual Int_t    GetN() const {return fN;}
-        Option_t        *GetOption() const {return fOption.Data();}
-        Double_t        *GetX() const {return fX;}
-        Double_t        *GetY() const {return fY;}
-        virtual void     ls(Option_t *option="") const;
-        virtual Int_t    Merge(TCollection *list);
+        virtual Int_t    GetN() {return fN;}
+        Option_t         *GetOption() const {return fOption.Data();}
+        Float_t          *GetX() {return fX;}
+        Float_t          *GetY() {return fY;}
+        virtual void     ls(Option_t *option="");
         virtual void     Paint(Option_t *option="");
-        virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-        virtual void     Print(Option_t *option="") const;
+        virtual void     PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
+        virtual void     Print(Option_t *option="");
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual Int_t    SetNextPoint(Double_t x, Double_t y); // *MENU*
-        virtual void     SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*
-        virtual void     SetPolyMarker(Int_t n);
-        virtual void     SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
-        virtual void     SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-        virtual Int_t    Size() const {return fLastPoint+1;}
+        virtual void     SetPoint(Int_t point, Float_t x, Float_t y); // *MENU*
+        virtual void     SetPolyMarker(Int_t n, Float_t *x=0, Float_t *y=0, Option_t *option="");
 
-        ClassDef(TPolyMarker,4)  //An array of points with the same marker
+        ClassDef(TPolyMarker,1)  //An array of points with the same marker
 };
 
 #endif

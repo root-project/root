@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.2 2000/11/21 16:52:19 brun Exp $
+// @(#)root/eg:$Name$:$Id$
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -41,9 +41,9 @@ class TParticle;
 
 class TGenerator : public TNamed {
  protected:
-        Float_t       fPtCut;        //!Pt cut. Do not show primaries below
-        Bool_t        fShowNeutrons; //!display neutrons if true
-        TObjArray    *fParticles;    //->static container of the primary particles
+        Float_t       fPtCut;        //Pt cut. Do not show primaries below
+        Bool_t        fShowNeutrons; //display neutrons if true
+        TObjArray    *fParticles;    //static container of the primary particles
  public:
 
         TGenerator(){}; //Used by Dictionary
@@ -55,14 +55,14 @@ class TGenerator : public TNamed {
         virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
         virtual TObjArray      *ImportParticles(Option_t *option="");
-        virtual TParticle      *GetParticle(Int_t i) const;
-        Int_t                   GetNumberOfParticles() const {return fParticles->GetLast()+1;}
-        virtual TObjArray      *GetListOfParticles() const {return fParticles;}
+        virtual TParticle      *GetParticle(Int_t i);
+        Int_t                   GetNumberOfParticles() {return fParticles->GetLast()+1;}
+        virtual TObjArray      *GetListOfParticles() {return fParticles;}
         virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
-        Float_t                 GetPtCut() const {return fPtCut;}
+        Float_t                 GetPtCut() {return fPtCut;}
         virtual void            Paint(Option_t *option="");
         virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
-        virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*
+        virtual void            SetViewRadius(Float_t rbox = 1000); //*MENU*
         virtual void            SetViewRange(Float_t xmin=-10000,Float_t ymin=-10000,Float_t zmin=-10000
                                             ,Float_t xmax=10000,Float_t ymax=10000,Float_t zmax=10000);  // *MENU*
         virtual void            ShowNeutrons(Bool_t show=1); // *MENU*

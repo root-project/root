@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.6 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.3 2000/06/05 10:13:37 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -11,9 +11,12 @@
 #ifndef ROOT_TLatex
 #define ROOT_TLatex
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
+#ifndef __CINT__
+#include <fstream.h>
+#else
+class ofstream;
 #endif
+
 #ifndef ROOT_TText
 #include "TText.h"
 #endif
@@ -109,8 +112,8 @@ public:
       void             Copy(TObject &text);
 
       TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
-      Double_t         GetHeight() const;
-      virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
+      Double_t         GetHeight();
+      virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
       Double_t         GetXsize();
       Double_t         GetYsize();
       virtual void     Paint(Option_t *option="");

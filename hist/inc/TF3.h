@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.4 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -49,17 +49,16 @@ public:
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-          Int_t     GetNpz() const {return fNpz;}
+          Int_t     GetNpz() {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
-   virtual Double_t GetZmin() const {return fZmin;}
-   virtual Double_t GetZmax() const {return fZmax;}
-   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
+   virtual Double_t GetZmin() {return fZmin;}
+   virtual Double_t GetZmax() {return fZmax;}
+   virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return TF1::Integral(ax,bx,ay,by,epsilon);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
-   virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     SetNpz(Int_t npz=30);
    virtual void     SetRange(Double_t xmin, Double_t xmax);

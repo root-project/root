@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -13,7 +13,6 @@
 #include "TAttPad.h"
 #include "TBuffer.h"
 #include "TStyle.h"
-#include "TClass.h"
 
 ClassImp(TAttPad)
 
@@ -57,7 +56,7 @@ void TAttPad::Copy(TAttPad &attpad)
 }
 
 //______________________________________________________________________________
-void TAttPad::Print(Option_t *) const
+void TAttPad::Print(Option_t *)
 {
 }
 
@@ -88,7 +87,7 @@ void TAttPad::SetBottomMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad bottom margin in per cent of the pad height*-*-*-*
 //*-*              ===================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fTopMargin >= 1) return;
    fBottomMargin = margin;
 }
@@ -98,7 +97,7 @@ void TAttPad::SetLeftMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad left margin in per cent of the pad width*-*-*-*-*
 //*-*              ================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fRightMargin >= 1) return;
    fLeftMargin = margin;
 }
@@ -108,7 +107,7 @@ void TAttPad::SetRightMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad right margin in per cent of the pad width*-*-*-*-*
 //*-*              =================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fLeftMargin >= 1) return;
    fRightMargin = margin;
 }
@@ -118,7 +117,7 @@ void TAttPad::SetTopMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad top margin in per cent of the pad height*-*-*-*-*
 //*-*              ================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fBottomMargin >= 1) return;
    fTopMargin = margin;
 }
@@ -129,13 +128,7 @@ void TAttPad::Streamer(TBuffer &R__b)
    // Stream an object of class TAttPad.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         TAttPad::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion();
       R__b >> fLeftMargin;
       R__b >> fRightMargin;
       R__b >> fBottomMargin;
@@ -155,9 +148,24 @@ void TAttPad::Streamer(TBuffer &R__b)
          R__b >> fFrameBorderSize;
          R__b >> fFrameBorderMode;
       }
-      //====end of old versions
-      
    } else {
-      TAttPad::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TAttPad::IsA());
+      R__b << fLeftMargin;
+      R__b << fRightMargin;
+      R__b << fBottomMargin;
+      R__b << fTopMargin;
+      R__b << fXfile;
+      R__b << fYfile;
+      R__b << fAfile;
+      R__b << fXstat;
+      R__b << fYstat;
+      R__b << fAstat;
+      R__b << fFrameFillColor;
+      R__b << fFrameLineColor;
+      R__b << fFrameFillStyle;
+      R__b << fFrameLineStyle;
+      R__b << fFrameLineWidth;
+      R__b << fFrameBorderSize;
+      R__b << fFrameBorderMode;
    }
 }

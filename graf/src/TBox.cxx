@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.2 2000/06/13 10:45:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
@@ -115,9 +116,8 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- Are we inside the box?
 //*-*  ======================
-   if (GetFillStyle()) {
-      if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) return 0;
-      else return 9999;
+   if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) {
+      if (GetFillStyle()) return 0;  //*-* if box is filled
    }
 
 //*-*- Are we on the edges?
@@ -439,26 +439,26 @@ again:
 
       if (px1 < 0 ) break;
       if (PA) {
-         fX1 = gPad->AbsPixeltoX(pxold);
+         fX1 = gPad->AbsPixeltoX(px);
          fY1 = gPad->AbsPixeltoY(pyt);
          fX2 = gPad->AbsPixeltoX(pxt);
-         fY2 = gPad->AbsPixeltoY(pyold);
+         fY2 = gPad->AbsPixeltoY(py);
       }
       if (PB) {
          fX1 = gPad->AbsPixeltoX(pxl);
          fY1 = gPad->AbsPixeltoY(pyt);
-         fX2 = gPad->AbsPixeltoX(pxold);
-         fY2 = gPad->AbsPixeltoY(pyold);
+         fX2 = gPad->AbsPixeltoX(px);
+         fY2 = gPad->AbsPixeltoY(py);
       }
       if (PC) {
          fX1 = gPad->AbsPixeltoX(pxl);
-         fY1 = gPad->AbsPixeltoY(pyold);
-         fX2 = gPad->AbsPixeltoX(pxold);
+         fY1 = gPad->AbsPixeltoY(py);
+         fX2 = gPad->AbsPixeltoX(px);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
       if (PD) {
-         fX1 = gPad->AbsPixeltoX(pxold);
-         fY1 = gPad->AbsPixeltoY(pyold);
+         fX1 = gPad->AbsPixeltoX(px);
+         fY1 = gPad->AbsPixeltoY(py);
          fX2 = gPad->AbsPixeltoX(pxt);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
@@ -514,7 +514,7 @@ void TBox::HideToolTip(Int_t event)
 }
 
 //______________________________________________________________________________
-void TBox::ls(Option_t *) const
+void TBox::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this box with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
@@ -543,12 +543,12 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 }
 
 //______________________________________________________________________________
-void TBox::Print(Option_t *) const
+void TBox::Print(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this box with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
    if (GetLineStyle() != 1) printf(" Style=%d",GetLineStyle());
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());
@@ -602,26 +602,34 @@ void TBox::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TBox.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      Float_t x1,y1,x2,y2;
-      R__b >> x1; fX1 = x1;
-      R__b >> y1; fY1 = y1;
-      R__b >> x2; fX2 = x2;
-      R__b >> y2; fY2 = y2;
+      if (R__v < 2) {
+         Float_t x1,y1,x2,y2;
+         R__b >> x1; fX1 = x1;
+         R__b >> y1; fY1 = y1;
+         R__b >> x2; fX2 = x2;
+         R__b >> y2; fY2 = y2;
+      } else {
+         R__b >> fX1;
+         R__b >> fY1;
+         R__b >> fX2;
+         R__b >> fY2;
+      }
       R__b.CheckByteCount(R__s, R__c, TBox::IsA());
-      //====end of old versions
-
    } else {
-      TBox::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TBox::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      R__b << fX1;
+      R__b << fY1;
+      R__b << fX2;
+      R__b << fY2;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

@@ -6,9 +6,6 @@
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
 
-template <class BidirectionalIterator>
-inline void reverse(BidirectionalIterator first, BidirectionalIterator last) {}
-
 // Generic algorithms can not be precompiled
 
 #pragma endif

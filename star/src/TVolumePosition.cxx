@@ -1,8 +1,10 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.4 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.4 2002/01/23 17:52:51 rdm Exp $
+// $Id: TNodePosition.cxx,v 1.23 1999/12/21 18:57:14 fine Exp $
 
-#include "Riostream.h"
+#include <iostream.h>
+#include <iomanip.h>
+
 #include "TCL.h"
 #include "TVolumePosition.h"
 #include "TVolume.h"
@@ -141,10 +143,10 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
+Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t)
 {
-   if (!gPad) return 0;
-   if (!GetNode()) return 0;
+   if (!gPad) return "";
+   if (!GetNode()) return "";
    static char info[64];
    sprintf(info,"%s/%s, shape=%s/%s",GetNode()->GetName(),GetNode()->GetTitle(),GetNode()->GetShape()->GetName(),GetNode()->GetShape()->ClassName());
    return info;
@@ -269,7 +271,7 @@ void TVolumePosition::Paint(Option_t *)
 }
 
 //_______________________________________________________________________
-void TVolumePosition::Print(Option_t *) const
+void TVolumePosition::Print(Option_t *)
 {
   cout << " Node: " <<   GetNode()->GetName() << endl;
   cout << " Position: x=" <<

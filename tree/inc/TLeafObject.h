@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.8 2001/04/27 17:29:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -32,31 +32,26 @@ class TMethodCall;
 class TLeafObject : public TLeaf {
 
 protected:
-    TClass      *fClass;          //! pointer to class
-    void       **fObjAddress;     //! Address of Pointer to object
-    Bool_t       fVirtual;        // Support for Virtuality
+    TClass      *fClass;          //pointer to class
+    void        **fObjAddress;    //Address of Pointer to object
+    Bool_t       fVirtual;        //Support for Virtuality
     
 public:
-    enum { kWarn = BIT(12) };
-
     TLeafObject();
     TLeafObject(const char *name, const char *type);
     virtual ~TLeafObject();
 
     virtual void    FillBasket(TBuffer &b);
-    TClass         *GetClass() const {return fClass;}
-    TMethodCall    *GetMethodCall(const char *name);
-    TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
-    const char     *GetTypeName() const ;
-    Bool_t          IsOnTerminalBranch() const    { return kFALSE; }
-    Bool_t          IsVirtual() const {return fVirtual;}
-    virtual Bool_t  Notify();
-    virtual void    PrintValue(Int_t i=0) const;
+    TClass          *GetClass() {return fClass;}
+    TMethodCall     *GetMethodCall(char *name);
+    TObject         *GetObject() {return (TObject*)(*fObjAddress);}
+    const char      *GetTypeName() const ;
+    Bool_t          IsVirtual() {return fVirtual;}
     virtual void    ReadBasket(TBuffer &b);
     virtual void    SetAddress(void *add=0);
     virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
     
-    ClassDef(TLeafObject,4)  //A TLeaf for a general object derived from TObject.
+    ClassDef(TLeafObject,1)  //A TLeaf for a general object derived from TObject.
 };
 
 #endif

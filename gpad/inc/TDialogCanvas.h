@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.4 2001/01/12 08:27:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -37,13 +37,12 @@ protected:
 public:
    TDialogCanvas();
    TDialogCanvas(const char *name, const char *title, UInt_t ww, UInt_t wh);
-   TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh);
    virtual        ~TDialogCanvas();
    virtual void   Apply(const char *action="");
    virtual void   BuildStandardButtons();
    virtual void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
-   TObject        *GetRefObject() const { return fRefObject; }
-   TPad           *GetRefPad() const { return fRefPad; }
+   TObject        *GetRefObject() { return fRefObject; }
+   TPad           *GetRefPad() { return fRefPad; }
    virtual void   Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual void   RecursiveRemove(TObject *obj);
    virtual void   SetBorderMode(Short_t bordermode){ fBorderMode = bordermode; }
@@ -51,6 +50,7 @@ public:
    virtual void   SetLogx(Int_t value = 1);
    virtual void   SetLogy(Int_t value = 1);
    virtual void   SetName(const char *name) { fName = name; }
+   virtual void   SetObject();
    virtual void   SetRefObject(TObject*obj) { fRefObject=obj; }
    virtual void   SetRefPad(TPad *pad) { fRefPad=pad; }
    virtual void   x3d(Option_t *option="");

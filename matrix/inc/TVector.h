@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -55,37 +55,22 @@
 #endif
 
 
-class TVector;
 class TMatrix;
 class TElementAction;
 class TElementPosAction;
-class TMatrixRow;
-class TMatrixColumn;
-class TMatrixDiag;
-
-TVector &operator+=(TVector &target, const TVector &source);
-TVector &operator-=(TVector &target, const TVector &source);
-Double_t operator*(const TVector &v1, const TVector &v2);
-TVector &Add(TVector &target, Double_t scalar, const TVector &source);
-TVector &ElementMult(TVector &target, const TVector &source);
-TVector &ElementDiv(TVector &target, const TVector &source);
-Bool_t   operator==(const TVector &v1, const TVector &v2);
-void     Compare(const TVector &im1, const TVector &im2);
-Bool_t   AreCompatible(const TVector &v1, const TVector &v2);
 
 
 class TVector : public TObject {
 
-friend class TMatrix;
 friend class TMatrixRow;
 friend class TMatrixColumn;
 friend class TMatrixDiag;
 
 protected:
-   Int_t     fNmem;             //! number of rows in allocated memory (>=fNrows)
    Int_t     fNrows;            // number of rows
+   Int_t     fNmem;             // number of rows in allocated memory (>=fNrows)
    Int_t     fRowLwb;           // lower bound of the row index
-   Real_t   *fElements;	        //[fNrows] elements themselves
+   Real_t   *fElements;	        // elements themselves
 
    void Allocate(Int_t nrows, Int_t row_lwb = 0);
    void Invalidate() { fNrows = -1; fElements = 0; }
@@ -145,7 +130,7 @@ public:
    Double_t Norm2Sqr() const;
    Double_t NormInf() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="");
 
    friend TVector &operator+=(TVector &target, const TVector &source);
    friend TVector &operator-=(TVector &target, const TVector &source);
@@ -158,7 +143,7 @@ public:
    friend void Compare(const TVector &im1, const TVector &im2);
    friend Bool_t AreCompatible(const TVector &v1, const TVector &v2);
 
-   ClassDef(TVector,2)  // Vector class
+   ClassDef(TVector,1)  // Vector class
 };
 
 
@@ -170,7 +155,7 @@ void VerifyVectorIdentity(const TVector &v1, const TVector &v2);
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 
@@ -219,7 +204,7 @@ inline TVector &TVector::operator=(const TVector &source)
    return *this;
 }
 
-inline TVector::TVector(const TVector &another) : TObject()
+inline TVector::TVector(const TVector &another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

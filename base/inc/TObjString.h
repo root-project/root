@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -36,15 +36,15 @@ private:
 
 public:
    TObjString(const char *s = "") : fString(s) { }
-   TObjString(const TObjString &s) : TObject(), fString(s.fString) { }
+   TObjString(const TObjString &s) : fString(s.fString) { }
    ~TObjString() { }
-   Int_t     Compare(const TObject *obj) const;
+   Int_t     Compare(TObject *obj);
    const char *GetName() const { return fString.Data(); }
-   ULong_t   Hash() const { return fString.Hash(); }
+   ULong_t   Hash() { return fString.Hash(); }
    void      FillBuffer(char *&buffer) { fString.FillBuffer(buffer); }
-   void      Print(Option_t *) const { Printf("TObjString = %s", (const char*)fString); }
+   void      Print(Option_t *) { Printf("TObjString = %s", (const char*)fString); }
    Bool_t    IsSortable() const { return kTRUE; }
-   Bool_t    IsEqual(const TObject *obj) const;
+   Bool_t    IsEqual(TObject *obj);
    void      ReadBuffer(char *&buffer) { fString.ReadBuffer(buffer); }
    void      SetString(char *s) { fString = s; }
    TString   GetString() const { return fString; }

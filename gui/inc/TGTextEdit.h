@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.6 2000/08/30 16:57:20 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -79,11 +79,11 @@ protected:
 
 public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
-              UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
-              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = GetWhitePixel());
+              Int_t id = -1, UInt_t sboptions = 0, ULong_t back = fgWhitePixel);
 
    virtual ~TGTextEdit();
 
@@ -92,7 +92,7 @@ public:
    virtual Bool_t Copy();
    virtual Bool_t Cut();
    virtual Bool_t Paste();
-   virtual void   Print(Option_t * = "") const;
+   virtual void   Print(Option_t * = "");
    virtual void   Delete(Option_t * = "");
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
@@ -104,7 +104,6 @@ public:
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
-   virtual void   SetFocus();
 
    TGLongPosition GetCurrentPos() const { return fCurrent; }
    virtual Long_t ReturnLongestLineWidth();
@@ -115,7 +114,6 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleFocusChange(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*

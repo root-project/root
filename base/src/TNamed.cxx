@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.9 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,7 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "Strlen.h"
 #include "TNamed.h"
 #include "TClass.h"
@@ -56,18 +57,7 @@ TNamed& TNamed::operator=(const TNamed& rhs)
 }
 
 //______________________________________________________________________________
-TObject *TNamed::Clone(const char *newname) const
-{
-   // Make a clone of an object using the Streamer facility.
-   // If newname is specified, this will be the name of the new object
-
-   TNamed *named = (TNamed*)TObject::Clone(newname);
-   if (newname && strlen(newname)) named->SetName(newname);
-   return named;
-}
-
-//______________________________________________________________________________
-Int_t TNamed::Compare(const TObject *obj) const
+Int_t TNamed::Compare(TObject *obj)
 {
    // Compare two TNamed objects. Returns 0 when equal, -1 when this is
    // smaller and +1 when bigger (like strcmp).
@@ -96,7 +86,7 @@ void TNamed::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-void TNamed::ls(Option_t *) const
+void TNamed::ls(Option_t *)
 {
    // List TNamed name and title.
 
@@ -106,7 +96,7 @@ void TNamed::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TNamed::Print(Option_t *) const
+void TNamed::Print(Option_t *)
 {
    // Print TNamed name and title.
 
@@ -117,22 +107,20 @@ void TNamed::Print(Option_t *) const
 void TNamed::SetName(const char *name)
 {
    // Change (i.e. set) the name of the TNamed.
-   // WARNING: if the object is a member of a THashTable or THashList container
-   // the container must be Rehash()'ed after SetName(). For example the list
-   // of objects in the current directory is a THashList.
+   // WARNING !!
+   // If the object is a member of a THashTable, THashList container
+   // The HashTable must be Rehashed after SetName
+   // For example the list of objects in the current directory is a THashList
 
    fName = name;
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TNamed::SetNameTitle(const char *name, const char *title)
+void TNamed::SetObject(const char *name, const char *title)
 {
    // Change (i.e. set) all the TNamed parameters (name and title).
-   // WARNING: if the name is changed and the object is a member of a
-   // THashTable or THashList container the container must be Rehash()'ed
-   // after SetName(). For example the list of objects in the current
-   // directory is a THashList.
+   // See also WARNING in SetName
 
    fName  = name;
    fTitle = title;

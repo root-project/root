@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.8 2001/05/08 14:21:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ friend class TObjArrayIter;
 friend class TClonesArray;
 
 protected:
-   TObject     **fCont;        //!Array contents
+   TObject     **fCont;        //Array contents
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 
@@ -53,7 +53,6 @@ public:
    Int_t            GetEntries() const;
    Int_t            GetEntriesFast() const {return GetAbsLast()+1;}  //only OK when no gaps
    Int_t            GetLast() const;
-   TObject        **GetObjectRef(TObject *obj) const;
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
 
@@ -76,7 +75,7 @@ public:
    TObject         *Last() const;
    virtual TObject *&operator[](Int_t i);
    Int_t            LowerBound() const { return fLowerBound; }
-   Int_t            IndexOf(const TObject *obj) const;
+   Int_t            IndexOf(TObject *obj) const; // returns fLowerBound-1 if not found
    void             SetLast(Int_t last);
 
    virtual void     Sort(Int_t upto = kMaxInt);
@@ -129,20 +128,10 @@ inline Bool_t TObjArray::BoundsOk(const char *where, Int_t at) const
 
 inline TObject *&TObjArray::operator[](Int_t at)
 {
-   int j = at-fLowerBound;
-   if (j >= 0 && j < fSize) return fCont[j];
-   BoundsOk("operator[]", at);
-   fLast = -2; // invalidate fLast since the result may be used as an lvalue
-   return fCont[0];
-}
-
-inline TObject *TObjArray::At(Int_t i) const
-{
-   // Return the object at position i. Returns 0 if i is out of bounds.
-   int j = i-fLowerBound;
-   if (j >= 0 && j < fSize) return fCont[j];
-   BoundsOk("At", i);
-   return 0;
+   if (!BoundsOk("operator[]", at))
+      at = fLowerBound;
+   //fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   return fCont[at-fLowerBound];
 }
 
 #endif

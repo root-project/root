@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux (Debian) with glibc and egcs
 # Changes for Debian 2.0:
 # libncurses does not exist, remove -lncurses
@@ -35,7 +33,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lnsl -lm -ldl -rdynamic
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = -L/usr/X11R6/lib -lX11 -lXpm
 CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
@@ -45,5 +43,4 @@ F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

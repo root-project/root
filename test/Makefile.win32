@@ -8,7 +8,7 @@ OutPutOpt     = -out:
 !include <win32.mak>
 CC            = $(cc)
 CXX           = $(cc)
-CXXFLAGS      = $(cvarsdll) -nologo -G5 -GR -MD -DWIN32 -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
+CXXFLAGS      = $(cvarsdll) -nologo -G5 -MD -DWIN32 -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
 CXXOPT        = -O2
 #CXXOPT       = -Z7
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.5 2002/02/04 08:21:50 brun Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -70,10 +70,7 @@ void TFunction::CreateSignature()
       }
       if (arg.DefaultValue() && strlen(arg.DefaultValue())) {
          fSignature += " = ";
-         const char *charstar = strstr(arg.Type()->TrueName(),"char*");
-         if (charstar) fSignature += "\"";
          fSignature += arg.DefaultValue();
-         if (charstar) fSignature += "\"";
       }
       ifirst++;
    }
@@ -147,7 +144,7 @@ Int_t TFunction::GetNargsOpt() const
 }
 
 //______________________________________________________________________________
-Int_t TFunction::Compare(const TObject *obj) const
+Int_t TFunction::Compare(TObject *obj)
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -157,7 +154,7 @@ Int_t TFunction::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-ULong_t TFunction::Hash() const
+ULong_t TFunction::Hash()
 {
    // Return hash value for TFunction based on its name.
 
@@ -180,14 +177,5 @@ void *TFunction::InterfaceMethod() const
    // can find which TFunction belongs to a G__MethodInfo object.
    // Both need to have the same InterfaceMethod pointer.
 
-   G__InterfaceMethod pfunc = fInfo->InterfaceMethod();
-   if (!pfunc) {
-      struct G__bytecodefunc *bytecode = fInfo->GetBytecode();
-
-      if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
-      else {
-        pfunc = (G__InterfaceMethod)NULL;
-      }
-   }
-   return (void*)pfunc;
+   return (void*)fInfo->InterfaceMethod();
 }

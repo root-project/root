@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.6 2001/08/23 22:11:48 brun Exp $
+// @(#)root/eg:$Name$:$Id$
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -10,14 +10,8 @@
 ClassImp(TParticle)
 
 //______________________________________________________________________________
-TParticle::TParticle() :
-  fPdgCode(0), fStatusCode(0), fWeight(0),fCalcMass(0), fPx(0), fPy(0),
-  fPz(0), fE(0), fVx(0), fVy(0), fVz(0), fVt(0), fPolarTheta(0), fPolarPhi(0)
+TParticle::TParticle()
 {
-  fMother[0]   = 0;
-  fMother[1]   = 0;
-  fDaughter[0] = 0;
-  fDaughter[1] = 0;
   fParticlePDG = 0;
 }
 
@@ -41,9 +35,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
-     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
-     else         fCalcMass = -TMath::Sqrt(-a2);
+     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
   }
 }
 
@@ -67,9 +59,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
-     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
-     else         fCalcMass = -TMath::Sqrt(-a2);
+     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
   }
 }
 
@@ -78,7 +68,25 @@ TParticle::TParticle(const TParticle &p)
 {
     // copy constructor
 
-   *this = p;
+  fPdgCode     = p.fPdgCode;
+  fStatusCode  = p.fStatusCode;
+  fMother[0]   = p.fMother[0];
+  fMother[1]   = p.fMother[1];
+  fDaughter[0] = p.fDaughter[0];
+  fDaughter[1] = p.fDaughter[1];
+  fWeight      = p.fWeight;
+  fCalcMass    = p.fCalcMass;
+  fPx          = p.fPx;
+  fPy          = p.fPy;
+  fPz          = p.fPz;
+  fE           = p.fE;
+  fVx          = p.fVx;
+  fVy          = p.fVy;
+  fVz          = p.fVz;
+  fVt          = p.fVt;
+  fPolarTheta  = p.fPolarTheta;
+  fPolarPhi    = p.fPolarPhi;
+  fParticlePDG = p.fParticlePDG;
 }
 
 //______________________________________________________________________________
@@ -211,15 +219,15 @@ void TParticle::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TParticle::Print(Option_t *) const
+void TParticle::Print(Option_t *)
 {
 //
 //  Print the internals of the primary vertex particle
 //
-   //TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
+   TParticlePDG* pdg = this->GetPDG();
    Printf("TParticle: %-13s  p: %8f %8f %8f Vertex: %8e %8e %8e %5d %5d %s",
           GetName(),Px(),Py(),Pz(),Vx(),Vy(),Vz(),
-          fMother[0],fMother[1]);
+          fMother[0],fMother[1],pdg->Type());
 }
 
 //______________________________________________________________________________
@@ -254,15 +262,9 @@ void TParticle::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TParticle.
 
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TParticle::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       R__b >> fPdgCode;
@@ -283,9 +285,26 @@ void TParticle::Streamer(TBuffer &R__b)
       R__b >> fPolarPhi;
       fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
       R__b.CheckByteCount(R__s, R__c, TParticle::IsA());
-      //====end of old versions
-      
    } else {
-      TParticle::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TParticle::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      R__b << fPdgCode;
+      R__b << fStatusCode;
+      R__b.WriteArray(fMother, 2);
+      R__b.WriteArray(fDaughter, 2);
+      R__b << fWeight;
+      R__b << fCalcMass;
+      R__b << fPx;
+      R__b << fPy;
+      R__b << fPz;
+      R__b << fE;
+      R__b << fVx;
+      R__b << fVy;
+      R__b << fVz;
+      R__b << fVt;
+      R__b << fPolarTheta;
+      R__b << fPolarPhi;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -35,30 +35,23 @@
 void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int flag);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1483
-#define G__PROTECTEDACCESS   1
-#define G__PRIVATEACCESS     2
-static int G__privateaccess = 0;
-#endif
-
 /**************************************************************************
 * CAUTION:
 *  Following macro G__BUILTIN must not be defined at normal cint
 * installation. This macro must be deleted only when you generate following
 * source files. 
-*     src/libstrm.cxx in lib/stream    'make'
-*     src/vcstrm.cxx  in lib/vcstream  'make' , 'make -f Makefileold'
-*     src/bcstrm.cxx  in lib/bcstream  'make'
-*     src/cbstrm.cpp  in lib/cbstream  'make'
-*     src/sunstrm.cxx in lib/snstream  'make'
+*     src/libstrm.cxx in lib/stream
+*     src/vcstrm.cxx  in lib/vcstream
+*     src/bcstrm.cxx  in lib/bcstream
+*     src/cbstrm.cpp  in lib/cbstream
+*     src/sunstrm.cxx in lib/snstream
 *     src/kccstrm.cxx (lib/kcc_work not included in the package)
-*     src/stdstrct.c  in lib/stdstrct  'make'
-*     src/Apiif.cxx   in src           'make -f Makeapi' , 'make -f Makeapiold'
+*     src/stdstrct.c  in lib/stdstrct
+*     src/Apiif.cxx   in src
 * g++ has a bug of distinguishing 'static operator delete(void* p)' in
 * different file scope. Deleting this macro will avoid this problem.
 **************************************************************************/
 /* #define G__BUILTIN */
-
 
 #if !defined(G__DECCXX) && !defined(G__BUILTIN)
 #define G__N_EXPLICITDESTRUCTOR
@@ -72,7 +65,6 @@ static int G__privateaccess = 0;
 #undef G__P2FDECL
 #endif
 #endif
-
 
 /**************************************************************************
 * If this is Windows-NT/95, create G__PROJNAME.DEF file
@@ -138,10 +130,6 @@ static int G__store_asm_noverflow;
 static int G__store_no_exec_compile;
 static int G__store_asm_exec;
 #endif
-#ifndef G__PHILIPPE30
-static int G__extra_inc_n = 0;
-static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
-#endif
 
 
 /**************************************************************************
@@ -176,19 +164,13 @@ static int G__isDLL=0;
 static char G__CINTLIBNAME[10] = "LIBCINT";
 #endif
 
-#define G__MAXDLLNAMEBUF 512
-
 static char G__PROJNAME[G__MAXNAME];
 #ifndef G__OLDIMPLEMENTATION1098
-static char G__DLLID[G__MAXDLLNAMEBUF];
+static char G__DLLID[G__MAXNAME];
 #else
 static char *G__DLLID;
 #endif
 static char *G__INITFUNC;
-
-#ifndef G__OLDIMPLEMENTATION1423
-static char G__NEWID[G__MAXDLLNAMEBUF];
-#endif
 
 #ifndef G__FONS60
 /**************************************************************************
@@ -202,9 +184,6 @@ void G__check_setup_version(version, func)
 int version;
 char *func;
 {
-#ifndef G__OLDIMPLEMENTATION1599
-   G__init_globals();
-#endif
 #ifndef G__OLDIMPLEMENTATION1169
    if (version > G__ACCEPTDLLREV_UPTO || version < G__ACCEPTDLLREV_FROM) {
 #else
@@ -333,8 +312,8 @@ int ifn;
      * LD_FUNC (C++ compiled)
      ****************************************/
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,
-			   "%3x: LD_FUNC C++ compiled %s paran=%d\n"
+    if(G__asm_dbg) fprintf(G__serr
+			   ,"%3x: LD_FUNC C++ compiled %s paran=%d\n"
 			   ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
 #endif
     G__asm_inst[G__asm_cp]=G__LD_FUNC;
@@ -532,11 +511,7 @@ FILE *fp;
   fprintf(fp,"class G__cpp_setup_init%s {\n",G__DLLID);
   fprintf(fp,"  public:\n");
   if (G__DLLID && G__DLLID[0]) {
-#ifndef G__OLDIMPLEMENTATION1565
-    fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)(&G__cpp_setup%s)); G__call_setup_funcs(); }\n",G__DLLID,G__DLLID,G__DLLID);
-#else
     fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)(&G__cpp_setup%s)); }\n",G__DLLID,G__DLLID,G__DLLID);
-#endif
     fprintf(fp,"   ~G__cpp_setup_init%s() { G__remove_setup_func(\"%s\"); }\n",G__DLLID,G__DLLID);
   } else {
     fprintf(fp,"    G__cpp_setup_init() { G__add_setup_func(\"G__Default\",(G__incsetup)(&G__cpp_setup)); }\n");
@@ -544,106 +519,6 @@ FILE *fp;
   }
   fprintf(fp,"};\n");
   fprintf(fp,"G__cpp_setup_init%s G__cpp_setup_initializer%s;\n\n",G__DLLID,G__DLLID);
-}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1423
-/**************************************************************************
-* G__gen_newdelete()
-*
-**************************************************************************/
-void G__gen_newdelete(fp) 
-FILE *fp;
-{
-  if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE)){
-    fprintf(fp,"class G__%s_tag {};\n\n",G__NEWID);
-    
-    if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
-      fprintf(fp,"static ");
-    fprintf(fp,"void* operator new(size_t size,G__%s_tag* p) {\n",G__NEWID);
-#ifndef G__OLDIMPLEMENTATION1436
-    fprintf(fp,"  if(p && G__PVOID!=G__getgvp()) return((void*)p);\n");
-#else
-    fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return((void*)p);\n");
-#endif
-    fprintf(fp,"#ifndef G__ROOT\n");
-    fprintf(fp,"  return(malloc(size));\n");
-    fprintf(fp,"#else\n");
-    fprintf(fp,"  return(::operator new(size));\n");
-    fprintf(fp,"#endif\n");
-    fprintf(fp,"}\n\n");
-
-#ifndef G__OLDIMPLEMENTATION1431
-    fprintf(fp,"/* dummy, for exception */\n");
-    fprintf(fp,"#ifdef G__EH_DUMMY_DELETE\n");
-    if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
-      fprintf(fp,"static ");
-    fprintf(fp,"void operator delete(void *p,G__%s_tag* x) {\n",G__NEWID);
-    fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-    fprintf(fp,"#ifndef G__ROOT\n");
-    fprintf(fp,"  free(p);\n");
-    fprintf(fp,"#else\n");
-    fprintf(fp,"  ::operator delete(p);\n");
-    fprintf(fp,"#endif\n");
-    fprintf(fp,"}\n");
-    fprintf(fp,"#endif\n\n");
-#endif
-    
-    fprintf(fp,"static void G__operator_delete(void *p) {\n");
-    fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-    fprintf(fp,"#ifndef G__ROOT\n");
-    fprintf(fp,"  free(p);\n");
-    fprintf(fp,"#else\n");
-    fprintf(fp,"  ::operator delete(p);\n");
-    fprintf(fp,"#endif\n");
-    fprintf(fp,"}\n\n");
-
-#ifndef G__OLDIMPLEMENTATION1447
-    fprintf(fp,"void G__DELDMY_%s() { G__operator_delete(0); }\n\n",G__NEWID);
-#endif
-    
-  }
-  else {
-    if(0==(G__is_operator_newdelete&(G__MASK_OPERATOR_NEW|G__IS_OPERATOR_NEW))){
-      if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
-	fprintf(fp,"static void* operator new(size_t size) {\n");
-	fprintf(fp,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
-      }
-      else {
-	fprintf(fp,"static void* operator new(size_t size,void* p) {\n");
-#ifndef G__OLDIMPLEMENTATION1321
-	fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
-#else
-	fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
-#endif
-      }
-      /* fprintf(fp,"  if(G__PVOID!=(long)p) return(p);\n"); */
-      fprintf(fp,"#ifndef G__ROOT\n");
-      fprintf(fp,"  return(malloc(size));\n");
-      fprintf(fp,"#else\n");
-      fprintf(fp,"  return new char[size];\n");
-      fprintf(fp,"#endif\n");
-      fprintf(fp,"}\n");
-    }
-    else {
-      G__fprinterr(G__serr,"Note: operator new() masked %x\n"
-	      ,G__is_operator_newdelete);
-    }
-#ifdef G__N_EXPLICITDESTRUCTOR
-    if(0==(G__is_operator_newdelete&
-	   (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
-      fprintf(fp,"static void operator delete(void *p) {\n");
-      fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-      /* fprintf(fp,"  if(G__PVOID!=G__getgvp()) return;\n"); */
-      fprintf(fp,"  free(p);\n");
-      fprintf(fp,"}\n");
-    }
-    else {
-      G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
-	      ,G__is_operator_newdelete);
-    }
-#endif /* G__N_EXPLICITDESTRUCTOR */
-  }
 }
 #endif
 
@@ -683,33 +558,6 @@ void G__gen_cpplink()
   if(!hfp) G__fileerror(G__CPPLINK_H);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1589
-  {
-    int algoflag=0;
-    int filen=0;
-    char *fname;
-    for(filen=0;filen<G__nfile;filen++) {
-      fname = G__srcfile[filen].filename;
-      if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 || 
-	 strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 || 
-	 strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
-	 strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 || 
-	 strcmp(fname,"queue")==0) {
-	algoflag |= 1;
-      }
-      if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 || 
-	 strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 || 
-	 strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 || 
-	 strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 || 
-	 strcmp(fname,"queue.h")==0) {
-	algoflag |= 2;
-      }
-    }
-    if(algoflag&1) fprintf(hfp,"#include <algorithm>\n");
-    else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
-  }
-#endif
-
 #ifndef G__OLDIMPLEMENTATION883
   if(G__CPPLINK==G__globalcomp&&-1!=G__defined_tagname("G__longlong",2)) {
 #if defined(__hpux) && !defined(G__ROOT)
@@ -721,9 +569,6 @@ void G__gen_cpplink()
   }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1423
-  G__gen_newdelete(fp);
-#else /* 1423 */
   if(0==(G__is_operator_newdelete&(G__MASK_OPERATOR_NEW|G__IS_OPERATOR_NEW))){
     if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
       fprintf(fp,"static void* operator new(size_t size) {\n");
@@ -746,12 +591,12 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr(G__serr,"Note: operator new() masked %x\n"
+    fprintf(G__serr,"Note: operator new() masked %x\n"
 	    ,G__is_operator_newdelete);
   }
 #ifdef G__N_EXPLICITDESTRUCTOR
   if(0==(G__is_operator_newdelete&
-	 (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
+     (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
     fprintf(fp,"static void operator delete(void *p) {\n");
     fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
     /* fprintf(fp,"  if(G__PVOID!=G__getgvp()) return;\n"); */
@@ -759,11 +604,10 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
+    fprintf(G__serr,"Note: operator delete() masked %x\n"
 	    ,G__is_operator_newdelete);
   }
-#endif /* G__N_EXPLICITDESTRUCTOR */
-#endif /* 1423 */
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1169
 #ifdef G__BUILTIN
@@ -849,59 +693,50 @@ void G__gen_cpplink()
   fclose(G__WINDEFfp);
 #endif
 
-  if(
-#ifndef G__OLDIMPLEMENTATION1423
-     (0==(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)) &&
-#endif /* 1423 */
-     (G__is_operator_newdelete&(G__IS_OPERATOR_NEW|G__IS_OPERATOR_DELETE))) {
+  if(G__is_operator_newdelete&(G__IS_OPERATOR_NEW|G__IS_OPERATOR_DELETE)) {
     fp = fopen("G__ISOPRNEW","w");
 #ifndef G__OLDIMPLEMENTATION606
     if(!fp) G__fileerror("G__ISOPRNEW");
 #endif
     fprintf(fp,"Global function new/delete are overloaded\n");
     fclose(fp);
-    G__fprinterr(G__serr,"################### CAUTION ##########################\n");
-    G__fprinterr(G__serr,"//Overloaded global operator new and/or delete are\n");
-    G__fprinterr(G__serr,"//found in user's source file.\n");
-    G__fprinterr(G__serr,"//Modify functions as follows. Otherwise, you may find\n");
-    G__fprinterr(G__serr,"//problems later.  (%x)\n",G__is_operator_newdelete);
-    G__fprinterr(G__serr,"\n");
-    G__fprinterr(G__serr,"// Giving memory arena to a base class object for constructor call\n");
-    G__fprinterr(G__serr,"#define G__PVOID (-1)\n");
-    G__fprinterr(G__serr,"extern \"C\" long G__getgvp();\n");
-    G__fprinterr(G__serr,"\n");
+    fprintf(G__serr,"################### CAUTION ##########################\n");
+    fprintf(G__serr,"//Overloaded global operator new and/or delete are\n");
+    fprintf(G__serr,"//found in user's source file.\n");
+    fprintf(G__serr,"//Modify functions as follows. Otherwise, you may find\n");
+    fprintf(G__serr,"//problems later.\n");
+    fprintf(G__serr,"\n");
+    fprintf(G__serr,"// Giving memory arena to a base class object for constructor call\n");
+    fprintf(G__serr,"#define G__PVOID (-1)\n");
+    fprintf(G__serr,"extern \"C\" long G__getgvp();\n");
+    fprintf(G__serr,"\n");
     if(G__is_operator_newdelete&(G__IS_OPERATOR_NEW)) {
       if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
-        G__fprinterr(G__serr,"void* operator new(size_t size) {\n");
-        G__fprinterr(G__serr,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
+        fprintf(G__serr,"void* operator new(size_t size) {\n");
+        fprintf(G__serr,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
       }
       else {
-        G__fprinterr(G__serr,"void* operator new(size_t size,void* p) {\n");
-#ifndef G__OLDIMPLEMENTATION1512
-        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) {G__setgvp(G__PVOID);return(p);}\n");
+        fprintf(G__serr,"void* operator new(size_t size,void* p) {\n");
+#ifndef G__OLDIMPLEMENTATION1321
+        fprintf(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #else
-        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+        fprintf(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #endif
       }
-      G__fprinterr(G__serr,"  // Yourown things...\n");
-      G__fprinterr(G__serr,"}\n");
-      G__fprinterr(G__serr,"\n");
+      fprintf(G__serr,"  // Yourown things...\n");
+      fprintf(G__serr,"}\n");
+      fprintf(G__serr,"\n");
     }
 #ifdef G__N_EXPLICITDESTRUCTOR
     if(G__is_operator_newdelete&(G__IS_OPERATOR_DELETE)) {
-      G__fprinterr(G__serr,"void operator delete(void *p) {\n");
-#ifndef G__OLDIMPLEMENTATION1512
-      G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) {G__setgvp(G__PVOID);return;}\n");
-#else
-      G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-#endif
-      G__fprinterr(G__serr,"  // Yourown things...\n");
-      G__fprinterr(G__serr,"}\n");
+      fprintf(G__serr,"void operator delete(void *p) {\n");
+      fprintf(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+      fprintf(G__serr,"  // Yourown things...\n");
+      fprintf(G__serr,"}\n");
     }
 #endif
-    G__fprinterr(G__serr,"######################################################\n");
+    fprintf(G__serr,"######################################################\n");
   }
-
 #ifdef G__OLDIMPLEMENTATION1197
 #ifdef G__GENWINDEF
   free(G__WINDEF);
@@ -920,24 +755,24 @@ int G__cleardictfile(flag)
 int flag;
 {
   if(EXIT_SUCCESS!=flag) {
-    G__fprinterr(G__serr,"!!!Removing ");
+    fprintf(G__serr,"!!!Removing ");
     if(G__CPPLINK_C) {
       remove(G__CPPLINK_C);
-      G__fprinterr(G__serr,"%s ",G__CPPLINK_C);
+      fprintf(G__serr,"%s ",G__CPPLINK_C);
     }
     if(G__CPPLINK_H) {
       remove(G__CPPLINK_H);
-      G__fprinterr(G__serr,"%s ",G__CPPLINK_H);
+      fprintf(G__serr,"%s ",G__CPPLINK_H);
     }
     if(G__CLINK_C) {
       remove(G__CLINK_C);
-      G__fprinterr(G__serr,"%s ",G__CLINK_C);
+      fprintf(G__serr,"%s ",G__CLINK_C);
     }
     if(G__CLINK_H) {
       remove(G__CLINK_H);
-      G__fprinterr(G__serr,"%s ",G__CLINK_H);
+      fprintf(G__serr,"%s ",G__CLINK_H);
     }
-    G__fprinterr(G__serr,"!!!\n");
+    fprintf(G__serr,"!!!\n");
   }
 #ifdef G__GENWINDEF
   if(G__WINDEF) free(G__WINDEF);
@@ -966,31 +801,17 @@ int flag;
 void G__clink_header(fp)
 FILE *fp;
 {
-#ifndef G__OLDIMPLEMENTATION1525
-  int i;
-#endif
   fprintf(fp,"#include <stddef.h>\n");
   fprintf(fp,"#include <stdio.h>\n");
   fprintf(fp,"#include <stdlib.h>\n");
   fprintf(fp,"#include <math.h>\n");
   fprintf(fp,"#include <string.h>\n");
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) 
-    fprintf(fp,"#define G__MULTITHREADLIBCINTC\n");
-#endif
   fprintf(fp,"#define G__ANSIHEADER\n");
-#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
-  fprintf(fp,"#define G__DICTIONARY\n");
-#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
-#endif
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) 
-    fprintf(fp,"#undef G__MULTITHREADLIBCINTC\n");
 #endif
 
 #ifdef G__BORLAND
@@ -1002,28 +823,6 @@ FILE *fp;
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup_global%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup%s();\n",G__DLLID);
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) {
-    fprintf(fp,"extern G__DLLEXPORT void G__SetCCintApiPointers G__P((\n");
-#if !defined(G__OLDIMPLEMENTATION1485)
-    for(i=0;i<125;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=124) fprintf(fp,",\n");
-    }
-#elif !defined(G__OLDIMPLEMENTATION1546)
-    for(i=0;i<124;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=123) fprintf(fp,",\n");
-    }
-#else
-    for(i=0;i<122;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=121) fprintf(fp,",\n");
-    }
-#endif
-    fprintf(fp,"));\n");
-  }
-#endif
 #else
   fprintf(fp,"extern void G__c_setup_tagtable%s();\n",G__DLLID);
   fprintf(fp,"extern void G__c_setup_typetable%s();\n",G__DLLID);
@@ -1031,30 +830,7 @@ FILE *fp;
   fprintf(fp,"extern void G__c_setup_global%s();\n",G__DLLID);
   fprintf(fp,"extern void G__c_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern void G__set_c_environment%s();\n",G__DLLID);
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) {
-    fprintf(fp,"extern void G__SetCCintApiPointers G__P((\n");
-#if !defined(G__OLDIMPLEMENTATION1485)
-    for(i=0;i<125;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=124) fprintf(fp,",\n");
-    }
-#elif !defined(G__OLDIMPLEMENTATION1546)
-    for(i=0;i<124;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=123) fprintf(fp,",\n");
-    }
-#else
-    for(i=0;i<122;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=121) fprintf(fp,",\n");
-    }
 #endif
-    fprintf(fp,"));\n");
-  }
-#endif
-#endif
-
 
   fprintf(fp,"\n");
   fprintf(fp,"\n");
@@ -1067,9 +843,6 @@ FILE *fp;
 void G__cpplink_header(fp)
 FILE *fp;
 {
-#ifndef G__OLDIMPLEMENTATION1525
-  int i;
-#endif
   fprintf(fp,"#include <stddef.h>\n");
   fprintf(fp,"#include <stdio.h>\n");
   fprintf(fp,"#include <stdlib.h>\n");
@@ -1078,23 +851,12 @@ FILE *fp;
 #ifdef G__OLDIMPLEMENTATION1193
   fprintf(fp,"extern \"C\" {\n");
 #endif
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) 
-    fprintf(fp,"#define G__MULTITHREADLIBCINTCPP\n");
-#endif
   fprintf(fp,"#define G__ANSIHEADER\n");
-#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
-  fprintf(fp,"#define G__DICTIONARY\n");
-#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
-#endif
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) 
-    fprintf(fp,"#undef G__MULTITHREADLIBCINTCPP\n");
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1193
@@ -1112,28 +874,6 @@ FILE *fp;
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup_memfunc%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup%s();\n",G__DLLID);
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) {
-    fprintf(fp,"extern G__DLLEXPORT void G__SetCppCintApiPointers G__P((\n");
-#if !defined(G__OLDIMPLEMENTATION1485)
-    for(i=0;i<125;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=124) fprintf(fp,",\n");
-    }
-#elif !defined(G__OLDIMPLEMENTATION1546)
-    for(i=0;i<124;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=123) fprintf(fp,",\n");
-    }
-#else
-    for(i=0;i<122;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=121) fprintf(fp,",\n");
-    }
-#endif
-    fprintf(fp,"));\n");
-  }
-#endif
 #else
   fprintf(fp,"extern void G__cpp_setup_tagtable%s();\n",G__DLLID);
   fprintf(fp,"extern void G__cpp_setup_inheritance%s();\n",G__DLLID);
@@ -1143,30 +883,7 @@ FILE *fp;
   fprintf(fp,"extern void G__cpp_setup_memfunc%s();\n",G__DLLID);
   fprintf(fp,"extern void G__cpp_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern void G__set_cpp_environment%s();\n",G__DLLID);
-#ifndef G__OLDIMPLEMENTATION1525
-  if(G__multithreadlibcint) {
-    fprintf(fp,"extern void G__SetCppCintApiPointers G__P((\n");
-#if !defined(G__OLDIMPLEMENTATION1485)
-    for(i=0;i<125;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=124) fprintf(fp,",\n");
-    }
-#elif !defined(G__OLDIMPLEMENTATION1546)
-    for(i=0;i<124;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=123) fprintf(fp,",\n");
-    }
-#else
-    for(i=0;i<122;i++) {
-      fprintf(fp,"\tvoid*");
-      if(i!=121) fprintf(fp,",\n");
-    }
 #endif
-    fprintf(fp,"));\n");
-  }
-#endif
-#endif
-
 
   fprintf(fp,"}\n");
   fprintf(fp,"\n");
@@ -1284,45 +1001,7 @@ FILE *hfp;
       /* member function */
       while(memfunc) {
 	for(ifn=0;ifn<memfunc->allifunc;ifn++) {
-#ifndef G__OLDIMPLEMENTATION1481
-	  if((G__PROTECTED==memfunc->access[ifn]
-#ifndef G__OLDIMPLEMENTATION1483
-	      || ((G__PRIVATEACCESS&G__struct.protectedaccess[i]) &&
-		  G__PRIVATE==memfunc->access[ifn])
-#endif
-	      ) &&
-	     strcmp(memfunc->funcname[ifn],G__struct.name[i])==0) {
-	    fprintf(hfp,"  %s_PR(",G__get_link_tagname(i));
-	    if(0==memfunc->para_nu[ifn]) {
-	      fprintf(hfp,"void");
-	    }
-	    else {
-	      for(n=0;n<memfunc->para_nu[ifn];n++) {
-		if(n!=0) fprintf(hfp,",");
-		fprintf(hfp,"%s G__%d"
-			,G__type2string(memfunc->para_type[ifn][n]
-					,memfunc->para_p_tagtable[ifn][n]
-					,memfunc->para_p_typetable[ifn][n]
-					,memfunc->para_reftype[ifn][n]
-					,memfunc->para_isconst[ifn][n]),n);
-	      }
-	    }
-	    fprintf(hfp,") : %s(",G__fulltagname(i,1));
-	    if(0<memfunc->para_nu[ifn]) {
-	      for(n=0;n<memfunc->para_nu[ifn];n++) {
-		if(n!=0) fprintf(hfp,",");
-		fprintf(hfp,"G__%d",n);
-	      }
-	    }
-	    fprintf(hfp,") { }\n");
-	  }
-#endif
-	  if((G__PROTECTED==memfunc->access[ifn]
-#ifndef G__OLDIMPLEMENTATION1483
-	      || ((G__PRIVATEACCESS&G__struct.protectedaccess[i]) &&
-		  G__PRIVATE==memfunc->access[ifn])
-#endif
-	      ) &&
+	  if(G__PROTECTED==memfunc->access[ifn] &&
 	     strcmp(memfunc->funcname[ifn],G__struct.name[i])!=0 &&
 	     '~'!=memfunc->funcname[ifn][0]) {
 #ifndef G__OLDIMPLEMENTATION1335
@@ -1408,27 +1087,6 @@ FILE *fp;
 FILE *hfp;
 {
   int i;
-#ifndef G__OLDIMPLEMENTATION1483
-  char buf[G__MAXFILENAME];
-  FILE* pfp;
-  if(G__privateaccess) {
-    char *xp;
-    strcpy(buf,G__CPPLINK_H);
-    xp = strstr(buf,".h");
-    if(xp) strcpy(xp,"P.h");
-    pfp = fopen(buf,"r");
-    if(pfp) {
-      fclose(pfp);
-      remove(buf);
-    }
-    pfp = fopen(buf,"w");
-    fprintf(pfp,"#ifdef PrivateAccess\n");
-    fprintf(pfp,"#undef PrivateAccess\n");
-    fprintf(pfp,"#endif\n");
-    fprintf(pfp,"#define PrivateAccess(name) PrivateAccess_##name\n");
-    fclose(pfp);
-  }
-#endif
   fprintf(fp,"/* Setup class/struct taginfo */\n");
   for(i=0;i<G__struct.alltag;i++) {
     if(G__NOLINK > G__struct.globalcomp[i] &&
@@ -1436,19 +1094,6 @@ FILE *hfp;
       fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
 	      ,G__get_link_tagname(i),G__fulltagname(i,0),G__struct.type[i]);
       fprintf(hfp,"extern G__linked_taginfo %s;\n",G__get_link_tagname(i));
-#ifndef G__OLDIMPLEMENTATION1483
-      if(G__privateaccess) {
-	pfp = fopen(buf,"a");
-	if(pfp) {
-	  if(G__PRIVATEACCESS&G__struct.protectedaccess[i]) 
-	    fprintf(pfp,"#define PrivateAccess_%s  friend class %s_PR;\n"
-		    ,G__fulltagname(i,1),G__get_link_tagname(i));
-	  else
-	    fprintf(pfp,"#define PrivateAccess_%s \n",G__fulltagname(i,1));
-	  fclose(pfp);
-	}
-      }
-#endif
     }
   }
   fprintf(fp,"\n");
@@ -1546,7 +1191,7 @@ char *G__mark_linked_tagnum(tagnum)
 int tagnum;
 {
   if(tagnum<0) {
-    G__fprinterr(G__serr,"Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
+    fprintf(G__serr,"Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
   }
 
   if(G__NOLINK == G__struct.globalcomp[tagnum]) {
@@ -1713,10 +1358,6 @@ static void G__write_windef_header()
     fprintf(fp,"        G__cpp_setup_global%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__cpp_setup_func%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__cpp_setup%s @%d\n",G__DLLID,++G__nexports);
-#ifndef G__OLDIMPLEMENTATION1525
-    if(G__multithreadlibcint) 
-      fprintf(fp,"        G__SetCppCintApiPointers @%d\n",++G__nexports);
-#endif
   }
   else {
     fprintf(fp,"        G__c_dllrev%s @%d\n",G__DLLID,++G__nexports);
@@ -1727,10 +1368,6 @@ static void G__write_windef_header()
     fprintf(fp,"        G__c_setup_global%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__c_setup_func%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__c_setup%s @%d\n",G__DLLID,++G__nexports);
-#ifndef G__OLDIMPLEMENTATION1525
-    if(G__multithreadlibcint) 
-      fprintf(fp,"        G__SetCCintApiPointers @%d\n",++G__nexports);
-#endif
   }
 }
 #endif /* G__GENWINDEF */
@@ -1776,15 +1413,6 @@ char *dllid;
     G__DLLID = dllid;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1423
-    if(0==strncmp(linkfilename,"G__cpp_",7)) 
-      strcpy(G__NEWID,G__map_cpp_name(linkfilename+7));
-    else if(0==strncmp(linkfilename,"G__",3)) 
-      strcpy(G__NEWID,G__map_cpp_name(linkfilename+3));
-    else
-      strcpy(G__NEWID,G__map_cpp_name(linkfilename));
-#endif
-
   switch(G__globalcomp) {
   case G__CPPLINK:
     sprintf(buf,"%s.h",linkfilepref);
@@ -1814,7 +1442,6 @@ char *dllid;
     fprintf(fp,"\n");
     fprintf(fp,"#ifdef G__MEMTEST\n");
     fprintf(fp,"#undef malloc\n");
-    fprintf(fp,"#undef free\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"\n");
 
@@ -2149,7 +1776,7 @@ char *macroin;
 #endif
   strcpy(temp,G__macros);
   if(strlen(temp)+strlen(macro)+3>G__LONGLINE) {
-    G__fprinterr(G__serr,"Warning: can not add any more macros in the list\n");
+    fprintf(G__serr,"Warning: can not add any more macros in the list\n");
     G__printlinenum();
   }
   else {
@@ -2217,28 +1844,12 @@ char *path;
   }
 
   /* G__allincludepath will be given to real preprocessor */
-#ifndef G__OLDIMPLEMENTATION1580
-  if(!G__allincludepath) {
-    G__allincludepath = (char*)malloc(1);
-    G__allincludepath[0] = '\0';
-  }
-#endif
 #ifndef G__OLDIMPLEMENTATION928
   store_allincludepath = realloc((void*)G__allincludepath
 				 ,strlen(G__allincludepath)+strlen(temp)+5);
   if(store_allincludepath) {
-#ifndef G__OLDIMPLEMENTATION1553
-    int i=0,flag=0;
-    while(temp[i]) if(isspace(temp[i++])) flag=1;
-    G__allincludepath = store_allincludepath;
-    if(flag)
-      sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I\"%s\" ",temp);
-    else
-      sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I%s ",temp);
-#else
     G__allincludepath = store_allincludepath;
     sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I%s ",temp);
-#endif
   }
   else {
     G__genericerror("Internal error: memory allocation failed for includepath buffer");
@@ -2375,23 +1986,15 @@ FILE *hfp;
 	for(j=0;j<ifunc->allifunc;j++) {
 	  if(G__PUBLIC==ifunc->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
-#ifndef G__OLDIMPLEMENTATION1483
-	     || (G__PROTECTED==ifunc->access[j] && 
-		 (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
-	     || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
-#else
 	     || (G__PROTECTED==ifunc->access[j] && 
 		 G__struct.protectedaccess[i])
-#endif
 #endif
 	     ) {
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      /* constructor need special handling */
 	      if(0==G__struct.isabstract[i]&&0==isnonpublicnew
-#ifdef G__OLDIMPLEMENTATION1481
 #ifndef G__OLDIMPLEMENTATION1334
 		 && G__PUBLIC==ifunc->access[j]
-#endif
 #endif
 		 )
 		G__cppif_genconstructor(fp,hfp,i,j,ifunc);
@@ -2524,12 +2127,7 @@ struct G__ifunc_table *ifunc;
 				,ifunc->para_p_tagtable[ifn][k]
 				,ifunc->para_p_typetable[ifn][k]
 				,0
-#ifndef G__OLDIMPLEMENTATION1579
-				,0
-#else
-				,ifunc->para_isconst[ifn][k]
-#endif
-				)
+				,ifunc->para_isconst[ifn][k])
 		,p+2,k,k,k);
       }
     }
@@ -2566,7 +2164,7 @@ struct G__ifunc_table *ifunc;
 	    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	    break;
 	  default:
-	    G__genericerror("Cint internal error ary parameter dimension");
+	    G__genericerror("Cint internal error ary parameter dimention");
 	    break;
 	  }
 	}
@@ -2580,7 +2178,7 @@ struct G__ifunc_table *ifunc;
 	    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	    break;
 	  default:
-	    G__genericerror("Cint internal error ary parameter dimension");
+	    G__genericerror("Cint internal error ary parameter dimention");
 	    break;
 	  }
 	}
@@ -2689,23 +2287,8 @@ struct G__ifunc_table *ifunc;
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
-  char buf[G__LONGLINE]; /* 1481 */
 
   G__ASSERT( tagnum != -1 );
-
-#ifndef G__OLDIMPLEMENTATION1481
-  if(G__PROTECTED==ifunc->access[ifn]
-#ifndef G__OLDIMPLEMENTATION1483
-     || G__PRIVATE==ifunc->access[ifn]
-#endif
-     ) 
-    sprintf(buf,"%s_PR",G__get_link_tagname(tagnum));
-  else
-    strcpy(buf,G__fulltagname(tagnum,1));
-#else
-  strcpy(buf,G__fulltagname(tagnum,1));
-#endif
-
 
 #ifndef G__OLDIMPLEMENTATION1235
 #ifdef G__CPPIF_EXTERNC
@@ -2734,13 +2317,6 @@ struct G__ifunc_table *ifunc;
 #else
   fprintf(fp,"   %s *p;\n",G__type2string('u',tagnum,-1,0,0));
 #endif
-#ifndef G__VAARG_COPYFUNC
-  if(2==ifunc->ansi[ifn]) {
-    fprintf(fp,"  G__va_arg_buf G__va_arg_bufobj;\n");
-    fprintf(fp,"  G__va_arg_put(&G__va_arg_bufobj,libp,%d);\n"
-	    ,ifunc->para_nu[ifn]);
-  }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION573
   G__if_ary_union(fp,ifn,ifunc);
@@ -2768,38 +2344,18 @@ struct G__ifunc_table *ifunc;
 	    fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	  }
 	  else {
-	    fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
+	    fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 	  }
 #else
-	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
+	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
 	  fprintf(fp,"     else {\n");
 	  fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	     ) 
-	    fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
-		    ,G__NEWID,buf);
-	  else
-#endif
-	    fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,buf);
-	  fprintf(fp,"%s;\n",buf);
-	  fprintf(fp,"       p=(%s*)G__getgvp();\n",buf);
+	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+	  fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
+	  fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	  fprintf(fp,"     }\n");
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	     )
-	    fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		    ,G__NEWID,buf);
-	  else
-#endif
-	    fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,buf);
+	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
 	}
 	else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2807,22 +2363,12 @@ struct G__ifunc_table *ifunc;
 	    fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	  }
 	  else {
-	    fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
+	    fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 	  }
 #else
-	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
+	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
-#endif
-	     )
-	    fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		    ,G__NEWID,buf);
-	  else
-#endif
-	    fprintf(fp,"   else                    p=new %s;\n" ,buf);
+	  fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
 	}
       }
       else {
@@ -2831,42 +2377,21 @@ struct G__ifunc_table *ifunc;
 #else
 	if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#ifndef G__OLDIMPLEMENTATION836
+	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
+#else
+	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",ifunc->funcname[ifn]);
 #endif
-	     )
-	    fprintf(fp,"      p = ::new((G__%s_tag*)G__getgvp()) %s("
-		    ,G__NEWID,buf);
-	  else
-#endif
-	    fprintf(fp,"      p = new((void*)G__getgvp()) %s(",buf);
 	}
 	else {
-#ifndef G__OLDIMPLEMENTATION1423
-	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#ifndef G__OLDIMPLEMENTATION836
+	  fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
+#else
+	  fprintf(fp,"      p = new %s(",ifunc->funcname[ifn]);
 #endif
-	     )
-	    fprintf(fp,"      p = ::new((G__%s_tag*)G__getgvp()) %s("
-		    ,G__NEWID,buf);
-	  else
-#endif
-	    fprintf(fp,"      p = new %s(",buf);
 	}
 	if(m>2) fprintf(fp,"\n");
 	for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
-#ifndef G__OLDIMPLEMENTATION1473
-	if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
-	  fprintf(fp,",libp,%d",k);
-#else
-	  fprintf(fp,",G__va_arg_bufobj");
-#endif
-	}
-#endif
 	fprintf(fp,");\n");
       }
 
@@ -2889,38 +2414,18 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	}
 	else {
-	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
+	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 	}
 #else
-	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
+	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
 	fprintf(fp,"     else {\n");
 	fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
-#ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	   )
-	  fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
-		  ,G__NEWID,buf);
-	else
-#endif
-	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,buf);
-	fprintf(fp,"%s;\n",buf);
-	fprintf(fp,"       p=(%s*)G__getgvp();\n",buf);
+	fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+	fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
+	fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	fprintf(fp,"     }\n");
-#ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	   )
-	  fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		  ,G__NEWID,buf);
-	else
-#endif
-	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,buf);
+	fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2928,22 +2433,12 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	}
 	else {
-	  fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
+	  fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 	}
 #else
-	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
+	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
-#endif
-	   )
-	  fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		  ,G__NEWID,buf);
-	else
-#endif
-	  fprintf(fp,"   else                    p=new %s;\n" ,buf);}
+	fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));}
     }
     else {
 #ifndef G__OLDIMPLEMENTATION680
@@ -2951,42 +2446,21 @@ struct G__ifunc_table *ifunc;
 #else
       if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
+#ifndef G__OLDIMPLEMENTATION836
+	fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
+#else
+	fprintf(fp,"      p = new((void*)G__getgvp()) %s(",ifunc->funcname[ifn]);
 #endif
-	   )
-	  fprintf(fp,"      p=::new((G__%s_tag*)G__getgvp()) %s("
-		  ,G__NEWID,buf);
-	else
-#endif
-	  fprintf(fp,"      p=new((void*)G__getgvp()) %s(",buf);
       }
       else {
-#ifndef G__OLDIMPLEMENTATION1423
-	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
+#ifndef G__OLDIMPLEMENTATION836
+	fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
+#else
+	fprintf(fp,"      p = new %s(",ifunc->funcname[ifn]);
 #endif
-	   )
-	  fprintf(fp,"      p=::new((G__%s_tag*)G__getgvp()) %s("
-		  ,G__NEWID,buf);
-	else
-#endif
-	  fprintf(fp,"      p = new %s(",buf);
       }
       if(m>2) fprintf(fp,"\n");
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
-#ifndef G__OLDIMPLEMENTATION1473
-      if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
-	fprintf(fp,",libp,%d",k);
-#else
-	fprintf(fp,",G__va_arg_bufobj");
-#endif
-      }
-#endif
       fprintf(fp,");\n");
     }
 
@@ -3287,9 +2761,6 @@ int isnonpublicnew;
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-  char dtorname[G__ONELINE];
-#endif
 
   G__ASSERT( tagnum != -1 );
 
@@ -3329,9 +2800,7 @@ int isnonpublicnew;
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
     fprintf(fp,"   %s *p;\n",G__fulltagname(tagnum,1));
-#ifdef G__OLDIMPLEMENTATION1432
     fprintf(fp,"   if(0!=libp->paran) ;\n");
-#endif
 
 #ifndef G__OLDIMPLEMENTATION680
     if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
@@ -3352,31 +2821,11 @@ int isnonpublicnew;
 #endif
       fprintf(fp,"     else {\n");
       fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
-#ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	 )
-	fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
-		,G__NEWID,G__fulltagname(tagnum,1));
-      else 
-#endif
-	fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+      fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
       fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
       fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
       fprintf(fp,"     }\n");
-#ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	 )
-	fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		,G__NEWID,G__fulltagname(tagnum,1));
-      else
-#endif
-	fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+      fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
     }
     else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -3389,17 +2838,7 @@ int isnonpublicnew;
 #else
       fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
-#endif
-	 )
-	fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-		,G__NEWID,G__fulltagname(tagnum,1));
-      else
-#endif
-	fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
+      fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
     }
     fprintf(fp,"   result7->obj.i = (long)p;\n");
     fprintf(fp,"   result7->ref = (long)p;\n");
@@ -3456,16 +2895,7 @@ int isnonpublicnew;
 #else
     if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-#ifndef G__OLDIMPLEMENTATION1441
-	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	 )
-	fprintf(fp,"   p=::new((G__%s_tag*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",G__NEWID,temp,temp);
-      else
-#endif
-	fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
+      fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
     }
     else {
       fprintf(fp,"   p=new %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
@@ -3500,16 +2930,6 @@ int isnonpublicnew;
     sprintf(funcname,"~%s",G__struct.name[tagnum]);
     fprintf(fp,"// automatic destructor\n");
 
-#ifndef G__OLDIMPLEMENTATION1423
-    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
-      if(1 /* strchr(funcname,'<') */ ) {
-	sprintf(dtorname,"G__T%s",G__map_cpp_name(G__fulltagname(tagnum,0)));
-	fprintf(fp,"typedef %s %s;\n",G__fulltagname(tagnum,0),dtorname);
-      }
-      else strcpy(dtorname,funcname+1);
-    }
-#endif
-
 #ifdef G__CPPIF_STATIC
     fprintf(fp,"static int %s(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)"
 	    ,G__map_cpp_funcname(tagnum ,funcname ,ifn,page));
@@ -3526,71 +2946,28 @@ int isnonpublicnew;
 	    ,G__map_cpp_funcname(tagnum ,funcname ,ifn,page));
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
-#ifndef G__OLDIMPLEMENTATION1602
-    fprintf(fp,"   if(0==G__getstructoffset()) return(1);\n");
-#endif
     fprintf(fp,"   if(G__getaryconstruct())\n");
     fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
     fprintf(fp,"       delete[] (%s *)(G__getstructoffset());\n" ,G__fulltagname(tagnum,1));
     fprintf(fp,"     else\n");
     fprintf(fp,"       for(int i=G__getaryconstruct()-1;i>=0;i--)\n");
-#ifndef G__OLDIMPLEMENTATION1423
-    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
-#ifndef G__OLDIMPLEMENTATION1441
-       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORDELETE)
-#endif
-       ) {
-      fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
-      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
-      fprintf(fp,"->~%s();\n",dtorname);
-    }
-    else {
+#ifndef G__N_EXPLICITDESTRUCTOR
+    fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
+    fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
+    fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
 #else
+    fprintf(fp,"         delete (%s *)",G__fulltagname(tagnum,1));
+    fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i);\n" ,G__fulltagname(tagnum,1));
 #endif
 #ifndef G__N_EXPLICITDESTRUCTOR
-      fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
-      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
-      fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
+    fprintf(fp,"   else if(G__PVOID==G__getgvp()) delete (%s *)(G__getstructoffset());\n"
+	    ,G__fulltagname(tagnum,1));
+    fprintf(fp,"   else ((%s *)(G__getstructoffset()))"
+	    ,G__fulltagname(tagnum,1));
+    fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
 #else
-      fprintf(fp,"         delete (%s *)",G__fulltagname(tagnum,1));
-      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i);\n" ,G__fulltagname(tagnum,1));
-#endif
-#ifndef G__OLDIMPLEMENTATION1423
-    }
-#endif
-#ifndef G__OLDIMPLEMENTATION1423
-    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
-#ifndef G__OLDIMPLEMENTATION1441
-       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORDELETE)
-#endif
-       ) {
-      fprintf(fp,"   else {\n");
-#ifndef G__OLDIMPLEMENTATION1518
-      fprintf(fp,"     long G__Xtmp=G__getgvp();\n");
-      fprintf(fp,"     G__setgvp(G__PVOID);\n");
-#endif
-      fprintf(fp,"     ((%s *)(G__getstructoffset()))",G__fulltagname(tagnum,1));
-      fprintf(fp,"->~%s();\n",dtorname);
-#ifndef G__OLDIMPLEMENTATION1518
-      fprintf(fp,"     G__setgvp(G__Xtmp);\n");
-#endif
-      fprintf(fp,"     G__operator_delete((void*)G__getstructoffset());\n");
-      fprintf(fp,"   }\n");
-    }
-    else {
-#endif /* 1423 */
-#ifndef G__N_EXPLICITDESTRUCTOR
-      fprintf(fp,"   else if(G__PVOID==G__getgvp()) delete (%s *)(G__getstructoffset());\n"
-	      ,G__fulltagname(tagnum,1));
-      fprintf(fp,"   else ((%s *)(G__getstructoffset()))"
-	      ,G__fulltagname(tagnum,1));
-      fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
-#else
-      fprintf(fp,"   else  delete (%s *)(G__getstructoffset());\n"
-	      ,G__fulltagname(tagnum,1));
-#endif
-#ifndef G__OLDIMPLEMENTATION1423
-    }
+    fprintf(fp,"   else  delete (%s *)(G__getstructoffset());\n"
+	    ,G__fulltagname(tagnum,1));
 #endif
 #ifdef G__OLDIMPLEMENTATION579
     /* This was my mistake. ifn is out of bound and must not call 
@@ -3685,13 +3062,6 @@ struct G__ifunc_table *ifunc;
 #endif
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1473
-#ifdef G__VAARG_COPYFUNC
-  if(2==ifunc->ansi[ifn] && 0<ifunc->pentry[ifn]->line_number)
-    G__va_arg_copyfunc(fp,ifunc,ifn);
-#endif
-#endif
-
 #ifndef G__CPPIF_STATIC
 #ifdef G__GENWINDEF
   fprintf(G__WINDEFfp,"        %s @%d\n"
@@ -3739,16 +3109,6 @@ struct G__ifunc_table *ifunc;
   G__if_ary_union(fp,ifn,ifunc);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1473
-#ifndef G__VAARG_COPYFUNC
-  if(2==ifunc->ansi[ifn]) {
-    fprintf(fp,"  G__va_arg_buf G__va_arg_bufobj;\n");
-    fprintf(fp,"  G__va_arg_put(&G__va_arg_bufobj,libp,%d);\n"
-	    ,ifunc->para_nu[ifn]);
-  }
-#endif
-#endif
-
   m = ifunc->para_nu[ifn] ;
 
   /*************************************************************
@@ -3767,12 +3127,7 @@ struct G__ifunc_table *ifunc;
 		  ,G__fulltagname(tagnum,1));
 	else {
 #ifndef G__OLDIMPLEMENTATION1334
-	  if(G__PROTECTED==ifunc->access[ifn]
-#ifndef G__OLDIMPLEMENTATION1483
-	     || (G__PRIVATE==ifunc->access[ifn] &&
-		 (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
-#endif
-	     ) 
+	  if(G__PROTECTED==ifunc->access[ifn]) 
 	    sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	  else 
 	    strcpy(castname,G__fulltagname(tagnum,1));
@@ -3793,12 +3148,7 @@ struct G__ifunc_table *ifunc;
 	}
       }
 #ifndef G__OLDIMPLEMENTATION1335
-      if(G__PROTECTED==ifunc->access[ifn]
-#ifndef G__OLDIMPLEMENTATION1483
-	 || (G__PRIVATE==ifunc->access[ifn] &&
-	     (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
-#endif
-	 ) 
+      if(G__PROTECTED==ifunc->access[ifn]) 
 	fprintf(fp,"G__PT_%s(",ifunc->funcname[ifn]);
       else
 	fprintf(fp,"%s(",ifunc->funcname[ifn]);
@@ -3806,19 +3156,10 @@ struct G__ifunc_table *ifunc;
       fprintf(fp,"%s(",ifunc->funcname[ifn]);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION274
+#ifndef G__OLDIMPLEMENTATINO274
       if(m>6) fprintf(fp,"\n");
 #endif
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
-#ifndef G__OLDIMPLEMENTATION1473
-      if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
-	fprintf(fp,",libp,%d",k);
-#else
-	fprintf(fp,",G__va_arg_bufobj");
-#endif
-      }
-#endif
 
       fprintf(fp,")%s\n",endoffunc);
 
@@ -3834,12 +3175,7 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,"%s::",G__fulltagname(tagnum,1));
       else {
 #ifndef G__OLDIMPLEMENTATION1334
-	if(G__PROTECTED==ifunc->access[ifn] 
-#ifndef G__OLDIMPLEMENTATION1483
-	   || (G__PRIVATE==ifunc->access[ifn] &&
-	       (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
-#endif
-	   )
+	if(G__PROTECTED==ifunc->access[ifn]) 
 	  sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	else 
 	  strcpy(castname,G__fulltagname(tagnum,1));
@@ -3860,12 +3196,7 @@ struct G__ifunc_table *ifunc;
       }
     }
 #ifndef G__OLDIMPLEMENTATION1335
-    if(G__PROTECTED==ifunc->access[ifn] 
-#ifndef G__OLDIMPLEMENTATION1483
-	 || (G__PRIVATE==ifunc->access[ifn] &&
-	     (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
-#endif
-       )
+    if(G__PROTECTED==ifunc->access[ifn]) 
       fprintf(fp,"G__PT_%s(",ifunc->funcname[ifn]);
     else
       fprintf(fp,"%s(",ifunc->funcname[ifn]);
@@ -3873,19 +3204,10 @@ struct G__ifunc_table *ifunc;
     fprintf(fp,"%s(",ifunc->funcname[ifn]);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION274
+#ifndef G__OLDIMPLEMENTATINO274
     if(m>6) fprintf(fp,"\n");
 #endif
     for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
-#ifndef G__OLDIMPLEMENTATION1473
-    if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
-      fprintf(fp,",libp,%d",k);
-#else
-      fprintf(fp,",G__va_arg_bufobj");
-#endif
-    }
-#endif
 
     fprintf(fp,")%s\n",endoffunc);
   }
@@ -3910,9 +3232,6 @@ char *endoffunc;
 {
 #ifndef G__SMALLOBJECT
   int type,tagnum,typenum,reftype,isconst;
-#ifndef G__OLDIMPLEMENTATION1503
-  int deftyp = -1;
-#endif
 
   type = ifunc->type[ifn];
   tagnum = ifunc->p_tagtable[ifn];
@@ -3987,9 +3306,6 @@ char *endoffunc;
   case 'r':
   case 'h':
   case 'k':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
     fprintf(fp,"      G__letint(result7,%d,(long)",type);
     sprintf(endoffunc,");");
     return(0);
@@ -4002,23 +3318,12 @@ char *endoffunc;
     switch(G__struct.type[tagnum]) {
     case 'c':
     case 's':
-#ifndef G__OLDIMPLEMENTATION1496
-    case 'u':
-#endif
-#ifndef G__OLDIMPLEMENTATION1503
-#ifndef G__OLDIMPLEMENTATION1510
-      if(-1!=typenum) deftyp = typenum;
-      else deftyp = G__struct.defaulttypenum[tagnum];
-#else
-      deftyp = G__struct.defaulttypenum[tagnum];
-#endif
-#endif
       if(reftype) {
 	fprintf(fp,"      {\n");
 #ifndef G__OLDIMPLEMENTATION1209
 	if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
-	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
+	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,-1,0,0));
 	sprintf(endoffunc,";\n        result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n      }");
       }
       else {
@@ -4028,52 +3333,29 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1209
 	  if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
-	  fprintf(fp,"        %s *pobj,xobj="
-		  ,G__type2string('u',tagnum,deftyp,0,0));
+	  fprintf(fp,"        %s *pobj,xobj=",G__type2string('u',tagnum,-1,0,0));
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
-#ifndef G__OLDIMPLEMENTATION1423
-	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
-#ifndef G__OLDIMPLEMENTATION1441
-	      && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-		)
-	      sprintf(endoffunc,";\n        pobj=::new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
-	    else
-#endif
-	      sprintf(endoffunc,";\n        pobj=new((void*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		      ,G__type2string('u',tagnum,deftyp,0,0));
-
+	    sprintf(endoffunc,";\n        pobj=new((void*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
+		    ,G__type2string('u',tagnum,-1,0,0));
 	  }
 	  else {
 	    sprintf(endoffunc,";\n        pobj=new %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		    ,G__type2string('u',tagnum,deftyp,0,0));
+		    ,G__type2string('u',tagnum,-1,0,0));
 	  }
 #else /* ON902 **************************************************************/
 	  fprintf(fp,"      {\n");
-	  fprintf(fp,"        %s *pobj;\n"
-		  ,G__type2string('u',tagnum,deftyp,0,0));
+	  fprintf(fp,"        %s *pobj;\n",G__type2string('u',tagnum,-1,0,0));
 #ifndef G__OLDIMPLEMENTATION680
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
 #else
 	  if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION1423
-	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
-#ifndef G__OLDIMPLEMENTATION1441
-	       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
-#endif
-	       )
-	      fprintf(fp,"        pobj=::new((G__%s_tag*)G__getgvp()) %s("
-		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
-	    else
-#endif
-	      fprintf(fp,"        pobj=new((void*)G__getgvp()) %s("
-		      ,G__type2string('u',tagnum,deftyp,0,0));
+	    fprintf(fp,"        pobj=new((void*)G__getgvp()) %s("
+		    ,G__type2string('u',tagnum,-1,0,0));
 	  }
 	  else {
 	    fprintf(fp,"        pobj=new %s("
-		    ,G__type2string('u',tagnum,deftyp,0,0));
+		    ,G__type2string('u',tagnum,-1,0,0));
 	  }
 	  sprintf(endoffunc,");\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }");
 #endif /* ON902 **************************************************************/
@@ -4149,7 +3431,7 @@ int k;
 	  ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	  break;
 	default:
-	  G__genericerror("Cint internal error ary parameter dimension");
+	  G__genericerror("Cint internal error ary parameter dimention");
 	  break;
 	}
       }
@@ -4163,7 +3445,7 @@ int k;
 	  ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	  break;
 	default:
-	  G__genericerror("Cint internal error ary parameter dimension");
+	  G__genericerror("Cint internal error ary parameter dimention");
 	  break;
 	}
       }
@@ -4231,12 +3513,6 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-        case 'g':
-	  fprintf(fp,"*(%s*)G__Intref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
-	  break;
-#endif
         case 'f':
 	  fprintf(fp,"*(%s*)G__Floatref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
@@ -4282,12 +3558,6 @@ int k;
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulong(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-        case 'g':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
-		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
-	  break;
-#endif
         case 'f':
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mfloat(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
@@ -4312,13 +3582,8 @@ int k;
 	   *  reference and pointer to pointer can not happen at once */
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
 #ifndef G__OLDIMPLEMENTATION1111
-#ifndef G__OLDIMPLEMENTATION1493
-		  ,k,G__type2string(type,tagnum,typenum,0,isconst) 
-		  ,k,G__type2string(type,tagnum,typenum,0,isconst) ,k);
-#else
 		  ,k,G__type2string(type,tagnum,typenum,0,0) 
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k);
-#endif
 #else
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
@@ -4329,13 +3594,8 @@ int k;
 	}
 	else {
 	  fprintf(fp,"libp->para[%d].ref?*(%s**)libp->para[%d].ref:*(%s**)(&G__Mlong(libp->para[%d]))"
-#ifndef G__OLDIMPLEMENTATION1493
-		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst) 
-		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst),k);
-#else
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
-#endif
 	  /* above is , in fact, not good. G__type2string returns pointer to
 	   * static buffer. This relies on the fact that the 2 calls are
 	   * identical */
@@ -4404,9 +3664,6 @@ int k;
   case 'h':
   case 'l':
   case 'k':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
   case 'F':
   case 'D':
   case 'E':
@@ -4496,12 +3753,12 @@ FILE *hfp;
 
       if(-1==G__struct.line_number[i]) { 
 	if(G__NOLINK==G__struct.iscpplink[i]) {
-	  G__fprinterr(G__serr,"Note: Link requested for undefined class %s (ignore this message)"
+	  fprintf(G__serr,"Note: Link requested for undefined class %s "
 		  ,G__fulltagname(i,1));
 	}
 	else {
-	  G__fprinterr(G__serr,
-		  "Note: Link requested for already precompiled class %s (ignore this message)"
+	  fprintf(G__serr
+		  ,"Note: Link requested for already precompiled class %s "
 		  ,G__fulltagname(i,1));
 	}
 	G__printlinenum();
@@ -4518,32 +3775,17 @@ FILE *hfp;
 	 ) {
 	if('e'==G__struct.type[i])
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
-		  ,G__mark_linked_tagnum(i) ,"int" ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		  +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		  ,G__struct.isabstract[i]
-#endif
-		  ,buf);
+		  ,G__mark_linked_tagnum(i)
+		  ,"int"
+		  ,G__globalcomp ,G__struct.isabstract[i],buf);
 #ifndef G__OLDIMPLEMENTATION1054
 	else if('n'==G__struct.type[i]) {
 	  strcpy(mappedtagname,G__map_cpp_name(tagname));
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		  ,G__mark_linked_tagnum(i)
 		  /* ,G__type2string('u',i,-1,0,0) */
-		  ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		  +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		  ,G__struct.isabstract[i]
-#endif
-		  ,buf,mappedtagname,mappedtagname);
+		  ,G__globalcomp ,G__struct.isabstract[i],buf
+		  ,mappedtagname,mappedtagname);
 	}
 #endif
 	else {
@@ -4554,44 +3796,20 @@ FILE *hfp;
 	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
-		      ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		      +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		      ,G__struct.isabstract[i]
-#endif
-		      ,buf ,mappedtagname);
+		      ,G__globalcomp ,G__struct.isabstract[i],buf
+		      ,mappedtagname);
 	    else
 	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
-		      ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		      +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		      ,G__struct.isabstract[i]
-#endif
-		      ,buf ,mappedtagname,mappedtagname);
+		      ,G__globalcomp ,G__struct.isabstract[i],buf
+		      ,mappedtagname,mappedtagname);
 #else
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		    +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		    ,G__struct.isabstract[i]
-#endif
-		    ,buf ,mappedtagname,mappedtagname);
+		    ,G__globalcomp ,G__struct.isabstract[i],buf
+		    ,mappedtagname,mappedtagname);
 #endif
 	  }
 	  else if('$'==G__struct.name[i][0]&&
@@ -4599,31 +3817,14 @@ FILE *hfp;
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		    +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		    ,G__struct.isabstract[i]
-#endif
-		    ,buf);
+		    ,G__globalcomp ,G__struct.isabstract[i],buf);
 	  }
 	  else {
 	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
-		    ,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		    +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		    ,G__struct.isabstract[i]
-#endif
-		    ,buf ,mappedtagname);
+		    ,G__globalcomp ,G__struct.isabstract[i],buf
+		    ,mappedtagname);
 	  }
 
 	}
@@ -4631,16 +3832,7 @@ FILE *hfp;
       else {
 	fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,NULL,NULL);\n"
 		,G__mark_linked_tagnum(i)
-		,G__globalcomp 
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-		    +G__struct.rootflag[i]*0x10000
-#elif !defined(G__OLDIMPLEMENTATION1442)
-		,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
-#else
-		,G__struct.isabstract[i]
-#endif
-		,buf);
+		,G__globalcomp ,G__struct.isabstract[i],buf);
       }
       if('e'!=G__struct.type[i]) {
 	if(strchr(tagname,'<')) { /* template class */
@@ -4817,8 +4009,8 @@ FILE *fp;
 		fprintf(fp,"       %s *G__Lpbase=(%s*)G__Lderived;\n"
 			,temp,G__fulltagname(basetagnum,1));
 	      else {
-		G__fprinterr(G__serr,
-			"Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
+		fprintf(G__serr
+			,"Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
 			,temp,G__fulltagname(i,1));
 		fprintf(fp,"       %s *G__Lpbase=(%s*)((long)G__Lderived);\n"
 			,temp,G__fulltagname(basetagnum,1));
@@ -4961,7 +4153,7 @@ FILE *hfp;
 #endif /* G__FONS_COMMENT */
       if(G__newtype.nindex[i]>G__MAXVARDIM) {
 	/* This is just a work around */
-	G__fprinterr(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
+	fprintf(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
 		,G__newtype.name[i],G__newtype.nindex[i]
 		,(long)G__newtype.index[i]);
 	G__newtype.nindex[i] = 0;
@@ -5090,24 +4282,16 @@ FILE *fp;
 #endif
 	     ) {
 #ifndef G__OLDIMPLEMENTATION1029
-#if 0
-	    G__fprinterr(G__serr,
-		    "class %s in %s line %d original base of virtual func\n"
+	    fprintf(G__serr
+		    ,"class %s in %s line %d original base of virtual func\n"
 		    ,G__fulltagname(i,1)
 		    ,G__srcfile[G__struct.filenum[i]].filename
 		    ,G__struct.line_number[i]);
 #endif
-#endif
 	  }
 	  if(((G__PUBLIC==var->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
-#ifndef G__OLDIMPLEMENTATION1483
-	       ||(G__PROTECTED==var->access[j] && 
-		  (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
-	       || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
-#else
 	       ||(G__PROTECTED==var->access[j] && G__struct.protectedaccess[i])
-#endif
 #endif
 	       ) && 0==var->bitfield[j])||
 	     G__precomp_private) {
@@ -5130,22 +4314,12 @@ FILE *fp;
 	      }
 	    }
 #ifndef G__OLDIMPLEMENTATION1334
-#ifdef G__OLDIMPLEMENTATION1483
-	    else if((G__PROTECTED==var->access[j] && 
-		     (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
-		    || (G__PRIVATEACCESS&G__struct.protectedaccess[i])) {
-	      fprintf(fp,"(void*)((%s_PR*)p)->G__OS_%s(),"
-		      ,G__get_link_tagname(i)
-		      ,var->varnamebuf[j]);
-	    }
-#else
 	    else if(G__PROTECTED==var->access[j] && 
 		    G__struct.protectedaccess[i]) {
 	      fprintf(fp,"(void*)((%s_PR*)p)->G__OS_%s(),"
 		      ,G__get_link_tagname(i)
 		      ,var->varnamebuf[j]);
 	    }
-#endif
 #endif
 	    else { /* Private or protected member */
 	      fprintf(fp,"(void*)NULL,");
@@ -5316,13 +4490,7 @@ FILE *fp;
 	for(j=0;j<ifunc->allifunc;j++) {
 	  if((G__PUBLIC==ifunc->access[j]) || G__precomp_private
 #ifndef G__OLDIMPLEMENTATION1334
-#ifndef G__OLDIMPLEMENTATION1483
-	     || (G__PROTECTED==ifunc->access[j]&&
-		 (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
-	     || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
-#else
 	     || (G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i])
-#endif
 #endif
 	     ) {
 	    /* check if constructor */
@@ -5337,17 +4505,15 @@ FILE *fp;
 		 (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
 		++iscopyconstructor;
 	      }
-#ifdef G__OLDIMPLEMENTATION1481
 #ifndef G__OLDIMPLEMENTATION1334
 	      if(G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i]
 		 && !G__precomp_private){
-		G__fprinterr(G__serr,
-  "Limitation: can not generate dictionary for protected constructor for %s\n"
+		fprintf(G__serr
+  ,"Limitation: can not generate dictionary for protected constructor for %s\n"
 			,G__fulltagname(i,1));
 		continue;
 	      }
 	      
-#endif
 #endif
 	    }
 	    else if('~'==ifunc->funcname[j][0]) {
@@ -5361,8 +4527,8 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1334
 	      if(G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i]
 		 && !G__precomp_private){
-		G__fprinterr(G__serr,
-  "Limitation: can not generate dictionary for protected destructor for %s\n"
+		fprintf(G__serr
+  ,"Limitation: can not generate dictionary for protected destructor for %s\n"
 			,G__fulltagname(i,1));
 		continue;
 	      }
@@ -5378,17 +4544,9 @@ FILE *fp;
 	    fprintf(fp,"\"%s\",%d,",ifunc->funcname[j],ifunc->hash[j]);
 	    if(G__PUBLIC==ifunc->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
-#ifndef G__OLDIMPLEMENTATION1483
-	       || (((G__PROTECTED==ifunc->access[j] &&
-		    (G__PROTECTEDACCESS&G__struct.protectedaccess[i])) ||
-		    (G__PRIVATEACCESS&G__struct.protectedaccess[i])) &&
-#else
 	       || (G__PROTECTED==ifunc->access[j] &&
 		   G__struct.protectedaccess[i] &&
-#endif
-#ifdef G__OLDIMPLEMENTATION1481
 		   strcmp(G__struct.name[i],ifunc->funcname[j])!=0 &&
-#endif
 		   '~'!=ifunc->funcname[j][0])
 #endif
 	       ) {
@@ -5422,20 +4580,15 @@ FILE *fp;
 	    if(0>ifunc->para_nu[j]) fprintf(fp,"0,");
 	    else                    fprintf(fp,"%d,",ifunc->para_nu[j]);
 
-#if !defined(G__OLDIMPLEMENTATION1479)
-	    if(2==ifunc->ansi[j]) 
-	      fprintf(fp,"%d," ,8 + ifunc->staticalloc[j]*2
-		      + ifunc->isexplicit[j]*4);
-	    else 
-	      fprintf(fp,"%d," ,ifunc->ansi[j] + ifunc->staticalloc[j]*2
-		      + ifunc->isexplicit[j]*4);
-#elif !defined(G__OLDIMPLEMENTATION1287)
+#ifndef G__OLDIMPLEMENTATION1287
 	    fprintf(fp,"%d," ,ifunc->ansi[j] + ifunc->staticalloc[j]*2
 		    + ifunc->isexplicit[j]*4);
-#elif !defined(G__OLDIMPLEMENTATION1269)
+#else
+#ifndef G__OLDIMPLEMENTATION1269
 	    fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
 #else
 	    fprintf(fp,"%d,",ifunc->ansi[j]);
+#endif
 #endif
 	    fprintf(fp,"%d,",ifunc->access[j]);
 	    fprintf(fp,"%d,",ifunc->isconst[j]);
@@ -5453,7 +4606,7 @@ FILE *fp;
 		fprintf(fp,"%c ",ifunc->para_type[j][k]);
 	      }
 	      else {
-		G__fprinterr(G__serr,"Internal error: function parameter type\n");
+		fprintf(G__serr,"Internal error: function parameter type\n");
 		fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	      }
 
@@ -5745,26 +4898,17 @@ FILE *fp;
   int pvoidflag;
   G__value buf;
   char value[G__ONELINE],ttt[G__ONELINE];
-#ifndef G__OLDIMPLEMENTATION1590
-  int divn=0;
-  int maxfnc=100;
-  int fnc=0;
-#endif
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global variable information setup for each class\n");
   fprintf(fp,"*********************************************************/\n");
 
-#ifndef G__OLDIMPLEMENTATION1590
-  fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
-#else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_global%s() {\n",G__DLLID);
   }
   else {
     fprintf(fp,"void G__c_setup_global%s() {\n",G__DLLID);
   }
-#endif
 
   fprintf(fp,"\n   /* Setting up global variables */\n");
   var = &G__global;
@@ -5772,13 +4916,6 @@ FILE *fp;
 
   while((struct G__var_array*)NULL!=var) {
     for(j=0;j<var->allvar;j++) {
-#ifndef G__OLDIMPLEMENTATION1590
-      if(fnc++>maxfnc) {
-	fnc=0;
-	fprintf(fp,"}\n\n");
-	fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
-      }
-#endif
       if((G__AUTO==var->statictype[j] /* not static */ ||
 	  (0==var->p[j] && G__COMPILEDGLOBAL==var->statictype[j] &&
 	   INT_MAX == var->varlabel[j][1])) && /* extern type v[]; */
@@ -5860,21 +4997,6 @@ FILE *fp;
   fprintf(fp,"   G__resetglobalenv();\n");
 
   fprintf(fp,"}\n");
-
-#ifndef G__OLDIMPLEMENTATION1590
-  if(G__CPPLINK == G__globalcomp) {
-    fprintf(fp,"extern \"C\" void G__cpp_setup_global%s() {\n",G__DLLID);
-  }
-  else {
-    fprintf(fp,"void G__c_setup_global%s() {\n",G__DLLID);
-  }
-  for(fnc=0;fnc<divn;fnc++) {
-    fprintf(fp,"  G__cpp_setup_global%d();\n",fnc);
-  }
-  fprintf(fp,"}\n");
-#endif
-
-
 #endif
 }
 
@@ -6029,26 +5151,17 @@ FILE *fp;
   int j,k;
   struct G__ifunc_table *ifunc;
   char buf[G__ONELINE];
-#ifndef G__OLDIMPLEMENTATION1590
-  int divn=0;
-  int maxfnc=100;
-  int fnc=0;
-#endif
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global function information setup for each class\n");
   fprintf(fp,"*********************************************************/\n");
 
-#ifndef G__OLDIMPLEMENTATION1590
-  fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
-#else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_func%s() {\n",G__DLLID);
   }
   else {
     fprintf(fp,"void G__c_setup_func%s() {\n",G__DLLID);
   }
-#endif
 
   ifunc = &G__ifunc;
 
@@ -6056,13 +5169,6 @@ FILE *fp;
 
   while((struct G__ifunc_table*)NULL!=ifunc) {
     for(j=0;j<ifunc->allifunc;j++) {
-#ifndef G__OLDIMPLEMENTATION1590
-      if(fnc++>maxfnc) {
-	fnc=0;
-	fprintf(fp,"}\n\n");
-	fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
-      }
-#endif
       if(G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */
 	 G__PUBLIC==ifunc->access[j] && /* public, this is always true */
 	 0==ifunc->staticalloc[j] &&
@@ -6106,12 +5212,7 @@ FILE *fp;
 	if(0>ifunc->para_nu[j]) fprintf(fp,"0,");
 	else                    fprintf(fp,"%d,",ifunc->para_nu[j]);
 
-#if !defined(G__OLDIMPLEMENTATION1479)
-	if(2==ifunc->ansi[j]) 
-	  fprintf(fp,"%d,",8 + ifunc->staticalloc[j]*2);
-	else
-	  fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
-#elif !defined(G__OLDIMPLEMENTATION1269)
+#ifndef G__OLDIMPLEMENTATION1269
 	fprintf(fp,"%d,",ifunc->ansi[j] + ifunc->staticalloc[j]*2);
 #else
 	fprintf(fp,"%d,",ifunc->ansi[j]);
@@ -6133,7 +5234,7 @@ FILE *fp;
 	    fprintf(fp,"%c ",ifunc->para_type[j][k]);
 	  }
 	  else {
-	    G__fprinterr(G__serr,"Internal error: function parameter type\n");
+	    fprintf(G__serr,"Internal error: function parameter type\n");
 	    fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	  }
 
@@ -6149,12 +5250,7 @@ FILE *fp;
 	  else
 	    fprintf(fp,"- ");
 
-#ifndef G__OLDIMPLEMENTATION1551
-	  fprintf(fp,"%d "
-		,ifunc->para_reftype[j][k]+ifunc->para_isconst[j][k]*10);
-#else
 	  fprintf(fp,"%d ",ifunc->para_reftype[j][k]);
-#endif
 	  if(ifunc->para_def[j][k])
 	    fprintf(fp,"%s ",G__quotedstring(ifunc->para_def[j][k],buf));
 	  else fprintf(fp,"- ");
@@ -6185,20 +5281,7 @@ FILE *fp;
     fprintf(fp,"  %s();\n",G__INITFUNC);
   }
 
-  fprintf(fp,"}\n\n");
-
-#ifndef G__OLDIMPLEMENTATION1590
-  if(G__CPPLINK == G__globalcomp) {
-    fprintf(fp,"extern \"C\" void G__cpp_setup_func%s() {\n",G__DLLID);
-  }
-  else {
-    fprintf(fp,"void G__c_setup_func%s() {\n",G__DLLID);
-  }
-  for(fnc=0;fnc<divn;fnc++) {
-    fprintf(fp,"  G__cpp_setup_func%d();\n",fnc);
-  }
   fprintf(fp,"}\n");
-#endif
 }
 
 /**************************************************************************
@@ -6237,24 +5320,14 @@ G__incsetup setup_memfunc;
      && 'n'!=G__struct.type[tagnum]
 #endif
      && G__asm_dbg ) {
-    G__fprinterr(G__serr,"Warning: Try to reload %s from DLL. Ignored\n"
+    fprintf(G__serr,"Warning: Try to reload %s from DLL. Ignored\n"
             ,G__fulltagname(tagnum,1));
     return(0);
   }
 #endif
   G__struct.size[tagnum] = size;
   G__struct.iscpplink[tagnum] = cpplink;
-#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
-  G__struct.rootflag[tagnum] = (isabstract/0x10000)%0x100;
-  G__struct.funcs[tagnum] = (isabstract/0x100)%0x100;
-  G__struct.isabstract[tagnum] = isabstract%0x100;
-#elif !defined(G__OLDIMPLEMENTATION1442)
-  G__struct.funcs[tagnum] = isabstract/0x100;
-  G__struct.isabstract[tagnum] = isabstract%0x100;
-#else
   G__struct.isabstract[tagnum] = isabstract;
-#endif
-
 #ifdef G__FONS_COMMENT
   G__struct.comment[tagnum].p.com = comment;
   if(comment) G__struct.comment[tagnum].filenum = -2;
@@ -6505,11 +5578,7 @@ int isvirtual;
 #ifndef G__SMALLOBJECT
   G__func_now=G__p_ifunc->allifunc;
 
-#ifndef G__OLDIMPLEMENTATION1543
-  G__savestring(&G__p_ifunc->funcname[G__func_now],funcname);
-#else
   strcpy(G__p_ifunc->funcname[G__func_now],funcname);
-#endif
   G__p_ifunc->hash[G__func_now] = hash;
 
   /* set entry pointer */
@@ -6531,10 +5600,7 @@ int isvirtual;
   G__p_ifunc->reftype[G__func_now] = reftype;
 
   G__p_ifunc->para_nu[G__func_now] = para_nu;
-#if !defined(G__OLDIMPLEMENTATION1479)
-  if(ansi&8) G__p_ifunc->ansi[G__func_now] = 2;
-  else if(ansi&1) G__p_ifunc->ansi[G__func_now] = 1;
-#elif !defined(G__OLDIMPLEMENTATION1269)
+#ifndef G__OLDIMPLEMENTATION1269
   G__p_ifunc->ansi[G__func_now] = ansi&1;
 #else
   G__p_ifunc->ansi[G__func_now] = ansi;
@@ -6547,13 +5613,15 @@ int isvirtual;
   G__p_ifunc->access[G__func_now] = accessin;
 
   G__p_ifunc->globalcomp[G__func_now] = G__NOLINK;
-#if !defined(G__OLDIMPLEMENTATION1287)
+#ifndef G__OLDIMPLEMENTATION1287
   G__p_ifunc->isexplicit[G__func_now] = (ansi&4)/4;
   G__p_ifunc->staticalloc[G__func_now] = (ansi&2)/2;
-#elif !defined(G__OLDIMPLEMENTATION1269)
+#else
+#ifndef G__OLDIMPLEMENTATION1269
   G__p_ifunc->staticalloc[G__func_now] = ansi/2;
 #else
   G__p_ifunc->staticalloc[G__func_now] = 0;
+#endif
 #endif
 #ifdef G__TRUEP2F
   G__p_ifunc->isvirtual[G__func_now] = isvirtual&0x01;
@@ -6752,12 +5820,6 @@ int G__memfunc_next()
 
     /* set next G__p_ifunc */
     G__p_ifunc = G__p_ifunc->next;
-#ifndef G__OLDIMPLEMENTATION1543
-    {
-      int ix;
-      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->funcname[ix] = (char*)NULL;
-    }
-#endif
   }
 #endif
   return(0);
@@ -6925,16 +5987,6 @@ int globalcomp;
 * #pragma link C   global variablename;  can use regexp
 * #pragma link off global variablename;  can use regexp
 *
-* #pragma link C++ defined_in filename;
-* #pragma link C   defined_in filename;
-* #pragma link off defined_in filename;
-* #pragma link C++ defined_in classname;
-* #pragma link C   defined_in classname;
-* #pragma link off defined_in classname;
-* #pragma link C++ defined_in [class|struct|namespace] classname;
-* #pragma link C   defined_in [class|struct|namespace] classname;
-* #pragma link off defined_in [class|struct|namespace] classname;
-*
 * #pragma link C++ typedef TypeName;      can use regexp
 * #pragma link C   typedef TypeName;      can use regexp
 * #pragma link off typedef TypeName;      can use regexp
@@ -6977,50 +6029,16 @@ int link_stub;
   /* Get link language interface */
   c = G__fgetname_template(buf,";\n\r");
   if(G__SPECIFYLINK==link_stub) {
-    if(strcmp(buf,"C++")==0) {
-      globalcomp = G__CPPLINK;
-      if(G__CLINK==G__globalcomp) {
-	G__fprinterr(G__serr,"Warning: '#pragma link C++' ignored. Use '#pragma link C'");
-	G__printlinenum();
-      }
-    }
-    else if(strcmp(buf,"C")==0) {
-      globalcomp = G__CLINK;
-      if(G__CPPLINK==G__globalcomp) {
-	G__fprinterr(G__serr,"Warning: '#pragma link C' ignored. Use '#pragma link C++'");
-	G__printlinenum();
-      }
-    }
+    if(strcmp(buf,"C++")==0)      globalcomp = G__CPPLINK;
+    else if(strcmp(buf,"C")==0)   globalcomp = G__CLINK;
     else if(strcmp(buf,"MACRO")==0) globalcomp = G__MACROLINK;
-    else if(strcmp(buf,"off")==0) globalcomp = G__NOLINK;
-    else if(strcmp(buf,"OFF")==0) globalcomp = G__NOLINK;
-    else {
-      G__genericerror("Error: '#pragma link' syntax error");
-      globalcomp = G__NOLINK; /* off */
-    }
+    else                          globalcomp = G__NOLINK; /* off */
   }
   else {
-    if(strcmp(buf,"C++")==0) {
-      globalcomp = G__CPPSTUB;
-      if(G__CLINK==G__globalcomp) {
-	G__fprinterr(G__serr,"Warning: '#pragma stub C++' ignored. Use '#pragma stub C'");
-	G__printlinenum();
-      }
-    }
-    else if(strcmp(buf,"C")==0) {
-      globalcomp = G__CSTUB;
-      if(G__CPPLINK==G__globalcomp) {
-	G__fprinterr(G__serr,"Warning: '#pragma stub C' ignored. Use '#pragma stub C++'");
-	G__printlinenum();
-      }
-    }
+    if(strcmp(buf,"C++")==0)      globalcomp = G__CPPSTUB;
+    else if(strcmp(buf,"C")==0)   globalcomp = G__CSTUB;
     else if(strcmp(buf,"MACRO")==0) globalcomp = G__MACROLINK;
-    else if(strcmp(buf,"off")==0) globalcomp = G__NOLINK;
-    else if(strcmp(buf,"OFF")==0) globalcomp = G__NOLINK;
-    else {
-      G__genericerror("Error: '#pragma link' syntax error");
-      globalcomp = G__NOLINK; /* off */
-    }
+    else                          globalcomp = G__NOLINK; /* off */
   }
 
 #ifndef G__OLDIMPLEMENTATION1272
@@ -7052,7 +6070,7 @@ int link_stub;
   c = G__fgetname_template(buf,";\n\r");
 
   if(G__MACROLINK==globalcomp&&strncmp(buf,"function",3)!=0) {
-    G__fprinterr(G__serr,"Warning: #pragma link MACRO only valid for global function. Ignored\n");
+    fprintf(G__serr,"Warning: #pragma link MACRO only valid for global function. Ignored\n");
     G__printlinenum();
     c=G__fignorestream(";\n");
     return;
@@ -7079,7 +6097,7 @@ int link_stub;
   case G__CPPSTUB:
   case G__CSTUB:
     if(strncmp(buf,"function",3)!=0) {
-      G__fprinterr(G__serr,"Warning: #pragma stub only valid for global function. Ignored\n");
+      fprintf(G__serr,"Warning: #pragma stub only valid for global function. Ignored\n");
       c=G__fignorestream(";\n");
       return;
     }
@@ -7100,23 +6118,14 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION886
     int len;
     char* p2;
-#ifndef G__OLDIMPLEMENTATION1257
+#ifndef G__OLDIMPLEMENtATION1257
     int rf1 = 0;
     int rf2 = 0;
     int rf3 = 0;
     int iirf;
 #ifndef G__OLDIKMPLEMENTATION1334
     char protectedaccess=0;
-#ifndef G__OLDIKMPLEMENTATION1483
-    if(strncmp(buf,"class+protected",10)==0) 
-      protectedaccess=G__PROTECTEDACCESS;
-    else if(strncmp(buf,"class+private",10)==0) {
-      protectedaccess=G__PRIVATEACCESS;
-      G__privateaccess = 1;
-    }
-#else
     if(strncmp(buf,"class+protected",6)==0) protectedaccess = 1;
-#endif
 #endif
 #endif /* 1257 */
 #ifndef G__OLDIMPLEMENTATION1417
@@ -7124,7 +6133,7 @@ int link_stub;
 #else
     c = G__fgetstream(buf,";\n\r");
 #endif
-#ifndef G__OLDIMPLEMENTATION1257
+#ifndef G__OLDIMPLEMENtATION1257
     for (iirf = 0; iirf < 3; iirf++) {
       if (buf[strlen(buf)-1] == '-') {
 	rf1 = 1;
@@ -7142,11 +6151,7 @@ int link_stub;
 #endif /* 1257 */
     len = strlen(buf);
     p2 = strchr(buf,'[');
-#ifndef G__OLDIMPLEMENTATION1538
-    p = strrchr(buf,'*');
-#else
     p = strchr(buf,'*');
-#endif
     if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) p=p;
     else p=(char*)NULL;
 #else
@@ -7155,13 +6160,6 @@ int link_stub;
 #endif
     if(p) {
 #if defined(G__REGEXP)
-#ifndef G__OLDIKMPLEMENTATION1583
-      if('.'!=buf[len-2]) {
-	buf[len-1] = '.';
-	buf[len++] = '*';
-	buf[len] = 0;
-      }
-#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7203,17 +6201,13 @@ int link_stub;
 	}
       }
       free(re);
-#else /* G__REGEXP */
+#else
       *p='\0';
       hash=strlen(buf);
       for(i=0;i<G__struct.alltag;i++) {
 	if('$'==G__struct.name[i][0]) os=1;
 	else                          os=0;
-	if(strncmp(buf,G__struct.name[i]+os,hash)==0
-#ifndef G__OLDIMPLEMENTATION1538
-	   || ('*'==buf[0]&&strstr(G__struct.name[i],buf+1))
-#endif
-	   ) {
+	if(strncmp(buf,G__struct.name[i]+os,hash)==0) {
 	  G__struct.globalcomp[i] = globalcomp;
 #ifndef G__OLDIKMPLEMENTATION1334
 	  G__struct.protectedaccess[i] = protectedaccess;
@@ -7221,14 +6215,14 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
-	  /*G__fprinterr(G__serr,"#pragma link changed %s\n",G__struct.name[i]);*/
+	  /*fprintf(G__serr,"#pragma link changed %s\n",G__struct.name[i]);*/
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
 	}
       }
-#endif /* G__REGEXP */
+#endif
     } /* if(p) */
     else {
-#ifdef G__OLDIMPLEMENTATION1257
+#ifdef G__OLDIMPLEMENtATION1257
 #ifdef G__ROOTSPECIAL
       int rf1 = 0;
       int rf2 = 0;
@@ -7269,24 +6263,16 @@ int link_stub;
 	if (rf1 == 1) G__struct.rootflag[i] = G__NOSTREAMER;
 	if (rf2 == 1) G__struct.rootflag[i] |= G__NOINPUTOPERATOR;
 	if (rf3 == 1) {
-#ifndef G__OLDIMPLEMENTATION1490
-	  G__struct.rootflag[i] |= G__USEBYTECOUNT;
-	  if(rf1) {
-	    G__struct.rootflag[i] &= ~G__NOSTREAMER;
-	    G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
-	  }
-#else
 	  G__struct.rootflag[i] = G__USEBYTECOUNT;
 	  if(rf1 || rf2) 
-	    G__fprinterr(G__serr, "option + mutual exclusive with either - or !\n");
-#endif
+	    fprintf(G__serr, "option + mutual exclusive with either - or !\n");
 	}
       }
 #endif
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
+      fprintf(G__serr,"Note: link requested for unknown class %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7303,33 +6289,19 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1309
     char *cx;
 #endif
-#ifndef G__OLDIMPLEMENTATION1523
-    char *cy;
-#endif
     fpos_t pos;
     int store_line = G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
     c = G__fgetstream_template(buf,";\n\r<>");
 #ifndef G__OLDIMPLEMENTATION1309
-#ifndef G__OLDIMPLEMENTATION1523
-    cy = strchr(buf,'(');
-    if(!cy) cx = G__strrstr(buf,"::");
-    else {
-      *cy = 0;
-      cx = G__strrstr(buf,"::");
-      *cy = '(';
-    }
-#else
     cx = G__strrstr(buf,"::");
-#endif
     if(cx) {
       int tagnum;
       char tmpbuf[G__ONELINE];
       *cx = 0;
       tagnum = G__defined_tagname(buf,2);
       if(-1==tagnum) {
-	G__fprinterr(G__serr,"Error: %s not found",buf);
-	G__printlinenum();
+	fprintf(G__serr,"Error: %s not found",buf);
       }
       x_ifunc = G__struct.memfunc[tagnum];
       strcpy(tmpbuf,cx+2);
@@ -7398,25 +6370,13 @@ int link_stub;
 #endif
 
     /* search for wildcard character */
-#ifndef G__OLDIMPLEMENTATION1538
-    p = strrchr(buf,'*');
-#else
     p = strchr(buf,'*');
-#endif
 
     /* in case of operator*  */
     if(strncmp(buf,"operator",8)==0) p = (char*)NULL;
 
     if(p) {
 #if defined(G__REGEXP)
-#ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
-      if('.'!=buf[len-2]) {
-	buf[len-1] = '.';
-	buf[len++] = '*';
-	buf[len] = 0;
-      }
-#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7429,14 +6389,7 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
-	  if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)
-#ifndef G__OLDIMPLEMENTATION1534
-	     && (ifunc->para_nu[i]<2 ||
-		 -1==ifunc->para_p_tagtable[i][1] ||
-		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
-			 ,"G__CINT_",8)!=0)
-#endif
-	     ){
+	  if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)){
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7459,14 +6412,7 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
- 	  if(0!=regex(re,ifunc->funcname[i])
-#ifndef G__OLDIMPLEMENTATION1534
-	     && (ifunc->para_nu[i]<2 ||
-		 -1==ifunc->para_p_tagtable[i][1] ||
-		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
-			 ,"G__CINT_",8)!=0)
-#endif
-	     ){
+ 	  if(0!=regex(re,ifunc->funcname[i])){
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7476,7 +6422,7 @@ int link_stub;
 	ifunc = ifunc->next;
       }
       free(re);
-#else /* G__REGEXP */
+#else
       *p='\0';
       hash=strlen(buf);
 #ifndef G__OLDIMPLEMENTATION1309
@@ -7486,27 +6432,17 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
- 	  if((strncmp(buf,ifunc->funcname[i],hash)==0
-#ifndef G__OLDIMPLEMENTATION1538
-	      || ('*'==buf[0]&&strstr(ifunc->funcname[i],buf+1)))
-#endif
-#ifndef G__OLDIMPLEMENTATION1534
-	     && (ifunc->para_nu[i]<2 ||
-		 -1==ifunc->para_p_tagtable[i][1] ||
-		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
-			 ,"G__CINT_",8)!=0)
-#endif
-	     ) {
+ 	  if(strncmp(buf,ifunc->funcname[i],hash)==0) {
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
 #endif
-	    /*G__fprinterr(G__serr,"#pragma link changed %s\n",ifunc->funcname[i]);*/
+	    /*fprintf(G__serr,"#pragma link changed %s\n",ifunc->funcname[i]);*/
 	  }
 	}
 	ifunc = ifunc->next;
       }
-#endif /* G__REGEXP */
+#endif
     }
     else {
 #ifndef G__OLDIMPLEMENTATION1309
@@ -7516,14 +6452,7 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
-	  if(strcmp(buf,ifunc->funcname[i])==0
-#ifndef G__OLDIMPLEMENTATION1534
-	     && (ifunc->para_nu[i]<2 ||
-		 -1==ifunc->para_p_tagtable[i][1] ||
-		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
-			 ,"G__CINT_",8)!=0)
-#endif
-	     ) {
+	  if(strcmp(buf,ifunc->funcname[i])==0) {
 	    ifunc->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7535,7 +6464,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown function %s",buf);
+      fprintf(G__serr,"Note: link requested for unknown function %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7546,21 +6475,9 @@ int link_stub;
   *************************************************************************/
   else if(strncmp(buf,"global",3)==0) {
     c = G__fgetname_template(buf,";\n\r");
-#ifndef G__OLDIMPLEMENTATION1538
-    p = strrchr(buf,'*');
-#else
     p = strchr(buf,'*');
-#endif
     if(p) {
 #if defined(G__REGEXP)
-#ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
-      if('.'!=buf[len-2]) {
-	buf[len-1] = '.';
-	buf[len++] = '*';
-	buf[len] = 0;
-      }
-#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7598,27 +6515,23 @@ int link_stub;
 	var=var->next;
       }
       free(re);
-#else /* G__REGEXP */
+#else
       *p = '\0';
       hash = strlen(buf);
       var = &G__global;
       while(var) {
 	for(i=0;i<var->allvar;i++) {
-	  if(strncmp(buf,var->varnamebuf[i],hash)==0
-#ifndef G__OLDIMPLEMENTATION1538
-	     || ('*'==buf[0]&&strstr(var->varnamebuf[i],buf+1))
-#endif
-	     ) {
+	  if(strncmp(buf,var->varnamebuf[i],hash)==0) {
 	    var->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
 #endif
-	    /*G__fprinterr(G__serr,"#pragma link changed %s\n",var->varnamebuf[i]);*/
+	    /*fprintf(G__serr,"#pragma link changed %s\n",var->varnamebuf[i]);*/
 	  }
 	}
 	var=var->next;
       }
-#endif /* G__REGEXP */
+#endif
     }
     else {
       G__hash(buf,hash,i);
@@ -7632,7 +6545,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown global variable %s",buf);
+      fprintf(G__serr,"Note: link requested for unknown global variable %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7653,21 +6566,9 @@ int link_stub;
   *************************************************************************/
   else if(strncmp(buf,"typedef",3)==0) {
     c = G__fgetname_template(buf,";\n\r");
-#ifndef G__OLDIMPLEMENTATION1538
-    p = strrchr(buf,'*');
-#else
     p = strchr(buf,'*');
-#endif
     if(p) {
 #if defined(G__REGEXP)
-#ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
-      if('.'!=buf[len-2]) {
-	buf[len-1] = '.';
-	buf[len++] = '*';
-	buf[len] = 0;
-      }
-#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7676,12 +6577,6 @@ int link_stub;
       for(i=0;i<G__newtype.alltype;i++) {
 	if(0==regexec(&re,G__newtype.name[i],(size_t)0,(regmatch_t*)NULL,0)){
 	  G__newtype.globalcomp[i] = globalcomp;
-#ifndef G__OLDIMPLEMENTATION1527
-	  if(-1!=G__newtype.tagnum[i] && 
-	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
-	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
-	  }
-#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7697,51 +6592,29 @@ int link_stub;
       for(i=0;i<G__newtype.alltype;i++) {
 	if(0!=regex(re,G__newtype.name[i])){
 	  G__newtype.globalcomp[i] = globalcomp;
-#ifndef G__OLDIMPLEMENTATION1527
-	  if(-1!=G__newtype.tagnum[i] && 
-	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
-	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
-	  }
-#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
 	}
       }
       free(re);
-#else /* G__REGEXP */
+#else
       *p='\0';
       hash=strlen(buf);
       for(i=0;i<G__newtype.alltype;i++) {
-	if(strncmp(buf,G__newtype.name[i],hash)==0
-#ifndef G__OLDIMPLEMENTATION1538
-	   || ('*'==buf[0]&&strstr(G__newtype.name[i],buf+1))
-#endif
-	   ) {
+	if(strncmp(buf,G__newtype.name[i],hash)==0) {
 	  G__newtype.globalcomp[i] = globalcomp;
-#ifndef G__OLDIMPLEMENTATION1527
-	  if(-1!=G__newtype.tagnum[i] && 
-	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
-	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
-	  }
-#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
 	}
       }
-#endif /* G__REGEXP */
+#endif
     }
     else {
       i = G__defined_typename(buf);
       if(-1!=i) {
 	G__newtype.globalcomp[i] = globalcomp;
-#ifndef G__OLDIMPLEMENTATION1527
-	if(-1!=G__newtype.tagnum[i] && 
-	   '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
-	  G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
-	}
-#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7749,7 +6622,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown typedef %s",buf);
+      fprintf(G__serr,"Note: link requested for unknown typedef %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7761,36 +6634,14 @@ int link_stub;
   *************************************************************************/
 #ifndef G__PHILIPPE2
   else if(strncmp(buf,"defined_in",3)==0) {
-#ifndef G__OLDIMPLEMENTATION1537
-    fpos_t pos;
-    int tagflag = 0;
-#endif
     int ifile;
     struct stat statBufItem;  
     struct stat statBuf;  
 #ifdef G__WIN32
     char fullItem[_MAX_PATH], fullIndex[_MAX_PATH];
 #endif
-#ifndef G__OLDIMPLEMENTATION1537
-    fgetpos(G__ifile.fp,&pos);
-    c = G__fgetname(buf,";\n\r");
-    if(strcmp(buf,"class")==0||strcmp(buf,"struct")==0||
-	strcmp(buf,"namespace")==0) {
-      if(isspace(c)) c = G__fgetstream_template(buf,";\n\r<>");
-      tagflag = 1;
-    }
-    else {
-      fsetpos(G__ifile.fp,&pos);
-      c = G__fgetstream_template(buf,";\n\r<>");
-    }
-#else
     c = G__fgetstream_template(buf,";\n\r<>");
-#endif
-    if ( 
-#ifndef G__OLDIMPLEMENTATION1537
-	0==tagflag &&
-#endif
-	0 == stat( buf, & statBufItem ) ) {
+    if ( 0 == stat( buf, & statBufItem ) ) {
 #ifdef G__WIN32
       _fullpath( fullItem, buf, _MAX_PATH );      
 #endif
@@ -7814,13 +6665,6 @@ int link_stub;
 	    for(i=0;i<G__struct.alltag;i++) {
 	      if(G__struct.filenum[i]==ifile) {
 		G__struct.globalcomp[i]=globalcomp;
-#ifndef G__OLDIMPLEMENTATION1597
-                /* Note this make the equivalent of '+' the
-		   default for defined_in type of linking */
-                if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
-                  G__struct.rootflag[i] |= G__USEBYTECOUNT;
-                }
-#endif
 	      }
 	    }
 	    /* link global function */
@@ -7861,7 +6705,6 @@ int link_stub;
       }
     }
 #ifndef G__OLDIMPLEMENTATION1243
-    /* #pragma link [C|C++|off] defined_in [class|struct|namespace] name; */
     if(!done) {
       int parent_tagnum = G__defined_tagname(buf,2);
       int j,flag;
@@ -7874,47 +6717,16 @@ int link_stub;
 	    if(G__struct.parent_tagnum[j]==parent_tagnum) flag=1;
 	    j = G__struct.parent_tagnum[j];
 	  }
-#ifndef G__OLDIMPLEMENTATION1597
 	  if(flag) {
 	    G__struct.globalcomp[i]=globalcomp;
-	    /* Note this make the equivalent of '+' the
-	       default for defined_in type of linking */
-	    if ( (G__struct.rootflag[i] & G__NOSTREAMER) == 0 ) {
-	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
-	    }
-          }
-#else
-	  if(flag) G__struct.globalcomp[i]=globalcomp;
-#endif
+	  }
 	}
-#ifndef G__OLDIMPLEMENTATION1537
-	for(i=0;i<G__newtype.alltype;i++) {
-	  flag = 0;
-	  j = G__newtype.parent_tagnum[i];
-	  do {
-	    if(j == parent_tagnum) flag = 1;
-	    j = G__struct.parent_tagnum[j];
-	  } while(-1 != j);
-#ifndef G__OLDIMPLEMENTATION1597
-	  if(flag) {
-	    G__struct.globalcomp[i]=globalcomp;
-	    /* Note this make the equivalent of '+' the
-	       default for defined_in type of linking */
-	    if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
-	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
-	    }
-          }
-#else
-	  if(flag) G__newtype.globalcomp[i] = globalcomp;
-#endif
-	}
-#endif
       }
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Warning: link requested for unknown srcfile %s",buf);
+      fprintf(G__serr,"Warning: link requested for unknown srcfile %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7972,7 +6784,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown srcfile %s",buf);
+      fprintf(G__serr,"Note: link requested for unknown srcfile %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7985,70 +6797,25 @@ int link_stub;
   else if(strncmp(buf,"all",2)==0) {
     c = G__fgetname_template(buf,";\n\r");
     if(strncmp(buf,"class",3)==0) {
-      for(i=0;i<G__struct.alltag;i++) {
-#ifndef G__OLDIMPLEMENTATION1536
-	if(G__NOLINK==globalcomp ||
-	   (G__NOLINK==G__struct.iscpplink[i] && 
-	    (-1!=G__struct.filenum[i] && 
-	     0==(G__srcfile[G__struct.filenum[i]].hdrprop&G__CINTHDR))))
-	  G__struct.globalcomp[i] = globalcomp;
-#else
-	G__struct.globalcomp[i] = globalcomp;
-#endif
-      }
+      for(i=0;i<G__struct.alltag;i++) G__struct.globalcomp[i] = globalcomp;
     }
     else if(strncmp(buf,"function",3)==0) {
       ifunc = &G__ifunc;
       while(ifunc) {
-	for(i=0;i<ifunc->allifunc;i++) {
-#ifndef G__OLDIMPLEMENTATION1536
-	if(G__NOLINK==globalcomp ||
-	   (0<=ifunc->pentry[i]->filenum &&
-	    0==(G__srcfile[ifunc->pentry[i]->filenum].hdrprop&G__CINTHDR)))
-	  ifunc->globalcomp[i] = globalcomp;
-#else
-	ifunc->globalcomp[i] = globalcomp;
-#endif
-	}
+	for(i=0;i<ifunc->allifunc;i++) ifunc->globalcomp[i] = globalcomp;
 	ifunc = ifunc->next;
       }
     }
     else if(strncmp(buf,"global",3)==0) {
       var = &G__global;
       while(var) {
-	for(i=0;i<var->allvar;i++) {
-#ifndef G__OLDIMPLEMENTATION1536
-	  if(G__NOLINK==globalcomp ||
-	     (0<=var->filenum[i] &&
-	      0==(G__srcfile[var->filenum[i]].hdrprop&G__CINTHDR)))
-	    var->globalcomp[i] = globalcomp;
-#else
-	  var->globalcomp[i] = globalcomp;
-#endif
-	}
+	for(i=0;i<var->allvar;i++) var->globalcomp[i] = globalcomp;
 	var = var->next;
       }
     }
 #ifndef G__OLDIMPLEMENTATION528
     else if(strncmp(buf,"typedef",3)==0) {
-      for(i=0;i<G__newtype.alltype;i++) {
-#ifndef G__OLDIMPLEMENTATION1536
-	if(G__NOLINK==globalcomp ||
-	   (G__NOLINK==G__newtype.iscpplink[i] &&
-	    0<=G__newtype.filenum[i] &&
-	    0==(G__srcfile[G__newtype.filenum[i]].hdrprop&G__CINTHDR))) {
-#endif
-	  G__newtype.globalcomp[i] = globalcomp;
-#ifndef G__OLDIMPLEMENTATION1527
-	  if((-1!=G__newtype.tagnum[i] && 
-	      '$'==G__struct.name[G__newtype.tagnum[i]][0])) {
-	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
-	  }
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-	}
-#endif
-      }
+      for(i=0;i<G__newtype.alltype;i++) G__newtype.globalcomp[i] = globalcomp;
     }
 #endif /* ON528 */
 #ifndef G__OLDIMPLEMENTATION606
@@ -8095,7 +6862,7 @@ int tagnum;
     G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
 #ifdef G__DEBUG
     if(G__var_type!=store_var_type)
-      G__fprinterr(G__serr,"Cint internal error: G__incsetup_memvar %c %c\n"
+      fprintf(G__serr,"Cint internal error: G__incsetup_memvar %c %c\n"
 	      ,G__var_type,store_var_type);
 #endif
     G__var_type = store_var_type;
@@ -8724,92 +7491,6 @@ G__value *buf;
   return(&buf->obj.d);
 }
 /* #endif   ON1167 */
-
-
-#ifndef G__PHILIPPE30
-/**************************************************************************
-* G__specify_extra_include()
-* has to be called from the pragma decoding!
-**************************************************************************/
-void G__specify_extra_include() {
-  int i;
-  int c;
-  char buf[G__ONELINE];
-  char *tobecopied;
-  if (!G__extra_include) {
-    G__extra_include = (char**)malloc(G__MAXFILE*sizeof(char*));
-    for(i=0;i<G__MAXFILE;i++) 
-      G__extra_include[i]=(char*)malloc(G__MAXFILENAME*sizeof(char));
-  };
-  c = G__fgetstream_template(buf,";\n\r<>");
-  if ( 1 ) { /* should we check if the file exist ? */
-    tobecopied = buf;
-    if (buf[0]=='\"' || buf[0]=='\'') tobecopied++;
-    i = strlen(buf);
-    if (buf[i-1]=='\"' || buf[i-1]=='\'') buf[i-1]='\0';
-    strcpy(G__extra_include[G__extra_inc_n++],tobecopied);
-  }
-}
-
-/**************************************************************************
- * G__gen_extra_include()
- * prepend the extra header files to the C or CXX file
- **************************************************************************/
-void G__gen_extra_include() {
-  char * tempfile;
-  FILE *fp,*ofp;
-  char line[BUFSIZ];
-  int i;
-  
-  if (G__extra_inc_n) {
-#ifndef G__ADD_EXTRA_INCLUDE_AT_END
-    /* because of a bug in (at least) the KAI compiler we have to
-       add the files at the beginning of the dictionary header file
-       (Specifically, the extra include files have to be include 
-       before any forward declarations!) */
-    
-    tempfile = (char*) malloc(strlen(G__CPPLINK_H)+6);
-    sprintf(tempfile,"%s.temp", G__CPPLINK_H);
-    rename(G__CPPLINK_H,tempfile);
-    
-    fp = fopen(G__CPPLINK_H,"w");
-    if(!fp) G__fileerror(G__CPPLINK_H);
-    ofp = fopen(tempfile,"r");
-    if(!ofp) G__fileerror(tempfile);
-    
-    /* Add the extra include ad the beginning of the files */
-    fprintf(fp,"\n/* Includes added by #pragma extra_include */\n");
-    for(i=0; i< G__extra_inc_n; i++) {
-      fprintf(fp,"#include \"%s\"\n",G__extra_include[i]);
-    }
-    
-    /* Copy the rest of the header file */
-    while (fgets(line, BUFSIZ, ofp)) {
-      fprintf(fp, "%s", line);
-    }
-    fprintf(fp,"\n");
-    
-    fclose(fp);
-    fclose(ofp);
-    unlink(tempfile);
-    free(tempfile);
-    
-#else
-    fp = fopen(G__CPPLINK_H,"a");
-    if(!fp) G__fileerror(G__CPPLINK_H);
-    
-    fprintf(fp,"\n/* Includes added by #pragma extra_include */\n");
-    for(i=0; i< G__extra_inc_n; i++) {
-      fprintf(fp,"#include \"%s\"\n",G__extra_include[i]);
-    }
-    fprintf(fp,"\n");
-    fclose(fp);    
-#endif
-    
-  }
-}
-
-#endif
 
 /*
  * Local Variables:

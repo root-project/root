@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.4 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -25,9 +25,6 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 class TBrowser;
 class TClass;
@@ -40,18 +37,17 @@ private:
    G__BaseClassInfo  *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to class
-   TString            fName;      //name of class
 
 public:
    TBaseClass(G__BaseClassInfo *info = 0, TClass *cl = 0);
    virtual     ~TBaseClass();
    virtual void Browse(TBrowser *b);
-   Int_t        Compare(const TObject *obj) const;
    const char  *GetName() const;
    const char  *GetTitle() const;
-   TClass      *GetClassPointer(Bool_t load=kTRUE);
+   TClass      *GetClassPointer();
    Int_t        GetDelta() const;
-   ULong_t      Hash() const;
+   Int_t        Compare(TObject *obj);
+   ULong_t      Hash();
    Bool_t       IsFolder() const {return kTRUE;}
    Long_t       Property() const;
 
