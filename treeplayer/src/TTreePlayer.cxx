@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.18 2000/08/17 09:47:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.19 2000/08/31 07:13:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1149,8 +1149,12 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       } else fW[fNfill] = 1;
       fV1[fNfill] = fVar1->EvalInstance(0);
       if (fVar2) {
+         if (Var2Multiple && (fMultiplicity!=fVar2)) fVar2->GetNdata();
          fV2[fNfill] = fVar2->EvalInstance(0);
-         if (fVar3)  fV3[fNfill] = fVar3->EvalInstance(0);
+         if (fVar3) {
+           if (Var3Multiple && (fMultiplicity!=fVar3)) fVar3->GetNdata();           
+           fV3[fNfill] = fVar3->EvalInstance(0);
+         }
       }
       if (fW[fNfill]) {
          fNfill++;
