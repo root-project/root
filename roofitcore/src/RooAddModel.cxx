@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.21 2001/11/15 01:30:23 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.22 2001/11/19 07:23:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -352,7 +352,7 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 			   << model->getNorm(nset)*lastCoef << endl ;
 
   // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
+  if ((lastCoef<0 || lastCoef>1) && ++_errorCount<=10) {
     cout << "RooAddModel::evaluate(" << GetName() 
 	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
 	 << 1-lastCoef << endl ;
@@ -404,7 +404,7 @@ Double_t RooAddModel::getNormSpecial(const RooArgSet* nset) const
 			   << model->getNormSpecial(nset)*lastCoef << endl ;
 
   // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
+  if ((lastCoef<0 || lastCoef>1) && ++_errorCount<=10) {
     cout << "RooAddModel::evaluate(" << GetName() 
 	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
 	 << 1-lastCoef << endl ;
@@ -617,7 +617,7 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet)
   value += model->analyticalIntegralWN(subCode[i],normSet)*lastCoef ;
   
   // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
+  if ((lastCoef<0 || lastCoef>1) && ++_errorCount<=10) {
     cout << "RooAddModel::analyticalIntegral(" << GetName() 
 	 << " WARNING: sum of model coefficients not in range [0-1], value=" 
 	 << 1-lastCoef << endl ;
