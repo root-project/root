@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.5 2003/01/24 07:04:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.6 2003/06/10 19:07:03 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -69,7 +69,7 @@ protected:
 
 protected:
     virtual void      ClearFormula();
-    virtual void      CompileVariables(const char *varexp="", const char *selection="");
+    virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");
 
 public:
     TSelectorDraw();

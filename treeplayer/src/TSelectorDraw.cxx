@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.12 2003/06/10 19:07:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.13 2003/06/13 06:19:47 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -349,8 +349,7 @@ void TSelectorDraw::Begin(TTree *tree)
    }
 
    // Decode varexp and selection
-   CompileVariables(varexp, realSelection.GetTitle());
-   if (!fVar1 && !elist) {SetStatus(-1); return;}
+   if (!CompileVariables(varexp, realSelection.GetTitle())) {SetStatus(-1); return;}
 
    // In case fOldHistogram exists, check dimensionality
    Int_t nsel = strlen(selection);
@@ -690,7 +689,7 @@ void TSelectorDraw::ClearFormula()
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
+Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 {
    // Compile input variables and selection expression.
    //
@@ -706,6 +705,8 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
    //  Example:
    //      selection = "x<y && sqrt(z)>3.2"
    //       in a selection all the C++ operators are authorized
+   //
+   //  Return kFALSE if any of the variable is not compilable.
 
    const Int_t MAXCOL = 4;
    TString title;
@@ -720,17 +721,17 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
-      if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
+      if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return kFALSE; }
    }
    // if varexp is empty, take first column by default
    nch = strlen(varexp);
-   if (nch == 0) {fDimension = 0; return;}
+   if (nch == 0) {fDimension = 0; return kTRUE;}
    title = varexp;
 
    // otherwise select only the specified columns
    ncols  = 1;
    for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
-   if (ncols > 3 ) return;
+   if (ncols > 3 ) return kFALSE;
    MakeIndex(title,index);
 
    fManager = new TTreeFormulaManager();
@@ -738,17 +739,17 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
    fTree->ResetBit(TTree::kForceRead);
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
-      if (!fVar1->GetNdim()) { ClearFormula(); return;}
+      if (!fVar1->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar1);
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
-      if (!fVar2->GetNdim()) { ClearFormula(); return;}
+      if (!fVar2->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar2);
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
-      if (!fVar3->GetNdim()) { ClearFormula(); return;}
+      if (!fVar3->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar3);
    }
    fManager->Sync();
@@ -764,6 +765,7 @@ void TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
          fObjEval = kTRUE;
       }
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
