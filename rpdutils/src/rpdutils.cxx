@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.74 2005/03/06 15:46:34 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.75 2005/03/10 17:57:04 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5969,12 +5969,20 @@ int RpdLogin(int ServType, int auth)
             shm_ds.shm_perm.gid = pw->pw_gid;
             if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1) {
                 ErrorInfo("RpdLogin: can't change ownership of shared"
-                          " memory segment %d (errno: %d)",gShmIdCred,GetErrno());
+                          " memory segment %d (errno: %d)",
+                          gShmIdCred,GetErrno());
                 return -1;
             }
          }
       }
 #endif
+      //
+      // Anonymous users are confined to their corner
+      if (gAnon && chroot(pw->pw_dir) == -1) {
+         ErrorInfo("RpdLogin: can't chroot to %s", pw->pw_dir);
+         return -1;
+      }
+
       // set access control list from /etc/initgroup
       initgroups(gUser, pw->pw_gid);
 
