@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.47 2004/05/26 10:34:04 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.48 2004/06/13 16:26:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -106,7 +106,6 @@ TNetFile::~TNetFile()
    // TNetFile dtor. Send close message and close socket.
 
    Close();
-   SafeDelete(fSocket);
 }
 
 //______________________________________________________________________________
@@ -177,6 +176,8 @@ void TNetFile::Close(Option_t *opt)
 
    if (fProtocol > 6)
       fSocket->Send(kROOTD_BYE);
+
+   SafeDelete(fSocket);
 }
 
 //______________________________________________________________________________
