@@ -1303,7 +1303,7 @@ G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
   ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
 
   //////////////////////////////////////////////////
-  ++ifunc->allifunc;
+  G__memfunc_next();
 
   /* Initialize method object */
   G__MethodInfo method;
