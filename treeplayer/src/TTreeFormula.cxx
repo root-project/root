@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.16 2000/08/11 20:39:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.17 2000/10/31 11:21:18 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -64,7 +64,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    fNcodes       = 0;
    fMultiplicity = 0;
    Int_t i,j,k;
-      
+
    for (j=0; j<kMAXCODES; j++) {
       fNdimensions[j] = 0;
       for (k = 0; k<kMAXFORMDIM; k++) {
@@ -103,7 +103,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 
       if (fIndex[i] == -1 ) fIndex[i] = 0;
 
-      // Because we did not record the number of virtual dimensions associated 
+      // Because we did not record the number of virtual dimensions associated
       // with this leaf, we can not use the next loop which has to count down.
       Int_t virt_dim = 0;
       for (k = 0; k < fNdimensions[i]; k++) {
@@ -117,7 +117,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       for (k = fNdimensions[i]; (k > 0) && (fCumulSize[i][k-1]>=0); k--) {
          fCumulSize[i][k-1] *= fCumulSize[i][k];
       }
-      
+
    }
    for (k = kMAXFORMDIM; (k > 0) && (fCumulUsedSize[k-1]>=0); k--) {
       fCumulUsedSize[k-1] *= fCumulUsedSize[k];
@@ -125,7 +125,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    // Now that we know the virtual dimension we know if a loop over EvalInstance
    // is needed or not.
    if (fCumulUsedSize[0]==1 && fMultiplicity!=0) fMultiplicity -= 2;
-   
+
 }
 
 //______________________________________________________________________________
@@ -148,8 +148,8 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
    // the next value could be before the string but
    // that's okay because the next operation is ++
    // (this is to avoid (?) a if statement at the end of the
-   // loop 
-   if (current[0] != '[') current--; 
+   // loop
+   if (current[0] != '[') current--;
    while (current) {
       current++;
       scanindex = sscanf(current,"%d",&size);
@@ -160,11 +160,11 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
          if ( fIndexes[code][fNdimensions[code]] < 0 ) {
             fCumulUsedSize[virt_dim] = -1 * TMath::Abs(fCumulUsedSize[virt_dim]);
             virt_dim++;
-         } 
+         }
       } else {
          fCumulSize[code][fNdimensions[code]] = size;
          if ( fIndexes[code][fNdimensions[code]] < 0 ) {
-            if ( TMath::Abs(fCumulUsedSize[virt_dim])==1 
+            if ( TMath::Abs(fCumulUsedSize[virt_dim])==1
                  || (size < TMath::Abs(fCumulUsedSize[virt_dim]) ) ) {
                neg = fCumulUsedSize[virt_dim] < 0;
                fCumulUsedSize[virt_dim] = size;
@@ -176,8 +176,8 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
       fNdimensions[code] ++;
       if (fNdimensions[code] >= kMAXFORMDIM) {
          // NOTE: test that fNdimensions[code] this is NOT too big!!
-          
-         break; 
+
+         break;
       }
       current = (char*)strstr( current, "[" );
    }
@@ -251,7 +251,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             dim ++;
             if (dim >= kMAXFORMDIM) {
                // NOTE: test that dim this is NOT too big!!
-               break; 
+               break;
             }
             current = (char*)strstr( current, "[" );
          }
@@ -407,7 +407,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fNcodes++;
             if (scanindex) fIndex[code] = index;
             else           fIndex[code] = -1;
-            
+
             // Let see if we can understand the structure of this branch.
             // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
             // (with fixed_array that can be a multi-dimension array.
@@ -497,21 +497,21 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
         virt_dim = 0;
         max_dim--;
         for (Int_t dim = 0; dim < max_dim; dim++) {
-           if (fIndexes[0][dim]>=0) { 
+           if (fIndexes[0][dim]>=0) {
               real_instance += fIndexes[0][dim] * fCumulSize[0][dim+1];
            } else {
               if (fCumulUsedSize[virt_dim]>1) {
-                 real_instance += ( ( instance % fCumulUsedSize[virt_dim] ) 
-                                    / fCumulUsedSize[virt_dim+1]) 
+                 real_instance += ( ( instance % fCumulUsedSize[virt_dim] )
+                                    / fCumulUsedSize[virt_dim+1])
                                   * fCumulSize[0][dim+1];
               } else {
-                 real_instance += ( instance / fCumulUsedSize[virt_dim+1]) 
+                 real_instance += ( instance / fCumulUsedSize[virt_dim+1])
                                   * fCumulSize[0][dim+1];
-              }              
+              }
               virt_dim ++;
            }
         }
-        if (fIndexes[0][max_dim]>=0) { 
+        if (fIndexes[0][max_dim]>=0) {
            real_instance += fIndexes[0][max_dim];
         } else {
            if (fCumulUsedSize[virt_dim]>1) {
@@ -520,8 +520,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
               real_instance += instance;
            }
         }
-     }  
-     
+     }
+
      if (instance) {
         if (real_instance < leaf->GetNdata()) return leaf->GetValue(real_instance);
         else                                  return leaf->GetValue(0);
@@ -551,21 +551,21 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
            virt_dim = 0;
            max_dim--;
            for (Int_t dim = 0; dim < max_dim; dim++) {
-              if (fIndexes[i][dim]>=0) { 
+              if (fIndexes[i][dim]>=0) {
                  real_instance += fIndexes[i][dim] * fCumulSize[i][dim+1];
               } else {
                  if (fCumulUsedSize[virt_dim]>1) {
-                    real_instance += ( ( instance % fCumulUsedSize[virt_dim] ) 
-                                       / fCumulUsedSize[virt_dim+1]) 
+                    real_instance += ( ( instance % fCumulUsedSize[virt_dim] )
+                                       / fCumulUsedSize[virt_dim+1])
                                      * fCumulSize[i][dim+1];
                  } else {
-                    real_instance += ( instance / fCumulUsedSize[virt_dim+1]) 
+                    real_instance += ( instance / fCumulUsedSize[virt_dim+1])
                                      * fCumulSize[i][dim+1];
-                 }   
+                 }
                  virt_dim ++;
               }
            }
-           if (fIndexes[i][max_dim]>=0) { 
+           if (fIndexes[i][max_dim]>=0) {
               real_instance += fIndexes[i][max_dim];
            } else {
               if (fCumulUsedSize[virt_dim]>1) {
@@ -736,7 +736,7 @@ Int_t TTreeFormula::GetNdata()
    if (fMultiplicity==0) return 1;
 
    if (fMultiplicity==2) return fCumulUsedSize[0];
-   
+
    // We have at least one leaf with a variable size:
    Int_t  overall, current;
 
@@ -754,7 +754,7 @@ Int_t TTreeFormula::GetNdata()
             // unreacheable element requested:
             overall = 0;
          }
-      } 
+      }
    }
    if (overall==0) return 0;
    if (fCumulUsedSize[0] >= 0 ) return fCumulUsedSize[0];
@@ -773,20 +773,20 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 //*-*            ====================================
 //
 
-   if (i>=0) return 0; // case where we do NOT have a method defined   
+   if (i>=0) return 0; // case where we do NOT have a method defined
    TMethodCall *m = GetMethodCall(i);
    if (!m)   return 0;
 
    void *thisobj = leaf->GetObject();
 
-   EReturnType r = m->ReturnType();
+   TMethodCall::EReturnType r = m->ReturnType();
 
-   if (r == kLongRet) {
+   if (r == TMethodCall::kLong) {
       Long_t l;
       m->Execute(thisobj, l);
       return (Double_t) l;
    }
-   if (r == kDoubleRet) {
+   if (r == TMethodCall::kDouble) {
       Double_t d;
       m->Execute(thisobj, d);
       return (Double_t) d;
