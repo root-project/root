@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.38 2002/02/03 17:30:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.39 2002/06/25 05:47:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -170,6 +170,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
+    virtual Bool_t    GetBranchStatus(const char *branchname) const;
     static  Int_t     GetBranchStyle();
     virtual Int_t     GetChainEntryNumber(Int_t entry) const {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }

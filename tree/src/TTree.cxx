@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.124 2002/05/29 21:06:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.125 2002/06/25 05:47:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2131,9 +2131,21 @@ TBranch *TTree::GetBranch(const char *name)
 
 
 //______________________________________________________________________________
+Bool_t TTree::GetBranchStatus(const char *branchname) const
+{
+   // return status of branch with name branchname
+   // 0 if branch is not activated
+   // 1 if branch is activated
+   
+   TBranch *br = ((TTree*)this)->GetBranch(branchname);
+   if (br) return (br->TestBit(kDoNotProcess) == 0);
+   return 0;
+}    
+
+//______________________________________________________________________________
 Int_t TTree::GetBranchStyle()
 {
-  // static function returning the current branch style
+ // static function returning the current branch style
   // style = 0 old Branch
   // style = 1 new Bronch
 
