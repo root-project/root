@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.35 2004/05/06 09:40:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.36 2004/05/06 09:43:34 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -355,12 +355,23 @@ void TGraphErrors::Paint(Option_t *option)
    // of the error bars are drawn. This option is interesting to superimpose
    // systematic errors on top of a graph with statistical errors.
    //
+   // if option "3" is specified a filled area is drawn through the end points of
+   // the vertical error bars.
+   //
+   // if option "4" is specified a smoothed filled area is drawn through the end
+   // points of the vertical error bars.
+   //
    // Use gStyle->SetErrorX(dx) to control the size of the error along x.
    // set dx = 0 to suppress the error along x.
    //
    // Use gStyle->SetEndErrorSize(np) to control the size of the lines
    // at the end of the error bars (when option 1 is used).
    // By default np=1. (np represents the number of pixels).
+
+   Double_t *xline = 0; 
+   Double_t *yline = 0;
+   Int_t if1 = 0;
+   Int_t if2 = 0;
 
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
@@ -382,6 +393,22 @@ void TGraphErrors::Paint(Option_t *option)
    if (strchr(option,'a')) axis = kTRUE;
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) TGraph::Paint(option);
+
+   Bool_t option3 = kFALSE;
+   Bool_t option4 = kFALSE;
+   if (strchr(option,'3')) option3 = kTRUE;
+   if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
+
+   if (option3) {
+      xline = new Double_t[2*fNpoints];
+      yline = new Double_t[2*fNpoints];
+      if (!xline || !yline) {
+         Error("Paint", "too many points, out of memory");
+         return;
+      }
+      if1 = 1;
+      if2 = 2*fNpoints;
+   }
 
    TAttLine::Modify();
 
@@ -418,6 +445,18 @@ void TGraphErrors::Paint(Option_t *option)
       if (y > gPad->GetUymax()) continue;
       ex = fEX[i];
       ey = fEY[i];
+
+      //  keep points for fill area drawing
+      if (option3) {
+         xline[if1-1] = x;   
+         xline[if2-1] = x;
+         yline[if1-1] = gPad->YtoPad(fY[i] + ey);
+         yline[if2-1] = gPad->YtoPad(fY[i] - ey);
+         if1++;
+         if2--;
+	 continue;
+      }
+
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(fX[i] - ex);
       if (xl1 > xl2) {
@@ -463,6 +502,21 @@ void TGraphErrors::Paint(Option_t *option)
    }
    if (!brackets && !axis) TGraph::Paint(option);
    gPad->ResetBit(kClipFrame);
+
+   if (option3) {
+      Int_t logx = gPad->GetLogx();
+      Int_t logy = gPad->GetLogy();
+      gPad->SetLogx(0);
+      gPad->SetLogy(0);
+
+      if (option4) PaintGraph(2*fNpoints, xline, yline,"FC");
+      else         PaintGraph(2*fNpoints, xline, yline,"F");
+
+      gPad->SetLogx(logx);
+      gPad->SetLogy(logy);
+      delete [] xline;
+      delete [] yline;
+   }
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.130 2004/06/22 16:18:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.131 2004/07/06 14:48:42 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1953,8 +1953,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 //
 //
 
-   Int_t OptionLine , OptionAxis , OptionCurve,OptionStar ,OptionMark;
-   Int_t OptionBar  , OptionR    , OptionOne;
+   Int_t OptionLine , OptionAxis , OptionCurve, OptionStar ,OptionMark;
+   Int_t OptionBar  , OptionR    , OptionOne  , OptionE;
    Int_t OptionFill , OptionZ    , OptionCurveFill;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
@@ -1983,11 +1983,12 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    if(opt.Contains("R")) OptionR    = 1;  else OptionR    = 0;
    if(opt.Contains("1")) OptionOne  = 1;  else OptionOne  = 0;
    if(opt.Contains("F")) OptionFill = 1;  else OptionFill = 0;
+   if(opt.Contains("3") || opt.Contains("4")) OptionE = 1;  else OptionE = 0;
    OptionZ    = 0;
 //*-*           If no "drawing" option is selected and if chopt<>' '
 //*-*           nothing is done.
 
-  if (OptionLine+OptionFill+OptionCurve+OptionStar+OptionMark+OptionBar == 0) {
+  if (OptionLine+OptionFill+OptionCurve+OptionStar+OptionMark+OptionBar+OptionE == 0) {
      if (strlen(chopt) == 0)  OptionLine=1;
      else   return;
   }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.3 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.4 2004/07/06 14:55:04 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -446,6 +446,11 @@ void TGraphBentErrors::Paint(Option_t *option)
    // of the error bars are drawn. This option is interesting to superimpose
    // systematic errors on top of a graph with statistical errors.
 
+   Double_t *xline = 0;
+   Double_t *yline = 0;
+   Int_t if1 = 0;
+   Int_t if2 = 0;
+
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
@@ -467,6 +472,22 @@ void TGraphBentErrors::Paint(Option_t *option)
    if (strchr(option,'a')) axis = kTRUE;
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) TGraph::Paint(option);
+
+   Bool_t option3 = kFALSE;
+   Bool_t option4 = kFALSE;
+   if (strchr(option,'3')) option3 = kTRUE;
+   if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
+
+   if (option3) {
+      xline = new Double_t[2*fNpoints];
+      yline = new Double_t[2*fNpoints];
+      if (!xline || !yline) {
+         Error("Paint", "too many points, out of memory");
+         return;
+      }
+      if1 = 1;
+      if2 = 2*fNpoints;
+   }
 
    TAttLine::Modify();
 
@@ -504,6 +525,18 @@ void TGraphBentErrors::Paint(Option_t *option)
       if (x > gPad->GetUxmax()) continue;
       if (y < gPad->GetUymin()) continue;
       if (y > gPad->GetUymax()) continue;
+
+      //  keep points for fill area drawing
+      if (option3) {
+         xline[if1-1] = byh;
+         xline[if2-1] = byl;
+         yline[if1-1] = gPad->YtoPad(fY[i] + fEYhigh[i]);
+         yline[if2-1] = gPad->YtoPad(fY[i] - fEYlow[i]);
+         if1++;
+         if2--;
+         continue;
+      }
+
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(fX[i] - fEXlow[i]);
       if (xl1 > xl2) {
@@ -549,6 +582,21 @@ void TGraphBentErrors::Paint(Option_t *option)
    }
    if (!brackets && !axis) TGraph::Paint(option);
    gPad->ResetBit(kClipFrame);
+
+   if (option3) {
+      Int_t logx = gPad->GetLogx();
+      Int_t logy = gPad->GetLogy();
+      gPad->SetLogx(0);
+      gPad->SetLogy(0);
+
+      if (option4) PaintGraph(2*fNpoints, xline, yline,"FC");
+      else         PaintGraph(2*fNpoints, xline, yline,"F");
+
+      gPad->SetLogx(logx);
+      gPad->SetLogy(logy);
+      delete [] xline;
+      delete [] yline;
+   }
 }
 
 
