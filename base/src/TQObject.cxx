@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.3 2000/10/22 19:21:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.4 2000/10/26 14:26:05 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1363,6 +1363,18 @@ Bool_t TQObject::Disconnect(const char *signal,
    // Equivalent to Disconnect(this, signal, receiver, slot)
 
    return Disconnect(this, signal, receiver, slot);
+}
+
+//______________________________________________________________________________
+void TQObject::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TQObject.
+
+   if (R__b.IsReading()) {
+      // nothing to read
+   } else {
+      // nothing to write
+   }
 }
 
 //______________________________________________________________________________
