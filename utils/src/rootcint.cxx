@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.87 2002/07/01 16:19:20 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.88 2002/07/01 22:56:04 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1740,7 +1740,7 @@ void WriteStreamer(G__ClassInfo &cl)
                   if ((m.Type())->HasMethod("Streamer"))
                      fprintf(fp, "      %s.Streamer(R__b);\n", m.Name());
                   else {
-                     fprintf(fp, "R__b.StreamObject(&R__t,typeid(%s));\n",m.Type()->Name());               //R__t.Streamer(R__b);\n");
+                     fprintf(fp, "      R__b.StreamObject(&(%s),typeid(%s));\n",m.Name(),m.Type()->Name());               //R__t.Streamer(R__b);\n");
 //VP                     if (i == 0)
 //VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
 //VP                                  cl.Fullname(), m.Name());
