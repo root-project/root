@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.9 2004/07/28 08:02:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.10 2004/10/22 08:03:11 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -66,6 +66,8 @@ public:
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const = 0;
    virtual Foption_t GetFitOption() const {return fOption;}
    TMethodCall      *GetMethodCall() const {return fMethodCall;}
+   virtual Int_t     GetNpar() const = 0; //return total number of parameters
+   virtual Int_t     GetNumberFreeParameters() const = 0;
    virtual TObject  *GetObjectFit() const {return fObjectFit;}
    virtual Double_t  GetParError(Int_t ipar) const = 0;
    virtual Double_t  GetParameter(Int_t ipar) const = 0;

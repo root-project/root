@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.17 2004/07/28 08:02:04 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.18 2004/10/22 08:03:11 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -795,6 +795,26 @@ Double_t TFumili::GetCovarianceMatrixElement(Int_t i, Int_t j) const
    return fZ[j+fNpar*i];
 }
 
+
+//______________________________________________________________________________
+Int_t TFumili::GetNpar() const
+{
+   // return the total number of parameters
+
+   return fNpar;
+}
+
+//______________________________________________________________________________
+Int_t TFumili::GetNumberFreeParameters() const
+{
+   // return the number of free parameters
+
+   Int_t nfree = fNpar;
+   for (Int_t i=0;i<fNpar;i++) {
+       if (IsFixed(i)) nfree--;
+    }
+   return nfree;
+}
 
 //______________________________________________________________________________
 Double_t TFumili::GetParError(Int_t ipar) const

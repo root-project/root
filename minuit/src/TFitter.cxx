@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.23 2004/10/04 16:04:53 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.24 2004/10/22 08:03:11 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -132,6 +132,23 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
    Int_t ierr = 0;
    fMinuit->mnerrs(ipar, eplus,eminus,eparab,globcc);
    return ierr;
+}
+
+
+//______________________________________________________________________________
+Int_t TFitter::GetNpar() const
+{
+   // return the total number of parameters
+
+   return fMinuit->fNpar + fMinuit->fNpfix;
+}
+
+//______________________________________________________________________________
+Int_t TFitter::GetNumberFreeParameters() const
+{
+   // return the number of free parameters
+
+   return fMinuit->fNpfix;
 }
 
 

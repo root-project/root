@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.7 2004/07/28 08:02:04 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.8 2004/10/22 08:03:11 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -45,6 +45,8 @@ private:
    virtual Double_t  *GetCovarianceMatrix() const;
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const;
    virtual Int_t      GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
+   virtual Int_t      GetNpar() const; //return total number of parameters
+   virtual Int_t      GetNumberFreeParameters() const;
    virtual Double_t   GetParError(Int_t ipar) const;
    virtual Double_t   GetParameter(Int_t ipar) const;
    virtual Int_t      GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
