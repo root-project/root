@@ -163,6 +163,10 @@ N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
 
+N: Michal Kapalka
+E: Michal.Kapalka@cern.ch
+D: Improvements in the ZIP package
+
 N: Susan Kasahara
 E: schubert@physics.umn.edu
 D: many contributions to the debuging phase of the I/O system
