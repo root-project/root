@@ -1,12 +1,9 @@
 void makedocs(const char *version="Development", const char *where= "./html") 
 {
-
-//  const char *bfarch= gSystem->Getenv("BFARCH");
-//  TString sourceDir("RELEASE/RooFitCore:RELEASE/tmp/");
-//  sourceDir.Append(bfarch);
-//  sourceDir.Append("/RooFitCore");
-  TString sourceDir(gSystem->Getenv("HOME"));
-  sourceDir.Append("Physics/RooFitCore");
+  const char *bfarch= gSystem->Getenv("BFARCH");
+  TString sourceDir("RELEASE/RooFitCore:RELEASE/tmp/");
+  sourceDir.Append(bfarch);
+  sourceDir.Append("/RooFitCore");
   gEnv->SetValue("Root.Html.SourceDir",sourceDir.Data());
   gEnv->SetValue("Root.Html.OutputDir",where);
   gEnv->SetValue("Root.Html.Description","// -- CLASS DESCRIPTION");
