@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.28 2002/03/18 16:43:15 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.29 2002/04/11 11:41:29 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -382,10 +382,10 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    Int_t ix1 = XtoPS(x1);
    Int_t iy1 = YtoPS(y1);
 
-   Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
-              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));
-   Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
-              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));
+   Float_t WT = (288/2.54)*gPad->GetAbsWNDC()*
+                fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1()));
+   Float_t HT = (288/2.54)*gPad->GetAbsHNDC()*
+                fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1()));
 
    fLastCellRed     = 300;
    fLastCellGreen   = 300;
@@ -398,8 +398,8 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    fMaxLines = 40000/(3*fNbCellW);
 
    // Define some paremeters
-   PrintStr("@/WT"); WriteInteger(WT)       ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height
+   PrintStr("@/WT"); WriteReal(WT)          ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteReal(HT)          ; PrintStr(" def"); // Cells height
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
    PrintStr(" /YY"); WriteInteger(iy1)      ; PrintStr(" def"); // Y start
    PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
