@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.31 2004/01/10 10:52:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.32 2004/01/27 19:52:47 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -86,6 +86,7 @@ public:
    virtual void     SetSize(Int_t dsize) {fSize = dsize;}
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
    virtual void     SetType(Int_t dtype) {fType = dtype;}
+   virtual void     SetTypeName(const char *name) {fTypeName = name;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
 
    ClassDef(TStreamerElement,2)  //Base class for one element (data member) to be Streamed
@@ -112,8 +113,9 @@ public:
    Bool_t           IsBase() const;
    virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
-   Int_t            WriteBuffer(TBuffer &b, char *pointer);
+   void             SetBaseVersion(Int_t v) {fBaseVersion = v;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
+   Int_t            WriteBuffer(TBuffer &b, char *pointer);
 
    ClassDef(TStreamerBase,3)  //Streamer element of type base class
 };
@@ -139,7 +141,10 @@ public:
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    void           SetArrayDim(Int_t dim);
-
+   void           SetCountVersion(Int_t count) {fCountVersion = count;}
+   void           SetCountName(const char *name) {fCountName = name;}
+   void           SetCountClass(const char *clname) {fCountClass = clname;}
+   
    ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };
 
@@ -162,6 +167,9 @@ public:
    Int_t          GetSize() const;
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
+   void           SetCountVersion(Int_t count) {fCountVersion = count;}
+   void           SetCountName(const char *name) {fCountName = name;}
+   void           SetCountClass(const char *clname) {fCountClass = clname;}
 
    ClassDef(TStreamerLoop,2)  //Streamer element for a pointer to an array of objects
 };
@@ -282,6 +290,8 @@ public:
    const char    *GetInclude() const;
    Int_t          GetSize() const;
    virtual void   ls(Option_t *option="") const;
+   void           SetSTLtype(Int_t t) {fSTLtype = t;}
+   void           SetCtype(Int_t t) {fCtype = t;}
    virtual void   SetStreamer(TMemberStreamer *streamer);
 
    ClassDef(TStreamerSTL,3)  //Streamer element of type STL container
