@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.30 2003/04/04 16:47:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.31 2003/06/06 16:38:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -899,6 +899,9 @@ void TStyle::SetOptStat(Int_t mode)
 //           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
 //  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
 //          be taken as an octal number !!
+//  WARNING: SetOptStat(1) is taken as SetOptStat(1111) (for back compatibility
+//           with older versions. If you want to print only the name of the histogram
+//           call SetOptStat(10000001).
 //  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
 //        or overflow (100000), the stats box will show all combinations
 //        of underflow/overflows and not just one single number!
@@ -919,17 +922,17 @@ void TStyle::SetOptStat(Int_t mode)
 void TStyle::SetOptStat(Option_t *stat)
 {
 //  The parameter mode can be = IOURMEN
-//    n ;  name of histogram is printed
-//    e ;  number of entries printed
-//    m ;  mean value printed
-//    r ;  rms printed
-//    u ;  number of underflows printed
-//    o ;  number of overflows printed
-//    i ;  integral of bins printed
+//    n :  name of histogram is printed
+//    e :  number of entries printed
+//    m :  mean value printed
+//    r :  rms printed
+//    u :  number of underflows printed
+//    o :  number of overflows printed
+//    i :  integral of bins printed
 //  Example: gStyle->SetOptStat("ne");
 //           print only name of histogram and number of entries.
-//  gStyle->SetOptStat("n") is equivalent to gStyle->SetOptStat(1)
-//  which is the default layout (RMEN)
+//  gStyle->SetOptStat("n") print only the name of the histogram
+//  gStyle->SetOptStat("nemr") is the default
 
   Int_t mode=0;
 
@@ -943,7 +946,8 @@ void TStyle::SetOptStat(Option_t *stat)
   if (opt.Contains("u")) mode+=10000;
   if (opt.Contains("o")) mode+=100000;
   if (opt.Contains("i")) mode+=1000000;
-
+  if (mode == 1) mode = 10000001;
+  
   SetOptStat(mode);
 }
 
