@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.21 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.22 2002/02/21 12:14:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -163,7 +163,8 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
-   ::Error("RootX11ErrorHandler", "%s (XID: %u)", msg, err->resourceid);
+   ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
+           err->resourceid, err->request_code);
    if (TROOT::Initialized()) {
       //Getlinem(kInit, "Root > ");
       Throw(2);
