@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.78 2004/03/15 12:11:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.79 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3744,6 +3744,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 {
 // Check all geometry for illegal overlaps within a limit OVLP.
+   ClearOverlaps();
    printf("====  Checking overlaps for %s within a limit of %g ====\n", GetName(),ovlp);
    fSearchOverlaps = kTRUE;
    Int_t nvol = fVolumes->GetEntriesFast();
