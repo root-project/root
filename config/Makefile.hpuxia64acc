@@ -21,10 +21,10 @@ CXXFLAGS      = +DD64 +W740,749 -z +Z $(EXTRA_CXXFLAGS)
 CFLAGS        = +DD64 -Ae -z +Z $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = +DD64 -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 $(EXTRA_CXXFLAGS) -DG__SHAREDLIB -D_POSIX2_SOURCE \
-                -DG__ROOT -DG__REDIRECTIO
+                -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 CINTCFLAGS    = +DD64 -Ae -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO \
-                -D__STDCPP__ $(EXTRA_CFLAGS)
+                 -DG__64BIT -D__STDCPP__ $(EXTRA_CFLAGS)
 CPPPREP       = /opt/langtools/lbin/cpp.ansi -Z -D__STDCPP_ -E -C
 
 # Linker:
