@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.47 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.48 2003/09/12 17:36:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -278,11 +278,18 @@ TProofServ::TProofServ(int *argc, char **argv)
    }
 
    // Everybody expects iostream to be available, so load it...
-#ifndef WIN32
    ProcessLine("#include <iostream>", kTRUE);
-#endif
+
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
+
+   // The following libs are also useful to have, make sure they are loaded...
+   gROOT->LoadClass("TGeometry",   "Graf3d");
+   gROOT->LoadClass("TTree",       "Tree");
+   gROOT->LoadClass("TMatrix",     "Matrix");
+   gROOT->LoadClass("TMinuit",     "Minuit");
+   gROOT->LoadClass("TPostScript", "Postscript");
+   gROOT->LoadClass("TCanvas",     "Gpad");
 
    // Load user functions
    const char *logon;
