@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.79 2002/01/11 15:46:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.80 2002/01/15 10:29:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -452,7 +452,8 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      fTree->LoadTree(entryNumber);
+      Int_t localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          fTree->CopyAddresses(tree);
@@ -1454,7 +1455,7 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
 //  action < 0   Evaluate Limits for case abs(action)
 //
 
-   Int_t i,entry,entryNumber, lastentry,ndata,nfill0;
+   Int_t i,entry,entryNumber,localEntry, lastentry,ndata,nfill0;
    Double_t ww;
    Int_t  npoints;
    lastentry = firstentry + nentries - 1;
@@ -1485,7 +1486,8 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (entryNumber < 0) break;
          if (timer && timer->ProcessEvents()) break;
          if (gROOT->IsInterrupted()) break;
-         fTree->LoadTree(entryNumber);
+         localEntry = fTree->LoadTree(entryNumber);
+         if (localEntry < 0) break;
          if (fSelect) {
             if (force && fSelect->GetNdata()<=0) continue;
             fW[fNfill] = fSelect->EvalInstance(0);
@@ -1536,7 +1538,8 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       if (entryNumber < 0) break;
       if (timer && timer->ProcessEvents()) break;
       if (gROOT->IsInterrupted()) break;
-      fTree->LoadTree(entryNumber);
+      localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
       nfill0 = fNfill;
 
       // Look for the lowest common array size amongst the
@@ -2249,6 +2252,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
       fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
       fprintf(fpc,"      Int_t ientry = LoadTree(jentry); //in case of a TChain, ientry is the entry number in the current file\n");
+      fprintf(fpc,"      if (ientry < 0) break;\n");
       fprintf(fpc,"      nb = fChain->GetEntry(jentry);   nbytes += nb;\n");
       fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
       fprintf(fpc,"   }\n");
@@ -2666,7 +2670,8 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      fTree->LoadTree(entryNumber);
+      Int_t localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
@@ -2810,6 +2815,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
       if (gROOT->IsInterrupted()) break;
       if (elist) entryNumber = fTree->LoadTree(elist->GetEntry(entry));
       else       entryNumber = fTree->LoadTree(entry);
+      if (entryNumber < 0) break;
       if (fTree->GetTreeNumber() != treeNumber) {
          treeNumber = fTree->GetTreeNumber();
          selector->Notify();
@@ -2936,7 +2942,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      fTree->LoadTree(entryNumber);
+      Int_t localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
@@ -3066,7 +3073,8 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
-      fTree->LoadTree(entryNumber);
+      Int_t localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
