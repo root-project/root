@@ -50,7 +50,7 @@ G2ROOT       := bin/g2root$(EXEEXT)
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
-ifneq ($(CERNLIBDIR),)
+ifneq ($(CERNLIBS),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
@@ -84,7 +84,7 @@ $(G2ROOT):      $(G2ROOTO)
 		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTO) \
 		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
 
-ifneq ($(CERNLIBDIR),)
+ifneq ($(CERNLIBS),)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(H2ROOT) $(G2ROOT)
 else
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)

@@ -1,4 +1,4 @@
-# Makefile of ROOT for Linux with glibc and egcs (RH5.1)
+# Makefile of ROOT for Windows with MS Visual C++ compiler in Cygwin environment
 
 PLATFORM      = win32
 

@@ -1,13 +1,15 @@
 #! /bin/sh
 
-# Simple interface to LINK, tansforming -o <exe> to -out:<exe>
+# Simple interface to LINK, tansforming -o <exe> to -out:<exe> and unix
+# pathnames to windows pathnames.
 
 args=
 
 while [ "$1" != "" ]; do
-   case "$1" in
-   -o) args="$args -out:"; shift; args="$args$1" ;;
-   *) args="$args $1" ;;
+   arg=`cygpath -w -- $1`
+   case "$arg" in
+   -o) args="$args -out:"; shift; args="$args`cygpath -w -- $1`" ;;
+   *) args="$args $arg" ;;
    esac
    shift
 done
