@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.8 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.9 2002/06/14 20:30:35 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
         TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
         virtual ~TGraphAsymmErrors();
         virtual void    Apply(TF1 *f);
-        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
+        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;
         Double_t       *GetEXlow()  const {return fEXlow;}

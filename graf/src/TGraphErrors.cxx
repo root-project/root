@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.27 2002/08/09 20:45:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.28 2002/09/07 20:55:41 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -198,7 +198,7 @@ void TGraphErrors::Apply(TF1 *f)
 }
 
 //______________________________________________________________________________
-void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
+void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
   for (Int_t i=0;i<fNpoints;i++) {
      if (fX[i] -fEX[i] < xmin) {

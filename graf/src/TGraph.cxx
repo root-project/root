@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.83 2002/09/15 19:45:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.84 2002/11/04 21:19:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -475,7 +475,7 @@ void TGraph::Browse(TBrowser *)
 }
 
 //______________________________________________________________________________
-void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &)
+void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &) const
 {
 // this function is dummy in TGraph, but redefined by TGraphErrors
 }
@@ -1308,13 +1308,62 @@ TH1F *TGraph::GetHistogram() const
 //       1- option 'A' was specified in TGraph::Draw. Return fHistogram
 //       2- user had called TPad::DrawFrame. return pointer to hframe histogram
 
-   if (fHistogram) return fHistogram;
-   if (!gPad) return 0;
-   gPad->Modified();
-   gPad->Update();
-   if (fHistogram) return fHistogram;
-   TH1F *h1 = (TH1F*)gPad->FindObject("hframe");
-   return h1;
+  if (fHistogram) return fHistogram;
+  Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
+  Double_t uxmin, uxmax;
+  rwxmin = rwxmax = fX[0];
+  rwymin = rwymax = fY[0];
+  for (Int_t i=1;i<fNpoints;i++) {
+     if (fX[i] < rwxmin) rwxmin = fX[i];
+     if (fX[i] > rwxmax) rwxmax = fX[i];
+     if (fY[i] < rwymin) rwymin = fY[i];
+     if (fY[i] > rwymax) rwymax = fY[i];
+  }
+
+  ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
+
+  if (rwxmin == rwxmax) rwxmax += 1.;
+  if (rwymin == rwymax) rwymax += 1.;
+  dx = 0.1*(rwxmax-rwxmin);
+  dy = 0.1*(rwymax-rwymin);
+  uxmin    = rwxmin - dx;
+  uxmax    = rwxmax + dx;
+  minimum  = rwymin - dy;
+  maximum  = rwymax + dy;
+      // the graph is created with at least as many channels as there are points
+      // to permit zooming on the full range
+  if (uxmin < 0 && rwxmin >= 0) {
+     if (gPad && gPad->GetLogx()) uxmin = 0.9*rwxmin;
+     else                 uxmin = 0;
+  }
+  if (uxmax > 0 && rwxmax <= 0) {
+     if (gPad && gPad->GetLogx()) uxmax = 1.1*rwxmax;
+     else                 uxmax = 0;
+  }
+  if (minimum < 0 && rwymin >= 0) {
+     if(gPad && gPad->GetLogy()) minimum = 0.9*rwymin;
+     else                minimum = 0;
+  }
+  if (minimum <= 0) {
+      if (gPad && gPad->GetLogy()) minimum = 0.001*maximum;
+      else                         minimum = 0;
+   }
+   if (uxmin <= 0 && gPad && gPad->GetLogx()) {
+     if (uxmax > 1000) uxmin = 1;
+     else              uxmin = 0.001*uxmax;
+  }
+  rwxmin = uxmin;
+  rwxmax = uxmax;
+  Int_t npt = 100;
+  if (fNpoints > npt) npt = fNpoints;
+  ((TGraph*)this)->fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+  if (!fHistogram) return 0;
+  fHistogram->SetMinimum(minimum);
+  fHistogram->SetBit(TH1::kNoStats);
+  fHistogram->SetMaximum(maximum);
+  fHistogram->GetYaxis()->SetLimits(minimum,maximum);
+  fHistogram->SetDirectory(0);
+  return fHistogram;
 }
 
 //______________________________________________________________________________
