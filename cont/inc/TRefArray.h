@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.8 2002/06/04 19:51:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -52,7 +52,8 @@ protected:
    Int_t         GetAbsLast() const;
 
 public:
-   TRefArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
+   TRefArray();
+   TRefArray(Int_t s, Int_t lowerBound = 0);
    TRefArray(const TRefArray &a);
    virtual          ~TRefArray();
    virtual void     Clear(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.14 2002/07/09 21:00:37 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.15 2002/07/29 09:22:29 rdm Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -50,17 +50,30 @@
 ClassImp(TRefArray)
 
 //______________________________________________________________________________
+TRefArray::TRefArray()
+{
+   // default constructor
+
+   fPID  = TProcessID::GetSessionProcessID();
+   fUIDs = 0;
+   fSize = 0;
+   fLast = -1;
+   fLowerBound = 0;
+   Changed();
+}
+
+//______________________________________________________________________________
 TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 {
-   // Create an object array. Using s one can set the array size (default is
-   // kInitCapacity=16) and lowerBound can be used to set the array lowerbound
+   // Create an object array. Using s one can set the array size 
+   // and lowerBound can be used to set the array lowerbound
    // index (default is 0).
 
    if (s < 0) {
       Warning("TRefArray", "size (%d) < 0", s);
       s = TCollection::kInitCapacity;
-   } else if (s == 0)
-      s = TCollection::kInitCapacity;
+   }
+
    fPID  = TProcessID::GetSessionProcessID();
    fUIDs = 0;
    Init(s, lowerBound);
@@ -170,9 +183,9 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
       Error("AddAt", "out of bounds at %d in %x", idx, this);
       return;
    }
-   if (idx-fLowerBound >= fSize)
+   if (idx-fLowerBound >= fSize) 
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
-
+      
    fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -305,7 +318,7 @@ void TRefArray::Expand(Int_t newSize)
    } else {
      fUIDs = 0;
    }
-   if (fSize) delete [] temp;
+   if (temp) delete [] temp;
    fSize = newSize;
 }
 
@@ -486,8 +499,12 @@ void TRefArray::Init(Int_t s, Int_t lowerBound)
 
    fSize = s;
 
-   fUIDs = new UInt_t[fSize];
-   for (Int_t i=0;i<s;i++) fUIDs[i] = 0;
+   if (fSize) {
+      fUIDs = new UInt_t[fSize];
+      for (Int_t i=0;i<s;i++) fUIDs[i] = 0;
+   } else {
+      fUIDs = 0;
+   }
    fLowerBound = lowerBound;
    fLast = -1;
    Changed();
