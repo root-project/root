@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.8 2003/01/20 08:44:47 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.9 2003/01/22 11:23:05 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -405,9 +405,6 @@ Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
    } else {
       return TTF::SetTextFont(fontname);
    }
-
-   // set initial text size
-   SetTextSize(fTextSize);
 }
 
 //______________________________________________________________________________
