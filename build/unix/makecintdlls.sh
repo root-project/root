@@ -29,7 +29,9 @@ CINTDIRS=cint/stl
 
 clean() {
    rm -f $CINTDIRI/long.dl
+   rm -f $CINTDIRI/stdfunc.dll
    rm -f $CINTDIRI/posix.dll
+   rm -f $CINTDIRI/sys/types.h
    rm -f $CINTDIRI/sys/ipc.dll
    rm -f $CINTDIRS/string.dll
    rm -f $CINTDIRS/vector.dll
@@ -72,6 +74,22 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
 mv $CINTDIRI/long.$SOEXT $CINTDIRI/long.dl
 
 rm -f $LONGDIR/G__cpp_long.cxx $LONGDIR/G__cpp_long.h $LONGDIR/G__cpp_long.o
+
+
+##### stdfunc.dll #####
+
+STDFUNCDIR=$CINTDIRL/stdstrct
+
+$CINT -K -w1 -zstdfunc -n$STDFUNCDIR/G__c_stdfunc.c -D__MAKECINT__ \
+   -DG__MAKECINT -c-2 -Z0 $STDFUNCDIR/stdfunc.h
+$CC $OPT $CINTCFLAGS -I. -o $STDFUNCDIR/G__c_stdfunc.o \
+   -c $STDFUNCDIR/G__c_stdfunc.c
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdfunc.$SOEXT \
+   $CINTDIRI/stdfunc.$SOEXT "$STDFUNCDIR/G__c_stdfunc.o"
+rename $CINTDIRI/stdfunc
+
+rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
+      $STDFUNCDIR/G__c_stdfunc.o
 
 
 ##### posix.dll #####
