@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.57 2004/09/15 10:05:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.58 2004/09/28 06:39:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
-   fNcells      = (nbinsx+2)*(nbinsy+2);
+   fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
 
 //______________________________________________________________________________
@@ -67,7 +67,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
-   fNcells      = (nbinsx+2)*(nbinsy+2);
+   fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
 
 //______________________________________________________________________________
@@ -82,7 +82,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
    if (nbinsy <= 0) nbinsy = 1;
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
-   fNcells      = (nbinsx+2)*(nbinsy+2);
+   fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
 
 //______________________________________________________________________________
@@ -97,7 +97,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (nbinsy <= 0) nbinsy = 1;
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
-   fNcells      = (nbinsx+2)*(nbinsy+2);
+   fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
 
 //______________________________________________________________________________
@@ -112,7 +112,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    if (nbinsy <= 0) nbinsy = 1;
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
-   fNcells      = (nbinsx+2)*(nbinsy+2);
+   fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor.
 }
 
 //______________________________________________________________________________
