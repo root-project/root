@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.49 2001/10/01 14:12:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.50 2001/10/02 08:03:50 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -286,9 +286,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fStreamerInfo= new TObjArray(100);
    fProcessIDs  = new TList;
    fMessageHandlers = new TList;
-   TProcessID *pid0 = new TProcessID(0);
-   pid0->IncrementCount(); //this object should not be deleted
-   fProcessIDs->Add(pid0);
+   TProcessID *pid1 = new TProcessID(1);
+   pid1->IncrementCount(); //this object should not be deleted
+   fProcessIDs->Add(pid1);
    
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
