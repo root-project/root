@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.31 2003/01/02 22:41:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.32 2003/04/10 20:12:22 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -296,7 +296,7 @@ void TGraphErrors::Paint(Option_t *option)
    //
    // Use gStyle->SetEndErrorSize(np) to control the size of the lines
    // at the end of the error bars (when option 1 is used).
-   // By default np=1. (np reprersents the number of pixels).
+   // By default np=1. (np represents the number of pixels).
 
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
