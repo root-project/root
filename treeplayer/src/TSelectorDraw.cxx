@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.41 2004/12/14 17:22:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.42 2004/12/15 17:24:36 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1190,12 +1190,12 @@ void TSelectorDraw::TakeAction()
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          gr = (TGraph*)grs->UncheckedAt(col);
-         gr->SetPoint(gr->GetN(),fV2[i],fV1[i]);
+         if (gr) gr->SetPoint(gr->GetN(),fV2[i],fV1[i]);
       }
       // Remove potential empty graphs
       for (col=0;col<ncolors;col++) {
          gr = (TGraph*)grs->At(col);
-	 if (gr->GetN() <= 0) grs->Remove(gr);
+	 if (gr && gr->GetN() <= 0) grs->Remove(gr);
       }
    }
    //__________________________2D Profile Histogram__________________
