@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.4 2000/12/13 16:05:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.5 2000/12/26 14:17:33 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ void TClassTable::Print(Option_t *option) const
    // alphabetically. Only classes specified in option are listed.
    // default is to list all classes.
    // Standard wilcarding notation supported.
-   
+
    if (fgTally == 0 || !fgTable)
       return;
 
@@ -249,7 +249,7 @@ char *TClassTable::Next()
 }
 
 //______________________________________________________________________________
-void TClassTable::PrintTable() 
+void TClassTable::PrintTable()
 {
    // Print the class table. Before printing the table is sorted
    // alphabetically.
@@ -338,5 +338,5 @@ void RemoveClass(const char *cname)
    if (gROOT && gROOT->GetListOfClasses()) {
       TClass *cl = gROOT->GetClass(cname, kFALSE);
       delete cl;  // interesting, for delete to call TClass::~TClass
-   }              // Class.h needs to be included
+   }              // TClass.h needs to be included
 }
