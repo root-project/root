@@ -1,7 +1,9 @@
 #ifndef ROOT_TRolke
 #define ROOT_TRolke
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
 
 class TRolke : public TObject {
 protected:
