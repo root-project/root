@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.3 2004/07/15 22:46:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.4 2004/07/29 10:54:54 brun Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -15,6 +15,7 @@
 
 #include "TError.h"
 #include "TH1F.h"
+#include "TProofDebug.h"
 #include "TStatus.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
@@ -51,7 +52,7 @@ void TProofDraw::ClearFormulas()
 //______________________________________________________________________________
 void TProofDraw::Init(TTree *tree)
 {
-Info("Init","Enter tree = %p", tree);
+   PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    ClearFormulas();
 
@@ -78,7 +79,7 @@ Info("Init","Enter tree = %p", tree);
 
    fManager->Add(fSelFormula);
 
-fSelFormula->Print();
+   PDB(kDraw,1) fSelFormula->Print();
 
    fVarXFormula = new TTreeFormula("VarX", fVarX, tree);
    if (fVarXFormula->GetNdim() == 0) {
@@ -101,7 +102,7 @@ fSelFormula->Print();
 
    fManager->Add(fVarXFormula);
 
-fVarXFormula->Print();
+   PDB(kDraw,1) fVarXFormula->Print();
 
    fManager->Sync();
 
@@ -112,7 +113,7 @@ fVarXFormula->Print();
 //______________________________________________________________________________
 Bool_t TProofDraw::Notify()
 {
-Info("Notify","Enter");
+   PDB(kDraw,1) Info("Notify","Enter");
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
       Assert(fStatus);
@@ -129,13 +130,13 @@ Info("Notify","Enter");
 //______________________________________________________________________________
 void TProofDraw::Begin(TTree *tree)
 {
-Info("Begin","Enter tree = %p", tree);
+   PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fVarX = fInput->FindObject("varexp")->GetTitle();
 
-   Info("Begin","selection: %s", fSelection.Data());
-   Info("Begin","varexp: %s", fVarX.Data());
+   PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
+   PDB(kDraw,1) Info("Begin","varexp: %s", fVarX.Data());
 
 }
 
@@ -143,7 +144,7 @@ Info("Begin","Enter tree = %p", tree);
 //______________________________________________________________________________
 void TProofDraw::SlaveBegin(TTree *tree)
 {
-Info("SlaveBegin","Enter tree = %p", tree);
+   PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fVarX = fInput->FindObject("varexp")->GetTitle();
@@ -153,30 +154,30 @@ Info("SlaveBegin","Enter tree = %p", tree);
    fHistogram->SetDirectory(0);   // take ownership
    fOutput->Add(fHistogram);      // release ownership
 
-   Info("Begin","selection: %s", fSelection.Data());
-   Info("Begin","varexp: %s", fVarX.Data());
+   PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
+   PDB(kDraw,1) Info("Begin","varexp: %s", fVarX.Data());
 }
 
 
 //______________________________________________________________________________
 Bool_t TProofDraw::Process(Long64_t entry)
 {
-//Info("Process","Enter entry = %d", entry);
+   PDB(kDraw,3) Info("Process","Enter entry = %d", entry);
 
    fTree->LoadTree(entry);
    Int_t ndata = fManager->GetNdata();
 
-//Info("Process","ndata = %d", ndata);
+   PDB(kDraw,3) Info("Process","ndata = %d", ndata);
 
    for (Int_t i=0;i<ndata;i++) {
       Double_t w = fSelFormula->EvalInstance(i);
 
-//Info("Process","w[%d] = %f", i, w);
+      PDB(kDraw,3) Info("Process","w[%d] = %f", i, w);
 
       if (w == 0.0) continue;
       Double_t x = fVarXFormula->EvalInstance(i);
 
-//Info("Process","x[%d] = %f", i, x);
+      PDB(kDraw,3) Info("Process","x[%d] = %f", i, x);
       fHistogram->Fill(x, w);
    }
 
@@ -187,7 +188,7 @@ Bool_t TProofDraw::Process(Long64_t entry)
 //______________________________________________________________________________
 void TProofDraw::SlaveTerminate(void)
 {
-Info("SlaveTerminate","Enter");
+   PDB(kDraw,1) Info("SlaveTerminate","Enter");
 
 }
 
@@ -195,7 +196,7 @@ Info("SlaveTerminate","Enter");
 //______________________________________________________________________________
 void TProofDraw::Terminate(void)
 {
-Info("Terminate","Enter");
+   PDB(kDraw,1) Info("Terminate","Enter");
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
       if (fStatus == 0) {

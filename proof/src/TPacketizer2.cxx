@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.31 2004/07/09 04:45:24 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.32 2004/12/06 16:46:01 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -237,7 +237,7 @@ ClassImp(TPacketizer2)
 TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
                            Long64_t num, TList *input)
 {
-   PDB(kPacketizer,1) Info("TPacketizer2", "Enter");
+   PDB(kPacketizer,1) Info("TPacketizer2", "Enter (first %lld, num %lld)", first, num);
 
    fProcessed = 0;
    fMaxPerfIdx = 1;
@@ -299,6 +299,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
    Reset();                // setup file & filenode structure
    ValidateFiles(dset, slaves);
 
+   if (!fValid) return;
 
    // apply global range (first,num) to dset and rebuild structure
    // ommitting TDSet elements that are not needed
@@ -313,33 +314,36 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
    Long64_t cur = 0;
    while (( e = (TDSetElement*)dset->Next())) {
       TUrl url = e->GetFileName();
+      Long64_t eFirst = e->GetFirst();
+      Long64_t eNum = e->GetNum();
+
 
       // this element is before the start of the global range, skip it
-      if (cur + e->GetNum() < first) {
-         cur += e->GetNum();
+      if (cur + eNum < first) {
+         cur += eNum;
          continue;
-      }
-
-      // this element contains the start of the global range
-      // adjust its start and number of entries
-      if (cur < first) {
-         e->SetFirst( e->GetFirst() + (first - cur) );
-         e->SetNum( e->GetNum() - (first + cur) );
       }
 
       // this element is after the end of the global range, skip it
-      if (num != -1 && (first+num <= cur)) {
-         cur += e->GetNum();
-         continue;
+      if (first+num <= cur) {
+         cur += eNum;
+         continue; // break ??
       }
 
-      // this element contains the end of the global range
+      // If this element contains the end of the global range
       // adjust its number of entries
-      if ( num != -1 && ( first+num < cur + e->GetNum() ) ) {
+      if (first+num < cur+eNum) {
          e->SetNum( first + num - cur );
       }
 
-      cur += e->GetNum();
+      // If this element contains the start of the global range
+      // adjust its start and number of entries
+      if (cur < first) {
+         e->SetFirst( eFirst + (first - cur) );
+         e->SetNum( e->GetNum() - (first - cur) );
+      }
+
+      cur += eNum;
 
       // Map non URL filenames to dummy host
       TString host;
@@ -361,6 +365,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       ++files;
       fTotalEntries += e->GetNum();
       node->Add( e );
+      PDB(kPacketizer,2) e->Print("a");
    }
 
    PDB(kGlobal,1) Info("TPacketizer2","Processing %lld entries in %d files on %d hosts",
@@ -826,6 +831,8 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
    TDSetElement *base = file->GetElement();
    Long64_t num = Long64_t(fPacketSize*(Float_t)slstat->fSlave->GetPerfIdx()/fMaxPerfIdx);
+   if (num < 1) num = 1;
+
    Long64_t first = file->GetNextEntry();
    Long64_t last = base->GetFirst() + base->GetNum();
 

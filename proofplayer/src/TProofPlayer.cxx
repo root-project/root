@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.40 2004/11/24 07:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.41 2004/12/22 15:16:34 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -423,6 +423,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if ( !fPacketizer->IsValid() ) {
          return -1;
       }
+
+      // reset start, this is now managed by the packetizer
+      first = 0;
+
    } else {
       if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
       fSelectorClass = 0;
@@ -430,6 +434,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (fSelector == 0) return -1;
       fSelectorClass = fSelector->IsA();
       fSelector->SetInputList(fInput);
+
+      PDB(kLoop,1) Info("Process","Call Begin(0)");
+      fSelector->Begin(0);
       fSelector->Begin(0);
    }
 
@@ -461,6 +468,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       while(TObject* obj = next()) {
          output->Add(obj);
       }
+      PDB(kLoop,1) Info("Process","Call Terminate()");
       fSelector->Terminate();
    }
 
