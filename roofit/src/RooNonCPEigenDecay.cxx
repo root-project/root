@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.6 2002/05/02 00:12:12 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.7 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -303,7 +303,7 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars, 
 					RooArgSet&       generateVars, Bool_t staticInitOK ) const
 {
-  if (_staticInitOK) {
+  if (staticInitOK) {
     if (matchArgs( directVars, generateVars, _t, _tag, _rhoQ )) return 4;  
     if (matchArgs( directVars, generateVars, _t, _rhoQ       )) return 3;  
     if (matchArgs( directVars, generateVars, _t, _tag        )) return 2;  
