@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.156 2003/08/11 08:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.157 2003/08/20 06:56:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1300,6 +1300,8 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    Stat_t s[10];
    GetStats(s);
    PutStats(s);
+   if (nEntries == 0) nEntries = h1->GetEntries();
+   if (nEntries == 0) nEntries = 1;
    SetEntries(nEntries);
 }
 
