@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.21 2004/10/13 12:24:08 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.22 2004/10/14 10:09:30 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 
 #include "TGuiBldDragManager.h"
 #include "TGuiBldEditor.h"
-#include "TGuiBuilder.h"
+#include "TRootGuiBuilder.h"
 #include "TGuiBldQuickHandler.h"
 
 #include "TTimer.h"
@@ -3001,7 +3001,7 @@ void TGuiBldDragManager::CreatePropertyEditor()
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    root->SetEditable(kFALSE);
 
-   fBuilder = (TGuiBuilder*)TVirtualGuiBld::Instance();
+   fBuilder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
 
    fBuilder->Move(fPimpl->fX0, fPimpl->fY0);
    fBuilder->SetWMPosition(fPimpl->fX0, fPimpl->fY0);

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.80 2004/09/15 17:09:51 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.81 2004/10/11 12:34:34 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -388,7 +388,7 @@ Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
 +Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL   "TViewerOpenGL(TVirtualPad*)"
 +Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
 Plugin.TVirtualDragManager: GuiBld TGuiBldDragManager    GuiBld    "TGuiBldDragManager()"
-Plugin.TVirtualGuiBld:      GuiBld TGuiBuilder           GuiBld    "TGuiBuilder()"
+Plugin.TGuiBuilder:         GuiBld TRootGuiBuilder       GuiBld    "TRootGuiBuilder()"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

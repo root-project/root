@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.60 2004/09/21 11:18:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.61 2004/09/23 10:02:21 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -54,7 +54,7 @@
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"
 #include "TInterpreter.h"
-#include "TVirtualGuiBld.h"
+#include "TGuiBuilder.h"
 
 #include "HelpText.h"
 
@@ -1160,7 +1160,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      gROOT->GetMakeDefCanvas()();
                      break;
                   case kFileNewBuilder:
-                     TVirtualGuiBld::Instance();
+                     TGuiBuilder::Instance();
                      break;
                   case kFileOpen:
                      {

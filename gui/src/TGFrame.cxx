@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.96 2004/10/12 13:41:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.97 2004/10/13 12:24:08 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -80,7 +80,7 @@
 #include "TGMsgBox.h"
 #include "TSystem.h"
 #include "TVirtualDragManager.h"
-#include "TVirtualGuiBld.h"
+#include "TGuiBuilder.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;

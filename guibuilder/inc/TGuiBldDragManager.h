@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.2 2004/09/20 15:33:26 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.3 2004/09/20 21:00:40 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 
 class TTimer;
 class TGuiBldDragManagerPimpl;
-class TGuiBuilder;
+class TRootGuiBuilder;
 class TQUndoManager;
 class TGPopupMenu;
 class TGuiBldEditor;
@@ -53,7 +53,7 @@ friend class TGMainFrame;
 private:
    TGuiBldDragManagerPimpl *fPimpl;    // private data
 
-   TGuiBuilder   *fBuilder;            // pointer to gui builder
+   TRootGuiBuilder   *fBuilder;            // pointer to gui builder
    TGuiBldEditor *fEditor;             // frame property editor
    TGuiBldQuickHandler *fQuickHandler; // quick action handler
    Bool_t         fLassoDrawn;         // kTRUE if  lasso drawn
@@ -157,7 +157,7 @@ public:
    void           BreakLayout();
    void           SwitchLayout();
    Bool_t         GetDropStatus() const { return fDropStatus; }
-   void           SetBuilder(TGuiBuilder *b) { fBuilder = b; }
+   void           SetBuilder(TRootGuiBuilder *b) { fBuilder = b; }
 
    void           Selected(TGFrame *frame); //*SIGNAL*
 

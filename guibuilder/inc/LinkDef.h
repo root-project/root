@@ -14,7 +14,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TGuiBuilder;
+#pragma link C++ class TRootGuiBuilder;
 #pragma link C++ class TGuiBldDragManager;
 #pragma link C++ class TGuiBldEditor;
 #pragma link C++ class TGuiBldHintsButton;

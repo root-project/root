@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.54 2004/10/11 16:25:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.55 2004/10/11 16:27:13 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 #include "TVirtualPadEditor.h"
 #include "TRootControlBar.h"
 #include "TGLabel.h"
-#include "TVirtualGuiBld.h"
+#include "TGuiBuilder.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -977,7 +977,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      new TBrowser("browser");
                      break;
                   case kInspectBuilder:
-                     TVirtualGuiBld::Instance();
+                     TGuiBuilder::Instance();
                      break;
 
                   // Handle Inspect menu items...
