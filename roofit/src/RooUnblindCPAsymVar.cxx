@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.5 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.6 2001/11/20 04:00:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@ ClassImp(RooUnblindCPAsymVar)
 ;
 
 
+
 RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("") 
 {
   // Default constructor
@@ -39,15 +40,27 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
-					     const char *blindString, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
+					 const char *blindString, RooAbsReal& cpasym)
+  : RooAbsHiddenReal(name,title), _blindEngine(blindString), 
+  _asym("asym","CP Asymmetry",this,cpasym)
+{  
+  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+}
+
+
+RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
+					 const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState)
+  : RooAbsHiddenReal(name,title,blindState), _blindEngine(blindString), 
+  _asym("asym","CP Asymmetry",this,cpasym)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+  RooAbsHiddenReal(other, name), 
+  _blindEngine(other._blindEngine), 
+  _asym("asym",this,other._asym)
 {
   // Copy constructor
 }
@@ -61,11 +74,11 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 
 Double_t RooUnblindCPAsymVar::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-asymmetry method on blind value
-  return _blindEngine.UnHideAsym(_asym);
+  if (isHidden()) {
+    // Blinding active for this event
+    return _blindEngine.UnHideAsym(_asym);
+  } else {
+    // Blinding not active for this event
+    return _asym ;
+  }
 }
-
-
-
-
-

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUnblindPrecision.cc,v 1.1 2001/11/20 04:00:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,14 +40,28 @@ RooUnblindPrecision::RooUnblindPrecision() : _blindEngine("")
 
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& value)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,centralValue,scale), _value("value","Precision blinded value",this,value) 
+  : RooAbsHiddenReal(name,title), 
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale), 
+  _value("value","Precision blinded value",this,value)
+{  
+  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+}
+
+
+RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
+					 const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& value, RooAbsCategory& blindState)
+  : RooAbsHiddenReal(name,title,blindState), 
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale), 
+  _value("value","Precision blinded value",this,value)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _value("asym",this,other._value)
+  RooAbsHiddenReal(other, name), 
+  _blindEngine(other._blindEngine), 
+  _value("asym",this,other._value)
 {
   // Copy constructor
 }
@@ -62,9 +76,15 @@ RooUnblindPrecision::~RooUnblindPrecision()
 Double_t RooUnblindPrecision::evaluate() const
 {
   // Evaluate RooBlindTools unhide-precision method on blind value
-  return _blindEngine.UnHidePrecision(_value);
-}
 
+  if (isHidden()) {
+    // Blinding active for this event
+    return _blindEngine.UnHidePrecision(_value);
+  } else {
+    // Blinding not active for this event
+    return _value ;
+  }
+}
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.rdl,v 1.2 2001/05/14 22:55:11 verkerke Exp $
+ *    File: $Id: RooBlindTools.rdl,v 1.3 2001/11/20 04:00:55 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,7 +43,8 @@ public:
   (const char *stSeed,	// blinding seed string
    blindMode Mode=full,	// blinding mode
    Double_t centralValue=0.0,     // Central value for Precision measurements
-   Double_t sigmaOffset=1.0       // range for Offset
+   Double_t sigmaOffset=1.0,      // range for Offset
+   Bool_t s2bMode=kFALSE          // Use sin2beta modifications?
    );
 
   // Copy
@@ -129,6 +130,7 @@ private:
   Double_t _PrecisionOffset;
   Double_t _PrecisionCentralValue;
   blindMode _mode;
+  Bool_t   _s2bMode ;
   
   // setup data members from string seed  
   void setup(const char *stSeed);

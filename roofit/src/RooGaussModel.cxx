@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.16 2001/10/30 07:38:53 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.17 2001/11/02 03:07:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -93,6 +93,8 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 Double_t RooGaussModel::evaluate() const 
 {  
+  //cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
+  
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static Double_t root2(sqrt(2)) ;
   static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
@@ -205,7 +207,17 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     Double_t xscale = root2*(sigma*ssf);
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
     
-    Double_t result = 0.5*(erf((x.max()-(mean*msf))/xscale)-erf((x.min()-(mean*msf))/xscale)); ;
+    Double_t xpmin = (x.min()-(mean*msf))/xscale ;
+    Double_t xpmax = (x.max()-(mean*msf))/xscale ;
+ 
+    Double_t result ;
+    if (xpmin<-6 && xpmax>6) {
+      // If integral is over >6 sigma, approximate with full integral
+      result = 1.0 ;
+    } else {
+      result = 0.5*(erf(xpmax)-erf(xpmin)) ;
+    }
+
     if (_basisCode!=0 && basisSign==Both) result *= 2 ;    
     return result ;
   }
@@ -227,14 +239,20 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 3d form tau=" << tau << endl ;
-    
+
     Double_t result(0) ;
-    if (basisSign!=Minus) result += -1 * tau * ( erf(-umax) - erf(-umin) + 
-						 exp(c*c) * ( exp(-xpmax)*erfc(-umax+c)
-							      - exp(-xpmin)*erfc(-umin+c) )) ;     
-    if (basisSign!=Plus)  result +=      tau * ( erf(umax) - erf(umin) + 
-						 exp(c*c) * ( exp(xpmax)*erfc(umax+c)
-							      - exp(xpmin)*erfc(umin+c) )) ;     
+    if (umin<-6 && umax>6) {
+      // If integral is over >6 sigma, approximate with full integral
+      if (basisSign!=Minus) result += 2 * tau ;
+      if (basisSign!=Plus)  result += 2 * tau ;      
+    } else {
+      if (basisSign!=Minus) result += -1 * tau * ( erf(-umax) - erf(-umin) + 
+						   exp(c*c) * ( exp(-xpmax)*erfc(-umax+c)
+								- exp(-xpmin)*erfc(-umin+c) )) ;     
+      if (basisSign!=Plus)  result +=      tau * ( erf(umax) - erf(umin) + 
+						   exp(c*c) * ( exp(xpmax)*erfc(umax+c)
+								- exp(xpmin)*erfc(umin+c) )) ;     
+    }
     return result ;
   }
 
@@ -254,6 +272,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
       RooComplex evalDif(evalCerf(wt,umax,c) - evalCerf(wt,umin,c)) ;
       result +=  tau/(1+wt*wt) * ( -evalDif.im() +    wt*evalDif.re() -    wt*(erf(umax) - erf(umin)) ) ;
     }
+
     return result ;
   }
 
@@ -271,6 +290,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
       RooComplex evalDif(evalCerf(wt,umax,c) - evalCerf(wt,umin,c)) ;
       result +=  tau/(1+wt*wt) * ( evalDif.re() +  wt*evalDif.im() + erf(umax) - erf(umin) ) ;
     }
+
     return result ;
   }
 

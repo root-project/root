@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.cc,v 1.2 2001/11/20 04:00:55 verkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.3 2001/11/20 21:34:54 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,11 +31,12 @@ ClassImp(RooBlindTools)
 // Constructors --
 //----------------
 RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
-			     Double_t centralValue, Double_t sigmaOffset) :
+			     Double_t centralValue, Double_t sigmaOffset, Bool_t s2bMode) :
 
   _mode(Mode),
   _PrecisionOffsetScale(sigmaOffset),
-  _PrecisionCentralValue(centralValue)
+  _PrecisionCentralValue(centralValue),
+  _s2bMode(s2bMode)
 {
   setup(stSeed);
 }
@@ -45,7 +46,8 @@ RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
 RooBlindTools::RooBlindTools(const RooBlindTools& blindTool):
   _PrecisionOffsetScale(blindTool.getPrecisionOffsetScale()),
   _PrecisionCentralValue(blindTool.getPrecisionCentralValue()),
-  _mode(blindTool.mode())
+  _mode(blindTool.mode()),
+  _s2bMode(blindTool._s2bMode) 
 {
   setup(blindTool.stSeed());
 }
@@ -74,7 +76,11 @@ void RooBlindTools::setup(const char *stSeed)
   _MysteryPhase = 3.14159 * 
                   MakeOffset("wxyzabcdefghijklmnopqrstuv");
 
-  _PrecisionSignFlip = MakeSignFlip("klmnopqrstuvwxyzabcdefghij");
+  if (_s2bMode) {
+    _PrecisionSignFlip = MakeSignFlip("zyxwvutsrqponmlkjihgfedcba");
+  } else {
+    _PrecisionSignFlip = MakeSignFlip("klmnopqrstuvwxyzabcdefghij");
+  }
 
   _PrecisionOffset = _PrecisionOffsetScale*MakeGaussianOffset("opqrstuvwxyzabcdefghijklmn");
 
@@ -273,7 +279,11 @@ Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
   for (Int_t i=0; i<lengthSeed; i++){
     for (Int_t iAlphabet=0; iAlphabet<26; iAlphabet++){
       if ( lowerseed[i] == StringAlphabet[iAlphabet] ){
-	sumSeed = sumSeed + iAlphabet ;
+	if (_s2bMode) {
+	  sumSeed =  (iAlphabet<<(5*(i%3)))^sumSeed;
+	} else {
+	  sumSeed = sumSeed + iAlphabet ;	
+	}
       }
     }      
   }
