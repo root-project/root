@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.3 2001/10/08 05:21:14 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.4 2001/10/17 05:15:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -36,16 +36,16 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 {
   // Constructor
   if (type==SingleSided || type==DoubleSided) 
-    _basisExpPlus  = declareBasis("exp(-abs(@0)/@1)",RooArgSet(tau,dm)) ;
+    _basisExpPlus  = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau,dm)) ;
 
   if (type==Flipped || type==DoubleSided)
-    _basisExpMinus = declareBasis("exp(-abs(-@0)/@1)",RooArgSet(tau,dm)) ;
+    _basisExpMinus = declareBasis("exp(-abs(-@0)/@1)",RooArgList(tau,dm)) ;
 
   if (type==SingleSided || type==DoubleSided) 
-    _basisCosPlus  = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisCosPlus  = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
 
   if (type==Flipped || type==DoubleSided)
-    _basisCosMinus = declareBasis("exp(-abs(-@0)/@1)*cos(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisCosMinus = declareBasis("exp(-abs(-@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
 }
 
 

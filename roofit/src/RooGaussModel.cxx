@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.13 2001/10/08 05:21:19 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.14 2001/10/17 05:15:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -210,9 +210,10 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
   Double_t swt = omega * tau * sign ;
   RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
+    
   if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {    
     Double_t result = (swt==0)? 1.0 
-                    : (tau*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() + erf(umax) - erf(umin) )) ;
+                    : (tau*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() )) ;
     return result ;
   }
 

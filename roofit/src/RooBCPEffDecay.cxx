@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBCPEffDecay.cc,v 1.1 2001/06/26 18:13:00 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.2 2001/10/08 05:21:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -38,22 +38,22 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 {
   // Constructor
   if (type==SingleSided || type==DoubleSided) 
-    _basisExpPlus  = declareBasis("exp(-abs(@0)/@1)",RooArgSet(tau,dm)) ;
+    _basisExpPlus  = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau,dm)) ;
 
   if (type==Flipped || type==DoubleSided)
-    _basisExpMinus = declareBasis("exp(-abs(-@0)/@1)",RooArgSet(tau,dm)) ;
+    _basisExpMinus = declareBasis("exp(-abs(-@0)/@1)",RooArgList(tau,dm)) ;
 
   if (type==SingleSided || type==DoubleSided) 
-    _basisSinPlus  = declareBasis("exp(-abs(@0)/@1)*sin(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisSinPlus  = declareBasis("exp(-abs(@0)/@1)*sin(@0*@2)",RooArgList(tau,dm)) ;
 
   if (type==Flipped || type==DoubleSided)
-    _basisSinMinus = declareBasis("exp(-abs(-@0)/@1)*sin(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisSinMinus = declareBasis("exp(-abs(-@0)/@1)*sin(@0*@2)",RooArgList(tau,dm)) ;
 
   if (type==SingleSided || type==DoubleSided) 
-    _basisCosPlus  = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisCosPlus  = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
 
   if (type==Flipped || type==DoubleSided)
-    _basisCosMinus = declareBasis("exp(-abs(-@0)/@1)*cos(@0*@2)",RooArgSet(tau,dm)) ;
+    _basisCosMinus = declareBasis("exp(-abs(-@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
 }
 
 
