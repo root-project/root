@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:$:$Id:*/
+/* @(#)root/base:$Name:  $:$Id:$*/
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,7 +15,7 @@
 #error This header file can only be used in interpreted code.
 #endif
 
-// The definition of ClassDef is used only for files loaded via the  interpreter
+// The definition of ClassDef is used only for files loaded via the interpreter
 
 #define ClassDef(name,id) \
 private: \
@@ -57,7 +57,6 @@ public: \
 #define ClassImp2T(name,Tmpl1,Tmpl2) templateClassImp(name)
 #define ClassDef3T2(name,Tmpl1,Tmpl2,Tmpl3)
 #define ClassImp3T(name,Tmpl1,Tmpl2,Tmpl3) templateClassImp(name)
-
 
 // Macro not useful (yet?) in CINT
 #define ClassImp(X)
