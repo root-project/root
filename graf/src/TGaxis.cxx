@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.22 2001/10/30 15:56:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.23 2001/10/31 11:28:38 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include <fstream.h>
 #include <time.h>
 #include <math.h>
-#include <float.h>
 
 #include "TROOT.h"
 #include "TGaxis.h"
@@ -1214,6 +1213,7 @@ L110:
                      double tmpdb;
                      int tmplast, tmpfirst;
                      strcpy(CHTEMP,&LABEL[first]);
+                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 

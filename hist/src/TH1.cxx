@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.69 2001/12/02 16:15:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.70 2001/12/03 07:48:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -15,7 +15,6 @@
 #include <ctype.h>
 #include <fstream.h>
 #include <iostream.h>
-#include <float.h>
 
 #include "TROOT.h"
 #include "TH1.h"

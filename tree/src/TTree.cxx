@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.103 2001/11/17 15:59:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.104 2001/11/22 07:45:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -255,7 +255,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <float.h>
 
 #include "TROOT.h"
 #include "TSystem.h"

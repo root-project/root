@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.66 2001/11/03 16:55:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.67 2001/11/28 16:05:42 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -209,7 +209,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <float.h>
 #include <fstream.h>
 
 #include "TTreePlayer.h"

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.27 2001/11/17 16:00:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.28 2001/12/03 16:47:46 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -26,10 +26,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
-//the following include must be declared before TMath.h (finite on win32)
-#include <float.h>
-
 #include "TROOT.h"
 #include "TChain.h"
 #include "TTree.h"
@@ -42,7 +38,6 @@
 #include "TFriendElement.h"
 #include "TSystem.h"
 #include "TRegexp.h"
-
 
 ClassImp(TChain)
 

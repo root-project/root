@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.20 2001/07/11 06:46:19 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.21 2001/08/27 12:59:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.21  2001/08/27 12:59:09  brun
+// Must activate the definition of the function "finite" on Solaris systems.
+//
 // Revision 1.20  2001/07/11 06:46:19  brun
 // New version of the Star classes from Valery.
 //
@@ -136,10 +139,6 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <iomanip.h>
-
-#ifdef WIN32
-# include <float.h>
-#endif
 
 #include "TROOT.h"
 #include "TBaseClass.h"
@@ -1388,15 +1387,6 @@ Bool_t TTable::IsFolder() const {
 #endif
 }
 
-
-#ifdef WIN32
-# ifndef finite
-#   define finite _finite
-# endif
-#endif
-#ifdef R__SOLARIS
-  extern "C" {int finite( double x );}
-#endif
 
 //______________________________________________________________________________
 Int_t TTable::NaN()
