@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name$:$Id$
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -332,6 +332,9 @@ void TRint::HandleTermInput()
    char *line;
 
    if ((line = Getlinem(kOneChar, 0))) {
+      if (line[0] == 0 && Gl_eof())
+         Terminate(0);
+
       if (gROOT->Timer()) timer.Start();
 
       Gl_histadd(line);
