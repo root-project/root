@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.18 2004/01/18 16:30:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.19 2004/01/23 16:34:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -347,11 +347,11 @@ void TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local) cons
      return;
   }   
   const Double_t *rot = GetRotationMatrix();
-    for (Int_t i=0; i<3; i++) {
-       local[i] =  master[0]*rot[i]
-                 + master[1]*rot[i+3]
-                 + master[2]*rot[i+6];
-   }
+  for (Int_t i=0; i<3; i++) {
+     local[i] =  master[0]*rot[i]
+               + master[1]*rot[i+3]
+               + master[2]*rot[i+6];
+  }
 }
 //-----------------------------------------------------------------------------
 void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local) const

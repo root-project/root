@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.24 2004/01/19 13:44:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.25 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TGeoVolume.h"
 #include "TGeoCache.h"
 
+const Int_t kN3 = 3*sizeof(Double_t);
 
 
 ClassImp(TGeoNodeCache)
@@ -735,13 +736,35 @@ void TGeoCacheDummy::LocalToMasterBomb(const Double_t *local, Double_t *master) 
 //_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-   fMatrix->MasterToLocal(master, local);
+   //fMatrix->MasterToLocal(master, local);
+  if (fMatrix->IsIdentity()) {
+     memcpy(local, master, kN3);
+     return;
+  }   
+  const Double_t *tr  = fMatrix->GetTranslation();
+  const Double_t *rot = fMatrix->GetRotationMatrix();
+  Double_t mt0  = master[0]-tr[0];
+  Double_t mt1  = master[1]-tr[1];
+  Double_t mt2  = master[2]-tr[2];
+  local[0] = mt0*rot[0] + mt1*rot[3] + mt2*rot[6];
+  local[1] = mt0*rot[1] + mt1*rot[4] + mt2*rot[7];
+  local[2] = mt0*rot[2] + mt1*rot[5] + mt2*rot[8];
 }
 
 //_____________________________________________________________________________
 void TGeoCacheDummy::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
-   fMatrix->MasterToLocalVect(master, local);
+   //fMatrix->MasterToLocalVect(master, local);
+  if (fMatrix->IsIdentity()) {
+     memcpy(local, master, kN3);
+     return;
+  }   
+  const Double_t *rot = fMatrix->GetRotationMatrix();
+  for (Int_t i=0; i<3; i++) {
+     local[i] =  master[0]*rot[i]
+               + master[1]*rot[i+3]
+               + master[2]*rot[i+6];
+  }
 }
 
 //_____________________________________________________________________________

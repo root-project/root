@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.30 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.31 2004/01/20 15:44:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -284,7 +284,6 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
    // compute distance to surface 
-   Double_t rsq=point[0]*point[0]+point[1]*point[1];
    // Do Z
    Double_t sz = TGeoShape::Big();
    if (dir[2]>0) { 
@@ -299,7 +298,8 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<1E-10) return sz;
-   Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
+   Double_t rsq  =point[0]*point[0]+point[1]*point[1];
+   Double_t rdotn=point[0]*dir[0]  +point[1]*dir[1];
    Double_t b,d;
    Double_t sr;
    // inner cylinder
@@ -601,6 +601,28 @@ Double_t TGeoTube::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
+#ifndef NEVER
+   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t safe, safrmin, safrmax;
+   if (in) {
+      safe    = fDz-TMath::Abs(point[2]); // positive if inside
+      if (fRmin>1E-10) {
+         safrmin = r-fRmin;
+         if (safrmin < safe) safe = safrmin;
+      }
+      safrmax = fRmax-r;
+      if (safrmax < safe) safe = safrmax;
+   } else {
+      safe    = -fDz+TMath::Abs(point[2]);
+      if (fRmin>1E-10) {
+         safrmin = -r+fRmin;
+         if (safrmin > safe) safe = safrmin;
+      }
+      safrmax = -fRmax+r;
+      if (safrmax > safe) safe = safrmax;
+   }
+   return safe;
+#else
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -610,6 +632,7 @@ Double_t TGeoTube::Safety(Double_t *point, Bool_t in) const
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
+#endif
 }
 
 //_____________________________________________________________________________
