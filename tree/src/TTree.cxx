@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.46 2001/01/18 10:37:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.47 2001/01/20 21:18:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -466,6 +466,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       if (rd->IsObject()) {
          TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
          if (clm) BuildStreamerInfo(clm,(char*)obj+rd->GetThisOffset());
+         continue;
       }
       rdname = rd->GetName();
       dname  = dm->GetName();
@@ -2196,7 +2197,7 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *add, Int_t 
 
    // create a dummy top level trunk branch
    TStreamerInfo *sinfo = cl->GetStreamerInfo();
-   branch = new TBranchElement(name,sinfo,-1,bufsize,0);
+   branch = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
    fBranches.Add(branch);
    TObjArray *blist = branch->GetListOfBranches();   
    
@@ -2205,11 +2206,14 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *add, Int_t 
    TStreamerElement *element;
    Int_t id = 0;
    while ((element = (TStreamerElement*)next())) {
-      blist->Add(new TBranchElement(element->GetName(),sinfo,id,bufsize,splitlevel-1));
+      char *pointer = (char*)objadd + element->GetOffset();
+      blist->Add(new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1));
       id++;
    }
          
    branch->SetAddress(add);
+   
+   TStreamerInfo::Optimize(kTRUE);
    
    if (delobj) delete objadd;
    return branch;
