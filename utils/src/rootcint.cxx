@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.145 2003/12/04 07:12:37 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.146 2003/12/05 01:44:00 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2155,6 +2155,10 @@ void WriteStreamer(G__ClassInfo &cl)
          //  - members with an ! as first character in the title (comment) field
          //  - the member G__virtualinfo inserted by the CINT RTTI system
 
+         //special case for Double32_t
+         int isDouble32=0;
+         if (strstr(m.Type()->Name(),"Double32_t")) isDouble32=1;
+
          if (!(m.Property() & G__BIT_ISSTATIC) &&
              strncmp(m.Title(), "!", 1)        &&
              strcmp(m.Name(), "G__virtualinfo")) {
@@ -2189,14 +2193,20 @@ void WriteStreamer(G__ClassInfo &cl)
                      }
                   } else {
                      if (i == 0) {
-                        fprintf(fp, "      delete []%s; \n",m.Name());
+                        fprintf(fp, "      delete [] %s; \n",m.Name());
                         fprintf(fp, "      %s = new %s[%s]; \n",
                                 GetNonConstMemberName(m).c_str(),ShortTypeName(m.Type()->Name()),indexvar);
-                        fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",
-                                GetNonConstMemberName(m).c_str(),indexvar);
+                        if (isDouble32) {
+	                       fprintf(fp, "      R__b.ReadFastArrayDouble32(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+                        } else {
+	                       fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+						}
                      } else {
-                        fprintf(fp, "      R__b.WriteFastArray(%s,%s); \n",
-                                m.Name(),indexvar);
+                        if (isDouble32) {
+                           fprintf(fp, "      R__b.WriteFastArrayDouble32(%s,%s); \n", m.Name(),indexvar);
+                        } else {
+                           fprintf(fp, "      R__b.WriteFastArray(%s,%s); \n", m.Name(),indexvar);
+						}
                      }
                   }
                } else if (m.Property() & G__BIT_ISARRAY) {
@@ -2205,12 +2215,20 @@ void WriteStreamer(G__ClassInfo &cl)
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            fprintf(fp, "      R__b.ReadStaticArray((Int_t*)%s);\n", m.Name());
                         else
-                           fprintf(fp, "      R__b.ReadStaticArray((%s*)%s);\n", m.Type()->TrueName(), m.Name());
+                           if (isDouble32) {
+                              fprintf(fp, "      R__b.ReadStaticArrayDouble32((%s*)%s);\n", m.Type()->TrueName(), m.Name());
+                           } else {
+                              fprintf(fp, "      R__b.ReadStaticArray((%s*)%s);\n", m.Type()->TrueName(), m.Name());
+                           }
                      } else {
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            fprintf(fp, "      R__b.ReadStaticArray((Int_t*)%s);\n", m.Name());
                         else
-                           fprintf(fp, "      R__b.ReadStaticArray(%s);\n", m.Name());
+                           if (isDouble32) {
+                              fprintf(fp, "      R__b.ReadStaticArrayDouble32(%s);\n", m.Name());
+                           } else {
+                              fprintf(fp, "      R__b.ReadStaticArray((%s*)%s);\n", m.Type()->TrueName(), m.Name());
+                           }
                       }
                   } else {
                      int s = 1;
@@ -2220,12 +2238,20 @@ void WriteStreamer(G__ClassInfo &cl)
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            fprintf(fp, "      R__b.WriteArray((Int_t*)%s, %d);\n", m.Name(), s);
                         else
-                           fprintf(fp, "      R__b.WriteArray((%s*)%s, %d);\n", m.Type()->TrueName(), m.Name(), s);
+                           if (isDouble32) {
+                              fprintf(fp, "      R__b.WriteArrayDouble32((%s*)%s, %d);\n", m.Type()->TrueName(), m.Name(), s);
+                           } else {
+                              fprintf(fp, "      R__b.WriteArray((%s*)%s, %d);\n", m.Type()->TrueName(), m.Name(), s);
+                           }
                      } else {
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            fprintf(fp, "      R__b.WriteArray((Int_t*)%s, %d);\n", m.Name(), s);
                         else
-                           fprintf(fp, "      R__b.WriteArray(%s, %d);\n", m.Name(), s);
+                           if (isDouble32) {
+                              fprintf(fp, "      R__b.WriteArrayDouble32(%s, %d);\n", m.Name(), s);
+                           } else {
+                              fprintf(fp, "      R__b.WriteArray(%s, %d);\n", m.Name(), s);
+                           }
                      }
                   }
                } else if ((m.Type())->Property() & G__BIT_ISENUM) {
@@ -2234,10 +2260,17 @@ void WriteStreamer(G__ClassInfo &cl)
                   else
                      fprintf(fp, "      R__b << (Int_t)%s;\n", m.Name());
                } else {
-                  if (i == 0)
-                     fprintf(fp, "      R__b >> %s;\n", GetNonConstMemberName(m).c_str());
-                  else
-                     fprintf(fp, "      R__b << %s;\n", GetNonConstMemberName(m).c_str());
+                  if (isDouble32) {
+                     if (i == 0)
+                        fprintf(fp, "      {float R_Dummy; R__b >> R_Dummy; %s=Double32_t(R_Dummy);}\n", GetNonConstMemberName(m).c_str());
+                     else
+                        fprintf(fp, "      R__b << float(%s);\n", GetNonConstMemberName(m).c_str());
+                  } else {
+                     if (i == 0)
+                        fprintf(fp, "      R__b >> %s;\n", GetNonConstMemberName(m).c_str());
+                     else
+                        fprintf(fp, "      R__b << %s;\n", GetNonConstMemberName(m).c_str());
+                  }
                }
             } else {
                // we have an object...
