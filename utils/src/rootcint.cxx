@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.202 2005/02/22 06:19:21 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.203 2005/03/17 20:49:55 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -482,6 +482,19 @@ string R__tmpnam()
    return result;
 #endif
 }
+
+#ifdef WIN32
+#include "windows.h"
+//______________________________________________________________________________
+// defined in newlink.c
+extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode);
+
+# ifdef fopen
+#  undef fopen
+# endif
+# define fopen(A,B) FOpenAndSleep((A),(B))
+#endif
+
 
 //______________________________________________________________________________
 typedef map<string,string> recmap_t;
@@ -3818,6 +3831,40 @@ void StrcpyWithEsc(char *escaped, const char *original)
    escaped[k] = '\0';
 }
 
+void ReplaceFile(const char *tmpdictname, const char *dictname) 
+{
+   // Unlink dictname and move tmpdictname into dictname
+
+#ifdef WIN32
+   int tries=0;
+   bool success=false;
+   while (!success && ++tries<51) {
+      success = (unlink(dictname) != -1);
+      if (!success && tries<50)
+         if (errno!=EACCES) break;
+         else Sleep(200);
+   }
+   if (success) {
+      success=false;
+      tries=0;
+      while (!success && ++tries<52) {
+         success = (rename(tmpdictname, dictname) != -1);
+         if (!success && tries<51)
+            if (errno!=EACCES) break;
+            else Sleep(200);
+      }
+   }
+   if (!success)
+      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict() after %d tries\n",
+               tmpdictname, dictname, tries);
+#else
+   if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
+      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
+               tmpdictname, dictname);
+#endif
+
+}
+
 //______________________________________________________________________________
 void ReplaceBundleInDict(const char *dictname, const string &bundlename)
 {
@@ -3889,9 +3936,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
-      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
-               tmpdictname, dictname);
+   ReplaceFile(tmpdictname,dictname);
 
    // Next patch dict.h. Create tmp file and copy dict.h to this file.
    // When discovering a line like:
@@ -3951,9 +3996,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   if (unlink(dictnameh) == -1 || rename(tmpdictname, dictnameh) == -1)
-      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
-              tmpdictname, dictnameh);
+   ReplaceFile(tmpdictname,dictnameh);
 }
 
 //______________________________________________________________________________
