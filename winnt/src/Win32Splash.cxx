@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.6 2003/10/10 17:01:54 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.7 2004/01/13 21:02:14 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -72,25 +72,25 @@ static IMG_INFO ImageInfo;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables:
-HINSTANCE hInst;                        // current instance
-HWND    hSplashWnd = NULL;               // Splash screen
-BOOL    bShow = FALSE;
-DWORD   DelayVal = 0;
-HDC     hdcScreen = NULL, hdcCredits = NULL;
-HDC     hdcBk = NULL, hdcMask = NULL;
-HBITMAP hbmpBk = NULL, hbmpOldBk = NULL;
-HBITMAP hbmpScreen = NULL, hbmpOldScreen = NULL;
-HBITMAP hbmpCredits = NULL, hbmpOldCredits = NULL;
-HBITMAP hbmpMask = NULL, hbmpOldMask = NULL;
-HRGN    hrgnScreen = NULL;
-int     CreditsBmpWidth;
-int     CreditsBmpHeight;
+static HINSTANCE hInst;                        // current instance
+static HWND    hSplashWnd = NULL;               // Splash screen
+static BOOL    bShow = FALSE;
+static DWORD   DelayVal = 0;
+static HDC     hdcScreen = NULL, hdcCredits = NULL;
+static HDC     hdcBk = NULL, hdcMask = NULL;
+static HBITMAP hbmpBk = NULL, hbmpOldBk = NULL;
+static HBITMAP hbmpScreen = NULL, hbmpOldScreen = NULL;
+static HBITMAP hbmpCredits = NULL, hbmpOldCredits = NULL;
+static HBITMAP hbmpMask = NULL, hbmpOldMask = NULL;
+static HRGN    hrgnScreen = NULL;
+static int     CreditsBmpWidth;
+static int     CreditsBmpHeight;
 
 static bool         gStayUp        = true;
 static bool         gAbout         = false;
-static RECT         gCreditsRect   = { 15, 155, 300, 285 }; // clip rect in logo
+static RECT         gCreditsRect   = { 15, 155, 305, 285 }; // clip rect in logo
 static unsigned int gCreditsWidth  = gCreditsRect.right - gCreditsRect.left; // credits pixmap size
-static unsigned int gCreditsHeight = 0;
+static unsigned int gCreditsHeight = gCreditsRect.bottom - gCreditsRect.top; // credits rect height
 
 static void ReadContributors()
 {
@@ -229,11 +229,6 @@ static int DrawCredits(HDC hDC, bool draw, bool extended)
       y = DrawCreditItem(hDC, "Contributors: ", (const char **)gContributors, y, draw);
 
       y += 2 * lineSpacing;
-      y = DrawCreditItem(hDC, "Special thanks to the neglected families and friends", 0, y, draw);
-      y += lineSpacing;
-      y = DrawCreditItem(hDC, "of the aforementioned persons.", 0, y, draw);
-
-      y += 2 * lineSpacing;
       y = DrawCreditItem(hDC, "Our sincere thanks and apologies to anyone who deserves", 0, y, draw);
       y += lineSpacing;
       y = DrawCreditItem(hDC, "credit but fails to appear in this list.", 0, y, draw);
@@ -260,7 +255,7 @@ void CreateCredits(HDC hDC, bool extended)
     HFONT   hFont, hOldFont;
     HBRUSH  hBr;
     SIZE    sizeFont;
-	LOGFONT lf;
+    LOGFONT lf;
     RECT    fillRect;
     int     logpixelsy, nHeight;
 
@@ -286,12 +281,12 @@ void CreateCredits(HDC hDC, bool extended)
     fillRect.right = CreditsBmpWidth;
     FillRect(hdcCredits, &fillRect, hBr);
 
-	memset((void*)&lf, 0, sizeof(lf));
-	lf.lfHeight = 14;
-	lf.lfWeight = 400;
-	lf.lfQuality = NONANTIALIASED_QUALITY;
-	strcpy(lf.lfFaceName, "Arial");
-	hFont = CreateFontIndirect(&lf);
+    memset((void*)&lf, 0, sizeof(lf));
+    lf.lfHeight = 14;
+    lf.lfWeight = 400;
+    lf.lfQuality = NONANTIALIASED_QUALITY;
+    strcpy(lf.lfFaceName, "Arial");
+    hFont = CreateFontIndirect(&lf);
 
     if(hFont)
         hOldFont = (HFONT)SelectObject(hdcCredits, hFont);
@@ -317,61 +312,67 @@ void CreateCredits(HDC hDC, bool extended)
 
 void PaintBk(HDC hDC, HDC mDC)
 {
-	//save background the first time
-	if (hdcBk == NULL)
-	{
-		hdcBk = CreateCompatibleDC(mDC);
-		hbmpBk = CreateCompatibleBitmap(mDC, gCreditsRect.right-gCreditsRect.left, 
-            gCreditsRect.bottom-gCreditsRect.top);
-		hbmpOldBk = (HBITMAP)SelectObject(hdcBk, hbmpBk);
-		BitBlt(hdcBk, 0, 0, gCreditsRect.right-gCreditsRect.left, 
-            gCreditsRect.bottom-gCreditsRect.top, mDC, gCreditsRect.left, 
-            gCreditsRect.top, SRCCOPY);
-	}
+   // Save background the first time.
 
-	BitBlt(hDC, gCreditsRect.left, gCreditsRect.top, 
-        gCreditsRect.right-gCreditsRect.left, 
-        gCreditsRect.bottom-gCreditsRect.top, 
-        hdcBk, 0, 0, SRCCOPY);
+   if (hdcBk == NULL) {
+      hdcBk = CreateCompatibleDC(mDC);
+      hbmpBk = CreateCompatibleBitmap(mDC, gCreditsRect.right-gCreditsRect.left, 
+      gCreditsRect.bottom-gCreditsRect.top);
+      hbmpOldBk = (HBITMAP)SelectObject(hdcBk, hbmpBk);
+      BitBlt(hdcBk, 0, 0, gCreditsRect.right-gCreditsRect.left, 
+      gCreditsRect.bottom-gCreditsRect.top, mDC, gCreditsRect.left, 
+      gCreditsRect.top, SRCCOPY);
+   }
+
+   BitBlt(hDC, gCreditsRect.left, gCreditsRect.top, 
+   gCreditsRect.right-gCreditsRect.left, 
+   gCreditsRect.bottom-gCreditsRect.top, 
+   hdcBk, 0, 0, SRCCOPY);
 }
 
 void ScrollCredits(BOOL extended)
 {
-	// track scroll position
-	static int nScrollY = 0;
-	int nTimeInMilliseconds;
+   // Track scroll position.
 
-    if (!bShow)
-        return;
-    if (!IsWindow(hSplashWnd))
-        return;
-    HDC hDC = GetDC(hSplashWnd);
+   static int nScrollY = 0;
 
-    if(hdcCredits == NULL) {
-		CreateCredits(hDC, extended);
-        nScrollY = 0;
-    }
+   if (!bShow)
+      return;
+   if (!IsWindow(hSplashWnd))
+       return;
+   HDC hDC = GetDC(hSplashWnd);
 
-    if(nScrollY == 1)
-        Sleep(1000);
+   if(hdcCredits == NULL) {
+      CreateCredits(hDC, extended);
+      nScrollY = 0;
+   }
 
-    PaintBk(hdcScreen, hDC);
-	BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcCredits, 0, nScrollY, SRCINVERT);
-	BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcMask, 0, nScrollY, SRCAND);
-	BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcCredits, 0, nScrollY, SRCINVERT);
+   PaintBk(hdcScreen, hDC);
+   BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcCredits,
+          0, nScrollY, SRCINVERT);
+   BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcMask,
+          0, nScrollY, SRCAND);
+   BitBlt(hdcScreen, 0, 0, CreditsBmpWidth, CreditsBmpHeight, hdcCredits,
+          0, nScrollY, SRCINVERT);
 
-	BitBlt(hDC, gCreditsRect.left, gCreditsRect.top, (gCreditsRect.right - gCreditsRect.left), 
-           (gCreditsRect.bottom - gCreditsRect.top), hdcScreen, 0, 0, SRCCOPY);
+   BitBlt(hDC, gCreditsRect.left, gCreditsRect.top,
+          (gCreditsRect.right - gCreditsRect.left), 
+          (gCreditsRect.bottom - gCreditsRect.top), hdcScreen, 0, 0, SRCCOPY);
 
-	GdiFlush();
+   GdiFlush();
 
-    // continue scrolling
-	nScrollY += 1;
-	if(nScrollY >= CreditsBmpHeight) nScrollY = 0;	// scrolling up
-	if(nScrollY < 0) nScrollY = CreditsBmpHeight;	// scrolling down
-    
-    // delay scrolling by the specified time
-	Sleep(25);
+   if (extended) {
+      // delay scrolling by the specified time
+      Sleep(100);
+
+      if (nScrollY == 0)
+         Sleep(2000);
+
+      // continue scrolling
+      nScrollY += 1;
+      if (nScrollY > (int) (CreditsBmpHeight - 2*gCreditsHeight))
+         nScrollY = -int(gCreditsHeight);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -618,7 +619,8 @@ void CreateSplash(DWORD time, BOOL extended)
     }
     else return;
 
-    ReadContributors();
+    if (extended)
+       ReadContributors();
     
     // Create the splash screen
     CreateSplashScreen(NULL);

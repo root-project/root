@@ -19,7 +19,7 @@ static DWORD WINAPI HandleSplashThread(LPVOID extended)
 {
    // thread for handling Splash Screen
 
-   CreateSplash(7, (Bool_t)extended);
+   CreateSplash(4, (Bool_t)extended);
    ::ExitThread(0);
    if (gSplash) delete gSplash;
    gSplash = 0;
