@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.129 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.130 2004/08/09 17:43:07 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TVirtualPerfStats.h"
 #include "TWebFile.h"
 #include "TArchiveFile.h"
+#include "TRefTable.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -76,6 +77,7 @@ TFile::TFile() : TDirectory()
    fArchive       = 0;
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
+   fRefTable      = 0;
 
    if (gDebug)
       Info("TFile", "default ctor");
@@ -220,6 +222,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fProcessIDs = 0;
    fNProcessIDs= 0;
    fOffset     = 0;
+   fRefTable   = 0;
 
    fOption.ToUpper();
 
@@ -1445,6 +1448,23 @@ void TFile::SetCompressionLevel(Int_t level)
    if (level < 0) level = 0;
    if (level > 9) level = 9;
    fCompress = level;
+}
+
+//______________________________________________________________________________
+void TFile::SetRefTable(TRefTable *table)
+{
+   // Set the current TRefTable
+   // When writing referenced objects, a table of parents of these
+   // referenced objects is kept in the TRefTable
+   // eg, when writing a Tree, the parent object is the TBranch
+   // with the referenced object. In this case the TRefTable is activated
+   // when filling the Tree. The information about the parents is kept
+   // in a separate Tree branch, such that when dereferencing a TRef
+   // the parent branch containing the referenced object can be loaded
+   // automatically.
+   
+   fRefTable = table;
+   if (table) fRefTable->Clear();
 }
 
 //______________________________________________________________________________
