@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.8 2001/05/21 11:20:07 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.9 2001/05/21 12:43:32 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -330,7 +330,19 @@ TGX11::TGX11(const TGX11 &org)
    for (i = 0; i < kNumCursors; i++)
       fCursors[i] = org.fCursors[i];
 
-   fColors = new TExMap(*org.fColors);
+   fColors = new TExMap;
+   Long_t     key, value;
+   TExMapIter it(org.fColors);
+   while (it.Next(key, value)) {
+      XColor_t *colo = (XColor_t *) value;
+      XColor_t *col  = new XColor_t;
+      col->pixel   = colo->pixel;
+      col->red     = colo->red;
+      col->green   = colo->green;
+      col->blue    = colo->blue;
+      col->defined = colo->defined;
+      fColors->Add(key, (Long_t) col);
+   }
 }
 
 //______________________________________________________________________________
