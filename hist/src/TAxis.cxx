@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.22 2001/11/03 16:51:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.23 2002/01/02 21:43:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -228,7 +228,14 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
       axisNumber = 1;
-      if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
+      if (!strcmp(GetName(),"xaxis")) {
+         axisNumber = 1;
+         if (!gPad->IsVertical()) axisNumber = 2;
+      }
+      if (!strcmp(GetName(),"yaxis")) {
+         axisNumber = 2;
+         if (!gPad->IsVertical()) axisNumber = 1;
+      }
       if (!strcmp(GetName(),"zaxis")) {
          if (TestBit(kPalette)) axisNumber = 4;
          else                   axisNumber = 3;
@@ -342,6 +349,8 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             ratio1 = ratio2;
             ratio2 = temp;
          }
+         if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
+         if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
          if (ratio2 - ratio1 > 0.05) {
             TH1 *hobj = (TH1*)fParent;
             bin1 = FindFixBin(xmin);
