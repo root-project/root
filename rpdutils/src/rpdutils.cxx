@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.31 2004/02/19 12:19:35 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.32 2004/03/17 17:52:24 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -288,6 +288,11 @@ gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
 #endif
 
 static int gRandInit = 0;
+// This is needed to guarantee message synchronization when
+// talking to old clients (root versions <= 3.05.07)
+static int gClientOld = 0;
+static char gBufOld[kMAXRECVBUF] = {0};
+static EMessageTypes gKindOld;
 
 } //namespace ROOT
 
@@ -577,7 +582,7 @@ int RpdUpdateAuthTab(int opt, char *line, char **token)
 int RpdCleanupAuthTab(char *Host, int RemId, int OffSet)
 {
    // In tab file, cleanup (set inactive) entry at offset
-   // 'OffSet' from remote PiD 'RemId' at 'Host'. 
+   // 'OffSet' from remote PiD 'RemId' at 'Host'.
    // If Host="all" or RemId=0 discard all entries.
    // Return number of entries not cleaned properly ...
 
@@ -664,7 +669,7 @@ int RpdCleanupAuthTab(char *Host, int RemId, int OffSet)
                }
             }
 
-            // Deactivate active entries (either inclusive or exclusive: 
+            // Deactivate active entries (either inclusive or exclusive:
             // remote client has gone ...)
             if (act > 0) {
                if (lsec == 3) {
@@ -743,7 +748,7 @@ int RpdCheckAuthTab(int Sec, char *User, char *Host, int RemId, int *OffSet)
 
    // Notify the result of the check
    if (GoodOfs) {
-      // We will receive the user token next 
+      // We will receive the user token next
       NetSend(1, kROOTD_AUTH);
    } else {
       // No authentication available for re-use
@@ -876,7 +881,7 @@ int RpdCheckOffSet(int Sec, char *User, char *Host, int RemId,
    if (gDebug > 2)
       ErrorInfo("RpcCheckOffSet: found line: %s", line);
 
-   if (nw > 5 && act > 0 && 
+   if (nw > 5 && act > 0 &&
       (gInclusiveToken || (act == 2 && gParentId == parid))) {
       if ((lsec == Sec)) {
          if (lsec == 3) {
@@ -903,7 +908,7 @@ int RpdCheckOffSet(int Sec, char *User, char *Host, int RemId,
          if (gDebug > 2)
             ErrorInfo("RpcCheckOffSet: found line: %s", line);
 
-         if (nw > 5 && act > 0 && 
+         if (nw > 5 && act > 0 &&
             (gInclusiveToken || (act == 2 && gParentId == parid))) {
             if (lsec == Sec) {
                if (lsec == 3) {
@@ -972,7 +977,7 @@ int RpdCheckOffSet(int Sec, char *User, char *Host, int RemId,
             RpdCleanupAuthTab(Host,RemId,*OffSet);
          }
          if (NewName) delete[] NewName;
-      }  
+      }
       if (OldName) delete[] OldName;
    }
 
@@ -1691,7 +1696,7 @@ void RpdSshAuth(const char *sstr)
             char Pipe[kMAXPATHLEN];
             if (fpipe) {
                while (fgets(Pipe, sizeof(Pipe), fpipe)) {
-                  if (Pipe[strlen(Pipe)-1] == '\n') 
+                  if (Pipe[strlen(Pipe)-1] == '\n')
                   Pipe[strlen(Pipe)-1] = 0;
                }
                fclose(fpipe);
@@ -1704,7 +1709,7 @@ void RpdSshAuth(const char *sstr)
             } else
                ErrorInfo("RpdSshAuth: cannot open file with pipe info"
                          " (errno= %d)",GetErrno());
-         } else 
+         } else
             ErrorInfo("RpdSshAuth: unable to localize pipe file"
                       " (errno: %d)", GetErrno());
       } else
@@ -1830,7 +1835,7 @@ void RpdSshAuth(const char *sstr)
    if (gRootLog == 0 && strlen(gFileLog) > 0)
       sprintf(CmdInfo, "%s/ssh2rpd %d %s %s", gExecDir, gDebug,
               PipeId, gFileLog);
-   else 
+   else
       sprintf(CmdInfo, "%s/ssh2rpd %d %s", gExecDir, gDebug,
               PipeId);
    // Add Tmp dir, if used
@@ -2524,10 +2529,16 @@ int RpdCheckSpecialPass(const char *passwd)
    if (s)
       *s = 0;
 
-   n = strlen(rootdpass);
-
-   if (strncmp(passwd, rootdpass, n + 1) != 0)
-      return 0;
+   if (gClientProtocol > 8) {
+      n = strlen(rootdpass);
+      if (strncmp(passwd, rootdpass, n + 1) != 0)
+         return 0;
+   } else {
+      char *pass_crypt = crypt(passwd, rootdpass);
+      n = strlen(rootdpass);
+      if (strncmp(pass_crypt, rootdpass, n+1) != 0)
+         return 0;
+   }
 
    if (gDebug > 0)
       ErrorInfo
@@ -2772,7 +2783,7 @@ void RpdGlobusAuth(const char *sstr)
    // Now we open the certificates and we check if we are able to
    // autheticate the client. In the affirmative case we send our
    // subject name to the client ...
-   // NB: we try first the user proxies; if it does not work we 
+   // NB: we try first the user proxies; if it does not work we
    // try using the local host certificates; but only if we have
    // the rigth privileges
    char *subject_name;
@@ -3904,7 +3915,7 @@ int RpdSecureRecv(char **Str)
 //______________________________________________________________________________
 int RpdGenRSAKeys(int setrndinit)
 {
-   // Generate a valid pair of private/public RSA keys to protect for 
+   // Generate a valid pair of private/public RSA keys to protect for
    // authentication password and token exchange
    // Returns 1 if a good key pair is not foun after kMAXRSATRIES attempts
    // Returns 0 if a good key pair is found
@@ -4169,19 +4180,26 @@ void RpdAuthenticate()
       ;
 #endif
 
-   // Reset gAuth (if we have been called this means that we need 
+   // Reset gAuth (if we have been called this means that we need
    // to check at least that a valid authentication exists ...)
    gAuth = 0;
 
    while (!gAuth) {
 
       // Receive next
-      if (NetRecv(buf, kMAXRECVBUF, kind) < 0)
-         Error(gErrFatal, -1, "RpdAuthenticate: error receiving message");
-      
+      if (!gClientOld) {
+         if (NetRecv(buf, kMAXRECVBUF, kind) < 0)
+            Error(gErrFatal, -1, "RpdAuthenticate: error receiving message");
+      } else {
+         strcpy(buf,gBufOld);
+         kind = gKindOld;
+         gBufOld[0] = '\0';
+         gClientOld = 0;
+      }
+
       // Decode the method ...
       Meth = RpdGetAuthMethod(kind);
-      
+
       if (gDebug > 2) {
          if (kind != kROOTD_PASS) {
             ErrorInfo("RpdAuthenticate got: %d -- %s", kind, buf);
@@ -4191,7 +4209,7 @@ void RpdAuthenticate()
       }
 
       // Guess the client procotol if not received via Rootd/ProofdProtocol
-      if (gClientProtocol == 0) 
+      if (gClientProtocol == 0)
          gClientProtocol = RpdGuessClientProt(buf, kind);
 
       // If the client supports it check if we accept the method proposed;
@@ -4202,7 +4220,7 @@ void RpdAuthenticate()
          if (RpdCheckAuthAllow(Meth, gOpenHost)) {
             if (gNumAllow>0) {
                if (gAuthListSent == 0) {
-                  if (gDebug > 0) 
+                  if (gDebug > 0)
                      ErrorInfo("Authenticate: %s method not"
                                " accepted from host: %s",
                                 kAuthMeth[Meth], gOpenHost);
@@ -4299,6 +4317,12 @@ void RpdProtocol(int ServType)
 {
    // Receives client protocol and returns daemon protocol.
 
+#ifdef R__DEBUG
+   int debug = 1;
+   while (debug)
+      ;
+#endif
+
    if (gDebug > 2)
       ErrorInfo("RpdProtocol: Enter: server type = %d", ServType);
 
@@ -4312,7 +4336,7 @@ void RpdProtocol(int ServType)
       int lbuf[3];
       if (NetRecvRaw(lbuf, sizeof(lbuf)) < 0)
          Error(gErrFatal, kErrFatal, "RpdAuthenticate: error receiving message");
-      
+
       // if kind is kROOTD_PROTOCOL then it is a recent one
       kind = (EMessageTypes) ntohl(lbuf[1]);
       if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
@@ -4341,6 +4365,7 @@ void RpdProtocol(int ServType)
    }
 
    int Done = 0;
+   gClientOld = 0;
    while (!Done) {
 
       // Receive next
@@ -4366,34 +4391,38 @@ void RpdProtocol(int ServType)
                sscanf(proto, "%d", &gClientProtocol);
             } else {
                if (ServType == kROOTD) {
-               // This is an old (TNetFile,TFTP) client:
-               // send our protocol first ...
-               if (NetSend(gServerProtocol, kROOTD_PROTOCOL) < 0)
-                  Error(gErrFatal, -1, 
-                        "RpdProtocol: error sending kROOTD_PROTOCOL");
-               // ... and receive protocol via kROOTD_PROTOCOL2
-               if (NetRecv(proto, kMAXRECVBUF, kind) < 0)
-                  Error(gErrFatal, -1, "RpdProtocol: error receiving message");
-               if (kind != kROOTD_PROTOCOL2) {
-                  Error(gErrFatal, -1, 
-                        "RpdProtocol: expecting kROOTD_PROTOCOL2 (%d)"
-                        " - received: %d",kROOTD_PROTOCOL2,kind);
+                  // This is an old (TNetFile,TFTP) client:
+                  // send our protocol first ...
+                  if (NetSend(gServerProtocol, kROOTD_PROTOCOL) < 0)
+                     Error(gErrFatal, -1,
+                           "RpdProtocol: error sending kROOTD_PROTOCOL");
+                  // ... and receive protocol via kROOTD_PROTOCOL2
+                  if (NetRecv(proto, kMAXRECVBUF, kind) < 0)
+                     Error(gErrFatal, -1,
+                           "RpdProtocol: error receiving message");
+                  if (kind != kROOTD_PROTOCOL2) {
+                     strcpy(gBufOld, proto);
+                     gKindOld = kind;
+                     gClientOld = 1;
+                     gClientProtocol = 0;
+                  } else
+                     sscanf(proto, "%d", &gClientProtocol);
                } else
-                  sscanf(proto, "%d", &gClientProtocol);
-            } else
-               gClientProtocol = 0;
+                  gClientProtocol = 0;
             }
-            // Notify
-            if (gDebug > 0) {
-               ErrorInfo("RpdProtocol: gClientProtocol = %d",
-                         gClientProtocol);
-               ErrorInfo("RpdProtocol: Sending gServerProtocol = %d",
-                         gServerProtocol);
+            if (!gClientOld) {
+               // Notify
+               if (gDebug > 0) {
+                  ErrorInfo("RpdProtocol: gClientProtocol = %d",
+                            gClientProtocol);
+                  ErrorInfo("RpdProtocol: Sending gServerProtocol = %d",
+                            gServerProtocol);
+               }
+               // send our protocol
+               if (NetSend(gServerProtocol, kROOTD_PROTOCOL) < 0)
+                  Error(gErrFatal, -1,
+                           "RpdProtocol: error sending kROOTD_PROTOCOL");
             }
-            // send our protocol 
-            if (NetSend(gServerProtocol, kROOTD_PROTOCOL) < 0)
-               Error(gErrFatal, -1, 
-                        "RpdProtocol: error sending kROOTD_PROTOCOL");
             Done = 1;
             break;
          case kROOTD_SSH:
@@ -4413,7 +4442,7 @@ void RpdLogin(int ServType)
 {
    // Authentication was successful, set user environment.
 
-   if (gDebug > 2) 
+   if (gDebug > 2)
       ErrorInfo("RpdLogin: enter ... Server: %d ... gUser: %s",
                 ServType, gUser);
 
@@ -4424,11 +4453,11 @@ void RpdLogin(int ServType)
    struct passwd *pw = getpwnam(gUser);
 
    if (!pw) {
-      Error(gErrFatal, -1, 
+      Error(gErrFatal, -1,
         "RpdLogin: user %s does not exist locally\n", gUser);
       return;
    } else if (chdir(pw->pw_dir) == -1) {
-      Error(gErrFatal, -1, 
+      Error(gErrFatal, -1,
         "RpdLogin: can't change directory to %s", pw->pw_dir);
       return;
    }
@@ -4500,7 +4529,7 @@ int RpdInitSession(int ServType)
    //   - authenticate the client
    //   - login the client
    // Returns 1 for a PROOF master server, 0 otherwise
-   // Called just after opening the connection 
+   // Called just after opening the connection
 
    int retval = 0;
 
@@ -4512,7 +4541,7 @@ int RpdInitSession(int ServType)
    strcpy(gOpenHost, OpenHost);
 
    if (ServType == kPROOFD) {
- 
+
       // find out if we are supposed to be a master or a slave server
       char  msg[80];
       if (NetRecv(msg, sizeof(msg)) < 0)
@@ -4544,17 +4573,17 @@ void RpdSetUid(int uid)
 {
    // Change current user id to uid (and gid).
 
-   if (gDebug > 2) 
+   if (gDebug > 2)
       ErrorInfo("RpdSetUid: enter ...uid: %d", uid);
 
    struct passwd *pw = getpwuid(uid);
 
    if (!pw) {
-      Error(gErrFatal, -1, 
+      Error(gErrFatal, -1,
         "RpdSetUid: uid %d does not exist locally", uid);
       return;
    } else if (chdir(pw->pw_dir) == -1) {
-      Error(gErrFatal, -1, 
+      Error(gErrFatal, -1,
         "RpdSetUid: can't change directory to %s", pw->pw_dir);
       return;
    }
