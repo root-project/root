@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.79 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.80 2005/03/13 15:06:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2908,16 +2908,7 @@ void TProof::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TProof::DeleteDrawFeedback(TDrawFeedback *f)
-{
-   // Delete draw feedback object.
-
-   if (f)
-      delete f;
-}
-
-//______________________________________________________________________________
-TList* TProof::GetOutputNames()
+TList *TProof::GetOutputNames()
 {
 //   FIXME: to be written
    return 0;
