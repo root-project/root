@@ -4,8 +4,18 @@
 # Args: $1 -> test Name
 #	$2 -> test directory
 
+printUSAGE() { echo "Give the Directory  $@."  ;exit 1; }
+
+# check whether sufficient args are given
+
+if [ $# -lt 2 ] ; then printUSAGE "for the test" ; fi
+
 cd $2
 
 sed -e "s/mytest/$1/g" Makefile > Makefile1
 rm Makefile
-mv Makefile1 Makefile
+
+sed -e "s/testWithDiff/$1/g" Makefile1 > Makefile
+rm Makefile1
+
+touch $1.log
