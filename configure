@@ -2968,6 +2968,26 @@ fi
 
 ######################################################################
 #
+# Show successful configure options
+#
+enabled_options=""
+for opt in $options; do 
+   if eval "test x$`eval echo $opt` = xyes"; then
+      thisopt=`echo $opt | sed 's,^enable_,,'`
+      if test "x$enabled_options" = "x"; then
+         enabled_options="$thisopt"
+      else
+         enabled_options="$enabled_options, $thisopt"
+      fi
+   fi
+done
+if test "x$enabled_options" != "x"; then
+   echo ""
+   echo "Enabled support for ${enabled_options}."
+fi
+
+######################################################################
+#
 # Warning about recommended build options
 #
 echo ""
