@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.38 2004/02/09 14:03:34 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.39 2004/02/09 14:10:44 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -2951,7 +2951,7 @@ L1900:
     it = Int_t(fWord7[0]);
     if (fFval3 != fAmin && it == 0) {
 	iflag = 3;
-	Printf(" CALL TO USER FUNCTION WITH IFLAG = 3");
+	if (fISW[4] >= 0) Printf(" CALL TO USER FUNCTION WITH IFLAG = 3");
 	nparx = fNpar;
 	Eval(nparx, fGin, f, fU, iflag);	++fNfcn;
     }
