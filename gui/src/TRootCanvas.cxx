@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.4 2000/10/08 14:30:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.5 2000/10/30 11:00:41 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -159,7 +159,7 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
                     kNone, kNone);
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
-            kStructureNotifyMask | kLeaveWindowMask);
+            kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
 }
 
 
