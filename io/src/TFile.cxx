@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.38 2001/06/02 10:01:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.39 2001/06/22 17:45:37 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TStreamerInfo.h"
 #include "TArrayC.h"
 #include "TClassTable.h"
+#include "TProcessID.h"
 
 TFile *gFile;                 //Pointer to current file
 
@@ -337,6 +338,7 @@ void TFile::Init(Bool_t create)
       fSeekDir     = key->GetSeekKey();
       fSeekFree    = 0;
       fNbytesFree  = 0;
+      fProcessCount= 0;
       WriteHeader();
       char *buffer = key->GetBuffer();
       TNamed::FillBuffer(buffer);
@@ -369,6 +371,7 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fCompress);
       frombuf(buffer, &fSeekInfo);
       frombuf(buffer, &fNbytesInfo);
+      frombuf(buffer, &fProcessCount);
       fSeekDir = fBEGIN;
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
@@ -419,7 +422,7 @@ void TFile::Init(Bool_t create)
       }
    }
    gROOT->GetListOfFiles()->Add(this);
-
+   
    // Create StreamerInfo index
    {
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
@@ -432,6 +435,29 @@ void TFile::Init(Bool_t create)
       if (gROOT->ProcessLineFast("TProof::IsActive()"))
          gROOT->ProcessLineFast(Form("TProof::This()->ConnectFile((TFile *)0x%lx);",
                                 (Long_t)this));
+   }
+
+   fProcessIDs = new TObjArray(fProcessCount+1);
+   if (fWritable) {
+      //read last ProcessID 
+      char pidname[32];
+      sprintf(pidname,"ProcessID%d",fProcessCount);
+      TProcessID *pidc = (TProcessID *)gROOT->GetListOfProcessIDs()->First();
+      TProcessID *pid  = (TProcessID *)Get(pidname);
+      if (!pid) {
+         fProcessIDs->AddAt(pidc,fProcessCount);
+         pidc->IncrementCount();
+         pidc->Write(pidname);
+      } else {
+         //check that a similar pid is not already registered in gROOT
+         if (strcmp(pidc->GetTitle(),pid->GetTitle())) {
+            fProcessCount++;
+            sprintf(pidname,"ProcessID%d",fProcessCount);
+            fProcessIDs->AddAt(pidc,fProcessCount);
+            pidc->IncrementCount();
+            pidc->Write(pidname);
+         }
+      }
    }
    return;
 
@@ -498,6 +524,14 @@ void TFile::Close(Option_t *)
    }
    TStreamerInfo::SetCurrentFile(gFile);
 
+   TIter nextp(fProcessIDs);
+   TProcessID *pid;
+   while ((pid = (TProcessID *)nextp())) {
+      Int_t count = pid->DecrementCount();
+      if (!count) delete pid;
+   }
+   delete fProcessIDs;
+   
    gROOT->GetListOfFiles()->Remove(this);
 
    if (TClassTable::GetDict("TProof")) {
