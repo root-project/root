@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.5 2000/10/30 11:00:40 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.6 2002/10/04 16:06:28 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -262,7 +262,8 @@ void TRootGLViewer::InitGLWindow()
    Window_t wind = fCanvasWindow->GetViewPort()->GetId();
 
 #ifndef GDK_WIN32
-   fGLWin = (Window) gVirtualX->CreateGLWindow(wind, fVisInfo->visual, fVisInfo->depth);
+   fGLWin = (Window) gVirtualX->CreateGLWindow(wind, (Visual_t)fVisInfo->visual,
+                                               fVisInfo->depth);
 #else
    fGLWin = (GdkWindow *)gVirtualX->CreateGLWindow(wind);
 #endif
