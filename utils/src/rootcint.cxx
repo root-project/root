@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.178 2004/07/22 20:37:50 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.179 2004/07/25 16:20:46 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1423,8 +1423,12 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
             if (!R__t)  return 1;
             //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
             fprintf(fp, "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {\n");
-            fprintf(fp, "               %s = new %s;\n",R__t,objType);
-            fprintf(fp, "               %s->Streamer(R__b);\n",R__t);
+            if (ti.Property() & G__BIT_ISABSTRACT) {
+               fprintf(fp, "               Assert(0);// %s is abstract. We assume that older file could not be produced using this streaming method.\n",objType);
+            } else {
+               fprintf(fp, "               %s = new %s;\n",R__t,objType);
+               fprintf(fp, "               %s->Streamer(R__b);\n",R__t);
+            }
             fprintf(fp, "            } else {\n");
             fprintf(fp, "               %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
             fprintf(fp, "            }\n");
