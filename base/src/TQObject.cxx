@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.11 2001/05/15 10:10:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.12 2001/12/04 16:42:19 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1449,11 +1449,11 @@ void TQObject::LoadRQ_OBJECT()
 
    char rqh[128];
 # ifdef ROOTINCDIR
-      sprintf(rqh, "%s/RQ_OBJECT.h", ROOTINCDIR);
+   sprintf(rqh, "%s/RQ_OBJECT.h", ROOTINCDIR);
 # else
-      sprintf(rqh, "%s/include/RQ_OBJECT.h", gSystem->Getenv("ROOTSYS"));
+   sprintf(rqh, "%s/include/RQ_OBJECT.h", gSystem->Getenv("ROOTSYS"));
 # endif
-      G__loadfile(rqh);
+   G__loadfile(rqh);
 }
 
 // Global function which simplifies making connection in interpreted
@@ -1462,13 +1462,13 @@ void TQObject::LoadRQ_OBJECT()
 //  ConnectCINT      - connects to interpreter(CINT) command
 
 //______________________________________________________________________________
-Bool_t ConnectCINT(TQObject *sender, char *signal, char *slot)
+Bool_t ConnectCINT(TQObject *sender, const char *signal, const char *slot)
 {
    TString str = "ProcessLine(=";
    str += '"';
    str += slot;
    str += '"';
    str += ")";
-   return TQObject::Connect(sender,signal, "TInterpreter",
+   return TQObject::Connect(sender, signal, "TInterpreter",
                             gInterpreter, str.Data());
 }

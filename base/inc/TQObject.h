@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.8 2001/04/20 17:29:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.9 2001/04/21 17:20:23 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -194,12 +194,14 @@ public:
    ClassDef(TQClass,0)  // Class with connections
 };
 
+
 // Global function which simplifies making connections in interpreted
 // ROOT session
 //
 //  ConnectCINT      - connects to interpreter(CINT) command
 
-extern Bool_t ConnectCINT(TQObject *sender, char *signal, char *slot);
+extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
+                          const char *slot);
 
 
 //---- ClassImpQ macro ----------------------------------------------
