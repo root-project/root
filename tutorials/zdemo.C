@@ -74,32 +74,31 @@ void zdemo()
    pad1->DrawFrame(1,1e-18,110,1e-8);
    pad1->GetFrame()->SetFillColor(19);
    TLatex *t = new TLatex();
+   t->SetNDC();
    t->SetTextFont(62);
    t->SetTextColor(36);
    t->SetTextSize(0.08);
    t->SetTextAlign(12);
-   t->DrawLatex(1.24,-8.8,"p - p");
+   t->DrawLatex(0.6,0.85,"p - p");
 
    t->SetTextSize(0.05);
-   t->DrawLatex(1.21,-9.55,"Direct #gamma");
-   t->DrawLatex(1.35,-10.12,"#theta = 90^{o}");
+   t->DrawLatex(0.6,0.79,"Direct #gamma");
+   t->DrawLatex(0.6,0.75,"#theta = 90^{o}");
 
-   t->DrawLatex(0.24,-13.3,"Ed^{3}#sigma/dq^{3}");
-   t->DrawLatex(0.24,-14.,"(barn/Gev^{2})");
+   t->DrawLatex(0.20,0.45,"Ed^{3}#sigma/dq^{3}");
+   t->DrawLatex(0.18,0.40,"(barn/Gev^{2})");
 
    t->SetTextSize(0.045);
    t->SetTextColor(kBlue);
-   t->DrawLatex(0.35,-16.01,"#sqrt{s} = 63(GeV)");
+   t->DrawLatex(0.22,0.260,"#sqrt{s} = 63(GeV)");
    t->SetTextColor(kRed);
-   t->DrawLatex(0.35,-16.73,"#sqrt{s} = 200(GeV)");
+   t->DrawLatex(0.22,0.205,"#sqrt{s} = 200(GeV)");
    t->SetTextColor(6);
-   t->DrawLatex(0.35,-17.39,"#sqrt{s} = 500(GeV)");
+   t->DrawLatex(0.22,0.15,"#sqrt{s} = 500(GeV)");
 
    t->SetTextSize(0.05);
    t->SetTextColor(1);
-   t->DrawLatex(1.3,-18.5,"q  (Gev/c)");
-   t->SetTextSize(0.03);
-   t->DrawLatex(1.37,-18.65,"T");
+   t->DrawLatex(0.6,0.06,"q_{T} (Gev/c)");
 
    gr1 = new TGraph(NLOOP,PT,INVSIG);
 
@@ -187,29 +186,30 @@ void zdemo()
    gr->Draw("LP");
 
    TLatex *t = new TLatex();
+   t->SetNDC();
    t->SetTextFont(62);
    t->SetTextColor(36);
    t->SetTextSize(0.08);
    t->SetTextAlign(12);
-   t->DrawLatex(1.63,-9.48,"p - p");
+   t->DrawLatex(0.6,0.85,"p - p");
 
    t->SetTextSize(0.05);
-   t->DrawLatex(1.6,-10.55,"Direct #gamma");
-   t->DrawLatex(1.87,-11.35,"#theta = 90^{o}");
+   t->DrawLatex(0.6,0.79,"Direct #gamma");
+   t->DrawLatex(0.6,0.75,"#theta = 90^{o}");
 
-   t->DrawLatex(2.52,-13.35,"H(z)");
-   t->DrawLatex(2.45,-14.05,"(barn)");
+   t->DrawLatex(0.70,0.55,"H(z)");
+   t->DrawLatex(0.68,0.50,"(barn)");
 
    t->SetTextSize(0.045);
    t->SetTextColor(46);
-   t->DrawLatex(0.5,-18.34,"#sqrt{s}, GeV");
-   t->DrawLatex(0.65,-19.04,"63");
-   t->DrawLatex(0.6,-19.84,"200");
-   t->DrawLatex(0.6,-20.64,"500");
+   t->DrawLatex(0.20,0.30,"#sqrt{s}, GeV");
+   t->DrawLatex(0.22,0.26,"63");
+   t->DrawLatex(0.22,0.22,"200");
+   t->DrawLatex(0.22,0.18,"500");
 
    t->SetTextSize(0.05);
    t->SetTextColor(1);
-   t->DrawLatex(3.2,-22.5,"z");
+   t->DrawLatex(0.88,0.06,"z");
 
    c1->Modified();
    c1->Update();
