@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.69 2003/08/29 07:03:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.70 2003/09/20 08:07:53 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2156,6 +2156,10 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
    if (GetChisquare() != 0) {
       out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
    }
+
+   GetXaxis()->SaveAttributes(out,GetName(),"->GetXaxis()");
+   GetYaxis()->SaveAttributes(out,GetName(),"->GetYaxis()");
+
    Double_t parmin, parmax;
    for (i=0;i<fNpar;i++) {
       out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.57 2003/09/16 11:17:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.58 2003/09/19 14:02:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1787,6 +1787,12 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
    }
    if (fLabelFont != 62) {
       out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;   
+   }
+   if (TestBit(TAxis::kMoreLogLabels)) {
+      out<<"   gaxis->SetMoreLogLabels();"<<endl;
+   }
+   if (TestBit(TAxis::kNoExponent)) {
+      out<<"   gaxis->SetNoExponent();"<<endl;
    }
    
    out<<"   gaxis->Draw();"<<endl;

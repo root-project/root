@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.47 2003/09/08 15:30:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.48 2003/09/12 09:18:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -692,6 +692,14 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
 
    if (TestBit(kCenterTitle)) {
       out<<"   "<<name<<subname<<"->CenterTitle(true);"<<endl;
+   }
+
+   if (TestBit(kMoreLogLabels)) {
+      out<<"   "<<name<<subname<<"->SetMoreLogLabels();"<<endl;
+   }
+
+   if (TestBit(kNoExponent)) {
+      out<<"   "<<name<<subname<<"->SetNoExponent();"<<endl;
    }
 
    TAttAxis::SaveAttributes(out,name,subname);
