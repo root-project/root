@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.59 2003/12/30 20:43:46 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.60 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -69,7 +69,6 @@
 #   endif
 #endif
 
-
 #if defined(__alpha) && !defined(linux)
 #   include <standards.h>
 #   ifdef _XOPEN_SOURCE
@@ -108,6 +107,7 @@
 #if defined(__sun) && !defined(linux)
 #   ifdef __SVR4
 #      define R__SOLARIS
+#      define R__SEEK64
 #      define ANSICPP
 #      ifdef __i386
 #         define R__I386
@@ -121,7 +121,6 @@
 #   define NEED_STRING
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
-#      define R__SEEK64
 #      define R__SOLARIS_CC50
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
@@ -130,7 +129,6 @@
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
-#      define R__SEEK64
 #   endif
 #endif
 
@@ -146,8 +144,9 @@
 #   endif
 #   if defined(__mips64) || defined(_ABI64)
 #      define R__B64
+#      undef R__SEEK64
 #   endif
-#   if !defined(__GNUC__) && !defined(__KCC) 
+#   if !defined(__GNUC__) && !defined(__KCC)
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif
@@ -173,7 +172,7 @@
 #      define __i486__       /* turn off if you really want to run on an i386 */
 #   endif
 #   define NEED_SIGJMP
-#   if __GNUC__ >=3
+#   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define R__SEEK64
 #   endif
 #endif
