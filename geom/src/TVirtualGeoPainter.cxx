@@ -38,7 +38,7 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
 
    // if no painter set yet, set TGeoPainter by default
    if (!fgGeoPainter) {
-      if (gROOT->LoadClass("TGeoPainter","GeoPainter")) return 0;
+      if (gROOT->LoadClass("TGeoPainter","GeomPainter")) return 0;
       TVirtualGeoPainter::SetPainter("TGeoPainter");
       if (!fgGeoPainter) return 0;
    }
