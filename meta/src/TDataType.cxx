@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.13 2004/02/18 17:10:51 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.14 2004/07/30 01:16:17 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -168,7 +168,7 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("unsigned char", name))
       strncpy(line, (char *)buf,80);
    else if (!strcmp("bool", name))
-      strncpy(line, (char *)buf,80);
+      sprintf(line, "%s", *(bool *)buf ? "true" : "false");
    else if (!strcmp("char", name))
       strncpy(line, (char *)buf,80);
    else if (!strcmp("float", name))
