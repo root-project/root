@@ -84,6 +84,8 @@ ALIENCLILIB    := @alienlib@
 ALIENINCDIR    := @alienincdir@
 
 BUILDASIMAGE   := @buildasimage@
+ASEXTRALIB     := @asextralib@
+ASEXTRALIBDIR  := @asextralibdir@
 
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@

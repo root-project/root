@@ -15,9 +15,8 @@ ASTEPVERS    := libAfterImage
 ASTEPDIRI    := $(MODDIRS)/$(ASTEPVERS)
 
 ##### libAfterImage #####
-ASTEPLIBSO   := $(MODDIRS)/$(ASTEPVERS)/libAfterImage.so.0.92
-ASTEPLIB     := $(LPATH)/libRAfterImage.so
-ASTEPLIBS    := -lRAfterImage
+ASTEPLIBA    := $(MODDIRS)/$(ASTEPVERS)/libAfterImage.a
+ASTEPLIB     := $(LPATH)/libAfterImage.a
 
 ##### libASImage #####
 ASIMAGEL     := $(MODDIRI)/LinkDef.h
@@ -44,10 +43,10 @@ INCLUDEFILES += $(ASIMAGEDEP)
 include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
-$(ASTEPLIB):    $(ASTEPLIBSO)
+$(ASTEPLIB):    $(ASTEPLIBA)
 		cp $< $@
 
-$(ASTEPLIBSO):
+$(ASTEPLIBA):
 		@(if [ ! -r $@ ]; then \
 			echo "*** Building $@..."; \
 			cd $(ASIMAGEDIRS); \
@@ -64,10 +63,9 @@ $(ASTEPLIBSO):
 			if [ $(CC) = "icc" ]; then \
 				ACC="icc"; \
 			fi; \
-			GNUMAKE=$(MAKE) CC=$$ACC \
-			CFLAGS=$$ACFLAGS \
-			./configure --enable-sharedlibs \
-				--with-ttf=no --with-afterbase=no; \
+			GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
+			./configure \
+			--with-ttf=no --with-gif=no --with-afterbase=no; \
 			$(MAKE); \
 		fi)
 
@@ -75,7 +73,7 @@ $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "-L$(LPATH) $(ASTEPLIBS) $(ASIMAGELIBEXTRA)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB)"
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

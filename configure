@@ -694,7 +694,7 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|linuxdeb|linuxicc|linuxia64*)
+linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
@@ -1133,11 +1133,26 @@ fi
 #
 # (See http://afterstep.sourceforge.net/afterimage/)
 #
-# Check for libAfterImage
+# Check for graphics libraries used by libAfterImage, like libjpeg, etc.
 #
+if test "x$platform" = "xwin32"; then
+    enable_asimage="no"
+fi
 if test ! "x$enable_asimage" = "xno" ; then
-    if test "x$platform" = "xwin32"; then
+    asextralib=""
+    asextralibdir=""
+    for i in libjpeg libpng libtiff libungif ; do
+        check_library $i "no" "" \
+            $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib
+        asextralib="$asextralib $found_lib"
+        asextralibdir="$asextralibdir $found_dir"
+    done
+    if test "x$asextralib" = "x" ; then
+        asextralib=""
+        asextralibdir=""
         enable_asimage="no"
+    else
+        asextralib="$asextralib -lz"   # needed by libpng
     fi
 fi
 
@@ -1632,6 +1647,8 @@ sed \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
     -e "s|@architecture@|$arch|"                \
+    -e "s|@asextralib@|$asextralib|"            \
+    -e "s|@asextralibdir@|$asextralibdir|"      \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@cernlibdir@|$cernlibdir|"            \
