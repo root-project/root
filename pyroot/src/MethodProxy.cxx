@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -89,7 +89,10 @@ namespace {
          if ( result == TPyExceptionMagic )
             return 0;              // exception info was already set
 
-         return result;
+         if ( result != 0 )
+            return result;
+
+      // fall through: python is dynamic, and so, the hashing isn't infallible
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
