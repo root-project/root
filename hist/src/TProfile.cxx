@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.29 2002/10/31 07:27:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.30 2002/11/11 15:16:31 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -755,7 +755,7 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    //if (eprim <= 0) {   test in version 2.25/03
    //if (test < 1.e-4) { test in version 3.01/06
    //if (test < 1.e-4 || eprim2 < 1e-6) { test in version 3.03/09
-   if (fNcells <=1000 && (test < 1.e-4 || eprim2 < 1e-6)) {
+   if (fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) {
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
