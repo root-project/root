@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.rdl,v 1.8 2005/02/15 21:15:53 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.rdl,v 1.9 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,7 +57,7 @@ public:
 protected:
   
 
-  ClassDef(RooAbsBinning,1) // Abstract base class for binning specification
+  ClassDef(RooAbsBinning,2) // Abstract base class for binning specification
 };
 
 #endif

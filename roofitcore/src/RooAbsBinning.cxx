@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.cc,v 1.9 2004/12/03 13:18:28 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.cc,v 1.10 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,3 +58,26 @@ void RooAbsBinning::printToStream(ostream &os, PrintOption opt, TString indent) 
     return ;
   }
 }
+
+void RooAbsBinning::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooAbsBinning.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      if (R__v==1) {
+	TObject::Streamer(R__b);
+      } else {
+	TNamed::Streamer(R__b);
+      }
+      RooPrintable::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, RooAbsBinning::IsA());
+   } else {
+      R__c = R__b.WriteVersion(RooAbsBinning::IsA(), kTRUE);
+      TNamed::Streamer(R__b);
+      RooPrintable::Streamer(R__b);
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
+

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.8 2005/02/23 15:09:41 wverkerke Exp $
+ *    File: $Id: RooMinuit.rdl,v 1.9 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -78,6 +78,7 @@ protected:
   virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
   void setPdfParamErr(Int_t index, Double_t value) ;
   void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
+  void clearPdfParamAsymErr(Int_t index) ;
 
 private:
 

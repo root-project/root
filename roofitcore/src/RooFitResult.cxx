@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.28 2005/02/14 20:44:24 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.29 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -147,12 +147,12 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   // lookup the input parameters by name: we require that they were floated in our fit
   const RooRealVar *par1= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName1));
   if(0 == par1) {
-    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << par1->GetName() << endl;
+    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << parName1 << endl;
     return 0;
   }
   const RooRealVar *par2= dynamic_cast<const RooRealVar*>(floatParsFinal().find(parName2));
   if(0 == par2) {
-    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << par2->GetName() << endl;
+    cout << "RooFitResult::correlationPlot: parameter not floated in fit: " << parName2 << endl;
     return 0;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.15 2005/02/23 15:09:40 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.16 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -737,6 +737,12 @@ void RooMinuit::setPdfParamErr(Int_t index, Double_t value)
 }
 
 
+void RooMinuit::clearPdfParamAsymErr(Int_t index) 
+{
+  // Modify PDF parameter error by ordinal index (needed by MINUIT)
+  ((RooRealVar*)_floatParamList->at(index))->removeAsymError() ;      
+}
+
 void RooMinuit::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) 
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
@@ -787,6 +793,9 @@ void RooMinuit::backProp()
     if(eplus > 0 || eminus < 0) {
       // Store the asymmetric error, if it is available
       setPdfParamErr(index, eminus,eplus);
+    } else {
+      // Clear the asymmetric error
+      clearPdfParamAsymErr(index) ;
     }
   }
 }
