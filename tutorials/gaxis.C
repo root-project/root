@@ -20,27 +20,31 @@
 
   TGaxis *axis3 = new TGaxis(-9,-0.8,-9,0.8,-8,8,50510,"");
   axis3->SetName("axis3");
+  axis3->SetTitle("axis3");
+  axis3->SetTitleOffset(0.5);
   axis3->Draw();
 
   TGaxis *axis4 = new TGaxis(-7,-0.8,-7,0.8,1,10000,50510,"G");
   axis4->SetName("axis4");
+  axis4->SetTitle("axis4");
   axis4->Draw();
-
+   
   TGaxis *axis5 = new TGaxis(-4.5,-0.6,5.5,-0.6,1.2,1.32,80506,"-+");
   axis5->SetName("axis5");
   axis5->SetLabelSize(0.03);
   axis5->SetTextFont(72);
-  axis5->SetLabelOffset(0.025);
 
   axis5->Draw();
 
-  TGaxis *axis6 = new TGaxis(-4.5,0.6,5.5,0.6,100,900,50510,"-");
+  TGaxis *axis6 = new TGaxis(-4.5,0.5,5.5,0.5,100,900,50510,"-");
   axis6->SetName("axis6");
   axis6->Draw();
+  TGaxis *axis6a = new TGaxis(-5.5,0.85,5.5,0.85,0,4.3e-6,510,"");
+  axis6a->SetName("axis6a");
+  axis6a->Draw();
 
   TGaxis *axis7 = new TGaxis(8,-0.8,8,0.8,0,9000,50510,"+L");
   axis7->SetName("axis7");
-  axis7->SetLabelOffset(0.01);
   axis7->Draw();
 
   //one can make axis going top->bottom. However because of a long standing
