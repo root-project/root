@@ -1,8 +1,5 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.6 2004/08/02 21:00:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.7 2004/08/11 04:42:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
-
-// CINT
-#include "Api.h"
 
 // Bindings
 #include "PyROOT.h"
@@ -11,6 +8,9 @@
 
 // ROOT
 #include "TClassEdit.h"
+
+// CINT
+#include "Api.h"
 
 
 //- data ------------------------------------------------------------------------

@@ -1,8 +1,5 @@
 // Author: Wim Lavrijsen, May 2004
 
-// CINT
-#include "Api.h"
-
 // Bindings
 #include "PyROOT.h"
 #include "TPyClassGenerator.h"
@@ -10,6 +7,9 @@
 // ROOT
 #include "TClass.h"
 #include "TObject.h"
+
+// CINT
+#include "Api.h"
 
 // Standard
 #include <iostream>

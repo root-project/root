@@ -1,9 +1,5 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.15 2004/08/04 20:46:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.16 2004/08/11 04:42:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
-
-// CINT
-#include "Api.h"
-#include "TVirtualMutex.h"
 
 // Bindings
 #include "PyROOT.h"
@@ -24,6 +20,10 @@
 #include "TClassEdit.h"
 #include "Gtypes.h"
 #include "GuiTypes.h"
+
+// CINT
+#include "Api.h"
+#include "TVirtualMutex.h"
 
 // Standard
 #include <assert.h>

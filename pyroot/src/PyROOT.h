@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H
@@ -15,6 +15,13 @@
 #undef _DEBUG
 // Avoid that pyconfig.h decides using a #pragma what library python library to use
 //#define MS_NO_COREDLL 1
+#endif
+
+// to prevent problems with fpos_t and redefinition warnings
+#include <stdio.h>
+
+#ifdef _POSIX_C_SOURCE
+#undef _POSIX_C_SOURCE
 #endif
 
 #include "Python.h"

@@ -1,8 +1,5 @@
 // Author: Wim Lavrijsen, Jul 2004
 
-// CINT
-#include "Api.h"
-
 // Bindings
 #include "PyROOT.h"
 #include "Pythonize.h"
@@ -18,6 +15,9 @@
 #include "TCollection.h"
 #include "TSeqCollection.h"
 #include "TObject.h"
+
+// CINT
+#include "Api.h"
 
 // Standard
 #include <stdexcept>
