@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.194 2004/06/14 11:17:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.195 2004/06/14 17:00:43 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -474,6 +474,12 @@ void TTree::AddClone(TTree *clone)
 TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 {
 // Add a TFriendElement to the list of friends.
+// This function:
+//   -opens a file if filename is specified
+//   -reads a Tree with name treename from the file (current directory)
+//   -adds the Tree to the list of friends
+// see other AddFriend functions
+//
 // A TFriendElement TF describes a TTree object TF in a file.
 // When a TFriendElement TF is added to the the list of friends of an
 // existing TTree T, any variable from TF can be referenced in a query
@@ -567,6 +573,9 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 // Add a TFriendElement to the list of friends. The TFile is managed by
 // the user (e.g. the user must delete the file).
 // For complete description see AddFriend(const char *, const char *).
+// This function:
+//   -reads a Tree with name treename from the file
+//   -adds the Tree to the list of friends
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,file);
