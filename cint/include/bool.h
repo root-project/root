@@ -7,7 +7,8 @@
 #undef false
 #ifndef G__OLDIMPLEMENTATION1604
 // bool as fundamental type
-const bool FALSE=0,false=0,TRUE=1,true=1;
+//const bool FALSE=0,false=0,TRUE=1,true=1;
+const bool false=0,true=1;
 #else
 enum bool { FALSE = 0, false = 0, TRUE = 1, true = 1 };
 #endif
