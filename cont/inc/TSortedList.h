@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSortedList.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSortedList.h,v 1.2 2000/09/27 10:05:23 rdm Exp $
 // Author: Fons Rademakers   14/09/95
 
 /*************************************************************************
@@ -43,9 +43,9 @@ public:
    void      AddLast(TObject *obj) { Add(obj); }
    void      AddLast(TObject *obj, Option_t *opt) { Add(obj, opt); }
    void      AddAt(TObject *obj, Int_t) { Add(obj); }
-   void      AddAfter(TObject *, TObject *obj) { Add(obj); }
+   void      AddAfter(const TObject *, TObject *obj) { Add(obj); }
    void      AddAfter(TObjLink *, TObject *obj) { Add(obj); }
-   void      AddBefore(TObject *, TObject *obj) { Add(obj); }
+   void      AddBefore(const TObject *, TObject *obj) { Add(obj); }
    void      AddBefore(TObjLink *, TObject *obj) { Add(obj); }
    void      Sort(Bool_t = kSortAscending) { }
 
