@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.111 2004/01/19 18:29:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.112 2004/01/19 18:55:29 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -224,12 +224,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
    Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
+   Bool_t devnull = kFALSE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
    }
 
-   Bool_t devnull = kFALSE;
    const char *fname;
 
    if (!fname1 || !strlen(fname1)) {
