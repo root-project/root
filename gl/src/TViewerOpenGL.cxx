@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.29 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.30 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -128,7 +128,7 @@ const Int_t TViewerOpenGL::fgInitH = 640;
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
                   :TVirtualViewer3D(vp),
-                   TGMainFrame(gClient->GetRoot(), fgInitW, fgInitH),
+                   TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
                    fCamera(), fViewVolume(), fZoom(),
                    fActiveViewport()
 {
