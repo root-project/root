@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.1 2001/06/14 23:19:15 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.2 2001/08/24 16:34:18 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -45,7 +45,9 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
    if (strcmp(url.GetFile(), "/"))
       dbase = url.GetFile()+1;   //skip leading /
 
-   fPgSQL = PQsetdbLogin(url.GetHost(), (const char *) url.GetPort(), 0, 0, dbase, uid, pw);
+   TString port;
+   port += url.GetPort();
+   fPgSQL = PQsetdbLogin(url.GetHost(), port, 0, 0, dbase, uid, pw);
 
    if (PQstatus(fPgSQL) != CONNECTION_BAD) {
       fType = "PgSQL";
