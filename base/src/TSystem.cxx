@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.53 2003/02/20 22:54:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.54 2003/02/27 18:48:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1569,7 +1569,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
            ||
-           (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
+           (gSystem->GetPathInfo( filename_fullpath, 0, 0, 0, &file_time ) == 0
             && ( lib_time < file_time ) )
          ) {
          // the library does not exist and is older than the script.
