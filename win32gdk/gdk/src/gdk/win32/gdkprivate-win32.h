@@ -340,8 +340,7 @@ extern "C" {
       guint32 grab_time;         //vo
       GdkWindow *grab_confine;   //vo
       GdkCursor *grab_cursor;    //vo
-      gint grab_keycode;         //vo
-      gint grab_key_mod;         //vo
+      GList *grab_keys;          //vo
       gint grab_key_owner_events;//vo
    };
 

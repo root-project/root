@@ -112,8 +112,7 @@ static GdkWindow *gdk_win32_window_alloc(void)
    GDK_WINDOW_WIN32DATA(window)->grab_time = 0;          //vo
    GDK_WINDOW_WIN32DATA(window)->grab_confine = NULL;    //vo
    GDK_WINDOW_WIN32DATA(window)->grab_cursor = NULL;     //vo
-   GDK_WINDOW_WIN32DATA(window)->grab_keycode = -1;      //vo
-   GDK_WINDOW_WIN32DATA(window)->grab_key_mod = 0;       //vo
+   GDK_WINDOW_WIN32DATA(window)->grab_keys = NULL;       //vo
    GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events = 0; //vo
    GDK_WINDOW_WIN32DATA(window)->bg_type = GDK_WIN32_BG_NORMAL;
    GDK_WINDOW_WIN32DATA(window)->xcursor = NULL;

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.56 2004/03/22 15:39:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.57 2004/04/06 16:40:32 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -5520,7 +5520,7 @@ void TGWin32::MapModifierState(UInt_t & state, UInt_t & xstate, Bool_t tox)
    if (tox) {
       xstate = state;
       if (state & kAnyModifier) {
-         xstate |= GDK_MODIFIER_MASK;
+         xstate = GDK_MODIFIER_MASK;
       }
    } else {
       state = xstate;
@@ -6393,8 +6393,8 @@ Window_t TGWin32::GetInputFocus()
 {
    // Returns the window id of the window having the input focus.
 
-   HWND focuswindow = ::GetFocus();
-   return (Window_t) gdk_xid_table_lookup(focuswindow);
+   HWND hwnd = ::GetFocus();
+   return (Window_t) gdk_xid_table_lookup(hwnd);
 }
 
 //______________________________________________________________________________
@@ -6402,7 +6402,8 @@ void TGWin32::SetInputFocus(Window_t id)
 {
    // Set keyboard input focus to window id.
 
-   ::SetFocus((HWND) GDK_DRAWABLE_XID((GdkWindow *)id));
+   HWND hwnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+   ::SetFocus(hwnd);
 }
 
 //______________________________________________________________________________

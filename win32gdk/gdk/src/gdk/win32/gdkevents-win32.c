@@ -617,16 +617,55 @@ void gdk_button_ungrab(gint button, gint mod, GdkWindow * window)
 }
 
 //vo
+typedef struct {
+   gint key;
+   gint mod;
+} _Gdk_key_mod;
+
+//vo
+static _Gdk_key_mod *find_key_mod(GList *li, gint keycode, gint mod)
+{
+   GList *list;
+   _Gdk_key_mod *result;
+
+   if (li == NULL) return NULL;
+   list = li;
+
+   while (list) {
+      result = (_Gdk_key_mod *)list->data;
+      if (((result->key == keycode) || (keycode == 0)) && 
+          ((result->mod == mod) || 
+           (result->mod == GDK_MODIFIER_MASK) ||
+           (mod == GDK_MODIFIER_MASK))) {
+         return result;
+      }
+      list = list->next;
+   }
+   return NULL;
+}
+
+//vo
 gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window)
 {
    gint return_val;
+   _Gdk_key_mod *key_mod;
 
    g_return_val_if_fail(window != NULL, 0);
    g_return_val_if_fail(GDK_IS_WINDOW(window), 0);
 
    return_val = GrabSuccess;
-   GDK_WINDOW_WIN32DATA(window)->grab_keycode = keycode;
-   GDK_WINDOW_WIN32DATA(window)->grab_key_mod |= mod;
+
+   key_mod = find_key_mod(GDK_WINDOW_WIN32DATA(window)->grab_keys, keycode, mod);
+  
+   if (key_mod == NULL) {
+      key_mod = g_new(_Gdk_key_mod, 1);
+      key_mod->key = keycode;
+      key_mod->mod = mod;
+      GDK_WINDOW_WIN32DATA(window)->grab_keys = 
+         g_list_append(GDK_WINDOW_WIN32DATA(window)->grab_keys, key_mod);
+   } else {
+      return_val = AlreadyGrabbed;
+   }
 
    return return_val;
 }
@@ -634,11 +673,35 @@ gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window)
 //vo
 void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window)
 {
+   _Gdk_key_mod *key_mod;
+   int i;
+
    if (window == NULL) return;
    if (!GDK_IS_WINDOW(window)) return;
+   if (GDK_WINDOW_WIN32DATA(window)->grab_keys == NULL) return;
+ 
+   if (keycode) {
+      key_mod = find_key_mod(GDK_WINDOW_WIN32DATA(window)->grab_keys, keycode, mod);
+      if (key_mod == NULL) return;
+   
+      GDK_WINDOW_WIN32DATA(window)->grab_keys = 
+         g_list_remove(GDK_WINDOW_WIN32DATA(window)->grab_keys, key_mod);
+   } else {
+      while (1) {
+         key_mod = find_key_mod(GDK_WINDOW_WIN32DATA(window)->grab_keys, 0, mod);
+         if (key_mod) {
+            GDK_WINDOW_WIN32DATA(window)->grab_keys = 
+               g_list_remove(GDK_WINDOW_WIN32DATA(window)->grab_keys, key_mod);
+         } else {
+            break;
+         }
+      }
+   }
 
-   GDK_WINDOW_WIN32DATA(window)->grab_keycode = -1;
-   GDK_WINDOW_WIN32DATA(window)->grab_key_mod = 0;
+   if (g_list_length(GDK_WINDOW_WIN32DATA(window)->grab_keys) == 0) {
+      g_list_free(GDK_WINDOW_WIN32DATA(window)->grab_keys);
+      GDK_WINDOW_WIN32DATA(window)->grab_keys = NULL;
+   } 
 }
 
 /*
@@ -3998,12 +4061,12 @@ static gint build_pointer_event_state(MSG * xevent)
    return state;
 }
 //vo
-static gint get_key_value( MSG * xevent)
+static gint get_key_value(MSG * xevent)
 {
    gint ret = GDK_VoidSymbol;
 
-   if (xevent->wParam < ' ') {
-      ret = xevent->wParam + '@';
+   if (xevent->wParam < 0x20) {
+      ret = (xevent->wParam + 0x60)  & 0xFF;
    } else {
       if (xevent->wParam & 0xFF00) {
          ret = ((xevent->wParam >> 8) & 0xFF);
@@ -4167,6 +4230,7 @@ build_keyrelease_event(GdkWindowWin32Data * windata,
    build_key_event_state(event);
    event->key.string = NULL;
    event->key.length = 0;
+   k_grab_window = 0; //vo
 }
 
 static void print_event_state(gint state)
@@ -4498,9 +4562,7 @@ is_grabbed_key(GdkWindow **window, gint keycode, gint mod)
    GdkWindow *sav = *window;
 
    while (1) {
-      if (((GDK_WINDOW_WIN32DATA(*window)->grab_keycode == 0) || //AnyKey
-          (GDK_WINDOW_WIN32DATA(*window)->grab_keycode == keycode)) &&
-          (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod & mod)) {
+      if (find_key_mod(GDK_WINDOW_WIN32DATA(*window)->grab_keys, keycode, mod)) {
          found = *window;
       }
       if (((GdkWindowPrivate *) *window)->parent == gdk_parent_root) break;
@@ -5208,8 +5270,10 @@ gdk_event_translate(GdkEvent * event,
       if (!k_grab_window &&
           is_grabbed_key(&window, event->key.keyval, event->key.state)) {
          gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
-      } else if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
-                  GDK_ALL_EVENTS_MASK, doesnt_want_key)) {
+      } 
+
+      if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
+                     GDK_ALL_EVENTS_MASK, doesnt_want_key)) {
          event->key.state = 0;
          break;
       }
@@ -5265,15 +5329,19 @@ gdk_event_translate(GdkEvent * event,
       if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
          event->key.state |= GDK_MOD1_MASK;
 
+      event->key.keyval = get_key_value(xevent);
+
       //vo check if key is grabbed 
       if (!k_grab_window &&
           is_grabbed_key(&window, event->key.keyval, event->key.state)) {
          gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
-      } else if (!propagate(&window, xevent, 
-                  k_grab_window, k_grab_owner_events,
-                  GDK_ALL_EVENTS_MASK, doesnt_want_char)) {
+      }
+
+      if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
+                     GDK_ALL_EVENTS_MASK, doesnt_want_char)) {
          break;
       }
+
       event->key.window = window;
       return_val = !GDK_DRAWABLE_DESTROYED(window);
 

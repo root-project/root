@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.51 2004/03/12 14:17:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.52 2004/03/26 18:00:10 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1086,9 +1086,8 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fWMHeightInc = (UInt_t) -1;
    fWMInitState = (EInitialState) 0;
 
-   gVirtualX->GrabKey(fId, kKey_s, kKeyControlMask, kTRUE);
-
-   AddInput(kKeyPressMask | kKeyReleaseMask);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
+                      kKeyControlMask, kTRUE);
 
    // if parent is editting/embedable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
@@ -1121,6 +1120,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
       UInt_t keysym;
       char str[2];
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
+
       if (str[0] == 19) {  // ctrl-s
          static TString dir(".");
          TGFileInfo fi;
