@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.142 2005/01/25 07:24:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.143 2005/02/07 18:02:36 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -370,6 +370,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups    = new TList;
    fMessageHandlers = new TList;
    fSecContexts = new TList;
+   fProofs      = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -394,6 +395,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
+   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
 
    // by default, add the list of files, tasks, canvases and browsers in the Cleanups list
    fCleanups->Add(fCanvases); fCanvases->SetBit(kMustCleanup);
@@ -462,6 +464,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsables->Add(fRootFolder, "root");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
+   fBrowsables->Add(fProofs, "PROOF Sessions");
 
    atexit(CleanUpROOTAtExit);
 
@@ -1718,7 +1721,7 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
       delete proof;
       return 0;
    }
-
+   fProofs->Add(proof);
    return proof;
 }
 

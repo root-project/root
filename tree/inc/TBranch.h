@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.23 2004/08/03 14:50:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.24 2004/11/24 14:11:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -101,7 +101,7 @@ public:
     virtual ~TBranch();
 
     virtual void      Browse(TBrowser *b);
-    virtual void      DropBaskets();
+    virtual void      DropBaskets(Option_t *option = "");
     virtual Int_t     Fill();
     virtual void      FillLeaves(TBuffer &b);
     virtual TBranch  *FindBranch(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.73 2005/02/24 10:35:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.74 2005/03/06 15:46:34 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3514,7 +3514,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
 int RpdCheckSpecialPass(const char *passwd)
 {
    // Check recieved user's password against password in $HOME/.rootdpass.
-   // The password is retrieved in RpdUser and temporarly saved in gPasswd. 
+   // The password is retrieved in RpdUser and temporarly saved in gPasswd.
    // Returns 1 in case of success authentication, 0 otherwise.
 
    // Check inputs
@@ -3579,12 +3579,12 @@ int RpdPass(const char *pass, int errheq)
 #endif
 
    if (gDebug > 2)
-      ErrorInfo("RpdPass: Enter");
+      ErrorInfo("RpdPass: Enter (pass length: %d)", (int)strlen(pass));
 
    int auth = 0;
    errheq = (errheq > -1 && errheq < 4) ? errheq : 0;
    if (!*gUser) {
-      if (gClientProtocol > 11) 
+      if (gClientProtocol > 11)
          NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
       else
          NetSend(kErrFatal, kROOTD_ERR);
@@ -3594,7 +3594,7 @@ int RpdPass(const char *pass, int errheq)
    }
 
    if (!pass) {
-      if (gClientProtocol > 11) 
+      if (gClientProtocol > 11)
          NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrNoPasswd, kROOTD_ERR);
@@ -3605,7 +3605,7 @@ int RpdPass(const char *pass, int errheq)
    int n = strlen(pass);
    // Passwd length should be in the correct range ...
    if (!n) {
-      if (gClientProtocol > 11) 
+      if (gClientProtocol > 11)
          NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrBadPasswd, kROOTD_ERR);
@@ -3614,7 +3614,7 @@ int RpdPass(const char *pass, int errheq)
       return auth;
    }
    if (n > (int) sizeof(passwd)) {
-      if (gClientProtocol > 11) 
+      if (gClientProtocol > 11)
          NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
       else
          NetSend(kErrBadPasswd, kROOTD_ERR);
@@ -3687,7 +3687,7 @@ int RpdPass(const char *pass, int errheq)
 #endif
       n = strlen(passw);
       if (strncmp(pass_crypt, passw, n + 1) != 0) {
-         if (gClientProtocol > 11) 
+         if (gClientProtocol > 11)
             NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
          else
             NetSend(kErrBadPasswd, kROOTD_ERR);
@@ -3704,7 +3704,7 @@ int RpdPass(const char *pass, int errheq)
 #endif
 
  authok:
-   auth = afs_auth ? 5 : 1; 
+   auth = afs_auth ? 5 : 1;
    gSec = 0;
 
    if (gClientProtocol > 8) {
@@ -3716,7 +3716,7 @@ int RpdPass(const char *pass, int errheq)
 
          SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
                  gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-         if (!afs_auth || gService == kPROOFD) 
+         if (!afs_auth || gService == kPROOFD)
             OffSet = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
             ErrorInfo("RpdPass: got offset %d", OffSet);
@@ -3852,7 +3852,7 @@ int RpdGlobusAuth(const char *sstr)
    // our credentials and we send our subject name to the client ...
    // NB: we look first for a specific certificate for ROOT (default
    // location under /etc/grid-security/root); if this is does not
-   // work we try to open the host certificate, which however may 
+   // work we try to open the host certificate, which however may
    // require super-user privileges; finally we check if valid proxies
    // (for the user who started the server) are available.
    char *subject_name;
@@ -4575,7 +4575,7 @@ int RpdUser(const char *sstr)
 #endif
          // Check if successful
          if (strlen(passw) == 0 || !strcmp(passw, "x")) {
-            if (gClientProtocol > 11) 
+            if (gClientProtocol > 11)
                NetSend(kUsrPwdErr[errrdp][errheq], kROOTD_ERR);
             else
                NetSend(kErrNotAllowed, kROOTD_ERR);
@@ -4713,7 +4713,7 @@ int RpdUser(const char *sstr)
              passwd[plen-1] == '#' && passwd[plen-10] == '#') {
             if (strncmp(ctag,&passwd[plen-10],10)) {
                // The tag does not match; failure
-               if (gClientProtocol > 11) 
+               if (gClientProtocol > 11)
                   NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
                else
                   NetSend(kErrBadPasswd, kROOTD_ERR);
@@ -4730,7 +4730,7 @@ int RpdUser(const char *sstr)
 
          } else {
             // The tag is not there or incomplete; failure
-            if (gClientProtocol > 11) 
+            if (gClientProtocol > 11)
                NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
             else
                NetSend(kErrBadPasswd, kROOTD_ERR);
@@ -6404,7 +6404,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
 {
    // Retrieve specific ROOT password from $HOME/fpw, if any.
    // To avoid problems with NFS-root-squashing, if 'root' changes temporarly the
-   // uid/gid to those of the target user (usr).   
+   // uid/gid to those of the target user (usr).
    // If OK, returns pass length and fill 'pass' with the password, null-terminated.
    // ('pass' is allocated externally to contain max lpwmax bytes).
    // If the file does not exists, return 0 and an empty pass.
@@ -6450,7 +6450,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
          ErrorInfo("RpdRetrieveSpecialPass: can't setuid for uid %d"
                    " (errno: %d)", uid, GetErrno());
    }
-   
+
    // The file now
    char rootdpass[kMAXPATHLEN];
    SPrintf(rootdpass, kMAXPATHLEN, "%s/%s", pw->pw_dir, fpw);
@@ -6503,7 +6503,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
    }
    close(fid);
 
-   // Get rid of special trailing chars 
+   // Get rid of special trailing chars
    len = n;
    while (len-- && (pass[len] == '\n' || pass[len] == 32))
       pass[len] = 0;

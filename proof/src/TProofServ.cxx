@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.83 2005/02/18 14:42:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.84 2005/03/08 09:19:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TUrl.h"
+#include "TTree.h"
 #include "TPluginManager.h"
 
 #include "compiledata.h"
@@ -516,8 +517,16 @@ TDSetElement *TProofServ::GetNextPacket()
    (*mess) >> ok;
 
    if (ok) {
-      (*mess) >> file >> dir >> obj >> first >> num;
-      e = new TDSetElement(0, file, obj, dir, first, num);
+      (*mess) >> file >> dir >> obj >> first;
+      if (first != -1) {
+         (*mess) >> num;
+         e = new TDSetElement(0, file, obj, dir, first, num);
+      } else {
+         TEventList *elist;
+         (*mess) >> elist;
+         e = new TDSetElement(0, file, obj, dir);
+         e->SetEventList(elist);
+      }
    } else {
       e = 0;
    }
@@ -653,10 +662,12 @@ void TProofServ::HandleSocketInput()
             TString filename, opt;
             TList *input;
             Long64_t nentries, first;
-
+            TEventList *evl;
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS", "Enter");
 
-            (*mess) >> dset >> filename >> input >> opt >> nentries >> first;
+            (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl;
+            if (evl)
+               dset->SetEventList(evl);
 
             if ( input == 0 ) {
                Error("HandleSocketInput:kPROOF_PROCESS", "input == 0");
@@ -1154,7 +1165,95 @@ void TProofServ::HandleSocketInput()
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");
          }
          break;
+      case kPROOF_GETTREEHEADER:
+         {
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Enter");
+            TMessage answ(kMESS_OBJECT);
 
+            TDSet* dset;
+            (*mess) >> dset;
+            const char* name = dset->GetObjName();
+            dset->Reset();
+            TDSetElement *e = dset->Next();
+            Long64_t entries = 0;
+            TFile *f;
+            TTree *t;
+            if (!e) {
+               PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
+                                    "Empty TDSet");
+            } else {
+               f = TFile::Open(e->GetFileName());
+               t = 0;
+               if (f) {
+                  t = (TTree*) f->Get(name);
+                  if (t) {
+                     t->SetMaxVirtualSize(0);
+                     t->DropBaskets();
+                     entries = t->GetEntries();
+
+                     // compute #entries in all the files
+                     while ((e = dset->Next()) != 0) {
+                        TFile *f1 = TFile::Open(e->GetFileName());
+                        if (f1) {
+                           TTree* t1 = (TTree*) f1->Get(name);
+                           if (t1) {
+                              entries += t1->GetEntries();
+                              delete t1;
+                           }
+                           delete f1;
+                        }
+                     }
+                     t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
+                  }
+               }
+//               if (!t && IsMaster()) {
+//                  PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
+//                                       "File or object not found at the master");
+//                  // ask a slave for the tree
+//                  t = fProof->GetTreeHeader(file.Data(), name.Data());
+//               }
+            }
+            if (t)
+               answ << TString("Success") << t;
+            else
+               answ << TString("Failed") << t;
+
+
+            fSocket->Send(answ);
+
+            SafeDelete(t);
+            SafeDelete(f);
+
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Done");
+         }
+         break;
+      case kPROOF_GETOUTPUTLIST:
+         {
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETOUTPUTLIST", "Enter");
+            TList* outputList = 0;
+            if (IsMaster()) {
+               outputList = fProof->GetOutputList();
+               if (!outputList)
+                  outputList = new TList();
+            } else {
+               outputList = new TList();
+               if (fProof->GetPlayer()) {
+                  TList *olist = fProof->GetPlayer()->GetOutputList();
+                  TIter next(olist);
+                  TObject *o;
+                  while ( (o = next()) ) {
+                     outputList->Add(new TNamed(o->GetName(), ""));
+                  }
+               }
+            }
+            outputList->SetOwner();
+            TMessage answ(kPROOF_GETOUTPUTLIST);
+            answ << outputList;
+            fSocket->Send(answ);
+            delete outputList;
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETOUTPUTLIST", "Done");
+         }
+         break;
       case kPROOF_VALIDATE_DSET:
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_VALIDATE_DSET", "Enter");

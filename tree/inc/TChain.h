@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.40 2004/12/11 08:26:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.41 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 class TFile;
 class TBrowser;
 class TCut;
-
+class TProofChain;
 
 class TChain : public TTree {
 
@@ -47,7 +47,10 @@ protected:
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
     TList       *fStatus;           //->  List of active/inactive branches
+    TProofChain *fProofChain;       //! wrapper class for a TDSet if this chain is to be 
+                                    //  procesed by proof
 
+    void ReleaseProofChain();
 public:
     // TChain constants
     enum {
@@ -74,7 +77,10 @@ public:
     virtual Long64_t  Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
     virtual Int_t     Fill() {MayNotUse("Fill()"); return -1;}
+    virtual TBranch  *FindBranch(const char *name);
+    virtual TLeaf    *FindLeaf(const char *name);
     virtual TBranch  *GetBranch(const char *name);
+    virtual Bool_t    GetBranchStatus(const char *branchname) const;
     virtual Long64_t  GetChainEntryNumber(Long64_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}
     virtual Long64_t  GetEntries() const;
@@ -89,6 +95,7 @@ public:
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
+    virtual Long64_t  GetReadEntry() const;
     TList            *GetStatus() const {return fStatus;}
     TTree            *GetTree() const {return fTree;}
             Int_t     GetTreeNumber() const {return fTreeNumber;}
@@ -113,6 +120,7 @@ public:
     virtual void      SetDirectory(TDirectory *dir);
     virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
     virtual void      SetPacketSize(Int_t size = 100);
+    virtual void      SetProof(TVirtualProof* proof = (TVirtualProof*) -1);
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
     virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.11 2004/11/24 07:41:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.12 2005/02/07 18:02:36 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -33,6 +33,10 @@
 class TList;
 class TDSet;
 class TEventList;
+class TTree;
+class TDSet;
+class TDrawFeedback;
+class TChain;
 
 
 class TVirtualProof : public TObject, public TQObject {
@@ -112,6 +116,16 @@ public:
 
    virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
    virtual void        Feedback(TList *objs) = 0; //*SIGNAL*
+
+   virtual TTree      *GetTreeHeader(TDSet* dset) = 0;
+   virtual TList      *GetOutputNames() = 0;
+
+   virtual void        AddChain(TChain* chain) = 0;
+   virtual void        RemoveChain(TChain* chain) = 0;
+
+   virtual TDrawFeedback *CreateDrawFeedback() = 0;
+   virtual void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) = 0;
+   virtual void           DeleteDrawFeedback(TDrawFeedback *f) = 0;
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.21 2005/02/08 22:38:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.22 2005/03/08 09:19:18 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -308,37 +308,42 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
-      // this element is before the start of the global range, skip it
-      if (cur + eNum < first) {
+      if (!e->GetEventList()) {
+         // this element is before the start of the global range, skip it
+         if (cur + eNum < first) {
+            cur += eNum;
+            PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
+            continue;
+         }
+
+         // this element is after the end of the global range, skip it
+         if (num != -1 && (first+num <= cur)) {
+            cur += eNum;
+            PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
+            continue; // break ??
+         }
+
+         // If this element contains the end of the global range
+         // adjust its number of entries
+         if (num != -1 && (first+num < cur+eNum)) {
+            e->SetNum( first + num - cur );
+            PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
+         }
+
+         // If this element contains the start of the global range
+         // adjust its start and number of entries
+         if (cur < first) {
+            e->SetFirst( eFirst + (first - cur) );
+            e->SetNum( e->GetNum() - (first - cur) );
+            PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
+                eFirst + (first - cur), first + num - cur);
+         }
+
          cur += eNum;
-         PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
-         continue;
+      } else {
+         if (e->GetEventList()->GetN() == 0)
+            continue;
       }
-
-      // this element is after the end of the global range, skip it
-      if (num != -1 && (first+num <= cur)) {
-         cur += eNum;
-         PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
-         continue; // break ??
-      }
-
-      // If this element contains the end of the global range
-      // adjust its number of entries
-      if (num != -1 && (first+num < cur+eNum)) {
-         e->SetNum( first + num - cur );
-         PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
-      }
-
-      // If this element contains the start of the global range
-      // adjust its start and number of entries
-      if (cur < first) {
-         e->SetFirst( eFirst + (first - cur) );
-         e->SetNum( e->GetNum() - (first - cur) );
-         PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
-             eFirst + (first - cur), first + num - cur);
-      }
-
-      cur += eNum;
       PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
@@ -363,6 +368,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       node->Add( e );
       PDB(kPacketizer,2) e->Print("a");
    }
+   if (dset->GetEventList())
+      fTotalEntries = dset->GetEventList()->GetN();
 
    PDB(kGlobal,1) Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
                        fTotalEntries, files, fFileNodes->GetSize());
@@ -384,7 +391,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(500,kFALSE);
-   }
+   } else
+      fProgress = 0;
 
    PDB(kPacketizer,1) Info("TPacketizer", "Return");
 }
@@ -402,7 +410,7 @@ TPacketizer::~TPacketizer()
    delete fUnAllocated;
    delete fActive;
    delete fFileNodes;
-   delete fProgress;
+   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________
@@ -676,26 +684,28 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       (*reply) >> entries;
 
+      e->SetTDSetOffset(entries);
       if ( entries > 0 ) {
 
-         if ( e->GetFirst() > entries ) {
-            Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
-                  e->GetFirst(), entries, e->GetFileName() );
+         if (!e->GetEventList()) {
+            if ( e->GetFirst() > entries ) {
+               Error("TPacketizer","first (%d) higher then number of entries (%d) in %d",
+                     e->GetFirst(), entries, e->GetFileName() );
 
-            // disable element
-            slavestat->fCurFile->SetDone();
-            fValid = kFALSE; // ???
+               // disable element
+               slavestat->fCurFile->SetDone();
+               fValid = kFALSE; // ???
+            }
+
+            if ( e->GetNum() == -1 ) {
+               e->SetNum( entries - e->GetFirst() );
+            } else if ( e->GetFirst() + e->GetNum() > entries ) {
+               Error("ValidateFiles",
+                     "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
+                     e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
+               e->SetNum( entries - e->GetFirst() );
+            }
          }
-
-         if ( e->GetNum() == -1 ) {
-            e->SetNum( entries - e->GetFirst() );
-         } else if ( e->GetFirst() + e->GetNum() > entries ) {
-            Error("ValidateFiles",
-                  "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
-                  e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
-            e->SetNum( entries - e->GetFirst() );
-         }
-
       } else {
 
          Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
@@ -719,6 +729,60 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       // we ran out of slaves ...
       fValid = kFALSE;
    }
+
+   // compute the offset for each file element
+   Long64_t offset = 0;
+   Long64_t newOffset = 0;
+   TIter next(dset->GetListOfElements());
+   TDSetElement *el;
+   while ( (el = dynamic_cast<TDSetElement*> (next())) ) {
+      newOffset = offset + el->GetTDSetOffset();
+      el->SetTDSetOffset(offset);
+      offset = newOffset;
+   }
+   if (dset->GetEventList()) {
+      SplitEventList(dset);
+   }
+}
+
+//______________________________________________________________________________
+void TPacketizer::SplitEventList(TDSet *dset) {
+
+   TEventList *mainList = dset->GetEventList();
+   if (!mainList)
+      return;
+
+   TIter next(dset->GetListOfElements());
+   TDSetElement *el, *prev;
+
+   prev = dynamic_cast<TDSetElement*> (next());
+   if (!prev)
+      return;
+   Long64_t low = prev->GetTDSetOffset();
+   Long64_t high = low;
+   Long64_t currPos = 0;
+   do {
+      el = dynamic_cast<TDSetElement*> (next());
+      if (el == 0)
+         high = kMaxLong64;         // infinity
+      else
+         high = el->GetTDSetOffset();
+
+//      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < low) {
+//         Error("SplitEventList", "event outside of the range of any of the TDSetElements");
+//         currPos++;        // unnecessary check
+//      }
+
+      TEventList* newEventList = new TEventList();
+      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < high) {
+         newEventList->Enter(mainList->GetEntry(currPos) - low);
+         currPos++;
+      }
+      prev->SetEventList(newEventList);
+      prev->SetNum(newEventList->GetN());
+      low = high;
+      prev = el;
+   } while (el);
 }
 
 //______________________________________________________________________________
@@ -849,6 +913,13 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    slstat->fCurElem = new TDSetElement(0,base->GetFileName(),base->GetObjName(),
                                        base->GetDirectory(),first,num);
+   if (base->GetEventList()) {
+      // take a part of the event list.
+      TEventList *evl = new TEventList();
+      for (; num > 0; num--, first++)
+         evl->Enter(base->GetEventList()->GetEntry(first));
+      slstat->fCurElem->SetEventList(evl);
+   }
 
    return slstat->fCurElem;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.12 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.13 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TTimeStamp.h"
 #include "TTree.h"
 #include "TVirtualPerfStats.h"
+#include "TEventList.h"
 
 
 //------------------------------------------------------------------------
@@ -60,6 +61,8 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fCur   = -1;
    fNum   = num;
    fStop  = kFALSE;
+   fEventList = 0;
+   fEventListPos = 0;
 }
 
 
@@ -198,6 +201,10 @@ Long64_t TEventIterObj::GetNextEvent()
       }
 
       fElem = fDSet->Next();
+      if (fElem->GetEventList()) {
+         Error("GetNextEvent", "EventLists not implemented");
+         return -1;
+      }
 
       if ( fElem == 0 ) {
          fNum = 0;
@@ -222,6 +229,11 @@ Long64_t TEventIterObj::GetNextEvent()
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
+      fEventList = fElem->GetEventList();
+      fEventListPos = 0;
+      if (fEventList) {
+         fElemNum = fEventList->GetN();
+      }
 
       Long64_t num = fKeys->GetSize();
 
@@ -356,31 +368,37 @@ Long64_t TEventIterTree::GetNextEvent()
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
+      fEventList = fElem->GetEventList();
+      fEventListPos = 0;
+      if (fEventList) {
+         fElemNum = fEventList->GetN();
+      }
 
       Long64_t num = (Long64_t) fTree->GetEntries();
 
-      if ( fElemFirst > num ) {
-         Error("GetNextEvent","First (%d) higher then number of entries (%d) in %s",
-            fElemFirst, num, fElem->GetObjName() );
-         fNum = 0;
-         return -1;
-      }
-      if ( fElemNum == -1 ) {
-         fElemNum = num - fElemFirst;
-      } else if ( fElemFirst+fElemNum  > num ) {
-         Error("GetNextEvent","Num (%d) + First (%d) larger then number of entries (%d) in %s",
-            fElemNum, fElemFirst, num, fElem->GetName() );
-         fElemNum = num - fElemFirst;
-      }
+      if (!fEventList) {
+         if ( fElemFirst > num ) {
+            Error("GetNextEvent","First (%d) higher then number of entries (%d) in %s",
+               fElemFirst, num, fElem->GetObjName() );
+            fNum = 0;
+            return -1;
+         }
+         if ( fElemNum == -1 ) {
+            fElemNum = num - fElemFirst;
+         } else if ( fElemFirst+fElemNum  > num ) {
+            Error("GetNextEvent","Num (%d) + First (%d) larger then number of entries (%d) in %s",
+               fElemNum, fElemFirst, num, fElem->GetName() );
+            fElemNum = num - fElemFirst;
+         }
 
-      // Skip this element completely?
-      if ( fCur + fElemNum < fFirst ) {
-         fCur += fElemNum;
-         continue;
+         // Skip this element completely?
+         if ( fCur + fElemNum < fFirst ) {
+            fCur += fElemNum;
+            continue;
+         }
+         // Position within this element. TODO: more efficient?
+         fElemCur = fElemFirst-1;
       }
-
-      // Position within this element. TODO: more efficient?
-      fElemCur = fElemFirst-1;
    }
 
    if ( attach ) {
@@ -389,10 +407,17 @@ Long64_t TEventIterTree::GetNextEvent()
       fSel->Notify();
       attach = kFALSE;
    }
-   --fElemNum;
-   ++fElemCur;
-   --fNum;
-   ++fCur;
-
-   return fElemCur;
+   if (!fEventList) {
+      --fElemNum;
+      ++fElemCur;
+      --fNum;
+      ++fCur;
+      return fElemCur;
+   }
+   else {
+      --fElemNum;
+      int rv = fEventList->GetEntry(fEventListPos);
+      fEventListPos++;
+      return rv;
+   }
 }

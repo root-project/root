@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.5 2001/01/23 21:09:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.6 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
 
 public:
         TChainElement();
-        TChainElement(const char *filename, const char *title);
+        TChainElement(const char *title, const char *filename);
         virtual ~TChainElement();
         virtual void     CreatePackets();
         virtual void    *GetBaddress() const {return fBaddress;}

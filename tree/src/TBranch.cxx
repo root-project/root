@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.83 2005/02/10 23:02:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.84 2005/03/06 08:43:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -311,9 +311,17 @@ void TBranch::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TBranch::DropBaskets()
+void TBranch::DropBaskets(Option_t* option)
 {
-//   Loop on all branch baskets.  Drop all except readbasket
+   // Loop on all branch baskets. Drop all except readbasket.
+   // If the option contains "all", drop all baskets including
+   // read- and write-baskets.
+
+   Bool_t all = kFALSE;
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("all"))
+      all = kTRUE;
 
    Int_t i,j;
    TBasket *basket;
@@ -322,7 +330,7 @@ void TBranch::DropBaskets()
       for (i=0;i<kMaxRAM;i++) {
          j = fBasketRAM[i];
          if (j < 0) continue;
-         if (j == fReadBasket || j == fWriteBasket) continue;
+         if ((j == fReadBasket || j == fWriteBasket) && !all) continue;
          basket = (TBasket*)fBaskets.UncheckedAt(j);
          if (!basket) continue;
          basket->DropBuffers();
@@ -352,13 +360,24 @@ void TBranch::DropBaskets()
       if (!basket) continue;
       if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = j;
       fNBasketRAM++;
-      if (j == fReadBasket || j == fWriteBasket) continue;
+      if ((j == fReadBasket || j == fWriteBasket) && !all) continue;
       basket->DropBuffers();
       GetListOfBaskets()->RemoveAt(j);
       delete basket;
       fNBasketRAM--;
       fBasketRAM[fNBasketRAM] = -1;
       if (!fTree->MemoryFull(0)) break;
+   }
+
+   // process subbranches
+   if (all) {
+      TObjArray *lb = GetListOfBranches();
+      Int_t nb = lb->GetEntriesFast();
+      for (Int_t j = 0; j < nb; j++) {
+         TBranch* branch = (TBranch*) lb->UncheckedAt(j);
+         if (!branch) continue;
+         branch->DropBaskets("all");
+      }
    }
 }
 

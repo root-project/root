@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.236 2005/03/04 20:30:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.237 2005/03/07 18:08:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2367,6 +2367,17 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
    GetPlayer();
    if (fPlayer) return fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
    else return -1;
+}
+
+//______________________________________________________________________________
+void TTree::DropBaskets()
+{
+   TBranch *branch;
+   Int_t nb = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nb; i++) {
+      branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->DropBaskets("all");
+   }
 }
 
 

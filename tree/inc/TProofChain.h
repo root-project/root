@@ -1,5 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.77 2005/01/25 19:58:14 brun Exp $
-// Author: Rene Brun   12/01/96
+// Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,126 +8,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_TProofChain
+#define ROOT_TProofChain
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TProofChain                                                          //
+//                                                                      //
+// A wrapper for TDSet to behave as a Tree/Chain.                       //
+// Uses an internal TDSet to handle processing and a TTree              //
+// which holds the branch structure.                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TTree
-#define ROOT_TTree
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTree                                                                //
-//                                                                      //
-// A TTree object is a list of TBranch.                                 //
-//   To Create a TTree object one must:                                 //
-//    - Create the TTree header via the TTree constructor               //
-//    - Call the TBranch constructor for every branch.                  //
-//                                                                      //
-//   To Fill this object, use member function Fill with no parameters.  //
-//     The Fill function loops on all defined TBranch.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#include "TTree.h"
 #endif
 
-#ifndef ROOT_TObjArray
-#include "TObjArray.h"
-#endif
+class TDSet;
+class TDrawFeedback;
 
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
-#endif
 
-#ifndef ROOT_TAttLine
-#include "TAttLine.h"
-#endif
-
-#ifndef ROOT_TAttFill
-#include "TAttFill.h"
-#endif
-
-#ifndef ROOT_TAttMarker
-#include "TAttMarker.h"
-#endif
-
-#ifndef ROOT_TBranch
-#include "TBranch.h"
-#endif
-
-#ifndef ROOT_TArrayD
-#include "TArrayD.h"
-#endif
-
-#ifndef ROOT_TArrayI
-#include "TArrayI.h"
-#endif
-
-#ifndef ROOT_TVirtualTreePlayer
-#include "TVirtualTreePlayer.h"
-#endif
-
-#ifndef ROOT_TDataType
-#include "TDataType.h"
-#endif
-
-class TBrowser;
-class TFile;
-class TDirectory;
-class TLeaf;
-class TH1;
-class TTreeFormula;
-class TPolyMarker;
-class TEventList;
-class TSQLResult;
-class TSelector;
-class TPrincipal;
-class TFriendElement;
-class TCut;
-class TVirtualIndex;
-class TBranchRef;
-
-class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
+class TProofChain : public TTree {
 
 protected:
-    Long64_t       fEntries;           //  Number of entries
-    Long64_t       fTotBytes;          //  Total number of bytes in all branches before compression
-    Long64_t       fZipBytes;          //  Total number of bytes in all branches after compression
-    Long64_t       fSavedBytes;        //  Number of autosaved bytes
-    Double_t       fWeight;            //  Tree weight (see TTree::SetWeight)
-    Int_t          fTimerInterval;     //  Timer interval in milliseconds
-    Int_t          fScanField;         //  Number of runs before prompting in Scan
-    Int_t          fUpdate;            //  Update frequency for EntryLoop
-    Long64_t       fMaxEntries;        //  Maximum number of entries in case of circular buffers
-    Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
-    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
-    Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
-    Long64_t       fEstimate;          //  Number of entries to estimate histogram limits
-    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
-    Long64_t       fReadEntry;         //! Number of the entry being processed
-    Long64_t       fTotalBuffers;      //! Total number of bytes in branch buffers
-    Int_t          fPacketSize;        //! Number of entries in one packet for parallel root
-    Int_t          fNfill;             //! Local for EntryLoop
-    Int_t          fDebug;             //! Debug level
-    Long64_t       fDebugMin;          //! First entry number to debug
-    Long64_t       fDebugMax;          //! Last entry number to debug
-    Int_t          fMakeClass;         //! not zero when processing code generated by MakeClass
-    Int_t          fFileNumber;        //! current file number (if file extensions)
-    TObject       *fNotify;            //! Object to be notified when loading a Tree
-    TDirectory    *fDirectory;         //! Pointer to directory holding this tree
-    TObjArray      fBranches;          //  List of Branches
-    TObjArray      fLeaves;            //  Direct pointers to individual branch leaves
-    TList         *fAliases;           //  List of aliases for expressions based on the tree branches.
-    TEventList    *fEventList;         //! Pointer to event selection list (if one)
-    TArrayD        fIndexValues;       //  Sorted index values
-    TArrayI        fIndex;             //  Index of sorted values
-    TVirtualIndex *fTreeIndex;         //  Pointer to the tree Index (if any)
-    TList         *fFriends;           //  pointer to list of friend elements
-    TList         *fUserInfo;          //  pointer to a list of user objects associated to this Tree
-    TVirtualTreePlayer *fPlayer;       //! Pointer to current Tree player
-    TList         *fClones;            //! List of cloned trees which share our addresses
-    TBranchRef    *fBranchRef;         //  Branch supporting the TRefTable (if any)
-  static Int_t     fgBranchStyle;      //  Old/New branch style
-  static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
+    TTree         *fTree;             // dummy tree
+    TDSet         *fSet;              // TDSet
+    TVirtualProof *fProof;            // PROOF
+    TDrawFeedback *fDrawFeedback;     // feedback handler
 
 protected:
     void             AddClone(TTree*);
@@ -136,19 +44,10 @@ protected:
     virtual void     KeepCircular();
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
-    virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-    virtual TBranch *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-    virtual Bool_t   CheckBranchAddressType(TBranch *branch, TClass *ptrClass, EDataType datatype, Bool_t ptr);
 
 public:
-    // TTree status bits
-    enum {
-       kForceRead   = BIT(11)
-    };
-
-    TTree();
-    TTree(const char *name, const char *title, Int_t splitlevel=99);
-    virtual ~TTree();
+    TProofChain(TDSet *set, TTree* tree);
+    virtual ~TProofChain();
 
     virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
     virtual TFriendElement *AddFriend(const char *treename, TFile *file);
@@ -160,19 +59,11 @@ public:
     virtual Int_t        Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t        Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
+    virtual TBranch     *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
+    virtual TBranch     *Branch(const char *name, TClonesArray **clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
 #if !defined(__CINT__)
     virtual TBranch     *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
 #endif
-    template <class T> TBranch *Branch(const char *name, const char *classname, T **addobj, Int_t bufsize=32000, Int_t splitlevel=99) 
-    {
-       // See BranchImp for details
-       return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
-    }
-    template <class T> TBranch *Branch(const char *name, T **addobj, Int_t bufsize=32000, Int_t splitlevel=99) 
-    {
-       // See BranchImp for details
-       return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
-    }
     virtual TBranch     *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual TBranch     *BranchRef();
@@ -186,12 +77,11 @@ public:
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     Int_t                Debug() const {return fDebug;}
     virtual void         Delete(Option_t *option=""); // *MENU*
-    virtual void         Draw(Option_t *opt);
     virtual Long64_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     virtual Long64_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
-    virtual void         DropBaskets();
+    virtual void         Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }
     virtual void         DropBuffers(Int_t nbytes);
     virtual Int_t        Fill();
     virtual TBranch     *FindBranch(const char *name);
@@ -210,7 +100,7 @@ public:
             Long64_t     GetDebugMax()  const {return fDebugMax;}
             Long64_t     GetDebugMin()  const {return fDebugMin;}
     TDirectory          *GetDirectory() const {return fDirectory;}
-    virtual Long64_t     GetEntries() const   {return fEntries;}
+    virtual Long64_t     GetEntries() const;
     virtual Long64_t     GetEntriesFast() const   {return fEntries;}
     virtual Long64_t     GetEntriesFriend() const;
     virtual Long64_t     GetEstimate() const { return fEstimate; }
@@ -219,7 +109,7 @@ public:
     virtual Int_t        GetEntryWithIndex(Int_t major, Int_t minor=0);
     virtual Long64_t     GetEntryNumberWithBestIndex(Int_t major, Int_t minor=0) const;
     virtual Long64_t     GetEntryNumberWithIndex(Int_t major, Int_t minor=0) const;
-    TEventList          *GetEventList() const {return fEventList;}
+//    TEventList          *GetEventList() const {return fEventList;}
     virtual Long64_t     GetEntryNumber(Long64_t entry) const;
     virtual Int_t        GetFileNumber() const {return fFileNumber;}
     virtual const char  *GetFriendAlias(TTree *) const;
@@ -228,11 +118,11 @@ public:
     virtual Double_t    *GetIndexValues() {return &fIndexValues.fArray[0];}
     virtual TIterator   *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
     virtual TLeaf       *GetLeaf(const char *name);
-    virtual TList       *GetListOfClones() { return fClones; }
-    virtual TObjArray   *GetListOfBranches() {return &fBranches;}
-    virtual TObjArray   *GetListOfLeaves()   {return &fLeaves;}
-    virtual TList       *GetListOfFriends()    const {return fFriends;}
-    virtual TSeqCollection *GetListOfAliases() const {return fAliases;}
+    virtual TList       *GetListOfClones() { return 0; }
+    virtual TObjArray   *GetListOfBranches() {return fTree->GetListOfBranches();}
+    virtual TObjArray   *GetListOfLeaves()   {return fTree->GetListOfLeaves();}
+    virtual TList       *GetListOfFriends()    const {return 0;}
+    virtual TSeqCollection *GetListOfAliases() const {return 0;}
 
     // GetMakeClass is left non-virtual for efficiency reason.
     // Making it virtual affects the performance of the I/O
@@ -247,7 +137,8 @@ public:
     TObject             *GetNotify() const {return fNotify;}
     TVirtualTreePlayer  *GetPlayer();
     virtual Int_t        GetPacketSize() const {return fPacketSize;}
-    virtual Long64_t     GetReadEntry()  const {return fReadEntry;}
+    virtual TVirtualProof* GetProof() const {return fProof;}
+    virtual Long64_t     GetReadEntry()  const;
     virtual Long64_t     GetReadEvent()  const {return fReadEntry;}
     virtual Int_t        GetScanField()  const {return fScanField;}
     TTreeFormula        *GetSelect()    {return GetPlayer()->GetSelect();}
@@ -277,8 +168,8 @@ public:
     virtual Long64_t     LoadTreeFriend(Long64_t entry, TTree *T);
     virtual Int_t        MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t        MakeCode(const char *filename=0);
-    virtual Int_t        MakeProxy(const char *classname, const char *macrofilename = 0, 
-                                   const char *cutfilename = 0, 
+    virtual Int_t        MakeProxy(const char *classname, const char *macrofilename = 0,
+                                   const char *cutfilename = 0,
                                    const char *option = 0, Int_t maxUnrolling = 3);
     virtual Int_t        MakeSelector(const char *selector=0);
     Bool_t               MemoryFull(Int_t nbytes);
@@ -289,6 +180,7 @@ public:
                                    ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     virtual void         Print(Option_t *option="") const; // *MENU*
     virtual Long64_t     Process(const char *filename,Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
+    virtual void         Progress(Long64_t total, Long64_t processed);
     virtual Long64_t     Process(TSelector *selector, Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0);
     virtual Long64_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
@@ -308,26 +200,17 @@ public:
     virtual void         SetBranchAddress(const char *bname,void *add);
 #endif
     virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t ptr);
-    template <class T> void SetBranchAddress(const char *bname, T **add) {
-       SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
-    }
-#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-    // This can only be used when the template overload resolution can distringuish between
-    // T* and T**
-    template <class T> void SetBranchAddress(const char *bname, T *add) {
-       SetBranchAddress(bname,add,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
-    }
-#endif
+
     virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
     static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
     virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
     virtual void         SetCircular(Long64_t maxEntries);
     virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
     virtual void         SetDirectory(TDirectory *dir);
-    virtual Long64_t     SetEntries(Long64_t n=-1);
+    virtual Long64_t     SetEntries(Long64_t n);
     virtual void         SetEstimate(Long64_t nentries=10000);
     virtual void         SetFileNumber(Int_t number=0);
-    virtual void         SetEventList(TEventList *list) {fEventList = list;}
+//    virtual void         SetEventList(TEventList *list) {TTree::SetEventList(list);}
     virtual void         SetMakeClass(Int_t make) {fMakeClass = make;}
     virtual void         SetMaxEntryLoop(Long64_t maxev=1000000000) {fMaxEntryLoop = maxev;} // *MENU*
     static  void         SetMaxTreeSize(Long64_t maxsize=1900000000);
@@ -345,46 +228,11 @@ public:
     virtual Long64_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     void                 UseCurrentStyle();
+    virtual void         ConnectProof(TVirtualProof* proof);
+    virtual void         ReleaseProof();
+    static  TProofChain *MakeProofChain(TDSet* set, TVirtualProof* proof);
 
-    ClassDef(TTree,15)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TProofChain,0)  //Tree descriptor (the main ROOT I/O class)
 };
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeFriendLeafIter                                                  //
-//                                                                      //
-// Iterator on all the leaves in a TTree and its friend                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TTreeFriendLeafIter : public TIterator {
-
-protected:
-   TTree             *fTree;         //tree being iterated
-   TIterator         *fLeafIter;     //current leaf sub-iterator.
-   TIterator         *fTreeIter;     //current tree sub-iterator.
-   Bool_t             fDirection;    //iteration direction
-
-   TTreeFriendLeafIter() : fTree(0), fLeafIter(0), fTreeIter(0),
-       fDirection(0) {}
-
-public:
-   TTreeFriendLeafIter(const TTree *t, Bool_t dir = kIterForward);
-   TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
-   ~TTreeFriendLeafIter() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-   TIterator &operator=(const TIterator &rhs);
-   TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
-
-   const TCollection *GetCollection() const { return 0; }
-   Option_t          *GetOption() const;
-   TObject           *Next();
-   void               Reset() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-
-   ClassDef(TTreeFriendLeafIter,0)  //Linked list iterator
-};
-
-
-inline void TTree::Draw(Option_t *opt)
-{ Draw(opt, "", "", 1000000000, 0); }
 
 #endif

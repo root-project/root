@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.13 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.14 2005/03/08 09:19:18 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -58,6 +58,11 @@
 #include "TUrl.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualProof.h"
+#include "TProof.h"
+#include "TProofChain.h"
+#include "TPluginManager.h"
+#include "TChain.h"
+#include "TChainElement.h"
 
 
 ClassImp(TDSetElementPfn)
@@ -121,11 +126,13 @@ TDSetElement::TDSetElement(const TDSet *set, const char *file,
    } else {
       fNum   = num;
    }
-   fMsd      = msd;
-   fPfnList  = 0;
-   fIterator = 0;
-   fCurrent  = 0;
-   fValid    = kFALSE;
+   fMsd         = msd;
+   fPfnList     = 0;
+   fIterator    = 0;
+   fCurrent     = 0;
+   fTDSetOffset = 0;
+   fEventList   = 0;
+   fValid       = kFALSE;
 
    if (objname)
       fObjName = objname;
@@ -140,6 +147,7 @@ TDSetElement::~TDSetElement()
 
    delete fIterator;
    delete fPfnList;
+//   SafeDelete(fEventList);
 }
 
 //______________________________________________________________________________
@@ -335,9 +343,10 @@ TDSet::TDSet()
    fElements->SetOwner();
    fElementsMsn = new TList;
    fElementsMsn->SetOwner();
-   fIsTree   = kFALSE;
-   fIterator = 0;
-   fCurrent  = 0;
+   fIsTree    = kFALSE;
+   fIterator  = 0;
+   fCurrent   = 0;
+   fEventList = 0;
 }
 
 //______________________________________________________________________________
@@ -361,6 +370,7 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    fElementsMsn->SetOwner();
    fIterator = 0;
    fCurrent  = 0;
+   fEventList = 0;
 
    if (!type || !*type) {
       Error("TDSet", "type name must be specified");
@@ -866,6 +876,74 @@ void TDSet::GridAddElementMsn(TDSetElementPfn *dsepfn)
       dseme->Increment();
       dseme->AddData(dsepfn->GetSize());
    }
+}
+
+//_______________________________________________________________________
+void TDSet::StartViewer()
+{
+   // Start the TTreeViewer on this TTree.
+
+   if (gROOT->IsBatch()) {
+      Warning("StartViewer", "viewer cannot run in batch mode");
+      return;
+   }
+
+   if (!gProof) {
+      Error("StartViewer", "no PROOF found");
+      return;
+   }
+   if (!IsTree()) {
+      Error("StartViewer", "TDSet contents should be of type TTree (or subtype)");
+      return;
+   }
+   TProofChain *w = TProofChain::MakeProofChain(this, gProof);
+   // TODO: w should be freed somewhere, probably in the TTreeViewer destructor.
+   if (!w) {
+      Error("StartViewer", "failure creating a TProofChain");
+      return;
+   }
+
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(1,w);
+   }
+}
+
+//_______________________________________________________________________
+TTree* TDSet::GetTreeHeader(TVirtualProof* proof)
+{
+   // Returns a tree header containing the branches' structure of the dataset.
+
+   return proof->GetTreeHeader(this);
+}
+
+//_______________________________________________________________________
+TDSet* TDSet::MakeTDSet(TChain *chain)
+{
+   // Creates a new TDSet new containing files from te given chain.
+
+   TIter next(chain->GetListOfFiles());
+   TChainElement *element;
+   TDSet *dset = new TDSet("TTree", chain->GetName());
+   while ((element = (TChainElement*)next())) {
+      TString file(element->GetTitle());
+      TString tree(element->GetName());
+      Int_t slashpos = tree.Index("/");
+      TString dir;
+      if (slashpos>=0) {
+         // Copy the tree name specification
+         TString behindSlash = tree(slashpos+1,tree.Length()-slashpos-1);
+         // and remove it from basename
+         tree.Remove(slashpos);
+         dir = tree;
+         tree = behindSlash;
+      }
+      dset->Add(file, tree, dir);
+   }
+   dset->SetDirectory(0);
+   return dset;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.29 2005/01/25 07:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.30 2005/01/31 13:40:15 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "Riostream.h"
+#include "TVirtualPad.h"
 
 const Int_t kNstat = 11;
 Bool_t TProfile2D::fgApproximate = kFALSE;
@@ -670,6 +671,9 @@ TH1 *TProfile2D::DrawCopy(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*Draw a copy of this profile2D histogram*-*-*-*-*-*-*-*-*-*-*
 //*-*            =======================================
+   TString opt = option;
+   opt.ToLower();
+   if (gPad && !opt.Contains("same")) gPad->Clear();
    TProfile2D *newpf = new TProfile2D();
    Copy(*newpf);
    newpf->SetDirectory(0);
@@ -1262,32 +1266,36 @@ Int_t TProfile2D::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
+   //Overflows and underflows are ignored.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width and the upper limit must also 
+   //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
 
    if (!list) return 0;
+   if (fBuffer) {
+      Error("Merge", "buffer not empty in the first histogram");
+      return 0;
+   }
    TIter next(list);
    Double_t umin,umax,vmin,vmax;
    Int_t nx,ny;
+
+   Stat_t stats[kNstat], totstats[kNstat];
+   TProfile2D *h, *hclone=0;
+   Int_t i;
+   Stat_t  nentries = fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    Double_t ymin  = fYaxis.GetXmin();
    Double_t ymax  = fYaxis.GetXmax();
-   Double_t bwix  = fXaxis.GetBinWidth(1);
-   Double_t bwiy  = fYaxis.GetBinWidth(1);
    Int_t    nbix  = fXaxis.GetNbins();
    Int_t    nbiy  = fYaxis.GetNbins();
-
-   Stat_t stats[kNstat], totstats[kNstat];
-   TProfile2D *h, *hclone=0;
-   Int_t i, nentries=(Int_t)fEntries;
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
       hclone = (TProfile2D*)Clone("FirstClone");
@@ -1295,16 +1303,23 @@ Int_t TProfile2D::Merge(TCollection *list)
       inlist.Add(hclone);
    }
    Bool_t same = kTRUE;
+   TAxis newXAxis(nbix, xmin, xmax);
+   TAxis newYAxis(nbiy, ymin, ymax);
    while ((h=(TProfile2D*)next())) {
       if (!h->InheritsFrom(TProfile2D::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
+         Error("Add","Attempt to add object of class: %s to a %s",
+                  h->ClassName(), this->ClassName());
          return -1;
       }
       inlist.Add(h);
+      if (h->fBuffer) {
+         Error("Merge", "buffer not empty");
+         return 0;
+      }
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
-      nentries += (Int_t)h->GetEntries();
+      nentries += h->GetEntries();
 
       // find min/max of the axes
       umin = h->GetXaxis()->GetXmin();
@@ -1316,34 +1331,36 @@ Int_t TProfile2D::Merge(TCollection *list)
       if (nx != nbix || ny != nbiy ||
               umin != xmin || umax != xmax || vmin != ymin || vmax != ymax) {
          same = kFALSE;
-         if (umin < xmin) xmin = umin;
-         if (umax > xmax) xmax = umax;
-         if (vmin < ymin) ymin = vmin;
-         if (vmax > ymax) ymax = vmax;
-         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);
-         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);
+         if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis())))
+            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                  "first: (%d, %f, %f), second: (%d, %f, %f)",
+                  newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                  nx, umin, umax);
+         if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis())))
+            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                  "first: (%d, %f, %f), second: (%d, %f, %f)",
+                  newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                  ny, vmin, vmax);
       }
    }
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); //while(nbix > 100) nbix /= 2;
-      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); //while(nbiy > 100) nbiy /= 2;
-      xmax = xmin + nbix*bwix;
-      ymax = ymin + nbiy*bwiy;
-      SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
+      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+              newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax());
    }
 
+   nbix  = fXaxis.GetNbins();
    //merge bin contents and errors
    TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, ix, iy;
    while ((h=(TProfile2D*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
-      for (biny=0;biny<=ny+1;biny++) {
-         iy = fYaxis.FindBin(h->GetBinCenter(biny));
-         for (binx=0;binx<=nx+1;binx++) {
-            ix = fXaxis.FindBin(h->GetBinCenter(binx));
+      for (biny = 1; biny <= ny; biny++) {
+         iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
+         for (binx = 1; binx <= nx; binx++) {
+            ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             bin = binx +(nx+2)*biny;
             ibin = ix +(nbix+2)*iy;
             fArray[ibin]             += h->GetW()[bin];
@@ -1366,7 +1383,7 @@ Int_t TProfile2D::Merge(TCollection *list)
    SetEntries(nentries);
    if (hclone) delete hclone;
 
-   return nentries;
+   return (Int_t) nentries;
 }
 
 //______________________________________________________________________________
@@ -1455,6 +1472,67 @@ void TProfile2D::Reset(Option_t *option)
   TH2D::Reset(option);
   fBinEntries.Reset();
   fTsumwz = fTsumwz2 = 0;
+}
+
+//______________________________________________________________________________
+void TProfile2D::RebinAxis(Axis_t x, const char* ax)
+{
+// Profile histogram is resized along ax such that x is in the axis range.
+// The new axis limits are recomputed by doubling iteratively
+// the current axis range until the specified value x is within the limits.
+// The algorithm makes a copy of the histogram, then loops on all bins
+// of the old histogram to fill the rebinned histogram.
+// Takes into account errors (Sumw2) if any.
+// The bit kCanRebin must be set before invoking this function.
+//  Ex:  h->SetBit(TH1::kCanRebin);
+
+   if (!TestBit(kCanRebin)) return;
+   char achoice = toupper(ax[0]);
+   TAxis *axis = &fXaxis;
+   if (achoice == 'Y') axis = &fYaxis;
+   if (axis->GetXmin() >= axis->GetXmax()) return;
+   if (axis->GetNbins() <= 0) return;
+
+   Axis_t xmin, xmax;
+   if (!FindNewAxisLimits(axis, x, xmin, xmax))
+      return;
+
+   //save a copy of this histogram
+   TProfile2D *hold = (TProfile2D*)Clone();
+   hold->SetDirectory(0);
+   //set new axis limits
+   axis->SetLimits(xmin,xmax);
+
+   Int_t  nbinsx = fXaxis.GetNbins();
+   Int_t  nbinsy = fYaxis.GetNbins();
+   Int_t  nbinsz = fZaxis.GetNbins();
+
+   //now loop on all bins and refill
+   Reset("ICE"); //reset only Integral, contents and Errors
+
+   Axis_t bx,by,bz;
+   Int_t ix, iy, iz, binx, biny, binz;
+   for (binz=1;binz<=nbinsz;binz++) {
+      bz  = hold->GetZaxis()->GetBinCenter(binz);
+      iz  = fZaxis.FindFixBin(bz);
+      for (biny=1;biny<=nbinsy;biny++) {
+         by  = hold->GetYaxis()->GetBinCenter(biny);
+         iy  = fYaxis.FindFixBin(by);
+         for (binx=1;binx<=nbinsx;binx++) {
+            bx = hold->GetXaxis()->GetBinCenter(binx);
+            ix  = fXaxis.FindFixBin(bx);
+
+            Int_t sourceBin = hold->GetBin(binx,biny,binz);
+            Int_t destinationBin = GetBin(ix,iy,iz);
+            AddBinContent(destinationBin, hold->fArray[sourceBin]);
+            fBinEntries.fArray[destinationBin] += hold->fBinEntries.fArray[sourceBin];
+            fSumw2.fArray[destinationBin] += hold->fSumw2.fArray[sourceBin];
+         }
+      }
+   }
+   fTsumwz = hold->fTsumwz;
+   fTsumwz2 = hold->fTsumwz2;
+   delete hold;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.77 2005/02/10 12:49:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.78 2005/03/08 09:19:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,12 @@
 #include "TPluginManager.h"
 #include "TCondor.h"
 #include "Riostream.h"
+#include "TTree.h"
+#include "TDrawFeedback.h"
+#include "TEventList.h"
+#include "TMonitor.h"
+#include "TBrowser.h"
+#include "TChain.h"
 #include "TProofServ.h"
 #include "TMap.h"
 #include "TTimer.h"
@@ -213,6 +219,11 @@ TProof::~TProof()
 {
    // Clean up PROOF environment.
 
+   while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
+      // remove "chain" from list
+      chain->SetProof(0);
+   }
+
    Close();
    SafeDelete(fIntHandler);
    SafeDelete(fSlaves);
@@ -224,6 +235,7 @@ TProof::~TProof()
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
    SafeDelete(fSlaveInfo);
+   SafeDelete(fChains);
    gROOT->GetListOfSockets()->Remove(this);
 
    if (gProof == this) {
@@ -272,6 +284,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fFeedback       = 0;
    fPlayer         = 0;
    fSecContext     = 0;
+   fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
 
    delete u;
@@ -1207,9 +1220,11 @@ Int_t TProof::Collect(TMonitor *mon)
                   answ << kTRUE
                        << TString(elem->GetFileName())
                        << TString(elem->GetDirectory())
-                       << TString(elem->GetObjName())
-                       << elem->GetFirst()
-                       << elem->GetNum();
+                       << TString(elem->GetObjName());
+                  if (elem->GetEventList())
+                     answ << ((Long64_t)-1) << elem->GetEventList();
+                  else
+                     answ << elem->GetFirst() << elem->GetNum();
                } else {
                   answ << kFALSE;
                }
@@ -1492,7 +1507,10 @@ void TProof::Print(Option_t *option) const
       Printf("User:                     %s", GetUser());
       Printf("Security context:         %s", fSecContext->AsString());
       TSlave *sl = (TSlave *)fActiveSlaves->First();
-      Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
+      if (sl)
+         Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
+      else
+         Printf("Proofd protocol version:  Error - No connection");
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
@@ -2092,9 +2110,9 @@ Int_t TProof::GoParallel(Int_t nodes)
                slavenodes = 0;
             } else {
                Collect(sl);
+               fActiveSlaves->Add(sl);
+               fActiveMonitor->Add(sl->GetSocket());
                if (sl->GetParallel()>0) {
-                  fActiveSlaves->Add(sl);
-                  fActiveMonitor->Add(sl->GetSocket());
                   slavenodes = sl->GetParallel();
                } else {
                   slavenodes = 0;
@@ -2777,6 +2795,7 @@ void TProof::AddFeedback(const char *name)
 {
    // Add object to feedback list.
 
+   PDB(kFeedback, 3) Info("AddFeedback", "Adding object \"%s\" to feedback", name);
    if (fFeedback == 0) {
       fFeedback = new TList;
       fFeedback->SetOwner();
@@ -2833,6 +2852,161 @@ TList *TProof::GetFeedbackList() const
 }
 
 //______________________________________________________________________________
+TTree *TProof::GetTreeHeader(TDSet *dset)
+{
+   // Creates a tree header (a tree with nonexisting files) object for
+   // the DataSet.
+
+   TList *l = GetListOfActiveSlaves();
+   TSlave *sl = (TSlave*) l->First();
+   if (sl == 0) {
+      Error("GetTreeHeader", "No connection");
+      return 0;
+   }
+
+   TSocket *soc = sl->GetSocket();
+   TMessage msg(kPROOF_GETTREEHEADER);
+
+   msg << dset;
+
+   soc->Send(msg);
+
+   TMessage *reply;
+   Int_t d = soc->Recv(reply);
+   if (reply <= 0) {
+      Error("GetTreeHeader", "Error getting a replay from the master.Result %d", (int) d);
+      return 0;
+   }
+
+   TString s1;
+   TTree * t;
+   (*reply) >> s1;
+   (*reply) >> t;
+
+   PDB(kGlobal, 1)
+      if (t)
+         Info("GetTreeHeader", Form("%s, message size: %d, entries: %d\n",
+             s1.Data(), reply->BufferSize(), (int) t->GetMaxEntryLoop()));
+      else
+         Info("GetTreeHeader", Form("%s, message size: %d\n", s1.Data(), reply->BufferSize()));
+
+   delete reply;
+
+   return t;
+}
+
+//______________________________________________________________________________
+TDrawFeedback *TProof::CreateDrawFeedback()
+{
+   // Draw feedback creation proxy. When accessed via TVirtualProof avoids
+   // link dependency on libProof.
+
+   return new TDrawFeedback(this);
+}
+
+//______________________________________________________________________________
+void TProof::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
+{
+   // Set draw feedback option.
+
+   if (f)
+      f->SetOption(opt);
+}
+
+//______________________________________________________________________________
+void TProof::DeleteDrawFeedback(TDrawFeedback *f)
+{
+   // Delete draw feedback object.
+
+   if (f)
+      delete f;
+}
+
+//______________________________________________________________________________
+TList* TProof::GetOutputNames()
+{
+//   FIXME: to be written
+   return 0;
+/*
+   TMessage msg(kPROOF_GETOUTPUTLIST);
+   TList* slaves = fActiveSlaves;
+   Broadcast(msg, slaves);
+   TMonitor mon;
+   TList* outputList = new TList();
+
+   TIter    si(slaves);
+   TSlave   *slave;
+   while ((slave = (TSlave*)si.Next()) != 0) {
+      PDB(kGlobal,4) Info("GetOutputNames","Socket added to monitor: %p (%s)",
+          slave->GetSocket(), slave->GetName());
+      mon.Add(slave->GetSocket());
+   }
+   mon.ActivateAll();
+   ((TProof*)gProof)->DeActivateAsyncInput();
+
+   while (mon.GetActive() != 0) {
+      TSocket *sock = mon.Select();
+      if (!sock) {
+         Error("GetOutputList","TMonitor::.Select failed!");
+         break;
+      }
+      mon.DeActivate(sock);
+      TMessage *reply;
+      if (sock->Recv(reply) <= 0) {
+         MarkBad(slave);
+//         Error("GetOutputList","Recv failed! for slave-%d (%s)",
+//               slave->GetOrdinal(), slave->GetName());
+         continue;
+      }
+      if (reply->What() != kPROOF_GETOUTPUTNAMES ) {
+//         Error("GetOutputList","unexpected message %d from slawe-%d (%s)",  reply->What(),
+//               slave->GetOrdinal(), slave->GetName());
+         MarkBad(slave);
+         continue;
+      }
+      TList* l;
+
+      (*reply) >> l;
+      TIter next(l);
+      TNamed *n;
+      while ( (n = dynamic_cast<TNamed*> (next())) ) {
+         if (!outputList->FindObject(n->GetName()))
+            outputList->Add(n);
+      }
+      delete reply;
+   }
+
+   return outputList;
+*/
+}
+
+//______________________________________________________________________________
+void TProof::Browse(TBrowser *b)
+{
+   // Build the proof's structure in the browser.
+
+   if (fFeedback == 0) {
+      fFeedback = new TList;
+      fFeedback->SetOwner();
+      fFeedback->SetName("FeedbackList");
+      AddInput(fFeedback);
+   }
+   if (!fPlayer)
+      fPlayer = new TProofPlayerRemote(this);
+
+   b->Add(fActiveSlaves, fActiveSlaves->Class(), "fActiveSlaves");
+   b->Add(&fMaster, fMaster.Class(), "fMaster");
+   b->Add(fFeedback, fFeedback->Class(), "fFeedback");
+   b->Add(fChains, fChains->Class(), "fChains");
+
+   if (fPlayer) {
+      b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
+      if (fPlayer->GetOutputList())
+         b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
+   }
+}
+
+//______________________________________________________________________________
 TProofPlayer *TProof::MakePlayer()
 {
    // Construct a TProofPlayer object.
@@ -2842,9 +3016,20 @@ TProofPlayer *TProof::MakePlayer()
 }
 
 //______________________________________________________________________________
+void TProof::AddChain(TChain *chain)
+{
+   fChains->Add(chain);
+}
+
+//______________________________________________________________________________
+void TProof::RemoveChain(TChain *chain)
+{
+   fChains->Remove(chain);
+}
+
+//------------------------------------------------------------------------------
 
 ClassImp(TProofCondor)
-
 
 //______________________________________________________________________________
 TProofCondor::TProofCondor(const char *masterurl, const char *conffile,

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.22 2004/07/02 18:36:57 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.23 2005/02/07 18:02:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -61,6 +61,8 @@ enum EMessageTypes {
    kPROOF_STOPPROCESS,                   //stop or abort the current process call
    kPROOF_HOSTAUTH,                      //HostAuth info follows
    kPROOF_GETSLAVEINFO,                  //get slave info from master
+   kPROOF_GETTREEHEADER,                 //get tree object
+   kPROOF_GETOUTPUTLIST,                 //get the output list
    kPROOF_GETSTATS,                      //get statistics of slaves
    kPROOF_GETPARALLEL,                   //get number of parallel slaves
    kPROOF_VALIDATE_DSET,                 //validate a TDSet

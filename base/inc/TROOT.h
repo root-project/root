@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.40 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -106,6 +106,7 @@ protected:
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
    TSeqCollection  *fClassGenerators;     //List of user defined class generators;
    TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
+   TSeqCollection  *fProofs;              //List of proof sessions
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.9 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.10 2005/03/08 09:19:18 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,10 +46,18 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_TEventList
+#include "TEventList.h"
+#endif
+
 class TList;
 class TDSet;
 class TEventList;
 class TCut;
+class TTree;
+class TChain;
+class TVirtualProof;
+class TEventList;
 
 
 class TDSetElementPfn : public TObject {
@@ -128,11 +136,14 @@ private:
    TList           *fPfnList;    // physical location information for Grid files
    TIter           *fIterator;   //! iterator on fPfnList
    TDSetElementPfn *fCurrent;    //! current element of fPfnList
+   Long64_t         fTDSetOffset;//! offset in the whole TDSet of the first
+                                 //  entry in this element
+   TEventList      *fEventList;  // event list to be used in processing
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
 
 public:
-   TDSetElement() { fSet = 0; fPfnList = 0; fIterator = 0; fCurrent = 0; fValid = kFALSE; }
+   TDSetElement() { fSet = 0; fPfnList = 0; fIterator = 0; fCurrent = 0; fValid = kFALSE; fEventList = 0;}
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0);
@@ -154,6 +165,10 @@ public:
    void             Reset();
    TDSetElementPfn *Next();
    void             Print(Option_t *options="") const;
+   Long64_t         GetTDSetOffset() const { return fTDSetOffset; }
+   void             SetTDSetOffset(Long64_t offset) { fTDSetOffset = offset; }
+   TEventList      *GetEventList() const { return fEventList; }
+   void             SetEventList(TEventList *aList) { fEventList = aList; }
    void             Validate();
    void             Validate(TDSetElement *elem);
    Int_t            Compare(const TObject *obj) const;
@@ -171,7 +186,7 @@ private:
    Bool_t   fIsTree;      // true if type is a TTree (or TTree derived)
    TIter   *fIterator;    //! iterator on fElements
    TList   *fElementsMsn; //-> list of mass storage names and the located files
-
+   TEventList *fEventList; //! event list for processing
 protected:
    TDSetElement  *fCurrent;  //! current element
 
@@ -200,13 +215,13 @@ public:
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,
                                  TEventList *evl = 0); // *MENU*
-   virtual void          Draw(Option_t *) { /* TODO: proper fix */ }
    virtual Int_t         Draw(const char *varexp, const char *selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
    virtual Int_t         Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
+   virtual void          Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }
 
    void                  Print(Option_t *option="") const;
 
@@ -236,7 +251,12 @@ public:
    void                  ClearInput();
    TObject              *GetOutput(const char *name);
    TList                *GetOutputList();
+   virtual void          StartViewer(); // *MENU*
 
+   virtual TTree        *GetTreeHeader(TVirtualProof *proof);
+   static TDSet         *MakeTDSet(TChain *chain);
+   virtual void          SetEventList(TEventList* evl) { fEventList = evl;}
+   TEventList           *GetEventList() const {return fEventList; }
    void                  Validate();
    void                  Validate(TDSet *dset);
 

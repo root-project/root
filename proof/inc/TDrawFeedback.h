@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.1 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.2 2004/11/24 07:41:32 brun Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -35,11 +35,16 @@ private:
    Bool_t         fAll;    //draw all or selected objects
    THashList     *fNames;  //selected objects
 
+protected:
+   Option_t      *fOption; //draw option
+   TProof        *fProof;  //handle to PROOF session
+
 public:
    TDrawFeedback(TVirtualProof *proof = 0, TSeqCollection *names = 0);
    ~TDrawFeedback();
 
    void Feedback(TList *objs);
+   void SetOption(Option_t *option) { fOption = option; }
 
    ClassDef(TDrawFeedback,0)  // Present PROOF query feedback
 };

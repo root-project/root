@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.57 2005/01/31 13:40:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.58 2005/01/31 22:14:46 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1194,6 +1194,7 @@ Int_t TH3::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
+   //Overflows and underflows are ignored.
    //The function returns the merged number of entries if the merge is 
    //successfull, -1 otherwise.
    //
@@ -1203,28 +1204,30 @@ Int_t TH3::Merge(TCollection *list)
    //be a multiple of the bin width.
    
    if (!list) return 0;
+   if (fBuffer) {
+      Error("Merge", "buffer not empty in the first histogram");
+      return 0;
+   }
    TIter next(list);
    Double_t umin,umax,vmin,vmax,wmin,wmax;
    Int_t nx,ny,nz;
+
+   const Int_t kNstat = 11;
+   Stat_t stats[kNstat], totstats[kNstat];
+   TH3 *h, *hclone=0;
+   Int_t i;
+   Stat_t nentries = fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    Double_t ymin  = fYaxis.GetXmin();
    Double_t ymax  = fYaxis.GetXmax();
    Double_t zmin  = fZaxis.GetXmin();
    Double_t zmax  = fZaxis.GetXmax();
-   Double_t bwix  = fXaxis.GetBinWidth(1);
-   Double_t bwiy  = fYaxis.GetBinWidth(1);
-   Double_t bwiz  = fZaxis.GetBinWidth(1);
    Int_t    nbix  = fXaxis.GetNbins();
    Int_t    nbiy  = fYaxis.GetNbins();
    Int_t    nbiz  = fZaxis.GetNbins();
-
-   const Int_t kNstat = 11;
-   Stat_t stats[kNstat], totstats[kNstat];
-   TH3 *h, *hclone=0;
-   Int_t i, nentries=(Int_t)fEntries;
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
       hclone = (TH3*)Clone("FirstClone");
@@ -1232,16 +1235,24 @@ Int_t TH3::Merge(TCollection *list)
       inlist.Add(hclone);
    }
    Bool_t same = kTRUE;
+   TAxis newXAxis(nbix, xmin, xmax);
+   TAxis newYAxis(nbiy, ymin, ymax);
+   TAxis newZAxis(nbiz, zmin, zmax);
+
    while ((h=(TH3*)next())) {     
       if (!h->InheritsFrom(TH3::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
       inlist.Add(h);
+      if (h->fBuffer) {
+         Error("Merge", "buffer not empty");
+         return 0;
+      }
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
-      nentries += (Int_t)h->GetEntries();
+      nentries += h->GetEntries();
       
       // find min/max of the axes
       umin = h->GetXaxis()->GetXmin();
@@ -1258,42 +1269,44 @@ Int_t TH3::Merge(TCollection *list)
                     vmin != ymin || vmax != ymax ||
                     wmin != zmin || wmax != zmax) {
          same = kFALSE;
-         if (umin < xmin) xmin = umin;  
-         if (umax > xmax) xmax = umax;  
-         if (vmin < ymin) ymin = vmin;  
-         if (vmax > ymax) ymax = vmax;  
-         if (wmin < zmin) zmin = wmin;  
-         if (wmax > zmax) zmax = wmax;  
-         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
-         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);     
-         if (h->GetZaxis()->GetBinWidth(1) > bwiz) bwiz = h->GetZaxis()->GetBinWidth(1);     
+         if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis())))
+            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                  "first: (%d, %f, %f), second: (%d, %f, %f)",
+                  newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                  nx, umin, umax);
+         if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis())))
+            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                  "first: (%d, %f, %f), second: (%d, %f, %f)",
+                  newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                  ny, vmin, vmax);
+         if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis())))
+            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                  "first: (%d, %f, %f), second: (%d, %f, %f)",
+                  newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
+                  nz, wmin, wmax);
       }
    }
-   
+
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); // while(nbix > 100) nbix /= 2;
-      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); // while(nbiy > 100) nbiy /= 2;
-      nbiz = (Int_t) ((zmax-zmin)/bwiz +0.1); // while(nbiz > 100) nbiz /= 2;
-      xmax = xmin + nbix*bwix;
-      ymax = ymin + nbiy*bwiy;
-      zmax = zmin + nbiz*bwiz;
-      SetBins(nbix,xmin,xmax,nbiy,ymin,ymax,nbiz,zmin,zmax);
+      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+              newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+              newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
    }
    
    //merge bin contents and errors
    TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, binz, ix, iy, iz;
    Double_t cu;
-   while ((h=(TH3*)next())) {     
+   while ((h=(TH3*)nextin())) {     
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       nz   = h->GetZaxis()->GetNbins();
-      for (binz=0;binz<=nz+1;binz++) {
+      for (binz = 1; binz <= nz; binz++) {
          iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
-         for (biny=0;biny<=ny+1;biny++) {
+         for (biny = 1; biny <= ny; biny++) {
             iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
-            for (binx=0;binx<=nx+1;binx++) {
+            for (binx = 1; binx <= nx; binx++) {
                ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                bin = binx +(nx+2)*(biny + (ny+2)*binz);
                ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
@@ -1313,7 +1326,7 @@ Int_t TH3::Merge(TCollection *list)
    SetEntries(nentries);
    if (hclone) delete hclone;
    
-   return nentries;
+   return (Int_t) nentries;
 }   
 
 //______________________________________________________________________________

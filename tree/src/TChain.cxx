@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.99 2005/01/25 17:05:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.100 2005/02/20 10:31:57 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -40,6 +40,10 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 #include "TObjString.h"
+#include "TProofChain.h"
+#include "TProof.h"
+#include "TDSet.h"
+
 
 ClassImp(TChain)
 
@@ -60,6 +64,7 @@ TChain::TChain(): TTree()
    fMaxCacheSize   = 0;
    fPageSize       = 0;
    fCanDeleteRefs  = kFALSE;
+   fProofChain     = 0;
 }
 
 //______________________________________________________________________________
@@ -105,6 +110,7 @@ TChain::TChain(const char *name, const char *title)
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
+   fProofChain = 0;
 }
 
 //______________________________________________________________________________
@@ -112,6 +118,7 @@ TChain::~TChain()
 {
 // destructor for a Chain
 
+   ReleaseProofChain();
    fDirectory = 0;
    delete fFile; fFile = 0; fTree = 0;
    gROOT->GetListOfSpecials()->Remove(this);
@@ -534,6 +541,10 @@ Long64_t TChain::Draw(const char *varexp, const TCut &selection, Option_t *optio
    // Useful to use the string operator +, example:
    //    ntuple.Draw("x",cut1+cut2+cut3);
    //
+   if (fProofChain) {
+      fProofChain->SetEventList(fEventList);
+      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
+   }
 
    return TChain::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
@@ -543,6 +554,11 @@ Long64_t TChain::Draw(const char *varexp, const char *selection, Option_t *optio
 {
    // Process all entries in this chain and draw histogram
    // corresponding to expression varexp.
+
+   if (fProofChain) {
+      fProofChain->SetEventList(fEventList);
+      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
+   }
 
    if (LoadTree(firstentry) < 0) return 0;
    return TTree::Draw(varexp,selection,option,nentries,firstentry);
@@ -554,6 +570,8 @@ TBranch *TChain::GetBranch(const char *name)
 {
 // Return pointer to the branch name in the current tree
 
+   if (fProofChain)
+      return fProofChain->GetBranch(name);
    if (fTree) return fTree->GetBranch(name);
    LoadTree(0);
    if (fTree) return fTree->GetBranch(name);
@@ -576,6 +594,8 @@ Long64_t TChain::GetEntries() const
 // In case the number of entries in each tree is not yet known,
 // the offset table is computed
 
+   if (fProofChain)
+      return fProofChain->GetEntries();
    if (fEntries >= (Stat_t)kBigNumber) {
       ((TChain*)this)->LoadTree(fEntries-1);
    }
@@ -633,6 +653,8 @@ TLeaf *TChain::GetLeaf(const char *name)
 {
 //  Return pointer to the leaf name in the current tree
 
+   if (fProofChain)
+      return fProofChain->GetLeaf(name);
    if (fTree) return fTree->GetLeaf(name);
    LoadTree(0);
    if (fTree) return fTree->GetLeaf(name);
@@ -645,6 +667,8 @@ TObjArray *TChain::GetListOfBranches()
 {
 // Return pointer to list of branches of current tree
 
+   if (fProofChain)
+      return fProofChain->GetListOfBranches();
    if (fTree) return fTree->GetListOfBranches();
    LoadTree(0);
    if (fTree) return fTree->GetListOfBranches();
@@ -657,7 +681,10 @@ TObjArray *TChain::GetListOfLeaves()
 {
 // Return pointer to list of leaves of current tree
 
+   if (fProofChain)
+      return fProofChain->GetListOfLeaves();
    if (fTree) return fTree->GetListOfLeaves();
+
    LoadTree(0);
    if (fTree) return fTree->GetListOfLeaves();
    return 0;
@@ -1156,6 +1183,8 @@ Long64_t TChain::Process(const char *filename,Option_t *option,  Long64_t nentri
 {
    // Process all entries in this chain, calling functions in filename
    // see TTree::Process
+   if (fProofChain)
+      return fProofChain->Process(filename, option, nentries, firstentry);
 
    if (LoadTree(firstentry) < 0) return 0;
    return TTree::Process(filename,option,nentries,firstentry);
@@ -1165,6 +1194,9 @@ Long64_t TChain::Process(const char *filename,Option_t *option,  Long64_t nentri
 Long64_t TChain::Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry)
 {
 // Process this chain executing the code in selector
+
+   if (fProofChain)
+      return fProofChain->Process(selector, option, nentries, firstentry);
 
    return TTree::Process(selector,option,nentries,firstentry);
 }
@@ -1399,3 +1431,86 @@ void TChain::UseCache(Int_t maxCacheSize, Int_t pageSize)
    fMaxCacheSize = maxCacheSize;
    fPageSize     = pageSize;
 }
+
+//______________________________________________________________________________
+void TChain::ReleaseProofChain()
+{
+   // Removes the PROOF chain (if present).
+
+   if (!fProofChain)
+      return;
+   fProofChain->GetProof()->RemoveChain(this);
+   SafeDelete(fProofChain);
+}
+
+//______________________________________________________________________________
+void TChain::SetProof(TVirtualProof *proof)
+{
+   // Sets the proof to be used for processing. "Draw" and "Processed" commands
+   // will be handled by the proof.
+   // If proof == (TVirtualProof*) -1 then the gProof is used.
+   // If proof == 0 no proof is connected and the previously connected
+   // proof is released.
+
+   if (proof == (TVirtualProof*) -1)
+      proof = gProof;
+   if (fProofChain && proof == fProofChain->GetProof())
+      return;
+   ReleaseProofChain();
+   if (proof) {
+      TDSet* set = TDSet::MakeTDSet(this);
+      if (!set) { // anyway should always succeed
+         Error("SetProof", "error creating a TDSet from a chain");
+         return;
+      }
+      fProofChain = TProofChain::MakeProofChain(set, proof);
+      if (!fProofChain)
+         Error("SetProof", "can't set PROOF");
+      else
+         proof->AddChain(this);
+   }
+}
+
+//______________________________________________________________________________
+Long64_t TChain::GetReadEntry() const
+{
+   // See TTree::GetReadEntry().
+
+   if (fProofChain)
+      return fProofChain->GetReadEntry();
+   else
+      return TTree::GetReadEntry();
+}
+//______________________________________________________________________________
+TBranch *TChain::FindBranch(const char* branchname)
+{
+   // See TTree::GetReadEntry().
+
+   if (fProofChain)
+      return fProofChain->FindBranch(branchname);
+   else
+      return TTree::FindBranch(branchname);
+}
+
+
+//______________________________________________________________________________
+TLeaf *TChain::FindLeaf(const char* searchname)
+{
+   // See TTree::GetReadEntry()
+   if (fProofChain)
+      return fProofChain->FindLeaf(searchname);
+   else
+      return TTree::FindLeaf(searchname);
+}
+
+//______________________________________________________________________________
+Bool_t TChain::GetBranchStatus(const char *branchname) const
+{
+   // See TTree::GetReadEntry()
+   if (fProofChain)
+      return fProofChain->GetBranchStatus(branchname);
+   else
+      return TTree::GetBranchStatus(branchname);
+}
+
+

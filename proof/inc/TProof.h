@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.50 2005/02/10 12:49:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.51 2005/03/08 09:19:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -62,6 +62,8 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TPacketizer2;
 class TCondor;
+class TTree;
+class TDrawFeedback;
 class TDSet;
 
 // protocol changes:
@@ -169,14 +171,14 @@ private:
    TPluginHandler *fProgressDialog; //progress dialog plugin
    TProofPlayer   *fPlayer;         //current player
    TList          *fFeedback;       //List of names to be returned as feedback
-
+   TList          *fChains;         //chains with this proof set
    struct MD5Mod_t {
-      TMD5   fMD5;              //file's md5
-      Long_t fModtime;          //file's modification time
+      TMD5   fMD5;                  //file's md5
+      Long_t fModtime;              //file's modification time
    };
    typedef std::map<TString, MD5Mod_t> FileMap_t;
-   FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
-   TDSet     *fDSet;            //current TDSet being validated
+   FileMap_t       fFileMap;        //map keeping track of a file's md5 and mod time
+   TDSet          *fDSet;           //current TDSet being validated
 
 protected:
    enum ESlaves { kAll, kActive, kUnique };
@@ -284,6 +286,7 @@ public:
 
    void        StopProcess(Bool_t abort);
    void        AddInput(TObject *obj);
+   void        Browse(TBrowser *b);
    void        ClearInput();
    TObject    *GetOutput(const char *name);
    TList      *GetOutputList();
@@ -323,6 +326,7 @@ public:
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
 
+   Bool_t      IsFolder() const { return kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
@@ -339,6 +343,16 @@ public:
 
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
+
+   TTree      *GetTreeHeader(TDSet *tdset);
+   TList      *GetOutputNames();
+
+   void        AddChain(TChain *chain);
+   void        RemoveChain(TChain *chain);
+
+   TDrawFeedback *CreateDrawFeedback();
+   void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
+   void           DeleteDrawFeedback(TDrawFeedback *f);
 
    ClassDef(TProof,0)  //PROOF control class
 };

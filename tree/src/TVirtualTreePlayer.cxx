@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.3 2002/09/19 13:54:58 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.4 2004/08/24 15:46:02 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TVirtualTreePlayer.h"
 #include "TPluginManager.h"
+#include "TProof.h"
 
 TClass              *TVirtualTreePlayer::fgPlayer  = 0;
 TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;
@@ -29,14 +30,12 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    // if no player set yet,  create a default painter via the PluginManager
    if (!fgPlayer) {
       TPluginHandler *h;
-      //if ((h = GetPluginManager()->FindHandler("TVirtualProof")))
-      //   h->LoadPlugin();
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreePlayer"))) {
          if (h->LoadPlugin() == -1)
             return 0;
          TVirtualTreePlayer::SetPlayer(h->GetClass());
-         if (!fgPlayer) return 0;
       }
+      if (!fgPlayer) return 0;
    }
 
    //create an instance of the Tree player
@@ -61,3 +60,4 @@ void TVirtualTreePlayer::SetPlayer(const char *player)
 
    fgPlayer = gROOT->GetClass(player);
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.63 2005/02/16 10:31:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.64 2005/03/03 08:19:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -111,8 +111,9 @@ protected:
     TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     virtual void     Copy(TObject &hnew) const;
     virtual Int_t    BufferFill(Axis_t x, Stat_t w);
+    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Axis_t point, Axis_t& newMin, Axis_t &newMax);
     virtual void     SavePrimitiveHelp(ofstream &out, Option_t *option);
-
+    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
 public:
     // TH1 status bits
     enum {

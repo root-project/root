@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.1 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.2 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -22,7 +22,8 @@
 #include "TSocket.h"
 #include "TH1.h"
 #include "TMessage.h"
-
+#include "TProofDebug.h"
+#include "TError.h"
 
 ClassImp(TProofLimitsFinder)
 
@@ -48,6 +49,10 @@ void TProofLimitsFinder::AutoBinFunc(TString& key,
    TSocket *s = gProofServ->GetSocket();
    TMessage mess(kPROOF_AUTOBIN);
 
+   PDB(kGlobal, 2) {
+      TProofLimitsFinder f;
+      f.Info("AutoBinFunc", Form("Sending %f, %f, %f, %f, %f, %f", xmin, xmax, ymin, ymax, zmin, zmax));
+   }
    mess << key << xmin << xmax << ymin << ymax << zmin << zmax;
 
    s->Send(mess);

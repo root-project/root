@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.23 2004/07/29 10:54:54 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.24 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -103,6 +103,7 @@ public:
    virtual void      ClearInput();
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
+   virtual TList    *GetInputList() const { return fInput; }
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
@@ -142,9 +143,9 @@ private:
    TList              *fFeedback;      // reference for use on master
    TList              *fFeedbackLists; // intermediate results
    TVirtualPacketizer *fPacketizer;    // transform TDSet into packets for slaves
+   TDSet              *fDSet;          //!tdset for current processing
 
    TList              *MergeFeedback();
-
 protected:
    virtual Bool_t  HandleTimer(TTimer *timer);
    TProof         *GetProof() const { return fProof; }

@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.19 2004/07/09 01:34:51 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.20 2005/02/07 18:02:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,9 +42,20 @@
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
 #pragma link C++ class TProofDraw+;
+#pragma link C++ class TProofDrawEventList+;
+#pragma link C++ class TProofDrawHist+;
+#pragma link C++ class TProofDrawProfile+;
+#pragma link C++ class TProofDrawProfile2D+;
+#pragma link C++ class TProofDrawGraph+;
+#pragma link C++ class TProofDrawPolyMarker3D+;
+#pragma link C++ class TProofDrawListOfGraphs+;
+#pragma link C++ class TProofDrawListOfPolyMarkers3D+;
 #pragma link C++ class TDrawFeedback+;
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TStatus+;
+#pragma link C++ class TDrawInfo+;
+#pragma link C++ class TProofNTuple+;
+
 
 #endif

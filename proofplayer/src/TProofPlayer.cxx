@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.47 2005/02/08 22:40:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.48 2005/03/08 09:19:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -40,9 +40,11 @@
 #include "TMap.h"
 #include "TPerfStats.h"
 #include "TStatus.h"
+#include "TEventList.h"
 #include "TProofLimitsFinder.h"
 #include "TSortedList.h"
-
+#include "TDrawInfo.h"
+#include "TCanvas.h"
 #include "Api.h"
 
 
@@ -263,6 +265,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
       }
    }
+   if (gProof && gProof->IsMaster()) {  // put all the canvases onto the output list
+      TIter next(gROOT->GetListOfCanvases());
+      while (TCanvas* c = dynamic_cast<TCanvas*> (next()))
+         fOutput->Add(c);
+   }
 
    TPerfStats::Stop();
 
@@ -319,20 +326,40 @@ Long64_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
+   TDrawInfo info;
+   info.Parse(varexp, selection, option);
+   TString selector = info.GetProofSelectorName();
+
    TNamed *varexpobj = new TNamed("varexp", varexp);
    TNamed *selectionobj = new TNamed("selection", selection);
+
+   // save the feedback list
+   TList *fb = (TList*) fInput->FindObject("FeedbackList");
+   if (fb)
+      fInput->Remove(fb);
 
    fInput->Clear();  // good idea? what about a feedbacklist, but old query
                      // could have left objs? clear at end? no, may want to
                      // rerun, separate player?
+   if (fb)
+      fInput->Add(fb);
 
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
 
-   Long64_t r = Process(set, "TProofDraw", option, nentries, firstentry);
+   if (info.GetObjectName() == "")
+      info.SetObjectName("htemp");
+   gProof->AddFeedback(info.GetObjectName());
+   Long64_t r = Process(set, selector, option, nentries, firstentry);
+   gProof->RemoveFeedback(info.GetObjectName());
 
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);
+   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("__PROOF_OPTIONS"))) {
+      fInput->Remove(opt);
+      delete opt;
+   }
+
    delete varexpobj;
    delete selectionobj;
 
@@ -376,9 +403,13 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // Returns -1 in case error, 0 otherwise.
 
    PDB(kGlobal,1) Info("Process","Enter");
+   fDSet = dset;
 
-   delete fOutput;
-   fOutput = new TList;
+//   delete fOutput;
+   if (!fOutput)
+      fOutput = new TList;
+   else
+      fOutput->Clear();
 
    if (fProof->IsMaster()){
       TPerfStats::Start(fInput, fOutput);
@@ -423,6 +454,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (fSelector == 0) return -1;
       fSelectorClass = fSelector->IsA();
       fSelector->SetInputList(fInput);
+      fSelector->SetOption(option);
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
@@ -432,7 +464,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    SetupFeedback();
 
    TString opt = option;
-   mesg << set << fn << fInput << opt << nentries << first; // no evl yet
+   TEventList* elist = 0;
+   if (!fProof->IsMaster() && set->GetEventList()) {
+      elist = set->GetEventList();
+   }
+   mesg << set << fn << fInput << opt << nentries << first << elist; // no evl yet
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
@@ -447,20 +483,38 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
 
-
+   Long64_t rv = 0;
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
    } else {
       TIter next(fOutput);
       TList *output = fSelector->GetOutputList();
       while(TObject* obj = next()) {
-         output->Add(obj);
+         if (!gProof->IsParallel()) {
+            if (TCanvas* c = dynamic_cast<TCanvas *> (obj))
+               c->Draw();
+            else
+               output->Add(obj);
+         }
+         else
+            output->Add(obj);
       }
       PDB(kLoop,1) Info("Process","Call Terminate()");
       fSelector->Terminate();
+      rv = fSelector->GetStatus();
+     // copy the output list back and clean the selector's list
+//      delete fOutput;
+//      fOutput = new TList;
+      fOutput->Clear();
+      TIter it(output);
+      while(TObject* o = it()) {
+         fOutput->Add(o);
+      }
+      // FIXME
+      output->SetOwner(kFALSE);
+      output->Clear();
    }
-
-   return 0;
+   return rv;
 }
 
 //______________________________________________________________________________
@@ -563,6 +617,40 @@ void TProofPlayerRemote::StoreOutput(TList *out)
       PDB(kOutput,2) Info("StoreOutput","Create fOutputLists");
       fOutputLists = new TList;
       fOutputLists->SetOwner();
+   }
+   // process eventlists first
+   TList* lists = dynamic_cast<TList*> (out->FindObject("_PROOF_EventListsList"));
+   if (lists) {
+      out->Remove(lists);
+      TEventList *mainList = new TEventList("_PROOF_EventList");
+      out->Add(mainList);
+      TIter it(lists);
+      TEventList *aList;
+      while ( (aList = dynamic_cast<TEventList*> (it())) ) {
+         // find file offset
+         TIter next(fDSet->GetListOfElements());
+         TDSetElement *elem;
+         while ( (elem = dynamic_cast<TDSetElement*> (next())) ) {
+            if (strcmp(elem->GetFileName(), aList->GetName()) == 0)
+               break;
+         }
+         if (!elem) {
+            Error("StoreOutput",Form("Found the EventList for %s, but no object with that name "
+                                 "in the TDSet", aList->GetName()));
+            continue;
+         }
+         int offset = elem->GetTDSetOffset();
+
+         // shift the list by the number of first event in that file
+         Int_t *arr = aList->GetList();
+         Int_t num = aList->GetN();
+         if (arr && offset)
+            for (int i = 0; i < num; i++)
+               arr[i] += offset;
+
+         mainList->Add(aList);           // add to the main list
+      }
+      delete lists;
    }
 
    TObject *obj;

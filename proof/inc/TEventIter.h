@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.6 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.7 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TSelector;
 class TList;
 class TIter;
 class TTree;
-
+class TEventList;
 
 //------------------------------------------------------------------------
 
@@ -59,8 +59,10 @@ protected:
    Long64_t       fNum;          // number of entries to process
    Long64_t       fCur;          // current entry
    Bool_t         fStop;         // termination of run requested
+   TEventList    *fEventList;    //! eventList for processing
+   Int_t          fEventListPos; //! current position in the eventList
 
-   Int_t    LoadDir();           // Load the directory pointed to by fElem
+   Int_t          LoadDir();     // Load the directory pointed to by fElem
 
 public:
    TEventIter();

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.45 2005/02/14 12:54:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.46 2005/03/08 05:33:30 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -586,6 +586,10 @@ void TSelectorDraw::Begin(TTree *tree)
          fNbins[0] = gEnv->GetValue("Hist.Binning.3D.z",20);
          fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
          fNbins[2] = gEnv->GetValue("Hist.Binning.3D.x",20);
+         if (fDimension == 3 && opt.Contains("prof")) {
+            fNbins[1] = gEnv->GetValue("Hist.Binning.3D.Profy",20);
+            fNbins[2] = gEnv->GetValue("Hist.Binning.3D.Profx",20);
+         }
          if (optSame) {
             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
             if (oldhtemp) {
@@ -1391,13 +1395,24 @@ void TSelectorDraw::TakeEstimate()
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
-
-      if (fAction == 3 || !h3->TestBit(kCanDelete)) {
+      if (fAction == 3) {
          for (i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+         return;
       }
-      if (fAction == 3) return;
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         h3->Draw(fOption.Data());
+         if (!h3->TestBit(kCanDelete)) {
+            // case like: T.Draw("y:x>>myhist")
+            // we must draw a copy before filling the histogram h3=myhist
+            // because h3 will be filled below and we do not want to show
+            // the binned scatter-plot, the TGraph being better.
+            TH1 *h3c = h3->DrawCopy(fOption.Data());
+            h3c->SetStats(kFALSE);
+         } else {
+            // case like: T.Draw("y:x")
+            // h3 is a temporary histogram (htemp). This histogram
+            // will be automatically deleted by TPad::Clear
+            h3->Draw(fOption.Data());
+         }
          gPad->Update();
       } else {
          rmin[0] = fVmin[2]; rmin[1] = fVmin[1]; rmin[2] = fVmin[0];
@@ -1412,6 +1427,10 @@ void TSelectorDraw::TakeEstimate()
       pm3d->SetMarkerSize(fTree->GetMarkerSize());
       for (i=0;i<fNfill;i++) { pm3d->SetPoint(i,fV3[i],fV2[i],fV1[i]);}
       if (!fDraw && !strstr(fOption.Data(),"goff")) pm3d->Draw();
+      if (!h3->TestBit(kCanDelete)) {
+         for (i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+      }
+
    //__________________________2D Profile Histogram__________________
    } else if (fAction == 23) {
       TProfile2D *hp = (TProfile2D*)fObject;
