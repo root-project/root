@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.129 2004/05/06 09:45:03 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.130 2004/05/10 14:15:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3694,18 +3694,15 @@ void TPad::Print(const char *filenam, Option_t *option)
 
 //==============Save pad/canvas as a XML file====================================
    if (strstr(opt,"xml")) {
-      // Plugin Postscript/SVG driver
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", "xml:"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         TDirectory *dirsav = gDirectory;
-         h->ExecPlugin(2,filenam,"recreate");
+      // Plugin XML driver
+      TDirectory *dirsav = gDirectory;
+      TFile *file = TFile::Open(psname,"recreate");
+      if (file) {
          Write();
-         delete gFile;
-         if (dirsav) dirsav->cd();
-         if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname);
+         delete file;
       }
+      if (dirsav) dirsav->cd();
+      if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname);
       return;
    }
 
