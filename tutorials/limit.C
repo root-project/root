@@ -1,0 +1,91 @@
+void limit() {
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*
+//*-*  This program demonstrates the computation of 95 % C.L. limits.
+//*-*  It uses a set of randomly created histograms.
+//*-*
+//*-*  Written by Christophe.Delaere@cern.ch on 21.08.02
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+// Create a new canvas.
+  TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
+  c1->SetFillColor(42);
+	  
+// Create some histograms
+  TH1F* background = new TH1F("background","The expected background",30,-4,4);
+  TH1F* signal     = new TH1F("signal","the expected signal",30,-4,4);
+  TH1F* data       = new TH1F("data","some fake data points",30,-4,4);
+  background->SetFillColor(48);
+  signal->SetFillColor(41);
+  data->SetMarkerStyle(21);
+  data->SetMarkerColor(kBlue);
+
+// Fill histograms randomly
+  TRandom r;
+  Float_t bg,sig,dt;
+  for (Int_t i = 0; i < 25000; i++) {
+     bg  = r.Gaus(0,1);
+     sig = r.Gaus(1,.2);
+     background->Fill(bg,0.02);
+     signal->Fill(sig,0.001);
+  }
+  for (Int_t i = 0; i < 500; i++) {
+     dt = r.Gaus(0,1);
+     data->Fill(dt);
+  }
+  THStack *hs = new THStack("hs","Signal and background compared to data...");
+  hs->Add(background);
+  hs->Add(signal);
+  hs->Draw();
+  data->Draw("PE1,Same");
+  c1->Modified();
+  c1->Update();
+  c1->GetFrame()->SetFillColor(21);
+  c1->GetFrame()->SetBorderSize(6);
+  c1->GetFrame()->SetBorderMode(-1);
+  c1->Modified();
+  c1->Update();
+  gSystem->ProcessEvents();
+  
+// Compute the limits
+  cout << "Computing limits... " << endl;
+  TLimitDataSource* mydatasource = new TLimitDataSource(signal,background,data);
+  TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
+  cout << "CLs    : "   << myconfidence->CLs()  << endl;
+  cout << "CLsb   : "   << myconfidence->CLsb() << endl;
+  cout << "CLb    : "   << myconfidence->CLb()  << endl;
+  cout << "< CLs >  : " << myconfidence->GetExpectedCLs_b()  << endl;
+  cout << "< CLsb > : " << myconfidence->GetExpectedCLsb_b() << endl;
+  cout << "< CLb >  : " << myconfidence->GetExpectedCLb_b()  << endl;
+
+// Add some systematics
+  cout << endl << "Computing limits with systematics... " << endl;
+  TH1F* errorb = new TH1F("errorb","errors on background",1,0,1);
+  TH1F* errors = new TH1F("errors","errors on signal",1,0,1);
+  TObjArray* names = new TObjArray();
+  TObjString name1("bg uncertainty");
+  TObjString name2("sig uncertainty");
+  names.AddLast(&name1);
+  names.AddLast(&name2);
+  errorb->SetBinContent(0,0.05); // error source 1: 5%
+  errorb->SetBinContent(1,0);    // error source 2: 0%
+  errors->SetBinContent(0,0);    // error source 1: 0%
+  errors->SetBinContent(1,0.01); // error source 2: 1%
+  TLimitDataSource* mynewdatasource  = new TLimitDataSource();
+  mynewdatasource->AddChannel(signal,background,data,errors,errorb,names);
+  TConfidenceLevel *mynewconfidence = TLimit::ComputeLimit(mynewdatasource,50000);
+  cout << "CLs    : " << mynewconfidence->CLs()  << endl;
+  cout << "CLsb   : " << mynewconfidence->CLsb() << endl;
+  cout << "CLb    : " << mynewconfidence->CLb()  << endl;
+  cout << "< CLs >  : " << mynewconfidence->GetExpectedCLs_b()  << endl;
+  cout << "< CLsb > : " << mynewconfidence->GetExpectedCLsb_b() << endl;
+  cout << "< CLb >  : " << mynewconfidence->GetExpectedCLb_b()  << endl;
+
+// clean up (except histograms and canvas)
+  delete myconfidence;
+  delete mydatasource;
+  delete mynewconfidence;
+  delete mynewdatasource;
+}
+  
