@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.20 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.21 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(const TH1 *h1);
     virtual void    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-    virtual TH1    *DrawCopy(Option_t *option="");
+    virtual TH1    *DrawCopy(Option_t *option="") const;
     virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual Int_t   Fill(Axis_t x, Axis_t y);
     virtual Int_t   Fill(const char *namex, Axis_t y);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.13 2002/10/31 07:27:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.14 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -543,7 +543,7 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
 }
 
 //______________________________________________________________________________
-TH1 *TProfile2D::DrawCopy(Option_t *option)
+TH1 *TProfile2D::DrawCopy(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*Draw a copy of this profile2D histogram*-*-*-*-*-*-*-*-*-*-*
 //*-*            =======================================

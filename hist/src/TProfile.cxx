@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.31 2002/11/11 21:19:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.32 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -564,7 +564,7 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
 }
 
 //______________________________________________________________________________
-TH1 *TProfile::DrawCopy(Option_t *option)
+TH1 *TProfile::DrawCopy(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*Draw a copy of this profile histogram*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            =====================================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.37 2002/11/22 13:54:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.38 2002/12/03 10:25:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1527,7 +1527,7 @@ void TH2C::Copy(TObject &newth2) const
 }
 
 //______________________________________________________________________________
-TH1 *TH2C::DrawCopy(Option_t *option)
+TH1 *TH2C::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -1746,7 +1746,7 @@ void TH2S::Copy(TObject &newth2) const
 }
 
 //______________________________________________________________________________
-TH1 *TH2S::DrawCopy(Option_t *option)
+TH1 *TH2S::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -1961,7 +1961,7 @@ void TH2F::Copy(TObject &newth2) const
 }
 
 //______________________________________________________________________________
-TH1 *TH2F::DrawCopy(Option_t *option)
+TH1 *TH2F::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -2184,7 +2184,7 @@ void TH2D::Copy(TObject &newth2) const
 }
 
 //______________________________________________________________________________
-TH1 *TH2D::DrawCopy(Option_t *option)
+TH1 *TH2D::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();

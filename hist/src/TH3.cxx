@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.28 2002/11/22 13:54:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.29 2002/12/03 10:25:40 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1556,7 +1556,7 @@ void TH3C::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3C::DrawCopy(Option_t *option)
+TH1 *TH3C::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -1769,7 +1769,7 @@ void TH3S::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3S::DrawCopy(Option_t *option)
+TH1 *TH3S::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -1961,7 +1961,7 @@ void TH3F::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3F::DrawCopy(Option_t *option)
+TH1 *TH3F::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -2153,7 +2153,7 @@ void TH3D::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3D::DrawCopy(Option_t *option)
+TH1 *TH3D::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.116 2002/12/03 10:25:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.117 2002/12/04 09:54:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1295,7 +1295,7 @@ void TH1::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-TH1 *TH1::DrawCopy(Option_t *)
+TH1 *TH1::DrawCopy(Option_t *) const
 {
 //   -*-*-*-*-*Copy this histogram and Draw in the current pad*-*-*-*-*-*-*-*
 //             ===============================================
@@ -1309,6 +1309,40 @@ TH1 *TH1::DrawCopy(Option_t *)
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    AbstractMethod("DrawCopy");
    return 0;
+}
+
+//______________________________________________________________________________
+TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
+{
+//  Draw a normalized copy of this histogram.
+// 
+//  A clone of this histogram is normalized to norm and drawn with option.
+//  A pointer to the normalized histogram is returned.
+//  The contents of the histogram copy are scaled such that the new
+//  sum of weights (excluding under and overflow) is equal to norm.
+//  Note that the returned normalized histogram is not added to the list
+//  of histograms in the current directory in memory.
+//  It is the user's responsability to delete this histogram.
+//  The kCanDelete bit is set for the returned object. If a pad containing
+//  this copy is cleared, the histogram will be automatically deleted.
+//
+//     See Draw for the list of options
+//
+//   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   Double_t sum = GetSumOfWeights();
+   if (sum == 0) {
+      Error("DrawNormalized","Sum of weights is null. Cannot normalized histogram: %s",GetName());
+      return 0;
+   }
+   Bool_t addStatus = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
+   TH1 *h = (TH1*)Clone();
+   h->SetBit(kCanDelete);
+   h->Scale(norm/sum);
+   h->Draw(option);   
+   TH1::AddDirectory(addStatus);
+   return h;
 }
 
 //______________________________________________________________________________
@@ -5264,7 +5298,7 @@ void TH1C::Copy(TObject &newth1) const
 }
 
 //______________________________________________________________________________
-TH1 *TH1C::DrawCopy(Option_t *option)
+TH1 *TH1C::DrawCopy(Option_t *option) const
 {
 
    TString opt = option;
@@ -5469,7 +5503,7 @@ void TH1S::Copy(TObject &newth1) const
 }
 
 //______________________________________________________________________________
-TH1 *TH1S::DrawCopy(Option_t *option)
+TH1 *TH1S::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -5667,7 +5701,7 @@ void TH1F::Copy(TObject &newth1) const
 }
 
 //______________________________________________________________________________
-TH1 *TH1F::DrawCopy(Option_t *option)
+TH1 *TH1F::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();
@@ -5866,7 +5900,7 @@ void TH1D::Copy(TObject &newth1) const
 }
 
 //______________________________________________________________________________
-TH1 *TH1D::DrawCopy(Option_t *option)
+TH1 *TH1D::DrawCopy(Option_t *option) const
 {
    TString opt = option;
    opt.ToLower();

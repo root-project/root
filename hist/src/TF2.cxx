@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.14 2002/10/12 16:41:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.15 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -178,7 +178,7 @@ void TF2::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-TF1 *TF2::DrawCopy(Option_t *option)
+TF1 *TF2::DrawCopy(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*Draw a copy of this function with its current attributes*-*-*
 //*-*            ========================================================
