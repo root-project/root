@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.9 2001/02/08 11:51:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.10 2001/03/12 07:18:35 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -32,7 +32,9 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TBrowser.h"
+#include "TFolder.h"
 
+const Int_t kMaxLen = 1024;
 R__EXTERN  TTree *gTree;
 
 ClassImp(TBranchElement)
@@ -45,6 +47,7 @@ TBranchElement::TBranchElement(): TBranch()
 
    fNleaves   = 1;
    fInfo = 0;
+   fBranchCount = 0;
 }
 
 
@@ -56,25 +59,210 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 //
 // If splitlevel > 0 this branch in turn is split into sub branches
    
-   char name[128];
+//printf("BranchElement, bname=%s, sinfo=%s, id=%d, splitlevel=%d\n",bname,sinfo->GetName(),id,splitlevel);
+   char name[kMaxLen];
    strcpy(name,bname);
-//printf("Creating branch:%s, sinfo:%s\n",name,sinfo->GetName());
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
    fID           = id;
    fStreamerType = -1;
    fType         = 0;
+   fBranchCount  = 0;
    fClassVersion = cl->GetClassVersion();
+   fTree         = gTree;
+   ULong_t *elems = sinfo->GetElems();
+   TStreamerElement *element = 0;
+   TBranchElement *brcount = 0;
    if (id >= 0) {
-     Int_t *types = sinfo->GetTypes();
-     fStreamerType = types[fID];
+      element = (TStreamerElement *)elems[id];
+      fStreamerType = element->GetType();
+      if (element->IsA() == TStreamerBasicPointer::Class()) {
+         TStreamerBasicPointer *bp = (TStreamerBasicPointer *)element;
+         char countname[kMaxLen];
+         strcpy(countname,bname);
+         char *dot = strrchr(countname,'.');
+         if (dot) *(dot+1) = 0;
+         else countname[0] = 0;
+         strcat(countname,bp->GetCountName());
+         brcount = (TBranchElement *)fTree->GetBranch(countname);
+         printf("found pointertobasicpointer: %s[%s]\n",name,countname);
+      }
    }
            
    SetName(name);
    SetTitle(name);
+
+   // Set the bit kAutoDelete to specify that when reading
+   // the object should be deleted before calling Streamer.
+   // It is foreseen to not set this bit in a future version.
+   SetAutoDelete(kTRUE);
+
+   fDirectory  = fTree->GetDirectory();
+   fFileName   = "";
    fClassName = sinfo->GetName();
+//printf("Building Branch=%s, class=%s, info=%s, version=%d, id=%d\n",bname,cl->GetName(),sinfo->GetName(),fClassVersion,id);
    fCompress = compress;
-   if (compress == -1) {
+   if (compress == -1 && gTree->GetDirectory()) {
+      TFile *bfile = gTree->GetDirectory()->GetFile();
+      if (bfile) fCompress = bfile->GetCompressionLevel();
+   }
+   if (basketsize < 100) basketsize = 100;
+   fBasketSize     = basketsize;
+   fBasketEntry    = new Int_t[fMaxBaskets];
+   fBasketBytes    = new Int_t[fMaxBaskets];
+   fBasketSeek     = new Seek_t[fMaxBaskets];
+
+   fBasketEntry[0] = fEntryNumber;
+   fBasketBytes[0] = 0;
+
+   // Create a basket for the terminal branch
+   TBasket *basket = new TBasket(name,fTree->GetName(),this);
+   fBaskets.Add(basket);
+   
+   // create sub branches if requested by splitlevel
+   if (splitlevel > 0) {
+      TClass *clm;
+      if (element->CannotSplit()) {
+         //printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
+      } else if (element->IsA() == TStreamerBase::Class()) {
+         // ===> develop the base class
+         fType = 1;
+         clm = gROOT->GetClass(element->GetName());
+         Int_t nbranches = fBranches.GetEntriesFast();
+         if (!strcmp(name,clm->GetName())) Unroll("",cl,clm,basketsize,splitlevel,0);
+         else                              Unroll(name,clm,clm,basketsize,splitlevel,0);
+         if (!strcmp(name,clm->GetName())) return;
+         if (strchr(bname,'.')) return;
+         //if (strchr(bname,'_')) return;
+         if (nbranches == fBranches.GetEntriesFast()) {
+            if (strlen(bname)) sprintf(name,"%s.%s",bname,clm->GetName());
+            //if (strlen(bname)) sprintf(name,"%s_%s",bname,clm->GetName());
+            else               sprintf(name,"%s",clm->GetName());
+            SetName(name);
+            SetTitle(name);
+         }
+         return; 
+                  
+      } else if (!strchr(element->GetTypeName(),'*') && (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
+         // ===> create sub branches for members that are classes
+         fType = 2;
+         clm = gROOT->GetClass(element->GetTypeName());
+         if (Unroll(name,clm,clm,basketsize,splitlevel,0) >= 0) return;
+         
+      } else if (!strcmp(element->GetTypeName(),"TClonesArray*")) {
+         // ===> Create a leafcount
+         TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
+         leaf->SetBranch(this);
+         fNleaves = 1;
+         fLeaves.Add(leaf);
+         fTree->GetListOfLeaves()->Add(leaf);
+         // Create a basket for the leafcount
+         TBasket *basket = new TBasket(name,fTree->GetName(),this);
+         fBaskets.Add(basket);
+         // ===> create sub branches for each data member of a TClonesArray
+         fType = 3;
+         char **ppointer = (char**)(pointer);
+         TClonesArray *clones = (TClonesArray*)(*ppointer);
+         if (!clones) return; // TClonesArray must exist
+         clm = clones->GetClass();
+         if (!clm) return;
+         //check that the contained objects class name is part of the element title
+         //This name is mandatory when reading the Tree later on and
+         //the parent class with the pointer to the TClonesArray is not available.
+         //This info will be used by TStreamerInfo::New
+         char aname[100];
+         sprintf(aname," (%s)",clm->GetName());
+         TString atitle = element->GetTitle();
+         if (!atitle.Contains(aname)) {
+            atitle += aname; 
+            element->SetTitle(atitle.Data());
+         } 
+         char branchname[kMaxLen];
+         sprintf(branchname,"%s_",name);
+         SetTitle(branchname);
+         leaf->SetName(branchname);
+         leaf->SetTitle(branchname);
+         Unroll(name,clm,clm,basketsize,splitlevel,31);
+         Int_t nbranches = fBranches.GetEntries();
+         for (Int_t i=0;i<nbranches;i++) {
+            TBranchElement *bre = (TBranchElement*)fBranches.At(i);
+            const char *fin = strrchr(bre->GetTitle(),'.');
+            //const char *fin = strrchr(bre->GetTitle(),'_');
+            if (fin == 0) continue;
+            TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
+            sprintf(branchname,"%s[%s_]",fin+1,name);
+            bre->SetTitle(branchname);
+            lf->SetTitle(branchname);
+            bre->SetBranchCount(this);
+         }
+         return;
+         
+      } else if (strstr(element->GetTypeName(),"vector<")) {
+         // ===> create sub branches for each data member of a STL vector
+         //      if it is a vector of class objects.
+         //      STL vectors like vector<float> are not split
+         fType = 0;
+         char classname[kMaxLen];
+         strcpy(classname,element->GetTypeName()+7);
+         char *star = strchr(classname,'>');
+         *star = 0;
+         clm = gROOT->GetClass(classname);
+         if (clm) {         
+            TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
+            leaf->SetBranch(this);
+            fNleaves = 1;
+            fLeaves.Add(leaf);
+            fTree->GetListOfLeaves()->Add(leaf);
+            // Create a basket for the leafcount
+            TBasket *basket = new TBasket(name,fTree->GetName(),this);
+            fBaskets.Add(basket);
+            // ===> create sub branches for each data member of the class
+            fType = 4;
+            char branchname[kMaxLen];
+            sprintf(branchname,"%s_",name);
+            SetTitle(branchname);
+            Unroll(name,clm,clm,basketsize,splitlevel,41);
+            TStreamerSTL *stl = (TStreamerSTL*)element;
+            if (stl->GetSTLtype() == 1 && stl->GetCtype() == 61) {
+               printf("will split this STL vector: %s of %s\n",name,classname);
+            }
+            if (stl->GetSTLtype() == 41 && stl->GetCtype() == 61) {
+               printf("will split this pointer to STL vector: %s of %s\n",name,classname);
+            }
+            return;
+         }
+      }
+   }
+
+   TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
+   leaf->SetBranch(this);
+   fNleaves = 1;
+   fLeaves.Add(leaf);
+   gTree->GetListOfLeaves()->Add(leaf);
+   if (brcount) SetBranchCount(brcount);
+}
+
+//______________________________________________________________________________
+TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
+    :TBranch()
+{
+// Create a BranchElement
+//
+// If splitlevel > 0 this branch in turn is split into sub branches
+   
+   char name[kMaxLen];
+   strcpy(name,bname);
+   fInfo         = TClonesArray::Class()->GetStreamerInfo();
+   fID           = 0;
+   fStreamerType = -1;
+   fType         = 0;
+   fClassVersion = 1;
+           
+   SetName(name);
+   SetTitle(name);
+   fClassName = fInfo->GetName();
+   fCompress = compress;
+   if (compress == -1 && gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
@@ -98,93 +286,34 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    
    // create sub branches if requested by splitlevel
    if (splitlevel > 0) {
-      TClass *clm;
-      TObjArray *elements = sinfo->GetElements();
-      TStreamerElement *element = (TStreamerElement *)elements->At(id);
-      if (element->CannotSplit()) {
-         printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
-      } else if (element->IsA() == TStreamerBase::Class()) {
-         // ===> develop the base class
-         fType = 1;
-         clm = gROOT->GetClass(element->GetName());
-         if (!strcmp(name,clm->GetName())) Unroll("",cl,clm,basketsize,splitlevel,0);
-         else                              Unroll(name,clm,clm,basketsize,splitlevel,0);
-         return;
-                  
-      } else if (!strchr(element->GetTypeName(),'*') && (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
-         // ===> create sub branches for members that are classes
-         fType = 2;
-         clm = gROOT->GetClass(element->GetTypeName());
-         Unroll(name,clm,clm,basketsize,splitlevel,0);
-         fClassName = element->GetTypeName();
-         return;
-         
-      } else if (!strcmp(element->GetTypeName(),"TClonesArray*")) {
-         // ===> Create a leafcount
-         TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
-         leaf->SetBranch(this);
-         fNleaves = 1;
-         fLeaves.Add(leaf);
-         fTree->GetListOfLeaves()->Add(leaf);
-         // Create a basket for the leafcount
-         TBasket *basket = new TBasket(name,fTree->GetName(),this);
-         fBaskets.Add(basket);
-         // ===> create sub branches for each data member of a TClonesArray
-         fType = 3;
-         char **ppointer = (char**)(pointer);
-         TClonesArray *clones = (TClonesArray*)(*ppointer);
-         if (!clones) return; // TClonesArray must exist
-         clm = clones->GetClass();
-         if (!clm) return;
-         char branchname[128];
-         sprintf(branchname,"%s_",name);
-         SetTitle(branchname);
-         Unroll(name,clm,clm,basketsize,splitlevel,31);
-         Int_t nbranches = fBranches.GetEntries();
-         for (Int_t i=0;i<nbranches;i++) {
-            TBranchElement *bre = (TBranchElement*)fBranches.At(i);
-            const char *fin = strrchr(bre->GetTitle(),'.');
-            if (fin == 0) continue;
-            sprintf(branchname,"%s[%s_]",fin+1,name);
-            bre->SetTitle(branchname);
-         }
-         return;
-         
-      } else if (strstr(element->GetTypeName(),"vector<")) {
-         // ===> create sub branches for each data member of a STL vector
-         //      if it is a vector of class objects.
-         //      STL vectors like vector<float> are not split
-         fType = 0;
-         char classname[128];
-         strcpy(classname,element->GetTypeName()+7);
-         char *star = strchr(classname,'>');
-         *star = 0;
-         clm = gROOT->GetClass(classname);
-         if (clm) {         
-            TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
-            leaf->SetBranch(this);
-            fNleaves = 1;
-            fLeaves.Add(leaf);
-            fTree->GetListOfLeaves()->Add(leaf);
-            // Create a basket for the leafcount
-            TBasket *basket = new TBasket(name,fTree->GetName(),this);
-            fBaskets.Add(basket);
-            // ===> create sub branches for each data member of the class
-            fType = 4;
-            char branchname[128];
-            sprintf(branchname,"%s_",name);
-            SetTitle(branchname);
-            Unroll(name,clm,clm,basketsize,splitlevel,41);
-            TStreamerSTL *stl = (TStreamerSTL*)element;
-            if (stl->GetSTLtype() == 1 && stl->GetCtype() == 61) {
-               printf("will split this STL vector: %s of %s\n",name,classname);
-            }
-            if (stl->GetSTLtype() == 41 && stl->GetCtype() == 61) {
-               printf("will split this pointer to STL vector: %s of %s\n",name,classname);
-            }
-            return;
-         }
+      // ===> Create a leafcount
+      TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
+      leaf->SetBranch(this);
+      fNleaves = 1;
+      fLeaves.Add(leaf);
+      fTree->GetListOfLeaves()->Add(leaf);
+      // Create a basket for the leafcount
+      TBasket *basket = new TBasket(name,fTree->GetName(),this);
+      fBaskets.Add(basket);
+      // ===> create sub branches for each data member of a TClonesArray
+      fType = 3;
+      TClass *clm = clones->GetClass();
+      if (!clm) return;
+      char branchname[kMaxLen];
+      sprintf(branchname,"%s_",name);
+      SetTitle(branchname);
+printf("Unrolling TClonesArray, branchname=%s, clm=%s\n",branchname,clm->GetName());
+      Unroll(name,clm,clm,basketsize,splitlevel,31);
+      Int_t nbranches = fBranches.GetEntries();
+      for (Int_t i=0;i<nbranches;i++) {
+         TBranchElement *bre = (TBranchElement*)fBranches.At(i);
+printf("  before setting title, i=%d, title=%s\n",i,bre->GetTitle());
+         const char *fin = strrchr(bre->GetTitle(),'.');
+         if (fin == 0) continue;
+         sprintf(branchname,"%s[%s_]",fin+1,name);
+         bre->SetTitle(branchname);
       }
+      return;
    }
 
    TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
@@ -211,10 +340,12 @@ TBranchElement::~TBranchElement()
 //______________________________________________________________________________
 void TBranchElement::Browse(TBrowser *b)
 {
-
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (nbranches > 1) {
-      fBranches.Browse( b );
+   if (nbranches > 0) {
+      fBranches.Browse(b);
+   } else {
+      GetTree()->Draw(GetName());
+      if (gPad) gPad->Update();
    }
 }
 
@@ -225,12 +356,20 @@ Int_t TBranchElement::Fill()
 //*-*            =======================================================
 
    Int_t nbytes = 0;
-   if (!TestBit(kDoNotProcess)) nbytes += TBranch::Fill();
    Int_t nbranches = fBranches.GetEntriesFast();
+   if (fType == 3)  nbytes += TBranch::Fill();  //TClonesArray counter
    if (nbranches) {
       for (Int_t i=0;i<nbranches;i++)  {
          TBranchElement *branch = (TBranchElement*)fBranches[i];
          if (!branch->TestBit(kDoNotProcess)) nbytes += branch->Fill();
+      }
+   } else {
+      if (!TestBit(kDoNotProcess)) nbytes += TBranch::Fill();
+   }
+   if (fTree->Debug() > 0) {
+      Int_t entry = (Int_t)fEntries;
+      if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
+         printf("Fill: %d, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
       }
    }
    return nbytes;
@@ -257,13 +396,8 @@ void TBranchElement::FillLeaves(TBuffer &b)
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
     fInfo->WriteBufferClones(b,clones,n,fID);
-  } else if (fType == 0) {
-     if (fID >= 0) {           // branch in split mode
-        fInfo->WriteBuffer(b,fAddress,fID);
-     } else if (fID == -1) {   // top level branch in non split mode
-        char **ppointer = (char**)fAddress;
-        fInfo->WriteBuffer(b,*ppointer,fID);
-     }
+  } else if (fType <= 2) {
+    fInfo->WriteBuffer(b,fAddress,fID);
   }   
 }
 
@@ -282,31 +416,119 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
    if (TestBit(kDoNotProcess) && !getall) return 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    
-   Int_t nbytes = TBranch::GetEntry(entry);
+   Int_t nbytes = 0;
 
+   // if branch address is not yet set, must set all addresses starting
+   // with the top level parent branch
+   if (fAddress == 0) {
+      TBranchElement *mother = GetMother();
+      TClass *cl = gROOT->GetClass(mother->GetClassName());
+      if (!mother || !cl) return 0;
+      mother->SetAddress(0);
+   }
+   
    if (nbranches) {
-      if (fAddress == 0) { // try to create object
-         if (!TestBit(kWarn)) {
-            TClass *cl = gROOT->GetClass(fClassName.Data());
-            if (cl) {
-               TObject** voidobj = (TObject**) new Long_t[1];
-               *voidobj = (TObject*)cl->New();
-               SetAddress(voidobj);
-            } else {
-               Warning("GetEntry","Cannot get class: %s",fClassName.Data());
-               SetBit(kWarn);
-            }
-         }
-      }
+      //branch has daughters
+      if (fType == 3) nbytes += TBranch::GetEntry(entry);  //TClonesArray counter
+         
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
          nbytes += branch->GetEntry(entry);
+      }
+   } else {
+      //terminal branch
+      nbytes = TBranch::GetEntry(entry);
+   }
+
+   if (fTree->Debug() > 0) {
+      if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
+         printf("GetEntry: %d, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
       }
    }
    return nbytes;
 }
 
+//______________________________________________________________________________
+TStreamerInfo *TBranchElement::GetInfo()
+{
+  //return pointer to TStreamerinfo object for teh class of this branch
+  //rebuild the info if not yet done
+   
+   if (fInfo) {
+      if (!fInfo->GetOffsets()) {
+printf("Branch=%s, recompiling info for class=%s, version=%d\n",GetName(),fInfo->GetName(),fClassVersion);
+         TStreamerInfo::Optimize(kFALSE);
+         fInfo->Compile();
+         TStreamerInfo::Optimize(kTRUE);
+      }
+      return fInfo;
+   }
+   TClass *cl = gROOT->GetClass(fClassName.Data());
+   if (cl) {
+      TStreamerInfo::Optimize(kFALSE);
+      fInfo = cl->GetStreamerInfo();
+      if (fInfo && !fInfo->GetOffsets()) {
+printf("Branch=%s, building info for class=%s, version=%d\n",GetName(),cl->GetName(),fClassVersion);
+         fInfo->Compile();
+      }
+      TStreamerInfo::Optimize(kTRUE);
+   }
+   return fInfo;
+}
 
+//______________________________________________________________________________
+TBranchElement *TBranchElement::GetMother() const
+{
+// Get top level branch parent of this branch 
+// A top level branch has its fID negative.
+   
+   TIter next(fTree->GetListOfBranches());
+   TBranch *branch;
+   TBranchElement *bre, *br;
+   while ((branch=(TBranch*)next())) {
+      if (branch->IsA() != TBranchElement::Class()) continue;
+      bre = (TBranchElement*)branch;
+      br = bre->GetSubBranch(this);
+      if (br) return bre;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TBranchElement *TBranchElement::GetSubBranch(const TBranchElement *br) const
+{
+// recursively find branch br in the list of branches of this branch.
+// return null if br is not in this branch hierarchy.
+   
+   if (br == this) return (TBranchElement*)this;
+   TIter next(((TBranchElement*)this)->GetListOfBranches());
+   TBranchElement *branch, *br2;
+   while ((branch = (TBranchElement*)next())) {
+      br2 = branch->GetSubBranch(br);
+      if (br2) return br2;
+   }
+   return 0;
+}
+
+
+//______________________________________________________________________________
+Double_t TBranchElement::GetValue(Int_t j) const
+{
+// Returns branch value. If the leaf is an array, j is the index in the array
+
+   if (j == 0 && fBranchCount) {
+      Int_t entry = fTree->GetReadEntry();
+      fBranchCount->TBranch::GetEntry(entry);
+   }
+   if (fType == 31) {
+      char **ppointer = (char**)GetAddress();
+      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      return fInfo->GetValueClones(clones,fID,j);
+   } else {
+      return fInfo->GetValue(GetAddress(),fID,j);
+   }
+}
+   
 //______________________________________________________________________________
 Bool_t TBranchElement::IsFolder() const
 {
@@ -327,11 +549,15 @@ void TBranchElement::Print(Option_t *option) const
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
       if (fID == -2) {
-         Printf("*Branch  :%-9s : %-54s *",GetName(),GetTitle());
-         Printf("*Entries : %8d : BranchElement (see below)                               *",Int_t(fEntries));
+         if (strcmp(GetName(),GetTitle()) == 0) {
+            Printf("*Branch  :%-66s *",GetName());
+         } else {
+            Printf("*Branch  :%-9s : %-54s *",GetName(),GetTitle());
+         }
+         Printf("*Entries : %8d : BranchElement (see below)                              *",Int_t(fEntries));
          Printf("*............................................................................*");
       } 
-      if (fType > 2) {
+      if (fType >= 2) {
          TBranch::Print(option);
       }
       for (Int_t i=0;i<nbranches;i++)  {
@@ -340,6 +566,24 @@ void TBranchElement::Print(Option_t *option) const
       }
    } else {
       TBranch::Print(option);
+   }
+}
+
+//______________________________________________________________________________
+void TBranchElement::PrintValue(Int_t len) const
+{
+// Prints leaf value
+
+   if (fType == 3) {
+      char **ppointer = (char**)GetAddress();
+      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      printf(" %-15s = %d",GetTitle(),clones->GetEntriesFast());
+   } else if (fType == 31) {
+      char **ppointer = (char**)GetAddress();
+      TClonesArray *clones = (TClonesArray*)(*ppointer);
+      fInfo->PrintValueClones(GetName(),clones,fID);
+   } else {
+      fInfo->PrintValue(GetName(),GetAddress(),fID);
    }
 }
 
@@ -358,6 +602,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     if (!clones) return; 
     Int_t n;
     b >> n;
+    fNdata = n;
     clones->Clear();
     clones->ExpandCreateFast(n);
   } else if (fType == 31) {    // sub branch of a TClonesArray
@@ -365,14 +610,10 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     TClonesArray *clones = (TClonesArray*)(*ppointer);
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
+    fNdata = n;
     fInfo->ReadBufferClones(b,clones,n,fID);
-  } else if (fType == 0) {     // branch in split mode
-     if (fID >= 0) {
-        fInfo->ReadBuffer(b,fAddress,fID);
-     } else if (fID == -1) {   // top level branch in non split mode
-        char **ppointer = (char**)fAddress;
-        fInfo->ReadBuffer(b,*ppointer,fID);
-     }
+  } else if (fType <= 2) {     // branch in split mode
+    fInfo->ReadBuffer(b,fAddress,fID);
   }   
 }
 
@@ -402,52 +643,65 @@ void TBranchElement::SetAddress(void *add)
 //*-*            ====================
 //
 
+//printf("setAddress called, branch:%s, add=%x, fID=%d\n",GetName(),add,fID);
    //special case when called from code generated by TTree::MakeClass
    if (Long_t(add) == -1) {
       SetBit(kWarn);
       return;
    }
    fReadEntry = -1;
-   
-   Int_t nbranches = fBranches.GetEntriesFast();
-//printf("SetAddress, branch:%s, classname=%s, fID=%d, fType=%d, nbranches=%d, add=%x, fInfo=%x\n",GetName(),fClassName.Data(),fID,fType,nbranches,add,fInfo);
+      
+   //build the StreamerInfo if first time for the class
    TClass *cl = gROOT->GetClass(fClassName.Data());
+   if (!fInfo ) GetInfo();
+   Int_t nbranches = fBranches.GetEntriesFast();
+//printf("SetAddress, branch:%s, classname=%s, fID=%d, fType=%d, nbranches=%d, add=%x, fInfo=%s, version=%d\n",GetName(),fClassName.Data(),fID,fType,nbranches,(Seek_t)add,fInfo->GetName(),fClassVersion);
    fAddress = (char*)add;
-   char *objadd = (char*)add;
    if (fID < 0) {
-      char **ppointer = (char**)add;
-      objadd = *ppointer;
-      if (!objadd && cl) {
-         objadd = (char*)cl->New();
-         *ppointer = objadd;
+      TStreamerInfo::Optimize(kFALSE);
+      if (fAddress) {
+         char **ppointer = (char**)add;
+         fAddress = *ppointer;
+         if (!fAddress && cl) {
+            fAddress = (char*)cl->New();
+            *ppointer = fAddress;
+         }
+      } else {
+         fAddress = (char*)cl->New();
       }
    }
-   
-   //build the StreamerInfo if first time for the class
-   TStreamerInfo::Optimize(kFALSE);
-   if (!fInfo ) fInfo = fTree->BuildStreamerInfo(cl);
-   Int_t *leafOffsets = fInfo->GetOffsets();
       
+   if (nbranches == 0) return;
    for (Int_t i=0;i<nbranches;i++)  {
       TBranchElement *branch = (TBranchElement*)fBranches[i];
       Int_t nb2 = branch->GetListOfBranches()->GetEntries();
       Int_t id = branch->GetID();
       Int_t baseOffset = 0;
+      TClass *clparent = gROOT->GetClass(branch->GetParentName());
+      if (!clparent) clparent = cl;
       TClass *clm = gROOT->GetClass(branch->GetClassName());
       if ((clm != cl) && (branch->GetType() == 0)) {
-         if (cl->GetBaseClass(clm)) {
-            baseOffset = cl->GetBaseClassOffset(clm);
+         if (clparent->GetBaseClass(clm)) {
+            baseOffset = clparent->GetBaseClassOffset(clm);
             if (baseOffset < 0) baseOffset = 0;
          }
       }
       if (nb2 > 0) {
-         branch->SetAddress(objadd + leafOffsets[id] + baseOffset);
+         TStreamerInfo *info = branch->GetInfo();
+         if (info) {            
+            Int_t *leafOffsets = info->GetOffsets();
+            if (leafOffsets) {               
+               branch->SetAddress(fAddress + leafOffsets[id] + baseOffset);
+            } else {
+               Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
+            }
+         } else {
+            Error("SetAddress","branch=%s, info=0",branch->GetName());
+         }
       } else {
-         branch->SetAddress(objadd + baseOffset);
+         branch->SetAddress(fAddress + baseOffset);
       }
-   }
-      
-   TStreamerInfo::Optimize(kTRUE);
+   }      
 }
 
 //______________________________________________________________________________
@@ -490,33 +744,45 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
 }
 
 //______________________________________________________________________________
+void TBranchElement::SetBranchCount(TBranchElement *bre)
+{
+// Set the branch count for this branch
+   fBranchCount = bre;
+   TLeafElement *lfc  = (TLeafElement *)bre->GetListOfLeaves()->At(0);
+   TLeafElement *leaf = (TLeafElement *)GetListOfLeaves()->At(0);
+   if (lfc && leaf) leaf->SetLeafCount(lfc);
+}   
+
+//______________________________________________________________________________
 Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype)
 {
 // unroll base classes and loop on all elements of class cl
 
    if (cl == TObject::Class() && cltop->CanIgnoreTObjectStreamer()) return 0;
    TStreamerInfo *info = cl->GetStreamerInfo();
+   if (!info) return 0;
    Int_t ndata = info->GetNdata();
    ULong_t *elems = info->GetElems();
-   TIter next(info->GetElements());
    TStreamerElement *elem;
+   char branchname[kMaxLen];
    Int_t jd = 0;
-//printf("unroll, name=%s, ndata=%d\n",name,ndata);
    for (Int_t i=0;i<ndata;i++) {
       elem = (TStreamerElement*)elems[i];
-      if (elem->IsA() == TStreamerBase::Class()) {
+//printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, splitlevel=%d, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),splitlevel,btype);
+     if (elem->IsA() == TStreamerBase::Class()) {
          TClass *clbase = gROOT->GetClass(elem->GetName());
          if (clbase->Property() & kIsAbstract) {
-            jd = -1;
-            break;
+            return -1;
          }
+//printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
       } else {
-//printf("elemgetname=%s\n",elem->GetName());
-         char branchname[128];
          if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
+         //if (strlen(name)) sprintf(branchname,"%s_%s",name,elem->GetFullName());
          else              sprintf(branchname,"%s",elem->GetFullName());
-         TBranchElement *branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+//printf("Making branch: %s, jd=%d, info=%s\n",branchname,jd,info->GetName());
+         TBranchElement *branch = new TBranchElement(branchname,info,jd,0,basketsize,splitlevel-1);
+         branch->SetParentName(cltop->GetName());
          branch->SetType(btype);
          fBranches.Add(branch);
       }
