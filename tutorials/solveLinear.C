@@ -67,12 +67,12 @@ void solveLinear(Double_t eps = 1.e-12)
   Double_t ay[] = {1.4,1.5,3.7,4.1};
   Double_t ae[] = {0.5,0.2,1.0,0.5};
 
-  // Adopt the data into the vectors: they are not copied, the vector data
+  // Make the vectors 'Use" the data : they are not copied, the vector data
   // pointer is just set appropriately
 
-  TVectorD x; x.Adopt(nrPnts,ax);
-  TVectorD y; y.Adopt(nrPnts,ay);
-  TVectorD e; e.Adopt(nrPnts,ae);
+  TVectorD x; x.Use(nrPnts,ax);
+  TVectorD y; y.Use(nrPnts,ay);
+  TVectorD e; e.Use(nrPnts,ae);
 
   TMatrixD A(nrPnts,nrVar);
   TMatrixDColumn(A,0) = 1.0;
