@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.53 2001/06/21 10:03:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.54 2001/06/22 16:10:21 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2427,12 +2427,16 @@ char *TTreeFormula::PrintValue(Int_t mode) const
       if (mode == 0) {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
-         ((TTreeFormula*)this)->GetNdata();
-         sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
-         char *expo = strchr(value,'e');
-         if (expo) {
-            if (value[0] == '-') strcpy(expo-6,expo);
-            else                 strcpy(expo-5,expo);
+         Int_t ndata = ((TTreeFormula*)this)->GetNdata();
+         if (ndata) {
+            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
+            char *expo = strchr(value,'e');
+            if (expo) {
+               if (value[0] == '-') strcpy(expo-6,expo);
+               else                 strcpy(expo-5,expo);
+            }
+         } else {
+            sprintf(value,"         ");
          }
       }
    }
