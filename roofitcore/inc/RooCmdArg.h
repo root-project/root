@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdArg.rdl,v 1.5 2004/04/05 22:44:10 wverkerke Exp $
+ *    File: $Id: RooCmdArg.rdl,v 1.6 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 
 #include "TNamed.h"
 #include "TString.h"
+#include "RooFitCore/RooLinkedList.hh"
 class RooAbsData ;
 
 
@@ -30,8 +31,12 @@ public:
 	    Int_t i1=0, Int_t i2=0, 
 	    Double_t d1=0, Double_t d2=0, 
 	    const char* s1=0, const char* s2=0, 
-	    const TObject* o1=0, const TObject* o2=0) ;
+	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0) ;
   RooCmdArg(const RooCmdArg& other) ;
+  RooCmdArg& operator=(const RooCmdArg& other) ;
+  void addArg(const RooCmdArg& arg) ;
+  void setProcessRecArgs(Bool_t flag) { _procSubArgs = flag ; }
+  const RooLinkedList& subArgs() const { return _argList ; }
 
   virtual TObject* Clone(const char* newName=0) const {
     return new RooCmdArg(*this) ;
@@ -39,6 +44,7 @@ public:
 
   ~RooCmdArg();
 
+  static const RooCmdArg none  ;
 
 protected:
 
@@ -53,12 +59,16 @@ protected:
 
 private:
 
+  friend class RooAbsCollection ;
+
   // Payload
   Double_t _d[2] ;
   Int_t _i[2] ;
   const char* _s[2] ;
   TObject* _o[2] ;
-
+  Bool_t _procSubArgs ;
+  RooLinkedList _argList ;
+	
   ClassDef(RooCmdArg,0) // Universal method argument
 };
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.cc,v 1.16 2004/11/29 20:23:54 wverkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.17 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,6 +86,11 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 {
   // Determine integration scenario. RooHistPdf can perform all integrals over 
   // its dependents analytically via partial or complete summation of the input histogram.
+
+  // Only analytical integrals over the full range are defined
+  if (rangeName!=0) {
+    return 0 ;
+  }
 
   // Simplest scenario, integrate over all dependents
   if ((allVars.getSize()==_depList.getSize()) && 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.13 2005/02/15 21:15:55 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.14 2005/02/16 21:51:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ ClassImp(RooAbsGoodnessOfFit)
 ;
 
 RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU) : 
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose) : 
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _pdf(&pdf),
@@ -53,6 +53,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, Ro
   _projDeps((RooArgSet*)projDeps.Clone()),
   _rangeName(rangeName),
   _simCount(1),
+  _verbose(verbose),
   _nGof(0),
   _gofArray(0),
   _nCPU(nCPU),
@@ -285,7 +286,7 @@ void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
     
     Bool_t doInline = (i==_nCPU-1) ;
-    if (!doInline) cout << "RooAbsGoodnessOfFit::initMPMode: starting remote GOF server process #" << i << endl ; 
+    if (!doInline && _verbose) cout << "RooAbsGoodnessOfFit::initMPMode: starting remote GOF server process #" << i << endl ; 
     //cout << "initMPMode -- creating MP front-end" << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_MPFE%d",GetName(),i),Form("%s_MPFE%d",GetTitle(),i),*gof,doInline) ;    
     //cout << "initMPMode -- initializing MP front-end" << endl ;
@@ -336,8 +337,10 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
     if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
-      cout << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
-	   << " (" << dset->numEntries() << " dataset entries)" << endl ;
+      if (_verbose) {
+	cout << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
+	     << " (" << dset->numEntries() << " dataset entries)" << endl ;
+      }
       _gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps) ;
       _gofArray[n]->setSimCount(_nGof) ;
       
@@ -346,8 +349,10 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       n++ ;
     } else {
       if ((!dset || dset->numEntries(kTRUE)==0.) && pdf) {
-	cout << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
-	     << " has no data entries, no slave GOF calculator created" << endl ;
+	if (_verbose) {
+	  cout << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
+	       << " has no data entries, no slave GOF calculator created" << endl ;
+	}
       }      
     }
   }

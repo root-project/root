@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.21 2004/11/29 20:22:04 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.22 2005/02/16 21:51:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -248,3 +248,16 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
 }
 
+
+
+RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
+			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
+{
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return plotOn(frame,l) ;  
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.15 2004/11/29 20:22:04 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.16 2005/02/14 20:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,7 +39,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   // Constructor
 
   // Check PDF dependents 
-  if (model.recursiveCheckDependents(&vars)) {
+  if (model.recursiveCheckObservables(&vars)) {
     cout << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
     _isValid = kFALSE ;
     return ;

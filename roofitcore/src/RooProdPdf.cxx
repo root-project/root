@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.50 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.51 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -141,10 +141,11 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   // be put first in the product. The default cutOff value is zero.
 
   TIterator* iter = pdfList.createIterator() ;
-  RooAbsPdf* pdf ;
+  RooAbsArg* arg ;
   Int_t numExtended(0) ;
-  while(pdf=(RooAbsPdf*)iter->Next()) {
-    if (!dynamic_cast<RooAbsPdf*>(pdf)) {
+  while(arg=(RooAbsArg*)iter->Next()) {
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+    if (!pdf) {
       cout << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
 	   << pdf->GetName() << " is not a PDF, ignored" << endl ;
       continue ;
@@ -405,7 +406,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     laIter->Reset() ;
 
     // Reduce pdfNSet to actual dependents
-    pdfNSet = pdf->getDependents(*pdfNSet) ;
+    pdfNSet = pdf->getObservables(*pdfNSet) ;
 //     cout << "factorize: pdf = " << pdf->GetName() << " nset = " ; pdfNSet->Print("1") ;
 
 
@@ -413,7 +414,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     RooArgSet pdfAllDeps ; // All dependents of this PDF ;
 
     // Make list of all dependents of this PDF
-    RooArgSet* tmp = pdf->getDependents(normSet) ;
+    RooArgSet* tmp = pdf->getObservables(normSet) ;
     pdfAllDeps.add(*tmp) ;
     delete tmp ;
 
@@ -426,7 +427,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       pdfNormDeps.add(pdfAllDeps) ;
     }
 
-    RooArgSet* pdfIntSet = pdf->getDependents(intSet) ;
+    RooArgSet* pdfIntSet = pdf->getObservables(intSet) ;
 
     RooArgSet pdfIntNoNormDeps(*pdfIntSet) ;
     pdfIntNoNormDeps.remove(pdfNormDeps,kTRUE,kTRUE) ;
@@ -933,45 +934,7 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
   }
   delete pIter ;
 
-  if (iset.getSize()>0) {
-    pname.Append("_Int[") ;
-    TIterator* iter = iset.createIterator() ;
-    RooAbsArg* arg ;
-    Bool_t first(kTRUE) ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      if (first) {
-	first=kFALSE ;
-      } else {
-	pname.Append(",") ;
-      }
-      pname.Append(arg->GetName()) ;
-    }
-    delete iter ;
-
-    if (isetRangeName) {
-      pname.Append("|") ;
-      pname.Append(isetRangeName) ;
-    }
-
-    pname.Append("]") ;
-  }
-
-  if (nset.getSize()>0) {
-    pname.Append("_Norm[") ;
-    Bool_t first(kTRUE); 
-    TIterator* iter  = nset.createIterator() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      if (first) {
-	first=kFALSE ;
-      } else {
-	pname.Append(",") ;
-      }
-      pname.Append(arg->GetName()) ;
-    }
-    delete iter ;
-    pname.Append("]") ;
-  }
+  pname.Append(integralNameSuffix(iset,&nset,isetRangeName)) ;  
 
   return pname.Data() ;
 }
@@ -1053,7 +1016,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
 
 
-Bool_t RooProdPdf::checkDependents(const RooArgSet* nset) const 
+Bool_t RooProdPdf::checkObservables(const RooArgSet* nset) const 
 {
   // Check that none of the PDFs have overlapping dependents
   return kFALSE ;
@@ -1066,8 +1029,8 @@ Bool_t RooProdPdf::checkDependents(const RooArgSet* nset) const
   while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
     *iter2 = *_pdfIter ;
     while(pdf2 = (RooAbsPdf*)iter2->Next()) {
-      if (pdf->dependentOverlaps(nset,*pdf2)) {
-	cout << "RooProdPdf::checkDependents(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
+      if (pdf->observableOverlaps(nset,*pdf2)) {
+	cout << "RooProdPdf::checkObservables(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
 	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
 	ret = kTRUE ;
       }    

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.43 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.44 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -563,7 +563,7 @@ void RooDataHist::dump2()
 
 RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const 
 {
-  if (o.bins) return RooTreeData::plotOn(frame,0) ;
+  if (o.bins) return RooTreeData::plotOn(frame,o) ;
 
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -1000,14 +1000,37 @@ Int_t RooDataHist::numEntries(Bool_t useWeights) const
 }
 
 
-Double_t RooDataHist::sumEntries() const
+Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
 {
-  Int_t i ;
-  Double_t n(0) ;
-  for (i=0 ; i<_arrSize ; i++) {
-    n+= _wgt[i] ;
+  if (cutSpec==0 && cutRange==0) {
+    Int_t i ;
+    Double_t n(0) ;
+    for (i=0 ; i<_arrSize ; i++) {
+      n+= _wgt[i] ;
+    }
+    return n ;
+  } else {
+
+    // Setup RooFormulaVar for cutSpec if it is present
+    RooFormula* select = 0 ;
+    if (cutSpec) {
+      select = new RooFormula("select",cutSpec,*get()) ;
+    }
+    
+    // Otherwise sum the weights in the event
+    Double_t sumw(0) ;
+    Int_t i ;
+    for (i=0 ; i<GetEntries() ; i++) {
+      get(i) ;
+      if (select && select->eval()==0.) continue ;
+      if (cutRange && !_vars.allInRange(cutRange)) continue ;
+      sumw += weight() ;
+    }
+    
+    if (select) delete select ;
+    
+    return sumw ;
   }
-  return n ;
 }
 
 

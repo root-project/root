@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.85 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.86 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,7 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooDataHist.hh"
 #include "TROOT.h"
 using std::cout;
 using std::endl;
@@ -281,6 +282,24 @@ RooDataSet::~RooDataSet()
 }
 
 
+RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) const 
+{
+  TString title, name ;
+  if (newName) {
+    name = newName ;
+  } else {
+    name = Form("%s_binned",GetName()) ;
+  }
+  if (newTitle) {
+    title = newTitle ;
+  } else {
+    title = Form("%s_binned",GetTitle()) ;
+  }
+
+  return new RooDataHist(name,title,*get(),*this) ;
+}
+
+
 
 void RooDataSet::setWeightVar(const char* name) 
 {
@@ -314,15 +333,26 @@ Int_t RooDataSet::numEntries(Bool_t useWeights) const
 
 
 
-Double_t RooDataSet::sumEntries() const 
+Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const 
 {
+  // Setup RooFormulaVar for cutSpec if it is present
+  RooFormula* select = 0 ;
+  if (cutSpec) {
+    select = new RooFormula("select",cutSpec,*get()) ;
+  }
+
   // Otherwise sum the weights in the event
   Double_t sumw(0) ;
   Int_t i ;
   for (i=0 ; i<GetEntries() ; i++) {
     get(i) ;
+    if (select && select->eval()==0.) continue ;
+    if (cutRange && !_vars.allInRange(cutRange)) continue ;
     sumw += weight() ;
   }
+
+  if (select) delete select ;
+
   return sumw ;  
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.24 2005/02/14 20:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.25 2005/02/16 21:51:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,17 +61,17 @@ public:
   virtual const RooArgSet* get(Int_t index) const = 0 ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;
-  virtual Double_t sumEntries() const = 0 ;
+  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const = 0 ;
   virtual Bool_t isWeighted() const { return kFALSE ; }
   virtual void reset() = 0 ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const = 0 ;
+			  const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+			  const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+			  const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
 
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;
@@ -85,6 +85,8 @@ public:
   }
 
 protected:
+
+  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const = 0 ;
 
   // Constant term optimizer interface
   friend class RooAbsReal ;

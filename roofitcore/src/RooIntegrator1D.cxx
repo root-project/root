@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.24 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.25 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -268,8 +268,6 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
       } else {
 	_extrapValue = _s[j] ;
 	_extrapError = _s[j]-(j>0?_s[j-1]:0) ;
-	cout << "extrapValue[" << j << "] = " << _extrapValue << endl ;
-	cout << "extrapError[" << j << "] = " << _extrapError << endl ;
       }
 
       if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.42 2005/02/14 20:44:28 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.43 2005/02/16 21:51:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,6 +65,7 @@ public:
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
 
   // Compatibility functions
+  void setFitBins(Int_t nBins) ;
   void setFitMin(Double_t value) ;
   void setFitMax(Double_t value) ;
   void setFitRange(Double_t min, Double_t max) ;
@@ -99,6 +100,9 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+
+
+  TString* format(const RooCmdArg& formatArg) const ;
   TString* format(Int_t sigDigits, const char *options) const ;
 
   static void printScientific(Bool_t flag=kFALSE) { _printScientific = flag ; }

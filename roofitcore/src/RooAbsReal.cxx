@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.105 2005/02/15 21:15:59 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.106 2005/02/16 21:51:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +41,7 @@
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooNumIntConfig.hh"
+#include "RooFitCore/RooAddition.hh"
 
 #include <iostream>
 
@@ -186,7 +187,7 @@ Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDep
 {
   // Default implementation of getAnalyticalIntegralWN for real valued objects defers to
   // normalization invariant getAnalyticalIntegral()
-  return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps) ;
+  return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps,rangeName) ;
 }
 
 
@@ -340,11 +341,65 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 }
 
 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
+				       const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
+				       const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) const 
+{
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsReal::createIntegral(%s)",GetName())) ;
+  pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
+  pc.defineObject("normSet","NormSet",0,0) ;
+  pc.defineObject("numIntConfig","NumIntConfig",0,0) ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  const char* rangeName = pc.getString("rangeName",0,kTRUE) ;
+  const RooArgSet* nset = static_cast<const RooArgSet*>(pc.getObject("normSet",0)) ;
+  const RooNumIntConfig* cfg = static_cast<const RooNumIntConfig*>(pc.getObject("numIntConfig",0)) ;
+
+  return createIntegral(iset,nset,cfg,rangeName) ;
+}
+
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const 
 {
-  TString name(GetName()) ;
   TString title(GetTitle()) ;
+  title.Prepend("Integral of ") ;
+
+  if (!rangeName || strchr(rangeName,',')==0) {
+    // Simple case: integral over full range or single limited range
+    TString name(GetName()) ;
+    name.Append(integralNameSuffix(iset,nset,rangeName)) ;
+    return new RooRealIntegral(name,title,*this,iset,nset,cfg,rangeName) ;
+  } else {
+    // Integral over multiple ranges
+    char* buf = new char[strlen(rangeName)+1] ;
+    strcpy(buf,rangeName) ;
+    char* range = strtok(buf,",") ;
+    RooArgSet components ;
+    while (range) {
+      TString compName(GetName()) ;
+      compName.Append(integralNameSuffix(iset,nset,range)) ;
+      RooAbsReal* compIntegral = new RooRealIntegral(compName,title,*this,iset,nset,cfg,range) ;
+      components.add(*compIntegral) ;
+      range = strtok(0,",") ;
+    }
+    delete[] buf ;
+    TString fullName(GetName()) ;
+    fullName.Append(integralNameSuffix(iset,nset,rangeName)) ;
+    return new RooAddition(fullName,title,components,kTRUE) ;
+  }
+}
+
+TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName) const 
+{
+
+  TString name ;
   name.Append("_Int[") ;
   if (iset.getSize()>0) {
     TIterator* iter = iset.createIterator() ;
@@ -383,8 +438,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   }
   name.Append("]") ;
 
-  title.Prepend("Integral of ") ;
-  return new RooRealIntegral(name,title,*this,iset,nset,cfg,rangeName) ;
+  return name ;
 }
 
 
@@ -465,7 +519,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 	leafNodes.add(*arg) ;
 
 	// Remove any dependents of found, replace by dependents of LV node
-	RooArgSet* lvDep = arg->getDependents(&leafNodes) ;
+	RooArgSet* lvDep = arg->getObservables(&leafNodes) ;
 	RooAbsArg* lvs ;
 	TIterator* iter = lvDep->createIterator() ;
 	while(lvs=(RooAbsArg*)iter->Next()) {
@@ -533,7 +587,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // Create the set of normalization variables to use in the projection integrand
 
 //   // WVE dependentVars might be LValue, expand into final servers
-//   RooArgSet* xxx = dependentVars.getDependents(...) ;
+//   RooArgSet* xxx = dependentVars.getObservables(...) ;
 //   RooArgSet normSet(*xxx) ;
 //   delete xxx ;
     
@@ -614,11 +668,11 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
   }
 
-  // Call checkDependents
+  // Call checkObservables
   RooArgSet allDeps(plotClones) ;
   if (projectedVars) allDeps.add(*projectedVars) ;
-  if (checkDependents(&allDeps)) {
-    cout << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkDependents, abort" << endl ;
+  if (checkObservables(&allDeps)) {
+    cout << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkObservables, abort" << endl ;
     return hist ;
   }
 
@@ -722,7 +776,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"L") ;
-  pc.defineString("projectionRangeName","ProjectionRange",0,"") ;
+  pc.defineString("projectionRangeName","ProjectionRange",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("projSet","Project",0) ;
@@ -747,9 +801,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineMutex("SliceVars","Project") ;
   pc.defineMutex("AddTo","Asymmetry") ;
-  pc.defineMutex("Range","RangeWithVLines") ;
-  pc.defineMutex("Range","RangeWithName") ;
-  pc.defineMutex("RangeWithName","RangeWithVLines") ;
+  pc.defineMutex("Range","RangeWithName","RangeWithVLines") ;
 
   // Process & check varargs 
   pc.process(argList) ;
@@ -783,7 +835,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   } else {
 
     // Use range of last fit, if it was non-default and no other range was specified
-    RooArgSet* plotDep = getDependents(*frame->getPlotVar()) ;
+    RooArgSet* plotDep = getObservables(*frame->getPlotVar()) ;
     RooRealVar* plotDepVar = (RooRealVar*) plotDep->find(frame->getPlotVar()->GetName()) ;
     if (plotDepVar->hasBinning("fit")) {
       o.rangeLo = plotDepVar->getMin("fit") ;
@@ -897,7 +949,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      RooArgSet *sliceSetTmp = getDependents(*frame->getNormVars()) ;
+      RooArgSet *sliceSetTmp = getObservables(*frame->getNormVars()) ;
       sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
       sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
@@ -938,7 +990,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // Inform user about projections
   if (projectedVars.getSize()) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " integrates over variables " ; projectedVars.Print("1") ;
+	 << " integrates over variables " << projectedVars 
+	 << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << endl;
   }  
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
@@ -948,7 +1001,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // Create projection integral
   RooArgSet* projectionCompList ;
 
-  RooArgSet* deps = getDependents(frame->getNormVars()) ;
+  RooArgSet* deps = getObservables(frame->getNormVars()) ;
   deps->remove(projectedVars,kTRUE,kTRUE) ;
   if (projDataNeededVars) {
     deps->remove(*projDataNeededVars,kTRUE,kTRUE) ;
@@ -956,9 +1009,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   deps->remove(*plotVar,kTRUE,kTRUE) ;
   deps->add(*plotVar) ;
 
-  // Now that we have the final set of dependents, call checkDependents()
-  if (checkDependents(deps)) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") error in checkDependents, abort" << endl ;
+  // Now that we have the final set of dependents, call checkObservables()
+  if (checkObservables(deps)) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") error in checkObservables, abort" << endl ;
     delete deps ;
     delete plotCloneSet ;
     if (projDataNeededVars) delete projDataNeededVars ;
@@ -1208,7 +1261,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      RooArgSet *sliceSetTmp = getDependents(*frame->getNormVars()) ;
+      RooArgSet *sliceSetTmp = getObservables(*frame->getNormVars()) ;
       sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
       sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
@@ -1449,7 +1502,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     projectedVars.remove(*found);
 
     // Take out eventual servers of plotVar
-    RooArgSet* plotServers = plotVar->getDependents(&projectedVars) ;
+    RooArgSet* plotServers = plotVar->getObservables(&projectedVars) ;
     TIterator* psIter = plotServers->createIterator() ;
     RooAbsArg* ps ;
     while(ps=(RooAbsArg*)psIter->Next()) {
@@ -1598,85 +1651,6 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, Bool_t active)
   if (branch) { 
     t.SetBranchStatus(cleanBranchName(),active?1:0) ;
   }
-}
-
-
-
-TString RooAbsReal::cleanBranchName() const
-{
-  // Construct a mangled name from the actual name that
-  // is free of any math symbols that might be interpreted by TTree
-
-  TString cleanName(GetName()) ;
-  cleanName.ReplaceAll("/","D") ;
-  cleanName.ReplaceAll("-","M") ;
-  cleanName.ReplaceAll("+","P") ;
-  cleanName.ReplaceAll("*","X") ;
-  cleanName.ReplaceAll("[","L") ;
-  cleanName.ReplaceAll("]","R") ;
-  cleanName.ReplaceAll("(","L") ;
-  cleanName.ReplaceAll(")","R") ;
-  cleanName.ReplaceAll("{","L") ;
-  cleanName.ReplaceAll("}","R") ;
-
-  if (cleanName.Length()<=60) return cleanName ;
-
-  // Name is too long, truncate and include CRC32 checksum of full name in clean name
-  static char buf[1024] ;
-  strcpy(buf,cleanName.Data()) ;
-  sprintf(buf+46,"_CRC%08x",crc32(cleanName.Data())) ;
-
-  return TString(buf) ;
-}
-
-
-
-
-
-UInt_t RooAbsReal::crc32(const char* data) const
-{
-  // Calculate and extract length of string
-  Int_t len = strlen(data) ;
-  if (len<4) {
-    cout << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
-    return 0 ;
-  }
-
-  // Initialize CRC table on first use
-  static Bool_t init(kFALSE) ;
-  static unsigned int crctab[256];
-  if (!init) {
-    int i, j;
-    unsigned int crc;
-    for (i = 0; i < 256; i++){
-      crc = i << 24;
-      for (j = 0; j < 8; j++) {
-	if (crc & 0x80000000) {
-	  crc = (crc << 1) ^ 0x04c11db7 ;
-	} else {
-	  crc = crc << 1;
-	}
-      }
-      crctab[i] = crc;
-    }
-    init = kTRUE ;
-  }
-  
-  unsigned int        result(0);
-  int                 i(0);
-  
-  result = *data++ << 24;
-  result |= *data++ << 16;
-  result |= *data++ << 8;
-  result |= *data++;
-  result = ~ result;
-  len -=4;
-  
-  for (i=0; i<len; i++) {
-    result = (result << 8 | *data++) ^ crctab[result >> 24];
-  }
-
-  return ~result;
 }
 
 
@@ -1846,7 +1820,7 @@ void RooAbsReal::setIntegratorConfig()
 
 
 
-void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet) 
+void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) 
 {
   getVal(normSet) ;
 
@@ -1859,7 +1833,7 @@ void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet)
   while(branch=(RooAbsArg*)bIter->Next()) {
     if (branch->dependsOn(*dataset.get())) {
 
-      RooArgSet* bdep = branch->getDependents(dataset.get()) ;
+      RooArgSet* bdep = branch->getObservables(dataset.get()) ;
       if (bdep->getSize()>0) {
 	branch->setOperMode(RooAbsArg::ADirty) ;
       } else {
@@ -1874,24 +1848,26 @@ void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet)
 }
 
 
-void RooAbsReal::doConstOpt(RooAbsData& dataset, const RooArgSet* normSet) 
+void RooAbsReal::doConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) 
 {
   // optimizeDirty must have been run first!
 
   // Find cachable branches and cache them with the data set
   RooArgSet cacheList ;
-  findCacheableBranches(this,&dataset,cacheList,normSet) ;
+  findCacheableBranches(this,&dataset,cacheList,normSet,verbose) ;
   dataset.cacheArgs(cacheList,normSet) ;  
 
   // Find unused data variables after caching and disable them
   RooArgSet pruneList("pruneList") ;
-  findUnusedDataVariables(&dataset,pruneList) ;
-  findRedundantCacheServers(&dataset,cacheList,pruneList) ;
+  findUnusedDataVariables(&dataset,pruneList,verbose) ;
+  findRedundantCacheServers(&dataset,cacheList,pruneList,verbose) ;
 
   if (pruneList.getSize()!=0) {
     // Deactivate tree branches here
-    cout << "RooAbsReal::optimizeConst: The following unused tree branches are deactivated: " ; 
-    pruneList.Print("1") ;
+    if (verbose) {
+      cout << "RooAbsReal::optimizeConst: The following unused tree branches are deactivated: " ; 
+      pruneList.Print("1") ;
+    }
     dataset.setArgStatus(pruneList,kFALSE) ;
   }
 
@@ -1904,7 +1880,7 @@ void RooAbsReal::doConstOpt(RooAbsData& dataset, const RooArgSet* normSet)
 }
 
 
-void RooAbsReal::undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet) 
+void RooAbsReal::undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) 
 {
   // Delete the cache
   dataset.resetCache() ;
@@ -1913,12 +1889,12 @@ void RooAbsReal::undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet)
   dataset.setArgStatus(*dataset.get(),kTRUE) ;
   
   // Reset all nodes to ADirty 
-  optimizeDirty(dataset,normSet) ;
+  optimizeDirty(dataset,normSet,verbose) ;
 }
 
 
 Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, 
-					    RooArgSet& cacheList, const RooArgSet* normSet) 
+					    RooArgSet& cacheList, const RooArgSet* normSet, Bool_t verbose) 
 {
   // Find branch PDFs with all-constant parameters, and add them
   // to the dataset cache list
@@ -1950,15 +1926,17 @@ Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset,
       if (canOpt) {
 	if (!cacheList.find(server->GetName())) {
 
-	  cout << "RooAbsReal::optimize: component " 
-	       << server->GetName() << " will be cached" << endl ;
-	  
+	  if (verbose) {
+	    cout << "RooAbsReal::optimize: component " 
+		 << server->GetName() << " will be cached" << endl ;
+	  }
+
 	  // Add to cache list
 	  cacheList.add(*server) ;
 	} 
       } else {
 	// Recurse if we cannot optimize at this level
-	findCacheableBranches(server,dset,cacheList,normSet) ;
+	findCacheableBranches(server,dset,cacheList,normSet,verbose) ;
       }
     }
   }
@@ -1968,7 +1946,7 @@ Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset,
 
 
 
-void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList) 
+void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList, Bool_t verbose) 
 {
   TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg* arg ;
@@ -1979,7 +1957,7 @@ void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList)
 }
 
 
-void RooAbsReal::findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
+void RooAbsReal::findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList, Bool_t verbose) 
 {
   TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg *var ;

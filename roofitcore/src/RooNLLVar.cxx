@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.12 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.13 2005/02/16 21:51:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,15 +25,49 @@
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooCmdConfig.hh"
 using std::cout;
 using std::endl;
 
 ClassImp(RooNLLVar)
 ;
 
+RooArgSet RooNLLVar::_emptySet ;
+
+RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
+		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
+		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
+		     const RooCmdArg& arg7, const RooCmdArg& arg8,const RooCmdArg& arg9) :
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,
+			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet
+									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","CutRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
+{
+  // RooNLLVar constructor. Optional arguments taken
+  //
+  //  Extended()  -- Include extended term in calculation
+  //  NumCPU()    -- Activate parallel processing feature
+  //  CutRange()  -- Fit only selected region
+  //  ConditionalObservables() -- Define conditional observables 
+  //  Verbose()   -- Verbose output of GOF framework classes
+
+  RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
+  pc.defineInt("extended","Extended",0,kFALSE) ;
+
+  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
+  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
+  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
+
+  _extended = pc.getInt("extended") ;
+}
+
+
+
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     Bool_t extended, const char* rangeName, Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),rangeName,nCPU),
+		     Bool_t extended, const char* rangeName, Int_t nCPU, Bool_t verbose) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),rangeName,nCPU,verbose),
   _extended(extended)
 {
   
@@ -41,8 +75,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,Int_t nCPU) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,rangeName,nCPU),
+		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,Int_t nCPU,Bool_t verbose) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,rangeName,nCPU,verbose),
   _extended(extended)
 {
   

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.rdl,v 1.8 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooAddition.rdl,v 1.2 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,38 +13,39 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRINTABLE
-#define ROO_PRINTABLE
+#ifndef ROO_ADDITION
+#define ROO_ADDITION
 
+#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooListProxy.hh"
 
-class TNamed ;
+class RooRealVar;
+class RooArgList ;
 
-#include <iostream>
-#include "Rtypes.h"
-#include "TString.h"
-
-class RooPrintable {
+class RooAddition : public RooAbsReal {
 public:
-  inline RooPrintable() { }
-  inline virtual ~RooPrintable() { }
-  enum PrintOption { InLine=0, OneLine=1, Standard=2, Shape=3, Verbose=4 } ;
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
-  PrintOption parseOptions(Option_t *options) const;
-  PrintOption lessVerbose(PrintOption opt) const;
-  static void inLinePrint(std::ostream& os, const TNamed &named);
-  static void oneLinePrint(std::ostream& os, const TNamed &named);
-  static std::ostream& defaultStream(std::ostream *os= 0);
 
+  RooAddition() ;
+  RooAddition(const char *name, const char *title, const RooArgSet& sumSet, Bool_t takeOwnerShip=kFALSE) ;
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnerShip=kFALSE) ;
+  virtual ~RooAddition() ;
 
-  ClassDef(RooPrintable,1) // Interface for printable objects
+  RooAddition(const RooAddition& other, const char* name = 0);
+  virtual TObject* clone(const char* newname) const { return new RooAddition(*this, newname); }
+
+  virtual Double_t defaultErrorLevel() const ;
+
+protected:
+
+  RooArgList   _ownedList ;
+  RooListProxy _set1 ;
+  RooListProxy _set2 ;
+  TIterator* _setIter1 ;  //! do not persist
+  TIterator* _setIter2 ;  //! do not persist
+
+  Double_t evaluate() const;
+
+  ClassDef(RooAddition,1) // Sum of RooAbsReal terms
 };
-
-namespace RooFit {
-ostream& operator<<(ostream& os, const RooPrintable& rp) ; 
-}
-
-#ifndef __CINT__
-using RooFit::operator<< ;
-#endif
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.rdl,v 1.13 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.14 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,11 @@ class RooRealVar ;
 class RooMCStudy {
 public:
 
+  RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables, 
+	     RooCmdArg arg1=RooCmdArg::none, RooCmdArg arg2=RooCmdArg::none,
+             RooCmdArg arg3=RooCmdArg::none, RooCmdArg arg4=RooCmdArg::none, RooCmdArg arg5=RooCmdArg::none,
+             RooCmdArg arg6=RooCmdArg::none, RooCmdArg arg7=RooCmdArg::none, RooCmdArg arg8=RooCmdArg::none) ;
+	
   RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
 	     const RooArgSet& dependents, const char* genOptions="",
 	     const char* fitOptions="", const RooDataSet* genProtoData=0,
@@ -36,8 +41,8 @@ public:
   virtual ~RooMCStudy() ;
   
   // Run methods
-  Bool_t generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
-  Bool_t generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
+  Bool_t generateAndFit(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
+  Bool_t generate(Int_t nSamples, Int_t nEvtPerSample=0, Bool_t keepGenData=kFALSE, const char* asciiFilePat=0) ;
   Bool_t fit(Int_t nSamples, const char* asciiFilePat) ;
   Bool_t fit(Int_t nSamples, TList& dataSetList) ;
   Bool_t addFitResult(const RooFitResult& fr) ;
@@ -49,18 +54,38 @@ public:
   const RooDataSet& fitParDataSet() ;
 
   // Plot methods
+  RooPlot* plotParamOn(RooPlot* frame, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                       const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                       const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                       const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  RooPlot* plotParam(const RooRealVar& param, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  RooPlot* plotNLL(const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  RooPlot* plotError(const RooRealVar& param, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  RooPlot* plotPull(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+                     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+
   RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
-  RooPlot* plotParamOn(RooPlot* frame) ;
-  RooPlot* plotParam(const RooRealVar& param) ;
   RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
   RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, Bool_t fitGauss=kFALSE) ;
     
 protected:
 
+  RooPlot* makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, Bool_t symRange=kFALSE) const ;
+
   Bool_t run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) ;
   Bool_t fitSample(RooAbsData* genSample) ;
   void calcPulls() ;
-  Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen) ;
     
   RooAbsPdf*        _genModel ;    // Generator model 
   RooAbsGenContext* _genContext ;  // Generator context 
@@ -79,6 +104,7 @@ protected:
   TList       _fitResList ;     // List of RooFitResult fit output objects
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   TString     _fitOptions ;     // Fit options string
+  RooLinkedList _fitOptList ;   // Fit option command list 
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
   Bool_t      _binGenData ;     // Bin data between generating and fitting
   Double_t    _nExpGen ;        // Number of expected events to generate in extended mode

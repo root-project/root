@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.17 2005/02/14 20:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.18 2005/02/16 21:51:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,8 +44,8 @@ ClassImp(RooAbsOptGoodnessOfFit)
 ;
 
 RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU) : 
-  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, nCPU),
+					 const RooArgSet& projDeps, const char* rangeName, Int_t nCPU, Bool_t verbose) : 
+  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, nCPU, verbose),
   _projDeps(0)
 {
   // Don't do a thing in master mode
@@ -59,7 +59,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
 
   // Check that the PDF is valid for use with this dataset
   // Check if there are any unprotected multiple occurrences of dependents
-  if (pdf.recursiveCheckDependents(&obs)) {
+  if (pdf.recursiveCheckObservables(&obs)) {
     cout << "RooAbsOptGoodnessOfFit: ERROR in PDF dependents, abort" << endl ;
     RooErrorHandler::softAbort() ;
     return ;
@@ -67,7 +67,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   
   
   // Check if the fit ranges of the dependents in the data and in the PDF are consistent
-  RooArgSet* pdfDepSet = pdf.getDependents(&data) ;
+  RooArgSet* pdfDepSet = pdf.getObservables(&data) ;
   const RooArgSet* dataDepSet = data.get() ;
   TIterator* iter = pdfDepSet->createIterator() ;
   RooAbsArg* arg ;
@@ -98,9 +98,9 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from pdfDepSet ranges
   if (rangeName) {
-    _dataClone = ((RooAbsData&)data).reduce(SelectVars(*pdfDepSet),CutRange(rangeName)) ;  
+    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet),RooFit::CutRange(rangeName)) ;  
   } else {
-    _dataClone = ((RooAbsData&)data).reduce(SelectVars(*pdfDepSet)) ;  
+    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet)) ;  
   }
 
   if (rangeName) {
@@ -176,7 +176,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     delete projDataDeps ;
   }
 
-  _pdfClone->optimizeDirty(*_dataClone,_normSet) ;
+  _pdfClone->optimizeDirty(*_dataClone,_normSet,_verbose) ;
 }
 
 
@@ -269,26 +269,28 @@ void RooAbsOptGoodnessOfFit::constOptimize(ConstOpCode opcode)
   RooAbsGoodnessOfFit::constOptimize(opcode);
   if (operMode()!=Slave) return ;
   
-  cout << "RooAbsOptGoodnessOfFit::constOptimize(" << GetName() << ") Action=" ;
+  if (_verbose) {
+    cout << "RooAbsOptGoodnessOfFit::constOptimize(" << GetName() << ") Action=" ;
+  }
 
   switch(opcode) {
-  case Activate: 
-    cout << "Activate" << endl ;
-    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
+  case Activate:     
+    if (_verbose) cout << "Activate" << endl ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case DeActivate:  
     cout << "DeActivate" << endl ;
-    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
+    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case ConfigChange: 
     cout << "ConfigChange" << endl ;
-    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
-    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
+    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
+    if (_verbose) _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   case ValueChange: 
     cout << "ValueChange" << endl ;
-    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
-    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
+    if (_verbose) _pdfClone->undoConstOpt(*_dataClone,_normSet,_verbose) ;
+    if (_verbose) _pdfClone->doConstOpt(*_dataClone,_normSet,_verbose) ;
     break ;
   }
 }

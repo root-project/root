@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.85 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.86 2004/11/29 20:21:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -390,7 +390,7 @@ RooArgSet* RooAbsArg::getParameters(const RooAbsData* set) const
   // ourself as top node that don't match any of the names of the variable list
   // of the supplied data set (the dependents). The caller of this
   // function is responsible for deleting the returned argset.
-  // The complement of this function is getDependents()
+  // The complement of this function is getObservables()
   return getParameters(set?set->get():0) ;
 }
 
@@ -402,7 +402,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   // ourself as top node that don't match any of the names the args in the 
   // supplied argset. The caller of this function is responsible 
   // for deleting the returned argset. The complement of this function 
-  // is getDependents()
+  // is getObservables()
 
 
   RooArgSet parList("parameters") ;
@@ -440,29 +440,29 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
 
 
 
-RooArgSet* RooAbsArg::getDependents(const RooAbsData* set) const 
+RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const 
 {
   // Create a list of leaf nodes in the arg tree starting with
   // ourself as top node that match any of the names of the variable list
   // of the supplied data set (the dependents). The caller of this
   // function is responsible for deleting the returned argset.
-  // The complement of this function is getDependents()
+  // The complement of this function is getObservables()
 
   if (!set) return new RooArgSet ;
 
-  return getDependents(set->get()) ;
+  return getObservables(set->get()) ;
 }
 
 
-RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const 
+RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList) const 
 {
   // Create a list of leaf nodes in the arg tree starting with
   // ourself as top node that match any of the names the args in the 
   // supplied argset. The caller of this function is responsible 
   // for deleting the returned argset. The complement of this function 
-  // is getDependents()
+  // is getObservables()
   
-  //cout << "RooAbsArg::getDependents(" << GetName() << ")" << endl ;
+  //cout << "RooAbsArg::getObservables(" << GetName() << ")" << endl ;
 
   RooArgSet* depList = new RooArgSet("dependents") ;
   if (!dataList) return depList ;
@@ -487,7 +487,7 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
   RooAbsArg* branch ;
   TIterator* bIter = branchList.createIterator() ;
   while(branch=(RooAbsArg*)bIter->Next()) {
-    branch->getDependentsHook(dataList, depList) ;
+    branch->getObservablesHook(dataList, depList) ;
   }
   delete bIter ;
 
@@ -508,7 +508,7 @@ RooArgSet* RooAbsArg::getComponents() const
 
 
 
-Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const 
+Bool_t RooAbsArg::checkObservables(const RooArgSet* nset) const 
 {
   // Overloadable function in which derived classes can implement
   // consistency checks of the variables. If this function returns
@@ -517,7 +517,7 @@ Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const
 }
 
 
-Bool_t RooAbsArg::recursiveCheckDependents(const RooArgSet* nset) const 
+Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const 
 {
   RooArgSet nodeList ;
   treeNodeServerList(&nodeList) ;
@@ -527,12 +527,12 @@ Bool_t RooAbsArg::recursiveCheckDependents(const RooArgSet* nset) const
   Bool_t ret(kFALSE) ;
   while(arg=(RooAbsArg*)iter->Next()) {
     if (arg->getAttribute("ServerDied")) {
-      cout << "RooAbsArg::recursiveCheckDependents(" << GetName() << "): ERROR: one or more servers of node " 
+      cout << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node " 
 	   << arg->GetName() << " no longer exists!" << endl ;
       arg->Print("v") ;
       ret = kTRUE ;
     }
-    ret |= arg->checkDependents(nset) ;
+    ret |= arg->checkObservables(nset) ;
   }
   delete iter ;
 
@@ -600,21 +600,21 @@ Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg) const
 
 
 
-Bool_t RooAbsArg::dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const
+Bool_t RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const
 {
-  // Test if any of the dependents of the arg tree (as determined by getDependents) 
+  // Test if any of the dependents of the arg tree (as determined by getObservables) 
   // overlaps with those of the testArg.
 
-  return dependentOverlaps(dset->get(),testArg) ;
+  return observableOverlaps(dset->get(),testArg) ;
 }
 
 
-Bool_t RooAbsArg::dependentOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
+Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
 {
-  // Test if any of the dependents of the arg tree (as determined by getDependents) 
+  // Test if any of the dependents of the arg tree (as determined by getObservables) 
   // overlaps with those of the testArg.
 
-  RooArgSet* depList = getDependents(nset) ;
+  RooArgSet* depList = getObservables(nset) ;
   Bool_t ret = testArg.dependsOn(*depList) ;
   delete depList ;
   return ret ;
@@ -1045,8 +1045,11 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     os << endl;
   }
   else {
-    oneLinePrint(os,*this);
-    if(opt == Verbose) {
+    if (opt==InLine) {
+      inLinePrint(os,*this) ;
+    } else if (opt==OneLine) {
+      oneLinePrint(os,*this);
+    } else if(opt == Verbose) {
       os << indent << "--- RooAbsArg ---" << endl;
       // dirty state flags
       os << indent << "  Value State: " ;
@@ -1282,5 +1285,84 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent)
   }
   delete iter ;
 }
+
+
+TString RooAbsArg::cleanBranchName() const
+{
+  // Construct a mangled name from the actual name that
+  // is free of any math symbols that might be interpreted by TTree
+
+  TString cleanName(GetName()) ;
+  cleanName.ReplaceAll("/","D") ;
+  cleanName.ReplaceAll("-","M") ;
+  cleanName.ReplaceAll("+","P") ;
+  cleanName.ReplaceAll("*","X") ;
+  cleanName.ReplaceAll("[","L") ;
+  cleanName.ReplaceAll("]","R") ;
+  cleanName.ReplaceAll("(","L") ;
+  cleanName.ReplaceAll(")","R") ;
+  cleanName.ReplaceAll("{","L") ;
+  cleanName.ReplaceAll("}","R") ;
+
+  if (cleanName.Length()<=60) return cleanName ;
+
+  // Name is too long, truncate and include CRC32 checksum of full name in clean name
+  static char buf[1024] ;
+  strcpy(buf,cleanName.Data()) ;
+  sprintf(buf+46,"_CRC%08x",crc32(cleanName.Data())) ;
+
+  return TString(buf) ;
+}
+
+
+
+
+
+UInt_t RooAbsArg::crc32(const char* data) const
+{
+  // Calculate and extract length of string
+  Int_t len = strlen(data) ;
+  if (len<4) {
+    cout << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
+    return 0 ;
+  }
+
+  // Initialize CRC table on first use
+  static Bool_t init(kFALSE) ;
+  static unsigned int crctab[256];
+  if (!init) {
+    int i, j;
+    unsigned int crc;
+    for (i = 0; i < 256; i++){
+      crc = i << 24;
+      for (j = 0; j < 8; j++) {
+	if (crc & 0x80000000) {
+	  crc = (crc << 1) ^ 0x04c11db7 ;
+	} else {
+	  crc = crc << 1;
+	}
+      }
+      crctab[i] = crc;
+    }
+    init = kTRUE ;
+  }
+  
+  unsigned int        result(0);
+  int                 i(0);
+  
+  result = *data++ << 24;
+  result |= *data++ << 16;
+  result |= *data++ << 8;
+  result |= *data++;
+  result = ~ result;
+  len -=4;
+  
+  for (i=0; i<len; i++) {
+    result = (result << 8 | *data++) ^ crctab[result >> 24];
+  }
+
+  return ~result;
+}
+
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.29 2004/11/29 20:22:02 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.30 2005/02/14 20:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,8 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
+#include <string>
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
@@ -34,6 +36,9 @@
 #include "RooFitCore/RooLinkedListIter.hh"
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooGlobalFunc.hh"
+using std::string ;
+using std::vector ;
 using std::cout;
 using std::endl;
 using std::fstream;
@@ -673,7 +678,7 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
   //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
-  if (opt==OneLine) {
+  if (opt==OneLine || opt==InLine) {
     os << "(" ;
     TIterator *iter= createIterator();
     RooAbsArg *arg ;
@@ -686,7 +691,10 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
       }
       os << arg->GetName() ;
     }
-    os << ")" << endl ;
+    os << ")" ;
+    if (opt==OneLine) {
+      os << endl ;
+    }
     delete iter ;
     return ;
   }
@@ -749,7 +757,16 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   pc.defineString("format","Format",0,"NEYVU") ;
   pc.defineInt("sigDigit","Format",0,1) ;
   pc.defineObject("siblings","Sibling",0,0,kTRUE) ;
+  pc.defineInt("dummy","FormatArgs",0,0) ;
+  pc.defineMutex("Format","FormatArgs") ;
  
+  // Stuff all arguments in a list
+  RooLinkedList cmdList;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg3)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg4)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
+
   // Process & check varargs 
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   if (!pc.ok(kTRUE)) {
@@ -759,22 +776,46 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   const char* outFile = pc.getString("outputFile") ;
   if (outFile && strlen(outFile)) {
     ofstream ofs(outFile) ;
-    printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+    if (pc.hasProcessed("FormatArgs")) {
+      RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
+      formatCmd->addArg(RooFit::LatexTableStyle()) ;
+      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;    
+    } else {
+      printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+    }
   } else {
-    printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+    if (pc.hasProcessed("FormatArgs")) {
+      RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
+      formatCmd->addArg(RooFit::LatexTableStyle()) ;
+      printLatex(cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;    
+    } else {
+      printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+    }
   }
 }
 
 
-void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList) const 
+void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList, const RooCmdArg* formatCmd) const 
 {
   // Count number of rows to print
   Int_t nrow = (Int_t) (getSize() / ncol + 0.99) ;
   Int_t i,j,k ;
 
-  // Sibling list do not need to print their name as it is supposed to be the same
-  TString sibOption = option ;
-  sibOption.ReplaceAll("N","") ;
+  // Sibling list do not need to print their name as it is supposed to be the same  
+  TString sibOption ;
+  RooCmdArg sibFormatCmd ;
+  if (option) {
+    sibOption = option ;
+    sibOption.ReplaceAll("N","") ;
+  } else {
+    sibFormatCmd = *formatCmd ;
+    TString tmp = formatCmd->_s[0] ;
+    tmp.ReplaceAll("N","") ;    
+    static char buf[100] ;
+    strcpy(buf,tmp.Data()) ;
+    sibFormatCmd._s[0] = buf ;
+  }
+
 
   // Make list of lists ;
   RooLinkedList listList ;
@@ -839,7 +880,11 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
       for (k=0 ; k<nlist ; k++) {
 	RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
 	if (par) {
-	  ofs << *par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+	  if (option) {
+	    ofs << *par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+	  } else {
+	    ofs << *par->format((k==0)?*formatCmd:sibFormatCmd) ;
+	  }
 	}
 	if (!(j==ncol-1 && k==nlist-1)) {
 	  ofs << " & " ;
@@ -851,6 +896,52 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   
   ofs << "\\end{tabular}" << endl ;
   listListRRV.Delete() ;
+}
+
+
+Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
+{
+  if (!rangeSpec) return kTRUE ;
+
+  // Parse rangeSpec specification
+  vector<string> cutVec ;
+  if (rangeSpec && strlen(rangeSpec)>0) {
+    if (strchr(rangeSpec,',')==0) {
+      cutVec.push_back(rangeSpec) ;
+    } else {
+      char* buf = new char[strlen(rangeSpec)+1] ;
+      strcpy(buf,rangeSpec) ;
+      const char* oneRange = strtok(buf,",") ;
+      while(oneRange) {
+	cutVec.push_back(oneRange) ;
+	oneRange = strtok(0,",") ;
+      }
+      delete[] buf ;
+    }
+  }
+
+
+  RooLinkedListIter iter = _list.iterator() ;
+
+  // Apply range based selection criteria
+  Bool_t selectByRange = kTRUE ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter.Next()) {
+    Bool_t selectThisArg = kFALSE ;
+    UInt_t icut ;
+    for (icut=0 ; icut<cutVec.size() ; icut++) {
+      if (arg->inRange(cutVec[icut].c_str())) {
+	selectThisArg = kTRUE ;
+	break ;
+      }
+    }
+    if (!selectThisArg) {
+      selectByRange = kFALSE ;
+      break ;
+    }
+  }
+
+  return selectByRange ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.49 2005/02/14 20:44:27 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.50 2005/02/16 21:51:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,7 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooErrorVar.hh"
 #include "RooFitCore/RooRangeBinning.hh"
+#include "RooFitCore/RooCmdConfig.hh"
 using std::cout;
 using std::endl;
 using std::istream;
@@ -490,6 +491,55 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
 }
 
 
+TString* RooRealVar::format(const RooCmdArg& formatArg) const 
+{
+  RooCmdArg tmp(formatArg) ;
+  tmp.setProcessRecArgs(kTRUE) ;
+
+  RooCmdConfig pc(Form("RooRealVar::format(%s)",GetName())) ;
+  pc.defineString("what","FormatArgs",0,"") ;
+  pc.defineInt("autop","FormatArgs::AutoPrecision",0,2) ;
+  pc.defineInt("fixedp","FormatArgs::FixedPrecision",0,2) ;
+  pc.defineInt("tlatex","FormatArgs::TLatexStyle",0,0) ;
+  pc.defineInt("latex","FormatArgs::LatexStyle",0,0) ;
+  pc.defineInt("latext","FormatArgs::LatexTableStyle",0,0) ;
+  pc.defineInt("verbn","FormatArgs::VerbatimName",0,0) ;
+  pc.defineMutex("FormatArgs::TLatexStyle","FormatArgs::LatexStyle","FormatArgs::LatexTableStyle") ;
+  pc.defineMutex("FormatArgs::AutoPrecision","FormatArgs::FixedPrecision") ;
+
+  // Process & check varargs 
+  pc.process(tmp) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  TString options ;
+  options = pc.getString("what") ;
+  
+  if (pc.getInt("tlatex")) {
+    options += "L" ;
+  } else if (pc.getInt("latex")) {
+    options += "X" ;
+  } else if (pc.getInt("latext")) {
+    options += "Y" ;
+  }   
+
+  if (pc.getInt("verbn")) options += "V" ;
+  Int_t sigDigits = 2 ;
+  if (pc.hasProcessed("FormatArgs::AutoPrecision")) {
+    options += "P" ;
+    sigDigits = pc.getInt("autop") ;
+  } else if (pc.hasProcessed("FormatArgs::FixedPrecision")) {
+    options += "F" ;
+    sigDigits = pc.getInt("fixedp") ;
+  }
+  
+  return format(sigDigits,options) ;
+}
+
+
+
 
 TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   // Format numeric value in a variety of ways
@@ -510,6 +560,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   // F = force fixed precision
   //
   
+  //cout << "format = " << options << endl ;
 
   // parse the options string
   TString opts(options);
@@ -586,7 +637,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
     text->Append(buffer);
   }
   
-  if (asymError && hasAsymError()) {
+  if (asymError && hasAsymError() && showError) {
     if(tlatexMode) {
       text->Append(" #pm ");
       text->Append("_{") ;      
@@ -775,6 +826,12 @@ void RooRealVar::Streamer(TBuffer &R__b)
 }
 
 
+void RooRealVar::setFitBins(Int_t nBins) 
+{
+  cout << "WARNING setFitBins() IS OBSOLETE, PLEASE USE setBins()" << endl ;
+  setBins(nBins) ;
+}
+
 void RooRealVar::setFitMin(Double_t value) 
 {
   cout << "WARNING setFitMin() IS OBSOLETE, PLEASE USE setMin()" << endl ;
@@ -813,7 +870,7 @@ void RooRealVar::removeFitRange()
 
 Double_t RooRealVar::getFitMin() const 
 {
-  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMax()" << endl ;
+  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
   return getMin() ;
 }
 

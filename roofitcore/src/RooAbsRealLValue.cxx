@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.35 2005/02/14 20:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.36 2005/02/15 21:16:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,6 +44,8 @@
 #include "RooFitCore/RooBinning.hh"
 #include "RooFitCore/RooUniformBinning.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooTreeData.hh"
+#include "RooFitCore/RooRealVar.hh"
 using std::cout;
 using std::endl;
 using std::istream;
@@ -149,21 +151,33 @@ RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
   return operator=(arg.getVal()) ;
 }
 
-RooPlot* RooAbsRealLValue::frame(RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4,
-				 RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) const {
+RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const {
+  RooLinkedList cmdList ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg3)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg4)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ; cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
+  return frame(cmdList) ;
+}
+
+RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooPlot::RooPlot(%s)",GetName())) ;
+  RooCmdConfig pc(Form("RooAbsRealLValue::frame(%s)",GetName())) ;
   pc.defineDouble("min","Range",0,getMin()) ;
   pc.defineDouble("max","Range",1,getMax()) ;
   pc.defineInt("nbins","Bins",0,getBins()) ;
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
-  pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("Range","RangeWithName","AutoRange") ;
+  pc.defineObject("rangeData","AutoRange",0,0) ;
+  pc.defineDouble("rangeMargin","AutoRange",0,0.1) ;
+  pc.defineInt("rangeSym","AutoRange",0,0) ;
 
   // Process & check varargs 
-  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
     return 0 ;
   }
@@ -173,17 +187,49 @@ RooPlot* RooAbsRealLValue::frame(RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3,
   if (pc.hasProcessed("Range")) {
     xmin = pc.getDouble("min") ;
     xmax = pc.getDouble("max") ;
-  } else {
+    cout << "Found Range" << xmin << " " << xmax << endl ;
+    if (xmin==xmax) {
+      xmin = getMin() ;
+      xmax = getMax() ;
+    }
+  } else if (pc.hasProcessed("RangeWithName")) {
     const char* rangeName=pc.getString("rangeName",0,kTRUE) ;
     xmin = getMin(rangeName) ;
     xmax = getMax(rangeName) ;
+  } else if (pc.hasProcessed("AutoRange")) {
+    RooTreeData* rangeData = static_cast<RooTreeData*>(pc.getObject("rangeData")) ;
+    rangeData->getRange((RooRealVar&)*this,xmin,xmax) ;
+    if (pc.getInt("rangeSym")==0) {
+      // Regular mode: range is from xmin to xmax with given extra margin
+      Double_t margin = pc.getDouble("rangeMargin")*(xmax-xmin) ;    
+      xmin -= margin ;
+      xmax += margin ; 
+      if (xmin<getMin()) xmin = getMin() ;
+      if (xmin>getMax()) xmax = getMax() ;
+    } else {
+      // Symmetric mode: range is centered at mean of distribution with enough width to include
+      // both lowest and highest point with margin
+      Double_t mean = rangeData->moment((RooRealVar&)*this,1) ;
+      Double_t delta = ((xmax-mean)>(mean-xmin)?(xmax-mean):(mean-xmin))*(1+pc.getDouble("rangeMargin")) ;
+      xmin = mean-delta ;
+      xmax = mean+delta ;
+      if (xmin<getMin()) xmin = getMin() ;
+      if (xmin>getMax()) xmax = getMax() ;
+    }
+  } else {
+    xmin = getMin() ;
+    xmax = getMax() ;
   }
 
   Int_t nbins = pc.getInt("nbins") ;
   const char* name = pc.getString("name",0,kTRUE) ;
   const char* title = pc.getString("title",0,kTRUE) ;
 
-  return new RooPlot(name,title,*this,xmin,xmax,nbins) ;
+  if (name && title) {
+    return new RooPlot(name,title,*this,xmin,xmax,nbins) ;
+  } else {
+    return new RooPlot(*this,xmin,xmax,nbins) ;
+  }
 }
 
 RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {
@@ -331,6 +377,108 @@ Bool_t RooAbsRealLValue::inRange(const char* name) const
 {
   // Check if current value is inside range with given name
   return (getVal() >= getMin(name) && getVal() <= getMax(name)) ;
+}
+
+
+TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, const RooCmdArg& arg2, 
+					const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+					const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+{
+  // Create empty 1,2 or 3D histogram
+  // Arguments recognized
+  //
+  // YVar() -- RooRealVar defining Y dimension with optional range/binning
+  // ZVar() -- RooRealVar defining Z dimension with optional range/binning
+  // AxisLabel() -- Vertical axis label
+  // Binning() -- Range/Binning specification of X axis
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsRealLValue::createHistogram(%s)",GetName())) ;
+
+  pc.defineObject("xbinning","Binning",0,0) ;
+  pc.defineString("xbinningName","BinningName",0,"") ;
+  pc.defineInt("nxbins","BinningSpec",0) ;
+  pc.defineDouble("xlo","BinningSpec",0,0) ;
+  pc.defineDouble("xhi","BinningSpec",1,0) ;
+
+  pc.defineObject("yvar","YVar",0,0) ;
+  pc.defineObject("ybinning","YVar::Binning",0,0) ;
+  pc.defineString("ybinningName","YVar::BinningName",0,"") ;
+  pc.defineInt("nybins","YVar::BinningSpec",0) ;
+  pc.defineDouble("ylo","YVar::BinningSpec",0,0) ;
+  pc.defineDouble("yhi","YVar::BinningSpec",1,0) ;
+
+  pc.defineObject("zvar","ZVar",0,0) ;
+  pc.defineObject("zbinning","ZVar::Binning",0,0) ;
+  pc.defineString("zbinningName","ZVar::BinningName",0,"") ;
+  pc.defineInt("nzbins","ZVar::BinningSpec",0) ;
+  pc.defineDouble("zlo","ZVar::BinningSpec",0,0) ;
+  pc.defineDouble("zhi","ZVar::BinningSpec",1,0) ;
+
+  pc.defineString("axisLabel","AxisLabel",0,"Events") ;
+
+  pc.defineDependency("ZVar","YVar") ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Initialize arrays for call to implementation version of createHistogram
+  const char* axisLabel = pc.getString("axisLabel") ;
+  const RooAbsBinning* binning[3] ;
+  RooArgList vars ;
+
+  // Prepare X dimension
+  vars.add(*this) ;
+  if (pc.hasProcessed("Binning")) {
+    binning[0] = static_cast<RooAbsBinning*>(pc.getObject("xbinning")) ;
+  } else if (pc.hasProcessed("BinningName")) {
+    binning[0] = &getBinning(pc.getString("xbinningName",0,kTRUE)) ;
+  } else if (pc.hasProcessed("BinningSpec")) {
+    Double_t xlo = pc.getDouble("xlo") ;
+    Double_t xhi = pc.getDouble("xhi") ;
+    binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
+  } else {
+    binning[0] = &getBinning() ;
+  }
+
+  if (pc.hasProcessed("YVar")) {
+    RooAbsRealLValue& yvar = *static_cast<RooAbsRealLValue*>(pc.getObject("yvar")) ;
+    vars.add(yvar) ;
+    if (pc.hasProcessed("YVar::Binning")) {
+      binning[1] = static_cast<RooAbsBinning*>(pc.getObject("ybinning")) ;
+    } else if (pc.hasProcessed("YVar::BinningName")) {
+      binning[1] = &yvar.getBinning(pc.getString("ybinningName",0,kTRUE)) ;
+    } else if (pc.hasProcessed("YVar::BinningSpec")) {
+      Double_t ylo = pc.getDouble("ylo") ;
+      Double_t yhi = pc.getDouble("yhi") ;
+      binning[1] = new RooUniformBinning((ylo==yhi)?yvar.getMin():ylo,(ylo==yhi)?yvar.getMax():yhi,pc.getInt("nybins")) ;
+    } else {
+      yvar.Print() ;
+      binning[1] = &yvar.getBinning() ;
+    }
+  }
+
+  if (pc.hasProcessed("ZVar")) {
+    RooAbsRealLValue& zvar = *static_cast<RooAbsRealLValue*>(pc.getObject("zvar")) ;
+    vars.add(zvar) ;
+    if (pc.hasProcessed("ZVar::Binning")) {
+      binning[2] = static_cast<RooAbsBinning*>(pc.getObject("zbinning")) ;
+    } else if (pc.hasProcessed("ZVar::BinningName")) {
+      binning[2] = &zvar.getBinning(pc.getString("zbinningName",0,kTRUE)) ;
+    } else if (pc.hasProcessed("ZVar::BinningSpec")) {
+      Double_t zlo = pc.getDouble("zlo") ;
+      Double_t zhi = pc.getDouble("zhi") ;
+      binning[2] = new RooUniformBinning((zlo==zhi)?zvar.getMin():zlo,(zlo==zhi)?zvar.getMax():zhi,pc.getInt("nzbins")) ;
+    } else {
+      binning[2] = &zvar.getBinning() ;
+    }
+  }
+
+
+  return createHistogram(name, vars, axisLabel, binning) ;
 }
 
 

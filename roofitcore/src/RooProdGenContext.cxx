@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.15 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.16 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   // Make full list of dependents (generated & proto)
   RooArgSet deps(vars) ;
   if (prototype) {
-    RooArgSet* protoDeps = model.getDependents(*prototype->get()) ;
+    RooArgSet* protoDeps = model.getObservables(*prototype->get()) ;
     deps.remove(*protoDeps,kTRUE,kTRUE) ;
     delete protoDeps ;
   }
@@ -101,7 +101,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	// Simple term
 	
 	pdf = (RooAbsPdf*) pdfIter->Next() ;
-	RooArgSet* pdfDep = pdf->getDependents(termDeps) ;
+	RooArgSet* pdfDep = pdf->getObservables(termDeps) ;
 	if (pdfDep->getSize()>0) {
 // 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
 	  RooArgSet* auxProto = 0 ;
@@ -135,7 +135,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
 	    if (pdfnset && pdfnset->getSize()>0) {
 	      // This PDF requires a Conditional() construction
-	      cmdList.Add(Conditional(*pdfSet,*pdfnset).Clone()) ;
+	      cmdList.Add(RooFit::Conditional(*pdfSet,*pdfnset).Clone()) ;
 // 	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
 	    } else {
 	      fullPdfSet.add(*pdfSet) ;
@@ -205,7 +205,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       
       if (pdfnset && pdfnset->getSize()>0) {
 	// This PDF requires a Conditional() construction
-	  cmdList.Add(Conditional(*pdfSet,*pdfnset).Clone()) ;
+	  cmdList.Add(RooFit::Conditional(*pdfSet,*pdfnset).Clone()) ;
       } else {
 	fullPdfSet.add(*pdfSet) ;
       }

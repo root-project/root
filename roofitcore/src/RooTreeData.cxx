@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.62 2005/02/14 20:44:29 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.63 2005/02/16 21:51:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,8 +21,12 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
+#include <string>
 #include <stdlib.h>
 #include <math.h>
+using std::vector ;
+using std::string ;
 
 #include "TRegexp.h"
 #include "TTreeFormula.h"
@@ -383,8 +387,6 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
   // Load values from dataset 't' into this data collection, optionally
   // selecting events using 'select' RooFormulaVar
   //
-
-  cout << "load values cutRange = " << (rangeName?rangeName:"") << endl ;
 
   // Redirect formula servers to source data row
   if (select) {
@@ -846,20 +848,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 }
 
 
-RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
-			     const RooCmdArg& arg3, const RooCmdArg& arg4,
-			     const RooCmdArg& arg5, const RooCmdArg& arg6,
-			     const RooCmdArg& arg7, const RooCmdArg& arg8) const 
-{
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
-  return plotOn(frame,l) ;
-}
-
-RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
+RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 {
 
   // New experimental plotOn() with varargs...
@@ -867,11 +856,15 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   // Define configuration for this method
   RooCmdConfig pc(Form("RooTreeData::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"P") ;
-  pc.defineString("cutRange","CutRange",0,"") ;
+  pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
   pc.defineString("cutString","CutSpec",0,"") ;
   pc.defineString("histName","Name",0,"") ;
   pc.defineObject("cutVar","CutVar",0) ;
   pc.defineObject("binning","Binning",0) ;
+  pc.defineString("binningName","BinningName",0,"") ;
+  pc.defineInt("nbins","BinningSpec",0,100) ;
+  pc.defineDouble("xlo","BinningSpec",0,0) ;
+  pc.defineDouble("xhi","BinningSpec",1,1) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
@@ -887,6 +880,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineDouble("xErrorSize","XErrorSize",0,1.) ;
   pc.defineMutex("DataError","Asymmetry") ;
+  pc.defineMutex("Binning","BinningName","BinningSpec") ;
 
   // Process & check varargs 
   pc.process(argList) ;
@@ -899,7 +893,16 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   // Extract values from named arguments
   o.drawOptions = pc.getString("drawOption") ;
   o.cuts = pc.getString("cutString") ;
-  o.bins = (RooAbsBinning*) pc.getObject("binning") ;
+  if (pc.hasProcessed("Binning")) {
+    o.bins = (RooAbsBinning*) pc.getObject("binning") ;
+  } else if (pc.hasProcessed("BinningName")) {
+    o.bins = &frame->getPlotVar()->getBinning(pc.getString("binningName")) ;
+  } else if (pc.hasProcessed("BinningSpec")) {
+    Double_t xlo = pc.getDouble("xlo") ;
+    Double_t xhi = pc.getDouble("xhi") ;
+    o.bins = new RooUniformBinning((xlo==xhi)?frame->getPlotVar()->getMin():xlo,
+				   (xlo==xhi)?frame->getPlotVar()->getMax():xhi,pc.getInt("nbins")) ;
+  }
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
   o.etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;
   o.histInvisible = pc.getInt("histInvisible") ;
@@ -935,6 +938,10 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
   if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
   if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
+
+  if (pc.hasProcessed("BinningSpec")) {
+    delete o.bins ;
+  }
 
   return ret ;
 }
@@ -985,7 +992,8 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist,0,1,o.etype,o.xErrorSize);
+  Double_t nomBinWidth = o.bins ? (frame->GetXaxis()->GetXmax()-frame->GetXaxis()->GetXmin())/frame->GetNbinsX() : 0 ;
+  RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize);
   if(0 == graph) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
@@ -1223,6 +1231,23 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     break;
   }
 
+  // Parse cutRange specification
+  vector<string> cutVec ;
+  if (cutRange && strlen(cutRange)>0) {
+    if (strchr(cutRange,',')==0) {
+      cutVec.push_back(cutRange) ;
+    } else {
+      char* buf = new char[strlen(cutRange)+1] ;
+      strcpy(buf,cutRange) ;
+      const char* oneRange = strtok(buf,",") ;
+      while(oneRange) {
+	cutVec.push_back(oneRange) ;
+	oneRange = strtok(0,",") ;
+      }
+      delete[] buf ;
+    }
+  }
+
   // Loop over events and fill the histogram
   Int_t nevent= (Int_t)_tree->GetEntries();
   for(Int_t i=0; i < nevent; ++i) {
@@ -1237,19 +1262,27 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     }
 
     // Apply range based selection criteria
-    Bool_t select(kTRUE) ;
+    Bool_t selectByRange = kTRUE ;
     if (cutRange) {
       _iterator->Reset() ;
       RooAbsArg* arg ;
       while(arg=(RooAbsArg*)_iterator->Next()) {
-	if (!arg->inRange(cutRange)) {
-	  select = kFALSE ;
+	Bool_t selectThisArg = kFALSE ;
+	UInt_t icut ;
+	for (icut=0 ; icut<cutVec.size() ; icut++) {
+	  if (arg->inRange(cutVec[icut].c_str())) {
+	    selectThisArg = kTRUE ;
+	    break ;
+	  }
+	}
+	if (!selectThisArg) {
+	  selectByRange = kFALSE ;
 	  break ;
 	}
       }
     }
 
-    if (!select) {
+    if (!selectByRange) {
       // Go to next event in loop over events
       continue ;
     }
@@ -1353,7 +1386,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
 
 
-Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) const
+Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
@@ -1374,10 +1407,21 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) c
     return 0;
   }
 
+  // Setup RooFormulaVar for cutSpec if it is present
+  RooFormula* select = 0 ;
+  if (cutSpec) {
+    select = new RooFormula("select",cutSpec,*get()) ;
+  }
+
+
   // Calculate requested moment
   Double_t sum(0);
+  const RooArgSet* vars ;
   for(Int_t index= 0; index < numEntries(); index++) {
-    get(index) ;
+    vars = get(index) ;
+    if (select && select->eval()==0) continue ;
+    if (cutRange && vars->allInRange(cutRange)) continue ;
+    
     sum+= weight() * pow(varPtr->getVal() - offset,order);
   }
   return sum/sumEntries();
@@ -1385,7 +1429,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) c
 
 
 
-RooRealVar* RooTreeData::meanVar(RooRealVar &var) const
+RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/Sqrt(N) which is generally valid.
@@ -1404,10 +1448,10 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var) const
   mean->setPlotLabel(label.Data());
 
   // fill in this variable's value and error
-  Double_t meanVal=moment(var,1) ;
-  Double_t N(sumEntries()) ;
+  Double_t meanVal=moment(var,1,0,cutSpec,cutRange) ;
+  Double_t N(sumEntries(cutSpec,cutRange)) ;
 
-  Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
+  Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   mean->setVal(meanVal) ;
   mean->setError(N > 0 ? rmsVal/sqrt(N) : 0);
 
@@ -1416,7 +1460,7 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var) const
 
 
 
-RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
+RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/(2*Sqrt(N)) which is only valid if the variable has a Gaussian distribution.
@@ -1436,7 +1480,7 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
   // Fill in this variable's value and error
   Double_t meanVal(moment(var,1)) ;
   Double_t N(sumEntries());
-  Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
+  Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   rms->setVal(rmsVal) ;
   rms->setError(rmsVal/sqrt(2*N));
 
@@ -1444,9 +1488,105 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
 }
 
 
+Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const 
+{
+  // Lookup variable in dataset
+  RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
+  if(0 == varPtr) {
+    cout << "RooDataSet::getRange(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
+    return kTRUE;
+  }
+
+  // Check if found variable is of type RooRealVar
+  if (!dynamic_cast<RooRealVar*>(varPtr)) {
+    cout << "RooDataSet::getRange(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
+    return kTRUE;
+  }
+
+  // Check if dataset is not empty
+  if(sumEntries() == 0.) {
+    cout << "RooDataSet::getRange(" << GetName() << ") WARNING: empty dataset" << endl ;
+    return kTRUE;
+  }
+
+  // Look for highest and lowest value 
+  lowest = RooNumber::infinity ;
+  highest = -RooNumber::infinity ;
+  for (Int_t i=0 ; i<numEntries() ; i++) {
+    get(i) ;
+    if (varPtr->getVal()<lowest) {
+      lowest = varPtr->getVal() ;
+    }
+    if (varPtr->getVal()>highest) {
+      highest = varPtr->getVal() ;
+    }
+  }  
+
+  return kFALSE ;
+}
+
+
+
+RooPlot* RooTreeData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2, 
+			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
+{
+  // Accepted commands
+  // Label() -- Add given label to text box
+  // Layout() -- Modify default box layout
+  // Format() -- Options to format variable printing
+
+  // Stuff all arguments in a list
+  RooLinkedList cmdList;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg3)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg4)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooTreeData::statOn(%s)",GetName())) ;
+  pc.defineString("what","What",0,"MNR") ;
+  pc.defineString("label","Label",0,"") ;
+  pc.defineDouble("xmin","Layout",0,0.65) ;
+  pc.defineDouble("xmax","Layout",1,0.99) ;
+  pc.defineInt("ymaxi","Layout",0,Int_t(0.95*10000)) ;
+  pc.defineString("formatStr","Format",0,"NELU") ;
+  pc.defineInt("sigDigit","Format",0,2) ;
+  pc.defineInt("dummy","FormatArgs",0,0) ;
+  pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
+  pc.defineString("cutString","CutSpec",0,"") ;
+  pc.defineMutex("Format","FormatArgs") ;
+
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  const char* label = pc.getString("label") ;
+  Double_t xmin = pc.getDouble("xmin") ;
+  Double_t xmax = pc.getDouble("xmax") ;
+  Double_t ymax = pc.getInt("ymaxi") / 10000. ;
+  const char* formatStr = pc.getString("formatStr") ;
+  Int_t sigDigit = pc.getInt("sigDigit") ;  
+  const char* what = pc.getString("what") ;
+
+  const char* cutSpec = pc.getString("cutString",0,kTRUE) ;
+  const char* cutRange = pc.getString("cutRange",0,kTRUE) ;
+
+  if (pc.hasProcessed("FormatArgs")) {
+    RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
+    return statOn(frame,what,label,0,0,xmin,xmax,ymax,cutSpec,cutRange,formatCmd) ;
+  } else {
+    return statOn(frame,what,label,sigDigit,formatStr,xmin,xmax,ymax,cutSpec,cutRange) ;
+  }
+}
+
+
 
 RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label, Int_t sigDigits,
-			     Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax) 
+			     Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax, 
+			     const char* cutSpec, const char* cutRange, const RooCmdArg* formatCmd) 
 {
 
   Bool_t showLabel= (label != 0 && strlen(label) > 0);
@@ -1476,12 +1616,22 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 
   // add formatted text for each statistic
   TText *text = 0;
-  RooRealVar N("N","Number of Events",sumEntries());
-  RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar());
-  RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar());
-  TString *rmsText= rms->format(sigDigits,options);
-  TString *meanText= mean->format(sigDigits,options);
-  TString *NText= N.format(sigDigits,options);
+  RooRealVar N("N","Number of Events",sumEntries(cutSpec,cutRange));
+  N.setPlotLabel("Entries") ;
+  RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
+  mean->setPlotLabel("Mean") ;
+  RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
+  rms->setPlotLabel("RMS") ;
+  TString *rmsText, *meanText, *NText ;
+  if (options) {
+    rmsText= rms->format(sigDigits,options);
+    meanText= mean->format(sigDigits,options);
+    NText= N.format(sigDigits,options);
+  } else {
+    rmsText= rms->format(*formatCmd);
+    meanText= mean->format(*formatCmd);
+    NText= N.format(*formatCmd);
+  }
   if (showR) text= box->AddText(rmsText->Data());
   if (showM) text= box->AddText(meanText->Data());
   if (showN) text= box->AddText(NText->Data());

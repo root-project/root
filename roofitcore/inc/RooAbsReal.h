@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.66 2005/02/14 20:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.67 2005/02/16 21:51:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -68,6 +68,10 @@ public:
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
   virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
+
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none,
+                             const RooCmdArg arg3=RooCmdArg::none, const RooCmdArg arg4=RooCmdArg::none, const RooCmdArg arg5=RooCmdArg::none, 
+                             const RooCmdArg arg6=RooCmdArg::none, const RooCmdArg arg7=RooCmdArg::none, const RooCmdArg arg8=RooCmdArg::none) const ;
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const 
               { return createIntegral(iset,0,0,rangeName) ; }
@@ -144,6 +148,8 @@ protected:
   void makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, 
 			 RooArgSet& projectedVars, Bool_t silent) const ;
 
+  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0) const ;
+
   const RooAbsReal *createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				     RooArgSet *&cloneSet, const char* rangeName=0) const;
 
@@ -179,8 +185,6 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
-  TString cleanBranchName() const ;
-  UInt_t crc32(const char* data) const ;
 
   Double_t _plotMin ;       // Minimum of plot range
   Double_t _plotMax ;       // Maximum of plot range
@@ -203,13 +207,13 @@ protected:
 
   // Dirty-state and constant term optimization used 
   // in RooAbsOptGoodnessOfFit and RooDataProjBinding
-  void optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet) ;
-  void doConstOpt(RooAbsData& dataset, const RooArgSet* normSet) ;
-  void undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet) ;  
+  void optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;
+  void doConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;
+  void undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;  
 
-  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList, const RooArgSet* normSet) ;
-  void findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList) ;
-  void findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
+  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList, const RooArgSet* normSet, Bool_t verbose) ;
+  void findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList, Bool_t verbose) ;
+  void findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList, Bool_t verbose) ;
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
   
   struct PlotOpt {

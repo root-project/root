@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.13 2004/11/29 20:24:01 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.14 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,6 +77,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _verbose = kFALSE ;
   _profile = kFALSE ;
   _handleLocalErrors = kFALSE ;
+  _printLevel = 1 ;
 
   // Examine parameter list
   RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
@@ -549,17 +550,17 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 void RooMinuit::optimizeConst(Bool_t flag) 
 {
   if (_optConst && !flag){ 
-    cout << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
+    if (_printLevel>-1) cout << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
     _func->constOptimize(RooAbsArg::DeActivate) ;
     _optConst = flag ;
   } else if (!_optConst && flag) {
-    cout << "RooMinuit::optimizeConst: activating const optimization" << endl ;
+    if (_printLevel>-1) cout << "RooMinuit::optimizeConst: activating const optimization" << endl ;
     _func->constOptimize(RooAbsArg::Activate) ;
     _optConst = flag ;
   } else if (_optConst && flag) {
-    cout << "RooMinuit::optimizeConst: const optimization already active" << endl ;
+    if (_printLevel>-1) cout << "RooMinuit::optimizeConst: const optimization already active" << endl ;
   } else {
-    cout << "RooMinuit::optimizeConst: const optimization wasn't active" << endl ;
+    if (_printLevel>-1) cout << "RooMinuit::optimizeConst: const optimization wasn't active" << endl ;
   }
 }
 

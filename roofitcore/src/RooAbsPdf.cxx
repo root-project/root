@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.89 2005/02/14 20:44:19 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.90 2005/02/16 21:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -129,6 +129,9 @@
 #include "RooFitCore/RooNameReg.hh"
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
+#include "RooFitCore/RooAddition.hh"
+#include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooInt.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -324,7 +327,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const TNamed* ran
   }
 
   // If not create it now
-  RooArgSet* depList = getDependents(nset) ;
+  RooArgSet* depList = getObservables(nset) ;
   norm = createIntegral(*depList,*getIntegratorConfig(),RooNameReg::str(rangeName)) ;
   delete depList ;
 
@@ -381,7 +384,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   if (fullNorm) {
     depList = ((RooArgSet*)nset) ;
   } else {
-    depList = getDependents(nset) ;
+    depList = getObservables(nset) ;
   }
 
 
@@ -504,7 +507,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
       cout << endl 
 	   << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: PDF evaluates to zero or negative value (" << prob << ")" << endl;
       RooArgSet* params = getParameters(nset) ;
-      RooArgSet* depends = getDependents(nset) ;	 
+      RooArgSet* depends = getObservables(nset) ;	 
       cout << "  Current values of PDF dependents:" ;
       depends->Print("v") ;
       cout << "  Current values of PDF parameters:" ;
@@ -560,16 +563,26 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
                                                  RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
 {
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return fitTo(data,l) ;
+}
+
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList) 
+{
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
-  pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
   pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("doSave","Save",0,0) ;
   pc.defineInt("doTimer","Timer",0,0) ;
-  pc.defineInt("blind","Blind",0,0) ;
+  pc.defineInt("plevel","PrintLevel",0,0) ;
   pc.defineInt("strat","Strategy",0,1) ;
   pc.defineInt("initHesse","InitialHesse",0,0) ;
   pc.defineInt("hesse","Hesse",0,1) ;
@@ -589,7 +602,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   pc.defineMutex("FitOptions","Minos") ;
   
   // Process and check varargs 
-  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
     return 0 ;
   }
@@ -601,7 +614,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   Int_t verbose  = pc.getInt("verbose") ;
   Int_t doSave   = pc.getInt("doSave") ;
   Int_t doTimer  = pc.getInt("doTimer") ;
-  Int_t blind    = pc.getInt("blind") ;
+  Int_t plevel    = pc.getInt("plevel") ;
   Int_t strat    = pc.getInt("strat") ;
   Int_t initHesse= pc.getInt("initHesse") ;
   Int_t hesse    = pc.getInt("hesse") ;
@@ -614,13 +627,30 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   if (tmp) projDeps.add(*tmp) ;
   
   // Construct NLL
-  RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,numcpu) ;
+  RooAbsReal* nll ;
+  if (!rangeName || strchr(rangeName,',')==0) {
+    // Simple case: default range, or single restricted range
+    nll = new RooNLLVar("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,numcpu,plevel!=-1) ;
+  } else {
+    // Composite case: multiple ranges
+    RooArgList nllList ;
+    char* buf = new char[strlen(rangeName)+1] ;
+    strcpy(buf,rangeName) ;
+    char* token = strtok(buf,",") ;
+    while(token) {
+      RooAbsReal* nllComp = new RooNLLVar(Form("nll_%s",token),"-log(likelihood)",*this,data,projDeps,ext,token,numcpu,plevel!=-1) ;
+      nllList.add(*nllComp) ;
+      token = strtok(0,",") ;
+    }
+    delete[] buf ;
+    nll = new RooAddition("nll","-log(likelihood)",nllList,kTRUE) ;
+  }
   
   // Instantiate MINUIT
-  RooMinuit m(nll) ;
+  RooMinuit m(*nll) ;
 
-  if(blind) {
-    m.setPrintLevel(-1);
+  if (plevel!=1) {
+    m.setPrintLevel(plevel) ;
   }
 
   if (optConst) {
@@ -669,11 +699,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   }
   
   // Optionally return fit result
+  RooFitResult *ret = 0 ;
   if (doSave) {
-    return m.save() ;
-  } else {
-    return 0 ;
-  }
+     ret = m.save() ;
+  } 
+
+  // Cleanup
+  delete nll ;
+
+  return ret ;
 }
 
 
@@ -821,6 +855,60 @@ RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet 
   return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
+
+RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, Int_t nEvents, const RooCmdArg& arg1,
+				const RooCmdArg& arg2, const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5) {
+  return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
+}
+
+RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
+				const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6) 
+{
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
+  pc.defineObject("proto","ProtoData",0,0) ;
+  pc.defineInt("randProto","ProtoData",0,0) ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("extended","Extended",0,0) ;
+  pc.defineInt("nEvents","NumEvents",0,0) ;
+  
+  
+  // Process and check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
+  Int_t  nEvents = pc.getInt("nEvents") ;
+  Bool_t verbose = pc.getInt("verbose") ;
+  Bool_t randProto = pc.getInt("randProto") ;
+  Bool_t extended = pc.getInt("extended") ;
+
+  if (extended) {
+    nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0?expectedEvents(&whatVars):nEvents) ;
+  }
+
+  if (extended && protoData && !randProto) {
+    cout << "RooAbsPdf::generate: WARNING Using generator option Extended() (Poisson distribution of #events) together " << endl
+	 << "                     with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
+	 << "                     Set randomize flag in ProtoData() option to randomize prototype dataset order and thus" << endl
+         << "                     to randomize the set of over/undersampled prototype events for each generation cycle." << endl ;
+  }
+
+
+  // Forward to appropiate implementation
+  if (protoData) {
+    return generate(whatVars,*protoData,nEvents,verbose,randProto) ;
+  } else {
+    return generate(whatVars,nEvents,verbose) ;
+  }
+  
+}
+
+
+
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
@@ -843,7 +931,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 }
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype,
-				Int_t nEvents, Bool_t verbose) const {
+				Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder) const {
   // Generate a new dataset with values of the whatVars variables
   // sampled from our distribution. Use the specified existing dataset
   // as a prototype: the new dataset will contain the same number of
@@ -859,6 +947,14 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
 
   RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,&prototype,0,verbose);
+
+  if (randProtoOrder && prototype.numEntries()!=nEvents) {
+    cout << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
+    Int_t* newOrder = randomizeProtoOrder(prototype.numEntries(),nEvents) ;
+    context->setProtoDataOrder(newOrder) ;
+    delete[] newOrder ;
+  }
+
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }
@@ -868,6 +964,37 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   if(0 != context) delete context;
   return generated;
 }
+
+
+
+Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto,Int_t nGen) const
+{
+  // Return lookup table with randomized access order for prototype events,
+  // given nProto prototype data events and nGen events that will actually
+  // be accessed
+
+  // Make unsorted linked list of indeces
+  RooLinkedList l ;
+  Int_t i ;
+  for (i=0 ; i<nProto ; i++) {
+    l.Add(new RooInt(i)) ;
+  }
+
+  // Make output list
+  Int_t* lut = new Int_t[nProto] ;
+
+  // Randomly samply input list into output list
+  for (i=0 ; i<nProto ; i++) {
+    Int_t iran = RooRandom::integer(nProto-i) ;
+    RooInt* sample = (RooInt*) l.At(iran) ;
+    lut[i] = *sample ;
+    l.Remove(sample) ;
+    delete sample ;
+  }
+  
+  return lut ;
+}
+
 
 Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars, Bool_t staticInitOK) const {
   // Load generatedVars with the subset of directVars that we can generate events for,
@@ -1004,7 +1131,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   frame->updateNormVars(*frame->getPlotVar()) ;
   
   // Append overriding scale factor command at end of original command list
-  RooCmdArg tmp = Normalization(scaleFactor,Raw) ;
+  RooCmdArg tmp = RooFit::Normalization(scaleFactor,Raw) ;
   cmdList.Add(&tmp) ;
   
   // Was a component selected requested
@@ -1368,12 +1495,95 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
 }
 
 
+RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2, 
+			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
+{
+  // Accepted commands
+  // Label() -- Add given label to text box
+  // Layout() -- Modify default box layout
+  // Format() -- Options to format variable printing
+
+  // Stuff all arguments in a list
+  RooLinkedList cmdList;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg3)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg4)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
+  cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::paramOn(%s)",GetName())) ;
+  pc.defineString("label","Label",0,"") ;
+  pc.defineDouble("xmin","Layout",0,0.65) ;
+  pc.defineDouble("xmax","Layout",1,0.99) ;
+  pc.defineInt("ymaxi","Layout",0,Int_t(0.95*10000)) ;
+  pc.defineInt("showc","ShowConstants",0,0) ;
+  pc.defineObject("params","Parameters",0,0) ;
+  pc.defineString("formatStr","Format",0,"NELU") ;
+  pc.defineInt("sigDigit","Format",0,2) ;
+  pc.defineInt("dummy","FormatArgs",0,0) ;
+  pc.defineMutex("Format","FormatArgs") ;
+
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  const char* label = pc.getString("label") ;
+  Double_t xmin = pc.getDouble("xmin") ;
+  Double_t xmax = pc.getDouble("xmax") ;
+  Double_t ymax = pc.getInt("ymaxi") / 10000. ;
+  Int_t showc = pc.getInt("showc") ;
+
+
+  const char* formatStr = pc.getString("formatStr") ;
+  Int_t sigDigit = pc.getInt("sigDigit") ;  
+
+  // Decode command line arguments
+  RooArgSet* params = static_cast<RooArgSet*>(pc.getObject("params")) ;
+  if (!params) {
+    params = getParameters(frame->getNormVars()) ;
+    if (pc.hasProcessed("FormatArgs")) {
+      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
+      paramOn(frame,*params,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
+    } else {
+      paramOn(frame,*params,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
+    }
+    delete params ;
+  } else {
+    RooArgSet* pdfParams = getParameters(frame->getNormVars()) ;    
+    RooArgSet* selParams = static_cast<RooArgSet*>(pdfParams->selectCommon(*params)) ;
+    if (pc.hasProcessed("FormatArgs")) {
+      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
+      paramOn(frame,*selParams,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
+    } else {
+      paramOn(frame,*selParams,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
+    }
+    delete selParams ;
+    delete pdfParams ;
+  }
+  
+  return frame ;
+}
+
 
 
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *label,
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
 			    Double_t xmax ,Double_t ymax) 
+{
+  RooArgSet* params = getParameters(data) ;
+  TString opts(options) ;  
+  paramOn(frame,*params,opts.Contains("c"),label,sigDigits,options,xmin,xmax,ymax) ;
+  delete params ;
+  return frame ;
+}
+
+RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants, const char *label,
+			    Int_t sigDigits, Option_t *options, Double_t xmin,
+			    Double_t xmax ,Double_t ymax, const RooCmdArg* formatCmd) 
 {
   // Add a text box with the current parameter values and their errors to the frame.
   // Dependents of this PDF appearing in the 'data' dataset will be omitted.
@@ -1386,14 +1596,12 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   // parse the options
   TString opts = options;
   opts.ToLower();
-  Bool_t showConstants= opts.Contains("c");
   Bool_t showLabel= (label != 0 && strlen(label) > 0);
   
   // calculate the box's size, adjusting for constant parameters
-  RooArgSet* params = getParameters(data) ;
-  TIterator* pIter = params->createIterator() ;
+  TIterator* pIter = params.createIterator() ;
 
-  Int_t nPar= params->getSize();
+  Int_t nPar= params.getSize();
   Double_t ymin(ymax), dy(0.06);
   Int_t index(nPar);
   RooRealVar *var = 0;
@@ -1418,7 +1626,8 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   pIter->Reset() ;
   while(var=(RooRealVar*)pIter->Next()) {
     if(var->isConstant() && !showConstants) continue;
-    TString *formatted= var->format(sigDigits, opts.Data());
+    
+    TString *formatted= options ? var->format(sigDigits, options) : var->format(*formatCmd) ;
     text= box->AddText(formatted->Data());
     delete formatted;
   }
@@ -1429,7 +1638,6 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
   frame->addObject(box) ;
 
   delete pIter ;
-  delete params ;
   return frame ;
 }
 
@@ -1475,9 +1683,9 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
   
   RooNLLVar nll("nll","-log(L)",*this,*data,extended) ;
   if (fixMinToZero) {
-    nll.plotOn(frame,DrawOption("L"),Precision(prec),ShiftToZero()) ;
+    nll.plotOn(frame,RooFit::DrawOption("L"),RooFit::Precision(prec),RooFit::ShiftToZero()) ;
   } else {
-    nll.plotOn(frame,DrawOption("L"),Precision(prec)) ;
+    nll.plotOn(frame,RooFit::DrawOption("L"),RooFit::Precision(prec)) ;
   }
 
   return frame ;

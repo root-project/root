@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.2 2004/11/30 16:08:20 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.3 2005/02/14 20:44:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -90,7 +90,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) : 
   RooAbsPdf(other,name), _isCopy(kTRUE),
-  _model(other._model), _convVar(0), 
+  _model(other._model), _convVar(other._convVar), 
   _convSet("convSet",this,other._convSet),
   _basisList(other._basisList),
   _convNormSet(new RooArgSet(*other._convNormSet)),
@@ -146,7 +146,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   //
 
   // Sanity check
-  if (!_model || !_convVar) {
+  if (_isCopy) {
     cout << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): ERROR attempt to "
 	 << " declare basis functions in a copied RooAbsAnaConvPdf" << endl ;
     return -1 ;
@@ -232,7 +232,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
 RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					       const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  RooArgSet* modelDep = _model->getDependents(&vars) ;
+  RooArgSet* modelDep = _model->getObservables(&vars) ;
   modelDep->remove(*convVar(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
@@ -312,8 +312,8 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   if (allVars.getSize()==0) return 0 ;
 
   // Select subset of allVars that are actual dependents
-  RooArgSet* allDeps = getDependents(allVars) ;
-  RooArgSet* normSet = normSet2 ? getDependents(normSet2) : 0 ;
+  RooArgSet* allDeps = getObservables(allVars) ;
+  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
 
   RooAbsArg *arg ;
   RooResolutionModel *conv ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.77 2004/11/29 20:24:17 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.78 2005/02/14 20:44:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -187,7 +187,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // Reduce exclLVBranches to only those depending exclusisvely on exclLVservers
     bIter->Reset() ;
     while(branch=(RooAbsArg*)bIter->Next()) {
-      RooArgSet* brDepList = branch->getDependents(&intDepList) ;
+      RooArgSet* brDepList = branch->getObservables(&intDepList) ;
       RooArgSet bsList(*brDepList,"bsList") ;
       delete brDepList ;
       bsList.remove(exclLVServers,kTRUE,kTRUE) ;
@@ -303,6 +303,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet anIntDepList ;
   _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet,RooNameReg::str(_rangeName)) ;    
 
+  // Avoid confusion -- if mode is zero no analytical integral is defined regardless of contents of _anaListx
+  if (_mode==0) {
+    _anaList.removeAll() ;
+  }
+
+
   // WVE kludge: synchronize dset for use in analyticalIntegral
   function.getVal(_funcNormSet) ;
 
@@ -327,7 +333,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add category dependent of LValueReal used in integration
       RooAbsArg *argDep ;
-      RooArgSet *argDepList = arg->getDependents(&intDepList) ;
+      RooArgSet *argDepList = arg->getObservables(&intDepList) ;
       TIterator *adIter = argDepList->createIterator() ;
       while (argDep=(RooAbsArg*)adIter->Next()) {
 	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class()) && intDepList.contains(*argDep)) {
@@ -353,7 +359,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       } else {
 	
 	// Expand server in final dependents 
-	RooArgSet *argDeps = arg->getDependents(&intDepList) ;
+	RooArgSet *argDeps = arg->getObservables(&intDepList) ;
 	
 	// Add final dependents, that are not forcibly integrated analytically, 
 	// to numerical integration list      

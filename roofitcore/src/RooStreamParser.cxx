@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.23 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.24 2004/11/29 20:24:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -312,7 +312,9 @@ void RooStreamParser::putBackToken(const TString& token)
   
   for (int i=len-1 ; i>=0 ; i--)
     _is.putback(buf[i]) ;
-  
+
+  // Add a space to keep the token separate
+  _is.putback(' ') ;
 }
 
 

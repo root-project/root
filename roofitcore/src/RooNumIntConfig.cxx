@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.2 2004/12/02 14:10:27 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.3 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -209,88 +209,90 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
   // specified by 'opt'
 
   switch(opt) {
+  case InLine:
+    os << "RooNumIntConfig" ;
   case OneLine:
-    cout << "RooNumIntConfig" << endl ;
+    os << endl ;
     break ;
 
   case Shape:
     break ;
 
   case Standard:
-    cout << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
+    os << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
     if (_printEvalCounter) {
-      cout << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+      os << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
     }
 
-    cout << "1-D integration method: " << _method1D.getLabel() ;
+    os << "1-D integration method: " << _method1D.getLabel() ;
     if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-      cout << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
-    cout << "2-D integration method: " << _method2D.getLabel() ;
+    os << "2-D integration method: " << _method2D.getLabel() ;
     if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-      cout << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
-    cout << "N-D integration method: " << _methodND.getLabel() ;
+    os << "N-D integration method: " << _methodND.getLabel() ;
     if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-      cout << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
     break ;
 
 
   case Verbose:
-    cout << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
+    os << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
     if (_printEvalCounter) {
-      cout << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+      os << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
     }
 
-    cout << "Selected integration methods:" << endl ;
-    cout << "1-D integration method: " << _method1D.getLabel() ;
+    os << "Selected integration methods:" << endl ;
+    os << "1-D integration method: " << _method1D.getLabel() ;
     if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-      cout << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
-    cout << "2-D integration method: " << _method2D.getLabel() ;
+    os << "2-D integration method: " << _method2D.getLabel() ;
     if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-      cout << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
-    cout << "N-D integration method: " << _methodND.getLabel() ;
+    os << "N-D integration method: " << _methodND.getLabel() ;
     if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-      cout << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
+      os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
     } else {
-      cout << endl ;
+      os << endl ;
     }
 
-    cout << endl << "Available integration methods:" << endl << endl ;
+    os << endl << "Available integration methods:" << endl << endl ;
     TIterator* cIter = _configSets.MakeIterator() ;
     RooArgSet* configSet ;
     while (configSet=(RooArgSet*)cIter->Next()) {
 
-      cout << "*** " << configSet->GetName() << " ***" << endl ;
-      cout << "Capabilities: " ;
+      os << "*** " << configSet->GetName() << " ***" << endl ;
+      os << "Capabilities: " ;
       const RooAbsIntegrator* proto = RooNumIntFactory::instance().getProtoIntegrator(configSet->GetName()) ;
-      if (proto->canIntegrate1D()) cout << "[1-D] " ;
-      if (proto->canIntegrate2D()) cout << "[2-D] " ;
-      if (proto->canIntegrateND()) cout << "[N-D] " ;
-      if (proto->canIntegrateOpenEnded()) cout << "[OpenEnded] " ;
-      cout << endl ;
+      if (proto->canIntegrate1D()) os << "[1-D] " ;
+      if (proto->canIntegrate2D()) os << "[2-D] " ;
+      if (proto->canIntegrateND()) os << "[N-D] " ;
+      if (proto->canIntegrateOpenEnded()) os << "[OpenEnded] " ;
+      os << endl ;
 
-      cout << "Configuration: " << endl ;
-      configSet->writeToStream(cout,kFALSE) ;
+      os << "Configuration: " << endl ;
+      configSet->writeToStream(os,kFALSE) ;
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {
-	cout << "(Depends on '" << depName << "')" << endl ;
+	os << "(Depends on '" << depName << "')" << endl ;
       }
-      cout << endl ;
+      os << endl ;
 
     }
 

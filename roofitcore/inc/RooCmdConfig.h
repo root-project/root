@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.8 2005/02/15 21:16:21 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.9 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,8 @@ public:
   void allowUndefined(Bool_t flag=kTRUE) { _allowUndefined = flag ; }
   void defineDependency(const char* refArgName, const char* neededArgName) ;
   void defineMutex(const char* argName1, const char* argName2) ;
+  void defineMutex(const char* argName1, const char* argName2, const char* argName3) ;
+  void defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4) ;
   void defineRequiredArgs(const char* argName1, const char* argName2=0,
 			  const char* argName3=0, const char* argName4=0,
 			  const char* argName5=0, const char* argName6=0,
@@ -43,13 +45,15 @@ public:
 
   Bool_t defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
   Bool_t defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
-  Bool_t defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="") ;
+  Bool_t defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",Bool_t appendMode=kFALSE) ;
   Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, Bool_t isArray=kFALSE) ;
 
   Bool_t process(const RooCmdArg& arg) ;
-  Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
-                 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) ;
-  Bool_t process(RooLinkedList& argList) ;
+  Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, 
+                 const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
+                 const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
+                 const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+  Bool_t process(const RooLinkedList& argList) ;
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
@@ -72,6 +76,11 @@ public:
 				 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
 				 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
 
+  static const char* decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, const RooCmdArg& arg1, 
+					 const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+					 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
+					 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
+
   static TObject* decodeObjOnTheFly(const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, const RooCmdArg& arg1, 
 				     const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 				     const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
@@ -93,7 +102,7 @@ protected:
   TList _rList ; // Required cmd list
   TList _fList ; // Forbidden cmd list
   TList _mList ; // Mutex cmd list 
-  TList _yList ; // Dependancy cmd list
+  TList _yList ; // Dependency cmd list
   TList _pList ; // Processed cmd list 
 
   TIterator* _iIter ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.7 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooMinuit.rdl,v 1.7 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +25,7 @@ class RooFitResult ;
 class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
+class TH2F ;
 
 class RooMinuit : public TObject {
 public:
@@ -32,6 +33,8 @@ public:
   RooMinuit(RooAbsReal& function) ;
   virtual ~RooMinuit() ;
 
+  enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
+  enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
   void setErrorHandling(Bool_t flag) { _handleLocalErrors = flag ; }

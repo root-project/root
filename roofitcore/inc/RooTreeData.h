@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.32 2005/02/14 20:44:30 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.33 2005/02/16 21:51:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,28 +65,26 @@ public:
 
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
-  virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+  virtual RooPlot* statOn(RooPlot* frame, 
+                          const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none, 
+                          const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
+                          const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
+                          const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
 
   virtual RooPlot* statOn(RooPlot* frame, const char *what, 
 			  const char *label= "", Int_t sigDigits= 2,
 			  Option_t *options= "NELU", Double_t xmin=0.15, 
-			  Double_t xmax= 0.65,Double_t ymax=0.85);
-  virtual RooPlot* statOn(RooPlot* frame, RooRealVar &var,
-			  const char *label= "", Int_t sigDigits= 2,
-			  Option_t *options= "NELU", Double_t xmin=0.15, 
-			  Double_t xmax= 0.65,Double_t ymax=0.85) { 
-    return statOn(frame,"NMR",label,sigDigits,options,xmin,xmax,ymax) ;
-  }
+			  Double_t xmax= 0.65,Double_t ymax=0.85, 
+                          const char* cutSpec=0, const char* cutRange=0, 
+                          const RooCmdArg* formatCmd=0);
 
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const;
 
-  Double_t moment(RooRealVar &var, Double_t order, Double_t offset=0) const ;
-  RooRealVar* meanVar(RooRealVar &var) const ;
-  RooRealVar* rmsVar(RooRealVar &var) const ;
+  Double_t moment(RooRealVar &var, Double_t order, Double_t offset=0, const char* cutSpec=0, const char* cutRange=0) const ;
+  RooRealVar* meanVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
+  RooRealVar* rmsVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
+
+  Bool_t getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const ;
 
   virtual TList* split(const RooAbsCategory& splitCat) const ;
 
@@ -103,7 +101,12 @@ public:
 
   void printToStream(std::ostream& os, PrintOption opt, TString indent) const ;
 
+  using RooAbsData::plotOn ;
+
 protected:
+
+  friend class RooMCStudy ;
+  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
 
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 
@@ -170,10 +173,6 @@ protected:
   void loadValues(const RooTreeData *t, RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ; 
   void loadValues(const TTree *t, RooFormulaVar* cutVar=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ; 
   void loadValues(const char *filename, const char *treename, RooFormulaVar *cutVar=0);
-
-
-  // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   friend class RooDataSet ;
   void createTree(const char* name, const char* title) ; 

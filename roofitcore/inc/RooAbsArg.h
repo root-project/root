@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.81 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.82 2005/02/14 20:44:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,20 +86,31 @@ public:
   // potentially be analytically integrated and generated.
   inline virtual Bool_t isLValue() const { return kFALSE; }
 
-  // Parameter & dependents interpretation of servers
+  // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
   friend class RooAddPdf ;
   RooArgSet* getParameters(const RooAbsData* set) const ;
   RooArgSet* getParameters(const RooArgSet& set) const { return getParameters(&set) ; }
   virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
-  RooArgSet* getDependents(const RooArgSet& set) const { return getDependents(&set) ; }
-  RooArgSet* getDependents(const RooAbsData* set) const ;
-  virtual RooArgSet* getDependents(const RooArgSet* depList) const ;
+  RooArgSet* getObservables(const RooArgSet& set) const { return getObservables(&set) ; }
+  RooArgSet* getObservables(const RooAbsData* set) const ;
+  virtual RooArgSet* getObservables(const RooArgSet* depList) const ;
+  Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
+  Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
+  virtual Bool_t checkObservables(const RooArgSet* nset) const ;
+  Bool_t recursiveCheckObservables(const RooArgSet* nset) const ;
   RooArgSet* getComponents() const ;	
-  Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
-  Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
-  virtual Bool_t checkDependents(const RooArgSet* nset) const ;
-  Bool_t recursiveCheckDependents(const RooArgSet* nset) const ;
+
+  // --- Obsolete functions for backward compatibility
+  inline RooArgSet* getDependents(const RooArgSet& set) const { return getObservables(set) ; }
+  inline RooArgSet* getDependents(const RooAbsData* set) const { return getObservables(set) ; }
+  inline RooArgSet* getDependents(const RooArgSet* depList) const { return getObservables(depList) ; }
+  inline Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
+  inline Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
+  inline Bool_t checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
+  inline Bool_t recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
+  // --- End obsolete functions for backward compatibility
+
   void attachDataSet(const RooAbsData &set);
 
   // I/O streaming interface (machine readable)
@@ -170,7 +181,7 @@ protected:
   virtual Bool_t isValid() const ;
 
   virtual void getParametersHook(const RooArgSet* nset, RooArgSet* list) const {} ;
-  virtual void getDependentsHook(const RooArgSet* nset, RooArgSet* list) const {} ;
+  virtual void getObservablesHook(const RooArgSet* nset, RooArgSet* list) const {} ;
 
   // Dirty state accessor/modifiers
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
@@ -260,6 +271,8 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
+  TString cleanBranchName() const ;
+  UInt_t crc32(const char* data) const ;
 
   // Global   
   friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  

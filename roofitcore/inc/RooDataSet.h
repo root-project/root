@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.53 2004/11/29 12:22:18 wverkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.54 2005/02/16 21:51:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 class TDirectory ;
 class RooAbsRealLValue ;
 class RooRealVar ;
+class RooDataHist ;
 #include "RooFitCore/RooTreeData.hh"
 #include "RooFitCore/RooDirItem.hh"
 
@@ -45,8 +46,10 @@ public:
 
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const ;
 
+  RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
+
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
-  virtual Double_t sumEntries() const ;
+  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
 
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.

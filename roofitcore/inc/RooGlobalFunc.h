@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.3 2005/02/16 21:51:30 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.4 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,8 @@ class RooAbsReal ;
 class RooAbsBinning ;
 class RooAbsPdf ;
 class RooConstVar ;
+
+namespace RooFit {
 
 // RooAbsReal::plotOn arguments
 RooCmdArg DrawOption(const char* opt) ;
@@ -59,6 +61,8 @@ RooCmdArg Components(const char* compSpec) ;
 RooCmdArg Cut(const char* cutSpec) ;
 RooCmdArg Cut(const RooFormulaVar& cutVar) ;
 RooCmdArg Binning(const RooAbsBinning& binning) ;
+RooCmdArg Binning(const char* binningName) ;
+RooCmdArg Binning(Int_t nBins, Double_t xlo=0., Double_t xhi=0.) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
@@ -67,19 +71,25 @@ RooCmdArg XErrorSize(Double_t width) ;
 RooCmdArg RefreshNorm() ;
 
 // RooChi2Var::ctor arguments
-RooCmdArg Extended() ;
+RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(RooDataHist::ErrorType) ;
 RooCmdArg NumCPU(Int_t nCPU) ;
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
-RooCmdArg Format(const char* format, Int_t sigDigit=1) ;
+RooCmdArg Format(const char* format, Int_t sigDigit) ;
+RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+                 const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
+                 const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none,
+                 const RooCmdArg& arg7=RooCmdArg::none,const RooCmdArg& arg8=RooCmdArg::none) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
+RooCmdArg AutoSymRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
+RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
 
 // RooAbsData::reduce arguments
 RooCmdArg SelectVars(const RooArgSet& vars) ;
@@ -88,18 +98,66 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 // RooAbsPdf::fitTo arguments
 RooCmdArg FitOptions(const char* opts) ;
 RooCmdArg Optimize(Bool_t flag=kTRUE) ;
-RooCmdArg ProjectedObservables(const RooArgSet& set) ;
+RooCmdArg ProjectedObservables(const RooArgSet& set) ; // obsolete, for backward compatibility
+RooCmdArg ConditionalObservables(const RooArgSet& set) ;
 RooCmdArg Verbose(Bool_t flag=kTRUE) ;
 RooCmdArg Save(Bool_t flag=kTRUE) ;
 RooCmdArg Timer(Bool_t flag=kTRUE) ;
-RooCmdArg Blind(Bool_t flag=kTRUE) ;
+RooCmdArg PrintLevel(Int_t code) ;
 RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
 RooCmdArg Hesse(Bool_t flag=kTRUE) ;
 RooCmdArg Minos(Bool_t flag=kTRUE) ;
 
+// RooAbsPdf::paramOn arguments
+RooCmdArg Label(const char* str) ;
+RooCmdArg Layout(Double_t xmin, Double_t xmax=0.99, Double_t ymin=0.95) ;
+RooCmdArg Parameters(const RooArgSet& params) ;
+RooCmdArg ShowConstants(Bool_t flag=kTRUE) ;
+
+// RooTreeData::statOn arguments
+RooCmdArg What(const char* str) ;
+
 // RooProdPdf::ctor arguments
 RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
+
+// RooAbsPdf::generate arguments
+RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE) ;
+RooCmdArg NumEvents(Int_t numEvents) ;
+
+// RooAbsRealLValue::createHistogram arguments
+RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none) ;
+RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none) ;
+RooCmdArg AxisLabel(const char* name) ;
+
+// RooAbsReal::createIntegral arguments
+RooCmdArg NormSet(const RooArgSet& nset) ;
+RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
+
+// RooMCStudy::ctor arguments
+RooCmdArg FitModel(RooAbsPdf& pdf) ;
+RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
+                     const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
+RooCmdArg Binned(Bool_t flag=kTRUE) ;
+
+// RooMCStudy::plot* arguments
+RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
+                const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
+                const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
+RooCmdArg FrameBins(Int_t nbins) ;
+RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
+RooCmdArg FitGauss(Bool_t flag=kTRUE) ;
+
+// RooRealVar::format arguments
+RooCmdArg AutoPrecision(Int_t ndigit=2) ;
+RooCmdArg FixedPrecision(Int_t ndigit=2) ;
+RooCmdArg TLatexStyle(Bool_t flag=kTRUE) ;
+RooCmdArg LatexStyle(Bool_t flag=kTRUE) ;
+RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
+RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
+
+}
 
 namespace RooFitShortHand {
 
@@ -133,6 +191,6 @@ RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, cons
 
 RooConstVar& C(Double_t value) ;
 
-}
+} // End namespace ShortHand
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.27 2005/02/15 21:16:16 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.28 2005/02/16 21:51:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,14 +81,22 @@ public:
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   
   // Build 1-dimensional plots
-  RooPlot* frame(RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(), RooCmdArg arg4=RooCmdArg(),
-                 RooCmdArg arg5=RooCmdArg(), RooCmdArg arg6=RooCmdArg(), RooCmdArg arg7=RooCmdArg(), RooCmdArg arg8=RooCmdArg()) const ;
+  RooPlot* frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none, 
+                 const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, const RooCmdArg& arg5=RooCmdArg::none, 
+                 const RooCmdArg& arg6=RooCmdArg::none, const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
+  RooPlot *frame(const RooLinkedList& cmdList) const ;
   RooPlot *frame(Double_t lo, Double_t hi, Int_t nbins) const;
   RooPlot *frame(Double_t lo, Double_t hi) const;
   RooPlot *frame(Int_t nbins) const;
   RooPlot *frame() const;
 
   // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals
+  TH1 *createHistogram(const char *name, 
+                       const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none, 
+                       const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
+                       const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
+                       const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
+ 
   TH1F *createHistogram(const char *name, const char *yAxisLabel) const ;
   TH1F *createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const ;
   TH1F *createHistogram(const char *name, const char *yAxisLabel, const RooAbsBinning& bins) const ;

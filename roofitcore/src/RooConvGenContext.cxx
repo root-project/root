@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.14 2004/12/02 14:10:27 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.15 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,7 +58,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   ((RooRealVar*)pdfClone->convVar())->removeRange() ;
 
   // Create generator for physics X truth model
-  _pdfVars = (RooArgSet*) pdfClone->getDependents(&vars) ;
+  _pdfVars = (RooArgSet*) pdfClone->getObservables(&vars) ;
   _pdfGen = pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose) ;  
 
   // Clone resolution model and use as normal PDF
@@ -74,7 +74,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   modelClone->convVar().removeRange() ;
 
   // Create generator for resolution model as PDF
-  _modelVars = (RooArgSet*) modelClone->getDependents(&vars) ;
+  _modelVars = (RooArgSet*) modelClone->getObservables(&vars) ;
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;
   _modelGen = modelClone->genContext(*_modelVars,prototype,auxProto,verbose) ;
@@ -97,12 +97,12 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   // and a generator for the resolution model as PDF.
 
   // Create generator for physics X truth model
-  _pdfVars = (RooArgSet*) model.conv().clonePdf().getDependents(&vars)->snapshot(kTRUE) ;
+  _pdfVars = (RooArgSet*) model.conv().clonePdf().getObservables(&vars)->snapshot(kTRUE) ;
   _pdfGen = ((RooAbsPdf&)model.conv().clonePdf()).genContext(*_pdfVars,prototype,auxProto,verbose) ;  
   _pdfCloneSet = 0 ;
 
   // Create generator for resolution model as PDF
-  _modelVars = (RooArgSet*) model.conv().cloneModel().getDependents(&vars)->snapshot(kTRUE) ;
+  _modelVars = (RooArgSet*) model.conv().cloneModel().getObservables(&vars)->snapshot(kTRUE) ;
   _convVarName = model.conv().cloneVar().GetName() ;
   _modelGen = ((RooAbsPdf&)model.conv().cloneModel()).genContext(*_modelVars,prototype,auxProto,verbose) ;
   _modelCloneSet = 0 ;

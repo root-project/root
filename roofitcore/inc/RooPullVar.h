@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.rdl,v 1.8 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,38 +13,34 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRINTABLE
-#define ROO_PRINTABLE
+#ifndef ROO_PULL_VAR
+#define ROO_PULL_VAR
 
+#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooRealProxy.hh"
 
-class TNamed ;
+class RooRealVar;
+class RooAbsReal ;
 
-#include <iostream>
-#include "Rtypes.h"
-#include "TString.h"
-
-class RooPrintable {
+class RooPullVar : public RooAbsReal {
 public:
-  inline RooPrintable() { }
-  inline virtual ~RooPrintable() { }
-  enum PrintOption { InLine=0, OneLine=1, Standard=2, Shape=3, Verbose=4 } ;
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
-  PrintOption parseOptions(Option_t *options) const;
-  PrintOption lessVerbose(PrintOption opt) const;
-  static void inLinePrint(std::ostream& os, const TNamed &named);
-  static void oneLinePrint(std::ostream& os, const TNamed &named);
-  static std::ostream& defaultStream(std::ostream *os= 0);
+
+  RooPullVar() ;
+  RooPullVar(const char *name, const char *title, RooRealVar& measurement, RooAbsReal& truth) ;
+  virtual ~RooPullVar() ;
+
+  RooPullVar(const RooPullVar& other, const char* name = 0);
+  virtual TObject* clone(const char* newname) const { return new RooPullVar(*this, newname); }
 
 
-  ClassDef(RooPrintable,1) // Interface for printable objects
+protected:
+
+  RooRealProxy _meas ;
+  RooRealProxy _true ;
+
+  Double_t evaluate() const;
+
+  ClassDef(RooPullVar,1) // Calculation of pull of measurement w.r.t a truth value
 };
-
-namespace RooFit {
-ostream& operator<<(ostream& os, const RooPrintable& rp) ; 
-}
-
-#ifndef __CINT__
-using RooFit::operator<< ;
-#endif
 
 #endif

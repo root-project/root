@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.10 2004/11/29 20:24:04 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.11 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -136,8 +136,8 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
   // B - Check if dependents(set1/set2) are compatible with current cache
   RooNameSet nset1d,nset2d ;
 
-  RooArgSet* set1d = set1 ? self->getDependents(*set1) : new RooArgSet ;
-  RooArgSet* set2d = set2 ? self->getDependents(*set2) : new RooArgSet ;
+  RooArgSet* set1d = set1 ? self->getObservables(*set1) : new RooArgSet ;
+  RooArgSet* set2d = set2 ? self->getObservables(*set2) : new RooArgSet ;
 
   nset1d.refill(*set1d) ;
   nset2d.refill(*set2d) ;

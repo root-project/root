@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.36 2004/11/29 20:22:46 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.37 2005/02/14 20:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -373,7 +373,7 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 }
 
 
-Bool_t RooAddModel::checkDependents(const RooArgSet* set) const 
+Bool_t RooAddModel::checkObservables(const RooArgSet* set) const 
 {
   // Check if model is valid with dependent configuration given by specified data set
   // Each model may not share any dependents with its coefficient
@@ -387,8 +387,8 @@ Bool_t RooAddModel::checkDependents(const RooArgSet* set) const
   RooRealProxy* model ;
   while(coef=(RooRealProxy*)cIter->Next()) {
     model = (RooRealProxy*)pIter->Next() ;
-    if (model->arg().dependentOverlaps(set,coef->arg())) {
-      cout << "RooAddModel::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
+    if (model->arg().observableOverlaps(set,coef->arg())) {
+      cout << "RooAddModel::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
 	   << " and model " << model->arg().GetName() << " have one or more dependents in common" << endl ;
       ret = kTRUE ;
     }

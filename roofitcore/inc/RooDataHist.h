@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.28 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.29 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,7 @@ public:
   virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual const RooArgSet* get(const RooArgSet& coord) const ;
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ; 
-  virtual Double_t sumEntries() const ;
+  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
   virtual Bool_t isWeighted() const { return kTRUE ; }
 
   Double_t sum(Bool_t correctForBinSize) const ;
@@ -93,10 +93,6 @@ protected:
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
-
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const {
-    return RooTreeData::plotOn(frame,cmdList) ;
-  }
 
   Int_t calcTreeIndex() const ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.39 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.40 2004/11/29 20:23:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -136,7 +136,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _directVars.add(generatedVars);
 
   // initialize the accept-reject generator
-  RooArgSet *depList= _pdfClone->getDependents(_theEvent);
+  RooArgSet *depList= _pdfClone->getObservables(_theEvent);
   depList->remove(_otherVars);
 
   TString nname(_pdfClone->GetName()) ;
@@ -194,7 +194,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // Regular case: First find maximum in other+proto space
       RooArgSet otherAndProto(_otherVars) ;
       
-      RooArgSet* protoDeps = model.getDependents(_protoVars) ;
+      RooArgSet* protoDeps = model.getObservables(_protoVars) ;
       otherAndProto.add(*protoDeps) ;
       delete protoDeps ;
       

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvPdf.cc,v 1.3 2004/12/02 14:10:27 wverkerke Exp $
+ *    File: $Id: RooNumConvPdf.cc,v 1.4 2004/12/03 13:18:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -157,7 +157,7 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
   if (!_init) initialize() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
-  RooArgSet* modelDep = _conv->model().getDependents(&vars) ;
+  RooArgSet* modelDep = _conv->model().getObservables(&vars) ;
   modelDep->remove(_conv->var(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;

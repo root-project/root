@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.11 2005/02/15 21:16:20 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.12 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -206,6 +206,24 @@ void RooCmdConfig::defineMutex(const char* argName1, const char* argName2)
 }
 
 
+void RooCmdConfig::defineMutex(const char* argName1, const char* argName2, const char* argName3) 
+{
+  defineMutex(argName1,argName2) ;
+  defineMutex(argName1,argName3) ;
+  defineMutex(argName2,argName3) ;
+}
+
+void RooCmdConfig::defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4) 
+{
+  defineMutex(argName1,argName2) ;
+  defineMutex(argName1,argName3) ;
+  defineMutex(argName1,argName4) ;
+  defineMutex(argName2,argName3) ;
+  defineMutex(argName2,argName4) ;
+  defineMutex(argName3,argName4) ;
+}
+
+
 
 Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
 {
@@ -243,7 +261,7 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
 
 
 
-Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal) 
+Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, Bool_t appendMode) 
 {
   if (_sList.FindObject(name)) {
     cout << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
@@ -251,6 +269,9 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
   }
 
   RooStringVar* rs = new RooStringVar(name,argName,defVal,10240) ;
+  if (appendMode) {
+    rs->setAttribute("RooCmdConfig::AppendMode") ;
+  }
   rs->SetUniqueID(stringNum) ;
   
   _sList.Add(rs) ;
@@ -314,7 +335,7 @@ void RooCmdConfig::print()
 }
 
 
-Bool_t RooCmdConfig::process(RooLinkedList& argList) 
+Bool_t RooCmdConfig::process(const RooLinkedList& argList) 
 {
   Bool_t ret(kFALSE) ;
   TIterator* iter = argList.MakeIterator() ;
@@ -419,7 +440,13 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   RooStringVar* rs ;
   while(rs=(RooStringVar*)_sIter->Next()) {
     if (!TString(opc).CompareTo(rs->GetTitle())) {
-      rs->setVal(arg.getString(rs->GetUniqueID())) ;
+      
+      const char* oldStr = rs->getVal() ;
+      if (oldStr && strlen(oldStr)>0 && rs->getAttribute("RooCmdConfig::AppendMode")) {
+	rs->setVal(Form("%s,%s",rs->getVal(),arg.getString(rs->GetUniqueID()))) ;
+      } else {
+	rs->setVal(arg.getString(rs->GetUniqueID())) ;
+      }
       anyField = kTRUE ;
       if (_verbose) {
 	cout << "RooCmdConfig::process " << rs->GetName() << "[string]" << " set to " << rs->getVal() << endl ;
@@ -460,7 +487,18 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   TNamed *pcmd = new TNamed(opc,opc) ;
   _pList.Add(pcmd) ;
 
-  return (anyField||_allowUndefined)?kFALSE:kTRUE ;
+  Bool_t depRet = kFALSE ;
+  if (arg._procSubArgs) {
+    for (Int_t ia=0 ; ia<arg._argList.GetSize() ; ia++) {
+      RooCmdArg* subArg = static_cast<RooCmdArg*>(arg._argList.At(ia)) ;
+      if (strlen(subArg->GetName())>0) {
+	subArg->SetName(Form("%s::%s",arg.GetName(),subArg->GetName())) ;
+	depRet |= process(*subArg) ;
+      }
+    }
+  }
+
+  return ((anyField||_allowUndefined)?kFALSE:kTRUE)||depRet ;
 }
   
 
@@ -557,6 +595,21 @@ Int_t RooCmdConfig::decodeIntOnTheFly(const char* callerID, const char* cmdArgNa
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
   return pc.getInt("theInt") ;
+}
+
+
+const char* RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, const RooCmdArg& arg1, 
+					 const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+					 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7,
+					 const RooCmdArg& arg8, const RooCmdArg& arg9) 
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineString("theString",cmdArgName,strIdx,defVal) ;
+  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
+  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
+  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
+  return pc.getString("theString",0,kTRUE) ;
 }
 
 

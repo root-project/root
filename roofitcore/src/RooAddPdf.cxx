@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.62 2005/02/14 20:44:22 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.63 2005/02/16 21:51:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -306,8 +306,8 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
   }
 
   // Reduce iset/nset to actual dependents of this PDF
-  RooArgSet* nset2 = nset ? getDependents(nset) : new RooArgSet() ;
-  RooArgSet* iset2 = iset ? getDependents(iset) : new RooArgSet() ;
+  RooArgSet* nset2 = nset ? getObservables(nset) : new RooArgSet() ;
+  RooArgSet* iset2 = iset ? getObservables(iset) : new RooArgSet() ;
 
   projList = new RooListProxy("projList","Coefficient projection list",(RooAbsArg*)this,kFALSE,kFALSE) ;
 
@@ -416,7 +416,7 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* rangeName) c
   _snormList = new RooArgList("suppNormList") ;
 
   // Retrieve the combined set of dependents of this PDF ;
-  RooArgSet *fullDepList = getDependents(nset) ;
+  RooArgSet *fullDepList = getObservables(nset) ;
 
   // Fill with dummy unit RRVs for now
   _pdfIter->Reset() ;
@@ -430,14 +430,14 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* rangeName) c
     RooArgSet supNSet(*fullDepList) ;
 
     // Remove PDF dependents
-    RooArgSet* pdfDeps = pdf->getDependents(nset) ;
+    RooArgSet* pdfDeps = pdf->getObservables(nset) ;
     if (pdfDeps) {
       supNSet.remove(*pdfDeps,kTRUE,kTRUE) ;
       delete pdfDeps ; 
     }
 
     // Remove coef dependents
-    RooArgSet* coefDeps = coef ? coef->getDependents(nset) : 0 ;
+    RooArgSet* coefDeps = coef ? coef->getObservables(nset) : 0 ;
     if (coefDeps) {
       supNSet.remove(*coefDeps,kTRUE,kTRUE) ;
       delete coefDeps ;
@@ -616,7 +616,7 @@ void RooAddPdf::resetErrorCounters(Int_t resetValue)
 }
 
 
-Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const 
+Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const 
 {
   // Check if PDF is valid for given normalization set.
   // Coeffient and PDF must be non-overlapping, but pdf-coefficient 
@@ -630,8 +630,8 @@ Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const
   RooAbsReal* pdf ;
   while(coef=(RooAbsReal*)_coefIter->Next()) {
     pdf = (RooAbsReal*)_pdfIter->Next() ;
-    if (pdf->dependentOverlaps(nset,*coef)) {
-      cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
+    if (pdf->observableOverlaps(nset,*coef)) {
+      cout << "RooAddPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
 	   << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
       ret = kTRUE ;
     }
@@ -655,7 +655,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
-  RooArgSet* allDepVars = getDependents(allVars) ;
+  RooArgSet* allDepVars = getObservables(allVars) ;
   RooArgSet allAnalVars(*allDepVars) ;
   delete allDepVars ;
   TIterator* avIter = allVars.createIterator() ;
@@ -697,7 +697,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   Bool_t allOK(kTRUE) ;
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    RooArgSet* allAnalVars2 = pdf->getDependents(allAnalVars) ;
+    RooArgSet* allAnalVars2 = pdf->getObservables(allAnalVars) ;
     subCode[n] = pdf->getAnalyticalIntegralWN(*allAnalVars2,subAnalVars,normSet,rangeName) ;
     //cout << "RooAddPdf::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
     if (subCode[n]==0 && allAnalVars2->getSize()>0) {
@@ -828,7 +828,7 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
     return ;
   }
 
-  RooArgSet* myDepSet = getDependents(depSet) ;
+  RooArgSet* myDepSet = getObservables(depSet) ;
   fixCoefNormalization(*myDepSet) ;
   delete myDepSet ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.cc,v 1.12 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooPrintable.cc,v 1.13 2004/11/29 20:24:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,11 +27,20 @@ using std::endl;
 using std::ostream;
 
 ClassImp(RooPrintable)
+;
+
+// Implement ostream operator on RooPrintable in terms of printToStream(InLine)  
+namespace RooFit {
+ostream& operator<<(ostream& os, const RooPrintable& rp) { 
+  rp.printToStream(os,RooPrintable::InLine) ; return os ; 
+}
+}
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible
   // PrintOptions are:
   //
+  //   InLine   - print contents suitable for inlining (i.e. no newlines in printout)
   //   OneLine  - print a one line summary (see oneLinePrint())
   //   Standard - the default level of printing
   //   Shape    - add information about our "shape"
@@ -46,6 +55,7 @@ void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) c
 RooPrintable::PrintOption RooPrintable::parseOptions(Option_t *options) const {
   // Apply the following PrintOption mapping:
   //
+  //  "I" - InLine
   //  "1" - OneLine
   //  "S" - Shape
   //  "V" - Verbose
@@ -56,6 +66,7 @@ RooPrintable::PrintOption RooPrintable::parseOptions(Option_t *options) const {
   TString opts(options);
   opts.ToUpper();
   PrintOption popt(Standard);
+  if(opts.Contains("I")) { popt= InLine ; }
   if(opts.Contains("1")) { popt= OneLine ; }
   if(opts.Contains("S")) { popt= Shape; }
   if(opts.Contains("V")) { popt= Verbose; }
@@ -68,8 +79,10 @@ RooPrintable::PrintOption RooPrintable::lessVerbose(PrintOption opt) const {
   // Useful for being less verbose when printing info about sub-objects.
 
   switch(opt) {
+  case InLine:
+    return InLine ;
   case OneLine:
-    return OneLine;
+    return InLine;
   case Standard:
     return OneLine;
   case Shape:
@@ -77,6 +90,14 @@ RooPrintable::PrintOption RooPrintable::lessVerbose(PrintOption opt) const {
   default:
     return Standard;
   }
+}
+
+void RooPrintable::inLinePrint(ostream& os, const TNamed &named) {
+  // Provide a standard implementation of in-line printing consisting of
+  //
+  // <classname>::<name> 
+  //
+  os << named.ClassName() << "::" << named.GetName() ;
 }
 
 void RooPrintable::oneLinePrint(ostream& os, const TNamed &named) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.55 2005/02/14 20:44:29 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.56 2005/02/16 21:51:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -437,7 +437,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     const RooAbsData* projDataTmp(projData) ;
     if (projData) {
       // Make list of categories columns to exclude from projection data
-      RooArgSet* indexCatComps = _indexCat.arg().getDependents(frame->getNormVars());
+      RooArgSet* indexCatComps = _indexCat.arg().getObservables(frame->getNormVars());
       
       // Make cut string to exclude rows from projection data
       TString cutString ;
@@ -470,8 +470,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     
     // Override normalization and projection dataset
     RooLinkedList cmdList2(cmdList) ;
-    RooCmdArg tmp1 = Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
-    RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
+    RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
+    RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
 
     // WVE -- do not adjust normalization for asymmetry plots
     if (!cmdList.find("Asymmetry")) {
@@ -494,7 +494,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooAbsCategoryLValue* idxCatClone = (RooAbsCategoryLValue*) idxCloneSet->find(_indexCat.arg().GetName()) ;
 
   // Build the list of indexCat components that are sliced
-  RooArgSet* idxCompSliceSet = _indexCat.arg().getDependents(frame->getNormVars()) ;
+  RooArgSet* idxCompSliceSet = _indexCat.arg().getObservables(frame->getNormVars()) ;
   idxCompSliceSet->remove(projectedVars,kTRUE,kTRUE) ;
   TIterator* idxCompSliceIter = idxCompSliceSet->createIterator() ;
 
@@ -561,7 +561,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
-    RooArgSet* idxCatServers = _indexCat.arg().getDependents(frame->getNormVars()) ;
+    RooArgSet* idxCatServers = _indexCat.arg().getObservables(frame->getNormVars()) ;
 
     projDataVars.remove(*idxCatServers,kTRUE,kTRUE) ;
 
@@ -587,7 +587,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
 	 << " represents a slice in index category components " ; idxCompSliceSet->Print("1") ;
 
-    RooArgSet* idxCompProjSet = _indexCat.arg().getDependents(frame->getNormVars()) ;
+    RooArgSet* idxCompProjSet = _indexCat.arg().getObservables(frame->getNormVars()) ;
     idxCompProjSet->remove(*idxCompSliceSet,kTRUE,kTRUE) ;
     if (idxCompProjSet->getSize()>0) {
       cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
@@ -603,8 +603,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // Override normalization and projection dataset
   RooLinkedList cmdList2(cmdList) ;
 
-  RooCmdArg tmp1 = Normalization(scaleFactor*sumWeight,stype) ;
-  RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
+  RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*sumWeight,stype) ;
+  RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
   // WVE -- do not adjust normalization for asymmetry plots
   if (!cmdList.find("Asymmetry")) {
     cmdList2.Add(&tmp1) ;
@@ -614,7 +614,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooPlot* frame2 ;
   if (projSetTmp.getSize()>0) {
     // Plot temporary function  
-    RooCmdArg tmp3 = Project(projSetTmp) ;
+    RooCmdArg tmp3 = RooFit::Project(projSetTmp) ;
     cmdList2.Add(&tmp3) ;
     frame2 = plotVar->plotOn(frame,cmdList2) ;
   } else {
@@ -646,10 +646,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
   // Make command list
   RooLinkedList cmdList ;
-  cmdList.Add(new RooCmdArg(DrawOption(drawOptions))) ;
-  cmdList.Add(new RooCmdArg(Normalization(scaleFactor,stype))) ;
-  if (projData) cmdList.Add(new RooCmdArg(ProjWData(*projData))) ;
-  if (projSet) cmdList.Add(new RooCmdArg(Project(*projSet))) ;
+  cmdList.Add(new RooCmdArg(RooFit::DrawOption(drawOptions))) ;
+  cmdList.Add(new RooCmdArg(RooFit::Normalization(scaleFactor,stype))) ;
+  if (projData) cmdList.Add(new RooCmdArg(RooFit::ProjWData(*projData))) ;
+  if (projSet) cmdList.Add(new RooCmdArg(RooFit::Project(*projSet))) ;
 
   // Call new method
   RooPlot* ret = plotOn(frame,cmdList) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.76 2005/02/14 20:44:19 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.77 2005/02/16 21:51:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,15 +47,22 @@ public:
   virtual ~RooAbsPdf();
 
   // Toy MC generation
+  RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
+                       const RooCmdArg& arg2=RooCmdArg::none, const RooCmdArg& arg3=RooCmdArg::none,
+                       const RooCmdArg& arg4=RooCmdArg::none, const RooCmdArg& arg5=RooCmdArg::none) ;
+  RooDataSet *generate(const RooArgSet &whatVars,  
+                       const RooCmdArg& arg1=RooCmdArg::none,const RooCmdArg& arg2=RooCmdArg::none,
+                       const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
+                       const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
-		       Bool_t verbose=kFALSE) const;
+		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE) const;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const {
+			  const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
+			  const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
+			  const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
+			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   }
 
@@ -89,11 +96,15 @@ public:
   // End backward compatibility functions
 
 
+  virtual RooPlot* paramOn(RooPlot* frame, 
+                           const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none, 
+                           const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
+                           const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
+                           const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
 			   Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
-
-
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
@@ -107,9 +118,10 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
-  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg(),  
-                              RooCmdArg arg3=RooCmdArg(),  RooCmdArg arg4=RooCmdArg(), RooCmdArg arg5=RooCmdArg(),  
-                              RooCmdArg arg6=RooCmdArg(),  RooCmdArg arg7=RooCmdArg(), RooCmdArg arg8=RooCmdArg()) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg::none,  
+                              RooCmdArg arg3=RooCmdArg::none,  RooCmdArg arg4=RooCmdArg::none, RooCmdArg arg5=RooCmdArg::none,  
+                              RooCmdArg arg6=RooCmdArg::none,  RooCmdArg arg7=RooCmdArg::none, RooCmdArg arg8=RooCmdArg::none) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
 
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
 			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
@@ -162,6 +174,12 @@ protected:
 
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const TNamed* rangeName=0) const ;
 
+  // Implementation version
+  virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants=kFALSE,
+                           const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", Double_t xmin=0.65,
+			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
+
+
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
   void plotOnCompSelect(RooArgSet* selNodes) const ;
 
@@ -174,6 +192,7 @@ protected:
   friend class RooConvGenContext ;
   friend class RooMCStudy ;
 
+  Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen) const ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
 	                               const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.36 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.37 2005/02/17 14:32:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,7 +46,7 @@ public:
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   Double_t evaluate() const ;
-  virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
+  virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;

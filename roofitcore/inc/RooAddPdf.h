@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.38 2005/02/14 20:44:23 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.39 2005/02/16 21:51:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ public:
   virtual ~RooAddPdf() ;
 
   Double_t evaluate() const ;
-  virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
+  virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.9 2004/11/29 20:24:20 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.10 2005/02/14 20:44:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -225,7 +225,7 @@ Double_t RooRealSumPdf::evaluate() const
 
 
 
-Bool_t RooRealSumPdf::checkDependents(const RooArgSet* nset) const 
+Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const 
 {
   // Check if FUNC is valid for given normalization set.
   // Coeffient and FUNC must be non-overlapping, but func-coefficient 
@@ -242,14 +242,14 @@ Bool_t RooRealSumPdf::checkDependents(const RooArgSet* nset) const
   RooAbsReal* func ;
   while(coef=(RooAbsReal*)_coefIter->Next()) {
     func = (RooAbsReal*)_funcIter->Next() ;
-    if (func->dependentOverlaps(nset,*coef)) {
-      cout << "RooRealSumPdf::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
-	   << " and FUNC " << func->GetName() << " have one or more dependents in common" << endl ;
+    if (func->observableOverlaps(nset,*coef)) {
+      cout << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
+	   << " and FUNC " << func->GetName() << " have one or more observables in common" << endl ;
       ret = kTRUE ;
     }
     if (coef->dependsOn(*nset)) {
-      cout << "RooRealPdf::checkDependents(" << GetName() << "): ERROR coefficient " << coef->GetName() 
-	   << " depends on one or more of the following dependents" ; nset->Print("1") ;
+      cout << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient " << coef->GetName() 
+	   << " depends on one or more of the following observables" ; nset->Print("1") ;
       ret = kTRUE ;
     }
   }
@@ -268,8 +268,8 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   if (_forceNumInt) return 0 ;
 
   // Select subset of allVars that are actual dependents
-  RooArgSet* allDeps = getDependents(allVars) ;
-  RooArgSet* normSet = normSet2 ? getDependents(normSet2) : 0 ;
+  RooArgSet* allDeps = getObservables(allVars) ;
+  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
 
   _funcIter->Reset() ;
   _coefIter->Reset() ;

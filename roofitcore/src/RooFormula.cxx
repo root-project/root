@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.47 2004/11/29 20:23:36 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.48 2005/02/14 20:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -240,7 +240,11 @@ RooFormula::DefinedVariable(TString &name, int& action)
 {
   Int_t ret = DefinedVariable(name) ;
   if (ret>=0) {
-    action = kDefinedVariable ;
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
+     action = kDefinedVariable;
+#endif
+
   }
   return ret ;
 }
