@@ -514,8 +514,8 @@ The flags consist of two classes:
           base/libmisc/libmisc.a
           base/lib/libshadow.a
           base/lib/pwauth.h
-          lib/libsrp.a
-          include
+          libsrp/libsrp.a
+          libsrp/t_server.h
      And alternatively
           lib/libgmp.a
           lib/libcrack.a
