@@ -172,8 +172,8 @@ void TPDF::Close(Option_t *)
 
    // Trailer
    PrintStr("trailer@");
-   PrintStr("<<@"); 
-   PrintStr("/Size"); 
+   PrintStr("<<@");
+   PrintStr("/Size");
    WriteInteger(fNbObj+1);
    PrintStr("@");
    PrintStr("/Root");
@@ -436,7 +436,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    if (ms >= 6 && ms <= 19) ms = 20;
    if (ms == 4) ms = 24;
-   
+
    // Define the marker size
    Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
    if (ms == 6) msize *= 0.2;
@@ -566,7 +566,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    if (ms >= 6 && ms <= 19) ms = 20;
    if (ms == 4) ms = 24;
-   
+
    // Define the marker size
    Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
    if (ms == 6) msize *= 0.2;
@@ -1008,7 +1008,7 @@ void TPDF::NewPage()
    PrintStr(" 0 R");
    PrintStr(">>@");
    PrintStr("endobj@");
-   
+
    NewObject(3*(fNbPage-1)+kObjFirstPage+1);
    PrintStr("<<@");
    PrintStr("/Length");
@@ -1137,7 +1137,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fNbPage = 0;
 
    PrintStr("%PDF-1.4@");
-   
+
    NewObject(kObjRoot);
    PrintStr("<<@");
    PrintStr("/Type /Catalog@");
@@ -1150,7 +1150,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr(" 0 R");
    PrintStr(">>@");
    PrintStr("endobj@");
-   
+
    NewObject(kObjInfo);
    PrintStr("<<@");
    PrintStr("/Creator (ROOT Version ");
@@ -1174,14 +1174,14 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("/Keywords (ROOT)");
    PrintStr(">>@");
    PrintStr("endobj@");
-   
+
    NewObject(kObjOutlines);
    PrintStr("<<@");
    PrintStr("/Type /Outlines@");
    PrintStr("/Count 0@");
    PrintStr(">>@");
    PrintStr("endobj@");
-   
+
    NewObject(kObjResources);
    PrintStr("<<@");
    PrintStr("/ProcSet [/PDF /Text]@");
@@ -1191,7 +1191,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr(">>@");
    PrintStr("endobj@");
-  
+
    FontEncode();
 
    NewPage();
@@ -1205,7 +1205,7 @@ void TPDF::PrintStr(const char *str)
 
    Int_t len = strlen(str);
    if (len == 0) return;
-   
+
    if (fCompress) {
       if (fLenBuffer+len >= fSizBuffer) {
          fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
@@ -1322,13 +1322,16 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
    fRed   = r;
    fGreen = g;
    fBlue  = b;
+   if (fRed   <= 0.000001) fRed=0;
+   if (fGreen <= 0.000001) fGreen=0;
+   if (fBlue  <= 0.000001) fBlue=0;
 
-   WriteReal(fRed); 
+   WriteReal(fRed);
    WriteReal(fGreen);
    WriteReal(fBlue);
    PrintFast(3," RG");
 
-   WriteReal(fRed); 
+   WriteReal(fRed);
    WriteReal(fGreen);
    WriteReal(fBlue);
    PrintFast(3," rg");
@@ -1449,7 +1452,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    if( fontsize <= 0) return;
    WriteReal(fontsize);
    PrintStr(" Tf");
-   
+
    // Text alignment
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
