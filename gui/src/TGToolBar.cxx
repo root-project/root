@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.2 2000/09/07 00:33:33 rdm Exp $
+// @(#)root/gui:$Name:$:$Id:$
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -45,6 +45,7 @@ TGToolBar::TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,
    // Create toolbar widget.
 
    fPictures = new TList;
+   fTrash    = new TList;
 }
 
 //______________________________________________________________________________
@@ -52,7 +53,8 @@ TGToolBar::~TGToolBar()
 {
    // Delete toolbar and its buttons and layout hints.
 
-   Cleanup();
+   if (fTrash) fTrash->Delete();
+   delete fTrash;
 
    TIter next(fPictures);
    const TGPicture *p;
@@ -88,4 +90,22 @@ void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacin
    pbut->AllowStayDown(button->fStayDown);
    pbut->Associate(w);
    button->fButton = pbut;
+
+   fTrash->Add(pbut);
+   fTrash->Add(layout);
+}
+
+//______________________________________________________________________________
+void TGToolBar::Cleanup()
+{
+   // Cleanup and delete all objects contained in this composite frame.
+   // This will delete all objects added via AddFrame().
+   // CAUTION: all objects (frames and layouthints) must be unique, i.e.
+   // cannot be shared.
+
+   // avoid double deletion of objects in trash
+   delete fTrash;
+   fTrash = 0;
+
+   TGCompositeFrame::Cleanup();
 }
