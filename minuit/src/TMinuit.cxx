@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.14 2001/09/21 17:12:55 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.15 2002/02/13 10:13:11 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -585,7 +585,7 @@ void TMinuit::DeleteArrays()
 }
 
 //______________________________________________________________________________
-Int_t TMinuit::Eval(Int_t &npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag)
+Int_t TMinuit::Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag)
 {
 // Evaluate the minimisation function
 //  Input parameters:
@@ -4586,7 +4586,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
     Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
     Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
     Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
-    Int_t i, nparx, nvmax=0, nxypt, kk, ipt;
+    Int_t i, nparx=0, nvmax=0, nxypt, kk, ipt;
     Bool_t ldebug;
     TString cmess;
     char chpq[13];

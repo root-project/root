@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.2 2000/12/05 10:49:01 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.3 2002/02/13 10:13:11 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -184,7 +184,7 @@ public:
  virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
  virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );
  virtual void   DeleteArrays();
- virtual Int_t  Eval(Int_t &npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag);
+ virtual Int_t  Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag);
  virtual Int_t  FixParameter( Int_t parNo );
  TMethodCall   *GetMethodCall() {return fMethodCall;}
  TObject       *GetObjectFit() {return fObjectFit;}
