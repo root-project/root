@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.66 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.67 2002/01/30 07:11:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3066,7 +3066,6 @@ void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
       yw[0] = fY1 + v1*(fY2 - fY1);
       yw[1] = fY1 + v2*(fY2 - fY1);
       gVirtualPS->DrawPS(2, xw, yw);
-      gVirtualPS->PrintFast(2," s");
    }
 
    Modified();
@@ -3478,6 +3477,13 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
       lnk = lnk->Prev();
    }
 
+   //if no primitive found, check if we have a TView
+   //if yes, return the view except if you are in the lower or upper X range
+   //of the pad.
+   if (fView && !gotPrim) {
+      Double_t dx = 0.05*(fUxmax-fUxmin);
+      if ((x > fUxmin +dx) && (x < fUxmax-dx)) dummyLink.SetObject(fView);
+   }
    if (picked->InheritsFrom(TButton::Class())) {
       TButton *button = (TButton*)picked;
       if (!button->IsEditable()) pickobj = 0;

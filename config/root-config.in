@@ -34,7 +34,7 @@ hpux)
    ;;
 hpuxacc | hpuxia64acc)
    # HP-UX 10.x with aCC
-   auxcflags="-DR__ACC"
+   auxcflags=
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;

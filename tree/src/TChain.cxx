@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.38 2002/01/19 11:04:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.40 2002/02/07 08:41:13 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -224,9 +224,9 @@ Int_t TChain::Add(const char *name, Int_t nentries)
          TString s = file;
          if (strcmp(slash,file) && s.Index(re) == kNPOS) continue;
          if (behind_dot_root != 0 && *behind_dot_root != 0)
-            nf += AddFile(Form("%s/%s/%s",aname,file,behind_dot_root),-1);
+            nf += AddFile(Form("%s/%s/%s",aname,file,behind_dot_root),kBigNumber);
          else
-            nf += AddFile(Form("%s/%s",aname,file),-1);
+            nf += AddFile(Form("%s/%s",aname,file),kBigNumber);
       }
       gSystem->FreeDirectory(dir);
    }
@@ -315,7 +315,6 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
       TTree *tree = (TTree*)obj;
       nentries = (Int_t)tree->GetEntries();
       pksize   = tree->GetPacketSize();
-      delete tree;
       delete file;
    }
 

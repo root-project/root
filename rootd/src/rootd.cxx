@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.37 2002/01/27 17:44:18 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.38 2002/02/03 18:40:08 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -174,7 +174,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
+#if defined(__MACH__) && !defined(__APPLE__)
 #   define R__GLIBC
 #endif
 

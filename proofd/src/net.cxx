@@ -1,4 +1,4 @@
-// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.3 2001/01/26 16:44:35 rdm Exp $
+// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.4 2002/01/22 10:53:28 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
+#if defined(__MACH__) && !defined(__APPLE__)
 #   define R__GLIBC
 #endif
 

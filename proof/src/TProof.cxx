@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.13 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.14 2002/01/18 14:24:09 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -136,6 +136,7 @@ TProof::~TProof()
    SafeDelete(fBadSlaves);
    SafeDelete(fAllMonitor);
    SafeDelete(fActiveMonitor);
+   SafeDelete(fUniqueMonitor);
 
    gProof = 0;
 }
@@ -185,6 +186,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fBadSlaves     = new TList;
    fAllMonitor    = new TMonitor;
    fActiveMonitor = new TMonitor;
+   fUniqueMonitor = new TMonitor;
 
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
@@ -411,6 +413,7 @@ void TProof::FindUniqueSlaves()
    // only once to nodes that share a file system (an image).
 
    fUniqueSlaves->Clear();
+   fUniqueMonitor->RemoveAll();
 
    TIter next(fActiveSlaves);
 
@@ -421,12 +424,20 @@ void TProof::FindUniqueSlaves()
       TSlave *sl2;
       Int_t   add = fUniqueSlaves->IsEmpty() ? 1 : 0;
       while ((sl2 = (TSlave *)next2())) {
-         if (sl->fImage == sl2->fImage) continue;
+         if (sl->fImage == sl2->fImage) {
+            add = 0;
+            break;
+         }
          add++;
       }
-      if (add)
+      if (add) {
          fUniqueSlaves->Add(sl);
+         fUniqueMonitor->Add(sl->GetSocket());
+      }
    }
+
+   // will be actiavted in Collect()
+   fUniqueMonitor->DeActivateAll();
 }
 
 //______________________________________________________________________________
@@ -742,10 +753,7 @@ Int_t TProof::Collect(ESlaves list)
    TMonitor *mon = 0;
    if (list == kAll)    mon = fAllMonitor;
    if (list == kActive) mon = fActiveMonitor;
-   if (list == kUnique) {
-      Error("Collect", "cannot be called with kUnique");
-      return 0;
-   }
+   if (list == kUnique) mon = fUniqueMonitor;
 
    mon->ActivateAll();
 

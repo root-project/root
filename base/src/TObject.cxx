@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.33 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.35 2002/02/07 07:31:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -875,6 +875,7 @@ void TObject::Streamer(TBuffer &R__b)
 
    if (IsA()->CanIgnoreTObjectStreamer()) return;
    UShort_t pidf;
+   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
@@ -884,7 +885,7 @@ void TObject::Streamer(TBuffer &R__b)
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
       R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
+      TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
       if (pid) pid->PutObjectWithID(this);
    } else {
       R__b.WriteVersion(TObject::IsA());
@@ -892,7 +893,7 @@ void TObject::Streamer(TBuffer &R__b)
       R__b << fBits;
       //if the object is referenced, we must save its address/file_pid
       if (!TestBit(kIsReferenced)) return;
-      pidf = (UShort_t)TProcessID::WriteProcessID(0,gFile);
+      pidf = 0;
       R__b << pidf;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.26 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.27 2002/01/24 11:39:28 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -81,7 +81,7 @@ ClassImp(TLatex)
 //
 //   ** Delimiters
 //   -------------
-//   You can produce 3 kinds of proportional delimiters.
+//   You can produce 4 kinds of proportional delimiters.
 //   #[]{....} or "a la" Latex #left[.....#right] : big square brackets
 //   #{}{....} or              #left{.....#right} : big curly brackets
 //   #||{....} or              #left|.....#right| : big absolute value symbol
@@ -1095,7 +1095,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
             dw = radius1*(1 - TMath::Cos(kPI*angle/180)) ;
          } else {
             fs1 = Readfs();
-            radius2 = fs1.Height() ;
+            radius2 = fs1.Height();
             radius1 = radius2  * 2 / 3;
             dw = radius1*(1 - TMath::Cos(kPI*angle/180)) ;
             Double_t x1 = x+l2+radius1 ;
@@ -1440,8 +1440,8 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
       angle = phimin*kPI/180 + Double_t(i)*dphi;
       dx    = r1*TMath::Cos(angle) +x1 -Xorigin;
       dy    = r2*TMath::Sin(angle) +y1 -Yorigin;
-      x[i]  = fX+gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang));
-      y[i]  = fY+gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang));
+      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +Xorigin));
+      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +Yorigin));
    }
    gPad->PaintPolyLine(np+1,x,y);
 

@@ -8,5 +8,5 @@
    na.Write();
    na.Close();
    gBenchmark->Show("geometry");
-   gROOT->Reset();
+   //gROOT->Reset();
 }

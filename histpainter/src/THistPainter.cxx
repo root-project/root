@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.65 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.67 2002/02/06 21:57:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -79,6 +79,11 @@ THistPainter::THistPainter()
    fYbuf  = new Double_t[kNMAX];
    fNcuts = 0;
    fStack = 0;
+   fStats = 0;
+
+   //add this THistPainter to the list of cleanups such that in case
+   //the stats object is deleted, its pointer be reset
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -87,6 +92,7 @@ THistPainter::~THistPainter()
 //    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
+   gROOT->GetListOfCleanups()->Remove(this);
    delete [] fXbuf;
    delete [] fYbuf;
 }
@@ -632,7 +638,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"E")) Hoption.Error =1;
    if (strstr(chopt,"F")) Hoption.Fill =1;
    if (strstr(chopt,"L")) { Hoption.Line =1; Hoption.Hist = -1;}
-   if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = 0;}
+   if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = -1;}
    if (strstr(chopt,"Z")) Hoption.Zscale =1;
    if (strstr(chopt,"*")) Hoption.Star =1;
    if (strstr(chopt,"+")) Hoption.Plus =1;
@@ -1289,7 +1295,7 @@ void THistPainter::Paint(Option_t *option)
 //    -----
 
 //         test for error bars or option E
-   if (Hoption.Error || Hoption.Mark) {
+   if (Hoption.Error) {
       PaintErrors();
       if (Hoption.Hist == 2) PaintHist();
    }
@@ -2790,6 +2796,9 @@ void THistPainter::PaintHist()
    graph.SetLineColor(fH->GetLineColor());
    graph.SetFillStyle(htype);
    graph.SetFillColor(fH->GetFillColor());
+   graph.SetMarkerStyle(fH->GetMarkerStyle());
+   graph.SetMarkerSize(fH->GetMarkerSize());
+   graph.SetMarkerColor(fH->GetMarkerColor());
    if (fixbin) {
       graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
    }
@@ -3665,6 +3674,10 @@ void THistPainter::PaintScatterPlot()
    Double_t zmax  = fH->GetMaximum();
    Double_t zmin  = fH->GetMinimum();
    if (zmin == 0 && zmax == 0) return;
+   if (zmin == zmax) {
+      zmax += 0.01*TMath::Abs(zmax);
+      zmin -= 0.01*TMath::Abs(zmin);
+   }
    Int_t ncells = (Hparam.ylast-Hparam.yfirst)*(Hparam.xlast-Hparam.xfirst);
    if (Hoption.Logz) {
       if (zmin > 0) zmin = TMath::Log10(zmin);
@@ -3779,10 +3792,10 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 
    static char t[64];
    Int_t dofit;
-   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
-   if (stats) {
-      dofit  = stats->GetOptFit();
-      dostat = stats->GetOptStat();
+   //   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
+   if (fStats) {
+      dofit  = fStats->GetOptFit();
+      dostat = fStats->GetOptStat();
    } else {
       dofit  = gStyle->GetOptFit();
    }
@@ -3807,99 +3820,100 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //     Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
-      if (stats) delete stats;
+      if (fStats) { delete fStats; fStats = 0; } 
       return;
    }
    Double_t  statw  = gStyle->GetStatW();
    if (fit) statw   = 1.8*gStyle->GetStatW();
    Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
-   if (stats) {
-      stats->Clear();
+   if (fStats) {
+      fStats->Clear();
       done = kTRUE;
    } else {
-      stats  = new TPaveStats(
+      fStats  = new TPaveStats(
                gStyle->GetStatX()-statw,
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
-      stats->SetOptFit(dofit);
-      stats->SetOptStat(dostat);
-      stats->SetFillColor(gStyle->GetStatColor());
-      stats->SetFillStyle(gStyle->GetStatStyle());
-      stats->SetBorderSize(gStyle->GetStatBorderSize());
-      stats->SetTextFont(gStyle->GetStatFont());
+      
+      fStats->SetOptFit(dofit);
+      fStats->SetOptStat(dostat);
+      fStats->SetFillColor(gStyle->GetStatColor());
+      fStats->SetFillStyle(gStyle->GetStatStyle());
+      fStats->SetBorderSize(gStyle->GetStatBorderSize());
+      fStats->SetTextFont(gStyle->GetStatFont());
       if (gStyle->GetStatFont()%10 > 2)
-         stats->SetTextSize(gStyle->GetStatFontSize());
-      stats->SetFitFormat(gStyle->GetFitFormat());
-      stats->SetStatFormat(gStyle->GetStatFormat());
-      stats->SetName("stats");
+         fStats->SetTextSize(gStyle->GetStatFontSize());
+      fStats->SetFitFormat(gStyle->GetFitFormat());
+      fStats->SetStatFormat(gStyle->GetStatFormat());
+      fStats->SetName("stats");
 
-      stats->SetTextColor(gStyle->GetStatTextColor());
-      stats->SetTextAlign(12);
-      stats->SetBit(kCanDelete);
+      fStats->SetTextColor(gStyle->GetStatTextColor());
+      fStats->SetTextAlign(12);
+      fStats->SetBit(kCanDelete);
    }
-   if (print_name)  stats->AddText(fH->GetName());
+   if (print_name)  fStats->AddText(fH->GetName());
    if (print_entries) {
       if (fH->GetEntries() < 1e7) sprintf(t,"Nent = %-7d",Int_t(fH->GetEntries()));
       else                        sprintf(t,"Nent = %14.7g",Float_t(fH->GetEntries()));
-      stats->AddText(t);
+      fStats->AddText(t);
    }
-   char fstats[50];
+   char textstats[50];
    if (print_mean) {
-      sprintf(fstats,"Mean  = %s%s","%",stats->GetStatFormat());
-      sprintf(t,fstats,fH->GetMean(1));
-      stats->AddText(t);
+      sprintf(textstats,"Mean  = %s%s","%",fStats->GetStatFormat());
+      sprintf(t,textstats,fH->GetMean(1));
+      fStats->AddText(t);
    }
    if (print_rms) {
-      sprintf(fstats,"RMS   = %s%s","%",stats->GetStatFormat());
-      sprintf(t,fstats,fH->GetRMS(1));
-      stats->AddText(t);
+      sprintf(textstats,"RMS   = %s%s","%",fStats->GetStatFormat());
+      sprintf(t,textstats,fH->GetRMS(1));
+      fStats->AddText(t);
    }
    if (print_under) {
-      sprintf(fstats,"Under = %s%s","%",stats->GetStatFormat());
-      sprintf(t,fstats,fH->GetBinContent(0));
-      stats->AddText(t);
+      sprintf(textstats,"Under = %s%s","%",fStats->GetStatFormat());
+      sprintf(t,textstats,fH->GetBinContent(0));
+      fStats->AddText(t);
    }
    if (print_over) {
-      sprintf(fstats,"Over  = %s%s","%",stats->GetStatFormat());
-      sprintf(t,fstats,fH->GetBinContent(fXaxis->GetNbins()+1));
-      stats->AddText(t);
+      sprintf(textstats,"Over  = %s%s","%",fStats->GetStatFormat());
+      sprintf(t,textstats,fH->GetBinContent(fXaxis->GetNbins()+1));
+      fStats->AddText(t);
    }
    if (print_integral) {
-      sprintf(fstats,"Integ = %s%s","%",stats->GetStatFormat());
-      sprintf(t,fstats,fH->Integral());
-      stats->AddText(t);
+      sprintf(textstats,"Integ = %s%s","%",fStats->GetStatFormat());
+      sprintf(t,textstats,fH->Integral());
+      fStats->AddText(t);
    }
 
 //     Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      sprintf(fstats,"Chi2 / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
-      sprintf(t,fstats,(Float_t)fit->GetChisquare());
-      if (print_fchi2) stats->AddText(t);
+      sprintf(textstats,"Chi2 / ndf = %s%s / %d","%",fStats->GetFitFormat(),ndf);
+      sprintf(t,textstats,(Float_t)fit->GetChisquare());
+      if (print_fchi2) fStats->AddText(t);
       if (print_fprob) {
-         sprintf(fstats,"Prob  = %s%s","%",stats->GetFitFormat());
-         sprintf(t,fstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
-         stats->AddText(t);
+         sprintf(textstats,"Prob  = %s%s","%",fStats->GetFitFormat());
+         sprintf(t,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+         fStats->AddText(t);
       }
       if (print_fval || print_ferrors) {
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             if (print_ferrors) {
-               sprintf(fstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
-               sprintf(t,fstats,(Float_t)fit->GetParameter(ipar)
+               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat(),"%",fStats->GetFitFormat());
+               sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
-               sprintf(fstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
-               sprintf(t,fstats,(Float_t)fit->GetParameter(ipar));
+               sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat());
+               sprintf(t,textstats,(Float_t)fit->GetParameter(ipar));
             }
             t[63] = 0;
-            stats->AddText(t);
+            fStats->AddText(t);
          }
       }
    }
 
-   if (!done) stats->Draw();
-   stats->Paint();
+   if (!done) fStats->Draw();
+   fStats->Paint();
 }
 
 //______________________________________________________________________________
@@ -4473,6 +4487,15 @@ void THistPainter::RecalculateRange()
                       xmax + dxr*gPad->GetRightMargin(),
                       ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
+}
+
+//______________________________________________________________________________
+void THistPainter::RecursiveRemove(TObject *obj)
+{
+   // Recursively remove this object from a list. Typically implemented
+   // by classes that can contain multiple references to a same object.
+  if (obj == fStats) fStats = 0;
+
 }
 
 //______________________________________________________________________________
