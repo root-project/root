@@ -1,5 +1,5 @@
-CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log *.xml
-TEST_TARGETS += boolUpdate skip ClassConv ConvArray typedef
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.log *.xml
+TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -63,4 +63,9 @@ boolUpdate.root: boolUpdate.keeproot
 boolUpdate.log: boolUpdate_C.$(DllSuf) boolUpdate.root
 
 boolUpdate: boolUpdate.log
+	$(TestDiff)
+
+foreign310: cms_cxx.$(DllSuf)
+
+foreign310: foreign310.log
 	$(TestDiff)
