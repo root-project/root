@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.39 2003/05/02 10:43:18 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.40 2003/07/18 15:36:38 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -2350,6 +2350,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
             continue;
          }
       }
+      if( chars[i] == '\n') continue;
       newtext[j] = chars[i];
       j++;
       newtext[j] = 0;
