@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:$:$Id:$
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.1 2002/08/09 14:12:22 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -668,12 +668,12 @@ void TASPaletteEditor::NewPalette(Long_t id)
 
    numPt = id == 0 ? 12 : 13;
    newPalette = new TImagePalette(numPt);
-   for (Int_t pt = 1; pt < Int_t(numPt - 1); pt++) {
+   Int_t pt;
+   for (pt = 1; pt < Int_t(numPt - 1); pt++) {
       newPalette->fPoints[pt] = fPalette->fPoints[1] + (pt - 1) * delta / (numPt - 3);
       newPalette->fColorAlpha[pt] = 0xffff;
    }
 
-   Int_t pt;
    switch (id) {
       case 0:  // rainbow
          memcpy(newPalette->fColorRed + 1,   gRedRainbow,   12 * sizeof(UShort_t));
