@@ -57,6 +57,9 @@
 #define G__PTR2MEMFUNC
 #endif
 
+/* Forward declaration of template does not work yet */
+#define G__OLDIMPLEMENTATION1760
+
 /* 1649 is not ready yet */
 /* #define G__OLDIMPLEMENTATION1649 */
 
