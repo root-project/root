@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.8 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.9 2001/05/17 00:43:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,8 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooSetProxy.hh"
 
 class RooArgSet ;
 class TH1F ;
@@ -54,11 +56,11 @@ protected:
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;  
 
   // Function pointer and integrands list
-  RooAbsPdf* _function ;
-  mutable RooArgSet _sumList ;
-  mutable RooArgSet _intList ;
-  mutable RooArgSet _anaList ;
-  mutable RooArgSet _jacList ;
+  RooRealProxy       _function ;
+  mutable RooSetProxy _sumList ;
+  mutable RooSetProxy _intList ;
+  mutable RooSetProxy _anaList ;
+  mutable RooSetProxy _jacList ;
   Int_t _mode ;
 
   mutable RooAbsIntegrator* _numIntEngine ;

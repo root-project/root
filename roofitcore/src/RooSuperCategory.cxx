@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.5 2001/05/15 06:54:26 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.6 2001/05/17 00:43:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -33,12 +33,11 @@ ClassImp(RooSuperCategory)
 ;
 
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList) :
-  RooAbsCategoryLValue(name, title) 
+  RooAbsCategoryLValue(name, title), _catSet("catSet","Input category set",this,kTRUE,kTRUE)
 {  
   // Constructor from list of input categories
 
   // Copy category list
-  RooArgSet* catList = new RooArgSet("catList") ;
   TIterator* iter = inputCatList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
@@ -46,29 +45,17 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSe
       cout << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
 	   << " is not an lvalue" << endl ;
     }
-    catList->add(*arg) ;
+    _catSet.add(*arg) ;
   }
   delete iter ;
-  _catListProxy = new RooSetProxy("catList","catList",this,*catList,kTRUE,kTRUE) ;
   
   updateIndexList() ;
 }
 
 
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
-  RooAbsCategoryLValue(other,name)
+  RooAbsCategoryLValue(other,name), _catSet("catSet",this,other._catSet)
 {
-  // Copy constructor
-
-  RooArgSet* catList = new RooArgSet("catList") ;
-  TIterator* iter = other._catListProxy->set()->MakeIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    catList->add(*arg) ;
-  }
-  delete iter ;
-  _catListProxy = new RooSetProxy("catList","catList",this,*catList,kTRUE,kTRUE) ;
-
   updateIndexList() ;
   setIndex(other.getIndex()) ;
 }
@@ -78,9 +65,6 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 RooSuperCategory::~RooSuperCategory() 
 {
   // Destructor
-
-  // We own the ArgSet of the proxy
-  delete _catListProxy->set() ;
 }
 
 
@@ -88,7 +72,7 @@ RooSuperCategory::~RooSuperCategory()
 TIterator* RooSuperCategory::MakeIterator() const 
 {
   // Make an iterator over the input categories of this supercategory
-  return new RooMultiCatIter(*_catListProxy->set()) ;
+  return new RooMultiCatIter(_catSet) ;
 }
 
 
@@ -98,15 +82,15 @@ void RooSuperCategory::updateIndexList()
   // Update the list of our category states 
 
   clearTypes() ;
-  RooArgSet* catListClone = _catListProxy->set()->snapshot(kTRUE) ;
-  RooMultiCatIter mcIter(*_catListProxy->set()) ;
+  RooArgSet* catListClone = _catSet.snapshot(kTRUE) ;
+  RooMultiCatIter mcIter(_catSet) ;
 
   while(mcIter.Next()) {
     // Register composite label
     defineType(currentLabel()) ;
   }
 
-  *_catListProxy->set() = *catListClone ;
+  _catSet = *catListClone ;
   delete catListClone ;
 
   // Renumbering will invalidate cache
@@ -119,7 +103,7 @@ TString RooSuperCategory::currentLabel() const
   // Return the name of the current state, 
   // constructed from the state names of the input categories
 
-  TIterator* lIter = _catListProxy->set()->MakeIterator() ;
+  TIterator* lIter = _catSet.MakeIterator() ;
 
   // Construct composite label name
   TString label ;
@@ -175,7 +159,7 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 
-  TIterator* iter = _catListProxy->set()->MakeIterator() ;
+  TIterator* iter = _catSet.MakeIterator() ;
   RooAbsCategoryLValue* arg ;
   Bool_t error(kFALSE) ;
 
@@ -201,7 +185,7 @@ void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString inden
   if (opt>=Verbose) {     
     os << indent << "--- RooSuperCategory ---" << endl;
     os << indent << "  Input category list:" << endl ;
-    _catListProxy->set()->printToStream(os,Standard,TString(indent).Append("  ")) ;
+    _catSet.printToStream(os,Standard,TString(indent).Append("  ")) ;
   }
 }
 

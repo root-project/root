@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsProxy.rdl,v 1.2 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsProxy.rdl,v 1.3 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,26 +16,24 @@
 #include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
 
-class RooAbsProxy : public TNamed {
+class RooAbsProxy {
 public:
 
   // Constructors, assignment etc.
-  RooAbsProxy() {} ;
-  RooAbsProxy(const char* name, const char* desc, Bool_t valueServer, Bool_t shapeServer) ;
+  RooAbsProxy() ;
   RooAbsProxy(const char* name, const RooAbsProxy& other) ;
   virtual ~RooAbsProxy() {} ;
+
+  virtual const char* name() const { return "dummy" ; } ;
 
 protected:
 
   RooDataSet* _dset ;
-  Bool_t _valueServer ;
-  Bool_t _shapeServer ;
-  friend class RooAbsArg ;
-  friend class RooAbsPdf ;
 
-  inline Bool_t isValueServer() const { return _valueServer ; }
-  inline Bool_t isShapeServer() const { return _shapeServer ; }
+  friend class RooAbsArg ;
   virtual Bool_t changePointer(const RooArgSet& newServerSet) = 0 ;
+
+  friend class RooAbsPdf ;
   void changeDataSet(const RooDataSet* newDataSet) ;
 
   ClassDef(RooAbsProxy,0) // Abstract proxy interface

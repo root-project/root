@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.11 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.12 2001/05/31 21:21:35 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -105,7 +105,7 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
  
     // Update dataset pointers of proxies
     for (int i=0 ; i<numProxies() ; i++) {
-      getProxy(i).changeDataSet(dset) ;
+      getProxy(i)->changeDataSet(dset) ;
     }
  
     RooArgSet* depList = getDependents(dset) ;

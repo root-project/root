@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.26 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.27 2001/05/31 21:21:34 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,6 +46,10 @@ public:
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
   inline RooAbsArg* findServer(const char *name) const { return (RooAbsArg*)_serverList.FindObject(name); }
+  inline Bool_t isValueServer(const RooAbsArg& arg) const { return _clientListValue.FindObject(&arg)?kTRUE:kFALSE ; }
+  inline Bool_t isValueServer(const char* name) const { return _clientListValue.FindObject(name)?kTRUE:kFALSE ; }
+  inline Bool_t isShapeServer(const RooAbsArg& arg) const { return _clientListShape.FindObject(&arg)?kTRUE:kFALSE ; }
+  inline Bool_t isShapeServer(const char* name) const { return _clientListShape.FindObject(name)?kTRUE:kFALSE ; }
   void leafNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
   void branchNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
   void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 
@@ -113,7 +117,7 @@ protected:
   friend class RooSetProxy ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
-  RooAbsProxy& getProxy(Int_t index) const ;
+  RooAbsProxy* getProxy(Int_t index) const ;
   Int_t numProxies() const ;
 	
   // Attribute list

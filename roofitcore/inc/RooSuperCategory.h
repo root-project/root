@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.rdl,v 1.3 2001/05/11 06:30:01 verkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.4 2001/05/14 22:54:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -39,7 +39,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   TIterator* MakeIterator() const ;
-  const RooArgSet& inputCatList() const { return *_catListProxy->set() ; }
+  const RooArgSet& inputCatList() const { return _catSet ; }
 
 protected:
 
@@ -47,7 +47,7 @@ protected:
   void updateIndexList() ;
   TString currentLabel() const ;
 
-  RooSetProxy* _catListProxy ;
+  RooSetProxy _catSet ;
   
   virtual RooCatType evaluate() const ; 
 

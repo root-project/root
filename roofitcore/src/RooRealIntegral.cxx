@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.14 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.15 2001/05/31 21:21:37 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,8 +38,13 @@ ClassImp(RooRealIntegral)
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsPdf& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsReal(name,title), _function((RooAbsPdf*)&function), _mode(0),
-  _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
+  RooAbsReal(name,title), _mode(0),
+  _function("function","Function to be integrated",this,(RooAbsPdf&)function,kFALSE,kFALSE), 
+  _sumList("sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
+  _intList("intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
+  _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
+  _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
+  _numIntEngine(0) 
 {
   // Constructor
   RooArgSet intDepList ;
@@ -112,7 +117,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = _function->getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
+  _mode = ((RooAbsPdf&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Make list of numerical integration variables consisting of:            *  
@@ -197,7 +202,7 @@ void RooRealIntegral::initNumIntegrator()
     break ;    
   case 1: 
     // 1-dimensional integration required
-    _numIntEngine = new RooIntegrator1D(*_function,_mode,*((RooRealVar*)_intList.First())) ;
+    _numIntEngine = new RooIntegrator1D((RooAbsPdf&)_function.arg(),_mode,*((RooRealVar*)_intList.First())) ;
     break ;
   default: 
     // multi-dimensional integration required (not supported currently)
@@ -207,12 +212,14 @@ void RooRealIntegral::initNumIntegrator()
 }
 
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
-  RooAbsReal(other,name), _function(other._function), _mode(other._mode),
-  _intList("intList"), _sumList("sumList") 
+  RooAbsReal(other,name), _mode(other._mode),
+ _function("function",this,other._function), 
+  _intList("intList",this,other._intList), 
+  _sumList("sumList",this,other._sumList),
+  _anaList("anaList",this,other._anaList),
+  _jacList("jacList",this,other._jacList) 
 {
   // Copy constructor
-  copyList(_intList,other._intList) ;
-  copyList(_sumList,other._sumList) ;
   initNumIntegrator() ;
 }
 
@@ -289,7 +296,7 @@ Double_t RooRealIntegral::integrate() const
   // Perform hybrid numerical/analytical integration over all real-valued dependents
 
   // Trivial case, fully analytical integration
-  if (!_numIntEngine) return _function->analyticalIntegral(_mode) ;
+  if (!_numIntEngine) return ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
 
   // Partial or complete numerical integration
   return _numIntEngine->integral() ;
@@ -307,32 +314,6 @@ Bool_t RooRealIntegral::isValid(Double_t value) const
 
 Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
-  // Process server redirect changes
-
-
-  // WVE need to switch too RooSetProxy here
-  RooAbsArg* arg ;
-  TIterator* iter ;
-  Bool_t error(kFALSE) ;
-
-  // Update contents of integration list
-  iter = _intList.MakeIterator() ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* newServer = newServerList.find(arg->GetName()) ;
-    if (newServer) _intList.replace(*arg,*newServer) ;
-    error |= (!newServer && mustReplaceAll) ;    
-  }
-  delete iter ;
-  
-  // Update contents of summing list
-  iter = _sumList.MakeIterator() ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* newServer = newServerList.find(arg->GetName()) ;
-    if (newServer) _sumList.replace(*arg,*newServer) ;
-    error |= (!newServer && mustReplaceAll) ;    
-  }
-  delete iter ;
-
   // Restart numerical integrator engine, which uses _intlist
   initNumIntegrator() ;
   
@@ -348,7 +329,7 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     RooAbsReal::printToStream(os,Verbose,indent) ;
     os << indent << "--- RooRealIntegral ---" << endl;
     os << indent << "  Integrates ";
-    _function->printToStream(os,Standard);
+    _function.arg().printToStream(os,Standard);
     TString deeper(indent);
     deeper.Append("  ");
     os << indent << "  Summed discrete args are ";
@@ -404,7 +385,7 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
   }
 
 
-  os << " " << _function->GetName() << " = " << getVal();
+  os << " " << _function.arg().GetName() << " = " << getVal();
   if(!_unit.IsNull()) os << ' ' << _unit;
   os << " : \"" << fTitle << "\"" ;
 

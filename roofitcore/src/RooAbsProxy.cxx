@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsProxy.cc,v 1.2 2001/05/15 06:54:24 verkerke Exp $
+ *    File: $Id: RooAbsProxy.cc,v 1.3 2001/05/17 00:43:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,20 +27,16 @@ ClassImp(RooAbsProxy)
 ;
 
 
-RooAbsProxy::RooAbsProxy(const char* name, const char* desc, Bool_t valueServer, Bool_t shapeServer) : 
-  TNamed(name,desc), _dset(0), 
-  _valueServer(valueServer), _shapeServer(shapeServer) 
+RooAbsProxy::RooAbsProxy() : _dset(0)
 {
   // Constructor with owner and proxied object
 }
 
 
 RooAbsProxy::RooAbsProxy(const char* name, const RooAbsProxy& other) : 
-  TNamed(other), _dset(other._dset),
-  _valueServer(other._valueServer), _shapeServer(other._shapeServer) 
+  _dset(other._dset)
 {
   // Copy constructor
-  SetName(name) ;
 }
 
 

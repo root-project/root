@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.5 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.6 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,7 +33,8 @@ ClassImp(RooArgProxy)
 
 RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
 			 Bool_t valueServer, Bool_t shapeServer) : 
-  RooAbsProxy(name,desc,valueServer,shapeServer), _arg(&arg)
+  TNamed(name,desc), _arg(&arg),
+  _valueServer(valueServer), _shapeServer(shapeServer) 
 {
   // Constructor with owner and proxied variable
   owner->registerProxy(*this) ;
@@ -41,7 +42,7 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 
 
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
-  RooAbsProxy(name,other), _arg(other._arg)
+  RooAbsProxy(other), TNamed(other), _arg(other._arg)
 {
   // Copy constructor
   owner->registerProxy(*this) ;

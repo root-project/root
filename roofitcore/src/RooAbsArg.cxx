@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.30 2001/05/18 00:59:18 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.31 2001/05/31 21:21:34 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -155,6 +155,9 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 {
   // Register another RooAbsArg as a server to us, ie, declare that
   // we depend on its value and shape.
+
+  // Check we are propagating something 
+  if (!valueProp && !shapeProp) return ;
 
   // Add server link to given server
   if (!_serverList.FindObject(&server)) {
@@ -517,7 +520,8 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    allReplaced &= getProxy(i).changePointer(newSet) ;    
+    cout << GetName() << ": processing proxy " << i << ": " << (void*)getProxy(i) << endl ;
+    allReplaced &= getProxy(i)->changePointer(newSet) ;    
   }
 
   if (mustReplaceAll && !allReplaced) {
@@ -578,18 +582,10 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyArray.FindObject(&proxy)) {
     cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
-	 << proxy.GetName() << " already registered" << endl ;
+ 	 << proxy.GetName() << " already registered" << endl ;
     return ;
   }
-
-  // Register list contents as server
-  TIterator* iter = proxy.set()->MakeIterator() ;
-  RooAbsArg *arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    addServer(*arg,proxy.isValueServer(),proxy.isShapeServer()) ;
-  }
-  delete iter ;
-
+   
   // Register proxy itself
   _proxyArray.Add(&proxy) ;  
 }
@@ -597,9 +593,12 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
 
 
 
-RooAbsProxy& RooAbsArg::getProxy(Int_t index) const
+RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
 {
-  return *((RooAbsProxy*)_proxyArray.At(index)) ;
+  // Horrible, but works. All RooAbsProxy implementations inherit
+  // from TObject, and are thus collectible, but RooAbsProxy doesn't
+  // as that would lead to multiple inheritance of TObject
+  return dynamic_cast<RooAbsProxy*> (_proxyArray.At(index)) ;
 }
 
 
@@ -704,13 +703,13 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
       // proxy list
       os << indent << "  Proxies: " << endl ;
       for (int i=0 ; i<numProxies() ; i++) {
-	RooAbsProxy& proxy=getProxy(i) ;
+	RooAbsProxy* proxy=getProxy(i) ;
 
-	if (proxy.IsA()->InheritsFrom(RooArgProxy::Class())) {
-	  os << indent << "    " << proxy.GetName() << " -> " ;
-	  ((RooArgProxy&)proxy).absArg()->printToStream(os,OneLine) ;
+	if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
+	  os << indent << "    " << proxy->name() << " -> " ;
+	  ((RooArgProxy*)proxy)->absArg()->printToStream(os,OneLine) ;
 	} else {
-	  os << indent << "    " << proxy.GetName() << " -> (RooArgSet)" ;
+	  os << indent << "    " << proxy->name() << " -> (RooArgSet)" ;
 	}
       }
     }
