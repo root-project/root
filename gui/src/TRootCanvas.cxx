@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.68 2005/01/14 18:10:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.69 2005/02/02 17:45:47 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -771,10 +771,12 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      {
                         static TString dir(".");
                         static Int_t typeidx = 0;
+                        static Bool_t overwr = kFALSE;
                         TGFileInfo fi;
                         fi.fFileTypes   = gSaveAsTypes;
                         fi.fIniDir      = StrDup(dir);
                         fi.fFileTypeIdx = typeidx;
+                        fi.fOverwrite = overwr;
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
                         if (!fi.fFilename) return kTRUE;
                         Bool_t  appendedType = kFALSE;
@@ -782,6 +784,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         TString ft = fi.fFileTypes[fi.fFileTypeIdx+1];
                         dir     = fi.fIniDir;
                         typeidx = fi.fFileTypeIdx;
+                        overwr  = fi.fOverwrite;
 again:
                         if (fn.EndsWith(".root") ||
                             fn.EndsWith(".ps")   ||

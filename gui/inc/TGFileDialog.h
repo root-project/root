@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.4 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.5 2004/12/07 01:34:31 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -42,12 +42,12 @@ enum EFileDialogMode {
 };
 
 
-class TGLabel;
 class TGTextBuffer;
 class TGTextEntry;
 class TGComboBox;
 class TGPictureButton;
 class TGTextButton;
+class TGCheckButton;
 class TGListView;
 class TGFileContainer;
 class TGFSComboBox;
@@ -55,11 +55,13 @@ class TGFSComboBox;
 
 class TGFileInfo {
 public:
-   char        *fFilename;    // selected file name
-   char        *fIniDir;      // on input: initial directory, on output: new directory
-   const char **fFileTypes;   // file types used to filter selectable files
-   Int_t        fFileTypeIdx; // selected file type, index in fFileTypes
-   TGFileInfo() : fFilename(0), fIniDir(0), fFileTypes(0), fFileTypeIdx(0) { }
+   char         *fFilename;    // selected file name
+   char         *fIniDir;      // on input: initial directory, on output: new directory
+   const char  **fFileTypes;   // file types used to filter selectable files
+   Int_t         fFileTypeIdx; // selected file type, index in fFileTypes
+   Bool_t        fOverwrite;   // if true overwrite the file with existing name on save
+
+   TGFileInfo() : fFilename(0), fIniDir(0), fFileTypes(0), fFileTypeIdx(0), fOverwrite(kFALSE) { }
    ~TGFileInfo() { delete [] fFilename; delete [] fIniDir; }
 };
 
@@ -67,17 +69,15 @@ public:
 class TGFileDialog : public TGTransientFrame {
 
 protected:
-   TGLabel           *fLookin;   // "Save in" or "Look in" label
-   TGLabel           *fLfname;
-   TGLabel           *fLftypes;
-   TGTextBuffer      *fTbfname;
-   TGTextEntry       *fName;
-   TGComboBox        *fTypes;
-   TGFSComboBox      *fTreeLB;
+   TGTextBuffer      *fTbfname;  // text buffer of file name
+   TGTextEntry       *fName;     // file name text entry
+   TGComboBox        *fTypes;    // file type combo box
+   TGFSComboBox      *fTreeLB;   // file system path combo box
    TGPictureButton   *fCdup;     // top toolbar button
    TGPictureButton   *fNewf;     // top toolbar button
    TGPictureButton   *fList;     // top toolbar button
    TGPictureButton   *fDetails;  // top toolbar button
+   TGCheckButton     *fOverWR;   // set on/off file overwriting 
    const TGPicture   *fPcdup;    // picture for fCdup
    const TGPicture   *fPnewf;    // picture for fNewf
    const TGPicture   *fPlist;    // picture for fList
@@ -86,22 +86,7 @@ protected:
    TGTextButton      *fCancel;   // cancel button
    TGListView        *fFv;       // file list view
    TGFileContainer   *fFc;       // file list view container (containing the files)
-   TGHorizontalFrame *fHtop;     // main frame directly in popup
-   TGHorizontalFrame *fHf;       // frame for file name and types
-   TGHorizontalFrame *fHfname;
-   TGHorizontalFrame *fHftype;
-   TGVerticalFrame   *fVf;
-   TGVerticalFrame   *fVbf;
-   TGLayoutHints     *fLmain;
-   TGLayoutHints     *fLhl;
-   TGLayoutHints     *fLb1;
-   TGLayoutHints     *fLb2;
-   TGLayoutHints     *fLvf;
-   TGLayoutHints     *fLvbf;
-   TGLayoutHints     *fLb;
-   TGLayoutHints     *fLht;
-   TGLayoutHints     *fLht1;
-   TGFileInfo        *fFileInfo;
+   TGFileInfo        *fFileInfo; // file info passed to this dialog
 
 public:
    TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,

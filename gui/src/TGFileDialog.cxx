@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.19 2004/12/07 16:40:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.20 2005/01/21 18:38:14 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -45,6 +45,7 @@ enum {
    kIDF_NEW_FOLDER,
    kIDF_LIST,
    kIDF_DETAILS,
+   kIDF_OVERWRITE,
    kIDF_FSLB,
    kIDF_FTYPESLB,
    kIDF_OK,
@@ -92,14 +93,12 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    if (!fFileInfo->fIniDir)
       fFileInfo->fIniDir = StrDup(".");
 
-   fHtop = new TGHorizontalFrame(this, 10, 10);
-
-   fLmain = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1);
+   TGHorizontalFrame *fHtop = new TGHorizontalFrame(this, 10, 10);
 
    //--- top toolbar elements
 
-   fLookin = new TGLabel(fHtop, new TGHotString((dlg_type == kFDSave)
-                         ? "S&ave in" : "&Look in:"));
+   TGLabel *fLookin = new TGLabel(fHtop, new TGHotString((dlg_type == kFDSave)
+                                                  ? "S&ave in:" : "&Look in:"));
    fTreeLB = new TGFSComboBox(fHtop, kIDF_FSLB);
    fTreeLB->Associate(this);
 
@@ -129,21 +128,22 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fList->AllowStayDown(kTRUE);
    fDetails->AllowStayDown(kTRUE);
 
-   fLhl = new TGLayoutHints(kLHintsLeft | kLHintsCenterY,  5,  5, 2, 2);
-   fLht = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 10,  0, 2, 2);
-   fLb1 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY,  8,  0, 2, 2);
-   fLb2 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY,  0, 15, 2, 2);
-
    fTreeLB->Resize(200, fTreeLB->GetDefaultHeight());
 
-   fHtop->AddFrame(fLookin, fLhl);
-   fHtop->AddFrame(fTreeLB, fLht);
-   fHtop->AddFrame(fCdup, fLb1);
-   fHtop->AddFrame(fNewf, fLb1);
-   fHtop->AddFrame(fList, fLb1);
-   fHtop->AddFrame(fDetails, fLb2);
+   fHtop->AddFrame(fLookin, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
+   fHtop->AddFrame(fTreeLB, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 3, 0, 2, 2));
+   fHtop->AddFrame(fCdup, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 2, 2));
+   fHtop->AddFrame(fNewf, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 2, 2));
+   fHtop->AddFrame(fList, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 2, 2));
+   fHtop->AddFrame(fDetails, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 0, 8, 2, 2));
 
-   AddFrame(fHtop, fLmain);
+   if (dlg_type == kFDSave) {
+      fOverWR = new TGCheckButton(fHtop, "&Overwrite", kIDF_OVERWRITE);
+      fOverWR->SetToolTipText("Overwrite a file without displaying a message if selected.");
+      fHtop->AddFrame(fOverWR, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fOverWR->SetOn(fFileInfo->fOverwrite);
+   } else fOverWR = 0;
+   AddFrame(fHtop, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    //--- file view
 
@@ -164,36 +164,33 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    fList->SetState(kButtonEngaged);
 
-   AddFrame(fFv, fLmain);
+   AddFrame(fFv, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    //--- file name and types
 
-   fHf = new TGHorizontalFrame(this, 10, 10);
+   TGHorizontalFrame *fHf = new TGHorizontalFrame(this, 10, 10);
 
-   fVf = new TGVerticalFrame(fHf, 10, 10);
-   fLvf = new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX);
+   TGVerticalFrame *fVf = new TGVerticalFrame(fHf, 10, 10);
 
-   fHfname = new TGHorizontalFrame(fVf, 10, 10);
+   TGHorizontalFrame *fHfname = new TGHorizontalFrame(fVf, 10, 10);
 
-   fLfname = new TGLabel(fHfname, new TGHotString("File &name:"));
+   TGLabel *fLfname = new TGLabel(fHfname, new TGHotString("File &name:"));
    fTbfname = new TGTextBuffer(1034);
    fName = new TGTextEntry(fHfname, fTbfname);
-   fName->Resize(220, fName->GetDefaultHeight());
+   fName->Resize(230, fName->GetDefaultHeight());
    fName->Associate(this);
 
-   fLht1 = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 20, 2, 2);
+   fHfname->AddFrame(fLfname, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
+   fHfname->AddFrame(fName, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 20, 2, 2));
 
-   fHfname->AddFrame(fLfname, fLhl);
-   fHfname->AddFrame(fName, fLht1);
+   fVf->AddFrame(fHfname, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX));
 
-   fVf->AddFrame(fHfname, fLvf);
+   TGHorizontalFrame *fHftype = new TGHorizontalFrame(fVf, 10, 10);
 
-   fHftype = new TGHorizontalFrame(fVf, 10, 10);
-
-   fLftypes = new TGLabel(fHftype, new TGHotString("Files of &type:"));
+   TGLabel *fLftypes = new TGLabel(fHftype, new TGHotString("Files of &type:"));
    fTypes = new TGComboBox(fHftype, kIDF_FTYPESLB);
    fTypes->Associate(this);
-   fTypes->Resize(220, fName->GetDefaultHeight());
+   fTypes->Resize(230, fName->GetDefaultHeight());
 
    char s[64];
    for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
@@ -211,19 +208,16 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    else
       fTbfname->Clear();
 
-   fHftype->AddFrame(fLftypes, fLhl);
-   fHftype->AddFrame(fTypes, fLht1);
+   fHftype->AddFrame(fLftypes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
+   fHftype->AddFrame(fTypes, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 20, 2, 2));
 
-   fVf->AddFrame(fHftype, fLvf);
+   fVf->AddFrame(fHftype, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX));
 
-   fHf->AddFrame(fVf, fLvf);
+   fHf->AddFrame(fVf, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX));
 
    //--- Open/Save and Cancel buttons
 
-   fVbf = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
-   fLvbf = new TGLayoutHints(kLHintsLeft | kLHintsCenterY);
-
-   fLb = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2);
+   TGVerticalFrame *fVbf = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
 
    fOk = new TGTextButton(fVbf, new TGHotString((dlg_type == kFDSave)
                                                  ? "&Save" : "&Open"), kIDF_OK);
@@ -232,15 +226,15 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fOk->Associate(this);
    fCancel->Associate(this);
 
-   fVbf->AddFrame(fOk, fLb);
-   fVbf->AddFrame(fCancel, fLb);
+   fVbf->AddFrame(fOk, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+   fVbf->AddFrame(fCancel, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 
    UInt_t width = TMath::Max(fOk->GetDefaultWidth(), fCancel->GetDefaultWidth()) + 20;
-   fVbf->Resize(width, fVbf->GetDefaultHeight());
+   fVbf->Resize(width + 20, fVbf->GetDefaultHeight());
 
-   fHf->AddFrame(fVbf, fLvbf);
+   fHf->AddFrame(fVbf, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 
-   AddFrame(fHf, fLmain);
+   AddFrame(fHf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
 
    MapSubwindows();
 
@@ -278,19 +272,9 @@ TGFileDialog::~TGFileDialog()
 {
    // Delete file dialog.
 
-   delete fOk; delete fCancel;
-   delete fVbf;
-   delete fLb; delete fLvbf;
-
-   delete fLfname; delete fName;
-   delete fHfname;
-
-   delete fLftypes; delete fTypes;
-   delete fHftype;
-
-   delete fVf;
-   delete fHf;
-
+   delete fOk; delete fCancel; delete fOverWR;
+   delete fName;
+   delete fTypes;
    delete fFv; delete fFc;
 
    delete fCdup; delete fNewf; delete fList; delete fDetails;
@@ -299,13 +283,8 @@ TGFileDialog::~TGFileDialog()
    fClient->FreePicture(fPlist);
    fClient->FreePicture(fPdetails);
 
-   delete fTreeLB; delete fLookin;
-
-   delete fLb1; delete fLb2; delete fLhl;
-   delete fLht; delete fLht1; delete fLvf;
-
-   delete fHtop;
-   delete fLmain;
+   delete fTreeLB;
+   
 }
 
 //______________________________________________________________________________
@@ -340,7 +319,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                      kMBOk);
                         return kTRUE;
                      } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
-                                !strcmp(fOk->GetTitle(), "Save")) {
+                                !strcmp(fOk->GetTitle(), "Save") &&
+                                (!(fOverWR->GetState() == kButtonDown))) {
                         Int_t ret;
                         txt = Form("File name %s already exists, OK to overwrite it?",
                                    fTbfname->GetString());
@@ -352,6 +332,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                     fTbfname->GetString());
+                     if (fOverWR && (fOverWR->GetState() == kButtonDown))
+                        fFileInfo->fOverwrite = kTRUE;
+                     else
+                        fFileInfo->fOverwrite = kFALSE;
                      DeleteWindow();
                      break;
 
@@ -464,7 +448,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                kMBOk);
                   return kTRUE;
                } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
-                          !strcmp(fOk->GetTitle(), "Save")) {
+                          !strcmp(fOk->GetTitle(), "Save") &&
+                          (!(fOverWR->GetState() == kButtonDown))) {
                   Int_t ret;
                   txt = Form("File name %s already exists, OK to overwrite it?",
                              fTbfname->GetString());
@@ -476,6 +461,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                }
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
+               if (fOverWR && (fOverWR->GetState() == kButtonDown))
+                  fFileInfo->fOverwrite = kTRUE;
+               else
+                  fFileInfo->fOverwrite = kFALSE;
                DeleteWindow();
                break;
 
