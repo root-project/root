@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.11 2002/02/02 11:54:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.12 2002/02/03 16:15:01 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -168,14 +168,18 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
    if (fObjlen > fNbytes-fKeylen) {
-      fBuffer = new char[fObjlen+fKeylen];
+      //always allocate 100 bytes more to the buffer.
+      //There are some rare situations when unzip needs a few more bytes
+      //to inflate teh buffer.
+      fBuffer = new char[fObjlen+fKeylen+100];
       memcpy(fBuffer,buffer,fKeylen);
       char *objbuf = fBuffer + fKeylen;
       Int_t nin = fNbytes-fKeylen;
       Int_t nout;
-      R__unzip(&nin, &buffer[fKeylen], &fObjlen, objbuf, &nout);
+      Int_t len = fObjlen + 100;
+      R__unzip(&nin, &buffer[fKeylen], &len, objbuf, &nout);
       if (nout != fObjlen) {
-         Error("ReadBasketBuffers", "fObjlen = %d, nout = %d", fObjlen, nout);
+         Error("ReadBasketBuffers", "fNbytes = %d, fKeylen = %d, fObjlen = %d, nout = %d", fNbytes,fKeylen,fObjlen, nout);
          badread = 1;
       }
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
