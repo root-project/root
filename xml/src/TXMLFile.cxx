@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.4 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.5 2004/06/04 16:28:31 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -506,8 +506,7 @@ Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* na
    if (!obj || !cl) return 0;
    
    if (cl->InheritsFrom("TTree")) {
-      Error("WriteObject","TTree class not (yet) supported"); 
-      return 0;
+      Warning("WriteObject","TTree class not (yet) fully supported"); 
    }
     
    TKey *key = 0, *oldkey=0;
