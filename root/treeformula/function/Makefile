@@ -4,7 +4,7 @@
 CLEAN_TARGETS += testFormulaFuncCall.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testFormulaFuncCall
+TEST_TARGETS += testFormulaFuncCall testNestedFunc
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -22,3 +22,5 @@ ifeq ($(FAIL),)
 endif
 
 
+testNestedFunc: NestedFunc.log
+	$(TestDiff)
