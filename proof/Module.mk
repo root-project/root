@@ -109,4 +109,4 @@ distclean::     distclean-proof
 
 ##### extra rules ######
 $(PROOFO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -I$(KRB5INCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -o $@ -c $<
