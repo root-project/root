@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.37 2003/05/08 16:55:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.38 2003/09/08 15:09:44 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1016,7 +1016,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                break;
             case 3: // hat
                x2 = x+fs1.Width()/2 ;
-               y1 = y +sub -fs1.Dessus() ;
+               y1 = y -9*sub; 
                y2 = y1-2*sub;
                x1 = x2-fs1.Width()/3 ;
                x3 = x2+fs1.Width()/3 ;
