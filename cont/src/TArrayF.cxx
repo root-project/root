@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.11 2002/06/10 16:59:21 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -105,6 +105,7 @@ void TArrayF::Set(Int_t n)
    // Set size of this array to n floats.
    // A new array is created, the old contents copied to the new array,
    // then the old array is deleted.
+   // This function should not be called if the array was declared via Adopt.
 
    if (n < 0) return;
    if (n != fN) {
@@ -128,6 +129,7 @@ void TArrayF::Set(Int_t n)
 void TArrayF::Set(Int_t n, const Float_t *array)
 {
    // Set size of this array to n floats and set the contents.
+   // This function should not be called if the array was declared via Adopt.
 
    if (fArray && fN != n) {
       delete [] fArray;
