@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.54 2004/01/29 16:06:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.55 2004/03/12 16:45:36 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3107,8 +3107,13 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
    while (*t == ' ')
       t++;
 
-   TClass *cl = gROOT->GetClass(t, load);
-   delete [] name;
+   TClass *cl=gROOT->GetClass(t, load);
+   // hack to get rid of prec_stl types
+   // TClassEdit checks are far too slow...
+   if (cl &&
+       cl->GetDeclFileName() &&
+       strstr(cl->GetDeclFileName(),"prec_stl/"))
+      cl = 0;   delete [] name;
    return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ? cl : 0);
 }
 
