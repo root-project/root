@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.8 2002/05/30 23:42:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.9 2002/05/31 16:59:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TLeaf::TLeaf(const char *name, const char *)
 //
 //     See the TTree and TBranch constructors for explanation of parameters.
 
+   fBranch     = 0;
    fLeafCount  = GetLeafCounter(fLen);
    if (fLen == -1) {MakeZombie(); return;}
    fIsRange    = 0;
@@ -139,9 +140,9 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    //    method is called from the TLeaf constructor. In that case, use global pointer
    //    gTree.
    //    Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
-  //TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
-  //if(pTree==NULL) pTree = gTree;
-  TLeaf *leaf = (TLeaf*) gTree->GetListOfLeaves()->FindObject(countname);
+  TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
+  if (!pTree) pTree = gTree;
+  TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
   Int_t i;
   if (leaf) {
      countval = 1;
