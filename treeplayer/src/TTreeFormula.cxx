@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.62 2001/08/14 06:54:55 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.63 2001/08/14 07:53:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include <math.h>
 
 const Int_t kMaxLen     = 512;
+R__EXTERN TTree *gTree;
 
 ClassImp(TTreeFormula)
 
@@ -1588,7 +1589,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       // change from tree to tree!.
       TTree *tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
-      TNamed *named = new TNamed(leaf->GetName(),tleaf->GetName());
+      TNamed *named = new TNamed(leaf->GetName(),leaf->GetBranch()->GetName());
       fNames.AddAtAndExpand(named,code);
       fLeaves.AddAtAndExpand(leaf,code);
 
@@ -2843,10 +2844,13 @@ void TTreeFormula::UpdateFormulaLeaves()
 
    // A safer alternative would be to recompile the whole thing .... However
    // currently compile HAS TO be called from the constructor!
+
+   char names[512];
    Int_t nleaves = fNames.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++) {
       if (!fTree) continue;
-      TLeaf *leaf = fTree->GetLeaf(fNames[i]->GetName());
+      sprintf(names,"%s/%s",fNames[i]->GetTitle(),fNames[i]->GetName());
+      TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
    }
    for (Int_t j=0; j<kMAXCODES; j++) {
