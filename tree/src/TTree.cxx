@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.68 2001/05/07 12:33:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.69 2001/05/10 07:48:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1023,6 +1023,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       while ((element = (TStreamerElement*)next())) {
          char *pointer = (char*)objadd + element->GetOffset();
          Bool_t isBase = element->IsA() == TStreamerBase::Class();
+         if (isBase) {
+            TClass *clbase = element->GetClassPointer();
+            if (clbase == TObject::Class() && cl->CanIgnoreTObjectStreamer()) continue;
+            }
          if (dot) {
             if (dotlast) {
                if (isBase) {sprintf(bname,"%s",name); bname[nch-1] = 0;}
