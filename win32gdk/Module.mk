@@ -50,17 +50,17 @@ lib/%.lib:      $(WIN32GDKDIR)/gdk/lib/%.lib
 bin/%.dll:      $(WIN32GDKDIR)/gdk/dll/%.dll
 		cp $< $@
 
-$(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(MAINLIBS) $(WIN32GDKLIBDEP)
+$(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPELIB) $(MAINLIBS) $(WIN32GDKLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libWin32gdk.$(SOEXT) $@ \
-		   "$(WIN32GDKO) $(WIN32GDKDO)" "$(WIN32GDKLIBEXTRA)"
+		   "$(WIN32GDKO) $(WIN32GDKDO)" "$(FREETYPELIB) $(WIN32GDKLIBEXTRA)"
 
 $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
 $(WIN32GDKDO):  $(WIN32GDKDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(WIN32GDKDIR)/gdk/inc \
+		$(CXX) $(NOOPT) $(CXXFLAGS)  -I$(FREETYPEDIRI) -I. -I$(WIN32GDKDIR)/gdk/inc \
 		   -I$(WIN32GDKDIR)/gdk/inc/gdk -I$(WIN32GDKDIR)/gdk/inc/glib \
 		   -o $@ -c $<
 
@@ -78,7 +78,7 @@ distclean-win32gdk: clean-win32gdk
 distclean::     distclean-win32gdk
 
 ##### extra rules #####
-$(WIN32GDKO1): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(WIN32GDKDIR)/gdk/inc \
+$(WIN32GDKO1): %.o: %.cxx $(FREETYPELIB)
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -I$(WIN32GDKDIR)/gdk/inc \
 	   -I$(WIN32GDKDIR)/gdk/inc/gdk -I$(WIN32GDKDIR)/gdk/inc/glib \
 	   -o $@ -c $<

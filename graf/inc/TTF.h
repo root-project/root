@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.1 2003/01/22 11:07:26 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.2 2003/01/22 14:50:13 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -56,13 +56,13 @@ public:
 
 
 class TGX11TTF;
-class TGWin32TTF;
+class TGWin32;
 
 
 class TTF {
 
 friend class TGX11TTF;
-friend class TGWin32TTF;
+friend class TGWin32;
 
 private:
    enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };

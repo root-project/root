@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.9 2003/01/22 11:23:04 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.10 2003/02/11 12:29:07 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -24,6 +24,10 @@
 
 #ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
+#endif
+
+#ifndef ROOT_TTF
+#include "TTF.h"
 #endif
 
 #if !defined(__CINT__)
@@ -139,6 +143,19 @@ struct XWindow_t {
 class TGWin32 : public TVirtualX {
 
 private:
+
+   enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
+                        kBLeft, kBCenter, kBRight };
+
+   FT_Vector   fAlign;                 // alignment vector
+
+   void    Align(void);
+   void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
+                     Int_t bx, Int_t by);
+   Bool_t  IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   GdkImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void    RenderString(Int_t x, Int_t y, ETextMode mode);
+
    Int_t            fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t       *fWindows;               //List of windows
    GdkCursor       *fCursors[kNumCursors];  //List of cursors
@@ -210,9 +227,14 @@ protected:
 
 public:
    TGWin32();
-   TGWin32(const TGWin32 &org);
    TGWin32(const char *name, const char *title);
    virtual ~TGWin32();
+
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                   const char *text, ETextMode mode);
+   void      SetTextFont(Font_t fontnumber);
+   Int_t     SetTextFont(char *fontname, ETextSetMode mode);
+   void      SetTextSize(Float_t textsize);
 
    Bool_t    Init();
    UInt_t	 ExecCommand(TGWin32Command *);
@@ -226,7 +248,6 @@ public:
    void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    void      DrawPolyLine(Int_t n, TPoint *xy);
    void      DrawPolyMarker(Int_t n, TPoint *xy);
-   virtual void DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
    void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
    Int_t     GetDoubleBuffer(Int_t wid);
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
@@ -272,10 +293,7 @@ public:
    void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    void      SetTextAlign(Short_t talign=11);
    void      SetTextColor(Color_t cindex);
-   virtual Int_t SetTextFont(char *fontname, ETextSetMode mode);
-   virtual void  SetTextFont(Font_t fontnumber);
    void      SetTextMagnitude(Float_t mgn=1) { fTextMagnitude = mgn;}
-   virtual void SetTextSize(Float_t textsize);
    void      Sync(Int_t mode);
    void      UpdateWindow(Int_t mode);
    void      Warp(Int_t ix, Int_t iy);

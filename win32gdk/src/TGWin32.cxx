@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.18 2003/02/11 12:29:07 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.19 2003/02/13 20:37:43 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -326,7 +326,7 @@ extern Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen);
 ClassImp(TGWin32)
 
 //______________________________________________________________________________
-    TGWin32::TGWin32()
+TGWin32::TGWin32()
 {
    // Default constructor.
 
@@ -369,12 +369,6 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
    if(!gROOT->IsBatch()) {
       hThread2 = (HANDLE)_beginthreadex( NULL, 0, &HandleSplashThread, 0, 0, &thread2ID );
    }
-/*
-   fThreadP.hThrSem = CreateSemaphore(NULL, 0, 1, NULL);
-   hGDKThread = (HANDLE)_beginthreadex( NULL, 0, &HandleGDKThread, (LPVOID) &pThreadP,
-                                        0, (unsigned int *) &fIDThread );
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-*/
 
    fThreadP.Drawable = NULL;
    fThreadP.GC = NULL;
@@ -422,106 +416,6 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
 }
 
 //______________________________________________________________________________
-TGWin32::TGWin32(const TGWin32 &org) : TVirtualX(org)
-{
-   // Copy constructor. Currently only used by TGWin32TTF.
-
-   Int_t i;
-
-   EnterCriticalSection(org.flpCriticalSection);
-   SuspendThread(org.hGDKThread);
-
-   fScreenNumber  = org.fScreenNumber;
-   fColormap      = org.fColormap;
-   fHasTTFonts    = org.fHasTTFonts;
-   fTextAlignH    = org.fTextAlignH;
-   fTextAlignV    = org.fTextAlignV;
-   fTextAlign     = org.fTextAlign;
-   fTextMagnitude = org.fTextMagnitude;
-   fCharacterUpX  = org.fCharacterUpX;
-   fCharacterUpY  = org.fCharacterUpY;
-   fDrawMode      = org.fDrawMode;
-   fRedDiv        = org.fRedDiv;
-   fGreenDiv      = org.fGreenDiv;
-   fBlueDiv       = org.fBlueDiv;
-   fRedShift      = org.fRedShift;
-   fGreenShift    = org.fGreenShift;
-   fBlueShift     = org.fBlueShift;
-   fVisual        = org.fVisual;
-   fColormap      = org.fColormap;
-   fDepth         = org.fDepth;
-
-   fMaxNumberOfWindows = org.fMaxNumberOfWindows;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (i = 0; i < fMaxNumberOfWindows; i++) {
-      fWindows[i].open          = org.fWindows[i].open;
-      fWindows[i].double_buffer = org.fWindows[i].double_buffer;
-      fWindows[i].ispixmap      = org.fWindows[i].ispixmap;
-      fWindows[i].drawing       = org.fWindows[i].drawing;
-      fWindows[i].window        = org.fWindows[i].window;
-      fWindows[i].buffer        = org.fWindows[i].buffer;
-      fWindows[i].width         = org.fWindows[i].width;
-      fWindows[i].height        = org.fWindows[i].height;
-      fWindows[i].clip          = org.fWindows[i].clip;
-      fWindows[i].xclip         = org.fWindows[i].xclip;
-      fWindows[i].yclip         = org.fWindows[i].yclip;
-      fWindows[i].wclip         = org.fWindows[i].wclip;
-      fWindows[i].hclip         = org.fWindows[i].hclip;
-      fWindows[i].new_colors    = org.fWindows[i].new_colors;
-      fWindows[i].ncolors       = org.fWindows[i].ncolors;
-   }
-
-   for (i = 0; i < kNumCursors; i++)
-      fCursors[i] = org.fCursors[i];
-
-   fThreadP.Drawable = org.fThreadP.Drawable;
-   fThreadP.GC       = org.fThreadP.GC;
-   fThreadP.pParam   = org.fThreadP.pParam;
-   fThreadP.pParam1  = org.fThreadP.pParam1;
-   fThreadP.pParam2  = org.fThreadP.pParam2;
-   fThreadP.iParam   = org.fThreadP.iParam;
-   fThreadP.iParam1  = org.fThreadP.iParam1;
-   fThreadP.iParam2  = org.fThreadP.iParam2;
-   fThreadP.uiParam  = org.fThreadP.uiParam;
-   fThreadP.uiParam1 = org.fThreadP.uiParam1;
-   fThreadP.uiParam2 = org.fThreadP.uiParam2;
-   fThreadP.lParam   = org.fThreadP.lParam;
-   fThreadP.lParam1  = org.fThreadP.lParam1;
-   fThreadP.lParam2  = org.fThreadP.lParam2;
-   fThreadP.x        = org.fThreadP.x;
-   fThreadP.x1       = org.fThreadP.x1;
-   fThreadP.x2       = org.fThreadP.x2;
-   fThreadP.y        = org.fThreadP.y;
-   fThreadP.y1       = org.fThreadP.y1;
-   fThreadP.y2       = org.fThreadP.y2;
-   fThreadP.w        = org.fThreadP.w;
-   fThreadP.h        = org.fThreadP.h;
-   fThreadP.xpos     = org.fThreadP.xpos;
-   fThreadP.ypos     = org.fThreadP.ypos;
-   fThreadP.angle1   = org.fThreadP.angle1;
-   fThreadP.angle2   = org.fThreadP.angle2;
-   fThreadP.bFill    = org.fThreadP.bFill;
-   fThreadP.sRet     = org.fThreadP.sRet;
-   fThreadP.iRet     = org.fThreadP.iRet;
-   fThreadP.iRet1    = org.fThreadP.iRet1;
-   fThreadP.uiRet    = org.fThreadP.uiRet;
-   fThreadP.uiRet1   = org.fThreadP.uiRet1;
-   fThreadP.lRet     = org.fThreadP.lRet;
-   fThreadP.lRet1    = org.fThreadP.lRet1;
-   fThreadP.pRet     = org.fThreadP.pRet;
-   fThreadP.pRet1    = org.fThreadP.pRet1;
-
-   fThreadP.hThrSem = CreateSemaphore(0, 0, 1, 0);
-   hGDKThread = CreateThread(0, 0, this->ThreadStub, this, 0, &fIDThread);
-   //WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   flpCriticalSection = new CRITICAL_SECTION;
-   InitializeCriticalSection(flpCriticalSection);
-   gIDThread = fIDThread;
-   LeaveCriticalSection(org.flpCriticalSection);
-}
-
-//______________________________________________________________________________
 TGWin32::~TGWin32()
 {
    // Destructor.
@@ -532,11 +426,12 @@ TGWin32::~TGWin32()
     if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
 
     if (fIDThread) {
+        PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);
+        WaitForSingleObject(fThreadP.hThrSem, INFINITE);
         if (hGDKThread) CloseHandle(hGDKThread);
         CloseHandle(fThreadP.hThrSem);
+        DeleteCriticalSection(flpCriticalSection);
     }
-
-   DeleteCriticalSection(flpCriticalSection);
 }
 
 //______________________________________________________________________________
@@ -637,6 +532,368 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
       }
    }
    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::Align(void)
+{
+   // Compute alignment variables. The alignment is done on the horizontal string
+   // then the rotation is applied on the alignment variables.
+   // SetRotation and LayoutGlyphs should have been called before.
+
+   EAlign align = (EAlign) fTextAlign;
+
+   // vertical alignment
+   if (align == kTLeft || align == kTCenter || align == kTRight) {
+      fAlign.y = TTF::GetAscent();
+   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
+      fAlign.y = TTF::GetAscent()/2;
+   } else {
+      fAlign.y = 0;
+   }
+   // horizontal alignment
+   if (align == kTRight || align == kMRight || align == kBRight) {
+      fAlign.x = TTF::GetWidth();
+   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
+      fAlign.x = TTF::GetWidth()/2;
+   } else {
+      fAlign.x = 0;
+   }
+
+   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
+   fAlign.x = fAlign.x >> 6;
+   fAlign.y = fAlign.y >> 6;
+}
+
+//______________________________________________________________________________
+void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
+                         GdkImage *xim, Int_t bx, Int_t by)
+{
+   // Draw FT_Bitmap bitmap to xim image at position bx,by using specified
+   // foreground color.
+
+   UChar_t d = 0, *s = source->buffer;
+
+   if (TTF::GetSmoothing()) {
+
+      static GdkColor col[5];
+      GdkColor *bcol = 0, *bc;
+      Int_t    x, y;
+
+      // background kClear, i.e. transparent, we take as background color
+      // the average of the rgb values of all pixels covered by this character
+      if (back == (ULong_t) -1 && (UInt_t)source->width) {
+         ULong_t r, g, b;
+         Int_t   dots, dotcnt;
+         const Int_t maxdots = 50000;
+
+         dots = Int_t(source->width * source->rows);
+         dots = dots > maxdots ? maxdots : dots;
+         bcol = new GdkColor[dots];
+         if (!bcol) return;
+         bc = bcol;
+         dotcnt = 0;
+         for (y = 0; y < (int) source->rows; y++) {
+            for (x = 0; x < (int) source->width; x++, bc++) {
+///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::GetAscent() + y);
+               bc->pixel = GetPixel((Drawable_t)xim, bx + x, by + y);
+               if (++dotcnt >= maxdots) break;
+            }
+         }
+         QueryColors(fColormap, bcol, dots);
+         r = g = b = 0;
+         bc = bcol;
+         dotcnt = 0;
+         for (y = 0; y < (int) source->rows; y++) {
+            for (x = 0; x < (int) source->width; x++, bc++) {
+               r += bc->red;
+               g += bc->green;
+               b += bc->blue;
+               if (++dotcnt >= maxdots) break;
+            }
+         }
+         if (dots != 0) {
+            r /= dots;
+            g /= dots;
+            b /= dots;
+         }
+         bc = &col[0];
+         if (bc->red == r && bc->green == g && bc->blue == b)
+            bc->pixel = back;
+         else {
+            bc->pixel = ~back;
+            bc->red   = (UShort_t) r;
+            bc->green = (UShort_t) g;
+            bc->blue  = (UShort_t) b;
+         }
+      }
+      delete [] bcol;
+
+      // if fore or background have changed from previous character
+      // recalculate the 3 smooting colors (interpolation between fore-
+      // and background colors)
+      if (fore != col[4].pixel || back != col[0].pixel) {
+         col[4].pixel = fore;
+         if (back != (ULong_t) -1) {
+            col[3].pixel = back;
+            QueryColors(fColormap, &col[3], 2);
+            col[0] = col[3];
+         } else {
+            QueryColors(fColormap, &col[4], 1);
+         }
+
+         // interpolate between fore and backgound colors
+         for (x = 3; x > 0; x--) {
+            col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
+            col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
+            col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
+            if (!AllocColor(fColormap, &col[x])) {
+               Warning("DrawImage", "cannot allocate smoothing color");
+               col[x].pixel = col[x+1].pixel;
+            }
+         }
+      }
+
+      // put smoothed character, character pixmap values are an index
+      // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+      for (y = 0; y < (int) source->rows; y++) {
+         for (x = 0; x < (int) source->width; x++) {
+            d = *s++ & 0xff;
+            d = ((d + 10) * 5) / 256;
+            if (d > 4) d = 4;
+            if (d && x < (int) source->width) {
+               ULong_t p = col[d].pixel;
+               PutPixel((Drawable_t)xim, bx + x, by + y, p);
+            }
+         }
+      }
+   } else {
+      // no smoothing, just put character using foreground color
+      UChar_t* row=s;
+      for (int y = 0; y < (int) source->rows; y++) {
+         int n = 0;
+         s = row;
+         for (int x = 0; x < (int) source->width; x++) {
+            if (n == 0) d = *s++;
+            if (TESTBIT(d,7-n))
+               PutPixel((Drawable_t)xim, bx + x, by + y, fore);
+            if (++n == (int) kBitsPerByte) n = 0;
+         }
+         row += source->pitch;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const char *text, ETextMode mode)
+{
+   // Draw text using TrueType fonts. If TrueType fonts are not available the
+   // text is drawn with TGWin32::DrawText.
+
+   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::SetRotationMatrix(angle);
+   TTF::PrepareString(text);
+   TTF::LayoutGlyphs();
+   Align();
+   RenderString(x, y, mode);
+
+}
+
+//______________________________________________________________________________
+GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Get the background of the current window in an XImage.
+
+   XWindow_t *cws = GetCurrentWindow();
+   EnterCriticalSection(flpCriticalSection);
+
+   if (x < 0) {
+      w += x;
+      x  = 0;
+   }
+   if (y < 0) {
+      h += y;
+      y  = 0;
+   }
+
+   if (x+w > cws->width)  w = cws->width - x;
+   if (y+h > cws->height) h = cws->height - y;
+
+   fThreadP.Drawable = cws->drawing;
+   fThreadP.x = x;
+   fThreadP.y = y;
+   fThreadP.w = w;
+   fThreadP.h = h;
+   fThreadP.pRet = NULL;
+   PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET, 0, 0L);  
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   GdkImage *image = (GdkImage *)fThreadP.pRet;
+   LeaveCriticalSection(flpCriticalSection);
+   return image;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Test if there is really something to render
+
+   XWindow_t *cws = GetCurrentWindow();
+
+   // If w or h is 0, very likely the string is only blank characters
+   if ((int)w == 0 || (int)h == 0)  return kFALSE;
+
+   // If string falls outside window, there is probably no need to draw it.
+   if (x + (int)w <= 0 || x >= (int)cws->width)  return kFALSE;
+   if (y + (int)h <= 0 || y >= (int)cws->height) return kFALSE;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
+{
+   // Perform the string rendering in the pad.
+   // LayoutGlyphs should have been called before.
+   EnterCriticalSection(flpCriticalSection);
+   TTGlyph* glyph = TTF::GetGlyphs();
+
+   // compute the size and position of the XImage that will contain the text
+   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
+   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
+   Int_t w    = TTF::GetBox().xMax + Xoff;
+   Int_t h    = TTF::GetBox().yMax + Yoff;
+   Int_t x1   = x-Xoff-fAlign.x;
+   Int_t y1   = y+Yoff+fAlign.y-h;
+
+   if (!IsVisible(x1, y1, w, h)) {
+       LeaveCriticalSection(flpCriticalSection);
+       return;
+   }
+
+   // create the XImage that will contain the text
+   UInt_t depth = fDepth;
+   GdkImage *xim  = 0;
+
+   fThreadP.w = w;
+   fThreadP.h = h;
+   fThreadP.pRet = NULL;
+   PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_NEW, 0, 0L);
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   xim = (GdkImage *)fThreadP.pRet;
+
+   // use malloc since Xlib will use free() in XDestroyImage
+//   xim->data = (char *) malloc(xim->bytes_per_line * h);
+//   memset(xim->data, 0, xim->bytes_per_line * h);
+
+   ULong_t   bg;
+//   XGCValues values;
+//   XGetGCValues(fDisplay, *GetGC(3), GCForeground | GCBackground, &values);
+
+   fThreadP.GC = GetGC(3);
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);  
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+
+   // get the background
+   if (mode == kClear) {
+      // if mode == kClear we need to get an image of the background
+      GdkImage *bim = GetBackground(x1, y1, w, h);
+      if (!bim) {
+         Error("DrawText", "error getting background image");
+         return;
+      }
+
+      // and copy it into the text image
+      Int_t xo = 0, yo = 0;
+      if (x1 < 0) xo = -x1;
+      if (y1 < 0) yo = -y1;
+
+      for (int yp = 0; yp < (int) bim->height; yp++) {
+         for (int xp = 0; xp < (int) bim->width; xp++) {
+            ULong_t pixel = GetPixel((Drawable_t)bim, xp, yp);
+            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
+         }
+      }
+      fThreadP.pParam = bim;
+      PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);  
+      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+      bg = (ULong_t) -1;
+   } else {
+      // if mode == kOpaque its simple, we just draw the background
+//      XAddPixel(xim, fThreadP.gcvals.background.pixel);
+      bg = fThreadP.gcvals.background.pixel;
+   }
+
+   // paint the glyphs in the XImage
+   glyph = TTF::GetGlyphs();
+   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage,
+                             TTF::GetSmoothing() ? ft_render_mode_normal
+                                              : ft_render_mode_mono,
+                             0, 1 )) continue;
+      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
+      FT_Bitmap*     source = &bitmap->bitmap;
+      Int_t          bx, by;
+
+      bx = bitmap->left+Xoff;
+      by = h - bitmap->top-Yoff;
+      DrawImage(source, fThreadP.gcvals.foreground.pixel, bg, xim, bx, by);
+   }
+
+   // put the Ximage on the screen
+   XWindow_t *cws = GetCurrentWindow();
+   GdkGC *gc = GetGC(6);      // gGCpxmp
+   fThreadP.Drawable = cws->drawing;
+   fThreadP.GC = gc; 
+   fThreadP.pParam = xim;
+   fThreadP.x = 0;
+   fThreadP.y = 0;
+   fThreadP.x1 = x1;
+   fThreadP.y1 = y1;
+   fThreadP.w = w;
+   fThreadP.h = h;
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_IMAGE, 0, 0L);  
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   fThreadP.pParam = xim;
+   PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);  
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::SetTextFont(Font_t fontnumber)
+{
+   // Set specified font.
+
+   fTextFont = fontnumber;
+   TTF::SetTextFont(fontnumber);
+}
+
+//______________________________________________________________________________
+Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
+{
+   // Set text font to specified name.
+   // mode       : loading flag
+   // mode=0     : search if the font exist (kCheck)
+   // mode=1     : search the font and load it if it exists (kLoad)
+   // font       : font name
+   //
+   // Set text font to specified name. This function returns 0 if
+   // the specified font is found, 1 if not.
+
+   return TTF::SetTextFont(fontname);
+
+   // set initial text size
+   SetTextSize(fTextSize);
+}
+
+//______________________________________________________________________________
+void TGWin32::SetTextSize(Float_t textsize)
+{
+   // Set current text size.
+
+   fTextSize = textsize;
+   TTF::SetTextSize(textsize);
 }
 
 //______________________________________________________________________________
@@ -975,7 +1232,7 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
          fThreadP.dashes[i] = (gint8) 0;
       fThreadP.GC = gGCdash;
       fThreadP.iParam = gDashOffset;
-      fThreadP.iParam2 = gDashSize; // sizeof(gDashList);
+      fThreadP.iParam2 = gDashSize;
       PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_DASHES, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
@@ -1154,119 +1411,6 @@ void TGWin32::DrawPolyMarker(int n, TPoint * xyt)
       }
    }
    delete[](GdkPoint *) xy;
-   LeaveCriticalSection(flpCriticalSection);
-}
-
-//______________________________________________________________________________
-void TGWin32::DrawText(int x, int y, float angle, float mgn,
-                       const char *text, ETextMode mode)
-{
-   // Draw a text string using current font.
-   // mode       : drawing mode
-   // mode=0     : the background is not drawn (kClear)
-   // mode=1     : the background is drawn (kOpaque)
-   // x,y        : text position
-   // angle      : text angle
-   // mgn        : magnification factor
-   // text       : text string
-   EnterCriticalSection(flpCriticalSection);
-
-   float old_mag, old_angle, sangle;
-   UInt_t old_align;
-   int y2, n1, n2;
-   int size, length, offset;
-   static gchar old_font_name[1024];
-   static gchar font_name[1024];
-
-   gchar facename[LF_FACESIZE * 5];
-   char foundry[32], family[100], weight[32], slant[32], set_width[32],
-       spacing[32], registry[32], encoding[32];
-   char pixel_size[10], point_size[10], res_x[10], res_y[10],
-       avg_width[10];
-
-   fThreadP.pParam = gTextFont;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_FULLNAME_GET, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   sprintf(old_font_name,"%s",fThreadP.sRet);
-   sprintf(font_name,"%s",fThreadP.sRet);
-
-//   gchar *old_font_name = gdk_font_full_name_get(gTextFont);
-//   gchar *font_name = gdk_font_full_name_get(gTextFont);
-
-   fThreadP.pParam = gTextFont;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   sscanf(font_name,
-          "-%30[^-]-%100[^-]-%30[^-]-%30[^-]-%30[^-]-%n",
-          foundry, family, weight, slant, set_width, &n1);
-   while (font_name[n1] && font_name[n1] != '-')
-      n1++;
-   sscanf(font_name + n1,
-          "-%8[^-]-%8[^-]-%8[^-]-%8[^-]-%30[^-]-%8[^-]-%30[^-]-%30[^-]%n",
-          pixel_size,
-          point_size,
-          res_x, res_y, spacing, avg_width, registry, encoding, &n2);
-   size = atoi(pixel_size);
-   if (fTextSize > 0)
-      size = fTextSize;
-   sangle = angle;
-   while (sangle < 0)
-      sangle += 360.0;
-   sprintf(avg_width, "%d", (int) (sangle * 10));
-   sprintf(set_width, "%d", (int) (sangle * 10));
-   sprintf(font_name, "-%s-%s-%s-%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s",
-           foundry,
-           family,
-           weight,
-           slant,
-           set_width,
-           "",
-           size,
-           point_size, res_x, res_y, "m", avg_width, registry, encoding);
-
-   fThreadP.pRet = NULL;
-   sprintf(fThreadP.sParam,"%s",font_name);
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   gTextFont = (GdkFont *)fThreadP.pRet;
-
-   fThreadP.GC = (GdkGC *) gGCtext;
-   fThreadP.uiParam = fTextAlign;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TEXT_ALIGN, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   old_align = fThreadP.uiRet;
-
-   // Adjust y position for center align.
-   offset = size * 0.25;
-   y2 = y + offset;
-
-   if (text) {
-      length = strlen(text);
-      fThreadP.Drawable = (GdkDrawable *) gCws->drawing;
-      fThreadP.pParam = gTextFont;
-      fThreadP.GC = (GdkGC *) gGCtext;
-      fThreadP.x = x;
-      fThreadP.y = y2;
-      sprintf(fThreadP.sParam,"%s",text);
-      fThreadP.iParam = length;
-      PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT_WC, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   }
-
-   fThreadP.GC = (GdkGC *) gGCtext;
-   fThreadP.uiParam = 0;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TEXT_ALIGN, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   fThreadP.pParam = gTextFont;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   sprintf(fThreadP.sParam,"%s",old_font_name);
-   fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   gTextFont = (GdkFont *)fThreadP.pRet;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_FULLNAME_FREE, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -1777,6 +1921,19 @@ Int_t TGWin32::OpenDisplay()
       //printf("fRedDiv = %d, fGreenDiv = %d, fBlueDiv = %d, fRedShift = %d, fGreenShift = %d, fBlueShift = %d\n",
       //       fRedDiv, fGreenDiv, fBlueDiv, fRedShift, fGreenShift, fBlueShift);
    }
+
+   SetName("Win32TTF");
+   SetTitle("ROOT interface to Win32 with TrueType fonts");
+
+   if (!TTF::IsInitialized()) TTF::Init();
+
+   if (fDepth > 8) {
+      TTF::SetSmoothing(kTRUE);
+   } else {
+      TTF::SetSmoothing(kFALSE);
+   }
+
+   fHasTTFonts = kTRUE;
 
    LeaveCriticalSection(flpCriticalSection);
    return 0;
@@ -4100,169 +4257,6 @@ void TGWin32::SetTextColor(Color_t cindex)
    PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_BACKGROUND, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
-}
-
-//______________________________________________________________________________
-Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
-{
-   // Set text font to specified name.
-   // mode       : loading flag
-   // mode=0     : search if the font exist (kCheck)
-   // mode=1     : search the font and load it if it exists (kLoad)
-   // font       : font name
-   //
-   // Set text font to specified name. This function returns 0 if
-   // the specified font is found, 1 if not.
-   EnterCriticalSection(flpCriticalSection);
-
-   char **fontlist;
-   char foundry[32], family[100], weight[32], slant[32], set_width[32],
-       spacing[32], registry[32], encoding[32], fname[100];
-   int fontcount;
-   int i, n1;
-
-   sscanf(fontname,
-          "-%30[^-]-%100[^-]-%30[^-]-%30[^-]-%30[^-]-%n",
-          foundry, family, weight, slant, set_width, &n1);
-   sprintf(fname, "*%s*", family);
-
-   if (mode == kLoad) {
-      for (i = 0; i < kMAXFONT; i++) {
-         if (strcmp(family, gFont[i].name) == 0) {
-            gTextFont = gFont[i].id;
-            fThreadP.GC = (GdkGC *) gGCtext;
-            fThreadP.pParam = gTextFont;
-            PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);
-            WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-            fThreadP.GC = (GdkGC *) gGCinvt;
-            fThreadP.pParam = gTextFont;
-            PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);
-            WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-            LeaveCriticalSection(flpCriticalSection);
-            return 0;
-         }
-      }
-   }
-
-   sprintf(fThreadP.sParam,"%s",fname);
-   fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   fontlist = (char **)fThreadP.pRet;
-   fontcount = fThreadP.iRet;
-
-   if (fontcount != 0) {
-      if (mode == kLoad) {
-         sprintf(fThreadP.sParam,"%s",fontname);
-         fThreadP.pRet = NULL;
-         PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         gTextFont = (GdkFont *)fThreadP.pRet;
-         fThreadP.GC = (GdkGC *) gGCtext;
-         fThreadP.pParam = gTextFont;
-         PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         fThreadP.GC = (GdkGC *) gGCinvt;
-         fThreadP.pParam = gTextFont;
-         PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         gFont[gCurrentFontNumber].id = gTextFont;
-         strcpy(gFont[gCurrentFontNumber].name, fname);
-         gCurrentFontNumber++;
-         if (gCurrentFontNumber == kMAXFONT)
-            gCurrentFontNumber = 0;
-      }
-      fThreadP.pParam = fontlist;
-      PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_FREE, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      LeaveCriticalSection(flpCriticalSection);
-      return 0;
-   } else {
-      LeaveCriticalSection(flpCriticalSection);
-      return 1;
-   }
-}
-
-//______________________________________________________________________________
-void TGWin32::SetTextFont(Font_t fontnumber)
-{
-   // Set current text font number.
-   // Set specified font.
-//*-*   Font ID       X11                       Win32 TTF       lfItalic  lfWeight  x 10
-//*-*        1 : times-medium-i-normal      "Times New Roman"      1           4
-//*-*        2 : times-bold-r-normal        "Times New Roman"      0           7
-//*-*        3 : times-bold-i-normal        "Times New Roman"      1           7
-//*-*        4 : helvetica-medium-r-normal  "Arial"                0           4
-//*-*        5 : helvetica-medium-o-normal  "Arial"                1           4
-//*-*        6 : helvetica-bold-r-normal    "Arial"                0           7
-//*-*        7 : helvetica-bold-o-normal    "Arial"                1           7
-//*-*        8 : courier-medium-r-normal    "Courier New"          0           4
-//*-*        9 : courier-medium-o-normal    "Courier New"          1           4
-//*-*       10 : courier-bold-r-normal      "Courier New"          0           7
-//*-*       11 : courier-bold-o-normal      "Courier New"          1           7
-//*-*       12 : symbol-medium-r-normal     "Symbol"               0           6
-//*-*       13 : times-medium-r-normal      "Times New Roman"      0           4
-//*-*       14 :                            "Wingdings"            0           4
-
-   char fx11[100];
-   fTextFont = fontnumber;
-   switch (fontnumber / 10) {
-   case 1:
-      sprintf(fx11, "-*-times-medium-i-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 2:
-      sprintf(fx11, "-*-times-bold-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 3:
-      sprintf(fx11, "-*-times-bold-i-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 4:
-      sprintf(fx11, "-*-arial-medium-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 5:
-      sprintf(fx11, "-*-arial-medium-o-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 6:
-      sprintf(fx11, "-*-arial-bold-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 7:
-      sprintf(fx11, "-*-arial-bold-o-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 8:
-      sprintf(fx11, "-*-courier-medium-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 9:
-      sprintf(fx11, "-*-courier-medium-o-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 10:
-      sprintf(fx11, "-*-courier-bold-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 11:
-      sprintf(fx11, "-*-courier-bold-o-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 12:
-      sprintf(fx11, "-*-symbol-medium-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 13:
-      sprintf(fx11, "-*-times-medium-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   case 14:
-      sprintf(fx11,
-              "-*-wingdings-medium-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   default:
-      sprintf(fx11, "-*-arial-bold-r-normal-*-15-*-*-*-*-*-iso8859-1");
-      break;
-   }
-   SetTextFont(fx11, kLoad);
-}
-
-//______________________________________________________________________________
-void TGWin32::SetTextSize(Float_t textsize)
-{
-   // Set current text size.
-
-   fTextSize = textsize;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.15 2003/02/11 12:29:07 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.16 2003/03/05 14:28:55 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -956,9 +956,9 @@ void TGWin32::CloseDisplay()
         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
         CloseHandle(fThreadP.hThrSem);
         CloseHandle(hGDKThread);
+        DeleteCriticalSection(flpCriticalSection);
     }
 
-    DeleteCriticalSection(flpCriticalSection);
 }
 
 //______________________________________________________________________________
