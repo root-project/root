@@ -1,5 +1,7 @@
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__STACK_DLL
 #pragma include_noerr <stack.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

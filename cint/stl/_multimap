@@ -1,7 +1,9 @@
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__MULTIMAP_DLL
 //#pragma include_noerr <pair.dll> 
 #pragma include_noerr <multimap.dll>
 #pragma include_noerr <multimap2.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

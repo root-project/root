@@ -1,6 +1,8 @@
 
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__MEMORY_DLL
 #pragma include_noerr <memory.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

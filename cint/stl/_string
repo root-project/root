@@ -4,8 +4,10 @@
 #define G__STRING
 
 
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__STRING_DLL
 #pragma include_noerr <string.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

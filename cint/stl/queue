@@ -1,8 +1,10 @@
 
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__QUEUE_DLL
 namespace std {
 #pragma include_noerr <queue.dll>
 }
+#endif
 #endif
 
 #ifdef __MAKECINT__

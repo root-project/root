@@ -1,6 +1,8 @@
 
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__ITERATOR_DLL
 #pragma include_noerr <iterator.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

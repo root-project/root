@@ -1,6 +1,8 @@
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__VECTOR_DLL
 #pragma include_noerr <vector.dll>
 #pragma include_noerr <vectorbool.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

@@ -1,6 +1,8 @@
 
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__CLIMITS_DLL
 #pragma include_noerr <climits.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__

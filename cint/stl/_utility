@@ -1,8 +1,10 @@
+#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__UTILITY_DLL
 #pragma include_noerr <utility.dll>
 #endif
 #ifndef G__PAIR_DLL
 #pragma include_noerr <pair.dll>
+#endif
 #endif
 
 #ifdef __MAKECINT__
