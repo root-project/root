@@ -165,7 +165,7 @@ G__ClassInfo {
   long ClassProperty();
 #endif
 #ifndef G__OLDIMPLEMENTATION2118
-  unsigned char FuncFlag() { return(IsValid()?G__struct.funcs[tagnum]:0); }
+  unsigned char FuncFlag();
 #endif
 
 };
