@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.32 2002/04/26 10:18:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.1 2002/05/20 15:10:08 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
+#include "Riostream.h"
 #include "TH1.h"
 #include "TMath.h"
 #include "TClass.h"
