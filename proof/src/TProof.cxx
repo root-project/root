@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.53 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.54 2003/09/12 17:36:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2278,10 +2278,10 @@ void TProof::SetActive(Bool_t active)
 
    if (fCondor) {
       if (active) {
-         Info("SetActive","-- Condor Resume --");
+         PDB(kCondor,1) Info("SetActive","-- Condor Resume --");
          fCondor->Resume();
       } else {
-         Info("SetActive","-- Condor Suspend --");
+         PDB(kCondor,1) Info("SetActive","-- Condor Suspend --");
          fCondor->Suspend();
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.40 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.41 2003/09/12 17:36:35 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -515,8 +515,8 @@ void CheckGlobus(char *rcfile)
       FILE *fs = fopen(s, "r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
-         sscanf(line, "%s %s %s", namenv, valenv, dummy);
-         if (!strcmp(namenv, "Proofd.Authentication:")) {
+         int n = sscanf(line, "%s %s %s", namenv, valenv, dummy);
+         if (n>1 && !strcmp(namenv, "Proofd.Authentication:")) {
             int sec = atoi(valenv);
             if (gDebug > 2) ErrorInfo("CheckGlobus: %s: %s (%d)", namenv, valenv, sec);
             if ((sGlobus != 1) && (sec == 3)) sGlobus = 1;

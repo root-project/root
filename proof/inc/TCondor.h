@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.1 2003/06/27 11:02:33 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -43,6 +43,8 @@ public:
    Int_t    fPerfIdx;
    TString  fImage;
    TString  fClaimID;
+
+   void        Print(Option_t *option="") const;
 
    ClassDef(TCondorSlave,0)  // Describes a claimed slave
 };

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.19 2003/09/12 17:36:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.20 2003/09/16 00:39:23 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -190,7 +190,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          if (details[i][0]) delete[] details[i][0];
          if (det[i]) delete[] det[i];
       }
-      if (nmeth) delete nmeth;
+      if (nmeth) delete [] nmeth;
       if (usr[0]) delete[] usr[0];
    }
 

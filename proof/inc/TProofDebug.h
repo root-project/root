@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDebug.h,v 1.4 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDebug.h,v 1.5 2002/11/15 18:14:40 rdm Exp $
 // Author: Maarten Ballintijn 19/6/2002
 
 /*************************************************************************
@@ -37,6 +37,7 @@ public:
       kGlobal        = 32,
       kPackage       = 64,
       kFeedback      = 128,
+      kCondor        = 256,
 
       kAll           = 0xFFFFFFFF
    };
