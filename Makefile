@@ -358,8 +358,10 @@ install:
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
 	   echo "Installing PROOF files in $(DESTDIR)$(PROOFDATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(PROOFDATADIR); \
-	   $(INSTALLDATA) proof/utils/*         $(DESTDIR)$(PROOFDATADIR); \
-	   $(INSTALLDATA) proof/etc/*           $(DESTDIR)$(PROOFDATADIR); \
+	   $(INSTALLDATA) proof/etc             $(DESTDIR)$(PROOFDATADIR); \
+	   $(INSTALLDATA) proof/utils           $(DESTDIR)$(PROOFDATADIR); \
+	   rm -rf $(DESTDIR)$(PROOFDATADIR)/etc/CVS; \
+	   rm -rf $(DESTDIR)$(PROOFDATADIR)/utils/CVS; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
@@ -382,19 +384,12 @@ install:
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/*                 $(DESTDIR)$(MANDIR); \
-	   echo "Installing system.rootrc in    $(DESTDIR)$(ETCDIR)"; \
+	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
-	   $(INSTALLDATA) system.rootrc         $(DESTDIR)$(ETCDIR); \
+	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
 	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
-	   if [ "$(USECONFIG)" = "TRUE" ]; then \
-	      echo "Installing root.mimes in $(DESTDIR)$(ETCDIR)"; \
-	      $(INSTALLDATA) icons/root.mimes   $(DESTDIR)$(ETCDIR); \
-	   else \
-	      echo "Installing root.mimes in $(DESTDIR)$(ICONPATH)"; \
-	      $(INSTALLDATA) icons/root.mimes   $(DESTDIR)$(ICONPATH); \
-	   fi \
 	fi
 
 showbuild:
