@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.1 2004/08/13 07:38:11 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -61,7 +61,7 @@ TGeoHalfSpace::~TGeoHalfSpace()
 }
 
 //_____________________________________________________________________________   
-void TGeoHalfSpace::ComputeNormal(Double_t */*point*/, Double_t *dir, Double_t *norm)
+void TGeoHalfSpace::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    memcpy(norm, fN, 3*sizeof(Double_t));

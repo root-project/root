@@ -1,4 +1,4 @@
-// @(#) :$Name:  $:$Id: Exp $
+// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.1 2004/08/13 07:38:11 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -51,16 +51,16 @@ public:
                                 Double_t start, Double_t step);
    virtual Double_t     *GetPoint()    {return fP;}
    virtual Double_t     *GetNorm()     {return fN;}
-   virtual void          GetBoundingCylinder(Double_t */*param*/) const {;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape */*mother*/, TGeoMatrix */*mat*/) const {return 0;}
+   virtual void          GetBoundingCylinder(Double_t * /*param*/) const {;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    virtual Int_t         GetNmeshVertices() const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
-   virtual void          Paint(Option_t */*option*/) {;}
+   virtual void          Paint(Option_t * /*option*/) {;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t */*buff*/) const {;}
-   virtual void          SetPoints(Float_t */*buff*/) const {;}
+   virtual void          SetPoints(Double_t * /*buff*/) const {;}
+   virtual void          SetPoints(Float_t * /*buff*/) const {;}
    virtual void          Sizeof3D() const {;}
 
   ClassDef(TGeoHalfSpace, 1)         // half-space class
