@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.12 2002/10/07 10:40:49 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.13 2002/11/11 16:23:16 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -42,7 +42,7 @@ class TMap : public TCollection {
 friend class  TMapIter;
 
 private:
-   THashTable   *fTable;     //Hash table used to store TAssociation's
+   THashTable   *fTable;     //Hash table used to store TPair's
 
 public:
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
@@ -61,6 +61,7 @@ public:
    TObject          *FindObject(const char *keyname) const;
    TObject          *FindObject(const TObject *key) const;
    TObject         **GetObjectRef(const TObject *obj) const { return fTable->GetObjectRef(obj); }
+   const THashTable *GetTable() const { return fTable; }
    TObject          *GetValue(const TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Print(Option_t *option="") const;
@@ -73,22 +74,22 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAssoc                                                               //
+// TPair                                                                //
 //                                                                      //
-// Internal class used by TMap to store associations.                   //
+// Class used by TMap to store (key,value) pairs.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TAssoc : public TObject {
+class TPair : public TObject {
 
 private:
    TObject  *fKey;
    TObject  *fValue;
 
 public:
-   TAssoc(TObject *key, TObject *value) : fKey(key), fValue(value) { }
-   TAssoc(const TAssoc &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
-   virtual               ~TAssoc() { }
+   TPair(TObject *key, TObject *value) : fKey(key), fValue(value) { }
+   TPair(const TPair &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
+   virtual               ~TPair() { }
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }
@@ -96,9 +97,11 @@ public:
    Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
-   
-   ClassDef(TAssoc,0);
+
+   ClassDef(TPair,0);
 };
+
+typedef TPair   TAssoc;     // for backward compatibility
 
 
 //////////////////////////////////////////////////////////////////////////

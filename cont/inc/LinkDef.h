@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.6 2002/07/01 22:56:04 rdm Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.7 2003/06/23 07:13:08 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,8 @@
 #pragma link C++ global kIterBackward;
 #pragma link C++ global gClassTable;
 #pragma link C++ global gObjectTable;
+
+#pragma link C++ typedef TAssoc;
 
 #pragma link C++ class TArray!;
 #pragma link C++ class TArrayC-!;
@@ -41,7 +43,7 @@
 #pragma link C++ class THashList;
 #pragma link C++ class TMap-;
 #pragma link C++ class TMapIter;
-#pragma link C++ class TAssoc;
+#pragma link C++ class TPair;
 #pragma link C++ class TObjArray-;
 #pragma link C++ class TObjArrayIter;
 #pragma link C++ class TObjectTable;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.20 2002/10/25 10:40:51 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.21 2003/05/15 11:02:18 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -103,7 +103,7 @@ namespace ROOT {
       }
 
       ClassRec_t *Find(const char *key) const {
-         const TAssoc *a = (const TAssoc *)fMap.FindObject(key);
+         const TPair *a = (const TPair *)fMap.FindObject(key);
          if (a) return (ClassRec_t*) a->Value();
          return 0;
       }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.12 2003/01/12 11:06:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.13 2003/05/12 16:44:08 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -297,7 +297,7 @@ Int_t TGButtonGroup::GetId(TGButton *button) const
    // Finds and returns the id of the button.
    // Returns -1 if the button is not a member of this group.
 
-   TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(button);
+   TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a)
       return (Int_t)Long_t(a->Value());
    else
@@ -326,7 +326,7 @@ void TGButtonGroup::ButtonPressed()
       TGButton *btn = (TGButton*)gTQSender;
 #endif
 
-   TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
       Int_t id = (Int_t)Long_t(a->Value());
       Pressed(id);
@@ -341,7 +341,7 @@ void TGButtonGroup::ButtonReleased()
 
    TGButton *btn = (TGButton*)gTQSender;
 
-   TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
       Int_t id = (Int_t)Long_t(a->Value());
       Released(id);
@@ -356,7 +356,7 @@ void TGButtonGroup::ButtonClicked()
 
    TGButton *btn = (TGButton*)gTQSender;
 
-   TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
       Int_t id = (Int_t)Long_t(a->Value());
       Clicked(id);

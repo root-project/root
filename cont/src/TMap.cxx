@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.9 2002/08/07 11:56:20 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.10 2002/10/07 10:40:49 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -70,7 +70,7 @@ void TMap::Add(TObject *key, TObject *value)
 
    if (IsArgNull("Add", key)) return;
 
-   fTable->Add(new TAssoc(key, value));
+   fTable->Add(new TPair(key, value));
    fSize++;
 }
 
@@ -102,7 +102,7 @@ void TMap::Clear(Option_t *option)
    if (IsOwner())
       Delete();
    else {
-      fTable->Delete(option);    // delete the TAssoc's
+      fTable->Delete(option);    // delete the TPair's
       fSize = 0;
    }
 }
@@ -133,13 +133,13 @@ void TMap::Delete(Option_t *option)
    // when they are allocated on the heap.
 
    TIter next(fTable);
-   TAssoc *a;
+   TPair *a;
 
-   while ((a = (TAssoc *)next()))
+   while ((a = (TPair *)next()))
       if (a->Key() && a->Key()->IsOnHeap())
          TCollection::GarbageCollect(a->Key());
 
-   fTable->Delete(option);   // delete the TAssoc's
+   fTable->Delete(option);   // delete the TPair's
    fSize = 0;
 }
 
@@ -150,13 +150,13 @@ void TMap::DeleteValues()
    // when they are allocated on the heap.
 
    TIter next(fTable);
-   TAssoc *a;
+   TPair *a;
 
-   while ((a = (TAssoc *)next()))
+   while ((a = (TPair *)next()))
       if (a->Value() && a->Value()->IsOnHeap())
          TCollection::GarbageCollect(a->Value());
 
-   fTable->Delete();   // delete the TAssoc's
+   fTable->Delete();   // delete the TPair's
    fSize = 0;
 }
 
@@ -167,16 +167,16 @@ void TMap::DeleteAll()
    // values when they are allocated on the heap.
 
    TIter next(fTable);
-   TAssoc *a;
+   TPair *a;
 
-   while ((a = (TAssoc *)next())) {
+   while ((a = (TPair *)next())) {
       if (a->Key()   && a->Key()->IsOnHeap())
          TCollection::GarbageCollect(a->Key());
       if (a->Value() && a->Value()->IsOnHeap())
          TCollection::GarbageCollect(a->Value());
    }
 
-   fTable->Delete();   // delete the TAssoc's
+   fTable->Delete();   // delete the TPair's
    fSize = 0;
 }
 
@@ -184,7 +184,7 @@ void TMap::DeleteAll()
 TObject *TMap::FindObject(const char *keyname) const
 {
    // Check if a (key,value) pair exists with keyname as name of the key.
-   // Returns a TAssoc* (need to downcast from TObject). Use Key() and
+   // Returns a TPair* (need to downcast from TObject). Use Key() and
    // Value() to get the pointers to the key and value, respectively.
    // Returns 0 if not found.
 
@@ -195,7 +195,7 @@ TObject *TMap::FindObject(const char *keyname) const
 TObject *TMap::FindObject(const TObject *key) const
 {
    // Check if a (key,value) pair exists with key as key.
-   // Returns a TAssoc* (need to downcast from TObject). Use Key() and
+   // Returns a TPair* (need to downcast from TObject). Use Key() and
    // Value() to get the pointers to the key and value, respectively.
    // Returns 0 if not found.
 
@@ -211,7 +211,7 @@ TObject *TMap::GetValue(const TObject *key) const
 
    if (IsArgNull("GetValue", key)) return 0;
 
-   TAssoc *a = (TAssoc *)fTable->FindObject(key);
+   TPair *a = (TPair *)fTable->FindObject(key);
    if (a) return a->Value();
    return 0;
 }
@@ -234,9 +234,9 @@ void TMap::Print(Option_t *option) const
    TRegexp re(option,kTRUE);
    Int_t nch = strlen(option);
    TIter next(fTable);
-   TAssoc *a;
+   TPair *a;
 
-   while ((a = (TAssoc*) next())) {
+   while ((a = (TPair*) next())) {
       TString s = a->Key()->GetName();
       if (nch && s != option && s.Index(re) == kNPOS) continue;
       printf("Key:   ");
@@ -265,8 +265,8 @@ TObject *TMap::Remove(TObject *key)
 
    if (!key) return 0;
 
-   TAssoc *a;
-   if ((a = (TAssoc *)fTable->FindObject(key))) {
+   TPair *a;
+   if ((a = (TPair *)fTable->FindObject(key))) {
       if (fTable->Remove(key)) {
          TObject *kobj = a->Key();
          delete a;
@@ -307,8 +307,8 @@ void TMap::Streamer(TBuffer &b)
       fName.Streamer(b);
       b << GetSize();
       TIter next(fTable);
-      TAssoc *a;
-      while ((a = (TAssoc*) next())) {
+      TPair *a;
+      while ((a = (TPair*) next())) {
          b << a->Key();
          b << a->Value();
       }
@@ -318,12 +318,12 @@ void TMap::Streamer(TBuffer &b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAssoc                                                               //
+// TPair                                                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-void TAssoc::Browse(TBrowser *b)
+void TPair::Browse(TBrowser *b)
 {
    if (b) {
       if (fKey)   b->Add(fKey);
@@ -417,7 +417,7 @@ TObject *TMapIter::Next()
    if (!fCursor)
       fCursor = new THashTableIter(fMap->fTable, fDirection);
 
-   TAssoc *a = (TAssoc *)fCursor->Next();
+   TPair *a = (TPair *)fCursor->Next();
    if (a) return a->Key();
    return 0;
 }

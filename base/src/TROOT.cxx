@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.93 2003/06/11 16:09:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.94 2003/06/13 06:14:19 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -230,7 +230,7 @@ namespace ROOT {
          fMap.Add(realkey, obj);
       }
       TClass* Find(const char* key) const {
-         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+         const TPair* a = (const TPair *)fMap.FindObject(key);
          if (a) return (TClass*) a->Value();
          return 0;
       }
@@ -786,7 +786,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
        strstr(name, "multiset<") || strstr(name, "::" ))
       return 0;   //reject STL containers
 
-   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long")) 
+   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
       return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
@@ -986,7 +986,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
 
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
-      
+
       if (faddr == (Long_t)G__exec_bytecode) {
          // the method is actually interpreted, its address is
          // not a discriminant (it always point to the same
@@ -994,7 +994,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
 
          TString mangled = fInterpreter->GetMangledName(0, function, params);
          while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod() 
+            if (faddr == (Long_t) f->InterfaceMethod()
                 && mangled == f->GetMangledName()) return f;
          }
 
@@ -1037,10 +1037,10 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
          // function (G__exec_bytecode).
 
          TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
-                                                                     function, 
+                                                                     function,
                                                                      proto);
          while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod() 
+            if (faddr == (Long_t) f->InterfaceMethod()
                 && mangled == f->GetMangledName()) return f;
          }
 
