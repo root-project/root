@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.1 2004/10/08 09:07:10 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.2 2004/10/19 15:20:56 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 
@@ -16,7 +16,6 @@
 #include "TArrayI.h"
 #include "TMatrixDSym.h"
 #include "TMatrixDSymEigen.h"
-#include "TH1D.h"
 
 class TRobustEstimator : public TObject {
 
@@ -94,11 +93,13 @@ public:
   const   TVectorD* GetMean() const {return &fMean;}       //returns robust mean vector estimate
   void    GetRDistances(TVectorD &rdist);                  //returns robust distances of all observations
   const   TVectorD* GetRDistances() const {return &fRd;}   //returns robust distances of all observations
-  TH1D*   GetRDistHisto();  
+  Int_t   GetNumberObservations() const {return fN;}
+  Int_t   GetNvar() const {return fNvar;}
   const   TArrayI* GetOuliers() const{return &fOut;}       //returns an array of outlier indexes
   Int_t   GetNOut(); //returns the number of points outside the tolerance ellipsoid.
                      //ONLY those with robust distances significantly larger than the
                      //cutoff value, should be considered outliers!
+  Double_t GetChiQuant(Int_t i) const;
   
   ClassDef(TRobustEstimator,1)  //Minimum Covariance Determinant Estimator
  

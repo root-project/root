@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.4 2004/10/19 15:20:56 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.5 2004/10/19 15:50:50 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -673,6 +673,14 @@ Int_t TRobustEstimator::GetBDPoint()
   n=(fN-fH+1)/fN;
   return n;
 }
+
+//_______________________________________________________________________
+Double_t TRobustEstimator::GetChiQuant(Int_t i) const
+{
+   if (i < 0 || i >= 50) return 0;
+   return kChiQuant[i];
+}
+
 //_______________________________________________________________________
 void TRobustEstimator::GetCovariance(TMatrixDSym &matr)
 {
@@ -736,24 +744,6 @@ void TRobustEstimator::GetRDistances(TVectorD &rdist)
      rdist.ResizeTo(fN);
   }
   rdist=fRd;
-}
-
-//_________________________________________________________________________
-TH1D* TRobustEstimator::GetRDistHisto()
-{
-  Double_t mb=4*kChiQuant[fNvar-1];
-  TH1D *histo=new TH1D("RDist", "RDist", 100, 0, mb);
-  for (Int_t i=0; i<fN; i++)
-    histo->Fill(fRd(i));
-
-  Char_t buffer[30];
-  sprintf(buffer, "cutoff = %f", kChiQuant[fNvar-1]);
-  //TPaveLabel *pl=new TPaveLabel(0.7, 0.77, 0.98, 0.82, buffer, "brNDC");
-  //pl->SetTextFont(62);
-  //pl->SetTextSize(0.5);
-  //histo->GetListOfFunctions()->Add(pl);
-
-  return histo;
 }
 
 //__________________________________________________________________________
