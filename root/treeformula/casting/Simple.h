@@ -5,7 +5,6 @@
 // Simple class
 //
 #include "TShape.h"
-#include <iostream.h>
 
 class Simple : public TObject {
 

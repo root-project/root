@@ -1,8 +1,10 @@
 //
 // Simple.cxx
 //
-#include <iostream.h>
+#include <iostream>
 #include "Simple.h"
+
+namespace std {} using namespace std;
 
 ClassImp(Simple)
 ClassImp(Simple)
