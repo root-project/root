@@ -472,6 +472,7 @@ int G__asm_test_g G__P((int *a,int *b));
 int G__asm_test_l G__P((int *a,int *b));
 long G__asm_gettest G__P((int op,long *inst));
 int G__asm_optimize G__P((int *start));
+int G__asm_optimize3 G__P((int *start));
 int G__inc_cp_asm G__P((int cp_inc,int dt_dec));
 int G__clear_asm G__P((void));
 int G__asm_clear G__P((void));
@@ -823,7 +824,7 @@ int G__loadfile_tmpfile G__P((FILE *fp));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2030
-int G__callfunc0 G__P((G__value *result,struct G__ifunc_table *ifunc,int ifn,struct G__param* libp,void* p));
+int G__callfunc0 G__P((G__value *result,struct G__ifunc_table *ifunc,int ifn,struct G__param* libp,void* p,int funcmatch));
 int G__calldtor G__P((void* p,int tagnum,int isheap));
 #endif
 
@@ -835,6 +836,12 @@ int G__display_replacesymbol G__P((FILE *fout,const char* name));
 #endif
 
 void G__asm_storebytecodefunc G__P((struct G__ifunc_table *ifunc,int ifn,struct G__var_array *var,G__value *pstack,int sp,long *pinst,int instsize));
+
+#ifndef G__OLDIMPLEMENTATION2042
+void G__push_autoobjectstack G__P((void *p,int tagnum,int num
+			           ,int scopelevel,int isheap)) ;
+void G__delete_autoobjectstack G__P((int scopelevel)) ;
+#endif
 
 #ifdef __cplusplus
 }

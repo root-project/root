@@ -965,10 +965,24 @@ int var_type;
 #ifndef G__OLDIMPLEMENTATION776
        && G__LOCALSTATIC!=var->statictype[ig15]
 #endif
-       ) 
+	) {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg)
+        G__fprinterr(G__serr,
+	        "%3x: ST_LVAR  %s index=%d paran=%d\n"
+	        ,G__asm_cp,item,ig15,paran);
+#endif
       G__asm_inst[G__asm_cp]=G__ST_LVAR;
-    else
+    }
+    else {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg)
+        G__fprinterr(G__serr,
+	        "%3x: ST_VAR  %s index=%d paran=%d\n"
+	        ,G__asm_cp,item,ig15,paran);
+#endif
       G__asm_inst[G__asm_cp]=G__ST_VAR;
+    }
 #else
     G__asm_inst[G__asm_cp]=G__ST_VAR;
 #endif
@@ -1082,8 +1096,11 @@ G__value result;
       else addstros_value=0;
       letvvalflag=0;
       store_asm_inst=G__asm_inst[G__asm_cp-5];
-      if(G__ST_VAR==store_asm_inst) G__asm_inst[G__asm_cp-5] = G__LD_VAR;
-      else                          G__asm_inst[G__asm_cp-5] = G__LD_MSTR;
+      if(G__ST_VAR==store_asm_inst) G__asm_inst[G__asm_cp-5]=G__LD_VAR;
+#ifndef G__OLDIMPLEMENTATION2060
+      else if(G__ST_LVAR==store_asm_inst) G__asm_inst[G__asm_cp-5]=G__LD_LVAR;
+#endif
+      else                          G__asm_inst[G__asm_cp-5]=G__LD_MSTR;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	G__fprinterr(G__serr,"ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR");
@@ -5410,8 +5427,14 @@ long G__struct_offset; /* used to be int */
 #ifdef G__ASM
 	if(G__asm_noverflow) {
 	  store_asm_inst=G__asm_inst[G__asm_cp-5];
-	  if(G__ST_VAR==store_asm_inst) G__asm_inst[G__asm_cp-5] = G__LD_VAR;
-	  else                          G__asm_inst[G__asm_cp-5] = G__LD_MSTR;
+	  if(G__ST_VAR==store_asm_inst) 
+	      G__asm_inst[G__asm_cp-5] = G__LD_VAR;
+#ifndef G__OLDIMPLEMENTATION2060
+	  else if(G__ST_LVAR==store_asm_inst) 
+	      G__asm_inst[G__asm_cp-5] = G__LD_LVAR;
+#endif
+	  else 
+	      G__asm_inst[G__asm_cp-5] = G__LD_MSTR;
 	  G__asm_inst[G__asm_cp] = G__PUSHSTROS;
 	  G__asm_inst[G__asm_cp+1] = G__SETSTROS;
 	  G__inc_cp_asm(2,0);

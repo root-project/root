@@ -520,6 +520,10 @@ int G__mask_error=0;
 G__eolcallback_t G__eolcallback;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2042
+int G__scopelevel=0;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

@@ -445,10 +445,19 @@
 #ifndef G__OLDIMPLEMENTATION2042
 #define G__ENTERSCOPE         0x0047
 #define G__EXITSCOPE          0x0048
+#define G__PUTAUTOOBJ         0x0049
+#define G__PUTHEAPOBJ         0x0050 /* not implemented yet */
 #endif
-#define G__CASE               0x0049
+#define G__CASE               0x0051
 
-#define G__NOP                0xffff
+#define G__NOP                0x00ff
+
+#define G__INSTMASK       0x000000ff
+#define G__LINENUMMASK    0xffffff00
+
+#define G__INST(x)  x
+/* #define G__INST(x) (x&G__INSTMASK) */ /* not ready yet */
+#define G__LINE(x) ((x&G__LINEMASK)/0x100)
 
 struct G__breakcontinue_list {
   int destination;

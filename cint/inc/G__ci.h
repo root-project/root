@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000000
-#define G__CINTVERSIONSTR  "6.0.0, May 9 2004"
+#define G__CINTVERSION      6000001
+#define G__CINTVERSIONSTR  "6.0.1, May 17 2004"
 #else
-#define G__CINTVERSION      50150136
-#define G__CINTVERSIONSTR  "5.15.136, May 9 2004"
+#define G__CINTVERSION      50150137
+#define G__CINTVERSIONSTR  "5.15.137, May 17 2004"
 #endif
 
 #define G__ALWAYS
@@ -36,7 +36,13 @@
 **********************************************************************/
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2058
+/* #define G__OLDIMPLEMENTATION2057 */
+/* #define G__OLDIMPLEMENTATION2056 */
+#define G__OLDIMPLEMENTATION2054
 #define G__OLDIMPLEMENTATION2051
+#define G__OLDIMPLEMENTATION2042
+#define G__OLDIMPLEMENTATION1073
 #endif
 
 /* Problem remains with autoloading if library is unloaded. Tried to fix it
@@ -180,7 +186,6 @@
  * instantiation in a function. Because the change includes some
  * problems , it is turned off at this moment by defining following
  * macro. */
-#define G__OLDIMPLEMENTATION1073
 #ifdef G__OLDIMPLEMENTATION1073
 /* define related macros here */
 #endif

@@ -650,6 +650,51 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   method.Init((long)ifunc,index,this);
   return(method);
 }
+#ifndef G__OLDIMPLEMENTATION2059
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
+  long dmy;
+  G__MethodInfo method;
+  char *fname= (char*)malloc(strlen(Name())+1);
+  sprintf(fname,"%s",Name());
+  method = GetMethod(fname,"",&dmy);
+  free((void*)fname);
+  return(method);
+}
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::GetCopyConstructor() {
+  long dmy;
+  G__MethodInfo method;
+  char *fname= (char*)malloc(strlen(Name())+1);
+  sprintf(fname,"%s",Name());
+  char *arg= (char*)malloc(strlen(Name())+10);
+  sprintf(arg,"const %s&",Name());
+  method = GetMethod(fname,arg,&dmy);
+  free((void*)arg);
+  free((void*)fname);
+  return(method);
+}
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::GetDestructor() {
+  long dmy;
+  G__MethodInfo method;
+  char *fname= (char*)malloc(strlen(Name())+2);
+  sprintf(fname,"~%s",Name());
+  method = GetMethod(fname,"",&dmy);
+  free((void*)fname);
+  return(method);
+}
+///////////////////////////////////////////////////////////////////////////
+G__MethodInfo G__ClassInfo::GetAssignOperator() {
+  long dmy;
+  G__MethodInfo method;
+  char *arg= (char*)malloc(strlen(Name())+10);
+  sprintf(arg,"const %s&",Name());
+  method = GetMethod("operator=",arg,&dmy);
+  free((void*)arg);
+  return(method);
+}
+#endif
 ///////////////////////////////////////////////////////////////////////////
 G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
 {

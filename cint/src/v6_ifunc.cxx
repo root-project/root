@@ -210,6 +210,14 @@ int instsize;
 #endif
 }
 
+#ifndef G__OLDIMPLEMENTATION2058
+/**************************************************************************
+* from bc_autoobj.h/cxx
+**************************************************************************/
+void* G__allocheapobjectstack G__P((struct G__ifunc_table* ifunc,int ifn,int scopelevel));
+void G__copyheapobjectstack G__P((void* p,G__value* result,struct G__ifunc_table *ifunc,int ifn));
+#endif
+
 /**************************************************************************
 * G__exec_bytecode()
 *
@@ -247,6 +255,9 @@ int hash; /* not used */
 #ifndef G__OLDIMPLEMENTATION1016
   struct G__var_array *var;
 #endif
+#ifndef G__OLDIMPLEMENTATION2058
+  void *ptmpbuf;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1911
   if(0 && hash) return(0); /* dummy */
@@ -256,6 +267,10 @@ int hash; /* not used */
   bytecode = (struct G__bytecodefunc*)funcname;
 #ifndef G__OLDIMPLEMENTATION1016
   var = bytecode->var;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2058
+  ptmpbuf=G__allocheapobjectstack(bytecode->ifunc,bytecode->ifn,++G__scopelevel);
 #endif
 
 #ifdef G__ASM_DBG
@@ -273,6 +288,7 @@ int hash; /* not used */
 	      ,(long)G__asm_stack,(long)asm_stack_g);
   }
 #endif
+
 
   /* Push loop compilation environment */
   store_asm_inst = G__asm_inst;
@@ -405,6 +421,10 @@ int hash; /* not used */
   ++bytecode->ifunc->busy[bytecode->ifn];
   G__exec_asm(/*start*/0,/*stack*/libp->paran,result7,localmem);
   --bytecode->ifunc->busy[bytecode->ifn];
+
+#ifndef G__OLDIMPLEMENTATION1259
+  result7->isconst = bytecode->ifunc->isconst[bytecode->ifn];
+#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     char temp[G__ONELINE];
@@ -412,10 +432,6 @@ int hash; /* not used */
   }
 #endif
   if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
-  
-#ifndef G__OLDIMPLEMENTATION1259
-  result7->isconst = bytecode->ifunc->isconst[bytecode->ifn];
-#endif
 
   /* free local memory */
   if(bytecode->varsize>G__LOCALBUFSIZE) free((void*)localmem);
@@ -463,6 +479,11 @@ int hash; /* not used */
   G__exec_memberfunc = store_exec_memberfunc;
   G__memberfunc_struct_offset=store_memberfunc_struct_offset;
   G__memberfunc_tagnum=store_memberfunc_tagnum;
+
+#ifndef G__OLDIMPLEMENTATION2058
+  if(ptmpbuf) G__copyheapobjectstack(ptmpbuf,result7,bytecode->ifunc,bytecode->ifn);
+  G__delete_autoobjectstack(--G__scopelevel);
+#endif
 
   return(0);
 }
@@ -1062,7 +1083,6 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #else
     strcpy(G__p_ifunc->funcname[func_now],funcheader);
 #endif
-
     if((char*)NULL!=(pt1=strstr(funcheader,">>")) && 
        (char*)NULL!=strchr(funcheader,'<')) {
       char *pt2;
@@ -1071,13 +1091,16 @@ char *funcheader;   /* funcheader = 'funcname(' */
       *pt2 = ' ';
       ++pt2;
       strcpy(pt2,pt1+1);
-    } else if ((char*)NULL!=strstr(funcheader,"operator<<") &&
+    }
+#ifndef G__OLDIMPLEMENTATION2055
+    else if ((char*)NULL!=strstr(funcheader,"operator<<") &&
                (char*)NULL!=strchr(funcheader,'>') ) { 
        /* we might have operator< <> or operator< <double> 
           with the space missing */
        char *pt2;
        pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        pt1 = funcheader + strlen( "operator<" );
+       //char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        if ( *(pt2+2)=='<' ) {
           /* we have operator<< <...> */
           ++pt2;
@@ -1085,7 +1108,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
        *pt2 = ' ';
        ++pt2;
        strcpy(pt2,pt1);        
-    }
+     }
+#endif
   }
   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now])-1]
     ='\0';
@@ -5483,7 +5507,9 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1727
   char *pexplicitarg;
 #endif
+#ifndef G__OLDIMPLEMENTATION2061
   int templatedConstructor = 0;
+#endif
 
   funcname = (char*)malloc(strlen(funcnamein)+1);
   strcpy(funcname,funcnamein);
@@ -5500,27 +5526,40 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1560
   ptmplt = strchr(funcname,'<');
   if(ptmplt) {
-     if ((-1!=env_tagnum) && strcmp(funcname,G__struct.name[env_tagnum])==0) {
-        /* this is probably a template constructor of a class template */
-        templatedConstructor = 1;
-        ptmplt = (char*)0;
-        pexplicitarg = 0;
-     } else {
-        int tmp;
-        *ptmplt = 0; 
-        if(G__defined_templatefunc(funcname)) {
-           G__hash(funcname,hash,tmp);
-        }
-        else {
-           *ptmplt = '<';
-           ptmplt = (char*)0;
-        }
-     }
+#ifndef G__OLDIMPLEMENTATION2061
+    if ((-1!=env_tagnum) && strcmp(funcname,G__struct.name[env_tagnum])==0) {
+       /* this is probably a template constructor of a class template */
+       templatedConstructor = 1;
+       ptmplt = (char*)0;
+       pexplicitarg = 0;
+    } 
+    else {
+      int tmp;
+      *ptmplt = 0; 
+      if(G__defined_templatefunc(funcname)) {
+         G__hash(funcname,hash,tmp);
+      }
+      else {
+         *ptmplt = '<';
+         ptmplt = (char*)0;
+      }
+    }
+#else /* 2061 */
+    int tmp;
+    *ptmplt = 0; 
+    if(G__defined_templatefunc(funcname)) {
+      G__hash(funcname,hash,tmp);
+    }
+    else {
+      *ptmplt = '<';
+      ptmplt = (char*)0;
+    }
+#endif /* 2061 */
   }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1727
-  if(!templatedConstructor && (pexplicitarg=strchr(funcname,'<'))) {
+  if((pexplicitarg=strchr(funcname,'<'))) {
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;

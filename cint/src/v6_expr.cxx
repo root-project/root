@@ -2217,7 +2217,7 @@ char *item;
 	while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
 	  item[--ulonglen]=0;
         if(strcmp(ulongmax,item)!=0) 
-          G__genericerror("Error: integer literal too large");
+          G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
       } 
 #ifndef G__OLDIMPLEMENTATION1874
       if('u'!=c) {

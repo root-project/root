@@ -5,7 +5,7 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/cygwin51_gcc3_so
+# platform/cygwin51_gcc3_so_v6
 #  Platform dependent information for Cygwin_NT-5.1
 #  using gcc-3.00
 #  Build libcint.dll instead of G__ci.a
@@ -35,7 +35,7 @@ LDDLLOPT    = -shared
 OPTIMIZE    = -O
 LDOPT       = -lm -ltermcap -lreadline
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__CYGWIN=51 -DG__NEWSTDHEADER
-OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION $(CCDLLPOST) -DG__GNUREADLINE
+OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION $(CCDLLPOST) -DG__GNUREADLINE -DG__CINT_VER6
 SYSIPATH    =
 
 # libraries
@@ -46,6 +46,7 @@ APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc
 RANLIB	    = /usr/bin/ranlib
 STDLIBS     = gcc3strm.o stdstrct.o
 PLATFORM    = $(CINTSYSDIR)/main/G__setup.o
+CINT_V6     = bc_autoobj.o bc_cfunc.o bc_inst.o bc_parse.o bc_reader.o bc_type.o bc_dict.o
 
 # source code postfix
 CSRCPOST    = .c
@@ -54,8 +55,6 @@ CPPSRCPOST  = .C
 CPPHDRPOST  = .h
 OBJPOST     = .o
 DLLPOST     = .dll
-
-
 
 
 
@@ -74,7 +73,7 @@ INPUTMODELOCK = off
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /cygdrive/d/gotom/src/cint
+CINTSYSDIR = /cygdrive/c/usr/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = pthread.dll
 OPTION     = $(CCDLLOPT)

@@ -430,7 +430,7 @@ long localmem;
     */
 #endif
 
-    switch(G__asm_inst[pc]) {
+    switch(G__INST(G__asm_inst[pc])) {
 
     case G__LDST_VAR_P:
       /***************************************
@@ -1261,7 +1261,7 @@ long localmem;
 #define G__TUNEUP_BY_SEPARATION
 #if defined(G__TUNEUP_BY_SEPARATION) && !defined(G__ASM_DBG)
     }
-    switch(G__asm_inst[pc]) {
+    switch(G__INST(G__asm_inst[pc])) {
 #endif
 
     case G__LD_VAR:
@@ -2583,12 +2583,16 @@ long localmem;
       * 1 index
       * 2 var_array pointer
       ***************************************/
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) 
-	G__fprinterr(G__serr,"%3x,%d: CTOR_SETGVP\n",pc,sp);
+#ifndef G__OLDIMPLEMENTATION2054
+      store_globalvarpointer[gvpp++] = G__globalvarpointer; /* ??? */
 #endif
       var=(struct G__var_array*)G__asm_inst[pc+2];
       G__globalvarpointer = localmem+var->p[G__asm_inst[pc+1]];
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: CTOR_SETGVP %p\n",pc,sp
+		     ,G__globalvarpointer);
+#endif
       pc+=3;
 #ifdef G__ASM_DBG
       break;
@@ -2699,7 +2703,6 @@ long localmem;
 
 #endif /* 1437 */
 
-#define G__OLDIMPLEMENTATION2042 /* need newsrc/autoobj.h/.cxx */
 #ifndef G__OLDIMPLEMENTATION2042
     case G__ENTERSCOPE:
       /***************************************
@@ -2727,6 +2730,29 @@ long localmem;
 #endif
       G__delete_autoobjectstack(--G__scopelevel);
       ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__PUTAUTOOBJ:
+      /***************************************
+      * inst
+      * 0 PUTAUTOOBJ
+      * 1 var
+      * 2 ig15
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+       G__fprinterr(G__serr,"%3x,%d: PUTAUTOOBJ\n",pc,sp);
+#endif
+      var=(struct G__var_array*)G__asm_inst[pc+1];
+      i=(int)G__asm_inst[pc+2];
+      G__push_autoobjectstack((void*)localmem+var->p[i]
+			      ,var->p_tagtable[i],var->varlabel[i][1]+1
+                              ,G__scopelevel,0);
+      pc+=3;
 #ifdef G__ASM_DBG
       break;
 #else
@@ -8860,7 +8886,7 @@ int *start;
 
   while(pc<G__MAXINST) {
 
-    switch(G__asm_inst[pc]) {
+    switch(G__INST(G__asm_inst[pc])) {
 
     case G__LDST_VAR_P:
       /***************************************
@@ -10436,7 +10462,7 @@ int *start;
       * 0 ENTERSCOPE
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ENTERSCOPE\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: ENTERSCOPE\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -10448,10 +10474,24 @@ int *start;
       * 0 EXITSCOPE
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: EXITSCOPE\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: EXITSCOPE\n",pc);
 #endif
       /* no optimization */
       ++pc;
+      break;
+
+    case G__PUTAUTOOBJ:
+      /***************************************
+      * inst
+      * 0 PUTAUTOOBJ
+      * 1 var
+      * 2 ig15
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PUTAUTOOBJ\n",pc);
+#endif
+      /* no optimization */
+      pc+=3;
       break;
 #endif /* 2042 */
 
@@ -10506,7 +10546,7 @@ int isthrow;
 
   while(pc<G__MAXINST) {
 
-    switch(G__asm_inst[pc]) {
+    switch(G__INST(G__asm_inst[pc])) {
 
     case G__LDST_VAR_P:
       /***************************************
@@ -11666,7 +11706,7 @@ int isthrow;
       * 0 ENTERSCOPE
       ***************************************/
 #ifdef G__ASM_DBG
-      if(0==isthrow) G__fprinterr(G__serr,"%3x,%d: ENTERSCOPE\n",pc,sp);
+      if(0==isthrow) G__fprinterr(G__serr,"%3x: ENTERSCOPE\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -11678,10 +11718,24 @@ int isthrow;
       * 0 EXITSCOPE
       ***************************************/
 #ifdef G__ASM_DBG
-      if(0==isthrow) G__fprinterr(G__serr,"%3x,%d: EXITSCOPE\n",pc,sp);
+      if(0==isthrow) G__fprinterr(G__serr,"%3x: EXITSCOPE\n",pc);
 #endif
       /* no optimization */
       ++pc;
+      break;
+
+    case G__PUTAUTOOBJ:
+      /***************************************
+      * inst
+      * 0 PUTAUTOOBJ
+      * 1 var
+      * 2 ig15
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) G__fprinterr(G__serr,"%3x: PUTAUTOOBJ\n",pc);
+#endif
+      /* no optimization */
+      pc+=3;
       break;
 #endif /* 2042 */
 
