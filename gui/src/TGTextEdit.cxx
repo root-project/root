@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.22 2003/12/12 18:21:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.23 2003/12/12 18:57:22 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1615,19 +1615,17 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
    out << "   TGTextEdit *";
    out << GetName() << " = new TGTextEdit(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
-       //<< "," << GetText()
-       //<< "," << WidgetId()
        << ");"<< endl;
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
-   char *fn=0;    // file name
-
+   char fn[kMAXPATHLEN];
+   
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
+      sprintf(fn, gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
    } else {
-      sprintf(fn,"Text%i",GetName()+5);
+      sprintf(fn,"Txt%s",GetName()+5);
       txt->Save(fn);
    }
    out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
