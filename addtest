@@ -45,15 +45,6 @@ rm Makefile
 sed -e "s/mytest/$1/g" Makefile1 > Makefile
 rm Makefile1
 
-#sed -e "s/mytest/$1/g" Makefile1 > Makefile
-#rm Makefile1
-#mv Makefile1 Makefile
-
-
-#sed -e "s/testWithDiff/$1/g" Makefile1 > Makefile
-#rm Makefile1
-
-#echo >> Makefile
 echo "$1 : $1.log" >> Makefile
 echo "	\$(TestDiff)" >> Makefile
 
