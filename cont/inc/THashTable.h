@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.8 2005/02/08 08:27:10 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.9 2005/03/24 07:13:35 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -65,11 +65,13 @@ public:
    TList        *GetListForObject(const char *name) const;
    TList        *GetListForObject(const TObject *obj) const;
    TObject     **GetObjectRef(const TObject *obj) const;
+   Int_t         GetRehashLevel() const { return fRehashLevel; }
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject      *Remove(TObject *obj);
    TObject      *RemoveSlow(TObject *obj);
+   void          SetRehashLevel(Int_t rehash) { fRehashLevel = rehash; }
 
    ClassDef(THashTable,0)  //A hash table
 };
