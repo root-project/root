@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.151 2004/08/03 05:25:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.152 2004/08/12 04:33:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
 //
 
 //______________________________________________________________________________
-TTreeFormula::TTreeFormula(): TFormula()
+TTreeFormula::TTreeFormula(): TFormula(), fDidBooleanOptimization(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default constructor*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
@@ -137,7 +137,7 @@ TTreeFormula::TTreeFormula(): TFormula()
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
-  :TFormula()
+  :TFormula(), fDidBooleanOptimization(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*Normal Tree Formula constructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
@@ -626,6 +626,19 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       Int_t code = fNcodes++;
       fCodes[code] = 0;
       fLookupType[code] = kLength;
+      return code;
+   }
+   static const char *lenfunc = "Length$(";
+   if (strncmp(cname,"Length$(",strlen(lenfunc))==0
+       && cname[strlen(cname)-1]==')') {
+
+      TString subform = cname+strlen(lenfunc);
+      subform.Remove( subform.Length() - 1 );
+      TTreeFormula *lengthForm = new TTreeFormula("lengthForm",subform,fTree);
+      fAliases.AddAtAndExpand(lengthForm,fNoper);
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kLengthFunc;
       return code;
    }
    static const char *altfunc = "Alt$(";
@@ -2275,6 +2288,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                         return fNdata[0]+1;
                      }
                   }
+                  if (fDidBooleanOptimization && local_index!=0) { 
+                     // Force the loading of the index.  
+                     fVarIndexes[codeindex][0]->LoadBranches();
+                  }
                   local_index = (Int_t)fVarIndexes[codeindex][0]->EvalInstance(local_index);
                }
                real_instance = local_index * fCumulSizes[codeindex][1];
@@ -2298,6 +2315,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 
             switch (fIndexes[codeindex][0]) {
             case -2:
+               if (fDidBooleanOptimization && instance!=0) { 
+                  // Force the loading of the index.  
+                  fVarIndexes[codeindex][0]->LoadBranches();
+               }
                local_index = (Int_t)fVarIndexes[codeindex][0]->EvalInstance(instance);
                if (local_index<0) {
                   Error("EvalInstance","Index %s is out of bound (%d) in formula %s",
@@ -2381,6 +2402,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   }
                   if (fIndexes[codeindex][dim]==-2) {
                      // NOTE: Should we check that this is a valid index?
+                     if (fDidBooleanOptimization && local_index!=0) { 
+                        // Force the loading of the index.  
+                        fVarIndexes[codeindex][dim]->LoadBranches();
+                     }
                      local_index = (Int_t)fVarIndexes[codeindex][dim]->EvalInstance(local_index);
                      if (local_index<0 ||
                          local_index>=(fCumulSizes[codeindex][dim]/fCumulSizes[codeindex][dim+1])) {
@@ -2406,6 +2431,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   local_index = instance;
                }
                if (fIndexes[codeindex][max_dim]==-2) {
+                  if (fDidBooleanOptimization && local_index!=0) { 
+                     // Force the loading of the index.  
+                     fVarIndexes[codeindex][max_dim]->LoadBranches();
+                  }
                   local_index = (Int_t)fVarIndexes[codeindex][max_dim]->EvalInstance(local_index);
                   if (local_index<0 ||
                          local_index>=fCumulSizes[codeindex][max_dim]) {
@@ -2491,6 +2520,7 @@ void* TTreeFormula::EvalObject(int instance)
       case kIndexOfEntry:
       case kEntries:
       case kLength:
+      case kLengthFunc:
       case kIteration:
         return 0;
    }
@@ -2581,7 +2611,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       /* In the cases where we are behind (i.e. right of) a potential boolean optimization      \
          this tree variable reading may have not been executed with instance==0 which would     \
          result in the branch being potentially not read in. */                                 \
-      if (haveSeenBooleanOptimization) {                                                        \
+      if (fDidBooleanOptimization) {                                                            \
          TBranch *br = leaf->GetBranch();                                                       \
          Long64_t treeEntry = br->GetTree()->GetReadEntry();                                    \
          if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
@@ -2613,6 +2643,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kIndexOfEntry: return fTree->GetReadEntry();
          case kEntries:      return fTree->GetEntries();
          case kLength:       return fManager->fNdata;
+         case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
 
          case -1: break;
@@ -2627,20 +2658,18 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return gcut->IsInside(xcut,ycut);
          }
          case -1: {
-            TCutG *gcut = (TCutG*)fMethods.At(0);
-            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            TCutG *gcut = (TCutG*)fMethods.At(0);            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             return fx->EvalInstance(instance);
          }
          default: return 0;
       }
    }
 
-
    Double_t tab[kMAXFOUND];
    const Int_t kMAXSTRINGFOUND = 10;
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
-   Bool_t haveSeenBooleanOptimization = kFALSE;
+   if (instance==0) fDidBooleanOptimization = kFALSE;
 
    Int_t pos  = 0;
    Int_t pos2 = 0;
@@ -2781,8 +2810,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                if (skip) {
                   int toskip = param / 10;
                   i += toskip;
-               }
-               haveSeenBooleanOptimization = kTRUE;
+                  if (instance==0) fDidBooleanOptimization = kTRUE;
+              }
                continue;
             }
 
@@ -2836,6 +2865,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kIndexOfEntry: tab[pos++] = fTree->GetReadEntry(); continue;
                case kEntries:      tab[pos++] = fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
+               case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata();
                case kIteration:    tab[pos++] = instance; continue;
 
                case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
@@ -2945,7 +2975,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   // In the cases where we are beind (i.e. right of) a potential boolean optimization
                   // this tree variable reading may have not been executed with instance==0 which would
                   // result in the branch being potentially not read in.
-                  if (haveSeenBooleanOptimization) {
+                  if (fDidBooleanOptimization) {
                      TBranch *br = leafc->GetBranch();
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
@@ -3129,6 +3159,7 @@ Bool_t TTreeFormula::IsInteger() const
          case kIndexOfEntry:
          case kEntries:
          case kLength:
+         case kLengthFunc:
          case kIteration:
            return kTRUE;
          default:
@@ -3154,6 +3185,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kIndexOfEntry:
          case kEntries:
          case kLength:
+         case kLengthFunc:
          case kIteration:
            return kTRUE;
          default:
@@ -3626,6 +3658,26 @@ void TTreeFormula::ResetDimensions() {
       //   if (fVarIndexes[i][k]) fManager->Add(fVarIndexes[i][k]);
       //}
 
+   }
+}
+
+//______________________________________________________________________________
+void TTreeFormula::LoadBranches() 
+{
+   // Make sure that all the branches have been loaded properly.
+
+   Int_t i;
+   for (i=0; i<fNoper ; ++i) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      TBranch *br = leaf->GetBranch();
+      Long64_t treeEntry = br->GetTree()->GetReadEntry();
+      if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+      TTreeFormula *alias = (TTreeFormula*)fAliases.UncheckedAt(i);
+      if (alias) alias->LoadBranches();
+      Int_t max_dim = fNdimensions[i];
+      for (Int_t dim = 0; dim < max_dim; ++dim) {
+         if (fVarIndexes[i][dim]) fVarIndexes[i][dim]->LoadBranches();
+      }
    }
 }
 

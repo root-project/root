@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.37 2004/07/29 10:54:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.38 2004/08/12 04:33:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -55,7 +55,7 @@ class TTreeFormula : public TFormula {
 protected:
    enum { kIsCharacter = BIT(12) };
    enum { kDirect, kDataMember, kMethod, 
-          kIndexOfEntry, kEntries, kLength, kIteration };
+          kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc };
    enum { kAlias           = 200,
           kAliasString     = 201,
           kAlternate       = 202,
@@ -104,6 +104,9 @@ protected:
 
    TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    TAxis      *fAxis;           //! pointer to histogram axis if this is a string
+
+   Bool_t      fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated
+   void        LoadBranches();
 
    TTreeFormulaManager *fManager; //! The dimension coordinator.
    friend class TTreeFormulaManager;
