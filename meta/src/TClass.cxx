@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.98 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.99 2002/12/02 11:35:23 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1565,7 +1565,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    char  dtor[64];
    sprintf(dtor, "~%s", GetName());
    R__LOCKGUARD(gCINTMutex);
-   func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset).InterfaceMethod());
+   func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset));
    address = (void*)((long)obj + offset);
    if (dtorOnly) {
 #ifdef WIN32
