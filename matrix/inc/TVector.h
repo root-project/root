@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.13 2002/07/05 22:25:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.15 2002/07/27 11:05:49 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -123,7 +123,8 @@ public:
    Int_t    GetUpb()        const { return fNrows + fRowLwb - 1; }
    Int_t    GetNrows()      const { return fNrows; }
    Int_t    GetNoElements() const { return fNrows; }
-   Float_t* GetElements()         { return fElements; }
+   Float_t *GetElements()         { return fElements; }
+   const Float_t *GetElements() const { return fElements; }
    void     SetElements(const Float_t *elements);
 
    TVector &operator=(const TVector &source);
