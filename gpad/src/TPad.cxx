@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.25 2000/12/15 08:47:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.26 2000/12/26 14:25:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3081,11 +3081,11 @@ void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
       if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
-   if (TestBit(TGraph::kClipFrame)) {
+   //if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   } else {
-      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   }
+   //} else {
+   //   xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   //}
    Int_t i,j,i1=-1,np=0;
    for (i=0; i<n; i++) {
       if (x[i] >= xmin && x[i] <= xmax && y[i] >= ymin && y[i] <= ymax) {
@@ -3125,11 +3125,11 @@ void TPad::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
       if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
-   if (TestBit(TGraph::kClipFrame)) {
+   //if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   } else {
-      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   }
+   //} else {
+   //   xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   //}
    Int_t i,j,i1=-1,np=0;
    for (i=0; i<n; i++) {
       if (x[i] >= xmin && x[i] <= xmax && y[i] >= ymin && y[i] <= ymax) {
