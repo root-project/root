@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.184 2004/03/17 09:31:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.185 2004/05/05 15:33:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3030,6 +3030,8 @@ Int_t TTree::LoadTree(Int_t entry)
 {
 //*-*-*-*-*-*-*-*-*Set current Tree entry
 //*-*              ======================
+//
+// returns -2 if entry does not exist (just as TChain::LoadTree())
 
 // this function is overloaded in TChain
 
@@ -3038,6 +3040,7 @@ Int_t TTree::LoadTree(Int_t entry)
    }
    fReadEntry = entry;
 
+   Bool_t friendHasEntry=kFALSE;
    if (fFriends) {
       // The current tree has not changed but some of its friend might.
 
@@ -3051,7 +3054,7 @@ Int_t TTree::LoadTree(Int_t entry)
          if (t->IsA()!=TTree::Class()) {
             Int_t oldNumber = t->GetTreeNumber();
 
-            t->LoadTree(entry);
+            friendHasEntry|=(t->LoadTree(entry)>=0);
 
             Int_t newNumber = t->GetTreeNumber();
             if (oldNumber!=newNumber) {
@@ -3063,7 +3066,7 @@ Int_t TTree::LoadTree(Int_t entry)
             }
          } else {
             // we assume it is a simple tree so we have nothing to do.
-            t->LoadTree(entry);
+            friendHasEntry|=(t->LoadTree(entry)>=0);
          }
       } // for each friend
 
@@ -3075,6 +3078,7 @@ Int_t TTree::LoadTree(Int_t entry)
       }
    }
 
+   if (fReadEntry>=fEntries && !friendHasEntry) return -2;
    return fReadEntry;
 
 }
