@@ -160,7 +160,7 @@ endif
 CINTS        := $(CINTS1) $(CINTS2)
 CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
 CINTTMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINTO))
-CINTTMPINC   := -Icint/include -Icint/stl -Icint/lib
+CINTTMPINC   := -I$(MODDIR)/include -I$(MODDIR)/stl -I$(MODDIR)/lib
 CINTDEP      := $(CINTO:.o=.d)
 CINTDEP      += $(MODDIRS)/loadfile_tmp.d
 CINTALLDEP   += $(MODDIRS)/loadfile_tmp.d
