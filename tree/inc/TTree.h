@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.75 2005/01/12 10:51:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.76 2005/01/12 18:06:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -136,9 +136,9 @@ protected:
     virtual void     KeepCircular();
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
-    virtual TBranch *BranchImp(const char *name, const char *classname, TClass *realClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-    virtual TBranch *BranchImp(const char *name, TClass *realClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-    virtual Bool_t   CheckBranchAddressType(TBranch *branch, TClass *realClass, EDataType datatype, Bool_t ptr);
+    virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
+    virtual TBranch *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
+    virtual Bool_t   CheckBranchAddressType(TBranch *branch, TClass *ptrClass, EDataType datatype, Bool_t ptr);
 
 public:
     // TTree status bits

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.228 2005/01/20 01:10:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.229 2005/01/25 07:24:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -740,36 +740,62 @@ Long64_t TTree::AutoSave(Option_t *option)
 }
 
 //______________________________________________________________________________
-TBranch* TTree::BranchImp(const char *name, const char *classname, 
-                          TClass *realClass, void *addobj, Int_t bufsize, 
+TBranch* TTree::BranchImp(const char *branchname, const char *classname, 
+                          TClass *ptrClass, void *addobj, Int_t bufsize, 
                           Int_t splitlevel) 
 {
    // Same as TTree::Branch with added check that the address passed in addobj
    // corresponding to className.  See TTree::Branch for other details.
 
-   if (realClass==0) return Branch(name,classname,(void*)addobj,bufsize,splitlevel);
+   if (ptrClass==0) return Branch(branchname,classname,(void*)addobj,bufsize,splitlevel);
    TClass *claim = gROOT->GetClass(classname);
-   if (realClass && claim && !(claim->InheritsFrom(realClass)||realClass->InheritsFrom(claim)) ) {
-      // Note we currently do not warning in case of splicing or over-expectation).
-      Error("Branch","The class requested (%s) for \"%s\" is different from the type of the pointer passed (%s)",
-            claim->GetName(),name,realClass->GetName());
+   TClass *actualClass = 0;
+   void **addr = (void**)addobj;
+   if (addr) actualClass = ptrClass->GetActualClass(*addr);
+
+   if (ptrClass && claim) {
+      if (!(claim->InheritsFrom(ptrClass)||ptrClass->InheritsFrom(claim)) ) {
+         // Note we currently do not warning in case of splicing or over-expectation).
+         Error("Branch","The class requested (%s) for \"%s\" is different from the type of the pointer passed (%s)",
+               claim->GetName(),branchname,ptrClass->GetName());
+      } else if (actualClass && claim!=actualClass && !actualClass->InheritsFrom(claim)) {
+         Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s",
+               actualClass->GetName(),branchname,claim->GetName());
+      }
    }
-   return Branch(name,realClass->GetName(),(void*)addobj,bufsize,splitlevel);
+   return Branch(branchname,classname,(void*)addobj,bufsize,splitlevel);
 }
 
 //______________________________________________________________________________
-TBranch* TTree::BranchImp(const char *name, TClass *realClass, void *addobj, 
+TBranch* TTree::BranchImp(const char *branchname, TClass *ptrClass, void *addobj, 
                           Int_t bufsize, Int_t splitlevel) 
 {
    // Same as TTree::Branch but automatic detection of the class name
    // See TTree::Branch for other details.
 
-   if (realClass == 0) {
+   if (ptrClass == 0) {
       Error("Branch","The pointer specified for %s is not of a class known to ROOT",
-            name);
+            branchname);
       return 0;
    }
-   return Branch(name,realClass->GetName(),(void*)addobj,bufsize,splitlevel);
+   TClass *actualClass = 0;
+   void **addr = (void**)addobj;
+   if (addr && *addr) {
+      actualClass = ptrClass->GetActualClass(*addr);
+      if (!actualClass) {
+         Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing."
+                 "\n\tThe object will be truncated down to its %s part",
+                 branchname,ptrClass->GetName());
+         actualClass = ptrClass;
+      } else if (ptrClass!=actualClass && !actualClass->InheritsFrom(ptrClass)) {
+         Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s",
+               actualClass->GetName(),branchname,ptrClass->GetName());
+         return 0;
+      }
+   } else {
+      actualClass = ptrClass;
+   }
+   return Branch(branchname,actualClass->GetName(),(void*)addobj,bufsize,splitlevel);
 }
 
 //______________________________________________________________________________
@@ -1631,7 +1657,7 @@ TFile *TTree::ChangeFile(TFile *file)
 }
 
 //______________________________________________________________________________
-Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *realClass, 
+Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass, 
                                      EDataType datatype, Bool_t ptr)
 {
    // Check whether the address described by the last 3 parameters match the
@@ -1660,10 +1686,12 @@ Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *realClass,
          if (element) expectedClass = element->GetClassPointer();
          if (expectedClass==0) {
             TDataType *data = gROOT->GetType(element->GetTypeNameBasic());
-            expectedType = (EDataType)data->GetType();
+            if (data==0) {
+               Error("CheckBranchAddress","Did not find the type number for %s",element->GetTypeNameBasic());
+            } else expectedType = (EDataType)data->GetType();
          }
       }
-      if (realClass && branch->GetMother()==branch) {
+      if (ptrClass && branch->GetMother()==branch) {
          // Top Level branch
          if (!ptr) {
             Error("SetBranchAddress",
@@ -1677,10 +1705,10 @@ Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *realClass,
 
    if (expectedType == kDouble32_t) expectedType = kDouble_t;
    if (datatype == kDouble32_t) datatype = kDouble_t;
-   if (expectedClass && realClass && !expectedClass->InheritsFrom(realClass)) {
+   if (expectedClass && ptrClass && !expectedClass->InheritsFrom(ptrClass)) {
       Error("SetBranchAddress",
             "The pointer type give (%s) does not correspond to the class needed (%s) by the branch: %s",
-            realClass->GetName(),expectedClass->GetName(),branch->GetName());
+            ptrClass->GetName(),expectedClass->GetName(),branch->GetName());
       return kFALSE;
    } else if (expectedType != kOther_t && datatype != kOther_t && 
               expectedType != kNoType_t && datatype != kNoType_t && 
@@ -4028,7 +4056,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 
 //_______________________________________________________________________
  void TTree::SetBranchAddress(const char *bname, void *add, 
-                              TClass *realClass, EDataType datatype, 
+                              TClass *ptrClass, EDataType datatype, 
                               Bool_t ptr)
 {
    //  Verify the validity of the type of add before calling SetBranchAddress.
@@ -4036,7 +4064,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
    TBranch *branch = GetBranch(bname);
    if (branch) {
 
-      CheckBranchAddressType(branch,realClass,datatype,ptr);
+      CheckBranchAddressType(branch,ptrClass,datatype,ptr);
       SetBranchAddress(bname,add);
 
    } else {
