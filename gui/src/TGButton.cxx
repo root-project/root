@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.8 2003/04/30 14:25:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.9 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -494,10 +494,33 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button\n%s", cmd);
       fPic = fClient->GetPicture("mb_question_s.xpm");
-   } else
+   } else {
       fPic = pic;
+   }
 
    fCommand = cmd;
+
+   if (fPic) {
+      fTWidth  = fPic->GetWidth();
+      fTHeight = fPic->GetHeight();
+
+      Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
+             fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
+   }
+}
+
+//______________________________________________________________________________
+TGPictureButton::TGPictureButton(const TGWindow *p, const char* pic, 
+   Int_t id, GContext_t norm, UInt_t option ) : TGButton(p, id, norm, option)
+{
+   // Create a picture button
+
+   if (!pic || !strlen(pic)) {
+      Error("TGPictureButton", "pixmap not found for button\n");
+      fPic = fClient->GetPicture("mb_question_s.xpm");
+   } else {
+      fPic = fClient->GetPicture(pic);
+   }
 
    if (fPic) {
       fTWidth  = fPic->GetWidth();

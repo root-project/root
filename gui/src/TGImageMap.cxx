@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.2 2000/12/22 12:36:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.3 2002/05/18 08:21:59 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -428,11 +428,10 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
 
 //______________________________________________________________________________
 TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
-   TGPictureButton(p, 0)
+   TGPictureButton(p, pic.Data())
 {
    // Create an image map widget.
 
-   fPic = gClient->GetPicture(pic.Data());
    fCursorMouseOut  = kPointer;
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;

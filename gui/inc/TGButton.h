@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.12 2002/02/23 18:41:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.13 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -182,6 +182,9 @@ public:
                    UInt_t option = kRaisedFrame | kDoubleBorder);
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
                    Int_t id = -1, GContext_t norm = GetDefaultGC()(),
+                   UInt_t option = kRaisedFrame | kDoubleBorder);
+   TGPictureButton(const TGWindow *p, const char* pic=0, Int_t id = -1,
+                   GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
    void SetPicture(const TGPicture *new_pic);

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.8 2002/06/12 16:46:12 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.9 2002/07/08 14:41:44 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -271,7 +271,7 @@ ClassImp(TTVLVContainer)
 TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
           :TGLVContainer(p, w, h,options | kSunkenFrame)
 {
-// TGLVContainer constructor
+   // TGLVContainer constructor
 
    fListView = 0;
    fViewer = 0;
@@ -280,16 +280,20 @@ TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t opt
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
    fMapSubwindows = kTRUE;
 }
+
 //______________________________________________________________________________
 TTVLVContainer::~TTVLVContainer()
 {
-// TGLVContainer destructor
+   // TGLVContainer destructor
+
    delete fExpressionList;
 }
+
 //______________________________________________________________________________
 const char* TTVLVContainer::Cut()
 {
-// return the cut entry
+   // return the cut entry
+
    TGFrameElement *el = (TGFrameElement *) fList->At(3);
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
@@ -298,10 +302,12 @@ const char* TTVLVContainer::Cut()
    }
    return 0;
 }
+
 //______________________________________________________________________________
 TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
 {
-// return the expression item at specific position
+   // return the expression item at specific position
+
    TGFrameElement *el = (TGFrameElement *) fList->At(index);
    if (el) {
       TTVLVEntry *item = (TTVLVEntry *) el->fFrame;
@@ -309,10 +315,12 @@ TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
    }
    return 0;
 }
+
 //______________________________________________________________________________
 TList* TTVLVContainer::ExpressionList()
 {
-// return the list of user-defined expressions
+   // return the list of user-defined expressions
+
    fExpressionList->Clear();
    TIter next(fList);
    TGFrameElement *el;
@@ -326,10 +334,12 @@ TList* TTVLVContainer::ExpressionList()
    }
    return fExpressionList;
 }
+
 //______________________________________________________________________________
 const char* TTVLVContainer::Ex()
 {
-// return the expression on X
+   // return the expression on X
+
    TGFrameElement *el = (TGFrameElement *) fList->At(0);
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
@@ -338,10 +348,12 @@ const char* TTVLVContainer::Ex()
    }
    return 0;
 }
+
 //______________________________________________________________________________
 const char* TTVLVContainer::Ey()
 {
-// return the expression on Y
+   // return the expression on Y
+
    TGFrameElement *el = (TGFrameElement *) fList->At(1);
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
@@ -350,10 +362,12 @@ const char* TTVLVContainer::Ey()
    }
    return 0;
 }
+
 //______________________________________________________________________________
 const char* TTVLVContainer::Ez()
 {
-// return the expression on Z
+   // return the expression on Z
+
    TGFrameElement *el = (TGFrameElement *) fList->At(2);
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
@@ -362,10 +376,12 @@ const char* TTVLVContainer::Ez()
    }
    return 0;
 }
+
 //______________________________________________________________________________
 const char* TTVLVContainer::ScanList()
 {
-// return the cut entry
+   // return the cut entry
+
    TGFrameElement *el = (TGFrameElement *) fList->At(4);
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
@@ -374,6 +390,7 @@ const char* TTVLVContainer::ScanList()
    }
    return 0;
 }
+
 //______________________________________________________________________________
 Bool_t TTVLVContainer::HandleButton(Event_t *event)
 {
@@ -482,10 +499,12 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
    }
    return kTRUE;
 }
+
 //______________________________________________________________________________
 Bool_t TTVLVContainer::HandleMotion(Event_t *event)
 {
    // Handle mouse motion events.
+
    Int_t xf0, xff, yf0, yff;
    Int_t xpos = event->fX - (fXp-fX0);
    Int_t ypos = event->fY - (fYp-fY0);
@@ -523,10 +542,12 @@ Bool_t TTVLVContainer::HandleMotion(Event_t *event)
    }
    return kTRUE;
 }
+
 //______________________________________________________________________________
 void TTVLVContainer::EmptyAll()
 {
-// Clear all names and aliases for expression type items
+   // Clear all names and aliases for expression type items
+
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
@@ -542,10 +563,12 @@ void TTVLVContainer::EmptyAll()
       }
    }
 }
+
 //______________________________________________________________________________
 void TTVLVContainer::RemoveNonStatic()
 {
    // remove all non-static items from the list view, except expressions
+
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
@@ -556,10 +579,12 @@ void TTVLVContainer::RemoveNonStatic()
       }
    }
 }
+
 //______________________________________________________________________________
 void TTVLVContainer::SelectItem(const char* name)
 {
- // select an item
+   // select an item
+
    if (fLastActive) {
       fLastActive->Activate(kFALSE);
       fLastActive = 0;
@@ -654,6 +679,7 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       MapWindow();
    }
 }
+
 //______________________________________________________________________________
 TGSelectBox::~TGSelectBox()
 {
@@ -671,23 +697,29 @@ TGSelectBox::~TGSelectBox()
    delete fBLayout;
    delete fBLayout1;
 }
+
 //______________________________________________________________________________
 void TGSelectBox::CloseWindow()
 {
-// close the select box
+   // close the select box
+
    gVirtualX->UnmapWindow(GetId());
    delete this;
 }
+
 //______________________________________________________________________________
 TGSelectBox * TGSelectBox::GetInstance()
 {
-// return the pointer to the instantiated singleton
+   // return the pointer to the instantiated singleton
+
    return fInstance;
 }
+
 //______________________________________________________________________________
 void TGSelectBox::GrabPointer()
 {
-// just focus the cursor inside
+   // just focus the cursor inside
+
    Event_t event;
    event.fType = kButtonPress;
    event.fCode = kButton1;
@@ -695,15 +727,18 @@ void TGSelectBox::GrabPointer()
    fTe->HandleButton(&event);
    fTe->SetCursorPosition(position);
 }
+
 //______________________________________________________________________________
 void TGSelectBox::SetLabel(const char* title)
 {
    fLabel->SetText(new TGString(title));
 }
+
 //______________________________________________________________________________
 void TGSelectBox::SaveText()
 {
-// save the edited entry true name and alias
+   // save the edited entry true name and alias
+
    if (fEntry) {
 
       Bool_t cutType;
@@ -735,15 +770,18 @@ void TGSelectBox::SaveText()
       }
    }
 }
+
 //______________________________________________________________________________
 void TGSelectBox::SetEntry(TTVLVEntry *entry)
 {
    // connect one entry
+
    fEntry = entry;
    fTe->SetText(entry->GetTrueName());
    fTeAlias->SetText(entry->GetAlias());
    fOldAlias = entry->GetAlias();
 }
+
 //______________________________________________________________________________
 void TGSelectBox::InsertText(const char* text)
 {
@@ -751,10 +789,12 @@ void TGSelectBox::InsertText(const char* text)
    fTe->InsertText(text, fTe->GetCursorPosition());
    fTe->SetCursorPosition(start+strlen(text));
 }
+
 //______________________________________________________________________________
 Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-// Message interpreter
+   // Message interpreter
+
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
          switch (GET_SUBMSG(msg)) {
@@ -791,10 +831,12 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    }
    return kTRUE;
 }
+
 //______________________________________________________________________________
 Bool_t TGSelectBox::ValidateAlias()
 {
-//--- return true if edited alias is not a leading string of other expression aliases
+   // return true if edited alias is not a leading string of other expression aliases
+
    if (!strcmp(fTeAlias->GetText(), "-empty-") || !strlen(fTeAlias->GetText())) {
       fViewer->Warning("ValidateAlias", "You should define the alias first.");
       return kFALSE;
