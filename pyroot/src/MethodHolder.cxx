@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.3 2004/04/29 06:46:07 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -100,10 +100,14 @@ namespace {
 // traits for python's array type codes
  #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    template< class aType > struct tct {};
-   template<> struct tct< int > { static const char tc = 'i'; };
-   template<> struct tct< long > { static const char tc = 'l'; };
-   template<> struct tct< float > { static const char tc = 'f'; };
-   template<> struct tct< double > { static const char tc = 'd'; };
+   template<> struct tct< int > { static const char tc; };
+   template<> struct tct< long > { static const char tc; };
+   template<> struct tct< float > { static const char tc; };
+   template<> struct tct< double > { static const char tc; };
+   const char tct< int >::tc = 'i';
+   const char tct< long >::tc = 'l';
+   const char tct< float >::tc = 'f';
+   const char tct< double >::tc = 'd';
 #else
    static char GetTct(int) { return 'i'; };
    static char GetTct(long) { return 'l'; };
