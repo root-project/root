@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.10 2004/08/09 15:35:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.11 2004/08/09 22:11:00 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -81,9 +81,9 @@ void TGLKernel::ClearColor(Int_t color)
       TColor *c = gROOT->GetColor(color);
       if (!c) c= gROOT->GetColor(1);
       c->GetRGB(red,green,blue);
-      ::glClearColor(red, green, blue, alpha);
+      glClearColor(red, green, blue, alpha);
    } else {
-      ::glClearIndex(color+ColorOffset);
+      glClearIndex(color+ColorOffset);
    }
 }
 
@@ -92,7 +92,7 @@ void TGLKernel::ClearGLColor(Float_t red, Float_t green, Float_t blue, Float_t a
 {
    //
 
-   ::glClearColor(red, green, blue, alpha);
+   glClearColor(red, green, blue, alpha);
 }
 
 //______________________________________________________________________________
@@ -104,7 +104,7 @@ void TGLKernel::ClearGLColor(Float_t *colors)
    GLclampf green = colors[1];
    GLclampf blue  = colors[2];
    GLclampf alpha = colors[3];
-   ::glClearColor(red, green, blue, alpha);
+   glClearColor(red, green, blue, alpha);
 }
 
 //______________________________________________________________________________
@@ -114,13 +114,13 @@ void TGLKernel::ClearGL(UInt_t stereo)
 #ifdef STEREO_GL
    if (stereo) {
       if (Int_t(stereo) < 0)
-         ::glDrawBuffer(GL_BACK_LEFT);
+         glDrawBuffer(GL_BACK_LEFT);
       else
-         ::glDrawBuffer(GL_BACK_RIGHT);
+         glDrawBuffer(GL_BACK_RIGHT);
    }
 #endif
    if (stereo) { }
-   ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________
@@ -128,7 +128,7 @@ void TGLKernel::DisableGL(EG3D2GLmode mode)
 {
    //
 
-   ::glDisable(GLCommand[mode]);
+   glDisable(GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -136,7 +136,7 @@ void TGLKernel::EnableGL(EG3D2GLmode mode)
 {
    //
 
-   ::glEnable(GLCommand[mode]);
+   glEnable(GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -144,7 +144,7 @@ void TGLKernel::FlushGL()
 {
    //
 
-   ::glFlush();
+   glFlush();
 }
 
 //______________________________________________________________________________
@@ -153,7 +153,7 @@ void TGLKernel::FrontGLFace(EG3D2GLmode faceflag)
    //
 
    fFaceFlag = faceflag;
-   ::glFrontFace(GLCommand[faceflag]);
+   glFrontFace(GLCommand[faceflag]);
 }
 
 //______________________________________________________________________________
@@ -161,7 +161,7 @@ void TGLKernel::NewGLList(UInt_t ilist, EG3D2GLmode mode)
 {
    //
 
-   ::glNewList(ilist, GLCommand[mode]);
+   glNewList(ilist, GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -169,7 +169,7 @@ void TGLKernel::NewGLModelView(Int_t ilist)
 {
    //
 
-   ::glNewList(ilist, GL_COMPILE);
+   glNewList(ilist, GL_COMPILE);
 //--    glMatrixMode(GL_MODELVIEW);
 //--    glLoadIdentity();
 }
@@ -179,7 +179,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, UChar_t *params)
 {
    //
 
-   ::glGetBooleanv(GLCommand[mode], params);
+   glGetBooleanv(GLCommand[mode], params);
 }
 
 //______________________________________________________________________________
@@ -187,7 +187,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, Double_t *params)
 {
    //
 
-   ::glGetDoublev(GLCommand[mode], params);
+   glGetDoublev(GLCommand[mode], params);
 }
 
 //______________________________________________________________________________
@@ -195,7 +195,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, Float_t *params)
 {
    //
 
-   ::glGetFloatv(GLCommand[mode], params);
+   glGetFloatv(GLCommand[mode], params);
 }
 
 //______________________________________________________________________________
@@ -203,7 +203,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, Int_t *params)
 {
    //
 
-   ::glGetIntegerv(GLCommand[mode], params);
+   glGetIntegerv(GLCommand[mode], params);
 }
 
 //______________________________________________________________________________
@@ -211,7 +211,7 @@ Int_t TGLKernel::GetGLError()
 {
    //
 
-   return ::glGetError();
+   return glGetError();
 }
 
 //______________________________________________________________________________
@@ -219,7 +219,7 @@ void TGLKernel::EndGLList()
 {
    //
 
-   ::glEndList();
+   glEndList();
 }
 
 //______________________________________________________________________________
@@ -227,7 +227,7 @@ void TGLKernel::BeginGLCmd(EG3D2GLmode mode)
 {
    //
 
-   ::glBegin(GLCommand[mode]);
+   glBegin(GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -235,7 +235,7 @@ void TGLKernel::EndGLCmd()
 {
    //
 
-   ::glEnd();
+   glEnd();
 }
 
 //______________________________________________________________________________
@@ -243,7 +243,7 @@ void TGLKernel::PushGLMatrix()
 {
    //
 
-   ::glPushMatrix();
+   glPushMatrix();
 }
 
 //______________________________________________________________________________
@@ -251,7 +251,7 @@ void TGLKernel::PopGLMatrix()
 {
    //
 
-   ::glPopMatrix();
+   glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -285,7 +285,7 @@ void TGLKernel::RotateGL(Double_t angle, Double_t x,Double_t y,Double_t z)
    //*-* the point (x, y, z).
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   ::glRotated(angle,x,y,z);
+   glRotated(angle,x,y,z);
 }
 
 //______________________________________________________________________________
@@ -306,7 +306,7 @@ void TGLKernel::TranslateGL(Double_t x,Double_t y,Double_t z)
 {
    //
 
-   ::glTranslated(x,y,z);
+   glTranslated(x,y,z);
 }
 
 //______________________________________________________________________________
@@ -322,7 +322,7 @@ void TGLKernel::MultGLMatrix(Double_t *mat)
 {
    //
 
-   ::glMultMatrixd(mat);
+   glMultMatrixd(mat);
 }
 
 //______________________________________________________________________________
@@ -330,7 +330,7 @@ void TGLKernel::SetGLColor(Float_t *rgb)
 {
    //
 
-   ::glColor3fv(rgb);
+   glColor3fv(rgb);
 }
 
 //______________________________________________________________________________
@@ -338,7 +338,7 @@ void TGLKernel::SetGLVertex(Float_t *vertex)
 {
    //
 
-   ::glVertex3fv(vertex);
+   glVertex3fv(vertex);
 }
 
 //______________________________________________________________________________
@@ -346,7 +346,7 @@ void TGLKernel::SetGLVertex(const Double_t *vert)
 {
    //
 
-   ::glVertex3dv(vert);
+   glVertex3dv(vert);
 }
 
 //______________________________________________________________________________
@@ -380,7 +380,7 @@ void TGLKernel::SetCurrentColor(Int_t color)
       rgb[2] = blue;
       SetGLColor(rgb);
    } else {
-      ::glIndexi(color+ColorOffset);
+      glIndexi(color+ColorOffset);
    }
 }
 
@@ -391,7 +391,7 @@ void TGLKernel::SetGLPointSize(Float_t size)
    //*-* The SetGLPointSize function specifies the diameter of rasterized points.
    //*-*
 
-   ::glPointSize(size);
+   glPointSize(size);
 }
 
 //______________________________________________________________________________
@@ -401,7 +401,7 @@ void TGLKernel::SetGLLineWidth(Float_t width)
    //*-* The SetGLLineWidth function specifies the width of rasterized lines.
    //*-*
 
-   ::glLineWidth(width);
+   glLineWidth(width);
 }
 
 //______________________________________________________________________________
@@ -412,15 +412,15 @@ void TGLKernel::SetRootLight(Bool_t flag)
    if (flag != fRootLight) {
       fRootLight = flag;
       if (fRootLight) {
-         ::glDisable(GL_LIGHT0);
-         ::glDisable(GL_LIGHTING);
-         ::glDisable(GL_COLOR_MATERIAL);
+         glDisable(GL_LIGHT0);
+         glDisable(GL_LIGHTING);
+         glDisable(GL_COLOR_MATERIAL);
       } else {
-         ::glEnable(GL_LIGHT0);
-         ::glEnable(GL_LIGHTING);
-         ::glEnable(GL_COLOR_MATERIAL);
+         glEnable(GL_LIGHT0);
+         glEnable(GL_LIGHTING);
+         glEnable(GL_COLOR_MATERIAL);
       #ifdef STEREO_GL
-         ::glEnable(GL_STEREO);
+         glEnable(GL_STEREO);
       #endif
       //            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
       //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);
@@ -434,7 +434,7 @@ void TGLKernel::DeleteGLLists(Int_t ilist, Int_t range)
 {
    //
 
-   ::glDeleteLists(ilist, range);
+   glDeleteLists(ilist, range);
 }
 
 //______________________________________________________________________________
@@ -442,7 +442,7 @@ Int_t TGLKernel::CreateGLLists(Int_t range)
 {
    //
 
-   return ::glGenLists(range);
+   return glGenLists(range);
 }
 
 //______________________________________________________________________________
@@ -450,7 +450,7 @@ void TGLKernel::RunGLList(Int_t list)
 {
    //
 
-   ::glCallList(list);
+   glCallList(list);
 }
 
 //______________________________________________________________________________
@@ -459,11 +459,11 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
    //
 #if 0
    if (kTRUE) {
-      ::glEnable(GL_LIGHT0);
-      ::glEnable(GL_LIGHTING);
-      ::glEnable(GL_COLOR_MATERIAL);
-      ::glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
-      ::glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
+      glEnable(GL_LIGHT0);
+      glEnable(GL_LIGHTING);
+      glEnable(GL_COLOR_MATERIAL);
+      glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
+      glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
    } else {
       ::SetRootLight(kTRUE);
    }
@@ -472,32 +472,32 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
 //       glLightModel();
 
 
-   ::glMatrixMode(GL_PROJECTION);
-   ::glLoadIdentity();
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
 
    Double_t dnear = TMath::Abs(max[0]-min[0]);
    Double_t dfar = 3*(dnear + TMath::Abs(max[2]-min[2]));
 
    if (perspective)
-      ::glFrustum(min[0],max[0],min[1],max[1],dnear,dfar);
+      glFrustum(min[0],max[0],min[1],max[1],dnear,dfar);
    else
-      ::glOrtho  (min[0],max[0],min[1],max[1],dnear,dfar);
+      glOrtho  (min[0],max[0],min[1],max[1],dnear,dfar);
 
 //       RotateGL(-(-90+view->GetLatitude()),-(90+view->GetLongitude()),view->GetPsi()+90);
 
-   ::glCullFace(GL_BACK);
-   ::glMatrixMode(GL_MODELVIEW);
-   ::glLoadIdentity();
+   glCullFace(GL_BACK);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
 
 #if 0
    if (!fRootLight && fTrueColorMode) {
-      ::glPushMatrix();
+      glPushMatrix();
       Float_t rgb[] = {0.8,0.8,0.8};
       SetGLColor(rgb);
-      ::glRotated(75,1,0,0);
-      ::glNormal3f(0.0,0.0,1.0);
-      ::glRectd(min[0],min[1],max[0],max[1]);
-      ::glPopMatrix();
+      glRotated(75,1,0,0);
+      glNormal3f(0.0,0.0,1.0);
+      glRectd(min[0],min[1],max[0],max[1]);
+      glPopMatrix();
    }
 #endif
 }
@@ -507,7 +507,7 @@ void TGLKernel::PolygonGLMode(EG3D2GLmode face , EG3D2GLmode mode)
 {
    //
 
-   ::glPolygonMode(GLCommand[face], GLCommand[mode]);
+   glPolygonMode(GLCommand[face], GLCommand[mode]);
 }
 
 //______________________________________________________________________________
@@ -521,11 +521,11 @@ void TGLKernel::SetStack(Double_t *matrix)
    // Double_t *matrix - the pointer to a new matrix to updtae stack
    //                      = 0 the indentity matrix must be applied
 
-   ::glPopMatrix();
-   if (!matrix) ::glLoadIdentity();
-   else ::glLoadMatrixd(matrix);
+   glPopMatrix();
+   if (!matrix) glLoadIdentity();
+   else glLoadMatrixd(matrix);
 
-   ::glPushMatrix();
+   glPushMatrix();
 }
 
 //______________________________________________________________________________
@@ -533,7 +533,7 @@ void TGLKernel::ShadeGLModel(EG3D2GLmode model)
 {
    //
 
-   ::glShadeModel(GLCommand[model]);
+   glShadeModel(GLCommand[model]);
 }
 
 //______________________________________________________________________________
@@ -542,25 +542,25 @@ void TGLKernel::AddRotation(Double_t *rotmatrix, Double_t *angles)
    //
 
    GLint mode;
-   ::glPushMatrix();
-   ::glGetIntegerv(GL_MATRIX_MODE,&mode);
+   glPushMatrix();
+   glGetIntegerv(GL_MATRIX_MODE,&mode);
 
-   ::glLoadIdentity();
+   glLoadIdentity();
    if (TMath::Abs(angles[0]) > 0.00001) RotateGL(angles[0],1,0,0);
    if (TMath::Abs(angles[1]) > 0.00001) RotateGL(angles[1],0,1,0);
    if (TMath::Abs(angles[2]) > 0.00001) RotateGL(angles[2],0,0,1);
-   ::glMultMatrixd(rotmatrix);
+   glMultMatrixd(rotmatrix);
 
    switch (mode) {
    case GL_MODELVIEW:
-      ::glGetDoublev(GL_MODELVIEW_MATRIX, rotmatrix);
+      glGetDoublev(GL_MODELVIEW_MATRIX, rotmatrix);
       break;
    case GL_PROJECTION:
-      ::glGetDoublev(GL_PROJECTION_MATRIX,rotmatrix);
+      glGetDoublev(GL_PROJECTION_MATRIX,rotmatrix);
       printf(" projection \n");
       break;
    case GL_TEXTURE:
-      ::glGetDoublev(GL_TEXTURE_MATRIX,   rotmatrix);
+      glGetDoublev(GL_TEXTURE_MATRIX,   rotmatrix);
       printf(" texture \n");
       break;
    default:
@@ -568,7 +568,7 @@ void TGLKernel::AddRotation(Double_t *rotmatrix, Double_t *angles)
       return;
    }
 
-   ::glPopMatrix();
+   glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -609,13 +609,13 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
 
    while (pass >= 0) {
       pass--;
-      ::glBegin(mode);
+      glBegin(mode);
       for (int i=0; i < n; i++) {
-         ::glVertex3f(GLfloat(points->GetX(i)),
+         glVertex3f(GLfloat(points->GetX(i)),
                       GLfloat(points->GetY(i)),
                       GLfloat(points->GetZ(i)));
       }
-      ::glEnd();
+      glEnd();
       mode=GL_POINTS;
    }
 }
@@ -631,10 +631,10 @@ void TGLKernel::PaintGLPoints(Int_t n, Float_t *p, Option_t *)
 //    if (fRootLight)
 //           LightIndex(0);  //reset the original color
 
-   ::glBegin(GL_POINTS);
+   glBegin(GL_POINTS);
 
-   for (int i=0; i < n; i++, point+=3) ::glVertex3fv(point);
-   ::glEnd();
+   for (int i=0; i < n; i++, point+=3) glVertex3fv(point);
+   glEnd();
 }
 
 //______________________________________________________________________________
@@ -648,10 +648,10 @@ void TGLKernel::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
 //    if (fRootLight)
 //           LightIndex(0);  //reset the original color
 
-   ::glBegin(GL_LINE_STRIP);
+   glBegin(GL_LINE_STRIP);
 
-   for (int i=0; i < n; i++, line+=3) ::glVertex3fv(line);
-   ::glEnd();
+   for (int i=0; i < n; i++, line+=3) glVertex3fv(line);
+   glEnd();
 }
 
 //______________________________________________________________________________
@@ -670,18 +670,18 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
 
       if (fRootLight) LightIndex(0);
 
-      ::glBegin(GL_QUADS);
+      glBegin(GL_QUADS);
       //*-*  "Top"  of TBRIK
       if (!fRootLight)
-         ::glNormal3fv(TMath::Normal2Plane(vert(7),vert(4),vert(6),normal));
+         glNormal3fv(TMath::Normal2Plane(vert(7),vert(4),vert(6),normal));
       for (i=4;i<8;i++)
-         ::glVertex3fv(vert(i));
+         glVertex3fv(vert(i));
 
 //*-*   "Bottom"  of TBRIK
       if (!fRootLight)
-         ::glNormal3fv(TMath::Normal2Plane(vert(0),vert(3),vert(1),normal));
+         glNormal3fv(TMath::Normal2Plane(vert(0),vert(3),vert(1),normal));
       for (i=3;i>-1;i--) {
-         ::glVertex3fv(vert(i));
+         glVertex3fv(vert(i));
       }
 
 //*-*   "Walls"  of TBRIK
@@ -689,28 +689,28 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
          if (fRootLight)
             LightIndex(i+1);
          else
-            ::glNormal3fv(TMath::Normal2Plane(vert(i),vert(i+1),vert(i+4),normal));
+            glNormal3fv(TMath::Normal2Plane(vert(i),vert(i+1),vert(i+4),normal));
 
-         ::glVertex3fv(vert(i));
-         ::glVertex3fv(vert(i+1));
-         ::glVertex3fv(vert(i+5));
-         ::glVertex3fv(vert(i+4));
+         glVertex3fv(vert(i));
+         glVertex3fv(vert(i+1));
+         glVertex3fv(vert(i+5));
+         glVertex3fv(vert(i+4));
       }
 //*-*  The last "wall" to close the brik
 
       if (fRootLight)
          LightIndex(i+1);
       else
-         ::glNormal3fv(TMath::Normal2Plane(vert(i),vert(0),vert(i+4),normal));
+         glNormal3fv(TMath::Normal2Plane(vert(i),vert(0),vert(i+4),normal));
 
       i = 0;
-      ::glVertex3fv(vert(i));
-      ::glVertex3fv(vert(i+4));
+      glVertex3fv(vert(i));
+      glVertex3fv(vert(i+4));
       i = 3;
-      ::glVertex3fv(vert(i+4));
-      ::glVertex3fv(vert(i));
+      glVertex3fv(vert(i+4));
+      glVertex3fv(vert(i));
 
-      ::glEnd();
+      glEnd();
 
       if (fRootLight)
          LightIndex(0);  //reset the original color
@@ -738,31 +738,31 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
 
    // Front or top face
    if (fRootLight) LightIndex(0);
-   else            ::glNormal3fv(frontnorm);
+   else            glNormal3fv(frontnorm);
 
-   ::glBegin(GL_POLYGON);
+   glBegin(GL_POLYGON);
    p  = vertex+3*(nz-1)*nxy;
 
    start = p;
 
-   for (ixy=0; ixy<nxy; ::glVertex3fv(p), ixy++,p+=3);
+   for (ixy=0; ixy<nxy; glVertex3fv(p), ixy++,p+=3);
 
-   ::glVertex3fv(start);
-   ::glEnd();
+   glVertex3fv(start);
+   glEnd();
 
    // Back face
    // go around in given order to keep outward normal
    if (fRootLight) LightIndex(0);
-   else            ::glNormal3fv(backnorm);
+   else            glNormal3fv(backnorm);
 
-   ::glBegin(GL_POLYGON);
+   glBegin(GL_POLYGON);
    p     = vertex+3*(nxy-1);
    start = p;
 
    for (ixy=0; ixy<nxy; glVertex3fv(p), ixy++,  p-=3);
 
-   ::glVertex3fv(start);
-   ::glEnd();
+   glVertex3fv(start);
+   glEnd();
 
 
    // The sides are given as a QUAD_STRIP list but care must be taken
@@ -778,7 +778,7 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
 
    Float_t *key = vertex;
    for (Int_t iz=0; iz<nz-1; iz++) {
-      ::glBegin(GL_QUAD_STRIP);
+      glBegin(GL_QUAD_STRIP);
 
       for (Int_t ixy=nxy; ixy > -1; ixy--) {
 
@@ -794,13 +794,13 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
             // have the same color (nor do they match the ends)
             LightIndex(cindex[ixy%ncol+iz%2]);
          } else
-            ::glNormal3fv(TMath::Normal2Plane(p1,px,p2,normal));
+            glNormal3fv(TMath::Normal2Plane(p1,px,p2,normal));
 
-         ::glVertex3fv(p1);
-         ::glVertex3fv(p2);
+         glVertex3fv(p1);
+         glVertex3fv(p2);
       }
       key += 3*nxy;
-      ::glEnd();
+      glEnd();
    }
 
    if (fRootLight)  LightIndex(0);  //reset the original color
@@ -874,43 +874,43 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
       if (fRootLight)
          LightIndex(0);
       else
-         ::glNormal3fv(onenorm);
+         glNormal3fv(onenorm);
 
       //*-*  Check internal radius
       nextv = vert(0,nstacks-1,0);
       if (*(nextv+1) == 0.0 && *nextv == 0.0) { // The inner radius is ZERO
 
       //*-*  Draw the "Triangle fan"
-            ::glBegin(GL_TRIANGLE_FAN);
-            ::glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
+            glBegin(GL_TRIANGLE_FAN);
+            glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
             nextv += pt3;
             for (i=0;i<ndiv;i++) {
-                ::glVertex3fv(nextv);
+                glVertex3fv(nextv);
                 nextv += 3;
             }
             if (nseg > 0)
-                ::glVertex3fv(nextv-pt3);
+                glVertex3fv(nextv-pt3);
         } else {
 //*-*  Draws the series of the quadrilaterals
-            ::glBegin(GL_QUAD_STRIP);
+            glBegin(GL_QUAD_STRIP);
             exnextv = nextv + pt3;
             for (i=0;i<ndiv;i++) {
-                ::glVertex3fv(nextv);
-                ::glVertex3fv(exnextv);
+                glVertex3fv(nextv);
+                glVertex3fv(exnextv);
                 nextv += 3;
                 exnextv += 3;
             }
             if (nseg > 0 ) {
-                ::glVertex3fv(nextv  - pt3);
-                ::glVertex3fv(exnextv- pt3);
+                glVertex3fv(nextv  - pt3);
+                glVertex3fv(exnextv- pt3);
             }
 
         }
-        ::glEnd();
+        glEnd();
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*   "Bottom"  of TPCON
          if (!fRootLight)
-            ::glNormal3fv(backone);
+            glNormal3fv(backone);
 
         nextv = vert(0,0,0);
         if (*(nextv+1) == 0.0 && *nextv == 0.0 ) {
@@ -1057,7 +1057,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
                 glNormal3fv(normal);
             }
 
-            ::glBegin(GL_QUAD_STRIP);
+            glBegin(GL_QUAD_STRIP);
             {
                 for (i=0;i<nstacks;i++) {
                     glVertex3fv(nextv+pt3);
@@ -1065,7 +1065,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
                     nextv += 6*ndiv;
                 }
             }
-            ::glEnd();
+            glEnd();
         }
         if (fRootLight)
             LightIndex(0);  //Reset the original color
@@ -1111,7 +1111,7 @@ void TGLKernel::ClearGLDepth(Float_t val)
 {
    //
 
-   ::glClearDepth(val);
+   glClearDepth(val);
 }
 
 //______________________________________________________________________________
@@ -1119,8 +1119,8 @@ void TGLKernel::MatrixModeGL(EG3D2GLmode mode)
 {
    //
 
-   ::glMatrixMode(GLCommand[mode]);
-   ::glLoadIdentity();
+   glMatrixMode(GLCommand[mode]);
+   glLoadIdentity();
 }
 
 //______________________________________________________________________________
@@ -1129,7 +1129,7 @@ void TGLKernel::FrustumGL( Double_t xmin, Double_t xmax, Double_t ymin,
 {
    //
 
-   ::glFrustum(xmin, xmax, ymin, ymax, znear, zfar);
+   glFrustum(xmin, xmax, ymin, ymax, znear, zfar);
 }
 
 //______________________________________________________________________________
@@ -1137,7 +1137,7 @@ void TGLKernel::GLLight(EG3D2GLmode name, const Float_t * lig_mat)
 {
    //
 
-   ::glLightfv(GLCommand[name], GL_POSITION, lig_mat);
+   glLightfv(GLCommand[name], GL_POSITION, lig_mat);
 }
 
 //______________________________________________________________________________
@@ -1145,7 +1145,7 @@ void TGLKernel::LightModel(EG3D2GLmode name, const Float_t * lig_mat)
 {
    //
 
-   ::glLightModelfv(GLCommand[name], lig_mat);
+   glLightModelfv(GLCommand[name], lig_mat);
 }
 
 //______________________________________________________________________________
@@ -1153,7 +1153,7 @@ void TGLKernel::LightModel(EG3D2GLmode name, Int_t prop)
 {
    //
 
-   ::glLightModeli(GLCommand[name], prop);
+   glLightModeli(GLCommand[name], prop);
 }
 
 //______________________________________________________________________________
@@ -1161,7 +1161,7 @@ void TGLKernel::CullFaceGL(EG3D2GLmode face)
 {
    //
 
-   ::glCullFace(GLCommand[face]);
+   glCullFace(GLCommand[face]);
 }
 
 //______________________________________________________________________________
@@ -1169,7 +1169,7 @@ void TGLKernel::ViewportGL(Int_t x, Int_t y, Int_t w, Int_t h)
 {
    //
 
-   ::glViewport(x, y, w, h);
+   glViewport(x, y, w, h);
 }
 
 //______________________________________________________________________________
@@ -1177,8 +1177,8 @@ void TGLKernel::MaterialGL(EG3D2GLmode face, const Float_t * mat_prop)
 {
    //
 
-   ::glMaterialfv(GLCommand[face], GL_SPECULAR, mat_prop);
-   ::glMaterialfv(GLCommand[face], GL_DIFFUSE, mat_prop);
+   glMaterialfv(GLCommand[face], GL_SPECULAR, mat_prop);
+   glMaterialfv(GLCommand[face], GL_DIFFUSE, mat_prop);
 }
 
 //______________________________________________________________________________
@@ -1186,7 +1186,7 @@ void TGLKernel::MaterialGL(EG3D2GLmode face, Float_t mat_prop)
 {
    //
 
-   ::glMaterialf(GLCommand[face], GL_SHININESS, mat_prop);
+   glMaterialf(GLCommand[face], GL_SHININESS, mat_prop);
 }
 
 //______________________________________________________________________________
@@ -1194,7 +1194,7 @@ void TGLKernel::BeginGL()
 {
    //
 
-   ::glBegin(GL_POLYGON);
+   glBegin(GL_POLYGON);
 }
 
 //______________________________________________________________________________
@@ -1202,7 +1202,7 @@ void TGLKernel::EndGL()
 {
    //
 
-   ::glEnd();
+   glEnd();
 }
 
 //______________________________________________________________________________
@@ -1210,7 +1210,7 @@ void TGLKernel::SetGLNormal(const Double_t *normal)
 {
    //
 
-   ::glNormal3dv(normal);
+   glNormal3dv(normal);
 }
 
 //______________________________________________________________________________
@@ -1218,7 +1218,7 @@ GLUtesselator * TGLKernel::GLUNewTess()
 {
    //
 
-   return ::gluNewTess();
+   return gluNewTess();
 }
 
 //______________________________________________________________________________
@@ -1226,7 +1226,7 @@ void TGLKernel::GLUDeleteTess(GLUtesselator * t_obj)
 {
    //
 
-   ::gluDeleteTess(t_obj);
+   gluDeleteTess(t_obj);
 }
 
 //______________________________________________________________________________
@@ -1240,9 +1240,9 @@ void TGLKernel::GLUTessCallback(GLUtesselator * t_obj)
  #define funptr void(*)()
 #endif
 
-   ::gluTessCallback(t_obj, GLU_BEGIN, (funptr)::glBegin);
-   ::gluTessCallback(t_obj, GLU_END, ::glEnd);
-   ::gluTessCallback(t_obj, GLU_VERTEX, (funptr)::glVertex3dv);
+   gluTessCallback(t_obj, (GLenum)GLU_BEGIN, (funptr)glBegin);
+   gluTessCallback(t_obj, (GLenum)GLU_END, glEnd);
+   gluTessCallback(t_obj, (GLenum)GLU_VERTEX, (funptr)glVertex3dv);
 
 #undef funptr
 }
@@ -1252,7 +1252,7 @@ void TGLKernel::GLUNextContour(GLUtesselator * t_obj)
 {
    //
 
-   ::gluNextContour(t_obj, GLU_UNKNOWN);
+   gluNextContour(t_obj, (GLenum)GLU_UNKNOWN);
 }
 
 //______________________________________________________________________________
@@ -1260,7 +1260,7 @@ void TGLKernel::GLUBeginPolygon(GLUtesselator * t_obj)
 {
    //
 
-   ::gluBeginPolygon(t_obj);
+   gluBeginPolygon(t_obj);
 }
 
 //______________________________________________________________________________
@@ -1268,7 +1268,7 @@ void TGLKernel::GLUEndPolygon(GLUtesselator * t_obj)
 {
    //
 
-   ::gluEndPolygon(t_obj);
+   gluEndPolygon(t_obj);
 }
 
 //______________________________________________________________________________
@@ -1276,7 +1276,7 @@ void TGLKernel::GLUTessVertex(GLUtesselator * t_obj, const Double_t * vert)
 {
    //
 
-   ::gluTessVertex(t_obj, (Double_t *)vert, (Double_t *)vert);
+   gluTessVertex(t_obj, (Double_t *)vert, (Double_t *)vert);
 }
 
 //______________________________________________________________________________
@@ -1284,8 +1284,8 @@ void TGLKernel::NewMVGL()
 {
    //
 
-   ::glMatrixMode(GL_MODELVIEW);
-   ::glLoadIdentity();
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
 }
 
 //______________________________________________________________________________
@@ -1293,6 +1293,6 @@ void TGLKernel::NewPRGL()
 {
    //
 
-   ::glMatrixMode(GL_PROJECTION);
-   ::glLoadIdentity();
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
 }
