@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.201 2005/02/16 01:27:29 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.202 2005/02/22 06:19:21 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -754,11 +754,8 @@ int GetClassVersion(G__ClassInfo &cl)
    if (!cl.HasMethod("Class_Version")) return -1;
 
    const char *function = "::Class_Version()";
-   string classname = GetLong64_Name( cl.Fullname() );
-   char *name = new char[classname.length()+strlen(function)+1];
-   sprintf(name, "%s%s", classname.c_str(), function);
-   int version = (int)G__int(G__calc(name));
-   delete [] name;
+   string funcname = GetLong64_Name( cl.Fullname() ) + function;
+   int version = (int)G__int(G__calc(funcname.c_str()));
    return version;
 }
 
