@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.8 2002/02/19 17:43:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.9 2002/02/24 18:01:15 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -114,6 +114,7 @@ Int_t TMultiGraph::DistancetoPrimitive(Int_t px, Int_t py)
    TIter   next(fGraphs);
    while ((g = (TGraph*) next())) {
       Int_t dist = g->DistancetoPrimitive(px,py);
+      if (dist <= 0) return 0;
       if (dist < kMaxDiff) {gPad->SetSelected(g); return dist;}
    }
    return distance;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.13 2002/06/21 06:57:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.14 2002/07/15 10:39:53 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -178,6 +178,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
       h = (TH1*)fHists->At(i);
       if (fStack && !strstr(doption,"nostack")) h = (TH1*)fStack->At(i);
       Int_t dist = h->DistancetoPrimitive(px,py);
+      if (dist <= 0) return 0;
       if (dist < kMaxDiff) {
          gPad->SetSelected(fHists->At(i));
          gPad->SetCursor(kPointer);
