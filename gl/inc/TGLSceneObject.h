@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.16 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.17 2004/12/01 16:57:19 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -113,6 +113,7 @@ public:
               UInt_t glName, TObject *realObj);
 
    void GLDraw(const TGLFrustum *fr)const;
+   void GLDrawPolys()const;
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
 private:

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.23 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.24 2004/12/01 16:57:19 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -350,11 +350,6 @@ void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
    glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
    glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
 
-   GLUtriangulatorObj *tessObj = GetTesselator();
-   const Double_t *pnts = &fVertices[0];
-   const Double_t *normals = &fNormals[0];
-   const Int_t *pols = &fPolyDesc[0];
-
    if (IsTransparent()) {
       glEnable(GL_BLEND);
       glDepthMask(GL_FALSE);
@@ -362,6 +357,25 @@ void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
    }
 
    glLoadName(GetGLName());
+   GLDrawPolys();
+
+   if (IsTransparent()) {
+      glDepthMask(GL_TRUE);
+      glDisable(GL_BLEND);
+   }
+   
+   if (fIsSelected) {
+      fSelectionBox.DrawBox();
+   }
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::GLDrawPolys()const
+{
+  GLUtriangulatorObj *tessObj = GetTesselator();
+  const Double_t *pnts = &fVertices[0];
+  const Double_t *normals = &fNormals[0];
+  const Int_t *pols = &fPolyDesc[0];
 
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
@@ -384,15 +398,6 @@ void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
          }
          glEnd();
       }
-   }
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-   
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
    }
 }
 
