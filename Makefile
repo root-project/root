@@ -32,10 +32,19 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 endif
 ifneq ($(TTFINCDIR),)
+ifneq ($(TTFLIBDIR),)
 MODULES      += x11ttf
 endif
+endif
 ifneq ($(OPENGLINCDIR),)
+ifneq ($(OPENGLLIBDIR),)
 MODULES      += gl
+endif
+endif
+ifneq ($(MYSQLINCDIR),)
+ifneq ($(MYSQLLIBDIR),)
+MODULES      += mysql
+endif
 endif
 ifneq ($(RFIO),)
 MODULES      += rfio
@@ -54,9 +63,6 @@ MODULES      += venus
 endif
 ifneq ($(STAR),)
 MODULES      += star
-endif
-ifneq ($(MYSQLINCDIR),)
-MODULES      += mysql
 endif
 ifneq ($(SRPDIR),)
 MODULES      += srputils
