@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.35 2004/05/21 20:39:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.36 2004/06/19 15:47:19 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -331,12 +331,12 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 	Double_t stats[10];
 	//compare sum of weights with sum of squares of weights
 	pass->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	if (TMath::Abs(stats[0] -stats[1]) < 1e-6) {
 		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
 		return;
 	}
 	total->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	if (TMath::Abs(stats[0] -stats[1]) < 1e-6) {
 		Error("BayesDivide","Total histogram has not been filled with weights = 1");
 		return;
 	}
