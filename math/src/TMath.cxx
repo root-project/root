@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.46 2004/01/27 16:28:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.47 2004/02/06 14:30:55 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -990,7 +990,7 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
   Double_t pi= TMath::Pi();
   Int_t Threeroots = 0; 
   
-  Double_t phi,q,r,s,t,p,D,R1,x,y,temp;
+  Double_t phi,q,r,s,t,p,D,R1,x,temp;
 
   a = 0.0;
   b = 0.0;
@@ -1025,7 +1025,7 @@ void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
   } else { 
       x   = q/2/(R1*R1*R1);           
       phi = TMath::Log(x+TMath::Sqrt(x*x+1));
-      y   = TMath::SinH(phi/3);
+      b   = TMath::SinH(phi/3);
   }
   
     a = (-2*R1)*a-r/3;
