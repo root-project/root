@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.47 2002/05/23 15:27:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.48 2002/06/02 14:49:33 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1128,7 +1128,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
       }
       if (*current==',' && count==0) break;
    }
-   char *sclose = current; *sclose = 0;
+   char *sclose = current; *sclose = 0; sclose--;
    char *sconst = strstr(sopen,"const");
    if (sconst) sopen = sconst + 5;
    fSTLtype = 0;
