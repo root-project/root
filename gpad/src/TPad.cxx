@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.139 2004/08/04 13:45:51 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.140 2004/08/10 21:55:47 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4154,31 +4154,34 @@ void TPad::SaveAs(const char *filename)
 //
 //   See comments in TPad::Print for the Postscript formats
 
-   char psname[264];
+   TString psname;
    Int_t lenfil =  filename ? strlen(filename) : 0;
 
-   if (!lenfil)  sprintf(psname,"%s.ps",GetName());
-   else          strcpy(psname,filename);
+   if (!lenfil)  { psname = GetName(); psname.Append(".ps"); }
+   else            psname = filename;
 
-   // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
-   if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
+   // lines below protected against case like c1->SaveAs( "../ps/cs.ps" );
+   if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) { 
+      psname = GetName(); 
+      psname.Append(filename); 
+   }
 
-   if (strstr(psname,".gif"))
-               Print(psname,"gif");
-   else if (strstr(psname,".C") || strstr(psname,".cxx") || strstr(psname,".cpp"))
-               Print(psname,"cxx");
-   else if (strstr(psname,".root"))
-               Print(psname,"root");
-   else if (strstr(psname,".xml"))
-               Print(psname,"xml");
-   else if (strstr(psname,".eps"))
-               Print(psname,"eps");
-   else if (strstr(psname,".pdf"))
-               Print(psname,"pdf");
-   else if (strstr(psname,".svg"))
-               Print(psname,"svg");
+   if (psname.EndsWith(".gif")) 
+                Print(psname,"gif");
+   else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp")) 
+                Print(psname,"cxx"); 
+   else if (psname.EndsWith(".root"))
+                Print(psname,"root");
+   else if (psname.EndsWith(".xml"))
+                Print(psname,"xml");
+   else if (psname.EndsWith(".eps"))
+                Print(psname,"eps");
+   else if (psname.EndsWith(".pdf"))
+                Print(psname,"pdf");
+   else if (psname.EndsWith(".svg"))
+                Print(psname,"svg");
    else
-               Print(psname,"ps");
+                Print(psname,"ps");
 
  }
 
