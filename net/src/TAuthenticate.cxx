@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.41 2004/03/22 15:26:29 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.42 2004/03/23 00:12:41 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2122,6 +2122,15 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       // Get replay from server
       fSocket->Recv(stat, kind);
+
+      // This check should guarantee backward compatibility with a private
+      // version of rootd used by CDF
+      if (kind == kROOTD_AUTH && stat == 1) {
+         fSecContext =
+            fHostAuth->CreateSecContext(User,fRemote,kClear,-1,fDetails,0);
+         return 1;
+      }
+
       if (kind == kROOTD_ERR) {
          TString Server = "sockd";
          if (fProtocol.Contains("root"))
