@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.50 2001/04/09 08:04:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.51 2001/04/12 19:17:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1571,6 +1571,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             *obj = (TObject*)el->GetClass()->New();
                          }
                          (*obj)->Streamer(b);
+                         if ((*obj)->IsZombie()) {
+                            delete (*obj);
+                            *obj = 0;
+                         }
                          break;
                         }
 
@@ -2291,12 +2295,16 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: { TObject **obj = (TObject**)(pointer+fOffset[i]);
-                          if (*obj) (*obj)->Streamer(b);
-                          else {
-                             Error("WriteBuffer","-> specified but pointer is null");
-                             TStreamerElement *element = (TStreamerElement*)fElem[i];
-                             element->ls();
+                          if (!(*obj)) {
+                             TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                             if (gDebug) {
+                                Error("WriteBuffer","-> specified but pointer is null");
+                                el->ls();
+                             }
+                             *obj = (TObject*)el->GetClass()->New();
+                             (*obj)->SetBit(kZombie);
                           }
+                          (*obj)->Streamer(b);
                           break;
                         }
 
