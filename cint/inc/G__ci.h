@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014083
-#define G__CINTVERSIONSTR  "5.14.83, Apr 5 2001"
+#define G__CINTVERSION      5014085
+#define G__CINTVERSIONSTR  "5.14.85, Apr 22 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -574,7 +574,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      128  /* Variable name */
 #endif
-#define G__MAXFILE      500  /* Max interpreted source file */
+#define G__MAXFILE     2000  /* Max interpreted source file */
 #define G__MAXFILENAME  256  /* Max interpreted source file name length */
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
@@ -1275,6 +1275,10 @@ struct G__tagtable {
 
 #ifndef G__OLDIMPLEMENTATION1238
   char isctor[G__MAXSTRUCT];
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1503
+  int defaulttypenum[G__MAXSTRUCT];
 #endif
 };
 

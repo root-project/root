@@ -12,6 +12,11 @@
 
 #include <stddef.h>
 
+#if defined(G__ANSIISOLIB)
+#undef G__GNUC
+#undef G__HPUX
+#endif
+
 //////////////////////////////////////////////////////////////////////
 #if defined(G__GNUC)
 

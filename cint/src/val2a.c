@@ -484,12 +484,28 @@ int mask_dollar;
     --pt;
     if('$'==G__struct.name[p_tagnum[pt]][0]) os = 1*mask_dollar;
     else                                     os = 0;
+#define G__OLDIMPLEMENTATION1503
+#ifndef G__OLDIMPLEMENTATION1503
+    if(-1!=G__struct.defaulttypenum[p_tagnum[pt]]) 
+      sprintf(string+len,"%s::"
+	      ,G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
+    else
+      sprintf(string+len,"%s::",G__struct.name[p_tagnum[pt]]+os);
+#else
     sprintf(string+len,"%s::",G__struct.name[p_tagnum[pt]]+os);
+#endif
     len=strlen(string);
   }
   if('$'==G__struct.name[tagnum][0]) os = 1*mask_dollar;
   else                               os = 0;
+#ifndef G__OLDIMPLEMENTATION1503
+  if(-1!=G__struct.defaulttypenum[tagnum]) 
+    sprintf(string+len,"%s",G__newtype.name[G__struct.defaulttypenum[tagnum]]);
+  else
+    sprintf(string+len,"%s",G__struct.name[tagnum]+os);
+#else
   sprintf(string+len,"%s",G__struct.name[tagnum]+os);
+#endif
 
   return(string);
 }
@@ -518,6 +534,12 @@ int type,tagnum,typenum,reftype,isconst;
     strcpy(string,"const ");
     string+=6;
   }
+#ifndef G__OLDIMPLEMENTATION1503
+  if(-1==typenum && tagnum>=0 && -1!=G__struct.defaulttypenum[tagnum] &&
+     'u'==G__newtype.type[G__struct.defaulttypenum[tagnum]]) {
+    typenum = G__struct.defaulttypenum[tagnum];
+  }
+#endif
   if(-1!=typenum) {
     if(0<=G__newtype.parent_tagnum[typenum]) 
       sprintf(string,"%s::%s"

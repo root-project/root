@@ -19,7 +19,9 @@
 #include <iterator>
 #include <memory>
 
-#if defined(G__GNUC)
+#if defined(G__ANSIISOLIB)
+template<class T,class Allocator=allocator<T> >
+#elif defined(G__GNUC)
 template<class T,class Allocator=alloc>
 #elif defined(G__HPUX)
 template<class T,class Allocator=allocator>

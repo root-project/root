@@ -841,10 +841,10 @@ void G__gen_cpplink()
       }
       else {
         G__fprinterr(G__serr,"void* operator new(size_t size,void* p) {\n");
-#ifndef G__OLDIMPLEMENTATION1321
-        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+#ifndef G__OLDIMPLEMENTATION1512
+        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) {G__setgvp(G__PVOID);return(p);}\n");
 #else
-        G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #endif
       }
       G__fprinterr(G__serr,"  // Yourown things...\n");
@@ -854,7 +854,11 @@ void G__gen_cpplink()
 #ifdef G__N_EXPLICITDESTRUCTOR
     if(G__is_operator_newdelete&(G__IS_OPERATOR_DELETE)) {
       G__fprinterr(G__serr,"void operator delete(void *p) {\n");
+#ifndef G__OLDIMPLEMENTATION1512
+      G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) {G__setgvp(G__PVOID);return;}\n");
+#else
       G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+#endif
       G__fprinterr(G__serr,"  // Yourown things...\n");
       G__fprinterr(G__serr,"}\n");
     }
@@ -3719,6 +3723,9 @@ char *endoffunc;
 {
 #ifndef G__SMALLOBJECT
   int type,tagnum,typenum,reftype,isconst;
+#ifndef G__OLDIMPLEMENTATION1503
+  int deftyp = -1;
+#endif
 
   type = ifunc->type[ifn];
   tagnum = ifunc->p_tagtable[ifn];
@@ -3808,12 +3815,20 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1496
     case 'u':
 #endif
+#ifndef G__OLDIMPLEMENTATION1503
+#ifndef G__OLDIMPLEMENTATION1510
+      if(-1!=typenum) deftyp = typenum;
+      else deftyp = G__struct.defaulttypenum[tagnum];
+#else
+      deftyp = G__struct.defaulttypenum[tagnum];
+#endif
+#endif
       if(reftype) {
 	fprintf(fp,"      {\n");
 #ifndef G__OLDIMPLEMENTATION1209
 	if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
-	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,-1,0,0));
+	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
 	sprintf(endoffunc,";\n        result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n      }");
       }
       else {
@@ -3823,7 +3838,8 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1209
 	  if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
-	  fprintf(fp,"        %s *pobj,xobj=",G__type2string('u',tagnum,-1,0,0));
+	  fprintf(fp,"        %s *pobj,xobj="
+		  ,G__type2string('u',tagnum,deftyp,0,0));
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
 #ifndef G__OLDIMPLEMENTATION1423
 	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE
@@ -3832,20 +3848,21 @@ char *endoffunc;
 #endif
 		)
 	      sprintf(endoffunc,";\n        pobj=new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
+		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
 	    else
 #endif
 	      sprintf(endoffunc,";\n        pobj=new((void*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		      ,G__type2string('u',tagnum,-1,0,0));
+		      ,G__type2string('u',tagnum,deftyp,0,0));
 
 	  }
 	  else {
 	    sprintf(endoffunc,";\n        pobj=new %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		    ,G__type2string('u',tagnum,-1,0,0));
+		    ,G__type2string('u',tagnum,deftyp,0,0));
 	  }
 #else /* ON902 **************************************************************/
 	  fprintf(fp,"      {\n");
-	  fprintf(fp,"        %s *pobj;\n",G__type2string('u',tagnum,-1,0,0));
+	  fprintf(fp,"        %s *pobj;\n"
+		  ,G__type2string('u',tagnum,deftyp,0,0));
 #ifndef G__OLDIMPLEMENTATION680
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
 #else
@@ -3858,15 +3875,15 @@ char *endoffunc;
 #endif
 	       )
 	      fprintf(fp,"        pobj=new((G__%s_tag*)G__getgvp()) %s("
-		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
+		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
 	    else
 #endif
 	      fprintf(fp,"        pobj=new((void*)G__getgvp()) %s("
-		      ,G__type2string('u',tagnum,-1,0,0));
+		      ,G__type2string('u',tagnum,deftyp,0,0));
 	  }
 	  else {
 	    fprintf(fp,"        pobj=new %s("
-		    ,G__type2string('u',tagnum,-1,0,0));
+		    ,G__type2string('u',tagnum,deftyp,0,0));
 	  }
 	  sprintf(endoffunc,");\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }");
 #endif /* ON902 **************************************************************/

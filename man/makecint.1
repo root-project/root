@@ -50,7 +50,7 @@ library files [xxx].a or combination of those.
 .br
 .B Procedure
 .br
-Create a Makefile
+1) Create a Makefile
 .br
 First of all, you need to create a Makefile by using
 makecint. Makecint will automate a process of generating
@@ -61,8 +61,9 @@ embeds xxx.C and yyy.o as precompiled library.
      $ makecint -mk Makefile -o mycint -H xxx.h yyy.h -C++ xxx.C yyy.o
 .fi
 Command line options will be explained later in this document.
+
 .br
-Modify Makefile
+2) Modify Makefile (if needed)
 .br
 Please check the created Makefile and modify it if needed.
 If your library is simple, modification may not be needed.
@@ -70,7 +71,7 @@ However, when linking non-trivial libraries, you may need
 to carefully examine and modify Makefile by hand.
 
 .br
-Do make
+3) Do make
 .br
 Do make. "mycint" will be compiled and linked. "mycint" is
 a  customized C/C++  interpreter  which  pre-includes
@@ -655,6 +656,9 @@ From cint5.14.60, a new scheme is introduced. This scmeme is still
 experimmental. In the new method, following flags dominates
 others. This scheme is intended to fix problems associated with global
 operator new/delete.
+Before 5.14.59, -M0x1c or -M0x10 was needed for HP-UX aCC, Solaris
+CC5 and few other compilers. From 5.14.60, this option is not 
+needed for those platforms any more.
 .nf
 
   #define G__DUMMYARG_NEWDELETE        0x100
@@ -677,7 +681,7 @@ following functions will be generated.
     static void operator delete(void *p,[DLLID]_tag* x);
     static void G__operator_delete(void *p);
 .fi
-In rootcint, -M0x1c is set by default.
+Default value is -M0x100 for pure CINT and -M0x1c for ROOTCINT.
 .nf
     $ makecint -mk Makeit -H src.h -C++ src.C -cint -M0x1c
     $ make -mk Makeit

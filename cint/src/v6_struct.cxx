@@ -728,6 +728,10 @@ int type;
     G__struct.isctor[i] = 0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1503
+    G__struct.defaulttypenum[i] = -1;
+#endif
+
     G__struct.alltag++;
   }
   else if(0==G__struct.type[i]) {

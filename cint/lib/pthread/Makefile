@@ -28,7 +28,7 @@ LDDLLOPT    = -shared
 OPTIMIZE    = -O2
 LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI
-OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION -DCINTSYSDIR=\"/usr/lib/cint\"
+OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
 SYSIPATH    =
 
 # libraries
@@ -116,8 +116,8 @@ $(CPPIFO) : $(CPPIFC)
 	$(CPP) $(CINTIPATH) $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -c $(CPPIFC)
 
 # Create C++ Interface routine ###########################
-$(CPPIFC) : $(CPPHEADER) $(CPPSTUB)
-	cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
+$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint
+	$(CINTSYSDIR)/cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
 
 
 # Clean up #################################################

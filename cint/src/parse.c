@@ -1782,6 +1782,26 @@ char *statement;
 }
 
 /***********************************************************************
+ * G__display_tempobject()
+ ***********************************************************************/
+void G__display_tempobject(action) 
+char* action;
+{
+  struct G__tempobject_list *ptempbuf = G__p_tempbuf;
+  fprintf(G__serr,"\n%s ",action);
+  while(ptempbuf) {
+    fprintf(G__serr,"%d:(%s)0x%p ",ptempbuf->level
+	    ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
+			    ,ptempbuf->obj.typenum
+			    ,ptempbuf->obj.obj.reftype.reftype
+			    ,ptempbuf->obj.isconst)
+	    ,(void*)ptempbuf->obj.obj.i);
+    ptempbuf = ptempbuf->prev;
+  }
+  fprintf(G__serr,"\n");
+}
+
+/***********************************************************************
 * G__free_tempobject()
 *
 * Called by
@@ -1806,6 +1826,10 @@ void G__free_tempobject()
      ) return;
 #endif
 
+#ifdef G__DEBUG
+  if(G__asm_dbg) G__display_tempobject("freetemp");
+#endif
+
   /*****************************************************
    * free temp object buffer
    *****************************************************/
@@ -1814,13 +1838,8 @@ void G__free_tempobject()
 
 #ifdef G__DEBUG
     if(G__asm_dbg) {
-#ifndef G__FONS31
       G__fprinterr(G__serr,"free_tempobject(%d)=0x%lx\n"
 	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
-#else
-      G__fprinterr(G__serr,"free_tempobject(%d)=0x%x\n"
-	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
-#endif
     }
 #endif
     
@@ -1852,19 +1871,11 @@ void G__free_tempobject()
     G__return=G__RETURN_NON;
     
     if(G__dispsource) {
-#ifndef G__FONS31
       G__fprinterr(G__serr,
 	      "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
 	      ,G__struct.name[G__tagnum]
 	      ,G__p_tempbuf->obj.obj.i
 	      ,G__p_tempbuf->level,G__templevel);
-#else
-      G__fprinterr(G__serr,
-	      "!!!Destroy temp object (%s)0x%x createlevel=%d destroylevel=%d\n"
-	      ,G__struct.name[G__tagnum]
-	      ,G__p_tempbuf->obj.obj.i
-	      ,G__p_tempbuf->level,G__templevel);
-#endif
     }
     
     sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
@@ -1944,13 +1955,8 @@ char *string;
 
 #ifdef G__DEBUG
   if(G__asm_dbg)
-#ifndef G__FONS31
     G__fprinterr(G__serr,"alloc_tempstring(%s)=0x%lx\n",string
 	    ,G__p_tempbuf->obj.obj.i);
-#else
-    G__fprinterr(G__serr,"alloc_tempstring(%s)=0x%x\n",string
-	    ,G__p_tempbuf->obj.obj.i);
-#endif
 #endif
 
   return(G__p_tempbuf->obj);
@@ -1995,14 +2001,12 @@ int tagnum,typenum;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-#ifndef G__FONS31
     G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
 	    G__p_tempbuf->obj.obj.i);
-#else
-    G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%x\n",tagnum,typenum,
-	    G__p_tempbuf->obj.obj.i);
-#endif
   }
+#endif
+#ifdef G__DEBUG
+  if(G__asm_dbg) G__display_tempobject("alloctemp");
 #endif
 }
 
@@ -2052,12 +2056,11 @@ G__value reg;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-#ifndef G__FONS31
     G__fprinterr(G__serr,"store_tempobject(%d)=0x%lx\n",reg.tagnum,reg.obj.i);
-#else
-    G__fprinterr(G__serr,"store_tempobject(%d)=0x%x\n",reg.tagnum,reg.obj.i);
-#endif
   }
+#endif
+#ifdef G__DEBUG
+  if(G__asm_dbg) G__display_tempobject("storetemp");
 #endif
 }
 
@@ -2078,14 +2081,12 @@ int G__pop_tempobject()
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-#ifndef G__FONS31
     G__fprinterr(G__serr,"pop_tempobject(%d)=0x%lx\n"
 	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
-#else
-    G__fprinterr(G__serr,"pop_tempobject(%d)=0x%x\n"
-	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
-#endif
   }
+#endif
+#ifdef G__DEBUG
+  if(G__asm_dbg) G__display_tempobject("poptemp");
 #endif
 
   store_p_tempbuf = G__p_tempbuf->prev;

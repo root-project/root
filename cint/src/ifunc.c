@@ -2007,10 +2007,47 @@ int func_now;
 	c=G__fgetspace();
 	break;
       case '[': 
-#ifndef G__OLDIMPLEMENTATION573
 	++arydim;
+#ifndef G__OLDIMPLEMENTATION1506
+	if(G__NOLINK>G__globalcomp && (0==name[0] || '['==name[0])) {
+#ifndef G__OLDIMPLEMENTATION1509
+	  fpos_t tmp_pos;
+	  int tmp_line;
 #endif
-#ifndef G__OLDIMPLEMENTATION846
+	  int len=strlen(name);
+	  name[len++] = c;
+	  name[len++] = ']';
+	  c=G__fignorestream("],)"); /* <<< */
+#ifndef G__OLDIMPLEMENTATION1509
+	  /* read 'f(double [][30])' or 'f(double [])' */
+	  G__disp_mask = 1000;
+	  fgetpos(G__ifile.fp,&tmp_pos);
+	  tmp_line = G__ifile.line_number;
+	  c=G__fgetstream(name+len,"[=,)");
+	  fsetpos(G__ifile.fp,&tmp_pos);
+	  G__ifile.line_number = tmp_line;
+	  G__disp_mask = 0;
+	  if('['==c) {
+	    c=G__fgetstream(name+len,"=,)");
+	    pointlevel = 0;
+	    break;
+	  }
+	  else {
+	    /* G__fignorestream("],)") already called above <<< */
+	    name[0] = 0;
+	  }
+#else
+	  if(']'==c) {
+	    c=G__fgetstream(name+len,"=,)");
+	  }
+	  pointlevel = 0;
+	  break;
+#endif
+	}
+	else {
+	  c=G__fignorestream("],)");
+	}
+#else
 	c=G__fignorestream("],)");
 #endif
       case '*':  
@@ -5635,6 +5672,12 @@ asm_ifunc_start:   /* loop compilation execution label */
     if(isupper(result7->type)) {
       result7->obj.reftype.reftype = p_ifunc->reftype[ifn];
     }
+#ifndef G__OLDIMPLEMENTATION1504
+    result7->ref = p_ifunc->reftype[ifn];
+    if('u'==p_ifunc->type[ifn]&&0==result7->ref&&-1!=result7->tagnum) {
+      G__store_tempobject(*result7); /* To free tempobject in pcode */
+    }
+#endif
     /* To be implemented */
     G__exec_memberfunc=store_exec_memberfunc;
     return(1);
@@ -6504,6 +6547,16 @@ asm_ifunc_start:   /* loop compilation execution label */
 		    ,temp);
 	  }
 	  G__getfunction(temp,&itemp,G__TRYCONSTRUCTOR);
+#ifndef G__OLDIMPLEMENTATION1507
+	  if(itemp && 
+	     store_p_tempobject != (&G__p_tempbuf->obj) &&
+	     store_struct_offset != G__p_tempbuf->obj.obj.i) {
+	    ++G__p_tempbuf->level;
+	    ++G__templevel;
+	    G__free_tempobject();
+	    --G__templevel;
+	  }
+#endif
 	}
 	else {
 	  /* precompiled class */
@@ -6523,7 +6576,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 	  G__globalvarpointer = store_globalvarpointer;
 #endif
 #ifndef G__OLDIMPLEMENtATION1274
-	  if(itemp) G__store_tempobject(buf);
+	  if(itemp) {
+#ifndef G__OLDIMPLEMENTATION1507
+	    G__free_tempobject();
+#endif
+	    G__store_tempobject(buf);
+	  }
 #else
 	  G__store_tempobject(buf);
 #endif

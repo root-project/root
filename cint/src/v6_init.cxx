@@ -761,6 +761,12 @@ char *argv[] ;
 
     case 'M':
       G__is_operator_newdelete = (int)G__int(G__calc_internal((optarg)));
+#ifndef G__OLDIMPLEMENTATION1513
+      if(G__NOT_USING_2ARG_NEW&G__is_operator_newdelete) {
+	fprintf(G__serr,"!!!-M option may not be needed any more. A new scheme has been implemented.\n");
+	fprintf(G__serr,"!!!Refer to $CINTSYSDIR/doc/makecint.txt for the detail.\n");
+      }
+#endif
       break;
 
     case 'V': /* Create precompiled private member dictionary */

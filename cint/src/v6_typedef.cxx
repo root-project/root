@@ -463,7 +463,16 @@ void G__define_type()
     if(-1!=itemp) {
       tagtype=G__struct.type[itemp];
 #ifndef G__OLDIMPLEMENTATION710
+#ifndef G__OLDIMPLEMENTATION1503
+      if(-1!=G__struct.parent_tagnum[itemp])
+	sprintf(tagname,"%s::%s"
+		,G__fulltagname(G__struct.parent_tagnum[itemp],0)
+		,G__struct.name[itemp]);
+      else
+	strcpy(tagname,G__struct.name[itemp]);
+#else
       strcpy(tagname,G__fulltagname(itemp,0));
+#endif
 #else
       strcpy(tagname,G__struct.name[itemp]);
 #endif

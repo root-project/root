@@ -265,6 +265,9 @@ char *item;
 #ifndef G__OLDIMPLEMENtATION997
   if(G__prerun&&G__static_alloc&&G__func_now>=0) return(0);
 #endif
+#ifndef G__OLDIMPLEMENtATION997
+  if(G__no_exec_compile && 0==G__asm_noverflow) return(0);
+#endif
   if(G__in_pause) return(0);
   if(G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
     G__CHECK(G__SECURE_PAUSE,1,G__pause());

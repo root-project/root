@@ -394,6 +394,9 @@ char *expression;
       /* This is a pre-compiled class */
       long store_globalvarpointer = G__globalvarpointer;
       if(memarena) G__globalvarpointer = memarena;
+#ifndef G__OLDIMPLEMENTATION1508
+      else G__globalvarpointer = G__PVOID;
+#endif
       if(arrayindex) {
 	G__cpp_aryconstruct=pinc;
 #ifndef G__OLDIMPLEMENTATION1437

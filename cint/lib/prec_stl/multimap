@@ -22,7 +22,10 @@
 #include <functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__GNUC)
+#if defined(G__ANSIISOLIB)
+template<class Key,class T,class Compare=less<Key>
+        ,class Allocator=allocator<T> >
+#elif defined(G__GNUC)
 template<class Key,class T,class Compare=less<Key>
         ,class Allocator=alloc>
 #elif defined(G__HPUX)

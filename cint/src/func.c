@@ -1522,18 +1522,28 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1376
 	  if(G__NOLINK > G__globalcomp) break;
 #endif
-#ifndef G__OLDIMPLEMENTATION1185
-	  G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
-		  ,G__struct.name[G__tagnum],item);
-#else
-	  G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
-		  ,G__struct.name[G__tagnum],funcname);
+#ifndef G__OLDIMPLEMENTATION1505
+	  if(!G__no_exec_compile || G__asm_noverflow) {
 #endif
-	  G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1185
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+			 ,G__struct.name[G__tagnum],item);
+#else
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
+			 ,G__struct.name[G__tagnum],funcname);
+#endif
+	    G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1505
+	  }
+#endif
 	  store_exec_memberfunc=G__exec_memberfunc;
 	  G__exec_memberfunc=1;
 #ifndef G__OLDIMPLEMENTATION1103
-	  if(0==G__const_noerror) {
+	  if(0==G__const_noerror
+#ifndef G__OLDIMPLEMENTATION1505
+	     && (!G__no_exec_compile || G__asm_noverflow)
+#endif
+	     ) {
 #endif
 	    G__fprinterr(G__serr,"Possible candidates are...\n");
 #ifndef G__OLDIMPLEMENTATION1079

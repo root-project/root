@@ -1378,7 +1378,11 @@ int *pnpara;
 	charlist->next->string = (char *)NULL;
 	charlist = charlist->next;
 #ifndef G__OLDIMPLEMENTATION773
+#ifndef G__OLDIMPLEMENTATION1503
+	searchflag = 3;
+#else
 	searchflag = 1;
+#endif
 #endif
       }
       else {
@@ -1421,6 +1425,9 @@ char *tagnamein;
   int parent_tagnum;
 #ifndef G__PHILIPPE24
   int store_constvar = G__constvar;
+#endif
+#ifndef G__OLDIMPLEMENTATION1503
+  int defarg=0;
 #endif
 #ifndef G__OLDIMPLEMENTATION770
 #define G__OLDIMPLEMENTATION778
@@ -1547,7 +1554,12 @@ char *tagnamein;
   }
 
   /* separate and evaluate template argument */
+#ifndef G__OLDIMPLEMENTATION1503
+  if((defarg=
+      G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara))) {
+#else
   if(G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara)) {
+#endif
     /* If evaluated template argument is not identical as string to
      * the original argument, recursively call G__defined_tagname()
      * to find actual tagname. */
@@ -1572,6 +1584,9 @@ char *tagnamein;
     if(-1!=typenum) {
       G__newtype.tagnum[typenum] = tagnum;
       G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+#ifndef G__OLDIMPLEMENTATION1503
+      if(3==defarg) G__struct.defaulttypenum[tagnum] = typenum;
+#endif
     }
 #endif
     G__freecharlist(&call_para);

@@ -415,7 +415,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var=(struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_P index=%d ldst=%d %s\n"
+	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_P index=%d ldst=%d %s"
 		,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -424,6 +424,11 @@ long localmem;
       (*p2f)(G__asm_stack,&sp,0
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
       pc+=5;
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) {
+	G__fprinterr(G__serr," -> %d\n", G__asm_stack[sp-1].obj.i);
+      }
+#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -600,15 +605,18 @@ long localmem;
       * sp    G__null
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: OP2_OPTIMIZED" ,pc,sp );
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: OP2_OPTIMIZED %c:%d %c:%d" ,pc,sp
+		     ,G__asm_stack[sp-2].type,G__asm_stack[sp-2].obj.i
+		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
       pc+=2;
       --sp;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr," %c %d\n" ,G__asm_stack[sp-1].type
-			     ,G__asm_stack[sp-1].obj.i);
+      if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
+				  ,G__asm_stack[sp-1].obj.i);
 #endif
 #ifdef G__ASM_DBG
       break;
@@ -626,13 +634,17 @@ long localmem;
       * sp    G__null     <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED\n" ,pc,sp );
-      }
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED %c:%d" ,pc,sp 
+		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1]);
       pc+=2;
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
+				  ,G__asm_stack[sp-1].obj.i);
+#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -5567,8 +5579,15 @@ G__value *bufm2;
 #ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
 #endif
+#ifndef G__OLDIMPLEMENTATION1511
+  if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
+    bufm2->obj.i = (G__doubleM(bufm2)==G__doubleM(bufm1));
+  else
+    bufm2->obj.i = (bufm2->obj.i == bufm1->obj.i);
+#else
   if(G__doubleM(bufm2)==G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
+#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -5584,8 +5603,15 @@ G__value *bufm2;
 #ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
 #endif
+#ifndef G__OLDIMPLEMENTATION1511
+  if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
+    bufm2->obj.i = (G__doubleM(bufm2)!=G__doubleM(bufm1));
+  else
+    bufm2->obj.i = (bufm2->obj.i != bufm1->obj.i);
+#else
   if(G__doubleM(bufm2)!=G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
+#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;

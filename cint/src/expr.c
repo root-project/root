@@ -1891,6 +1891,10 @@ char *item;
 	  int store_return = G__return;
 	  int store_security_error = G__security_error;
 #endif
+#ifndef G__OLDIMPLEMENTATION1505
+	  /* This fix should be verified very carefully */
+	  if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
+#endif
 	  sprintf(sbuf, "$%s", item);
 	  gettingspecial = 1;
           G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
@@ -1935,7 +1939,11 @@ char *item;
 	      if(pxx) {
 		*pxx = 0;
 #ifndef G__OLDIMPLEMENTATION1103
-		if(0==G__const_noerror&&!G__asm_wholefunction) {
+		if((0==G__const_noerror&&!G__asm_wholefunction)
+#ifndef G__OLDIMPLEMENTATION1505
+		   && (!G__no_exec_compile || G__asm_noverflow)
+#endif
+		   ) {
 #endif
 		  G__fprinterr(G__serr,"Possible candidates are...\n");
 		  if('$'==item[0]) G__display_proto(G__serr,item+1);
