@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -108,6 +108,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // documentation for why absolute times are better than relative.
    // Returns 0 if successfully signalled, 1 if time expired.
 
+   DWORD ret; 
    TTimeStamp t;
    // Get actual time
    ULong_t secNow     = t.GetSec();
@@ -124,7 +125,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwTimeWait, FALSE);
+   ret = SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwTimeWait, FALSE);
 
    // Reacquire lock to avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
@@ -147,7 +148,9 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
       // Always regain the external mutex since that's the guarantee we
       // give to our callers.
       WaitForSingleObject(fMutex->fHMutex, INFINITE);
-
+   
+   if(ret == WAIT_TIMEOUT)
+      return 1;
    return 0;
 }
 
