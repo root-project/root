@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.94 2001/10/16 09:12:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.95 2001/10/16 14:33:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1775,10 +1775,14 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             UInt_t start,count;
                             //We assume that the class was written with a standard streamer
                             //We attempt to recover if a version count was not written
-                            b.ReadVersion(&start,&count);
-                            if (count == 0) b.SetBufferOffset(start);
-                            cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
-                            if (count > 0) b.CheckByteCount(start,count,cl);
+                            Version_t v = b.ReadVersion(&start,&count);
+                            if (count) {
+                               cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+fOffset[i],-1);
+                               b.CheckByteCount(start,count,cl);
+                            } else {
+                               b.SetBufferOffset(start);
+                               cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
+                            }
                          }
                          break;
                         }
@@ -2173,13 +2177,14 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                   ((TObject*)(pointer+offset))->Streamer(b);
                }
             } else {
+               Version_t v;
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
                   //We assume that the class was written with a standard streamer
                   //We attempt to recover if a version count was not written
-                  b.ReadVersion(&start,&count);
+                  v = b.ReadVersion(&start,&count);
                   if (count == 0) b.SetBufferOffset(start);
-                  cl->GetStreamerInfo()->ReadBuffer(b,pointer+offset,-1);
+                  cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+offset,-1);
                }
             }
             break;}
