@@ -1432,6 +1432,9 @@ int reftype;
   return(i);
 }
 
+#ifndef G__OLDIMPLEMENTATION1743
+void G__setnewtype_settypeum G__P((int typenum));
+#endif
 /******************************************************************
 * G__search_typename2()
 ******************************************************************/
@@ -1458,6 +1461,9 @@ int parent_tagnum;
   G__static_parent_tagnum = -1;
 #ifndef G__OLDIMPLEMENTATION1394
   G__static_isconst = 0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1743
+  G__setnewtype_settypeum(ret);
 #endif
   return(ret);
 }

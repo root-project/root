@@ -9010,6 +9010,19 @@ int tagnum;
   return(G__struct.baseclass[tagnum]->basen);
 }
 
+#ifndef G__OLDIMPLEMENTATION1743
+/**************************************************************************
+* G__setnewtype_settypeum()
+*
+**************************************************************************/
+static int G__setnewtype_typenum = -1;
+void G__setnewtype_settypeum(typenum)
+int typenum;
+{
+  G__setnewtype_typenum=typenum;
+}
+#endif
+
 /**************************************************************************
 * G__setnewtype()
 *
@@ -9019,13 +9032,19 @@ int globalcomp;
 char* comment;
 int nindex;
 {
-  G__newtype.iscpplink[G__newtype.alltype-1] = globalcomp;
-  G__newtype.comment[G__newtype.alltype-1].p.com = comment;
-  if(comment) G__newtype.comment[G__newtype.alltype-1].filenum = -2;
-  else        G__newtype.comment[G__newtype.alltype-1].filenum = -1;
-  G__newtype.nindex[G__newtype.alltype-1] = nindex;
+#ifndef G__OLDIMPLEMENTATION1743
+  int typenum = 
+    (-1!=G__setnewtype_typenum)? G__setnewtype_typenum:G__newtype.alltype-1;
+#else
+  int typenum = G__newtype.alltype-1;
+#endif
+  G__newtype.iscpplink[typenum] = globalcomp;
+  G__newtype.comment[typenum].p.com = comment;
+  if(comment) G__newtype.comment[typenum].filenum = -2;
+  else        G__newtype.comment[typenum].filenum = -1;
+  G__newtype.nindex[typenum] = nindex;
   if(nindex)
-    G__newtype.index[G__newtype.alltype-1]=(int*)malloc(G__INTALLOC*nindex);
+    G__newtype.index[typenum]=(int*)malloc(G__INTALLOC*nindex);
 }
 
 /**************************************************************************
@@ -9036,7 +9055,13 @@ void G__setnewtypeindex(j,index)
 int j;
 int index;
 {
-  G__newtype.index[G__newtype.alltype-1][j] = index;
+#ifndef G__OLDIMPLEMENTATION1743
+  int typenum = 
+    (-1!=G__setnewtype_typenum)? G__setnewtype_typenum:G__newtype.alltype-1;
+#else
+  int typenum = G__newtype.alltype-1;
+#endif
+  G__newtype.index[typenum][j] = index;
 }
 
 /**************************************************************************
