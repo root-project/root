@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.30 2002/05/20 21:34:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.31 2002/06/16 10:06:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -68,7 +68,7 @@ ClassImp(TFormula)
 //*-*     TFormula new("x*old") is equivalent to:
 //*-*     TFormula new("x*sin(x*(x<0.5 || x>1))")
 //*-*
-//*-*   Up to 3 dimensions are supported (indicated by x, y, z)
+//*-*   Up to 4 dimensions are supported (indicated by x, y, z, t)
 //*-*   An expression may have 0 parameters or a list of parameters
 //*-*   indicated by the sequence [par_number]
 //*-*
@@ -1658,20 +1658,21 @@ Int_t TFormula::DefinedVariable(TString &chaine)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z)
+Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
 //*-*
-//*-*   The current value of variables x,y,z is passed through x, y and z.
+//*-*   The current value of variables x,y,z,t is passed through x, y, z and t.
 //*-*   The parameters used will be the ones in the array params if params is given
 //*-*    otherwise parameters will be taken from the stored data members fParams
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  Double_t xx[3];
+  Double_t xx[4];
   xx[0] = x;
   xx[1] = y;
   xx[2] = z;
+  xx[3] = t;
   return EvalPar(xx);
 
 }
@@ -1682,7 +1683,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
 //*-*
-//*-*   The current value of variables x,y,z is passed through the pointer x.
+//*-*   The current value of variables x,y,z,t is passed through the pointer x.
 //*-*   The parameters used will be the ones in the array params if params is given
 //*-*    otherwise parameters will be taken from the stored data members fParams
 //Begin_Html

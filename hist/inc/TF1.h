@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.22 2002/04/10 17:20:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.23 2002/07/16 08:06:07 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
    virtual void     DrawIntegral(Option_t *option="al");   // *MENU*
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual void     DrawPanel(); // *MENU*
-   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0);
+   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.14 2002/01/19 08:25:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.15 2002/03/02 04:37:41 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
  virtual char       *DefinedString(Int_t code);
  virtual Double_t   DefinedValue(Int_t code);
  virtual Int_t      DefinedVariable(TString &variable);
- virtual Double_t   Eval(Double_t x, Double_t y=0, Double_t z=0);
+ virtual Double_t   Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
  virtual Double_t   EvalPar(const Double_t *x, const Double_t *params=0);
  virtual Int_t      GetNdim() const {return fNdim;}
  virtual Int_t      GetNpar() const {return fNpar;}

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.41 2002/07/16 08:06:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.42 2002/07/16 08:30:18 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -725,7 +725,7 @@ void TF1::DrawPanel()
 }
 
 //______________________________________________________________________________
-Double_t TF1::Eval(Double_t x, Double_t y, Double_t z)
+Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -738,10 +738,11 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z)
 //*-*    otherwise parameters will be taken from the stored data members fParams
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  Double_t xx[3];
+  Double_t xx[4];
   xx[0] = x;
   xx[1] = y;
   xx[2] = z;
+  xx[3] = t;
 
   InitArgs(xx,fParams);
 
