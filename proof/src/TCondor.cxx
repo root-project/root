@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.1 2003/06/27 11:02:33 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -336,8 +336,8 @@ Info("GetVmInfo","command: %s", cmd.Data());
       if (line.EndsWith("\n")) line.Chop();
       if (line != "") {
 Info("GetVmInfo","line = %s", line.Data());
-         TString mips = line(TRegexp("^[0-9]*"));
-         perfidx = atoi(mips);
+         TString amips = line(TRegexp("^[0-9]*"));
+         perfidx = atoi(amips);
          image = line(TRegexp("[^:]+$"));
          break;
       }
