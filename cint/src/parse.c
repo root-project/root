@@ -20,6 +20,14 @@
 
 #include "common.h"
 
+/* 1929 */
+#define G__IFDEF_NORMAL       1
+#define G__IFDEF_EXTERNBLOCK  2
+#define G__IFDEF_ENDBLOCK     4
+#ifndef G__OLDIMPLEMENTATION1929
+static int G__externblock_iscpp = 0;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1672
 #define G__NONBLOCK   0
 #define G__IFSWITCH   1
@@ -731,7 +739,12 @@ char *statement;
    *  #endif
    ***********************************/
   if(strcmp(statement,"#ifdef")==0){
+#ifndef G__OLDIMPLEMENTATION1929
+    int stat = G__pp_ifdef(1);
+    return(stat);
+#else
     G__pp_ifdef(1);
+#endif
     return(1);
   }
   
@@ -799,7 +812,12 @@ char *statement;
     return(1);
   }
   if(strcmp(statement,"#ifndef")==0){
+#ifndef G__OLDIMPLEMENTATION1929
+    int stat = G__pp_ifdef(0);
+    return(stat);
+#else
     G__pp_ifdef(0);
+#endif
     return(1);
   }
   if(strcmp(statement,"#pragma")==0){
@@ -1420,6 +1438,94 @@ int elifskip;
   }
 }
 
+#ifndef G__OLDIMPLEMENTATION1929
+/***********************************************************************
+* G__pp_ifdefextern()
+*
+*   #ifdef __cplusplus
+*   extern "C" {       ^
+*   #endif
+*
+*   #ifdef __cplusplus ^
+*   }
+*   #endif
+***********************************************************************/
+int G__pp_ifdefextern(temp) 
+char* temp;
+{
+  int cin;
+  fpos_t pos;
+  int linenum = G__ifile.line_number;
+  fgetpos(G__ifile.fp,&pos);
+
+  cin = G__fgetname(temp,"\"}#");
+
+  if('}'==cin) {
+    /******************************
+     *   #ifdef __cplusplus
+     *   }
+     *   #endif
+     *****************************/
+    G__fignoreline();
+    do {
+      cin = G__fgetstream(temp,"#");
+      cin = G__fgetstream(temp,"\n\r");
+    } while(strcmp(temp,"endif")!=0); 
+    return(G__IFDEF_ENDBLOCK);
+  }
+
+  if('#'!=cin && strcmp(temp,"extern")==0) {
+    /******************************
+     *   #ifdef __cplusplus
+     *   extern "C" {
+     *   #endif
+     *****************************/
+    
+    G__var_type='p';
+    if('{'!=cin) cin = G__fgetspace();
+    if('"'==cin) {
+      /* extern "C" {  } */
+      int flag=0;
+      int store_iscpp=G__iscpp;
+      int store_externblock_iscpp=G__externblock_iscpp;
+      char fname[G__MAXFILENAME];
+      cin = G__fgetstream(fname,"\"");
+
+      temp[0] = 0;
+      cin = G__fgetstream(temp,"{\r\n");
+
+      if(0!=temp[0] || '{'!=cin)  goto goback;
+      G__fignoreline();
+      cin = G__fgetstream(temp,"#\n\r");
+      if('#'!=cin) goto goback;
+      cin = G__fgetstream(temp,"\n\r");
+      if(strcmp(temp,"endif")!=0) goto goback;
+
+      if(0==strcmp(fname,"C")) {
+	G__externblock_iscpp = (G__iscpp||G__externblock_iscpp);
+	G__iscpp=0; 
+      }
+      else {
+	G__loadfile(fname);
+	G__SetShlHandle(fname);
+	flag=1;
+      }
+      G__mparen = 1;
+      G__exec_statement();
+      G__iscpp=store_iscpp;
+      G__externblock_iscpp = store_externblock_iscpp;
+      if(flag) G__ResetShlHandle();
+      return(G__IFDEF_EXTERNBLOCK);
+    }
+  }
+
+ goback:
+  fsetpos(G__ifile.fp,&pos);
+  G__ifile.line_number = linenum;
+  return(G__IFDEF_NORMAL);
+}
+#endif
+
 /***********************************************************************
 * G__pp_if()
 *
@@ -1430,7 +1536,7 @@ int elifskip;
 *   #else
 *   #endif
 ***********************************************************************/
-void G__pp_if()
+int G__pp_if()
 {
   char condition[G__LONGLINE];
   int c,len=0;
@@ -1490,12 +1596,25 @@ void G__pp_if()
      ********************/
     G__pp_skip(0);
   }
+#ifndef G__OLDIMPLEMENTATION1929
+  else {
+    int stat;
+    G__no_exec_compile=store_no_exec_compile;
+    G__asm_wholefunction=store_asm_wholefunction;
+    G__asm_noverflow=store_asm_noverflow;
+    G__noerr_defined=0;
+    stat = G__pp_ifdefextern(condition);
+    return(stat); /* must be either G__IFDEF_ENDBLOCK or G__IFDEF_NORMAL */
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION878
   G__no_exec_compile=store_no_exec_compile;
   G__asm_wholefunction=store_asm_wholefunction;
   G__asm_noverflow=store_asm_noverflow;
 #endif
   G__noerr_defined=0;
+
+  return(G__IFDEF_NORMAL);
 }
 
 /***********************************************************************
@@ -1526,7 +1645,13 @@ char *macro;
 #ifndef G__OLDIMPLEMENTATION1883
   if(!G__cpp && 1704==hash && strcmp(macro,"__CINT_INTERNAL_CPP__")==0) return(1);
 #endif
-  if(G__iscpp && 1193==hash && strcmp(macro,"__cplusplus")==0) return(1);
+  if(
+#ifndef G__OLDIMPLEMENTATION1929
+     (G__iscpp || G__externblock_iscpp)
+#else
+     G__iscpp 
+#endif
+     && 1193==hash && strcmp(macro,"__cplusplus")==0) return(1);
 #ifndef G__OLDIMPLEMENTATION869
   { /* Following fix is not completely correct. It confuses typedef names
      * as macro */
@@ -1553,7 +1678,7 @@ char *macro;
 *   #else
 *   #endif
 ***********************************************************************/
-void G__pp_ifdef(def)
+int G__pp_ifdef(def)
 int def;  /* 1 for ifdef 0 for ifndef */
 {
   char temp[G__LONGLINE];
@@ -1564,13 +1689,21 @@ int def;  /* 1 for ifdef 0 for ifndef */
   notfound = G__defined_macro(temp) ^ 1; 
   
   /*****************************************************************
-   * faulse macro not found skip line until #else, #endif or #elif.
+   * false macro not found skip line until #else, #endif or #elif.
    * Then, return to evaluation
    *************************************************************/
   if(notfound==def) {
     /* SKIP */
     G__pp_skip(0);
   }
+#ifndef G__OLDIMPLEMENTATION1929
+  else {
+    int stat = G__pp_ifdefextern(temp);
+    return(stat); /* must be either G__IFDEF_ENDBLOCK or G__IFDEF_NORMAL */
+  }
+#endif
+
+  return(G__IFDEF_NORMAL);
 }
 
 /***********************************************************************
@@ -3516,7 +3649,12 @@ G__value G__exec_statement()
 	     *  #endif
 	     ***********************************/
 	    if(strcmp(statement,"#if")==0) {
+#ifndef G__OLDIMPLEMENTATION1929
+	      int stat = G__pp_if();
+	      if(stat==G__IFDEF_ENDBLOCK) return(G__null);
+#else
 	      G__pp_if();
+#endif
 	      spaceflag = 0;
 	      iout=0;
 	    }
@@ -3616,6 +3754,17 @@ G__value G__exec_statement()
 
 	  case 6:
 	    /* static, #ifdef,#endif,#undef */
+#ifndef G__OLDIMPLEMENTATION1929
+	    {
+	      int stat=G__keyword_anytime_6(statement);
+	      if(stat) {
+		if(0==mparen&&'#'!=statement[0]) return(G__null);
+		if(stat==G__IFDEF_ENDBLOCK) return(G__null);
+		spaceflag = 0;
+		iout=0;
+	      }
+	    }
+#else /* 1929 */
 	    if(G__keyword_anytime_6(statement)) {
 #ifndef G__OLDIMPLEMENTATION813
 	      if(0==mparen&&'#'!=statement[0]) return(G__null);
@@ -3623,6 +3772,7 @@ G__value G__exec_statement()
 	      spaceflag = 0;
 	      iout=0;
 	    }
+#endif /* 1929 */
 	    break;
 
 	  case 7:
@@ -3652,6 +3802,17 @@ G__value G__exec_statement()
 	    }
 	    
 	    /* #ifndef , #pragma */
+#ifndef G__OLDIMPLEMENTATION1929
+            {
+	      int stat=G__keyword_anytime_7(statement);
+	      if(stat) {
+	        if(0==mparen&&'#'!=statement[0]) return(G__null);
+	        if(stat==G__IFDEF_ENDBLOCK) return(G__null);
+	        spaceflag = 0;
+	        iout=0;
+	      }
+            }
+#else /* 1929 */
 	    if(G__keyword_anytime_7(statement)) {
 #ifndef G__OLDIMPLEMENTATION813
 	      if(0==mparen&&'#'!=statement[0]) return(G__null);
@@ -3659,6 +3820,7 @@ G__value G__exec_statement()
 	      spaceflag = 0;
 	      iout=0;
 	    }
+#endif /* 1929 */
 	    break;
 
 	  case 8:

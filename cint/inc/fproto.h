@@ -349,7 +349,7 @@ void G__gen_cpplink G__P((void));
 void G__clink_header G__P((FILE *fp));
 void G__cpplink_header G__P((FILE *fp));
 void G__cpplink_linked_taginfo G__P((FILE* fp,FILE* hfp));
-#ifdef G__OLDIMPLEMENtATION408
+#ifdef G__OLDIMPLEMENTATION408
 int G__get_linked_tagnum G__P((G__linked_taginfo *p));
 #endif
 char *G__get_link_tagname G__P((int tagnum));
@@ -384,7 +384,7 @@ void G__cpplink_global G__P((FILE *pfp));
 void G__cpplink_func G__P((FILE *pfp));
 void G__incsetup_memvar G__P((int tagnum));
 void G__incsetup_memfunc G__P((int tagnum));
-#ifdef G__OLDIMPLEMENtATION408
+#ifdef G__OLDIMPLEMENTATION408
 int G__tagtable_setup G__P((char *name,int type,int size,int cpplink,int isabstract,char *comment));
 #endif
 #ifdef G__OLDIMPLEMENTATION408
@@ -434,9 +434,9 @@ int G__setline G__P((char *statement,int c,int *piout));
 int G__skip_comment G__P((void));
 int G__pp_command G__P((void));
 void G__pp_skip G__P((int elifskip));
-void G__pp_if G__P((void));
+int G__pp_if G__P((void));
 int G__defined_macro G__P((char *macro));
-void G__pp_ifdef G__P((int def));
+int G__pp_ifdef G__P((int def));
 void G__pp_undef G__P((void));
 G__value G__exec_do G__P((void));
 G__value G__return_value G__P((char *statement));
@@ -531,7 +531,7 @@ int G__isenclosingclassbase G__P((int enclosingtagnum,int env_tagnum));
 char* G__find_first_scope_operator G__P((char* name));
 char* G__find_last_scope_operator G__P((char* name));
 #endif
-#ifdef G__OLDIMPLEMENtATION408
+#ifdef G__OLDIMPLEMENTATION408
 int G__defined_tagname G__P((char *tagname,int noerror));
 int G__search_tagname G__P((char *tagname,int type));
 #endif
@@ -593,7 +593,7 @@ int G__templatefunc G__P((G__value *result,char *funcname,struct G__param *libp,
 int G__matchtemplatefunc G__P((struct G__Definetemplatefunc *deftmpfunc,struct G__param *libp,struct G__Charlist *pcall_para,int funcmatch));
 int G__createtemplatefunc G__P((char *funcname,struct G__Templatearg *targ,int line_number,fpos_t *ppos));
 void G__define_type G__P((void));
-#ifdef G__OLDIMPLEMENtATION408
+#ifdef G__OLDIMPLEMENTATION408
 int G__defined_typename G__P((char *typename));
 int G__search_typename G__P((char *typenamein,int typein,int tagnum,int reftype));
 #endif

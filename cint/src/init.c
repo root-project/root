@@ -2116,6 +2116,9 @@ void G__platformMacro()
 #ifdef _WINDOWS_     /* Windows */
   sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
 #endif
+#ifdef __APPLE__     /* Apple MacOS X */
+  sprintf(temp,"G__APPLE=%ld",(long)__APPLE__); G__add_macro(temp);
+#endif
 #ifdef __VMS         /* DEC/Compac VMS */
   sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
 #endif

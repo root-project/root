@@ -2110,6 +2110,11 @@ int tagnum,typenum;      /* overrides global variables */
 	  }
 #ifndef G__OLDIMPLEMENTATION1549
 	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
+#ifndef G__OLDIMPLEMENTATION1927
+	    /* int store_tagnumC = G__tagnum; */
+	    /* int store_def_tagnumC = G__def_tagnum; */
+	    int store_tagdefiningC = G__tagdefining;
+#endif
 #ifndef G__OLDIMPLEMENTATION1551
 	    int store_eval_localstatic = G__eval_localstatic;
 	    G__eval_localstatic=1;
@@ -2117,6 +2122,11 @@ int tagnum,typenum;      /* overrides global variables */
 	    reg=G__getexpr(temp);
 #ifndef G__OLDIMPLEMENTATION1551
 	    G__eval_localstatic=store_eval_localstatic;
+#endif
+#ifndef G__OLDIMPLEMENTATION1927
+	    /* G__tagnum = store_tagnumC; shouldn't do this */
+	    /* G__def_tagnum = store_def_tagnumC; shouldn't do this */
+	    G__tagdefining = store_tagdefiningC;
 #endif
 	  }
 #else
@@ -2643,6 +2653,10 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION931
 	      long store_struct_offsetB=G__store_struct_offset;
 #endif
+#ifndef G__OLDIMPLEMENTATION1927
+	      /* int store_def_tagnumB = G__def_tagnum; shouldn't do this */
+	      int store_tagdefiningB = G__tagdefining;
+#endif
 	      /*********************************************
 	       * G__COPYCONSTRUCTOR
 	       * default and user defined copy constructor
@@ -2685,6 +2699,10 @@ int tagnum,typenum;      /* overrides global variables */
 	      G__var_type=store_var_typeB;
 	      G__tagnum = store_tagnumB;
 	      G__typenum = store_typenumB;
+#ifndef G__OLDIMPLEMENTATION1927
+	      /* G__def_tagnum = store_def_tagnumB; shouldn't do this */
+	      G__tagdefining = store_tagdefiningB;
+#endif
 	      if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
 #ifndef G__OLDIMPLEMENTATION983
 		if(reg.tagnum==tagnum && 'u'==reg.type) {

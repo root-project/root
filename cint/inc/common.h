@@ -990,7 +990,8 @@ struct G__funclist {
 /*********************************************************************
 * variable length string buffer
 *********************************************************************/
-#define G__BUFLEN 34
+/* #define G__BUFLEN 34 */
+#define G__BUFLEN 80
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1836

@@ -256,8 +256,8 @@ void G__CallFunc::SetArgs(const char* args)
 #ifndef G__OLDIMPLEMENTATION540
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFuncProto(G__ClassInfo* cls
-			  ,const char* fname  ,const char* argtype
-			  ,long* poffset)
+			       ,const char* fname  ,const char* argtype
+			       ,long* poffset)
 {
 #ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();

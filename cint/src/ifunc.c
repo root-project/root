@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+#define G__OLDIMPLEMENTATION1928
+
 #ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_noerror;
 #endif
@@ -3929,7 +3931,11 @@ int basetagnum,derivedtagnum;
 }
 
 #ifndef __CINT__
+#ifndef G__OLDIMPLEMENTATION1928
+struct G__ifunc_table* G__overload_match G__P((char* funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int memfunc_flag,int access,int *pifn,int recursive,int doconvert)) ;
+#else
 struct G__ifunc_table* G__overload_match G__P((char* funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int memfunc_flag,int access,int *pifn,int recursive)) ;
+#endif
 #endif
 
 /***********************************************************************
@@ -4371,7 +4377,11 @@ int recursive;
 	strcpy(funcname2,G__struct.name[formal_tagnum]);
 	G__hash(funcname2,hash2,ifn2);
 	ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
-				    ,G__TRYCONSTRUCTOR,G__PUBLIC,&ifn2,1);
+				   ,G__TRYCONSTRUCTOR,G__PUBLIC,&ifn2,1
+#ifndef G__OLDIMPLEMENTATION1928
+				   ,1
+#endif
+				   );
 	if(ifunc2 && -1!=ifn2) 
 	  funclist->p_rate[i] = G__USRCONVMATCH;
       }
@@ -4396,7 +4406,11 @@ int recursive;
 #endif
 	G__hash(funcname2,hash2,ifn2);
 	ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
-				   ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+				   ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1
+#ifndef G__OLDIMPLEMENTATION1928
+				   ,1
+#endif
+				   );
 #ifndef G__OLDIMPLEMENTATION1316
 	if(!ifunc2) {
 	  sprintf(funcname2,"operator %s"
@@ -4404,7 +4418,11 @@ int recursive;
 	  G__hash(funcname2,hash2,ifn2);
 	  ifunc2 = G__struct.memfunc[param_tagnum];
 	  ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
-				     ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+				     ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1
+#ifndef G__OLDIMPLEMENTATION1928
+				     ,1
+#endif
+				     );
 	}
 #endif
 	if(ifunc2 && -1!=ifn2) 
@@ -5637,7 +5655,11 @@ struct G__ifunc_table* G__overload_match(funcname
 					 ,memfunc_flag
 					 ,access
 					 ,pifn
-					 ,isrecursive)
+					 ,isrecursive
+#ifndef G__OLDIMPLEMENTATION1928
+					 ,doconvert
+#endif
+					 )
 char* funcname;
 struct G__param *libp;
 int hash;
@@ -5646,6 +5668,9 @@ int memfunc_flag;
 int access;
 int *pifn;
 int isrecursive;
+#ifndef G__OLDIMPLEMENTATION1928
+int doconvert;
+#endif
 {
   struct G__funclist *funclist = (struct G__funclist*)NULL;
   struct G__funclist *match = (struct G__funclist*)NULL;
@@ -5676,8 +5701,13 @@ int isrecursive;
 	  return(p_ifunc);
 	}
 #ifndef G__OLDIMPLEMENTATION1367
-	if(-1!=p_ifunc->tagnum && memfunc_flag==G__TRYNORMAL &&
-	   strcmp(G__struct.name[p_ifunc->tagnum],funcname)==0) {
+	if(-1!=p_ifunc->tagnum && 
+#ifndef G__OLDIMPLEMENTATION1928
+	   (memfunc_flag==G__TRYNORMAL && doconvert)
+#else
+	   memfunc_flag==G__TRYNORMAL 
+#endif
+	   && strcmp(G__struct.name[p_ifunc->tagnum],funcname)==0) {
 	  continue;
 	}
 #endif
@@ -5828,7 +5858,11 @@ int isrecursive;
 
   /* convert parameter */
 #ifndef G__OLDIMPLEMENTATION1365
-  if(G__convert_param(libp,p_ifunc,*pifn,match))
+  if(
+#ifndef G__OLDIMPLEMENTATION1928
+     doconvert && 
+#endif
+     G__convert_param(libp,p_ifunc,*pifn,match))
     return((struct G__ifunc_table*)NULL);
 #else
   G__convert_param(libp,p_ifunc,*pifn,match);
@@ -6006,7 +6040,11 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1290
 
   p_ifunc = G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag
-			      ,access,&ifn,0);
+			      ,access,&ifn,0
+#ifndef G__OLDIMPLEMENTATION1928
+			      ,1
+#endif
+			      );
   /* error */
   if(-1==ifn) {
     *result7 = G__null;
@@ -8474,13 +8512,17 @@ struct G__ifunc_table *p_ifunc;
 long *pifn;
 long *poffset;
 {
+#ifdef G__OLDIMPLEMENTATION1928
   int match;
+#endif
   struct G__ifunc_table *ifunc;
   struct G__param para;
   int hash;
   int temp;
+#ifdef G__OLDIMPLEMENTATION1928
 #ifndef G__OLDIMPLEMENTATION1313
   struct G__funclist *funclist = (struct G__funclist*)NULL;
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1523
@@ -8496,6 +8538,32 @@ long *poffset;
 #endif
   G__hash(funcname,hash,temp);
 
+#ifndef G__OLDIMPLEMENTATION1928
+ {
+   int tagnum = p_ifunc->tagnum;
+   int ifn = (int)(*pifn);
+   ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
+			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+   *poffset = 0;
+   *pifn = ifn;
+   if(ifunc) return(ifunc);
+   if(-1!=tagnum) {
+     int basen=0;
+     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
+     while(basen<baseclass->basen) {
+       if(baseclass->baseaccess[basen]&G__PUBLIC) {
+	 *poffset = baseclass->baseoffset[basen];
+	 p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+	 ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
+				   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+	 *pifn = ifn;
+	 if(ifunc) return(ifunc);
+       }
+       ++basen;
+     }
+   }
+ }
+#else /* 1828 */
 #ifndef G__OLDIMPLEMENTATION1313
   /* first, search for exact match */
   ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
@@ -8523,6 +8591,7 @@ long *poffset;
 				  ,match);
     if(ifunc) return(ifunc);
   }
+#endif /* 1828 */
   return(ifunc);
 }
 
