@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.10 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.11 2000/12/26 14:22:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
     virtual Int_t     Add(TChain *chain);
     virtual Int_t     Add(const char *name, Int_t nentries=-1);
     virtual Int_t     AddFile(const char *name, Int_t nentries);
+    virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);

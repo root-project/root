@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.16 2001/02/22 10:33:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.17 2001/04/09 08:35:44 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "TChainElement.h"
+#include "TFriendElement.h"
 #include "TSystem.h"
 #include "TRegexp.h"
 
@@ -297,6 +298,74 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    delete [] filename;
    if (cursav) cursav->cd();
    return 1;
+}
+
+//______________________________________________________________________________
+TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
+{
+// Add a TFriendElement to the list of friends of this chain.
+//
+//   A TChain has a list of friends similar to a tree (see TTree::AddFriend). 
+// You can add a friend to a chain with the TChain::AddFriend method, and you 
+// can retrieve the list of friends with TChain::GetListOfFriends.
+// This example has four chains each has 20 ROOT trees from 20 ROOT files.
+// 
+// TChain ch("t"); // a chain with 20 trees from 20 files
+// TChain ch1("t1");  
+// TChain ch2("t2");
+// TChain ch3("t3");
+// Now we can add the friends to the first chain.
+// 
+// ch.AddFriend("t1")
+// ch.AddFriend("t2")
+// ch.AddFriend("t3")
+//
+//Begin_Html
+/*
+<img src="gif/chain_friend.gif">
+*/
+//End_Html
+//
+// The parameter is the name of friend chain (the name of a chain is always 
+// the name of the tree from which it was created).
+// The original chain has access to all variable in its friends. 
+// We can use the TChain::Draw method as if the values in the friends were 
+// in the original chain.
+// To specify the chain to use in the Draw method, use the syntax:
+// 
+// <chainname>.<branchname>.<varname>
+// If the variable name is enough to uniquely identify the variable, you can 
+// leave out the chain and/or branch name.
+// For example, this generates a 3-d scatter plot of variable "var" in the 
+// TChain ch versus variable v1 in TChain t1 versus variable v2 in TChain t2.
+// 
+// ch.Draw("var:t1.v1:t2.v2");
+// When a TChain::Draw is executed, an automatic call to TTree::AddFriend 
+// connects the trees in the chain. When a chain is deleted, its friend 
+// elements are also deleted. 
+// 
+// The number of entries in the friend must be equal or greater to the number 
+// of entries of the original chain. If the friend has fewer entries a warning 
+// is given and the resulting histogram will have missing entries.
+// For additional information see TTree::AddFriend.
+    
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,chain,dummy);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+            //         chain,filename,t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","Unknown TChain %s",chain);
+      }
+   } else {
+      Warning("AddFriend","Cannot add FriendElement %s",chain);
+   }   
+   return fe;
 }
 
 //______________________________________________________________________________
