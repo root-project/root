@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.8 2001/11/01 11:43:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.9 2002/01/23 15:48:05 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -241,8 +241,8 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
 
    button->fGroup = this;
 
-   static int seq_no = -2;
-   int bid;
+   static Int_t seq_no = -2;
+   Long_t bid;
 
    if (id < -1)       bid = seq_no--;
    else if (id == -1) bid = GetCount()+1;
@@ -258,7 +258,7 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
    Connect(button, "Released()", "TGButtonGroup", this, "ButtonReleased()");
    Connect(button, "Clicked()" , "TGButtonGroup", this, "ButtonClicked()");
 
-   return bid;
+   return (Int_t) bid;
 }
 
 //______________________________________________________________________________
