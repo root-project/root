@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.2 2000/11/27 15:40:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.3 2000/11/27 18:38:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -252,13 +252,18 @@ char *TAuthenticate::GetUser(const char *remote)
    // or proofd. User is asked to type user name.
    // Returns user name (which must be deleted by caller) or 0.
 
-   char *usr = Getline(Form("Name (%s:%s): ", remote, gSystem->Getenv("USER")));
+   const char *user = gSystem->Getenv("USER");
+#ifdef R__WIN32
+   if (!user)
+      user = gSystem->Getenv("USERNAME");
+#endif
+   char *usr = Getline(Form("Name (%s:%s): ", remote, user));
    if (usr[0]) {
       usr[strlen(usr)-1] = 0;   // get rid of \n
       if (strlen(usr))
          return StrDup(usr);
       else
-         return StrDup(gSystem->Getenv("USER"));
+         return StrDup(user);
    }
    return 0;
 }
