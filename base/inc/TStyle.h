@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.6 2001/06/05 11:29:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.7 2001/12/05 14:59:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -120,6 +120,7 @@ private:
         Float_t       fStatY;             //Y position of top right corner of stat box
         Float_t       fStatW;             //width of stat box
         Float_t       fStatH;             //height of stat box
+        Bool_t        fStripDecimals;     //Strip decimals in axis labels
         Color_t       fTitleColor;        //title fill area color
         Color_t       fTitleTextColor;    //title text color
         Width_t       fTitleBorderSize;   //border size of Title PavelLabel
@@ -235,6 +236,7 @@ public:
         Float_t          GetStatY() const     {return fStatY;}
         Float_t          GetStatW() const     {return fStatW;}
         Float_t          GetStatH() const     {return fStatH;}
+        Int_t            GetStripDecimals() const {return fStripDecimals;}
         Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
         Color_t          GetTitleColor() const {return fTitleColor;}  //return histogram title fill area color
         Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
@@ -337,6 +339,7 @@ public:
         void             SetStatY(Float_t y=0)    {fStatY=y;}
         void             SetStatW(Float_t w=0.19) {fStatW=w;}
         void             SetStatH(Float_t h=0.1)  {fStatH=h;}
+        void             SetStripDecimals(Bool_t strip=kTRUE);
         void             SetTimeOffset(Double_t toffset);
         void             SetTitleColor(Int_t color=19)      {fTitleColor=color;}
         void             SetTitleTextColor(Int_t color=1)   {fTitleTextColor=color;}
@@ -355,7 +358,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,5)  //A collection of all graphics attributes
+        ClassDef(TStyle,6)  //A collection of all graphics attributes
 };
 
 

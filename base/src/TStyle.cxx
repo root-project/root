@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.11 2001/10/23 14:15:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.12 2001/12/05 14:59:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -82,6 +82,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //  - TStyle::SetTitleSize
 //  - TStyle::SetPalette
 //  - TStyle::SetTimeOffset
+//  - TStyle::SetStripDecimals
 //
 //  The current style is pointed by gStyle.
 //  When calling myStyle->cd(), gStyle is set to myStyle.
@@ -328,6 +329,7 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fFitFormat      = fFitFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
+   ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -432,7 +434,8 @@ void TStyle::Reset(Option_t *)
    fLegoInnerR     = 0.5;
    fHeaderPS       = "";
    fTitlePS        = "";
-
+   fStripDecimals  = kTRUE;
+   
    SetDateX();
    SetDateY();
    fAttDate.SetTextSize(0.025);
@@ -1084,4 +1087,17 @@ void TStyle::SetTimeOffset(Double_t toffset)
 //   in order to plot times correctly and conveniently
 
    fTimeOffset = toffset;
+}
+
+//______________________________________________________________________________
+void TStyle::SetStripDecimals(Bool_t strip)
+{
+//  Set option to strip decimals when drawing axis labels.
+//  By default, TGaxis::PaintAxis removes trailing 0s after a dot
+//  in the axis labels. Ex: {0,0.5,1,1.5,2,2.5, etc}
+//  If this function is called with strip=kFALSE, TGAxis::PaintAxis will
+//  draw labels with the same number of digits after the dot
+//  Ex: (0.0,0.5,1.0,1.5,2.0,2.5,etc}
+   
+   fStripDecimals = strip;
 }
