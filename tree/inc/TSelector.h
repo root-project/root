@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.4 2000/07/17 10:26:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.5 2000/07/18 07:11:32 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TTree;
