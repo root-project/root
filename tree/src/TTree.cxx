@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.231 2005/02/03 14:25:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.232 2005/02/09 07:26:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1352,11 +1352,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          return branch;
       }
    }
-   //ROOT collections (except TClonesArray above) cannot be split
-   if (splitlevel >0 && cl->InheritsFrom(TCollection::Class())) {
-      splitlevel = 0;
-      Warning("Bronch","ROOT collections cannot be split, resetting splitlevel to 0");
-   }
+
    //	Now look vector<> or list<>
    //int stlcont = TClassEdit::IsSTLCont(classname);
 
@@ -1414,6 +1410,13 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       *ppointer = objadd;
       delobj = kTRUE;
    }
+
+   // Avoid splitting unsplitable classes
+   if (splitlevel>0 && !cl->CanSplit()) {
+      splitlevel = 0;
+      Warning("Bronch","%s cannot be split, resetting splitlevel to 0",cl->GetName());
+   }
+
    //build the StreamerInfo if first time for the class
    Bool_t optim = TStreamerInfo::CanOptimize();
    if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
