@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooDircPdf.cc,v 1.1 2001/05/14 05:25:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -66,18 +66,6 @@ RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) :
 //   tailSigma = _tailSigmaFun.Eval(cosTheta, drcMtm);
 //   relNorm = _relNormFun.Eval(cosTheta, drcMtm); // (core area)/(core + tail areas)
 //
-//   NB: This PDF is not normalized! This is going to give problems.
-//       RooDircPDF uses (via composition) at least three dependents
-//
-//       (trkTheta,drcMtm,thetaC), so integration is non-trivial
-// 
-//       Unfortunately it wouldn't work with any RFC technology,
-//       3D numerical integration is not implemented (yet) and
-//       analytical integration is not possible because the above
-//       functions cannot be LValues (>1 dependent)
-//   
-//       We currently have no mechanism to bypass the normalization requirement...
-
 
 Double_t RooDircPdf::evaluate() const
 {
