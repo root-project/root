@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.49 2001/07/03 11:07:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.50 2001/07/03 15:38:08 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -906,14 +906,28 @@ void TBranchElement::SetAddress(void *add)
    //special case for a TClonesArray when address is not yet set
    //we must create the clonesarray first
    if (fType ==3) {
+#ifdef MARIANA
       char **ppointer = (char**)(fAddress);
-      if ( (*ppointer)==0 ) {
+      if ( !ppointer || (*ppointer)==0 ) {
           TClass *clm = gROOT->GetClass(fClonesName.Data());
           if (clm) clm->GetStreamerInfo();
           *ppointer = (char*) new TClonesArray(fClonesName.Data());
           fAddress = (char*)ppointer;
       }
       fObject = (char*)*ppointer;      
+#else
+      if (fAddress) {
+         TClonesArray **ppointer = (TClonesArray**)fAddress;
+         fObject = (char*)*ppointer;
+         if (!fObject) fAddress = 0;
+      }
+      if (!fAddress) {
+         TClass *clm = gROOT->GetClass(fClonesName.Data());
+         if (clm) clm->GetStreamerInfo();
+         fObject = (char*)new TClonesArray(fClonesName.Data());
+         fAddress = (char*)&fObject;
+      }
+#endif
    }
 
    if (fType == 31) {
