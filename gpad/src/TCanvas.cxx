@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.12 2000/09/12 06:44:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.13 2000/09/13 07:32:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -543,20 +543,17 @@ void TCanvas::cd(Int_t subpadnumber)
 //______________________________________________________________________________
 void TCanvas::Clear(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Clear canvas*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ============
-//  Remove all primitives in default pad
-//  Remove all pads (except default pad)
-//
-//  By default, all primitives and subpads are deleted
-//  If option "D" is specified, only subpads are cleared and not deleted
+   // Remove all primitives from the canvas.
+   // If option "D" is specified, direct subpads are cleared but not deleted.
+   // This option is not recursive, i.e. pads in direct subpads are deleted.
 
    if (fCanvasID == -1) return;
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("d")) {
-      // clear subpads, but do not delete pads in case the canvas 
-      // has been divided
+      // clear subpads, but do not delete pads in case the canvas
+      // has been divided (note: option "D" is propagated so could cause
+      // conflicts for primitives using option "D" for something else)
       if (fPrimitives) {
          TIter next(fPrimitives);
          TObject *obj;
@@ -568,7 +565,7 @@ void TCanvas::Clear(Option_t *option)
       //default, clear everything in the canvas. Subpads are deleted
       TPad::Clear(option);   //Remove primitives from pad
    }
-   
+
    fSelected    = 0;
    fSelectedPad = 0;
 }
@@ -683,7 +680,7 @@ void TCanvas::DrawClonePad()
    // the canvas context menu item DrawClonePad.
    // Note that the original canvas may have subpads.
 
-   
+
   TPad *padsav = (TPad*)gPad;
   TPad *pad = (TPad*)gROOT->GetSelectedPad();
   if (fCanvasID < 0 || padsav == 0 || pad == this) {
