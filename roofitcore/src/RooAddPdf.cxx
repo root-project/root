@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.40 2002/06/03 22:15:53 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.41 2002/06/12 23:53:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -286,6 +286,8 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     RooArgSet* nset2 = nset ? getDependents(*nset) : new RooArgSet ;
     _doProjectCoefs = !nset2->equals(_refCoefNorm) ;
     if (!_doProjectCoefs) {
+      _lastCoefProjSet = (RooArgSet*)nset ; // wve test
+      _lastCoefProjIntSet = (RooArgSet*)iset ; // wve test
       delete nset2 ;
       return ;
     }
@@ -447,7 +449,9 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
 
   Double_t coefSum(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
+    RooAbsPdf::globalSelectComp(kTRUE) ;
     Double_t proj = ((RooAbsReal*)_pdfProjList.at(i))->getVal() ;
+    RooAbsPdf::globalSelectComp(kFALSE) ;
     _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;
   }
@@ -487,8 +491,8 @@ Double_t RooAddPdf::evaluate() const
       Double_t pdfVal = pdf->getVal(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
-// 	cout << "RAP::e(" << GetName() << ") v += [" 
-// 	     << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
+//    	cout << "RAP::e(" << GetName() << ") v += [" 
+//    	     << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
       }
     }
     i++ ;
@@ -645,8 +649,9 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
     if (_coefCache[i]) {
       snormVal = snormSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
+      Double_t val = pdf->analyticalIntegralWN(subCode[i],normSet) ;
       if (pdf->isSelectedComp()) {
-	value += pdf->analyticalIntegralWN(subCode[i],normSet)*_coefCache[i]/snormVal ;      
+	value += val*_coefCache[i]/snormVal ;
       }
     }
     i++ ;

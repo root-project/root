@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.68 2002/06/11 16:49:57 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.69 2002/06/12 23:53:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -131,6 +131,7 @@ ClassImp(RooAbsPdf)
 
 
 Int_t RooAbsPdf::_verboseEval = 0;
+Bool_t RooAbsPdf::_globalSelectComp = kFALSE ;
 RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
@@ -221,7 +222,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
     clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
-  }
+  } 
 
   if (_traceCount>0) {
     cout << "[" << _traceCount << "] " ;

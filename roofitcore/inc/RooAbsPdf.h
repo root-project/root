@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.57 2002/06/08 00:45:01 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.58 2002/06/12 23:53:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -129,7 +129,7 @@ public:
 
   static void verboseEval(Int_t stat) { _verboseEval = stat ; }
 
-  inline Bool_t isSelectedComp() const { return _selectComp ; }
+  inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 
   const RooIntegratorConfig* getNormIntConfig() const ;
   const RooIntegratorConfig* getDefaultNormIntConfig() const ;
@@ -193,7 +193,9 @@ protected:
 
   friend class RooAddPdf ;
   void selectComp(Bool_t flag) { _selectComp = flag ; }
+  static void globalSelectComp(Bool_t flag) { _globalSelectComp = flag ; }
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
+  static Bool_t _globalSelectComp ;  // Global activation switch for component selection
   
   ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
 };
