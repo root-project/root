@@ -2678,6 +2678,13 @@ TMatrixD MakeMatrix(Int_t nrows,Int_t ncols,
 }
 #endif
 
+class FillMatrix2 : public TElementPosActionD {
+   void Operation(Double_t &element) const
+      { element = fJ>fI ? 0 : fI==fJ ? 21-fJ : -1; }
+public:
+   FillMatrix2() {}
+};
+
 void astress_decomp()
 {
   Bool_t ok = kTRUE;
@@ -2724,12 +2731,6 @@ void astress_decomp()
     if (gVerbose)
       cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
               "Ordered singular numbers are Sig[21-k] = sqrt(k*(k-1))\n" <<endl;
-    class FillMatrix2 : public TElementPosActionD {
-      void Operation(Double_t &element) const
-      	{ element = fJ>fI ? 0 : fI==fJ ? 21-fJ : -1; }
-    public:
-      FillMatrix2() {}
-    };
     FillMatrix2 f;
     TMatrixD A(21,20);
     A.Apply(f);

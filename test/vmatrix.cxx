@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.20 2004/01/26 14:19:43 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.22 2004/01/26 16:20:56 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -231,6 +231,7 @@ class FillMatrix : public TElementPosActionD {
    void Operation(Double_t &element) const
       { element = 4*TMath::Pi()/no_elems * (fI*no_cols+fJ); }
 public:
+   FillMatrix() {}
    FillMatrix(const TMatrixD &m) :
          no_elems(m.GetNoElements()),no_cols(m.GetNcols()) { }
 };

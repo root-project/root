@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.16 2004/01/25 22:18:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.17 2004/01/26 13:58:21 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -188,6 +188,7 @@ class CosAction : public TElementPosActionD {
   Double_t factor;
   void Operation(Double_t &element) const { element = TMath::Cos(factor*fI); }
   public:
+    CosAction() { }
     CosAction(Int_t no_elems): factor(2*TMath::Pi()/no_elems) { }
 };
 
