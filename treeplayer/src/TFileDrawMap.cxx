@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.1 2003/01/17 17:48:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.2 2003/01/19 21:18:36 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -73,7 +73,7 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TMath.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TH1.h"
 #include "TBox.h"
@@ -127,14 +127,14 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    fFrame->SetMaximum(fYsize);
    fFrame->GetYaxis()->SetLimits(0,fYsize);
    
-   Bool_t show = kFALSE;
+   //Bool_t show = kFALSE;
    if (gPad) {
       gPad->Clear();
-      show = gPad->GetCanvas()->GetShowEventStatus();
+      //show = gPad->GetCanvas()->GetShowEventStatus();
    }
    Draw();
    if (gPad) {
-      if (!show) gPad->GetCanvas()->ToggleEventStatus();
+      //if (!show) gPad->GetCanvas()->ToggleEventStatus();
       gPad->Update();
    }
 }
@@ -205,8 +205,8 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    Int_t sleep = 1;
    Int_t stime = (Int_t)(100./(nentries*fractionRead));
    if (stime < 10) {stime=1; sleep = nentries/400;}
-printf("sleep=%d, stime = %d, fractionRead=%g\n",sleep,stime,fractionRead);
-   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
+   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
    for (Int_t entry=0;entry<nentries;entry++) {
       for (Int_t ib=0;ib<nbranches;ib++) {
          branch = (TBranch*)list.At(ib);
