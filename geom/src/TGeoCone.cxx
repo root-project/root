@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.47 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.48 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -831,7 +831,7 @@ void TGeoCone::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   dz    = " << fDz << ";" << endl;
    out << "   rmin1 = " << fRmin1 << ";" << endl;
    out << "   rmax1 = " << fRmax1 << ";" << endl;
-   out << "   rmin2 = " << fRmin1 << ";" << endl;
+   out << "   rmin2 = " << fRmin2 << ";" << endl;
    out << "   rmax2 = " << fRmax2 << ";" << endl;
    out << "   pShape = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.52 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.53 2005/02/09 14:33:37 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1228,7 +1228,9 @@ char *TGeoVolume::GetPointerName() const
 {
 // Provide a pointer name containing uid.
    static char name[20];
-   sprintf(name,"%s", GetName());
+   Int_t uid = GetUniqueID();
+   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
+   else     sprintf(name,"p%s", GetName());
    return name;
 }
 
@@ -1671,6 +1673,7 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 // to this volume
    Int_t idx = fVolumes->GetEntriesFast();
    fVolumes->AddAtAndExpand(vol,idx);
+   vol->SetUniqueID(idx+1);
    TGeoVolumeMulti *div;
    TGeoVolume *cell;
    if (fDivision) {

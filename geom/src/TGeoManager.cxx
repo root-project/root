@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.107 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.108 2005/03/08 10:32:18 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -4118,7 +4118,14 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    // Export this geometry on filename with a key=name
    // By default the geometry is saved without the voxelisation info.
    // Use option 'v" to save the voxelisation info.
+   // If file extension is not .root, export as C++ code
 
+   TString sfile(filename);
+   if (!sfile.Contains(".root")) {
+      printf("Exporting %s %s as C++ code\n", GetName(), GetTitle());
+      fTopVolume->SaveAs(filename);
+      return 1;
+   }   
    TFile *f = TFile::Open(filename,"recreate");
    if (!f || f->IsZombie()) return 0;
    char keyname[256];

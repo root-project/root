@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.36 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.37 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -470,7 +470,11 @@ void TGeoMatrix::Print(Option_t *) const
 //_____________________________________________________________________________
 void TGeoMatrix::RegisterYourself()
 {
-   if (!IsRegistered() && gGeoManager) {
+   if (!gGeoManager) {
+      Warning("RegisterYourself", "cannot register without geometry");
+      return;
+   }   
+   if (!IsRegistered()) {
       gGeoManager->RegisterMatrix(this); 
       SetBit(kGeoRegistered);
    }   
@@ -1359,12 +1363,10 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
 //_____________________________________________________________________________
 void TGeoCombiTrans::RegisterYourself()
 {
-   if (!IsRegistered() && gGeoManager) {
-      gGeoManager->RegisterMatrix(this); 
-      SetBit(kGeoRegistered);
-   }
-   if (!gGeoManager) 
-      Warning("RegisterYourself", "cannot register without geometry");
+   TGeoMatrix::RegisterYourself();
+   if (fRotation && TestBit(kGeoMatrixOwned)) {
+      if (fRotation->IsRotation()) fRotation->RegisterYourself();
+   }   
 }
 
 //_____________________________________________________________________________
@@ -1487,44 +1489,37 @@ void TGeoCombiTrans::SavePrimitive(ofstream &out, Option_t *option)
 void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 {
 // Assign a foreign rotation to the combi. The rotation is NOT owned by this.
-   if (rot->IsRotation()) {
-      SetBit(kGeoRotation);
-      SetBit(kGeoReflection, rot->TestBit(kGeoReflection));
-//      const TGeoRotation &r = *rot;
-      if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
-      TGeoRotation *rr = (TGeoRotation*)rot;
-      fRotation = rr;
-      fRotation->RegisterYourself();
-      ResetBit(TGeoMatrix::kGeoMatrixOwned);      
-   } else {   
-      if (!IsRotation() || !fRotation) return;
-      ResetBit(kGeoRotation);
-      ResetBit(kGeoReflection);
-      if (TestBit(kGeoMatrixOwned)) fRotation->Clear();
-      else fRotation = 0;
-   }   
+   if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
+   fRotation = 0;
+   ResetBit(TGeoMatrix::kGeoMatrixOwned);      
+   ResetBit(kGeoRotation);
+   ResetBit(kGeoReflection);   
+   if (!rot) return;
+   if (!rot->IsRotation()) return;
+         
+   SetBit(kGeoRotation);
+   SetBit(kGeoReflection, rot->TestBit(kGeoReflection));
+   TGeoRotation *rr = (TGeoRotation*)rot;
+   fRotation = rr;
 }
 
 //_____________________________________________________________________________
 void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
 {
 // Copy the rotation from another one.
-   if (rot.IsRotation()) {
-      SetBit(kGeoRotation);
-      SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
-      if (!fRotation || !TestBit(kGeoMatrixOwned)) {
-         fRotation = new TGeoRotation(rot);
-      } else {
-         delete fRotation;
-         fRotation = new TGeoRotation(rot);
-      }   
-      SetBit(kGeoMatrixOwned);
-   } else {
-      if (!IsRotation() || !fRotation) return;
+   if (fRotation && TestBit(kGeoMatrixOwned)) delete fRotation;
+   fRotation = 0;
+   if (!rot.IsRotation()) {
       ResetBit(kGeoRotation);
-      if (TestBit(kGeoMatrixOwned)) fRotation->Clear();
-      else fRotation = 0;
-   }   
+      ResetBit(kGeoReflection);
+      ResetBit(TGeoMatrix::kGeoMatrixOwned);
+      return;
+   }         
+      
+   SetBit(kGeoRotation);
+   SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
+   fRotation = new TGeoRotation(rot);
+   SetBit(kGeoMatrixOwned);
 }
 
 //_____________________________________________________________________________
