@@ -1,11 +1,31 @@
-// Author : Andrei Gheata 02/11/00
+// @(#)root/treeviewer:$Name:$:$Id:$
+//Author : Andrei Gheata   16/08/00
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TGTreeLVC.h"
+#include "TTreeView.h"
+#include "TGPicture.h"
+#include "TGLabel.h"
+#include "TGButton.h"
+#include "TGTextEntry.h"
 
 ClassImp(TGLVTreeEntry)
 
-//______________________________________________________________________________
-//*-*   TGTreeLVEntry is a TGLVEntry that has a name of a variable to be draw
-//*-*   by the TTreeView GUI, and an alias for it
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGTreeLVEntry is a TGLVEntry that has a name of a variable to be     //
+// draw by the TTreeViewer GUI, and an alias for it.                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 //______________________________________________________________________________
 TGLVTreeEntry::TGLVTreeEntry(const TGWindow *p,
                              const TGPicture *bigpic, const TGPicture *smallpic,
@@ -13,17 +33,17 @@ TGLVTreeEntry::TGLVTreeEntry(const TGWindow *p,
                              EListViewMode ViewMode)
               :TGLVEntry(p, bigpic, smallpic, name, subnames, ViewMode)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*TGTreeLVEntry constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =========================
-// both alias and true name are initialized to name
+   // TGTreeLVEntry constructor.
+
+   // both alias and true name are initialized to name
    fAlias = name->GetString();
    fTrueName = name->GetString();
 }
 //______________________________________________________________________________
 void TGLVTreeEntry::CopyItem(TGLVTreeEntry *dest)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Copy this item's name and alias to an other*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ===========================================
+   // Copy this item's name and alias to an other.
+
    if (!dest) return;
    dest->SetItemName(fName->GetString());
    dest->SetAlias(fAlias);
@@ -32,7 +52,8 @@ void TGLVTreeEntry::CopyItem(TGLVTreeEntry *dest)
 //______________________________________________________________________________
 Bool_t TGLVTreeEntry::HasAlias()
 {
-// check if alias name is not empty
+   // Check if alias name is not empty.
+
    if (fAlias.Length()) return kTRUE;
    return kFALSE;
 }
@@ -68,28 +89,33 @@ void TGLVTreeEntry::SetSmallPic(const TGPicture *spic)
    fSelPic = 0;
    if (fActive) {
       fSelPic = new TGSelectedPicture(fClient, fCurrent);
-   } 
-   DoRedraw(); 
-   fClient->FreePicture(cspic);     
+   }
+   DoRedraw();
+   fClient->FreePicture(cspic);
 }
 
 ClassImp(TGTreeLVC)
 
-//______________________________________________________________________________
-//*-*   TGTreeLVC is a container having TGLVTreeEntry items that can be dragged
-//
-//
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//   TGTreeLVC                                                          //
+//                                                                      //
+// This class represent the list view container for the                 //
+// TreeView class. It is a TGLVContainer with item dragging             //
+// capabilities for the TGLVTreeEntry objects inside                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TGTreeLVC::TGTreeLVC(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
           :TGLVContainer(p, w, h,options | kSunkenFrame)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*TGLVContainer constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =========================
+// TGLVContainer constructor
+
    fListView = 0;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
-}   
+}
 //______________________________________________________________________________
 const char* TGTreeLVC::Cut()
 {
@@ -97,9 +123,9 @@ const char* TGTreeLVC::Cut()
    TGFrameElement *el = (TGFrameElement *) fList->At(3);
    if (el) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName(); 	
+      if (f) return f->GetTrueName();
       return 0;
-   }	
+   }
    return 0;
 }
 //______________________________________________________________________________
@@ -109,9 +135,9 @@ const char* TGTreeLVC::Ex()
    TGFrameElement *el = (TGFrameElement *) fList->At(0);
    if (el) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName(); 	
+      if (f) return f->GetTrueName();
       return 0;
-   }	
+   }
    return 0;
 }
 //______________________________________________________________________________
@@ -121,9 +147,9 @@ const char* TGTreeLVC::Ey()
    TGFrameElement *el = (TGFrameElement *) fList->At(1);
    if (el) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName(); 	
+      if (f) return f->GetTrueName();
       return 0;
-   }	
+   }
    return 0;
 }
 //______________________________________________________________________________
@@ -133,9 +159,9 @@ const char* TGTreeLVC::Ez()
    TGFrameElement *el = (TGFrameElement *) fList->At(2);
    if (el) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName(); 	
+      if (f) return f->GetTrueName();
       return 0;
-   }	
+   }
    return 0;
 }
 //______________________________________________________________________________
@@ -145,9 +171,9 @@ const char* TGTreeLVC::ScanList()
    TGFrameElement *el = (TGFrameElement *) fList->At(4);
    if (el) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName(); 	
+      if (f) return f->GetTrueName();
       return 0;
-   }	
+   }
    return 0;
 }
 //______________________________________________________________________________
@@ -173,8 +199,8 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
          ++total;
          if (f->GetId() == (Window_t)event->fUser[0]) {  // fUser[0] = subwindow
             f->Activate(kTRUE);
-	    fX0 = f->GetX();
-	    fY0 = f->GetY();
+            fX0 = f->GetX();
+            fY0 = f->GetY();
             ++selected;
             fLastActive = f;
          } else {
@@ -191,7 +217,7 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
 
       if (selected == 1 && event->fCode == 1) {
          ULong_t *itemType = (ULong_t *) fLastActive->GetUserData();
-         if (*itemType & kLTDragType) {
+         if (*itemType & TTreeViewer::kLTDragType) {
             fDragging = kTRUE;
             gVirtualX->SetCursor(fId,fCursor);
             fXp = event->fX;
@@ -203,35 +229,35 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
    if (event->fType == kButtonRelease) {
       if (fDragging) {
          fDragging = kFALSE;
-	   gVirtualX->SetCursor(fId,fDefaultCursor);
-	   fLastActive->Move(fX0,fY0);
-   	   TGFrameElement *el;
-   	   TIter next(fList);
-   	   while ((el = (TGFrameElement *) next())) {
+           gVirtualX->SetCursor(fId,fDefaultCursor);
+           fLastActive->Move(fX0,fY0);
+           TGFrameElement *el;
+           TIter next(fList);
+           while ((el = (TGFrameElement *) next())) {
               TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
               if ((f == fLastActive) || !f->IsActive()) continue;
                  ULong_t *itemType = (ULong_t *) f->GetUserData();
                  fLastActive->Activate(kFALSE);
-                 if (!(*itemType & kLTPackType)) { 
-		    ((TGLVTreeEntry *) fLastActive)->CopyItem(f);
-		 } else {
-		    if (!strlen(f->GetTrueName())) {
-		       f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
-		    } else {
-		       TString name = f->GetTrueName();
-		       name += ":";
-		       name += ((TGLVTreeEntry *)fLastActive)->GetTrueName();
-		       f->SetTrueName(name.Data());
-		    }
-		    f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
-		 }
-		 
-		 fLastActive = f;
+                 if (!(*itemType & TTreeViewer::kLTPackType)) {
+                    ((TGLVTreeEntry *) fLastActive)->CopyItem(f);
+                 } else {
+                    if (!strlen(f->GetTrueName())) {
+                       f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
+                    } else {
+                       TString name = f->GetTrueName();
+                       name += ":";
+                       name += ((TGLVTreeEntry *)fLastActive)->GetTrueName();
+                       f->SetTrueName(name.Data());
+                    }
+                 f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
+                 }
+
+               fLastActive = f;
            }
-	   if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
+           if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
               SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                           event->fCode, (event->fYRoot << 16) | event->fXRoot);
-	   }
+           }
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
@@ -243,9 +269,9 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
 Bool_t TGTreeLVC::HandleMotion(Event_t *event)
 {
    // Handle mouse motion events.
-	Int_t xf0, xff, yf0, yff;
-	Int_t xpos = event->fX - (fXp-fX0);
-	Int_t ypos = event->fY - (fYp-fY0);
+   Int_t xf0, xff, yf0, yff;
+   Int_t xpos = event->fX - (fXp-fX0);
+   Int_t ypos = event->fY - (fYp-fY0);
 
    if (fDragging) {
       TGFrameElement *el;
@@ -253,13 +279,13 @@ Bool_t TGTreeLVC::HandleMotion(Event_t *event)
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
          TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-	 if (f == fLastActive) continue;
+         if (f == fLastActive) continue;
          xf0 = f->GetX();
          yf0 = f->GetY();
          xff = f->GetX() + f->GetWidth();
          yff = f->GetY() + f->GetHeight();
-         itemType = (ULong_t *) f->GetUserData();	   
-         if (*itemType & kLTExpressionType) {
+         itemType = (ULong_t *) f->GetUserData();
+         if (*itemType & TTreeViewer::kLTExpressionType) {
             if (xpos>xf0 && xpos<xff && ypos>yf0 && ypos<yff) {
                f->Activate(kTRUE);
             } else {
@@ -268,8 +294,8 @@ Bool_t TGTreeLVC::HandleMotion(Event_t *event)
          }
       }
       if ((fXp - event->fX) > 10) {
-         fListView->SetHsbPosition(0);   
-         fListView->SetVsbPosition(0);   
+         fListView->SetHsbPosition(0);
+         fListView->SetVsbPosition(0);
       }
       fLastActive->Move(xpos, ypos);
       gVirtualX->RaiseWindow(fLastActive->GetId());
@@ -286,14 +312,14 @@ void TGTreeLVC::EmptyAll()
    while ((el = (TGFrameElement *) next())) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
       UInt_t *userData = (UInt_t *) f->GetUserData();
-      if (*userData & kLTExpressionType) {
-         if (*userData & kLTPackType) {
-	    f->SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
-	    f->SetTrueName("");    
-	 } else { 
-	    f->Empty();
-	 }
-      }	   
+      if (*userData & TTreeViewer::kLTExpressionType) {
+         if (*userData & TTreeViewer::kLTPackType) {
+            f->SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
+            f->SetTrueName("");
+         } else {
+            f->Empty();
+         }
+      }
    }
 }
 //______________________________________________________________________________
@@ -305,9 +331,9 @@ void TGTreeLVC::RemoveNonStatic()
    while ((el = (TGFrameElement *) next())) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
       UInt_t *userData = (UInt_t *) f->GetUserData();
-      if (!((*userData) & kLTExpressionType)) {
+      if (!((*userData) & TTreeViewer::kLTExpressionType)) {
          RemoveItem(f);
-      }	   
+      }
    }
 }
 //______________________________________________________________________________
@@ -334,10 +360,16 @@ void TGTreeLVC::SelectItem(const char* name)
 
 ClassImp(TGSelectBox)
 
-//______________________________________________________________________________
-//*-*   TGSelectBox is a transient frame with 2 text entries and it can
-//*-*   edit TGLVTreeEntries
-//
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//   TGSelectBox                                                        //
+//                                                                      //
+// This class represent a specialized expression editor for             //
+// TGLVTreeEntry 'true name' and 'alias' data members.                  //
+// It is a singleton in order to be able to use it for several          //
+//  expressions                                                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 enum ETransientFrameCommands {
    kTFDone
@@ -346,12 +378,12 @@ enum ETransientFrameCommands {
 TGSelectBox* TGSelectBox::fpInstance = 0;
 
 //______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*TGSelectBox constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =========================
 TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
                          UInt_t w, UInt_t h)
             :TGTransientFrame(p, main, w, h)
 {
+   // TGSelectBox constructor
+
    if (!fpInstance) {
       fpInstance = this;
       ULong_t color;
@@ -372,28 +404,28 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
 
       fTeAlias = new TGTextEntry(this, new TGTextBuffer(100));
       AddFrame(fTeAlias, fLayout);
-   
+
       fbDone = new TGTextButton(this, "&Done", kTFDone);
-      AddFrame(fbDone, fbLayout);   
-   
+      AddFrame(fbDone, fbLayout);
+
       MapSubwindows();
       Resize(GetDefaultSize());
-   
+
       SetBackgroundColor(color);
       Window_t wdum;
       Int_t ax, ay;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
                                       (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
                                       ax, ay, wdum);
-      MoveResize(ax, ay, w, GetDefaultHeight());   
+      MoveResize(ax, ay, w, GetDefaultHeight());
       MapWindow();
    }
 }
 //______________________________________________________________________________
 TGSelectBox::~TGSelectBox()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*TGSelectBox destructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ======================
+   // TGSelectBox destructor
+
    fpInstance = 0;
    delete fLabel;
    delete fTe;
@@ -408,7 +440,7 @@ void TGSelectBox::CloseWindow()
 // close the select box
    gVirtualX->UnmapWindow(GetId());
    delete this;
-} 
+}
 //______________________________________________________________________________
 TGSelectBox * TGSelectBox::GetInstance()
 {
@@ -441,14 +473,14 @@ void TGSelectBox::SaveText()
       if (strlen(fTeAlias->GetText())) {
          fEntry->SetItemName(fTeAlias->GetText());
       } else {
-         fEntry->SetItemName(fTe->GetText());	
+         fEntry->SetItemName(fTe->GetText());
       }
    }
 }
 //______________________________________________________________________________
 void TGSelectBox::SetEntry(TGLVTreeEntry *entry)
 {
-	// connect one entry
+   // connect one entry
    fEntry = entry;
    fTe->SetText(entry->GetTrueName());
    fTeAlias->SetText(entry->GetAlias());

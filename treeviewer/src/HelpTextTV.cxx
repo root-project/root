@@ -1,9 +1,18 @@
-// Author : Andrei Gheata	02/10/00
+// @(#)root/treeviewer:$Name:$:$Id:$
+// Author: Andrei Gheata   02/10/00
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "HelpTextTV.h"
 
-#ifndef WIN32
-const char gTVHelpAbout[] 		= "\
+#ifndef R__WIN32
+const char gTVHelpAbout[] = "\
    TTreeView is GUI version of TTreeViewer, designed to handle ROOT trees and\n\
 to take advantage of TTree class features in a graphical manner. It uses only\n\
 ROOT native GUI widgets and has capability to work with several trees in the\n\
@@ -24,7 +33,7 @@ same session. It provides the following functionalities :\n\n\
  ";
 
 
-const char gTVHelpStart[]		= "\
+const char gTVHelpStart[] = "\
    The quickest way to start the tree viewer is to start a ROOT session in \n\
 your working directory where you have the root files containing trees.\n\
 You will need first to load the library for TTreeView and optionally other\n\
@@ -39,7 +48,7 @@ This will work if uou have the path to the library TTreeView defined in your\n\
  ";
 
 
-const char gTVHelpLayout[]		= "\
+const char gTVHelpLayout[] = "\
    The layout has the following items :\n\n\
   - a menu bar with entries : File, Edit, Run, Options and Help;\n\
   - a toolbar in the upper part where you can issue user commands, change\n\
@@ -64,7 +73,7 @@ const char gTVHelpLayout[]		= "\
  ";
 
 
-const char gTVHelpBrowse[]		= "\
+const char gTVHelpBrowse[] = "\
    Browsing root files from the working directory :\n\n\
 Just double-click on the directory item on the left and you will see all\n\
 root files from this directory. Do it once more on the files with a leading +\n\
@@ -78,7 +87,7 @@ left, where you can click on branches to expand them on the right.\n\n\
  ";
 
 
-const char gTVHelpDraggingItems[]	= "\
+const char gTVHelpDraggingItems[] = "\
    Items that can be dragged from the list in the right : expressions and \n\
 leaves. Dragging an item and dropping to another will copy the content of first\n\
 to the last (leaf->expression, expression->expression). Items far to the right\n\
@@ -87,7 +96,7 @@ placed) by dragging them to the left at least 10 pixels.\n\n\
  ";
 
 
-const char gTVHelpEditExpressions[]	= "\
+const char gTVHelpEditExpressions[] = "\
    All editable expressions from the right panel has two components : a\n\
 true name (that will be used when TTree::Draw() commands are issued) and an\n\
 alias (used for labeling axes - not yet). The visible name is the alias if\n\
@@ -104,7 +113,7 @@ The editor usage is the following :\n\
  ";
 
 
-const char gTVHelpUserCommands[]	= "\
+const char gTVHelpUserCommands[] = "\
    User commands can be issued directly from the textbox labeled \"Command\"\n\
 from the upper-left toolbar by typing and pressing Enter at the end.\n\
    An other way is from the right panel context menu : ExecuteCommand.\n\n\
@@ -115,7 +124,7 @@ checking the Rec button from the top-right\n\n\
  ";
 
 
-const char gTVHelpContext[]		= "\
+const char gTVHelpContext[] = "\
    You can activate context menus by right-clicking on items or inside the\n\
 box from the right.\n\n\
 Context menus for mapped items from the left tree-type list :\n\n\
@@ -135,7 +144,7 @@ right-clicks the right panel. Commands are :\n\
  ";
 
 
-const char gTVHelpDrawing[]		= "\
+const char gTVHelpDrawing[] = "\
 Fast variable drawing : Just double-click an item from the right list.\n\n\
 Normal drawing : Edit the X, Y, Z fields as you wish, fill input-output list\n\
 names if you have them. You can change output histogram name, or toggle Hist\n\
@@ -151,20 +160,22 @@ pressing the DRAW button.\n\n\
  ";
 
 
-const char gTVHelpMacros[]		= "\
+const char gTVHelpMacros[] = "\
    Macros can be loaded and executed in this version only by issuing\n\
 the corresponding user commands (see help on user commands)\n\n\
  ";
+
 #else
-const char gTVHelpAbout[] 		= "empty";
-const char gTVHelpStart[]		= "empty";
-const char gTVHelpLayout[]		= "empty";
-const char gTVHelpBrowse[]		= "empty";
-const char gTVHelpDraggingItems[]	= "empty";
-const char gTVHelpEditExpressions[]	= "empty";
-const char gTVHelpUserCommands[]	= "empty";
-const char gTVHelpLoopingEvents[]	= "empty";
-const char gTVHelpDrawing[]		= "empty";
-const char gTVHelpMacros[]		= "empty";
+
+const char gTVHelpAbout[]               = "empty";
+const char gTVHelpStart[]               = "empty";
+const char gTVHelpLayout[]              = "empty";
+const char gTVHelpBrowse[]              = "empty";
+const char gTVHelpDraggingItems[]       = "empty";
+const char gTVHelpEditExpressions[]     = "empty";
+const char gTVHelpUserCommands[]        = "empty";
+const char gTVHelpLoopingEvents[]       = "empty";
+const char gTVHelpDrawing[]             = "empty";
+const char gTVHelpMacros[]              = "empty";
 
 #endif

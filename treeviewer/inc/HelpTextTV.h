@@ -1,4 +1,16 @@
-// Author : Andrei Gheata	02/10/00
+// @(#)root/treeviewer:$Name:$:$Id:$
+// Author: Andrei Gheata   02/10/00
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_HelpTextTV
+#define ROOT_HelpTextTV
 
 #ifndef ROOT_Rtypes
 #include <Rtypes.h>
@@ -15,3 +27,4 @@ R__EXTERN const char gTVHelpContext[];
 R__EXTERN const char gTVHelpDrawing[];
 R__EXTERN const char gTVHelpMacros[];
 
+#endif

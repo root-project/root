@@ -1,18 +1,188 @@
-#include "TTreeView.h"
+// @(#)root/treeviewer:$Name:$:$Id:$
+//Author : Andrei Gheata   16/08/00
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//
+// TTreeViewer is designed to handle ROOT trees and
+// to take advantage of TTree class features in a graphical manner.
+//
+// It uses ROOT native GUI widgets and has capability to work with several trees
+// in the same session. It provides the following functionality :
+//  - browsing all root files in the working directory and mapping trees inside;
+//  - once a tree is mapped, the user can browse branches and work with the
+// corresponding sub-branches if there is no need for the whole tree;
+//  - fast drawing of branches by double-click;
+//  - easy edit the expressions to be drawn on X, Y and Z axis and/or selection;
+//  - dragging expressions to one axis and aliasing of expression names;
+//  - handle input/output event lists;
+//  - usage of predefined compatible drawing options;
+//  - possibility of executing user commands and macros and echoing of the current
+// command;
+//  - possibility of interrupting the current command or the event loop (not yet);
+//  - possibility of selecting the tree entries to be processed (not yet);
+//  - take advantage of TTree class features via context menu;
+//
+// The layout has the following items:
+//
+//  - a menu bar with entries : File, Edit, Run, Options and Help;
+//  - a toolbar in the upper part where you can issue user commands, change
+//  the drawing option and the histogram name, two check buttons Hist and Rec
+//  which toggles histogram drawing mode and command recording respectively;
+//  - a button bar in the lower part with : buttons DRAW/STOP that issue histogram
+//  drawing and stop the current command respectively, two text widgets where
+//  input and output event lists can be specified, a message box and a RESET
+//  button on the right that clear edited expression content (see Editing...)
+//  - a tree-type list on the main left panel where you can browse the root files
+//  from the working directory and load the trees inside by double clicking.
+//  When the first tree is loaded, a new item called "TreeList" will pop-up on
+//  the list menu and will have the selected tree inside with all branches mapped
+//  Mapped trees are provided with context menus, activated by right-clicking;
+//  - a view-type list on the main right panel. The first column contain X, Y and
+//  Z expression items, an optional cut and ten optional editable expressions.
+//  The other items in this list are activated when a mapped item from the
+//  "TreeList" is left-clicked (tree or branch) and will describe the conyent
+//  of the tree (branch). Expressions and leaf-type items can be dragged or
+//  deleted. A right click on the list-box or item activates a general context
+//  menu.
+//
+// Browsing root files from the working directory:
+//
+// Just double-click on the directory item on the left and you will see all
+// root files from this directory. Do it once more on the files with a leading +
+// and you will see the trees inside. If you want one or more of those to
+// be loaded, double-click on them and they will be mapped in a new item called
+// "TreeList".
+//
+// Browsing trees:
+//
+// Left-clicking on trees from the TreeList will expand their content on the list
+// from the right side. Double-clicking them will also open their content on the
+// left, where you can click on branches to expand them on the right.
+//
+// Dragging items:
+//
+// Items that can be dragged from the list in the right : expressions and
+// leaves. Dragging an item and dropping to another will copy the content of first
+// to the last (leaf->expression, expression->expression). Items far to the right
+// side of the list can be easily dragged to the left (where expressions are
+// placed) by dragging them to the left at least 10 pixels.
+//
+// Editing expressions
+//
+// All editable expressions from the right panel has two components : a
+// true name (that will be used when TTree::Draw() commands are issued) and an
+// alias (used for labeling axes - not yet). The visible name is the alias if
+// there is one and the true name otherwise.
+//   The expression editor can be activated by right clicking on an
+// expression item via the command EditExpression from the context menu.
+// An alternative is to use the Edit-Expression menu after the desired expression
+// is selected. The editor will pop-up in the left part, but it can be moved.
+// The editor usage is the following :
+//  - you can write C expressions made of leaf names by hand or you can insert
+//  any item from the right panel by clicking on it (recommandable);
+//  - you should write the item alias by hand since it not ony make the expression
+
+// User commands can be issued directly from the textbox labeled "Command"
+// from the upper-left toolbar by typing and pressing Enter at the end.
+//   An other way is from the right panel context menu : ExecuteCommand.
+// All commands can be interrupted at any time by pressing the STOP button
+// from the bottom-left (not yet)
+// You can toggle recording of the current command in the history file by
+// checking the Rec button from the top-right
+//
+// Context menus
+//
+// You can activate context menus by right-clicking on items or inside the
+// box from the right.
+// Context menus for mapped items from the left tree-type list :
+//   The items from the left that are provided with context menus are tree and
+// branch items. You can directly activate the *MENU* marked methods of TTree
+// from this menu.
+// Context menu for the right panel :
+//   A general context manu of class TTreeViewer is acivated if the user
+// right-clicks the right panel. Commands are :
+//  - EmptyAll        : empty the content of all expressions;
+//  - Empty           : empty the content of the clicked expression;
+//  - EditExpression  : pops-up the expression editor;
+//  - ExecuteCommand  : execute a user command;
+//  - MakeSelector    : equivalent of TTree::MakeSelector();
+//  - Process         : equivalent of TTree::Process();
+//  - RemoveExpression: removes clicked item from the list;
+//
+// Starting the viewer
+//
+// The quickest way to start the tree viewer is to start a ROOT session in
+// your working directory where you have the root files containing trees.
+// You will need first to load the library for TTreeViewer and optionally other
+// libraries for user defined classes (you can do this later in the session) :
+//    root [0] gSystem->Load(\"TTreeViewer\");
+//    root [1] new TTreeViewer;
+// or, to load the tree Mytree from the file Myfile :
+//    root [1] TFile file(\"Myfile\");
+//    root [2] new TTreeViewer(\"Mytree\");
+// This will work if uou have the path to the library TTreeViewer defined
+// in your .rootrc file.
+//
+//Begin_Html
+/*
+<img src="treeview.gif">
+*/
+//End_Html
+//
+
 #include <iostream.h>
-#include <TROOT.h>
-#include <TGX11.h>
-#include <TGMsgBox.h>
-#include <TTreePlayer.h>
-#include <TContextMenu.h>
-#include <TInterpreter.h>
-#include <TLeaf.h>
-#include <TRootHelpDialog.h>
+
+#include "TTreeView.h"
+#include "HelpTextTV.h"
+#include "TGTreeLVC.h"
+
+#include "TROOT.h"
+#include "TGMsgBox.h"
+#include "TTreePlayer.h"
+#include "TContextMenu.h"
+#include "TInterpreter.h"
+#include "TLeaf.h"
+#include "TRootHelpDialog.h"
+#include "TSystem.h"
+#include "TApplication.h"
+#include "TVirtualX.h"
+#include "TGClient.h"
+#include "TKey.h"
+#include "TFile.h"
+#include "TGMenu.h"
+#include "TGFrame.h"
+#include "TCanvas.h"
+#include "TH1.h"
+#include "TTree.h"
+#include "TObjArray.h"
+#include "TGButton.h"
+#include "TGTextEntry.h"
+#include "TGComboBox.h"
+#include "TGLabel.h"
+#include "TGListView.h"
+#include "TGListTree.h"
+#include "TGMimeTypes.h"
+#include "TGSplitter.h"
+#include "TGDoubleSlider.h"
+#include "TGToolBar.h"
+#include "TGStatusBar.h"
+#include "Getline.h"
+#include "TTimer.h"
+#include "TG3DLine.h"
+#include "TGFileDialog.h"
 
 
 // drawing options
 static const char* optgen[16] =
-{	
+{
    "","AXIS","HIST","SAME","CYL","POL","SPH","PSR","LEGO","LEGO1","LEGO2",
    "SURF","SURF1","SURF2","SURF3","SURF4"
 };
@@ -30,7 +200,7 @@ static const char* gOpenTypes[] = {"Root files",   "*.root",
                                    0,              0       };
 
 // Menu command id's
-enum ERootTreeViewCommands {
+enum ERootTreeViewerCommands {
    kFileCanvas,
    kFileBrowse,
    kFileLoadLibrary = 3,
@@ -39,19 +209,19 @@ enum ERootTreeViewCommands {
    kFilePrint,
    kFileClose,
    kFileQuit,
-   
+
    kEditExpression,
    kEditCut,
    kEditMacro,
    kEditEvent,
-   
+
    kRunCommand,
    kRunMacro,
 
-   kOptionsGeneral = 20,   
+   kOptionsGeneral = 20,
    kOptions1D = 50,
    kOptions2D = 70,
-   
+
    kHelpAbout = 100,
    kHelpStart,
    kHelpLayout,
@@ -62,7 +232,7 @@ enum ERootTreeViewCommands {
    kHelpContext,
    kHelpDrawing,
    kHelpMacros,
-   
+
    kBarCommand,
    kBarOption,
    kBarCut,
@@ -78,149 +248,22 @@ enum EButtonIdentifiers {
    kSLIDER
 };
 
-ClassImp(TTreeView)
 
-//______________________________________________________________________________//*-*
-//*-*   TTreeView is GUI version of TTreeViewer, designed to handle ROOT trees and
-//*-*   to take advantage of TTree class features in a graphical manner. 
-//
-//	It uses ROOT native GUI widgets and has capability to work with several trees 
-//	in the same session. It provides the following functionality :
-//  - browsing all root files in the working directory and mapping trees inside;
-//  - once a tree is mapped, the user can browse branches and work with the
-//  corresponding sub-branches if there is no need for the whole tree;
-//  - fast drawing of branches by double-click;
-//  - easy edit the expressions to be drawn on X, Y and Z axis and/or selection;
-//  - dragging expressions to one axis and aliasing of expression names;
-//  - handle input/output event lists;
-//  - usage of predefined compatible drawing options;
-//  - possibility of executing user commands and macros and echoing of the current
-//  command;
-//  - possibility of interrupting the current command or the event loop (not yet);
-//  - possibility of selecting the tree entries to be processed (not yet);
-//  - take advantage of TTree class features via context menu;
-//
-//   The layout has the following items :
-//
-//  - a menu bar with entries : File, Edit, Run, Options and Help;
-//  - a toolbar in the upper part where you can issue user commands, change
-//  the drawing option and the histogram name, two check buttons Hist and Rec
-//  which toggles histogram drawing mode and command recording respectively;
-//  - a button bar in the lower part with : buttons DRAW/STOP that issue histogram
-//  drawing and stop the current command respectively, two text widgets where 
-//  input and output event lists can be specified, a message box and a RESET
-//  button on the right that clear edited expression content (see Editing...)
-//  - a tree-type list on the main left panel where you can browse the root files
-//  from the working directory and load the trees inside by double clicking.
-//  When the first tree is loaded, a new item called "TreeList" will pop-up on
-//  the list menu and will have the selected tree inside with all branches mapped
-//  Mapped trees are provided with context menus, activated by right-clicking;
-//  - a view-type list on the main right panel. The first column contain X, Y and
-//  Z expression items, an optional cut and ten optional editable expressions.
-//  The other items in this list are activated when a mapped item from the
-//  "TreeList" is left-clicked (tree or branch) and will describe the conyent
-//  of the tree (branch). Expressions and leaf-type items can be dragged or
-//  deleted. A right click on the list-box or item activates a general context
-//  menu.
-//
-//   Browsing root files from the working directory :
-//
-// Just double-click on the directory item on the left and you will see all
-// root files from this directory. Do it once more on the files with a leading +
-// and you will see the trees inside. If you want one or more of those to
-// be loaded, double-click on them and they will be mapped in a new item called
-// "TreeList".
-//
-//   Browsing trees :
-//
-// Left-clicking on trees from the TreeList will expand their content on the list
-// from the right side. Double-clicking them will also open their content on the
-// left, where you can click on branches to expand them on the right.
-//
-//   Dragging items :
-//
-//   Items that can be dragged from the list in the right : expressions and 
-// leaves. Dragging an item and dropping to another will copy the content of first
-// to the last (leaf->expression, expression->expression). Items far to the right
-// side of the list can be easily dragged to the left (where expressions are
-// placed) by dragging them to the left at least 10 pixels.
-//
-//   Editing expressions
-//
-//   All editable expressions from the right panel has two components : a
-// true name (that will be used when TTree::Draw() commands are issued) and an
-// alias (used for labeling axes - not yet). The visible name is the alias if
-// there is one and the true name otherwise.
-//   The expression editor can be activated by right clicking on an
-// expression item via the command EditExpression from the context menu.
-// An alternative is to use the Edit-Expression menu after the desired expression
-// is selected. The editor will pop-up in the left part, but it can be moved.
-// The editor usage is the following :
-//  - you can write C expressions made of leaf names by hand or you can insert
-//  any item from the right panel by clicking on it (recommandable);
-//  - you should write the item alias by hand since it not ony make the expression
+ClassImp(TTreeViewer)
 
-//   User commands can be issued directly from the textbox labeled "Command"
-// from the upper-left toolbar by typing and pressing Enter at the end.
-//   An other way is from the right panel context menu : ExecuteCommand.
-// All commands can be interrupted at any time by pressing the STOP button
-// from the bottom-left (not yet)
-// You can toggle recording of the current command in the history file by
-// checking the Rec button from the top-right
-//
-//   Context menus
-//
-//   You can activate context menus by right-clicking on items or inside the
-// box from the right.
-// Context menus for mapped items from the left tree-type list :
-//  The items from the left that are provided with context menus are tree and
-// branch items. You can directly activate the *MENU* marked methods of TTree
-// from this menu.
-// Context menu for the right panel :
-//  A general context manu of class TTreeView is acivated if the user
-// right-clicks the right panel. Commands are :
-//  - EmptyAll        : empty the content of all expressions;
-//  - Empty           : empty the content of the clicked expression;
-//  - EditExpression  : pops-up the expression editor;
-//  - ExecuteCommand  : execute a user command;
-//  - MakeSelector    : equivalent of TTree::MakeSelector();
-//  - Process         : equivalent of TTree::Process();
-//  - RemoveExpression: removes clicked item from the list;
-//
-//   Starting the viewer
-//
-//   The quickest way to start the tree viewer is to start a ROOT session in 
-// your working directory where you have the root files containing trees.
-// You will need first to load the library for TTreeView and optionally other
-// libraries for user defined classes (you can do this later in the session) :
-//    root [0] gSystem->Load(\"TTreeView\");
-//    root [1] new TTreeView;
-// or, to load the tree Mytree from the file Myfile :
-//    root [1] TFile file(\"Myfile\");
-//    root [2] new TTreeView(\"Mytree\");
-// This will work if uou have the path to the library TTreeView defined in your
-// .rootrc file.
-//
-//Begin_Html
-/*
-<img src="treeview.gif">
-*/
-//End_Html
-//
-		
 //______________________________________________________________________________
-TTreeView::TTreeView(const char* treeName)
+TTreeViewer::TTreeViewer(const char* treeName)
           :TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*TTreeView default constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ================================
+  // TTreeViewer default constructor
+
    fTree = 0;
    BuildInterface();
    SetTreeName(treeName);
 }
 
 //______________________________________________________________________________
-void TTreeView::SetTreeName(const char* treeName)
+void TTreeViewer::SetTreeName(const char* treeName)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Allow geting the tree from the context menu*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==========================================
@@ -228,22 +271,22 @@ void TTreeView::SetTreeName(const char* treeName)
    TTree *tree = (TTree *) gROOT->FindObject(treeName);
    if (!tree) return;
    if (fTreeList) {
-      if (fTreeList->FindObject(treeName)) return;   
+      if (fTreeList->FindObject(treeName)) return;
    }
    if (fTree != tree) {
       fTree = tree;
-      // load the tree via the interpreter 
+      // load the tree via the interpreter
       char command[100];
       command[0] = 0;
       // define a global "tree" variable for the same tree
       sprintf(command, "TTree *tree = (TTree *) gROOT->FindObject(\"%s\");", treeName);
       ExecuteCommand(command);
-   } 
+   }
    //--- add the list of trees
    if (!fTreeList) {
       fTreeList = new TList();
-      ExecuteCommand("TList *list = new TList;"); 
-   }      
+      ExecuteCommand("TList *list = new TList;");
+   }
    //--- add the tree to the list if it is noy already in
    fTreeList->Add(fTree);
    ExecuteCommand("list->Add(tree);");
@@ -259,18 +302,18 @@ void TTreeView::SetTreeName(const char* treeName)
    fLt->OpenItem(parent);
    fLt->HighlightItem(lTreeItem);
    fClient->NeedRedraw(fLt);
-   
+
    //--- map slider and list view
    SwitchTree(fTreeIndex-1);
    fLVContainer->RemoveNonStatic();
    MapTree(fTree);
-   fListView->Layout();   
+   fListView->Layout();
 }
 
 
 
 //______________________________________________________________________________
-void TTreeView::BuildInterface()
+void TTreeViewer::BuildInterface()
 {
 //*-*-*-*-*-*-*-*-*Create all viewer widgets*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
@@ -281,7 +324,7 @@ void TTreeView::BuildInterface()
    //--- cursors
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
    fWatchCursor = gVirtualX->CreateCursor(kWatch);
-   //--- colours   
+   //--- colours
    ULong_t color;
    gClient->GetColorByName("blue",color);
    //--- pictures for X, Y and Z expression items
@@ -313,8 +356,8 @@ void TTreeView::BuildInterface()
    fFileMenu->AddEntry("&Print",           kFilePrint);
    fFileMenu->AddEntry("&Close",           kFileClose);
    fFileMenu->AddSeparator();
-   fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);   
-   
+   fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);
+
 //   fFileMenu->DisableEntry(kFileBrowse);
 //   fFileMenu->DisableEntry(kFileLoadLibrary);
    fFileMenu->DisableEntry(kFileSaveSettings);
@@ -326,7 +369,7 @@ void TTreeView::BuildInterface()
    fEditMenu->AddEntry("&Cut...",          kEditCut);
    fEditMenu->AddEntry("&Macro...",        kEditMacro);
    fEditMenu->AddEntry("E&Vent...",        kEditEvent);
-   
+
    fEditMenu->DisableEntry(kEditMacro);
    fEditMenu->DisableEntry(kEditEvent);
    //---Run menu
@@ -340,7 +383,7 @@ void TTreeView::BuildInterface()
    fOptionsGen->AddSeparator();
    fOptionsGen->AddEntry("Axis only",      kOptionsGeneral+1);  // "AXIS"
    fOptionsGen->AddEntry("Contour only",   kOptionsGeneral+2);  // "HIST"
-   fOptionsGen->AddEntry("Superimpose",    kOptionsGeneral+3);  //"SAME"	
+   fOptionsGen->AddEntry("Superimpose",    kOptionsGeneral+3);  //"SAME"
    fOptionsGen->AddEntry("Cylindrical",    kOptionsGeneral+4);  //"CYL"
    fOptionsGen->AddEntry("Polar",          kOptionsGeneral+5);  //"POL"
    fOptionsGen->AddEntry("Spherical",      kOptionsGeneral+6);  //"SPH"
@@ -360,7 +403,7 @@ void TTreeView::BuildInterface()
    fOptions1D->AddSeparator();
    fOptions1D->AddEntry("No labels/ticks", kOptions1D+1);       // "AH"
    fOptions1D->AddEntry("Bar chart",       kOptions1D+2);       // "B"
-   fOptions1D->AddEntry("Smooth curve",    kOptions1D+3);       // "C"	
+   fOptions1D->AddEntry("Smooth curve",    kOptions1D+3);       // "C"
    fOptions1D->AddEntry("Errors",          kOptions1D+4);       // "E"
    fOptions1D->AddEntry("Errors 1",        kOptions1D+5);       // "E1"
    fOptions1D->AddEntry("Errors 2",        kOptions1D+6);       // "E2"
@@ -378,7 +421,7 @@ void TTreeView::BuildInterface()
    fOptions2D->AddEntry("Box/Surf",        kOptions2D+2);       // "BOX"
    fOptions2D->AddEntry("Box/Color",       kOptions2D+3);       // "COL"
    fOptions2D->AddEntry("Box/ColMap",      kOptions2D+4);       // "COLZ"
-   fOptions2D->AddEntry("Contour",         kOptions2D+5);       // "CONT"	
+   fOptions2D->AddEntry("Contour",         kOptions2D+5);       // "CONT"
    fOptions2D->AddEntry("Contour 0",       kOptions2D+6);       // "CONT0"
    fOptions2D->AddEntry("Contour 1",       kOptions2D+7);       // "CONT1"
    fOptions2D->AddEntry("Contour 2",       kOptions2D+8);       // "CONT2"
@@ -412,20 +455,20 @@ void TTreeView::BuildInterface()
    fRunMenu->Associate(this);
    fOptionsMenu->Associate(this);
    fHelpMenu->Associate(this);
-   
+
    //--- menubar layout hints
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0,0,1,1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
    fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
    //--- create menubar and add popup menus
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
-   
+
    fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Edit", fEditMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Run",  fRunMenu,  fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Options", fOptionsMenu,	fMenuBarItemLayout);
+   fMenuBar->AddPopup("&Options", fOptionsMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help", fHelpMenu, fMenuBarHelpLayout);
-   
+
    AddFrame(fMenuBar, fMenuBarLayout);
    //--- toolbar ----------------------------------------------------------------
    fToolBar = new TGToolBar(this, 10, 10, kHorizontalFrame);
@@ -499,7 +542,7 @@ void TTreeView::BuildInterface()
    //--- 2'nd horizontal tool bar separator ----------------------------------------
    toolBarSep = new TGHorizontal3DLine(this);
    fWidgets->Add(toolBarSep);
-   AddFrame(toolBarSep, fBarLayout);   
+   AddFrame(toolBarSep, fBarLayout);
    //--- Horizontal mother frame
    fHf = new TGHorizontalFrame(this, 10, 10);
    //--- Vertical frames
@@ -513,7 +556,7 @@ void TTreeView::BuildInterface()
    fListHdr = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame);
    fLbl1 = new TGLabel(fTreeHdr, "Current folder");
    fLbl2 = new TGLabel(fListHdr, "Current tree :                 ");
-   
+
    lo = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 0, 0);
    fWidgets->Add(lo);
    fTreeHdr->AddFrame(fLbl1, lo);
@@ -523,7 +566,7 @@ void TTreeView::BuildInterface()
    fWidgets->Add(lo);
    fV1->AddFrame(fTreeHdr, lo);
    fV2->AddFrame(fListHdr, lo);
-   
+
    fV1->Resize(fTreeHdr->GetDefaultWidth()+100, fV1->GetDefaultHeight());
    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(lo);
@@ -536,7 +579,7 @@ void TTreeView::BuildInterface()
    fWidgets->Add(splitter);
    fWidgets->Add(lo);
    fHf->AddFrame(splitter,lo);
-	
+
    lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
    fHf->AddFrame(fV2,lo);
@@ -547,7 +590,7 @@ void TTreeView::BuildInterface()
                         fgWhitePixel);
    fLt->Associate(this);
    fTreeView->SetContainer(fLt);
-	
+
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
    fV1->AddFrame(fTreeView, lo);
@@ -563,7 +606,7 @@ void TTreeView::BuildInterface()
    fListView->SetViewMode(kLVList);
 
    fV2->AddFrame(fListView,lo);
-   AddFrame(fHf, lo);	
+   AddFrame(fHf, lo);
    //--- bottom button frame ----------------------------------------------------
    fBFrame = new TGHorizontalFrame(this,10,10);
    fPicDraw = gClient->GetPicture("draw_t.xpm");
@@ -613,16 +656,16 @@ void TTreeView::BuildInterface()
    lo = new TGLayoutHints(kLHintsExpandX,2,2,2,0);
    fWidgets->Add(lo);
    AddFrame(fBFrame,lo);
-	
+
    // map the window
    SetWindowName("TreeViewer");
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   
+
    // put default items in the listview on the right
    const TGPicture *pic, *spic;
-   
+
    fLVContainer->RemoveAll();
    TGLVTreeEntry* entry;
    Char_t symbol;
@@ -663,15 +706,15 @@ void TTreeView::BuildInterface()
    fLVContainer->AddThisItem(entry);
    entry->MapWindow();
    entry->SetTrueName("");
-   
+
    pic = gClient->GetPicture("expression_t.xpm");
-   spic = gClient->GetPicture("expression_t.xpm");   
+   spic = gClient->GetPicture("expression_t.xpm");
    //--- 10 expression items
    for (Int_t i=0; i<10; i++) {
       entry = new TGLVTreeEntry(fLVContainer,pic,spic,new TGString(),0,kLVSmallIcons);
       entry->SetUserData(new ULong_t(kLTExpressionType | kLTDragType));
       fLVContainer->AddThisItem(entry);
-      entry->MapWindow();   
+      entry->MapWindow();
    }
 
    fListView->Layout();
@@ -689,16 +732,16 @@ void TTreeView::BuildInterface()
 }
 
 //______________________________________________________________________________
-TTreeView::~TTreeView() 
+TTreeViewer::~TTreeViewer()
 {
-//*-*-*-*-*-*-*-*-*-*-*TTreeView default destructor*-*-*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*TTreeViewer default destructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
 
    gClient->FreePicture(fPicX);
-   gClient->FreePicture(fPicY);   
-   gClient->FreePicture(fPicZ);   
-   gClient->FreePicture(fPicDraw);   
-   gClient->FreePicture(fPicStop);   
+   gClient->FreePicture(fPicY);
+   gClient->FreePicture(fPicZ);
+   gClient->FreePicture(fPicDraw);
+   gClient->FreePicture(fPicStop);
 
    fDialogBox = TGSelectBox::GetInstance();
    if (fDialogBox) delete fDialogBox;
@@ -732,12 +775,12 @@ TTreeView::~TTreeView()
    delete fListHdr;
    delete fLt;
    delete fTreeView;
-   delete fLVContainer; 
+   delete fLVContainer;
    delete fListView;
 
    delete fbDRAW;
    delete fbSTOP;
-   delete fReset;  
+   delete fReset;
    delete fBFrame;
 
    delete fMenuBar;
@@ -753,7 +796,7 @@ TTreeView::~TTreeView()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
    delete fBarLayout;
-   
+
    fWidgets->Delete();
    delete fWidgets;
    if (fTreeList) {
@@ -763,24 +806,24 @@ TTreeView::~TTreeView()
    delete fTimer;
 }
 //______________________________________________________________________________
-const char* TTreeView::Cut()
+const char* TTreeViewer::Cut()
 {
    return fLVContainer->Cut();
 }
 //______________________________________________________________________________
-const char* TTreeView::ScanList()
+const char* TTreeViewer::ScanList()
 {
    return fLVContainer->ScanList();
 }
 //______________________________________________________________________________
-void TTreeView::EmptyAll()
+void TTreeViewer::EmptyAll()
 {
 //*-*-*-*-*-*-*-*-*Clear the content of all items in the list view*-*-*-*-*-*-*
 //*-*              ================================================
    fLVContainer->EmptyAll();
 }
 //______________________________________________________________________________
-void TTreeView::Empty()
+void TTreeViewer::Empty()
 //*-*-*-*-*-*-*-*-*Empty the content of the selected expression*-*-*-*-*-*-*-*-*-*-*
 //*-*              ============================================
 {
@@ -804,7 +847,7 @@ void TTreeView::Empty()
 }
 
 //______________________________________________________________________________
-Int_t TTreeView::Dimension()
+Int_t TTreeViewer::Dimension()
 {
 //*-*-*-*-*-*-*-*-*Compute dimension of the histogram*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================================
@@ -815,7 +858,7 @@ Int_t TTreeView::Dimension()
    return fDimension;
 }
 //______________________________________________________________________________
-void TTreeView::ExecuteDraw()
+void TTreeViewer::ExecuteDraw()
 {
 //*-*-*-*-*-*-*-*-*Called when the DRAW button is executed*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -858,7 +901,7 @@ void TTreeView::ExecuteDraw()
       new TCanvas("c1");
    }
    // find graphics option
-   const char* gopt = fBarOption->GetText();   
+   const char* gopt = fBarOption->GetText();
    // just in case a previous interrupt was posted
    gROOT->SetInterrupt(kFALSE);
    // check if only histogram has to be updated
@@ -875,49 +918,49 @@ void TTreeView::ExecuteDraw()
    // check if cut is enabled
    const char *cut = "";
    if (fEnableCut) cut = Cut();
-   
-   // get entries to be processed   
-   Int_t nentries = (Int_t)(fSlider->GetMaxPosition() - 
+
+   // get entries to be processed
+   Int_t nentries = (Int_t)(fSlider->GetMaxPosition() -
                             fSlider->GetMinPosition() + 1);
    Int_t firstentry =(Int_t) fSlider->GetMinPosition();
 
    // check if Scan is checked and if there is something in the box
    if (strlen(ScanList())) sprintf(varexp, ScanList());
    if (fBarScan->GetState() == kButtonDown) {
-      sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);", 
+      sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
               varexp, cut, gopt, nentries, firstentry);
       ExecuteCommand(command, kTRUE);
       return;
    }
    // send draw command
-   sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);", 
+   sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
            varexp, cut, gopt, nentries, firstentry);
    ExecuteCommand(command, kTRUE);
    gPad->Update();
 }
 //______________________________________________________________________________
-const char* TTreeView::Ex()
+const char* TTreeViewer::Ex()
 {
 //*-*-*-*-*-*-*-*-*Get the expression to be drawn on X axis*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
    return fLVContainer->Ex();
 }
 //______________________________________________________________________________
-const char* TTreeView::Ey()
+const char* TTreeViewer::Ey()
 {
 //*-*-*-*-*-*-*-*-*Get the expression to be drawn on Y axis*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
    return fLVContainer->Ey();
 }
 //______________________________________________________________________________
-const char* TTreeView::Ez()
+const char* TTreeViewer::Ez()
 {
 //*-*-*-*-*-*-*-*-*Get the expression to be drawn on Z axis*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
    return fLVContainer->Ez();
 }
 //______________________________________________________________________________
-void TTreeView::EditExpression()
+void TTreeViewer::EditExpression()
 {
 //*-*-*-*-*-*-*-*-*Start the expression editor*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
@@ -934,7 +977,7 @@ void TTreeView::EditExpression()
       Warning("Not expression type.");
       return;
    }
-   // check if the editor is already active 
+   // check if the editor is already active
    fDialogBox = TGSelectBox::GetInstance();
    if (!fDialogBox) {
       fDialogBox = new TGSelectBox(fClient->GetRoot(), this, fV1->GetWidth() - 10);
@@ -947,10 +990,10 @@ void TTreeView::EditExpression()
       fDialogBox->SetLabel("Cut");
    } else {
       fDialogBox->SetLabel("Expression");
-   } 
+   }
 }
 //______________________________________________________________________________
-Int_t TTreeView::MakeSelector(const char* selector)
+Int_t TTreeViewer::MakeSelector(const char* selector)
 {
 //*-*-*-*-*-*-*-*-*get use of TTree::MakeSelector() via the context menu*-*-*-*-*-*-*-*-*-*-*
 //*-*              =====================================================
@@ -958,7 +1001,7 @@ Int_t TTreeView::MakeSelector(const char* selector)
    return fTree->MakeSelector(selector);
 }
 //______________________________________________________________________________
-Int_t TTreeView::Process(const char* filename, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TTreeViewer::Process(const char* filename, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*get use of TTree::Process() via the context menu*-*-*-*-*-*
 //*-*              ================================================
@@ -966,7 +1009,7 @@ Int_t TTreeView::Process(const char* filename, Option_t *option, Int_t nentries,
    return fTree->Process(filename, option, nentries, firstentry);
 }
 //______________________________________________________________________________
-void TTreeView::RemoveItem()
+void TTreeViewer::RemoveItem()
 {
 //*-*-*-*-*-*-*-*-*Remove the selected item from the list*-*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -987,18 +1030,18 @@ void TTreeView::RemoveItem()
    fListView->Layout();
 }
 //______________________________________________________________________________
-Bool_t TTreeView::HandleTimer(TTimer *timer)
+Bool_t TTreeViewer::HandleTimer(TTimer *timer)
 {
-// This function is called by the fTimer object 
+// This function is called by the fTimer object
    timer->Reset();
    fCounting = kTRUE;
-   // functionality to be added 
+   // functionality to be added
    if (gPad) gPad->SetCursor(kWatch);
    cout << "time\n";
    return kFALSE;
 }
 //______________________________________________________________________________
-Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
 //*-*-*-*-*-*-*-*-*Handle menu and other commands generated*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -1007,8 +1050,8 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    switch (GET_MSG(msg)) {
       case kC_VSLIDER :
-	 // handle slider messages
-	 PrintEntries();
+         // handle slider messages
+         PrintEntries();
       break;
       case kC_TEXTENTRY:
          switch (GET_SUBMSG(msg)) {
@@ -1017,12 +1060,12 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                if ((Int_t)parm1 == kBarCommand) {
                   ExecuteCommand(fBarCommand->GetText());
                }
-	       if ((Int_t)parm1 == kBarOption) {
-	          fVarDraw = kFALSE;
+               if ((Int_t)parm1 == kBarOption) {
+                  fVarDraw = kFALSE;
                   fBarH->SetState(kButtonDown);
-		  ExecuteDraw();
-		  fBarH->SetState(kButtonUp);
-	       }
+                  ExecuteDraw();
+                  fBarH->SetState(kButtonUp);
+               }
                break;
             default:
                break;
@@ -1039,13 +1082,13 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
                      if (*itemType & kLTTreeType) {
-                     // already mapped tree item clicked 
+                     // already mapped tree item clicked
                         Int_t index = (Int_t)(*itemType >> 8);
                         SwitchTree(index);
                         if (fTree != fMappedTree) {
-			// switch also the global "tree" variable
+                           // switch also the global "tree" variable
                            fLVContainer->RemoveNonStatic();
-                           // map it on the right panel			   
+                           // map it on the right panel
                            MapTree(fTree);
                            fListView->Layout();
                         }
@@ -1056,16 +1099,16 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         SetParentTree(ltItem);
                         if (!fTree) break; // really needed ?
                         TBranch *branch = fTree->GetBranch(ltItem->GetText());
-                        if (!branch) break; 
+                        if (!branch) break;
                         // check if it is mapped on the right panel
                         if (branch != fMappedBranch) {
                            fLVContainer->RemoveNonStatic();
                            MapBranch(branch);
-			   fStopMapping = kFALSE;
+                           fStopMapping = kFALSE;
                            fListView->Layout();
                         }
                      }
-		   
+
                      if (*itemType & kLTLeafType) {
                      // leaf item clicked
                         SetParentTree(ltItem);
@@ -1073,26 +1116,26 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         // find parent branch
                         TBranch *branch = fTree->GetBranch(ltItem->GetParent()->GetText());
                         if (!branch) {
-			   if (fTree != fMappedTree) {
-			      fLVContainer->RemoveNonStatic();
-			      MapTree(fTree);
-			      fListView->Layout();
-			   }
-			} else {
+                           if (fTree != fMappedTree) {
+                              fLVContainer->RemoveNonStatic();
+                              MapTree(fTree);
+                              fListView->Layout();
+                           }
+                        } else {
                            // check if it is already mapped
                            if (branch != fMappedBranch) {
                               fLVContainer->RemoveNonStatic();
                               MapBranch(branch);
-			      fStopMapping = kFALSE;
+                              fStopMapping = kFALSE;
                               fListView->Layout();
                            }
-			}   
+                        }
                         // select corresponding leaf on the right panel
                         fLVContainer->SelectItem(ltItem->GetText());
                      }
-                  }      
+                  }
                }
-	       
+
                if (parm1 == kButton3) {
                // get item that sent this
                   TGListTreeItem *ltItem = 0;
@@ -1100,42 +1143,42 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
                      if (*itemType & kLTTreeType) {
-                     // already mapped tree item clicked 
+                     // already mapped tree item clicked
                         Int_t index = (Int_t)(*itemType >> 8);
                         SwitchTree(index);
                         if (fTree != fMappedTree) {
-                           fLVContainer->RemoveNonStatic();			   
+                           fLVContainer->RemoveNonStatic();
                            MapTree(fTree);
                            fListView->Layout();
                         }
                         // activate context menu for this tree
                         Int_t x = (Int_t)(parm2 &0xffff);
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                        fContextMenu->Popup(x, y, fTree);				   
+                        fContextMenu->Popup(x, y, fTree);
                      }
                      if (*itemType & kLTBranchType) {
                      // branch item clicked
                         SetParentTree(ltItem);
                         if (!fTree) break; // really needed ?
                         TBranch *branch = fTree->GetBranch(ltItem->GetText());
-                        if (!branch) break; 
+                        if (!branch) break;
                         if (branch != fMappedBranch) {
                            fLVContainer->RemoveNonStatic();
                            MapBranch(branch);
-			   fStopMapping = kFALSE;
+                           fStopMapping = kFALSE;
                            fListView->Layout();
                         }
                         // activate context menu for this branch (no *MENU* methods ):)
                         Int_t x = (Int_t)(parm2 &0xffff);
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                        fContextMenu->Popup(x, y, branch);				   
+                        fContextMenu->Popup(x, y, branch);
                      }
                   }
                }
                break;
-	    case kCT_ITEMDBLCLICK :
-	       fClient->NeedRedraw(fLt);
-	       break;
+            case kCT_ITEMDBLCLICK :
+               fClient->NeedRedraw(fLt);
+               break;
             default:
                break;
          }
@@ -1188,35 +1231,35 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   break;
                }
                switch (parm1) {
-	          case kFileCanvas:
-		     gROOT->GetMakeDefCanvas()();
-		     break;
+                  case kFileCanvas:
+                     gROOT->GetMakeDefCanvas()();
+                     break;
                   case kFileBrowse:
-		     if (1) {
-		        TGFileInfo info;
-		        info.fFileTypes = (char **) gOpenTypes;
-		        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
-		        if (!info.fFilename) return kTRUE;
-			char command[100];
-			command[0] = 0;
-			sprintf(command, "TFile *treeFile = new TFile(\"%s\");", info.fFilename);
-			ExecuteCommand(command);
-			ExecuteCommand("treeFile->ls();");
-			cout << "Use SetTreeName() from context menu and supply a tree name\n";
-			cout << "The context menu is activated by right-clicking the panel from right\n";
-		        delete[] info.fFilename;
-		     }
+                     if (1) {
+                        TGFileInfo info;
+                        info.fFileTypes = (char **) gOpenTypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
+                        if (!info.fFilename) return kTRUE;
+                        char command[100];
+                        command[0] = 0;
+                        sprintf(command, "TFile *treeFile = new TFile(\"%s\");", info.fFilename);
+                        ExecuteCommand(command);
+                        ExecuteCommand("treeFile->ls();");
+                        cout << "Use SetTreeName() from context menu and supply a tree name" << endl;
+                        cout << "The context menu is activated by right-clicking the panel from right" << endl;
+                        delete[] info.fFilename;
+                     }
                      break;
                   case kFileLoadLibrary:
-		     fBarCommand->SetText("gSystem->Load(\"\");");
-		     if (1) {
-		        Event_t event;
-			event.fType = kButtonPress;
-			event.fCode = kButton1;
-			
-			fBarCommand->HandleButton(&event);
-		     }
-		     fBarCommand->SetCursorPosition(15);
+                     fBarCommand->SetText("gSystem->Load(\"\");");
+                     if (1) {
+                        Event_t event;
+                        event.fType = kButtonPress;
+                        event.fCode = kButton1;
+
+                        fBarCommand->HandleButton(&event);
+                     }
+                     fBarCommand->SetCursorPosition(15);
                      break;
                   case kFileSaveSettings:
                      break;
@@ -1243,7 +1286,7 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kRunMacro:
                      break;
                   case kHelpAbout:
-                     hd = new TRootHelpDialog(this, "About TTreeView...", 600, 400);
+                     hd = new TRootHelpDialog(this, "About TTreeViewer...", 600, 400);
                      hd->SetText(gTVHelpAbout);
                      hd->Resize(hd->GetDefaultSize());
                      hd->Popup();
@@ -1294,13 +1337,13 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      hd->Popup();
                      break;
                   default:
-                     break;			
+                     break;
                }
                break;
             default:
                break;
          }
-	 break;
+         break;
       case kC_CONTAINER:
          switch (GET_SUBMSG(msg)) {
          // handle messages sent from the listview (right panel)
@@ -1349,14 +1392,14 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            if (!fDialogBox) break;
                            // paste it
                            char first = (char) trueName(0);
-			   TString insert("");
+                           TString insert("");
                            if (first != '(') insert += "(";
                            insert += item->GetTrueName();
                            if (first != '(') insert += ")";
 
-			   fDialogBox->GrabPointer();
-			   fDialogBox->InsertText(insert.Data());
-			   // put the cursor at the right position
+                           fDialogBox->GrabPointer();
+                           fDialogBox->InsertText(insert.Data());
+                           // put the cursor at the right position
                         }
                      }
                      break;
@@ -1397,17 +1440,17 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  fVarDraw = kTRUE;
                                  // draw on double-click
                                  ExecuteDraw();
-				 break;
+                                 break;
                               }
                            }
-			   if (*itemType & kLTCutType) {
-			      fEnableCut = !fEnableCut;
-			      if (fEnableCut) {
-			         item->SetSmallPic(gClient->GetPicture("cut_t.xpm"));
-			      } else {
-			         item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
-			      } 
-			   }
+                           if (*itemType & kLTCutType) {
+                              fEnableCut = !fEnableCut;
+                              if (fEnableCut) {
+                                 item->SetSmallPic(gClient->GetPicture("cut_t.xpm"));
+                              } else {
+                                 item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
+                              }
+                           }
                         }
                      }
                      break;
@@ -1431,7 +1474,7 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 //______________________________________________________________________________
-void TTreeView::CloseWindow()
+void TTreeViewer::CloseWindow()
 {
 // Close the viewer
    gVirtualX->UnmapWindow(GetId());
@@ -1439,7 +1482,7 @@ void TTreeView::CloseWindow()
    cout << "Tree Viewer deleted\n";
 }
 //______________________________________________________________________________
-void TTreeView::ExecuteCommand(const char* command, Bool_t fast)
+void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
 {
 //*-*-*-*-*-*-*-*-*Execute all user commands*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
@@ -1468,7 +1511,7 @@ void TTreeView::ExecuteCommand(const char* command, Bool_t fast)
    fVarDraw = kFALSE;
 }
 //______________________________________________________________________________
-void TTreeView::MapOptions(Long_t parm1)
+void TTreeViewer::MapOptions(Long_t parm1)
 {
 //*-*-*-*-*-*-*-*-*Scan the selected options from option menu*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================================
@@ -1480,7 +1523,7 @@ void TTreeView::MapOptions(Long_t parm1)
          fOptionsGen->CheckEntry(parm1);
          if (parm1 != kOptionsGeneral) fOptionsGen->UnCheckEntry(kOptionsGeneral);
       }
-      if (fOptionsGen->IsEntryChecked(kOptionsGeneral)) {	
+      if (fOptionsGen->IsEntryChecked(kOptionsGeneral)) {
       // uncheck all in this menu
          for (ind=kOptionsGeneral+1; ind<kOptionsGeneral+16; ind++) {
             fOptionsGen->UnCheckEntry(ind);
@@ -1495,14 +1538,14 @@ void TTreeView::MapOptions(Long_t parm1)
          fOptions1D->CheckEntry(parm1);
          if (parm1 != kOptions1D) fOptions1D->UnCheckEntry(kOptions1D);
       }
-      if (fOptions1D->IsEntryChecked(kOptions1D)) {	
+      if (fOptions1D->IsEntryChecked(kOptions1D)) {
       // uncheck all in this menu
          for (ind=kOptions1D+1; ind<kOptions1D+12; ind++) {
             fOptions1D->UnCheckEntry(ind);
          }
       }
    }
-   
+
    if (parm1 >= kOptions2D) {
       if (fOptions2D->IsEntryChecked(parm1)) {
          fOptions2D->UnCheckEntry(parm1);
@@ -1510,7 +1553,7 @@ void TTreeView::MapOptions(Long_t parm1)
          fOptions2D->CheckEntry(parm1);
          if (parm1 != kOptions2D) fOptions2D->UnCheckEntry(kOptions2D);
       }
-      if (fOptions2D->IsEntryChecked(kOptions2D)) {	
+      if (fOptions2D->IsEntryChecked(kOptions2D)) {
       // uncheck all in this menu
          for (ind=kOptions2D+1; ind<kOptions1D+14; ind++) {
             fOptions2D->UnCheckEntry(ind);
@@ -1520,24 +1563,24 @@ void TTreeView::MapOptions(Long_t parm1)
    // concatenate options
    fBarOption->SetText("");
    for (ind=kOptionsGeneral; ind<kOptionsGeneral+16; ind++) {
-      if (fOptionsGen->IsEntryChecked(ind)) 
-         fBarOption->AppendText(optgen[ind-kOptionsGeneral]);	
+      if (fOptionsGen->IsEntryChecked(ind))
+         fBarOption->AppendText(optgen[ind-kOptionsGeneral]);
    }
    if (Dimension() == 1) {
       for (ind=kOptions1D; ind<kOptions1D+12; ind++) {
          if (fOptions1D->IsEntryChecked(ind))
-            fBarOption->AppendText(opt1D[ind-kOptions1D]);   
+            fBarOption->AppendText(opt1D[ind-kOptions1D]);
       }
    }
    if (Dimension() == 2) {
       for (ind=kOptions2D; ind<kOptions2D+14; ind++) {
          if (fOptions2D->IsEntryChecked(ind))
-            fBarOption->AppendText(opt2D[ind-kOptions2D]);   
+            fBarOption->AppendText(opt2D[ind-kOptions2D]);
       }
    }
 }
 //______________________________________________________________________________
-void TTreeView::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
+void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 {
 //*-*-*-*-*-*-*-*-*Map current tree and expand its content in the lists*-*-*-*-*-*-*-*-*-*-*
 //*-*              ====================================================
@@ -1560,7 +1603,7 @@ void TTreeView::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
    }
 }
 //______________________________________________________________________________
-void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt)
+void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt)
 {
 //*-*-*-*-*-*-*-*-*Map current branch and expand its content in the list view*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================================================
@@ -1585,7 +1628,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
                spic = gClient->GetPicture("branch-cl_t.xpm");
             } else {
                pic = gClient->GetPicture("branch_t.xpm");
-               spic = gClient->GetPicture("branch_t.xpm");		   
+               spic = gClient->GetPicture("branch_t.xpm");
             }
          }
          branchItem = fLt->AddItem(parent, branch->GetName(), itemType,
@@ -1609,7 +1652,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
          fMappedTree = 0;
          fStopMapping = kTRUE;
       }
-      textEntry = new TGString(name.Data()); 
+      textEntry = new TGString(name.Data());
       if (branch->GetListOfBranches()->GetEntries()) {
          if (branch->InheritsFrom("TBranchObject")) {
             pic = gClient->GetPicture("branch-ob_t.xpm");
@@ -1620,7 +1663,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
                spic = gClient->GetPicture("branch-cl_t.xpm");
             } else {
                pic = gClient->GetPicture("branch_t.xpm");
-               spic = gClient->GetPicture("branch_t.xpm");		   
+               spic = gClient->GetPicture("branch_t.xpm");
             }
          }
          entry = new TGLVTreeEntry(fLVContainer,pic,spic,textEntry,0,kLVSmallIcons);
@@ -1639,9 +1682,9 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
       }
    }
 
-   TObjArray *Branches 	= branch->GetListOfBranches(); 
+   TObjArray *Branches = branch->GetListOfBranches();
    TBranch   *branchDaughter = 0;
-   
+
    // loop all sub-branches
    for (ind=0; ind<Branches->GetEntries(); ind++) {
       branchDaughter = (TBranch *)Branches->UncheckedAt(ind);
@@ -1650,7 +1693,7 @@ void TTreeView::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt
    }
 }
 //______________________________________________________________________________
-void TTreeView::SetParentTree(TGListTreeItem *item)
+void TTreeViewer::SetParentTree(TGListTreeItem *item)
 {
 //*-*-*-*-*-*-*-*-*Find parent tree of a clicked item*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================================
@@ -1660,21 +1703,21 @@ void TTreeView::SetParentTree(TGListTreeItem *item)
    Int_t index;
    if (!(*itemType & kLTTreeType)) {
       parent = item->GetParent();
-      SetParentTree(parent); 
+      SetParentTree(parent);
    } else {
       index = (Int_t)(*itemType >> 8);
       SwitchTree(index);
    }
 }
 //______________________________________________________________________________
-void TTreeView::Message(const char* msg)
+void TTreeViewer::Message(const char* msg)
 {
 //*-*-*-*-*-*-*-*-*Send a message on the status bar*-*-*-*-*-*-*-*-*-*-*
 //*-*              ================================
    fStatusBar->SetText(msg);
 }
 //______________________________________________________________________________
-void TTreeView::Warning(const char* msg)
+void TTreeViewer::Warning(const char* msg)
 {
 //*-*-*-*-*-*-*-*-*Pops-up a warning message*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
@@ -1682,19 +1725,19 @@ void TTreeView::Warning(const char* msg)
    gClient->WaitFor(mBox);
 }
 //______________________________________________________________________________
-void TTreeView::PrintEntries()
+void TTreeViewer::PrintEntries()
 {
 //*-*-*-*-*-*-*-*-*Print the number of selected entries on status-bar*-*-*-*-*
 //*-*              ==================================================
    if (!fTree) return;
    char * msg = new char[100];
-   sprintf(msg, "First entry : %i Last entry : %i", 
+   sprintf(msg, "First entry : %i Last entry : %i",
            (Int_t)fSlider->GetMinPosition(), (Int_t)fSlider->GetMaxPosition());
    Message(msg);
    delete[] msg;
 }
 //______________________________________________________________________________
-Bool_t TTreeView::SwitchTree(Int_t index)
+Bool_t TTreeViewer::SwitchTree(Int_t index)
 {
 //*-*-*-*-*-*-*-*-*Makes current the tree at a given index in the list*-*-*-*-*
 //*-*              ===================================================

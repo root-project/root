@@ -1,4 +1,4 @@
-/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.2 2000/10/31 11:19:57 brun Exp $ */
+/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.3 2000/11/21 21:01:48 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,11 +14,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TPaveVar+;
-#pragma link C++ class TTreeViewer-;
-#pragma link C++ class TGLVTreeEntry+;
+#pragma link C++ class TTreeViewer+;
 #pragma link C++ class TGTreeLVC+;
-#pragma link C++ class TTreeView+;
+#pragma link C++ class TGLVTreeEntry+;
 #pragma link C++ class TGSelectBox+;
 
 #endif
