@@ -1,12 +1,8 @@
 ARCH          = $(shell root-config --arch)
 PLATFORM      = $(ARCH)
 
-ifeq ($(PLATFORM),win32)
-# disabled because of the building of shared library
-else
 TEST_TARGETS += sepDictLibs
-endif
-CLEAN_TARGETS +=  *.o *.so *Dict* run.output
+CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict* run.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -20,29 +16,28 @@ ROOTLIBS     := $(patsubst -lCore, -lThread -lCore, $(shell root-config --libs))
 ROOTLIBS     += -lGui
 ROOTGLIBS    := $(shell root-config --glibs)
 
-sepDictLibs: run.output
-	$(CMDECHO) diff -b run.good.output run.output
+sepDictLibs: run.log
+	$(CMDECHO) diff -b -w run.good.output run.log
 
-run.output: libmaster.so libslave1.so libslave2.so
-	$(CMDECHO) rm -f run.output
-	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum >| run.output
+run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
+	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-z]:.*[/\]?FILE:?' > run.log
 
 all: sepDictLibs
 
-libmaster.so: Master.o MasterDict.o
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libmaster.$(DllSuf): Master.$(ObjSuf) MasterDict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libslave1.so: Slave1.o  Slave1Dict.o
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave1.$(DllSuf): Slave1.$(ObjSuf)  Slave1Dict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libslave3a.so: Slave3a.o  Slave3aDict.o
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave3a.$(DllSuf): Slave3a.$(ObjSuf)  Slave3aDict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libslave2.so: Slave2.o  Slave2Dict.o
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave2.$(DllSuf): Slave2.$(ObjSuf)  Slave2Dict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libslave3.so: Slave3.o  Slave3Dict.o
-	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave3.$(DllSuf): Slave3.$(ObjSuf)  Slave3Dict.$(ObjSuf)
+	$(BuildFromObjs)
 
 
 MasterDict.C: Master.hh MasterLinkDef.hh
@@ -52,11 +47,8 @@ Slave2Dict.C: Master.hh Slave2.hh Slave2LinkDef.hh
 %Dict.C:
 	$(CMDECHO)rootcint -f $@ -c $^ 
 
-%Dict.o: %Dict.C	
+%Dict.$(ObjSuf): %Dict.C	
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@
 
-%.o: %.C	
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@
-
 clean_local:
-	$(CMDECHO) rm -f *.o *.so *Dict*
+	$(CMDECHO) rm -f *.$(ObjSuf) *.$(DllSuf) *Dict*

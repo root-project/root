@@ -1,19 +1,9 @@
 
-#CC  := gcc
-#CXX := g++
-#F77 := g77
-#LD  := g++
-#SOFLAGS   = -Wl,-soname,${@F} -shared
 ARCH          = $(shell root-config --arch)
 PLATFORM      = $(ARCH)
 
-ifeq ($(PLATFORM),win32)
-# Test disable because of the shared library building
-TEST_TARGETS +=
-else
 TEST_TARGETS += sepDictLibs
-endif
-CLEAN_TARGETS +=  *.o *.so *Dict* run.output
+CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict* *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -27,24 +17,23 @@ ROOTLIBS     := $(patsubst -lCore, -lThread -lCore, $(shell root-config --libs))
 ROOTLIBS     += -lGui
 ROOTGLIBS    := $(shell root-config --glibs)
 
-sepDictLibs: run.output
-	$(CMDECHO) diff run.good.output run.output
+sepDictLibs: run.log
+	$(CMDECHO) diff -b -w run.good.output run.log
 
 
-run.output: libmaster.so libslave1.so libslave2.so 
-	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum >| run.output
+run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
+	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-z]:.*[/\]?FILE:?' > run.log
 
 all: sepDictLibs
 
+libmaster.$(DllSuf): MyClass.$(ObjSuf) MasterDict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libmaster.so: MyClass.o MasterDict.o
-	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave1.$(DllSuf):  Slave1Dict.$(ObjSuf)
+	$(BuildFromObjs)
 
-libslave1.so:  Slave1Dict.o
-	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
-
-libslave2.so:  Slave2Dict.o
-	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+libslave2.$(DllSuf):  Slave2Dict.$(ObjSuf)
+	$(BuildFromObjs)
     
 
 MasterDict.C: MyClass.hh MasterLinkDef.hh
@@ -54,11 +43,8 @@ Slave2Dict.C: MyClass.hh Slave2LinkDef.hh
 %Dict.C:
 	$(CMDECHO)rootcint -f $@ -c $^ 
 
-%Dict.o: %Dict.C	
+%Dict.$(ObjSuf): %Dict.C	
 	$(CMDECHO)$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@ > $@_build.log 2>&1
 
-%.o: %.C
-	$(CMDECHO)$(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@ > $@_build.log 2>&1
-
 clean_sepdict:
-	$(CMDECHO)rm -f *.o *.so *Dict*
+	$(CMDECHO)rm -f *.$(ObjSuf) *.$(DllSuf) *Dict*
