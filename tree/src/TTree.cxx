@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.209 2004/09/22 07:19:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.210 2004/10/06 07:58:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4030,7 +4030,7 @@ void TTree::SetEntries(Long64_t n)
   // is null. A Warning is issued otherwise
 
    if (fEntries != 0) {
-      Warning("SetEntries","Trees has already %g entries",fEntries);
+      Warning("SetEntries","Tree has already %g entries",fEntries);
    }
    fEntries = n;
 }
