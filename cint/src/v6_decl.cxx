@@ -645,6 +645,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
     G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+    G__globalvarpointer = G__PVOID;
+#endif
     return; /* long long handling */
   }
 #endif
@@ -911,6 +914,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
 
@@ -1042,6 +1048,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
+#endif
 	    return;
 	  }
 	  G__var_type = var_type;
@@ -1129,6 +1138,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1161,6 +1173,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -1285,6 +1300,9 @@ int tagnum,typenum;      /* overrides global variables */
 	  G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
 #endif
 	  return;
 	}
@@ -1446,6 +1464,9 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }
@@ -1743,6 +1764,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1789,6 +1813,9 @@ int tagnum,typenum;      /* overrides global variables */
 	  G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
 #endif
 	  return;
 	}
@@ -1964,6 +1991,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	    /* struct class initialization ={x,y,z} */
@@ -2062,6 +2092,9 @@ int tagnum,typenum;      /* overrides global variables */
 		G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
 #endif
 		return;
 	      }
@@ -2206,6 +2239,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
+#endif
 		return;
 	      }
 	    }
@@ -2259,6 +2295,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  return;
 	}
 	/* insert array initialization */
@@ -2275,6 +2314,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -2327,6 +2369,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
     else if('}'==cin) {
@@ -2340,6 +2385,9 @@ int tagnum,typenum;      /* overrides global variables */
       G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
 #endif
       return;
     }
@@ -2361,6 +2409,9 @@ int tagnum,typenum;      /* overrides global variables */
 	G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }

@@ -3190,6 +3190,11 @@ int recursive;
 	    -1!=formal_tagnum&&'e'==G__struct.type[formal_tagnum]) {
       funclist->p_rate[i] = G__EXACTMATCH;
     }
+#ifndef G__OLDIMPLEMENTATION1319
+    else if(isupper(formal_type)&&'i'==param_type&&0==libp->para[i].obj.i) {
+      funclist->p_rate[i] = G__STDCONVMATCH;
+    }
+#endif
     
     /* promotion */
     if(G__NOMATCH==funclist->p_rate[i]) {
@@ -3523,11 +3528,26 @@ int recursive;
 	G__incsetup_memfunc(param_tagnum);
 	ifunc2 = G__struct.memfunc[param_tagnum];
 	para.paran = 0;
+#ifndef G__OLDIMPLEMENTATION1316
+	sprintf(funcname2,"operator %s"
+		,G__type2string(formal_type,formal_tagnum,-1,0,0));
+#else
 	sprintf(funcname2,"operator %s"
 		,G__type2string(param_type,param_tagnum,-1,0,0));
+#endif
 	G__hash(funcname2,hash2,ifn2);
 	ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
 				   ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+#ifndef G__OLDIMPLEMENTATION1316
+	if(!ifunc2) {
+	  sprintf(funcname2,"operator %s"
+		  ,G__type2string(formal_type,formal_tagnum,-1,0,1));
+	  G__hash(funcname2,hash2,ifn2);
+	  ifunc2 = G__struct.memfunc[param_tagnum];
+	  ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
+				     ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+	}
+#endif
 	if(ifunc2 && -1!=ifn2) 
 	  funclist->p_rate[i] = G__USRCONVMATCH;
       }
@@ -4371,6 +4391,9 @@ int recursive;
 	    !p_ifunc->para_default[ifn][libp->paran])
 #ifdef G__OLDIMPLEMENTATION1260_YET
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
+#endif
+#ifndef G__OLDIMPLEMENTATION1315
+	   || (recursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	  funclist->rate = G__NOMATCH;

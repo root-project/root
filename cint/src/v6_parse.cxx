@@ -928,7 +928,11 @@ int *piout;
 		 We need to need to carry this information on.
 		 If the previous file (G__ifile) was preprocessed, this one
 		 should also be. */
-	      if( G__cpp && G__srcfile[G__ifile.filenum].prepname[0] ) {
+	      if( G__cpp && 
+#ifndef G__OLDIMPLEMENTATION1323
+		  G__srcfile[G__ifile.filenum].prepname &&
+#endif
+		  G__srcfile[G__ifile.filenum].prepname[0] ) {
 		G__srcfile[G__nfile].prepname = 
 	       (char*)malloc(strlen(G__srcfile[G__ifile.filenum].prepname)+1);
 		strcpy(G__srcfile[G__nfile].prepname,

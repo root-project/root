@@ -10,7 +10,7 @@ typedef unsigned int size_t;
 #define 	_IONBF (2)
 #define 	BUFSIZ (8192)
 #define 	FILENAME_MAX (4095)
-#define 	L_tmpnam (19)
+#define 	L_tmpnam (20)
 #define 	TMP_MAX (238328)
 #ifndef SEEK_CUR
 #define 	SEEK_CUR (1)

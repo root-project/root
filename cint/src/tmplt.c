@@ -1668,6 +1668,10 @@ int parent_tagnum;
 #ifndef G__OLDIMPLEMENTATION777
   fpos_t out_pos,in_pos;
 #endif
+#ifndef G__OLDIMPLEMENTATION1317
+  fpos_t const_pos;
+  char const_c = 0;
+#endif
 
   /*******************************************************************
    * open macro and template substitution file and get ready for
@@ -1742,10 +1746,14 @@ int parent_tagnum;
     SET_READINGFILE; /* ON777 */
     c = G__fgetstream(symbol,punctuation);
     SET_WRITINGFILE; /* ON777 */
-#ifndef G__OLDIMPLEMENTATION923
     if('~'==c) isnew=1;
-    else if(';'==c||','==c) isnew=0;
+    else if(','==c) isnew=0;
+    else if(';'==c) {
+      isnew = 0;
+#ifndef G__OLDIMPLEMENTATION1317
+      const_c = 0;
 #endif
+    }
     if('\0' != symbol[0]) {
       if(0==double_quote && 0==single_quote) {
 	if(isspace(c)) {
@@ -1774,7 +1782,26 @@ int parent_tagnum;
 	  c='>';
 	}
       }
+#ifndef G__OLDIMPLEMENTATION1317
+      if(const_c && '*'==symbol[strlen(symbol)-1]) {
+	fsetpos(G__mfp,&const_pos);
+	fprintf(G__mfp,"%s",symbol);
+	fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
+	const_c = 0;
+      }
+      else {
+	if(';'!=c && strcmp("const",symbol)==0) {
+	  const_c = c;
+	  fgetpos(G__mfp,&const_pos);
+	}
+	else {
+	  const_c = 0;
+	}
+	fprintf(G__mfp,"%s",symbol);
+      }
+#else
       fprintf(G__mfp,"%s",symbol);
+#endif
       if(G__dispsource) fprintf(G__serr,"%s",symbol);
     }
 
@@ -1854,6 +1881,9 @@ int parent_tagnum;
 #endif
     SET_READINGFILE; /* ON777 */
     G__fgetstream(symbol,";");
+#ifndef G__OLDIMPLEMENTATION1317
+    const_c = 0;
+#endif
     SET_WRITINGFILE; /* ON777 */
     fprintf(G__mfp,"%s ;",symbol);
     if(G__dispsource) fprintf(G__serr,"%s ;",symbol);

@@ -842,10 +842,13 @@ char *keyword;
 int base;
 {
   char classname[G__ONELINE];
+#ifdef G__OLDIMPLEMENTATION1320
   char *p=classname;
+#endif
 
   G__more_pause((FILE*)NULL,0);
   strcpy(classname,classnamein);
+#ifdef G__OLDIMPLEMENTATION1320
   while(*p && isspace(*p)) ++p;
 #ifndef G__OLDIMPLEMENTATION1048
   while(*p && (!isspace(*p)||('>'==*(p-1)&&'>'==*(p+1)))) ++p;
@@ -853,6 +856,7 @@ int base;
   while(*p && !isspace(*p)) ++p;
 #endif
   if(*p) *p=0;
+#endif
   if(keyword&&keyword[0]) {
 #ifndef G__TMPFILE
     char tname[L_tmpnam+10];
@@ -1670,12 +1674,22 @@ int  *more;
 #ifndef G__OLDIMPLEMENTATION967
     if(strncmp("class",com,3)==0) {
       char *p = strchr(string,'/');
-      if(p) ++p;
+      if(p) {
+#ifndef G__OLDIMPLEMENTATION1320
+	*p = 0;
+#endif
+	++p;
+      }
       G__display_classkeyword(G__sout,string,p,0);
     }
     else if(strncmp("Class",com,3)==0) {
       char *p = strchr(string,'/');
-      if(p) ++p;
+      if(p) {
+#ifndef G__OLDIMPLEMENTATION1320
+	*p = 0;
+#endif
+	++p;
+      }
       G__display_classkeyword(G__sout,string,p,1);
     }
 #else
