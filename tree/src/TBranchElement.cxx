@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.164 2005/03/19 16:39:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.165 2005/03/30 21:09:19 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1499,7 +1499,11 @@ void TBranchElement::PrintValue(Int_t lenmax) const
        return;
      } else if (fType == 31 || fType == 41) {    // sub branch of a TClonesArray
        Int_t n = TMath::Min(10,fNdata);
-       Int_t atype = fStreamerType+20;
+       Int_t atype = fStreamerType+TStreamerInfo::kOffsetL;
+       // TStreamerInfo::kOffsetL + TStreamerInfo::kChar is printed as a character strings
+       // and hence could print weird character.  So let's do let damage and print an unsigned
+       // char instead (not perfect but better).
+       if (fStreamerType==TStreamerInfo::kChar) atype=TStreamerInfo::kOffsetL + TStreamerInfo::kUChar;
        if (atype > 54) {
           //more logic required here (like in ReadLeaves)
           printf(" %-15s = %d\n",GetName(),fNdata);

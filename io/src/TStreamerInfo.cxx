@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.219 2005/01/19 22:03:15 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.220 2005/02/10 07:29:46 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1897,6 +1897,8 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
    Int_t atype,aleng;
    printf(" %-15s = ",name);
 
+   TStreamerElement * aElement  = 0;
+   Int_t *count  = 0;
    if (len >= 0) {
       ladd  = pointer;
       atype = i;
@@ -1906,11 +1908,11 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       ladd  = pointer + fOffset[i];
       atype = fNewType[i];
       aleng = fLength[i];
+      aElement  = (TStreamerElement*)fElem[i];
+      count = (Int_t*)(pointer+fMethod[i]);
    }
    if (aleng > lenmax) aleng = lenmax;
    
-   TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
-   Int_t *count = (Int_t*)(pointer+fMethod[i]);
    PrintValueAux(ladd,atype,aElement,aleng,count);
    printf("\n");
 }
@@ -2078,6 +2080,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
    //           len is the number of elements to be printed starting at pointer.
    int j;
 
+   assert(  ! ((kOffsetP + kChar)<=atype && atype<=(kOffsetP + kBool) && count==0) );
    switch (atype) {
       // basic types
       case kBool:              {Bool_t    *val = (Bool_t*   )ladd; printf("%d" ,*val);  break;}
@@ -2111,6 +2114,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
       case kOffsetL + kUInt:    {UInt_t    *val = (UInt_t*   )ladd; for(j=0;j<aleng;j++) { printf("%u " ,val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kULong:   {ULong_t   *val = (ULong_t*  )ladd; for(j=0;j<aleng;j++) { printf("%lu ",val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<aleng;j++) { printf("%llu ",val[j]);PrintCR(j,aleng, 5); } break;}
+      case kOffsetL + kBits:    {UInt_t    *val = (UInt_t*   )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng, 5); } break;}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kBool:    {Bool_t   **val = (Bool_t**  )ladd; for(j=0;j<*count;j++) { printf("%d " ,(*val)[j]);  PrintCR(j,aleng,20); } break;}
@@ -2127,6 +2131,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
       case kOffsetP + kUInt:    {UInt_t   **val = (UInt_t**  )ladd; for(j=0;j<*count;j++) { printf("%u " ,(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kULong:   {ULong_t  **val = (ULong_t** )ladd; for(j=0;j<*count;j++) { printf("%lu ",(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kULong64: {ULong64_t**val = (ULong64_t**)ladd; for(j=0;j<*count;j++){ printf("%llu ",(*val)[j]); PrintCR(j,aleng, 5); } break;}
+
          // array counter //[n]
       case kCounter:            {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // char *
