@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.44 2004/07/13 12:46:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.45 2004/07/29 10:54:55 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1365,7 +1365,7 @@ void TTreeViewer::ExecuteDraw()
    Long64_t nentries = (Long64_t)(fSlider->GetMaxPosition() -
                             fSlider->GetMinPosition() + 1);
    Long64_t firstentry =(Long64_t) fSlider->GetMinPosition();
-printf("firstentry=%lld, nentries=%lld\n",firstentry,nentries);
+//printf("firstentry=%lld, nentries=%lld\n",firstentry,nentries);
    // check if Scan is checked and if there is something in the box
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
@@ -2115,7 +2115,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
    // Execute the command, write it to history file and echo it to output
    if (fBarRec->GetState() == kButtonDown) {
    // show the command on the command line
-      printf("%s\n", command);
+      //printf("%s\n", command);
       char comm[2000];
       comm[0] = 0;
       if (strlen(command) > 1999) {
@@ -2224,6 +2224,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
    // loop on branches
    for (Int_t id=0; id<Branches->GetEntries(); id++) {
       branch = (TBranch *)Branches->At(id);
+      if (branch->TestBit(kDoNotProcess))  continue;
       TString name = branch->GetName();
       if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
       // now map sub-branches
