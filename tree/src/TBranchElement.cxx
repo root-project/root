@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.73 2001/12/14 20:29:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.74 2001/12/18 14:01:47 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -705,6 +705,51 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       else return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
    } else {
       return fInfo->GetValue(fObject,fID,j,-1);
+   }
+}
+
+//______________________________________________________________________________
+void *TBranchElement::GetValuePointer() const
+{
+// Returns pointer to first data element of this branch
+// Currently used only for members of type character
+
+   if (fBranchCount) {
+      Int_t entry = fTree->GetReadEntry();
+      fBranchCount->TBranch::GetEntry(entry);
+      if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
+   }
+   if (fTree->GetMakeClass()) {
+     if (!fAddress) return 0;
+     if (fType == 3) {    //top level branch of a TClonesArray
+       //return &fNdata;
+       return 0;
+     } else if (fType == 31) {    // sub branch of a TClonesArray
+       //Int_t atype = fStreamerType;
+       //if (atype < 20) atype += 20;
+       //return fInfo->GetValue(fAddress,atype,j,1);
+       return 0;
+     } else if (fType <= 2) {     // branch in split mode
+       if (fStreamerType > 40 && fStreamerType < 55) {
+          //Int_t atype = fStreamerType - 20;
+          //return fInfo->GetValue(fAddress,atype,j,1);
+          return 0;
+       } else {
+          //return fInfo->GetValue(fObject,fID,j,-1);
+          return 0;
+       }
+     }
+   }
+
+   if (fType == 31) {
+      //TClonesArray *clones = (TClonesArray*)fObject;
+      //if (subarr) return fInfo->GetValueClones(clones,fID, j, len,fOffset);
+      //else return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
+      return 0;
+   } else {
+      //return fInfo->GetValue(fObject,fID,j,-1);
+      char **val = (char**)(fObject+fInfo->GetOffsets()[fID]);
+      return *val;
    }
 }
 

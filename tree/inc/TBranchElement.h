@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.21 2001/08/15 09:52:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.22 2001/12/03 13:32:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -74,6 +74,7 @@ public:
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
     virtual const char *GetTypeName() const;
             Double_t GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
+    virtual void    *GetValuePointer() const;
             Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
     virtual Bool_t   Notify() {fAddress = 0; return 1;}
