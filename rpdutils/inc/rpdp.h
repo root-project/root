@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.18 2004/05/30 16:13:05 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.19 2004/06/25 16:49:09 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -188,7 +188,7 @@ int  RpdRecvClientRSAKey();
 int  RpdRenameKeyFile(int oofs, int nofs);
 bool RpdReUseAuth(const char *sstr, int kind);
 void RpdRfioAuth(const char *sstr);
-void RpdSavePubKey(const char *PubKey, int OffSet, char *User);
+int  RpdSavePubKey(const char *PubKey, int OffSet, char *User);
 int  RpdSecureRecv(char **Str);
 int  RpdSecureSend(char *Str);
 void RpdSendAuthList();

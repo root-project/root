@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.54 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.55 2004/07/09 06:15:06 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -746,19 +746,45 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       // We are going to write at the end
       retval = lseek(itab, 0, SEEK_END);
 
-      // Generate token
-      *token = RpdGetRandString(3, 8);   // 8 crypt-like chars
-      char *CryptToken = crypt(*token, *token);
-      SPrintf(fbuf, kMAXPATHLEN, "%s %s\n", line, CryptToken);
-      if (gDebug > 2)
-         ErrorInfo("RpdUpdateAuthTab: token: '%s'", CryptToken);
+      // Save first RSA public key into file for later use by the
+      // same or other rootd/proofd; we will update the tab file
+      // only if this operation is successful
+      int ntry = 10;
+      int rs = 0;
+      while ((rs = RpdSavePubKey(gPubKey, retval, gUser)) == 2 && ntry--) {
+         // We are here if a file with the same name exists already
+         // and can not be deleted: we shift the offset with a 
+         // dummy entry
+         char ltmp[256];
+         SPrintf(ltmp, 256,
+                 "0 0 %d %d %d %s error: pubkey file in use: shift offset\n",
+                 gRSAKey, gParentId, gRemPid, gOpenHost.c_str());
 
-      // adds line
-      while (write(itab, fbuf, strlen(fbuf)) < 0 && GetErrno() == EINTR)
-         ResetErrno();
+         // adds line
+         while (write(itab, ltmp, strlen(ltmp)) < 0 && GetErrno() == EINTR)
+            ResetErrno();
 
-      // Save RSA public key into file for later use by other rootd/proofd
-      RpdSavePubKey(gPubKey, retval, gUser);
+         // Set to the new end
+         retval = lseek(itab, 0, SEEK_END);
+      }
+
+      if (rs > 0) {
+         // Something wrong
+         retval = -1;
+         if (gDebug > 0)
+            ErrorInfo("RpdUpdateAuthTab: pub key could not be saved (%d)",rs);
+      } else {
+         // Generate token
+         *token = RpdGetRandString(3, 8);   // 8 crypt-like chars
+         char *CryptToken = crypt(*token, *token);
+         SPrintf(fbuf, kMAXPATHLEN, "%s %s\n", line, CryptToken);
+         if (gDebug > 2)
+            ErrorInfo("RpdUpdateAuthTab: token: '%s'", CryptToken);
+         
+         // adds line
+         while (write(itab, fbuf, strlen(fbuf)) < 0 && GetErrno() == EINTR)
+            ResetErrno();
+      }
 
    } else {
 
@@ -2333,7 +2359,7 @@ void RpdSshAuth(const char *sstr)
       NetSend(strlen(line), kROOTD_SSH);   // Send message length first
       NetSend(line, kMESS_STRING);
 
-      if (gReUseRequired) {
+      if (gReUseRequired && OffSet > -1) {
          // Send over the token
          if (RpdSecureSend(token) == -1) {
             ErrorInfo
@@ -2726,7 +2752,7 @@ void RpdKrb5Auth(const char *sstr)
          NetSend(line, kMESS_STRING);
 
          // Send Token
-         if (gReUseRequired) {
+         if (gReUseRequired && OffSet > -1) {
             if (RpdSecureSend(token) == -1) {
                ErrorInfo("RpdKrb5Auth: problems secure-sending token"
                          " - may result in corrupted token");
@@ -2976,7 +3002,7 @@ void RpdSRPUser(const char *sstr)
             NetSend(strlen(line), kROOTD_SRPUSER);   // Send message length first
             NetSend(line, kMESS_STRING);
 
-            if (gReUseRequired) {
+            if (gReUseRequired && OffSet > -1) {
                // Send Token
                if (RpdSecureSend(token) == -1) {
                   ErrorInfo("RpdSRPUser: problems secure-sending token"
@@ -3338,23 +3364,25 @@ void RpdPass(const char *pass)
          NetSend(strlen(line), kROOTD_PASS);   // Send message length first
          NetSend(line, kMESS_STRING);
 
-         if (gDebug > 2)
-            ErrorInfo("RpdPass: sending token %s (Crypt: %d)", token,
-                      gCryptRequired);
-         if (gCryptRequired) {
-            // Send over the token
-            if (RpdSecureSend(token) == -1) {
-               ErrorInfo("RpdPass: problems secure-sending token"
-                         " - may result in corrupted token");
+         if (OffSet > -1) {
+            if (gDebug > 2)
+               ErrorInfo("RpdPass: sending token %s (Crypt: %d)", token,
+                         gCryptRequired);
+            if (gCryptRequired) {
+               // Send over the token
+               if (RpdSecureSend(token) == -1) {
+                  ErrorInfo("RpdPass: problems secure-sending token"
+                            " - may result in corrupted token");
+               }
+            } else {
+               // Send token inverted
+               for (int i = 0; i < (int) strlen(token); i++) {
+                  token[i] = ~token[i];
+               }
+               NetSend(token, kMESS_STRING);
             }
-         } else {
-            // Send token inverted
-            for (int i = 0; i < (int) strlen(token); i++) {
-               token[i] = ~token[i];
-            }
-            NetSend(token, kMESS_STRING);
+            if (token) delete[] token;
          }
-         if (token) delete[] token;
          gOffSet = OffSet;
 
       } else {
@@ -3644,7 +3672,7 @@ void RpdGlobusAuth(const char *sstr)
       NetSend(strlen(line), kROOTD_GLOBUS);   // Send message length first
       NetSend(line, kMESS_STRING);
 
-      if (gReUseRequired) {
+      if (gReUseRequired && OffSet > -1) {
          // Send Token
          if (RpdSecureSend(token) == -1) {
             ErrorInfo("RpdGlobusAuth: problems secure-sending token"
@@ -4519,45 +4547,77 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
 }
 
 //______________________________________________________________________________
-void RpdSavePubKey(const char *PubKey, int OffSet, char *user)
+int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
 {
    // Save RSA public key into file for later use by other rootd/proofd.
+   // Return: 0 if ok
+   //         1 if not ok
+   //         2 if not ok because file already exists and cannot be
+   //           overwritten
+
+   int retval = 0;
 
    if (gRSAKey == 0 || OffSet < 0)
-      return;
+      return 1;
 
    char strofs[20];
    snprintf(strofs,20,"%d",OffSet);
-   std::string PubKeyFile = gTmpDir + "/rpk_" + std::string(strofs);
-   FILE *fKey = fopen(PubKeyFile.c_str(), "w");
-   if (fKey) {
-      if (fwrite((const void *)PubKey,gPubKeyLen,1,fKey) < 1) {
-         ErrorInfo ("RpdSavePubKey: problems writing public key (errno: %d):"
-                    " set entry inactive ", GetErrno());
-         RpdCleanupAuthTab(gOpenHost.c_str(), gRemPid, OffSet);
+   std::string pukfile = gTmpDir + "/rpk_" + std::string(strofs);
+
+   // Stat file
+   if (access(pukfile.c_str(),W_OK)) {
+      if (GetErrno() != ENOENT) {
+         // File exists and cannot overwritten by this process
+         // return
+         return 2;
       }
-   } else {
-      ErrorInfo
-          ("RpdSavePubKey: cannot save public key: set entry inactive");
-      RpdCleanupAuthTab(gOpenHost.c_str(), gRemPid, OffSet);
    }
 
-   if (fKey) {
-      fclose(fKey);
-      chmod(PubKeyFile.c_str(), 0600);
+   // Open file for writing; truncate it if exists
+   int ipuk = -1;
+   ipuk = open(pukfile.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+   if (ipuk == -1) {
+      ErrorInfo("RpdSavePubKey: cannot open file %s (errno: %d)",
+                pukfile.c_str(),GetErrno());
+      if (GetErrno() == ENOENT)
+         return 2;
+      else
+         return 1;
+   }
 
-      if (getuid() == 0) {
-         // Set ownership of the pub key to the user
+   // Change permissions
+   if (fchmod(ipuk, 0600) == -1) {
+      ErrorInfo("RpdSavePubKey: cannot change permissions on file"
+                " %s (errno: %d)", pukfile.c_str(),GetErrno());
+      return 2;
+   }
 
-         struct passwd *pw = getpwnam(user);
-
-         if (chown(PubKeyFile.c_str(),pw->pw_uid,pw->pw_gid) == -1) {
-            ErrorInfo
-                ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
-                  PubKeyFile.c_str(),GetErrno());
+   // If root process set ownership of the pub key to the user
+   if (getuid() == 0) {
+      struct passwd *pw = getpwnam(user);
+      if (pw) {
+         if (fchown(ipuk,pw->pw_uid,pw->pw_gid) == -1) {
+            ErrorInfo("RpdSavePubKey: cannot change ownership"
+                      " of %s (errno: %d)",pukfile.c_str(),GetErrno());
+            retval = 1;
          }
+      } else {
+         ErrorInfo("RpdSavePubKey: getpwnam failure (errno: %d)",GetErrno());
+         retval = 1;
       }
    }
+
+   // Write the key if no error occured
+   if (retval == 0) {
+      while (write(ipuk, PubKey, gPubKeyLen) < 0 && GetErrno() == EINTR)
+         ResetErrno();
+   }
+
+   // close the file
+   close(ipuk);
+
+   // Over
+   return retval;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.58 2004/06/25 23:12:51 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.59 2004/07/01 18:49:31 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2405,7 +2405,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       User = lUser;
 
       char *Token = 0;
-      if (ReUse == 1) {
+      if (ReUse == 1 && OffSet > -1) {
          // Receive Token
          if (Crypt == 1) {
             if (SecureRecv(fSocket, 1, fRSAKey, &Token) == -1) {
