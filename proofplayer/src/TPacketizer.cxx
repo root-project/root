@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.1 2002/03/21 16:11:03 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -128,13 +128,14 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves)
    // Is there an easier way to do shallow copy ?
    TIter nodes(fFileNodes);
    fUnAllocated = new TList;
-   for( TObject *o = nodes(); o != 0 ; o = nodes() ) { fUnAllocated->Add(o); }
+   TObject *o;
+   for( o = nodes(); o != 0 ; o = nodes() ) { fUnAllocated->Add(o); }
    fUnAllocated->SetOwner(kFALSE);
    fUnAllocNext = fUnAllocated->First();
 
    nodes.Reset();
    fActive = new TList;
-   for( TObject *o = nodes(); o != 0 ; o = nodes() ) { fActive->Add(o); }
+   for( o = nodes(); o != 0 ; o = nodes() ) { fActive->Add(o); }
    fActive->SetOwner(kFALSE);
    fActiveNext = fActive->First();
 
