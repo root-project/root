@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.5 2001/01/23 12:32:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.6 2001/01/24 12:02:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -163,14 +163,14 @@ void TLeafB::SetAddress(void *add)
 
    if (ResetAddress(add)) {
       delete [] fValue;
-      if (add) fNdata = 0;
    }
    if (add) {
       if (fLeafCount) {
          fPointer = (Char_t**) add;
+         fNdata = fLen;
          Int_t ncountmax = Int_t(fLeafCount->GetMaximum()+1);
          if (ncountmax > fNdata || *fPointer == 0) {
-            delete *fPointer;
+            delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Char_t[fNdata];
          }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.5 2001/01/23 12:32:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.6 2001/01/24 12:02:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TLeafD::~TLeafD()
 //*-*-*-*-*-*Default destructor for a LeafD*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ===============================
 
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   //if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
 
@@ -151,14 +151,14 @@ void TLeafD::SetAddress(void *add)
 
    if (ResetAddress(add)) {
       delete [] fValue;
-      if (add) fNdata = 0;
    }
    if (add) {
       if (fLeafCount) {
          fPointer = (Double_t**) add;
+         fNdata = fLen;
          Int_t ncountmax = Int_t(fLeafCount->GetMaximum()+1);
          if (ncountmax > fNdata || *fPointer == 0) {
-            delete *fPointer;
+            delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Double_t[fNdata];
          }

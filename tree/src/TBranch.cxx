@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.12 2000/12/26 14:22:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.13 2001/01/11 14:35:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -236,12 +236,17 @@ TBranch::~TBranch()
 //*-*-*-*-*-*Default destructor for a Branch*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ===============================
 
-   fLeaves.Delete();
-   fBaskets.Delete();
    if (fBasketRAM)   delete [] fBasketRAM;
    if (fBasketEntry) delete [] fBasketEntry;
    if (fBasketBytes) delete [] fBasketBytes;
    if (fBasketSeek)  delete [] fBasketSeek;
+   fBasketRAM   = 0;
+   fBasketEntry = 0;
+   fBasketBytes = 0;
+   fBasketSeek  = 0;
+
+   fLeaves.Delete();
+   fBaskets.Delete();
    // Warning. Must use FindObject by name instead of fDirectory->GetFile()
    // because two branches<may point to the same file and the file
    // already deleted in the previous branch
@@ -249,9 +254,6 @@ TBranch::~TBranch()
       TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(GetFileName());
       if (file ) delete file;
    }
-   fBasketEntry = 0;
-   fBasketBytes = 0;
-   fBasketSeek  = 0;
    fTree        = 0;
    fDirectory   = 0;
 }

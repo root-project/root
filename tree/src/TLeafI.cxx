@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.6 2001/01/23 12:32:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.7 2001/01/24 12:02:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TLeafI::~TLeafI()
 //*-*-*-*-*-*Default destructor for a LeafI*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ===============================
 
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   //if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
 
@@ -191,14 +191,14 @@ void TLeafI::SetAddress(void *add)
 
    if (ResetAddress(add)) {
       delete [] fValue;
-      if (add) fNdata = 0;
    }
    if (add) {
-      if (fLeafCount) {
+      if (TestBit(kIndirectAddress)) {
          fPointer = (Int_t**) add;
-         Int_t ncountmax = Int_t(fLeafCount->GetMaximum()+1);
+         fNdata = fLen;
+         Int_t ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if (ncountmax > fNdata || *fPointer == 0) {
-            delete *fPointer;
+            delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Int_t[fNdata];
          }
