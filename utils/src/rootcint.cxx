@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.59 2002/04/24 17:17:36 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.60 2002/04/24 18:33:10 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -319,6 +319,8 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    char arg[2048], *current, *next;
 
    strcpy(arg, m.Type()->TmpltArg());
+   // arg is now a comma separated list of type names, and we want
+   // to return the 'count+1'-th element in the list.
    int len = strlen(arg);
    int nesting = 0;
    int i = 0;
@@ -352,6 +354,10 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    char arg[2048], *current, *next;
 
    strcpy(arg, m.Name());
+   // arg is now is the name of class template instantiation.
+   // We first need to find the start of the list of its template arguments
+   // then we have a comma separated list of type names.  We want to return
+   // the 'count+1'-th element in the list.
    int len = strlen(arg);
    int nesting = 0;
    int i = 0;
@@ -359,9 +365,15 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    next = &(arg[0]);
    for (int c = 0; c<len && i<=count; c++) {
       switch (arg[c]) {
-      case '<': nesting++; break;
+      case '<': if (nesting==0) {
+                   arg[c]=0;
+                   current = next;
+                   next = &(arg[c+1]);                   
+                }
+                nesting++; 
+                break;
       case '>': nesting--; break;
-      case ',': if (nesting==0) {
+      case ',': if (nesting==1) {
                    arg[c]=0;
                    i++;
                    current = next;
