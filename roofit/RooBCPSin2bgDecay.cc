@@ -1,13 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.cc,v 1.1 2002/03/12 06:02:09 walkowia Exp $
+ *    File: $Id: RooBCPSin2bgDecay.cc,v 1.2 2002/03/14 01:15:05 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
  *   05-Mar-2002 WW Created initial version
  *   12-Mar-2002 WW Added alphaD0 and rhoD0
  *   13-Mar-2002 WW Added 2nd constructor for offset type scheme
+ *   09-Apr-2002 WW Inverted sign infront of the sin() term
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -21,13 +22,13 @@
 //       gam*exp(-gam*|dt|)/(1+|Lambda|^2)/4 * [
 //          ((1-S_tag*dw)*(1-alpha)+alpha*(1+S_mix*(1-2*rho)))*(1+|lambda|^2)
 //         + S_mix*(1-2*w)*(1-alpha)*(1-|lambda|^2)*cos(dm*dt)
-//         + S_tag*(1-2*w)*(1-alpha)*2*|lambda|*sin2bg*sin(dm*dt) ] 
+//         - S_tag*(1-2*w)*(1-alpha)*2*|lambda|*sin2bg*sin(dm*dt) ] 
 //
 // 2)  f(dt,S_tag,S_mix) = 
 //       gam*exp(-gam*|dt|)/(1+|Lambda|^2)/4 * [
 //          ( 1-S_tag*dw' + S_mix*offset )*(1+|lambda|^2)
 //         + S_mix*(1-2*w')*(1-|lambda|^2)*cos(dm*dt)
-//         + S_tag*(1-2*w')*2*|lambda|*sin2bg*sin(dm*dt) ] 
+//         - S_tag*(1-2*w')*2*|lambda|*sin2bg*sin(dm*dt) ] 
 //
 // with                                           / argLambdaPlus  for +
 //     sin2bg = sin(2*beta+gamma+tag*mix*delta) = |
@@ -53,17 +54,18 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
 				     RooAbsCategory& mixState,
 				     RooAbsReal& tau, RooAbsReal& dm,
 				     RooAbsReal& avgMistag, 
-				     RooAbsReal& a, RooAbsReal& bPlus,
-				     RooAbsReal& bMinus, 
+				     RooAbsReal& absLambda, 
+				     RooAbsReal& argLambdaPlus,
+				     RooAbsReal& argLambdaMinus, 
 				     RooAbsReal& delMistag,
 				     RooAbsReal& alphaD0, 
 				     RooAbsReal& rhoD0,
 				     const RooResolutionModel& model, 
 				     DecayType type) :
     RooConvolutedPdf(name,title,model,t), 
-    _absLambda("absLambda","Absolute value of lambda",this,a),
-    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,bPlus),
-    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,bMinus),
+    _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
+    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
     _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
     _delMistag("delMistag","Delta mistag rate",this,delMistag),  
     _alphaD0("alphaD0","D0 tagged fraction",this,alphaD0),
@@ -89,16 +91,17 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
 				     RooAbsCategory& mixState,
 				     RooAbsReal& tau, RooAbsReal& dm,
 				     RooAbsReal& avgMistag, 
-				     RooAbsReal& a, RooAbsReal& bPlus,
-				     RooAbsReal& bMinus, 
+				     RooAbsReal& absLambda, 
+				     RooAbsReal& argLambdaPlus,
+				     RooAbsReal& argLambdaMinus, 
 				     RooAbsReal& delMistag,
 				     RooAbsReal& offsetD0, 
 				     const RooResolutionModel& model, 
 				     DecayType type) :
     RooConvolutedPdf(name,title,model,t), 
-    _absLambda("absLambda","Absolute value of lambda",this,a),
-    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,bPlus),
-    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,bMinus),
+    _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
+    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
     _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
     _delMistag("delMistag","Delta mistag rate",this,delMistag),  
     _alphaD0("alphaD0","-- not used --",this,
@@ -172,12 +175,12 @@ Double_t RooBCPSin2bgDecay::coefficient(Int_t basisIndex) const
     }
     
     if (basisIndex==_basisSin) {
-	//sin term: tag*dil*absLambda*ImLambda/2
-        // ( = tag * dil * |l| * sin(2b+g+/-d)/2 )
+	//sin term: - tag*dil*absLambda*ImLambda/2
+        // ( = - tag * dil * |l| * sin(2b+g+/-d)/2 )
 	if ( _tag*_mixState < 0 ) { 
-	    return _tag*dil*_absLambda*_argLambdaMinus/2 ;
+	    return -_tag*dil*_absLambda*_argLambdaMinus/2 ;
 	} else {
-	    return _tag*dil*_absLambda*_argLambdaPlus/2 ;
+	    return -_tag*dil*_absLambda*_argLambdaPlus/2 ;
 	}
     }
   
@@ -227,7 +230,7 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 		return (1+_absLambda*_absLambda)*(1-_tag*dw)/2 ;
 	    }
 	    if (basisIndex==_basisSin) {
-		return _tag*dil*_absLambda
+		return -_tag*dil*_absLambda
 		    *(_argLambdaPlus+_argLambdaMinus)/2 ;
 	    }
 	    if (basisIndex==_basisCos) {
@@ -392,7 +395,7 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	Double_t acceptProb =   
 	    (1-_tag*dw+_mixState*off)*(1+al2) 
 	    + _mixState*dil*(1-al2)*cos(_dm*tval)
-	    + _tag*2*dil*_absLambda*argLambda*sin(_dm*tval) ;
+	    - _tag*2*dil*_absLambda*argLambda*sin(_dm*tval) ;
 
 	// paranoid check
 	if ( acceptProb > maxAcceptProb ) {
