@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.60 2003/12/30 13:16:51 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.61 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1545,6 +1545,8 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
    // file system image, -1 in case of error. If bin is true binary
    // file transfer is used, otherwise ASCII mode.
 
+   if (!IsValid()) return 0;
+   
    TList *slaves = fActiveSlaves;
 
    if (slaves->GetSize() == 0) return 0;
