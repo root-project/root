@@ -147,7 +147,7 @@ endif
 endif
 ifneq ($(XMLINCDIR),)
 ifneq ($(XMLCLILIB),)
-#MODULES      += xmlparser
+MODULES      += xmlparser
 endif
 endif
 ifneq ($(QTINCDIR),)
@@ -193,8 +193,8 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot \
-                xrootd netx clarens peac oracle
+                mlp krb5auth rpdutils globusauth pyroot xmlparser ruby \
+                qt qtroot xrootd netx clarens peac oracle
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -616,9 +616,9 @@ maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   test/Makefile $(ROOTRC) etc/system.rootauthrc \
-	   etc/system.rootdaemonrc etc/root.mimes \
-	   build/misc/root-help.el
+	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
+	   etc/root.mimes build/misc/root-help.el \
+	   rootd/misc/rootd.rc.d
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
