@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: LinkDef.h,v 1.2 2002/05/21 13:19:25 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,6 @@
 
 #pragma link C++ class TPainter3dAlgorithms;
 #pragma link C++ class THistPainter;
-
+#pragma link C++ class TPaletteAxis+;
 
 #endif
