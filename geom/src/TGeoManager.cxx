@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.38 2003/01/27 18:04:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.39 2003/01/28 16:41:11 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2743,7 +2743,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    if (fTopNode) delete fTopNode;
    else fMasterVolume = vol;
    fTopNode = new TGeoNodeMatrix(vol, gGeoIdentity);
-   char *name = new char[strlen(vol->GetName()+2)];
+   char *name = new char[strlen(vol->GetName())+3];
    sprintf(name, "%s_1", vol->GetName());
    fTopNode->SetName(name);
    fTopNode->SetNumber(1);
