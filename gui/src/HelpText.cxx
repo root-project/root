@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.7 2004/01/08 15:15:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.8 2004/04/23 16:25:51 brun Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -170,10 +170,10 @@ you can create as before the following graphics objects:\n\
   pointing inside the ellipse and dragging it to its new position.\n\
   Using the contextmenu, you can build an arc of ellipse and tilt the ellipse.\n\n\
  -A Pad. Click with the left button and freeze again with the left button.\n\
-  The editor draws a rubber band box to suggest the outline of the pad.\n\n\
- -A PaveLabel. Proceed like for a pad. Type the label to be put in the box. \n\
-  Then type carriage return. The text will be redrawn to fill the box.\n\n"
-" -A PaveText or PavesText. Proceed like for a pad.\n\
+  The editor draws a rubber band box to suggest the outline of the pad.\n\n"
+" -A PaveLabel. Proceed like for a pad. Type the label to be put in the box. \n\
+  Then type carriage return. The text will be redrawn to fill the box.\n\n\
+ -A PaveText or PavesText. Proceed like for a pad.\n\
   You can then click on the PaveText object with the right mouse button\n\
   and select the option AddText.\n\n\
  -A PolyLine. Click with the left button for the first point,\n\
@@ -230,8 +230,8 @@ Each canvas has a menu bar with the following items:\n\
            <Pad   >   clears the last selected pad via middle mouse button)\n\
            <Canvas>   clears this canvas.\n\
      <Undo >          not implemented\n\
-     <Redo >          not implemented\n\n\
-\"View\" with the items:\n\
+     <Redo >          not implemented\n\n"
+"\"View\" with the items:\n\
      <Editor      >   toggles the pad editor\n\
      <Toolbar     >   toggles the tool bar\n\
      <Event Status>   toggles the event status bar that shows the identification\n\
@@ -248,8 +248,8 @@ Each canvas has a menu bar with the following items:\n\
                       a new canvas is created. See OpenGL canvas help.\n\
                       The 3-d picture can be interactively rotated, zoomed\n\
                       in wireframe, solid, hidden line or stereo mode.\n\n\
-\"Options\" with the items:\n"
-"      <Event Status>  toggles the identification of the objects when\n\
+\"Options\" with the items:\n\
+      <Event Status>  toggles the identification of the objects when\n\
                       moving the mouse.\n\
       <Statistics>    toggles the display of the histogram statistics box.\n\
       <Histo Title>   toggles the display of the histogram title.\n\
