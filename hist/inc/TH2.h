@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.27 2003/11/07 08:59:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.28 2004/01/25 20:33:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -54,37 +54,38 @@ public:
                                          ,Int_t nbinsy,const Float_t  *ybins);
    TH2(const TH2&);
    virtual ~TH2();
-   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
-   virtual void    Copy(TObject &hnew) const;
-           Int_t   Fill(Axis_t) {return -1;} //MayNotUse
-           Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
-   virtual Int_t   Fill(Axis_t x, Axis_t y);
-   virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
-   virtual Int_t   Fill(Axis_t x, const char *namey, Stat_t w);
-   virtual Int_t   Fill(const char *namex, Axis_t y, Stat_t w);
-   virtual Int_t   Fill(const char *namex, const char *namey, Stat_t w);
-   virtual void    FillN(Int_t, const Axis_t *, const Double_t *, Int_t) {;} //MayNotUse
-   virtual void    FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Double_t *w, Int_t stride=1);
-   virtual void    FillRandom(const char *fname, Int_t ntimes=5000);
-   virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
-   virtual void    FitSlicesX(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
-   virtual void    FitSlicesY(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
-   virtual Stat_t  GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
-   virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
-   virtual void    GetRandom2(Axis_t &x, Axis_t &y);
-   virtual void    GetStats(Stat_t *stats) const;
-   virtual Stat_t  Integral(Option_t *option="") const;
-   virtual Stat_t  Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
-   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
+   virtual Int_t    BufferEmpty(Bool_t deleteBuffer=kFALSE);
+   virtual Double_t Chi2Test(TH1 *h, Option_t *option, Int_t constraint =0 );
+   virtual void     Copy(TObject &hnew) const;
+           Int_t    Fill(Axis_t) {return -1;} //MayNotUse
+           Int_t    Fill(const char*, Stat_t) {return -1;} //MayNotUse
+   virtual Int_t    Fill(Axis_t x, Axis_t y);
+   virtual Int_t    Fill(Axis_t x, Axis_t y, Stat_t w);
+   virtual Int_t    Fill(Axis_t x, const char *namey, Stat_t w);
+   virtual Int_t    Fill(const char *namex, Axis_t y, Stat_t w);
+   virtual Int_t    Fill(const char *namex, const char *namey, Stat_t w);
+   virtual void     FillN(Int_t, const Axis_t *, const Double_t *, Int_t) {;} //MayNotUse
+   virtual void     FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Double_t *w, Int_t stride=1);
+   virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
+   virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
+   virtual void     FitSlicesX(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
+   virtual void     FitSlicesY(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
+   virtual Stat_t   GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
+   virtual Stat_t   GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
+   virtual void     GetRandom2(Axis_t &x, Axis_t &y);
+   virtual void     GetStats(Stat_t *stats) const;
+   virtual Stat_t   Integral(Option_t *option="") const;
+   virtual Stat_t   Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
+   virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
+   virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
-   virtual Int_t   Merge(TCollection *list);
-      TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
-      TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
-          TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
-          TH1D    *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
-   virtual void    PutStats(Stat_t *stats);
-   virtual void    Reset(Option_t *option="");
+   virtual Int_t    Merge(TCollection *list);
+      TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
+      TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
+          TH1D     *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
+          TH1D     *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
+   virtual void     PutStats(Stat_t *stats);
+   virtual void     Reset(Option_t *option="");
 
    ClassDef(TH2,3)  //2-Dim histogram base class
 };
