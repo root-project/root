@@ -754,7 +754,7 @@ MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
@@ -763,7 +763,7 @@ endif
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
@@ -772,7 +772,7 @@ endif
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
@@ -781,7 +781,7 @@ endif
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
@@ -790,7 +790,7 @@ endif
 TBench.$(ObjSuf): TBench.h
 TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
@@ -799,7 +799,7 @@ endif
 guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@echo "Generating dictionary $@..."
-ifeq ($(ARCH),aix5)
+ifeq ($(ARCH),aix5a)
 	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
 else
 	@rootcint -f $@ -c $^
