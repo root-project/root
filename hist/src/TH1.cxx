@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.14 2000/07/11 15:47:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.15 2000/07/21 07:20:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1160,7 +1160,7 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
 //*-*                  =================================
 //*-*
 //*-*   fname is the name of an already predefined function created by TF1 or TF2
-//*-*   Predefined functions such as Gaus, Expo and Poln are automatically
+//*-*   Predefined functions such as gaus, expo and poln are automatically
 //*-*   created by ROOT.
 //*-*
 //*-*   The list of fit options is given in parameter option.

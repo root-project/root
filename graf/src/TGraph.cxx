@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.7 2000/07/03 10:04:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.8 2000/07/10 06:07:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -520,7 +520,7 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 //*-*                  ==================================
 //
 //   fname is the name of an already predefined function created by TF1
-//   Predefined functions such as Gaus, Expo and Poln are automatically
+//   Predefined functions such as gaus, expo and poln are automatically
 //   created by ROOT.
 //
 //   The list of fit options is given in parameter option.
