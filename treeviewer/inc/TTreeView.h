@@ -36,6 +36,7 @@
 #include <Getline.h>
 #include <TTimer.h>
 #include <TG3DLine.h>
+#include <TGFileDialog.h>
 #include "HelpTextTV.h"
 
 #include "TGTreeLVC.h"
@@ -52,7 +53,6 @@ enum EListItemType {
    kLTExpressionType    = BIT(6),
    kLTCutType           = BIT(7)
 };
-
 
 class TGTreeLVC;
 class TGSelectBox;
@@ -165,7 +165,6 @@ public:
    Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
    Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void         RemoveItem();					// *MENU*
-   void         SetTree(TTree* tree) {;} 
    void         SetTreeName(const char* treeName);              // *MENU*
    Bool_t       SwitchTree(Int_t index);
 

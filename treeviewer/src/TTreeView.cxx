@@ -26,6 +26,9 @@ static const char* opt2D[14] =
    "FB","BB","SCAT","PROF"
 };
 
+static const char* gOpenTypes[] = {"Root files",   "*.root",
+                                   0,              0       };
+
 // Menu command id's
 enum ERootTreeViewCommands {
    kFileCanvas,
@@ -221,6 +224,7 @@ void TTreeView::SetTreeName(const char* treeName)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Allow geting the tree from the context menu*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==========================================
+   if (!treeName) return;
    TTree *tree = (TTree *) gROOT->FindObject(treeName);
    if (!tree) return;
    if (fTreeList) {
@@ -301,7 +305,7 @@ void TTreeView::BuildInterface()
    //--- File menu
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
    fFileMenu->AddEntry("&New canvas",      kFileCanvas);
-   fFileMenu->AddEntry("&Browse",          kFileBrowse);
+   fFileMenu->AddEntry("&Open...",         kFileBrowse);
    fFileMenu->AddEntry("&Load Library...", kFileLoadLibrary);
    fFileMenu->AddEntry("&Save Settings",   kFileSaveSettings);
    fFileMenu->AddEntry("Save &Macro",      kFileSaveMacro);
@@ -311,7 +315,7 @@ void TTreeView::BuildInterface()
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);   
    
-   fFileMenu->DisableEntry(kFileBrowse);
+//   fFileMenu->DisableEntry(kFileBrowse);
 //   fFileMenu->DisableEntry(kFileLoadLibrary);
    fFileMenu->DisableEntry(kFileSaveSettings);
    fFileMenu->DisableEntry(kFileSaveMacro);
@@ -1188,6 +1192,20 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 		     gROOT->GetMakeDefCanvas()();
 		     break;
                   case kFileBrowse:
+		     if (1) {
+		        TGFileInfo info;
+		        info.fFileTypes = (char **) gOpenTypes;
+		        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
+		        if (!info.fFilename) return kTRUE;
+			char command[100];
+			command[0] = 0;
+			sprintf(command, "TFile *treeFile = new TFile(\"%s\");", info.fFilename);
+			ExecuteCommand(command);
+			ExecuteCommand("treeFile->ls();");
+			cout << "Use SetTreeName() from context menu and supply a tree name\n";
+			cout << "The context menu is activated by right-clicking the panel from right\n";
+		        delete[] info.fFilename;
+		     }
                      break;
                   case kFileLoadLibrary:
 		     fBarCommand->SetText("gSystem->Load(\"\");");
