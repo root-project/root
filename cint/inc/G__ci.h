@@ -138,7 +138,7 @@
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
-#define G__UNADDRESSABLEBOOL
+/* #define G__UNADDRESSABLEBOOL */
 #endif
 
 /* Speed up G__strip_quotation */
