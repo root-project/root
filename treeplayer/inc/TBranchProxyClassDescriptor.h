@@ -1,20 +1,26 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TBRANCHPROXYCLASSDESCRIPTOR_H
-#define TBRANCHPROXYCLASSDESCRIPTOR_H
+#ifndef ROOT_TBranchProxyClassDescriptor
+#define ROOT_TBranchProxyClassDescriptor
 
+#ifndef ROOT_TList
 #include "TList.h"
+#endif
+#ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+
 class TTree;
+
 
 namespace ROOT {
 
@@ -29,7 +35,7 @@ namespace ROOT {
       TList   fListOfBaseProxies;
       UInt_t  fIsClones;   // 1 for the general case, 2 when this a split clases inside a TClonesArray.
       bool    fIsLeafList; // true if the branch was constructed from a leaf list.
-      
+
       UInt_t  fSplitLevel;
 
       TString fRawSymbol;
@@ -39,13 +45,13 @@ namespace ROOT {
       UInt_t  fMaxDatamemberType;
 
       void NameToSymbol();
-      
+
    public:
 
       TBranchProxyClassDescriptor(const char *type, const char *branchname,
                                   UInt_t isclones, UInt_t splitlevel);
       TBranchProxyClassDescriptor(const char *branchname);
-      
+
       TBranchProxyClassDescriptor(const char *type, const char *branchname,
                                   const char *branchPrefix, UInt_t isclones,
                                   UInt_t splitlevel);

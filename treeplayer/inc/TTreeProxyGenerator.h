@@ -1,19 +1,23 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TTREEPROXYGENERATOR_H
-#define TTREEPROXYGENERATOR_H
+#ifndef ROOT_TTreeProxyGenerator
+#define ROOT_TTreeProxyGenerator
 
+#ifndef ROOT_Tlist
 #include "TList.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 class TBranch;
 class TLeaf;

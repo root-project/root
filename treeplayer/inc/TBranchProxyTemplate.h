@@ -1,16 +1,16 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TBRANCHPROXYTEMPLATE_H
-#define TBRANCHPROXYTEMPLATE_H
+#ifndef ROOT_TBranchProxyTemplate
+#define ROOT_TBranchProxyTemplate
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include "TBranchProxy.h"
@@ -22,20 +22,20 @@
    bool Setup() { return obj.Setup(); }                  \
    bool IsInitialized() { return obj.IsInitialized(); }  \
    bool IsaPointer() const { return obj.IsaPointer(); }  \
-   bool Read() { return obj.Read(); } 
+   bool Read() { return obj.Read(); }
 
 namespace ROOT {
-   template <class T> 
+   template <class T>
    class TObjProxy {
       TBranchProxy obj;
    public:
       InjecTBranchProxyInterface();
 
-      TObjProxy() : obj() {}; 
+      TObjProxy() : obj() {};
       TObjProxy(TBranchProxyDirector *director, const char *name) : obj(director,name) {};
-      TObjProxy(TBranchProxyDirector *director, const char *top, const char *name) : 
+      TObjProxy(TBranchProxyDirector *director, const char *top, const char *name) :
          obj(director,top,name) {};
-      TObjProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TObjProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
       TObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
       ~TObjProxy() {};
@@ -53,7 +53,7 @@ namespace ROOT {
          // if (temp==0) return &default_val;
          return temp;
       }
- 
+
       T* operator->() { return ptr(); }
       operator T*() { return ptr(); }
       // operator T&() { return *ptr(); }
@@ -66,12 +66,12 @@ namespace ROOT {
    public:
       TBranchProxy obj;
       InjecTBranchProxyInterface();
-   
+
       TArray2Proxy() : obj() {}
       TArray2Proxy(TBranchProxyDirector *director, const char *name) : obj(director,name) {};
-      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name) : 
+      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name) :
          obj(director,top,name) {};
-      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) : 
+      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
       TArray2Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director, parent, name) {};
       ~TArray2Proxy() {};
@@ -99,7 +99,7 @@ namespace ROOT {
    };
 #endif
 
-   template <class T> 
+   template <class T>
    class TClaObjProxy  {
       TClaProxy obj;
    public:
@@ -111,11 +111,11 @@ namespace ROOT {
          //if (obj.fWhere) cout << "value? " << *(T*)obj.fWhere << endl;
       }
 
-      TClaObjProxy() : obj() {}; 
+      TClaObjProxy() : obj() {};
       TClaObjProxy(TBranchProxyDirector *director, const char *name) : obj(director,name) {};
-      TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name) : 
+      TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
          obj(director,top,name) {};
-      TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) : 
+      TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
       TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
       ~TClaObjProxy() {};

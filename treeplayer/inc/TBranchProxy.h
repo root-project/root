@@ -1,26 +1,41 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TBRANCHPROXY_H
-#define TBRANCHPROXY_H
+#ifndef ROOT_TBranchProxy
+#define ROOT_TBranchProxy
 
+#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-
+#endif
+#ifndef ROOT_TTree
 #include "TTree.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TBranchElement
 #include "TBranchElement.h"
+#endif
+#ifndef ROOT_TStreamerInfo
 #include "TStreamerInfo.h"
+#endif
+#ifndef ROOT_TStreamerElement
 #include "TStreamerElement.h"
+#endif
+#ifndef ROOT_Riostream
 #include "Riostream.h"
+#endif
+#ifndef ROOT_TError
 #include "TError.h"
+#endif
 
 #include <list>
 #include <algorithm>
@@ -604,5 +619,5 @@ namespace ROOT {
 
 } // namespace ROOT
 
-#endif // TPROXY_H
+#endif
 
