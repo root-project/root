@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.2 2003/08/21 08:27:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.3 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -59,9 +59,9 @@ public:
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=kBig, Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=kBig, Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

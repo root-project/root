@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.13 2003/10/01 17:53:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.14 2003/11/10 09:48:19 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1457,6 +1457,7 @@ void TGeoHMatrix::RotateX(Double_t angle)
       v[2] = -s*fRotationMatrix[j+1]+c*fRotationMatrix[j+2];
       memcpy(&fRotationMatrix[j], v, 3*sizeof(Double_t));
    }   
+   SetBit(kGeoRotation);
    v[0] = fTranslation[0];
    v[1] = c*fTranslation[1]+s*fTranslation[2];
    v[2] = -s*fTranslation[1]+c*fTranslation[2];
@@ -1479,6 +1480,7 @@ void TGeoHMatrix::RotateY(Double_t angle)
       v[2] = s*fRotationMatrix[j]+c*fRotationMatrix[j+2];
       memcpy(&fRotationMatrix[j], v, 3*sizeof(Double_t));
    }   
+   SetBit(kGeoRotation);
    v[0] = c*fTranslation[0]-s*fTranslation[2];
    v[1] = fTranslation[1];
    v[2] = s*fTranslation[0]+c*fTranslation[2];
@@ -1501,6 +1503,7 @@ void TGeoHMatrix::RotateZ(Double_t angle)
       v[2] = fRotationMatrix[j+2];
       memcpy(&fRotationMatrix[j], v, 3*sizeof(Double_t));
    }   
+   SetBit(kGeoRotation);
    v[0] = c*fTranslation[0]+s*fTranslation[1];
    v[1] = -s*fTranslation[0]+c*fTranslation[1];
    v[2] = fTranslation[2];

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.26 2003/08/21 10:17:15 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -227,7 +227,7 @@ void TGeoArb8::ComputeTwist()
 void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
-   Double_t safe = kBig;
+   Double_t safe = TGeoShape::Big();
    Double_t safc;
    Int_t i;          // current facette index
    Double_t x0, y0, z0, x1, y1, z1, x2, y2;
@@ -368,10 +368,10 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
               +tx1*ys2-tx2*ys1)*dir[2];
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
-   Double_t s=kBig;
+   Double_t s=TGeoShape::Big();
    Double_t x1,x2,y1,y2,xp,yp,zi;
    if (TMath::Abs(a)<1E-10) {           
-      if (b==0) return kBig;
+      if (b==0) return TGeoShape::Big();
       s=-c/b;
       if (s>0) {
          if (in) return s;
@@ -387,7 +387,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             if (zi<=0) return s;
          }      
       }
-      return kBig;
+      return TGeoShape::Big();
    }      
    b=0.5*b/a;
    c=c/a;
@@ -424,14 +424,14 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
          }      
       }
    }
-   return kBig;
+   return TGeoShape::Big();
 }      
       
 //_____________________________________________________________________________
 Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from outside point to surface of the arb8
-   Double_t snxt=kBig;
+   Double_t snxt=TGeoShape::Big();
    if (!TGeoBBox::Contains(point)) {
       snxt=TGeoBBox::DistToIn(point,dir,3);
       if (snxt>1E20) return snxt;
@@ -443,7 +443,7 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Doub
       dist[i]=DistToPlane(point, dir, i, kFALSE);  
    }   
    // check Z planes
-   dist[4]=kBig;
+   dist[4]=TGeoShape::Big();
    if (TMath::Abs(point[2])>fDz) {
       if (dir[2]!=0) {
          Double_t pt[3];
@@ -455,10 +455,10 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Doub
             pt[2]=-fDz;
          }   
          if (dist[4]<0) {
-            dist[4]=kBig;
+            dist[4]=TGeoShape::Big();
          } else {   
             for (Int_t j=0; j<2; j++) pt[j]=point[j]+dist[4]*dir[j];
-            if (!Contains(&pt[0])) dist[4]=kBig;
+            if (!Contains(&pt[0])) dist[4]=TGeoShape::Big();
          }   
       }
    }   
@@ -470,7 +470,7 @@ Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Dou
 {
 // compute distance from inside point to surface of the arb8
    Double_t dist[6];
-   dist[0]=dist[1]=kBig;
+   dist[0]=dist[1]=TGeoShape::Big();
    if (dir[2]<0) {
       dist[0]=(-fDz-point[2])/dir[2];
    } else {
@@ -565,10 +565,10 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t lower[8];
    SetPlaneVertices(origin[2]-dd[2], lower);
    SetPlaneVertices(origin[2]+dd[2], upper);
-   Double_t ddmin=TGeoShape::kBig;
+   Double_t ddmin=TGeoShape::TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::kBig;
+      ddmin=TGeoShape::TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
@@ -598,7 +598,7 @@ Double_t TGeoArb8::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   return TGeoShape::Big();
 }
 
 //_____________________________________________________________________________
@@ -710,10 +710,10 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
    fTl2 = tl2;
    fAlpha1 = alpha1;
    fAlpha2 = alpha2;
-   Double_t tx = TMath::Tan(theta*kDegRad)*TMath::Cos(phi*kDegRad);
-   Double_t ty = TMath::Tan(theta*kDegRad)*TMath::Sin(phi*kDegRad);
-   Double_t ta1 = TMath::Tan(alpha1*kDegRad);
-   Double_t ta2 = TMath::Tan(alpha2*kDegRad);
+   Double_t tx = TMath::Tan(theta*TMath::DegToRad())*TMath::Cos(phi*TMath::DegToRad());
+   Double_t ty = TMath::Tan(theta*TMath::DegToRad())*TMath::Sin(phi*TMath::DegToRad());
+   Double_t ta1 = TMath::Tan(alpha1*TMath::DegToRad());
+   Double_t ta2 = TMath::Tan(alpha2*TMath::DegToRad());
    fXY[0][0] = -dz*tx-h1*ta1-bl1;    fXY[0][1] = -dz*ty-h1;
    fXY[1][0] = -dz*tx+h1*ta1-tl1;    fXY[1][1] = -dz*ty+h1;
    fXY[2][0] = -dz*tx+h1*ta1+tl1;    fXY[2][1] = -dz*ty+h1;
@@ -753,10 +753,10 @@ TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, 
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
    }   
-   Double_t tx = TMath::Tan(theta*kDegRad)*TMath::Cos(phi*kDegRad);
-   Double_t ty = TMath::Tan(theta*kDegRad)*TMath::Sin(phi*kDegRad);
-   Double_t ta1 = TMath::Tan(alpha1*kDegRad);
-   Double_t ta2 = TMath::Tan(alpha2*kDegRad);
+   Double_t tx = TMath::Tan(theta*TMath::DegToRad())*TMath::Cos(phi*TMath::DegToRad());
+   Double_t ty = TMath::Tan(theta*TMath::DegToRad())*TMath::Sin(phi*TMath::DegToRad());
+   Double_t ta1 = TMath::Tan(alpha1*TMath::DegToRad());
+   Double_t ta2 = TMath::Tan(alpha2*TMath::DegToRad());
    fXY[0][0] = -dz*tx-h1*ta1-bl1;    fXY[0][1] = -dz*ty-h1;
    fXY[1][0] = -dz*tx+h1*ta1-tl1;    fXY[1][1] = -dz*ty+h1;
    fXY[2][0] = -dz*tx+h1*ta1+tl1;    fXY[2][1] = -dz*ty+h1;
@@ -786,8 +786,8 @@ Double_t TGeoTrap::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
    return TGeoArb8::DistToOut(point, dir, iact, step, safe);
@@ -800,8 +800,8 @@ Double_t TGeoTrap::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kFALSE);
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
    return TGeoArb8::DistToIn(point, dir, iact, step, safe);
@@ -902,7 +902,7 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
 {
 // Computes the closest distance from given point to this shape, according
 // to option. 
-   Double_t safe = kBig;
+   Double_t safe = TGeoShape::Big();
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
    Int_t i;          // current facette index
@@ -984,10 +984,10 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
    fAlpha1 = alpha1;
    fAlpha2 = alpha2;
    Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
-   al1 = alpha1*kDegRad;
-   al2 = alpha2*kDegRad;
-   th = theta*kDegRad;
-   ph = phi*kDegRad;
+   al1 = alpha1*TMath::DegToRad();
+   al2 = alpha2*TMath::DegToRad();
+   th = theta*TMath::DegToRad();
+   ph = phi*TMath::DegToRad();
    dx = 2*dz*TMath::Sin(th)*TMath::Cos(ph);
    dy = 2*dz*TMath::Sin(th)*TMath::Sin(ph);
    fDz = dz;
@@ -1013,8 +1013,8 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
    for (i=4; i<8; i++) {
       x = fXY[i][0];
       y = fXY[i][1];
-      fXY[i][0] = x*TMath::Cos(twist*kDegRad) + y*TMath::Sin(twist*kDegRad);
-      fXY[i][1] = -x*TMath::Sin(twist*kDegRad) + y*TMath::Cos(twist*kDegRad);      
+      fXY[i][0] = x*TMath::Cos(twist*TMath::DegToRad()) + y*TMath::Sin(twist*TMath::DegToRad());
+      fXY[i][1] = -x*TMath::Sin(twist*TMath::DegToRad()) + y*TMath::Cos(twist*TMath::DegToRad());      
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
@@ -1041,10 +1041,10 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
    fAlpha1 = alpha1;
    fAlpha2 = alpha2;
    Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
-   al1 = alpha1*kDegRad;
-   al2 = alpha2*kDegRad;
-   th = theta*kDegRad;
-   ph = phi*kDegRad;
+   al1 = alpha1*TMath::DegToRad();
+   al2 = alpha2*TMath::DegToRad();
+   th = theta*TMath::DegToRad();
+   ph = phi*TMath::DegToRad();
    dx = 2*dz*TMath::Sin(th)*TMath::Cos(ph);
    dy = 2*dz*TMath::Sin(th)*TMath::Sin(ph);
    fDz = dz;
@@ -1070,8 +1070,8 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
    for (i=4; i<8; i++) {
       x = fXY[i][0];
       y = fXY[i][1];
-      fXY[i][0] = x*TMath::Cos(twist*kDegRad) + y*TMath::Sin(twist*kDegRad);
-      fXY[i][1] = -x*TMath::Sin(twist*kDegRad) + y*TMath::Cos(twist*kDegRad);      
+      fXY[i][0] = x*TMath::Cos(twist*TMath::DegToRad()) + y*TMath::Sin(twist*TMath::DegToRad());
+      fXY[i][1] = -x*TMath::Sin(twist*TMath::DegToRad()) + y*TMath::Cos(twist*TMath::DegToRad());      
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 

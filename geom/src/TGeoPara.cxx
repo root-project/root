@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.17 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.18 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -76,9 +76,9 @@ TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
    fAlpha = alpha;
    fTheta = theta;
    fPhi = phi;
-   fTxy = TMath::Tan(alpha*kDegRad);
-   Double_t tth = TMath::Tan(theta*kDegRad);
-   Double_t ph  = phi*kDegRad;
+   fTxy = TMath::Tan(alpha*TMath::DegToRad());
+   Double_t tth = TMath::Tan(theta*TMath::DegToRad());
+   Double_t ph  = phi*TMath::DegToRad();
    fTxz = tth*TMath::Cos(ph);
    fTyz = tth*TMath::Sin(ph);
    if ((fX<0) || (fY<0) || (fZ<0)) {
@@ -101,9 +101,9 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
    fAlpha = alpha;
    fTheta = theta;
    fPhi = phi;
-   fTxy = TMath::Tan(alpha*kDegRad);
-   Double_t tth = TMath::Tan(theta*kDegRad);
-   Double_t ph  = phi*kDegRad;
+   fTxy = TMath::Tan(alpha*TMath::DegToRad());
+   Double_t tth = TMath::Tan(theta*TMath::DegToRad());
+   Double_t ph  = phi*TMath::DegToRad();
    fTxz = tth*TMath::Cos(ph);
    fTyz = tth*TMath::Sin(ph);
    if ((fX<0) || (fY<0) || (fZ<0)) {
@@ -178,9 +178,9 @@ void TGeoPara::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
          norm[2] = - fTyz*cty;
          break;
       case 2:
-         norm[0] = TMath::Cos(fTheta*kDegRad)*TMath::Cos(fAlpha*kDegRad);
-         norm[1] = - TMath::Cos(fTheta*kDegRad)*TMath::Sin(fAlpha*kDegRad);
-         norm[2] = -TMath::Sin(fTheta*kDegRad);
+         norm[0] = TMath::Cos(fTheta*TMath::DegToRad())*TMath::Cos(fAlpha*TMath::DegToRad());
+         norm[1] = - TMath::Cos(fTheta*TMath::DegToRad())*TMath::Sin(fAlpha*TMath::DegToRad());
+         norm[2] = -TMath::Sin(fTheta*TMath::DegToRad());
    }
    if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
       norm[0] = -norm[0];
@@ -210,11 +210,11 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (iact<3 && safe) {
    // compute safety
       *safe = Safety(point, kTRUE);
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig; 
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big(); 
    }
    Double_t saf[6];
-   Double_t snxt = kBig;
+   Double_t snxt = TGeoShape::Big();
    // distance from point to higher Z face
    saf[4] = fZ-point[2];
    // distance from point to lower Z face
@@ -233,7 +233,7 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // distance from point to lower X face 
    saf[1] = -fX-xt;
    Double_t sn1, sn2, sn3;
-   sn1 = sn2 = sn3 = kBig;
+   sn1 = sn2 = sn3 = TGeoShape::Big();
    if (dir[2]!=0) sn3=saf[4]/dir[2];
    if (sn3<0)     sn3=saf[5]/dir[2];
    
@@ -254,7 +254,7 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from inside point to surface of the para
 //   Warning("DistToIn", "PARA TOIN");
-//   Double_t snxt=kBig;
+//   Double_t snxt=TGeoShape::Big();
    Double_t dn31=-fZ-point[2];
    Double_t dn32=fZ-point[2];
    Double_t yt=point[1]-fTyz*point[2];
@@ -277,17 +277,17 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute safety
       *safe = TMath::Max(sn1, sn2);
       if (sn3>(*safe)) *safe=sn3;
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig; 
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big(); 
    }
    // compute distance to PARA
    Double_t swap;
 //   Bool_t upx=kFALSE, upy=kFALSE, upz=kFALSE;
    // check if dir is paralel to Z planes
    if (dir[2]==0) {
-      if ((dn32*dn31)>0) return kBig;
+      if ((dn32*dn31)>0) return TGeoShape::Big();
       dn31 = 0;
-      dn32 = kBig;
+      dn32 = TGeoShape::Big();
    } else {
       dn31=dn31/dir[2];
       dn32=dn32/dir[2];
@@ -297,12 +297,12 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          dn32=swap;
       }   
    }
-   if (dn32<0) return kBig;
+   if (dn32<0) return TGeoShape::Big();
    Double_t dy=dir[1]-fTyz*dir[2];
    if (dy==0) {
-      if ((dn21*dn22)>0) return kBig;
+      if ((dn21*dn22)>0) return TGeoShape::Big();
       dn21=0;
-      dn22=kBig;
+      dn22=TGeoShape::Big();
    } else {
       dn21=dn21/dy;
       dn22=dn22/dy;
@@ -312,12 +312,12 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          dn22=swap;
       }   
    }
-   if (dn22<0) return kBig;
+   if (dn22<0) return TGeoShape::Big();
    Double_t dx=dir[0]-fTxy*dy-fTxz*dir[2];
    if (dx==0) {
-      if ((dn11*dn12)>0) return kBig;
+      if ((dn11*dn12)>0) return TGeoShape::Big();
       dn11=0;
-      dn12=kBig;
+      dn12=TGeoShape::Big();
    } else {
       dn11=dn11/dx;
       dn12=dn12/dx;
@@ -327,13 +327,13 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          dn12=swap;
       }   
    }
-   if (dn12<0) return kBig;
+   if (dn12<0) return TGeoShape::Big();
    Double_t smin=TMath::Max(dn11,dn21);
    if (dn31>smin) smin=dn31;
    Double_t smax=TMath::Min(dn12,dn22);
    if (dn32<smax) smax=dn32;
-   if (smax<=smin) return kBig;
-   if (smin<=0) return kBig;
+   if (smax<=smin) return TGeoShape::Big();
+   if (smin<=0) return TGeoShape::Big();
    return smin;
 }
 
@@ -475,10 +475,10 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    upper[6]=z*fTxz-fTxy*fY+fX; 
    upper[7]=-fY+z*fTyz;
    
-   Double_t ddmin=TGeoShape::kBig;
+   Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::kBig;
+      ddmin=TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
@@ -559,9 +559,9 @@ void TGeoPara::SetDimensions(Double_t *param)
    fAlpha = param[3];
    fTheta = param[4];
    fPhi   = param[5];
-   fTxy = TMath::Tan(param[3]*kDegRad);
-   Double_t tth = TMath::Tan(param[4]*kDegRad);
-   Double_t ph  = param[5]*kDegRad;
+   fTxy = TMath::Tan(param[3]*TMath::DegToRad());
+   Double_t tth = TMath::Tan(param[4]*TMath::DegToRad());
+   Double_t ph  = param[5]*TMath::DegToRad();
    fTxz   = tth*TMath::Cos(ph);
    fTyz   = tth*TMath::Sin(ph);
 }   

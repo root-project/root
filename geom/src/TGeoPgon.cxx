@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.30 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.31 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -104,20 +104,20 @@ void TGeoPgon::ComputeBBox()
    // find the radius of the outscribed circle
    rmin = fRmin[TMath::LocMin(fNz, fRmin)];   
    rmax = fRmax[TMath::LocMax(fNz, fRmax)];
-   rmax = rmax/TMath::Cos(0.5*divphi*kDegRad);
+   rmax = rmax/TMath::Cos(0.5*divphi*TMath::DegToRad());
    Double_t phi1 = fPhi1;
    Double_t phi2 = phi1 + fDphi;
    
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = rmax*TMath::Cos(phi1*kDegRad);
-   yc[0] = rmax*TMath::Sin(phi1*kDegRad);
-   xc[1] = rmax*TMath::Cos(phi2*kDegRad);
-   yc[1] = rmax*TMath::Sin(phi2*kDegRad);
-   xc[2] = rmin*TMath::Cos(phi1*kDegRad);
-   yc[2] = rmin*TMath::Sin(phi1*kDegRad);
-   xc[3] = rmin*TMath::Cos(phi2*kDegRad);
-   yc[3] = rmin*TMath::Sin(phi2*kDegRad);
+   xc[0] = rmax*TMath::Cos(phi1*TMath::DegToRad());
+   yc[0] = rmax*TMath::Sin(phi1*TMath::DegToRad());
+   xc[1] = rmax*TMath::Cos(phi2*TMath::DegToRad());
+   yc[1] = rmax*TMath::Sin(phi2*TMath::DegToRad());
+   xc[2] = rmin*TMath::Cos(phi1*TMath::DegToRad());
+   yc[2] = rmin*TMath::Sin(phi1*TMath::DegToRad());
+   xc[3] = rmin*TMath::Cos(phi2*TMath::DegToRad());
+   yc[3] = rmin*TMath::Sin(phi2*TMath::DegToRad());
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
@@ -157,8 +157,8 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       phi1 = fPhi1;
       if (phi1<0) phi1+=360;
       phi2 = phi1 + fDphi;
-      phi1 *= kDegRad;
-      phi2 *= kDegRad;
+      phi1 *= TMath::DegToRad();
+      phi2 *= TMath::DegToRad();
       c1 = TMath::Cos(phi1);
       s1 = TMath::Sin(phi1);
       c2 = TMath::Cos(phi2);
@@ -180,11 +180,11 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    dz = TMath::Abs(fZ[iplclose]-point[2]);
 
    Double_t divphi = fDphi/fNedges;
-   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
+   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    while (phi<fPhi1) phi+=360.;
    Double_t ddp = phi-fPhi1;
    Int_t ipsec = Int_t(ddp/divphi);
-   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
+   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*TMath::DegToRad();
    // compute projected distance
    Double_t r, rsum, rpgon, ta, calf;
    r = TMath::Abs(point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0));
@@ -212,7 +212,7 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    rmin1 = fRmin[ipl];
    rmin2 = fRmin[ipl+1];
    rsum = rmin1+rmin2;
-   Double_t safe = kBig;
+   Double_t safe = TGeoShape::Big();
    if (rsum>1E-10) {
       ta = (rmin2-rmin1)/dz;
       calf = 1./TMath::Sqrt(1+ta*ta);
@@ -246,13 +246,13 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
    if (point[2]>fZ[fNz-1]) return kFALSE;
    Double_t divphi = fDphi/fNedges;
    // now check phi
-   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
+   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    while (phi < fPhi1) phi += 360.0;
    Double_t ddp = phi-fPhi1;
    if (ddp>fDphi) return kFALSE;
    // now find phi division
    Int_t ipsec = TMath::Min(Int_t(ddp/divphi), fNedges-1);
-   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
+   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*TMath::DegToRad();
    // now check projected distance
    Double_t r = point[0]*TMath::Cos(ph0) + point[1]*TMath::Sin(ph0);
    // find in which Z section the point is in
@@ -301,8 +301,8 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // first find out in which Z section the point is in
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }   
    // find current Z section
    Int_t ipl, ipsec;
@@ -326,11 +326,11 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t snext;
    if (TMath::Abs(dir[2])<1E-8) {
       if (SliceCrossingInZ(point, dir, icrossed, iph, sph, snext, stepmax)) return snext;
-      if (snext>stepmax) return kBig;
+      if (snext>stepmax) return TGeoShape::Big();
       return 0.;
    }
    if (SliceCrossingIn(point, dir, icrossed, iph, sph, snext, stepmax)) return snext;
-   if (snext>stepmax) return kBig;   
+   if (snext>stepmax) return TGeoShape::Big();   
    return 0.;
 }   
 
@@ -338,7 +338,7 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 void TGeoPgon::LocatePhi(Double_t *point, Int_t &ipsec) const
 {
    Double_t divphi=fDphi/fNedges;
-   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
+   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    while (phi<fPhi1) phi+=360.;
    ipsec = Int_t((phi-fPhi1)/divphi); // [0, fNedges-1]
    if (ipsec>fNedges-1) ipsec = -1;
@@ -371,7 +371,7 @@ Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Do
          sphi[icrossed-1] = stepmax;
          return icrossed;
       }   
-      phi = TMath::ATan2(dir[1], dir[0])*kRadDeg;   
+      phi = TMath::ATan2(dir[1], dir[0])*TMath::RadToDeg();   
       while (phi<fPhi1) phi+=360.;
       istart = Int_t((phi-fPhi1)/divphi);
       if (istart>fNedges-1) istart=-1;
@@ -386,8 +386,8 @@ Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Do
    else          ist=(incsec>0)?(istart+1):istart;
    Bool_t crossing = kTRUE;
    Bool_t gapdone = kFALSE;
-   divphi *= kDegRad;
-   Double_t phi1 = fPhi1*kDegRad;
+   divphi *= TMath::DegToRad();
+   Double_t phi1 = fPhi1*TMath::DegToRad();
    while (crossing) { 
       if (istart<0) gapdone = kTRUE;
       phi = phi1+ist*divphi;
@@ -448,9 +448,9 @@ Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, In
       rmax = Rpg(point[2], ipl, kFALSE, apg,bpg);        
    }
    Int_t iphcrt;
-   Double_t divphi = kDegRad*fDphi/fNedges;
+   Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
    Double_t rproj, ndot, dist;
-   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t cosph, sinph;
    Double_t snextphi = 0.;
    Double_t step = 0;
@@ -471,7 +471,7 @@ Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, In
       cosph = TMath::Cos(phi);
       sinph = TMath::Sin(phi);
       rproj = pt[0]*cosph+pt[1]*sinph;
-      dist = kBig;
+      dist = TGeoShape::Big();
       ndot = dir[0]*cosph+dir[1]*sinph;
       if (ndot!=0) {
          dist = (ndot>0)?((rmax-rproj)/ndot):((rmin-rproj)/ndot);
@@ -517,9 +517,9 @@ Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_
       rmax = Rpg(point[2], ipl, kFALSE, apg,bpg);        
    }
    Int_t iphcrt;
-   Double_t divphi = kDegRad*fDphi/fNedges;
+   Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
    Double_t rproj, ndot, dist;
-   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t cosph, sinph;
    Double_t snextphi = 0.;
    Double_t step = 0;
@@ -548,12 +548,12 @@ Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_
       cosph = TMath::Cos(phi);
       sinph = TMath::Sin(phi);
       rproj = pt[0]*cosph+pt[1]*sinph;
-      dist = kBig;
+      dist = TGeoShape::Big();
       ndot = dir[0]*cosph+dir[1]*sinph;
       if (rproj<rmin) {
-         dist = (ndot>0)?((rmin-rproj)/ndot):kBig;
+         dist = (ndot>0)?((rmin-rproj)/ndot):TGeoShape::Big();
       } else {
-         dist = (ndot<0)?((rmax-rproj)/ndot):kBig;
+         dist = (ndot<0)?((rmax-rproj)/ndot):TGeoShape::Big();
       }    
       if (dist<1E10) {
          snext = step+dist;
@@ -600,8 +600,8 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
    Int_t iphcrt;
    Double_t apg,bpg, apr, bpr, db;
    Double_t rpg, rnew, znew;
-   Double_t divphi = kDegRad*fDphi/fNedges;
-   Double_t phi1 = fPhi1*kDegRad;
+   Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
+   Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi, dz;
    Double_t cosph, sinph;
    Double_t rproj;
@@ -625,7 +625,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
       rproj = Rproj(pt[2], pt, dir, cosph, sinph, apr, bpr);
       // compute distance to next Z plane
       while (ipl>=0 && ipl<fNz-1) {
-         din = dout = kBig;
+         din = dout = TGeoShape::Big();
          // dist to last boundary of current segment according dir
          distz = (fZ[ipl+((1+incseg)>>1)]-pt[2])*invdir;
          // length of current segment
@@ -643,7 +643,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
                znew = (apr-apg)/db;
                if (znew>=fZ[ipl] && znew<=fZ[ipl+1]) {
                   din = (znew-pt[2])*invdir;
-                  if (din<0) din = kBig;
+                  if (din<0) din = TGeoShape::Big();
                }
             }
             rpg = Rpg(pt[2], ipl, kFALSE, apg, bpg);
@@ -652,7 +652,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
                znew = (apr-apg)/db;
                if (znew>=fZ[ipl] && znew<=fZ[ipl+1]) {
                   dout = (znew-pt[2])*invdir;
-                  if (dout<0) dout = kBig;
+                  if (dout<0) dout = TGeoShape::Big();
                }
             }
          }         
@@ -688,7 +688,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
          ipl += incseg;
       }   // end loop Z
    }   // end loop phi
-   snext = kBig;
+   snext = TGeoShape::Big();
    return kFALSE;
 }   
                
@@ -728,8 +728,8 @@ Bool_t TGeoPgon::SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t
    Double_t apg,bpg;
    Double_t rpgin;
    Double_t rpgout;
-   Double_t divphi = kDegRad*fDphi/fNedges;
-   Double_t phi1 = fPhi1*kDegRad;
+   Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
+   Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi;
    Double_t cosph, sinph;
    Double_t rproj;
@@ -790,8 +790,8 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
    Double_t step;
    Int_t incseg = (dir[2]>0)?1:-1;
    Double_t invdir = 1./dir[2];
-   Double_t divphi = kDegRad*fDphi/fNedges;
-   Double_t phi = fPhi1*kDegRad + (iphi+0.5)*divphi;
+   Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
+   Double_t phi = fPhi1*TMath::DegToRad() + (iphi+0.5)*divphi;
    Double_t cphi = TMath::Cos(phi);
    Double_t sphi = TMath::Sin(phi);
    Double_t apr, bpr;
@@ -811,7 +811,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
          }
          icrtseg = ipl;
       }      
-      din = dout = kBig;
+      din = dout = TGeoShape::Big();
       dz = fZ[ipl+1]-fZ[ipl];
       rdot = (rproj-fRmin[ipl])*dz - (pt[2]-fZ[ipl])*(fRmin[ipl+1]-fRmin[ipl]);
       if (rdot<0) {
@@ -827,7 +827,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
                znew = (apr-apg)/db;
                if (znew>fZ[ipl] && znew<fZ[ipl+1]) {
                   din=(znew-pt[2])*invdir;
-                  if (din<0) din=kBig;
+                  if (din<0) din=TGeoShape::Big();
                }   
             }
          }
@@ -845,7 +845,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
             if (db!=0.) {
                znew = (apr-apg)/db;
                if (znew>fZ[ipl] && znew<fZ[ipl+1]) dout=(znew-pt[2])*invdir;
-               if (dout<0) dout=kBig;
+               if (dout<0) dout=TGeoShape::Big();
             }
          }
       }
@@ -870,8 +870,8 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 // compute distance from outside point to surface of the polygone
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
-      if (iact==0) return kBig;               // just safety computed
-      if (iact==1 && step<*safe) return kBig; // safety mode
+      if (iact==0) return TGeoShape::Big();               // just safety computed
+      if (iact==1 && step<*safe) return TGeoShape::Big(); // safety mode
    }   
    // copy the current point
    Double_t pt[3];
@@ -880,8 +880,8 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Int_t ipl;
    Int_t i, ipsec;
    ipl = TMath::BinarySearch(fNz, fZ, pt[2]);
-   if (ipl<0 && dir[2]<=0) return kBig;      // ray downwards
-   if (ipl==fNz-1 && dir[2]>=0) return kBig; // ray upwards
+   if (ipl<0 && dir[2]<=0) return TGeoShape::Big();      // ray downwards
+   if (ipl==fNz-1 && dir[2]>=0) return TGeoShape::Big(); // ray upwards
 
    Double_t divphi=fDphi/fNedges;
    // check if ray may intersect outer cylinder
@@ -890,13 +890,13 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t rpr, snewcross;
    Double_t r2 = pt[0]*pt[0]+pt[1]*pt[1];
    Double_t radmax = fRmax[TMath::LocMax(fNz, fRmax)];
-   radmax = radmax/TMath::Cos(0.5*divphi*kDegRad);
+   radmax = radmax/TMath::Cos(0.5*divphi*TMath::DegToRad());
    radmax += 1E-8;
    if (r2>(radmax*radmax) || pt[2]<fZ[0] || pt[2]>fZ[fNz-1]) {
       pt[2] -= 0.5*(fZ[0]+fZ[fNz-1]);
       snext = TGeoTube::DistToInS(pt,dir,0.,radmax,0.5*(fZ[fNz-1]-fZ[0]));
-      if (snext>1E10) return kBig;
-      if (snext>stepmax) return kBig;
+      if (snext>1E10) return TGeoShape::Big();
+      if (snext>stepmax) return TGeoShape::Big();
       stepmax -= snext;
       pt[2] = point[2];
       for (i=0; i<3; i++) pt[i] += snext*dir[i];
@@ -911,12 +911,12 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             rmin = fRmin[fNz-1];
             rmax = fRmax[fNz-1];
          }      
-         Double_t phi = TMath::ATan2(pt[1], pt[0])*kRadDeg;
+         Double_t phi = TMath::ATan2(pt[1], pt[0])*TMath::RadToDeg();
          while (phi < fPhi1) phi += 360.0;
          Double_t ddp = phi-fPhi1;
          if (ddp<=fDphi) {
             ipsec = Int_t(ddp/divphi);
-            Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
+            Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*TMath::DegToRad();
             rpr = pt[0]*TMath::Cos(ph0) + pt[1]*TMath::Sin(ph0);
             if (rpr>=rmin && rpr<=rmax) return snext;
          }   
@@ -931,7 +931,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       LocatePhi(pt, ipsec);
       icrossed = GetPhiCrossList(pt,dir,ipsec,sph,iph, stepmax);
       if (SliceCrossingZ(pt, dir, icrossed, iph, sph, snewcross, stepmax)) return (snext+snewcross);
-      return kBig;
+      return TGeoShape::Big();
    }
    // Locate phi and get the phi crossing list
    LocatePhi(pt, ipsec);
@@ -941,7 +941,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       snext += snewcross;
       return snext;
    }   
-   return kBig;   
+   return TGeoShape::Big();   
 }          
 
 //_____________________________________________________________________________
@@ -1056,7 +1056,7 @@ void TGeoPgon::GetBoundingCylinder(Double_t *param) const
       if (fRmax[i] > param[1]) param[1] = fRmax[i];
    }
    Double_t divphi = fDphi/fNedges;
-   param[1] /= TMath::Cos(0.5*divphi*kDegRad);
+   param[1] /= TMath::Cos(0.5*divphi*TMath::DegToRad());
    param[0] *= param[0];
    param[1] *= param[1];
    if (fDphi==360.) {
@@ -1132,7 +1132,7 @@ Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cp
 // Computes projected distance at a given Z for a given ray inside a given sector 
 // and fills coefficients:
 //   Rproj = a + b*z
-   if (TMath::Abs(dir[2])<1E-8) return kBig;
+   if (TMath::Abs(dir[2])<1E-8) return TGeoShape::Big();
    Double_t invdirz = 1./dir[2];
    a = ((point[0]*dir[2]-point[2]*dir[0])*cphi+(point[1]*dir[2]-point[2]*dir[1])*sphi)*invdirz;
    b = (dir[0]*cphi+dir[1]*sphi)*invdirz;
@@ -1153,14 +1153,14 @@ Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_
    if (dz<1E-9) return 1E9; // skip radius-changing segment
    Double_t znew = point[2] - 0.5*(fZ[ipl]+fZ[ipl+1]);
    saf[0] = 0.5*dz - TMath::Abs(znew);
-   if (-saf[0]>safmin) return kBig; // means: stop checking further segments
+   if (-saf[0]>safmin) return TGeoShape::Big(); // means: stop checking further segments
    Double_t rmin1 = fRmin[ipl];
    Double_t rmax1 = fRmax[ipl];
    Double_t rmin2 = fRmin[ipl+1];
    Double_t rmax2 = fRmax[ipl+1];
    Double_t divphi = fDphi/fNedges;
    if (iphi<0) {
-      Double_t f = 1./TMath::Cos(0.5*divphi*kDegRad);
+      Double_t f = 1./TMath::Cos(0.5*divphi*TMath::DegToRad());
       rmax1 *= f;
       rmax2 *= f;
       r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
@@ -1172,7 +1172,7 @@ Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_
       Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
       Double_t rin = tg1*znew+ro1;
       Double_t rout = tg2*znew+ro2;
-      saf[1] = (ro1>0)?((r-rin)*cr1):kBig;
+      saf[1] = (ro1>0)?((r-rin)*cr1):TGeoShape::Big();
       saf[2] = (rout-r)*cr2;
       for (i=0; i<3; i++) saf[i]=-saf[i];
       safe = saf[TMath::LocMax(3,saf)];
@@ -1180,7 +1180,7 @@ Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_
       if (safe<0) safe = 0;
       return safe;
    }
-   Double_t ph0 = (fPhi1+divphi*(iphi+0.5))*kDegRad;
+   Double_t ph0 = (fPhi1+divphi*(iphi+0.5))*TMath::DegToRad();
    r = point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0);
    if (rmin1+rmin2>1E-10) {
       ta = (rmin2-rmin1)/dz;
@@ -1188,7 +1188,7 @@ Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_
       rpgon = rmin1 + (point[2]-fZ[ipl])*ta;
       saf[1] = (r-rpgon)*calf;
    } else {
-      saf[1] = kBig;
+      saf[1] = TGeoShape::Big();
    }   
    ta = (rmax2-rmax1)/dz;
    calf = 1./TMath::Sqrt(1+ta*ta);
@@ -1227,7 +1227,7 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
       safmin = SafetyToSegment(point, ipl, iphi, in, safphi);
       if (safmin>1E10) {
          //  something went wrong - point is not inside current segment
-         return kBig;
+         return TGeoShape::Big();
       }
       if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
       // check increasing iplanes
@@ -1301,7 +1301,7 @@ void TGeoPgon::SetPoints(Double_t *buff) const
     Double_t phi, dphi;
     Int_t n = fNedges + 1;
     dphi = fDphi/(n-1);
-    Double_t factor = 1./TMath::Cos(kDegRad*dphi/2);
+    Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
     Int_t i, j;
     Int_t indx = 0;
 
@@ -1310,14 +1310,14 @@ void TGeoPgon::SetPoints(Double_t *buff) const
         {
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = factor * fRmin[i] * TMath::Cos(phi);
                 buff[indx++] = factor * fRmin[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = factor * fRmax[i] * TMath::Cos(phi);
                 buff[indx++] = factor * fRmax[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
@@ -1333,7 +1333,7 @@ void TGeoPgon::SetPoints(Float_t *buff) const
     Double_t phi, dphi;
     Int_t n = fNedges + 1;
     dphi = fDphi/(n-1);
-    Double_t factor = 1./TMath::Cos(kDegRad*dphi/2);
+    Double_t factor = 1./TMath::Cos(TMath::DegToRad()*dphi/2);
     Int_t i, j;
     Int_t indx = 0;
 
@@ -1342,14 +1342,14 @@ void TGeoPgon::SetPoints(Float_t *buff) const
         {
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = factor * fRmin[i] * TMath::Cos(phi);
                 buff[indx++] = factor * fRmin[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = factor * fRmax[i] * TMath::Cos(phi);
                 buff[indx++] = factor * fRmax[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.11 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.12 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -55,9 +55,9 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=kBig, Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=kBig, Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    Double_t              DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check=kTRUE, Bool_t firstcross=kTRUE) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

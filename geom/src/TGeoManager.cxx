@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.66 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.67 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1904,7 +1904,7 @@ Double_t TGeoManager::Safety(Bool_t inside)
    }   
    Double_t point[3];
    Double_t local[3];
-   if (!inside) fSafety = TGeoShape::kBig;
+   if (!inside) fSafety = TGeoShape::Big();
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
 //      if (fSafety<0) {printf("%s (%f, %f, %f) kFALSE outside safe=%g\n", fTopVolume->GetName(), fPoint[0],fPoint[1],fPoint[2],fSafety); exit(1);}
@@ -2486,7 +2486,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 
    // convert current point and direction to local reference
    Int_t iact = 3;
-   fStep = TGeoShape::kBig;
+   fStep = TGeoShape::Big();
    *fCurrentMatrix = GetCurrentMatrix();
    fNextNode = 0;
    if (stepmax<1E20) {
@@ -2497,7 +2497,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          return fCurrentNode;
       }
    }   
-   Double_t snext  = TGeoShape::kBig;
+   Double_t snext  = TGeoShape::Big();
    Double_t safe;
    Double_t point[3];
    Double_t dir[3];
@@ -2968,7 +2968,7 @@ Bool_t TGeoManager::IsInPhiRange() const
    origin = ((TGeoBBox*)fCurrentNode->GetVolume()->GetShape())->GetOrigin();
    Double_t point[3];
    LocalToMaster(origin, &point[0]);
-   Double_t phi = TMath::ATan2(point[1], point[0])*TGeoShape::kRadDeg;
+   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
    if (phi<0) phi+=360.;
    if ((phi>=fPhimin) && (phi<=fPhimax)) return kFALSE;
    return kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.18 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.19 2003/02/18 15:37:36 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -497,14 +497,14 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
    //---> start from old slices
    memcpy(&dind[0], &fSlices[0], 3*sizeof(Int_t));
    Double_t dmin[3]; // distances to get to next X,Y, Z slices.
-   dmin[0] = dmin[1] = dmin[2] = TGeoShape::kBig;
+   dmin[0] = dmin[1] = dmin[2] = TGeoShape::Big();
    //---> max. possible step to be considered
    Double_t maxstep = TMath::Min(gGeoManager->GetStep(), fLimits[TMath::LocMin(3, fLimits)]);
 //   printf("1- maxstep=%g\n", maxstep);
    Bool_t isXlimit=kFALSE, isYlimit=kFALSE, isZlimit=kFALSE;
    Bool_t isForcedX=kFALSE, isForcedY=kFALSE, isForcedZ=kFALSE;
    Double_t dforced[3];
-   dforced[0] = dforced[1] = dforced[2] = TGeoShape::kBig;
+   dforced[0] = dforced[1] = dforced[2] = TGeoShape::Big();
    Int_t iforced = 0;
    //
    //---> work on X
@@ -1012,7 +1012,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
    memset(bits, 0, loc);
    memset(fInc, 0, 3*sizeof(Int_t));
    for (Int_t i=0; i<3; i++) {
-      fInvdir[i] = TGeoShape::kBig;
+      fInvdir[i] = TGeoShape::Big();
       if (TMath::Abs(dir[i])<1E-10) continue;
       fInc[i] = (dir[i]>0)?1:-1;
       fInvdir[i] = 1./dir[i];
@@ -1020,7 +1020,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
    Bool_t flag = GetIndices(point);
    TGeoBBox *box = (TGeoBBox*)(fVolume->GetShape());
    if (fInc[0]==0) {
-      fLimits[0] = TGeoShape::kBig;
+      fLimits[0] = TGeoShape::Big();
    } else {   
       if (fSlices[0]==-2) {
          // no slice on this axis -> get limit to bounding box limit
@@ -1034,7 +1034,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
       }
    }                
    if (fInc[1]==0) {
-      fLimits[1] = TGeoShape::kBig;
+      fLimits[1] = TGeoShape::Big();
    } else {   
       if (fSlices[1]==-2) {
          // no slice on this axis -> get limit to bounding box limit
@@ -1048,7 +1048,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
       }
    }                
    if (fInc[2]==0) {
-      fLimits[2] = TGeoShape::kBig;
+      fLimits[2] = TGeoShape::Big();
    } else {   
       if (fSlices[2]==-2) {
          // no slice on this axis -> get limit to bounding box limit
@@ -2174,11 +2174,11 @@ void TGeoCylVoxels::BuildVoxelLimits()
                      }      
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      xyz[3] = -xyz[3];
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      if (bcyl[2]<0) bcyl[2]+=360.;
                      while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
                   }   
@@ -2200,11 +2200,11 @@ void TGeoCylVoxels::BuildVoxelLimits()
                      }      
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      xyz[4] = -xyz[4];
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      if (bcyl[2]<0) bcyl[2]+=360.;
                      while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
                   } else {
@@ -2223,12 +2223,12 @@ void TGeoCylVoxels::BuildVoxelLimits()
                      }   
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi1: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[2] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      xyz[3] = -xyz[3];
                      xyz[4] = -xyz[4];
                      matrix->LocalToMaster(&xyz[3], &xyz[0]);
 //                     printf("  at phi2: %g %g\n", xyz[0], xyz[1]);
-                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TGeoShape::kRadDeg;
+                     bcyl[3] = TMath::ATan2(xyz[1], xyz[0])*TMath::RadToDeg();
                      if (bcyl[2]<0) bcyl[2]+=360.;
                      while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;   
                   }   
@@ -2249,11 +2249,11 @@ void TGeoCylVoxels::BuildVoxelLimits()
                   bcyl[0] = orig[1]-dy;
                   bcyl[0] *= bcyl[0];
                   if (y0>0) {
-                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[1]);   
-                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[0]);
+                     bcyl[2] = TMath::RadToDeg()*TMath::ATan2(xyz[2], xyz[1]);   
+                     bcyl[3] = TMath::RadToDeg()*TMath::ATan2(xyz[2], xyz[0]);
                   } else {    
-                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[0]);   
-                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[1]);
+                     bcyl[2] = TMath::RadToDeg()*TMath::ATan2(xyz[3], xyz[0]);   
+                     bcyl[3] = TMath::RadToDeg()*TMath::ATan2(xyz[3], xyz[1]);
                   }
                   if (bcyl[2]<0) bcyl[2]+=360.;
                   while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
@@ -2263,11 +2263,11 @@ void TGeoCylVoxels::BuildVoxelLimits()
                   bcyl[0] = orig[0]-dx;
                   bcyl[0] *= bcyl[0];
                   if (x0>0) {
-                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[0]);   
-                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[0]);
+                     bcyl[2] = TMath::RadToDeg()*TMath::ATan2(xyz[2], xyz[0]);   
+                     bcyl[3] = TMath::RadToDeg()*TMath::ATan2(xyz[3], xyz[0]);
                   } else {    
-                     bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3], xyz[1]);   
-                     bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[2], xyz[1]);
+                     bcyl[2] = TMath::RadToDeg()*TMath::ATan2(xyz[3], xyz[1]);   
+                     bcyl[3] = TMath::RadToDeg()*TMath::ATan2(xyz[2], xyz[1]);
                   }
                   if (bcyl[2]<0) bcyl[2]+=360.;
                   while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
@@ -2276,8 +2276,8 @@ void TGeoCylVoxels::BuildVoxelLimits()
                   Int_t indx, indy;
                   indy = (x0>0)?0:1;
                   indx = (y0>0)?1:0; 
-                  bcyl[2] = TGeoShape::kRadDeg*TMath::ATan2(xyz[indy+2], xyz[indx]);
-                  bcyl[3] = TGeoShape::kRadDeg*TMath::ATan2(xyz[3-indy], xyz[1-indx]);
+                  bcyl[2] = TMath::RadToDeg()*TMath::ATan2(xyz[indy+2], xyz[indx]);
+                  bcyl[3] = TMath::RadToDeg()*TMath::ATan2(xyz[3-indy], xyz[1-indx]);
                   if (bcyl[2]<0) bcyl[2]+=360.;
                   while (bcyl[3]<bcyl[2]) bcyl[3]+=360.;
                }
@@ -2395,7 +2395,7 @@ Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
    Double_t ptcyl[3];
    ptcyl[0] = point[0]*point[0]+point[1]*point[1];
    if (fPriority[1]) {
-      ptcyl[1] = TMath::ATan2(point[1], point[0])*TGeoShape::kRadDeg;
+      ptcyl[1] = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
       if (ptcyl[1]<0) ptcyl[1]+=360.;
    }   
    ptcyl[2] = point[2];

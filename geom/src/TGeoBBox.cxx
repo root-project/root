@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.22 2003/07/31 20:19:32 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.23 2003/08/21 10:17:15 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -251,8 +251,8 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (iact<3 && safe) {
    // compute safe distance
       *safe = saf[TMath::LocMin(6, &saf[0])];
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to surface
    Double_t s[3];
@@ -261,7 +261,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (dir[i]!=0) {
          s[i] = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
       } else {
-         s[i] = kBig;
+         s[i] = TGeoShape::Big();
       }
    }
    ipl = TMath::LocMin(3, s);
@@ -286,11 +286,11 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (iact<3 && safe) {
       // compute safe distance
       *safe = saf[TMath::LocMax(3, saf)];
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance from point to box
-   Double_t coord, snxt=kBig;
+   Double_t coord, snxt=TGeoShape::Big();
    Int_t ibreak=0;
    for (i=0; i<3; i++) {
       if (saf[i]<0) continue;
@@ -307,7 +307,7 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
       if (!ibreak) return snxt;
    }
-   return kBig;
+   return TGeoShape::Big();
 }
 
 //_____________________________________________________________________________
@@ -461,7 +461,7 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t safe = kBig;
+   Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t par[3];
    par[0] = fDX;

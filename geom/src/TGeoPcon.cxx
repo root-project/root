@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.23 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.24 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -136,14 +136,14 @@ void TGeoPcon::ComputeBBox()
    
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = rmax*TMath::Cos(phi1*kDegRad);
-   yc[0] = rmax*TMath::Sin(phi1*kDegRad);
-   xc[1] = rmax*TMath::Cos(phi2*kDegRad);
-   yc[1] = rmax*TMath::Sin(phi2*kDegRad);
-   xc[2] = rmin*TMath::Cos(phi1*kDegRad);
-   yc[2] = rmin*TMath::Sin(phi1*kDegRad);
-   xc[3] = rmin*TMath::Cos(phi2*kDegRad);
-   yc[3] = rmin*TMath::Sin(phi2*kDegRad);
+   xc[0] = rmax*TMath::Cos(phi1*TMath::DegToRad());
+   yc[0] = rmax*TMath::Sin(phi1*TMath::DegToRad());
+   xc[1] = rmax*TMath::Cos(phi2*TMath::DegToRad());
+   yc[1] = rmax*TMath::Sin(phi2*TMath::DegToRad());
+   xc[2] = rmin*TMath::Cos(phi1*TMath::DegToRad());
+   yc[2] = rmin*TMath::Sin(phi1*TMath::DegToRad());
+   xc[3] = rmin*TMath::Cos(phi2*TMath::DegToRad());
+   yc[3] = rmin*TMath::Sin(phi2*TMath::DegToRad());
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
@@ -224,8 +224,8 @@ void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       phi1 = fPhi1;
       if (phi1<0) phi1+=360;
       phi2 = phi1 + fDphi;
-      phi1 *= kDegRad;
-      phi2 *= kDegRad;
+      phi1 *= TMath::DegToRad();
+      phi2 *= TMath::DegToRad();
       c1 = TMath::Cos(phi1);
       s1 = TMath::Sin(phi1);
       c2 = TMath::Cos(phi2);
@@ -272,7 +272,7 @@ Bool_t TGeoPcon::Contains(Double_t *point) const
    // now check phi 
    if (fDphi==360) return kTRUE;
    if (r2<1E-10) return kTRUE;
-   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
+   Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
    if (phi < 0) phi+=360.0;
    Double_t ddp = phi-fPhi1;
    if (ddp<0) ddp+=360.;
@@ -295,10 +295,10 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 // compute distance from inside point to surface of the polycone
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
-      if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   Double_t snxt = kBig;
+   Double_t snxt = TGeoShape::Big();
    Double_t sstep = 1E-6;
    Double_t point_new[3];
    // determine which z segment contains the point
@@ -328,12 +328,12 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (phi1<0) phi1+=360.;
    Double_t phi2 = phi1+fDphi;
    Double_t phim = 0.5*(phi1+phi2);
-   Double_t c1 = TMath::Cos(phi1*kDegRad);
-   Double_t s1 = TMath::Sin(phi1*kDegRad);
-   Double_t c2 = TMath::Cos(phi2*kDegRad);
-   Double_t s2 = TMath::Sin(phi2*kDegRad);
-   Double_t cm = TMath::Cos(phim*kDegRad);
-   Double_t sm = TMath::Sin(phim*kDegRad);
+   Double_t c1 = TMath::Cos(phi1*TMath::DegToRad());
+   Double_t s1 = TMath::Sin(phi1*TMath::DegToRad());
+   Double_t c2 = TMath::Cos(phi2*TMath::DegToRad());
+   Double_t s2 = TMath::Sin(phi2*TMath::DegToRad());
+   Double_t cm = TMath::Cos(phim*TMath::DegToRad());
+   Double_t sm = TMath::Sin(phim*TMath::DegToRad());
    if (intub) {
       if (inphi) snxt=TGeoTubeSeg::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm); 
       else snxt=TGeoTube::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
@@ -357,10 +357,10 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t zmin=fZ[iz];
    Double_t zmax=fZ[iz+1];
    if (zmin==zmax) {
-      if (dir[2]==0) return kBig;
+      if (dir[2]==0) return TGeoShape::Big();
       Int_t istep=(dir[2]>0)?1:-1;
       iz+=istep;
-      if (iz<0 || iz>(fNz-2)) return kBig;
+      if (iz<0 || iz>(fNz-2)) return TGeoShape::Big();
       return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
    }
    Double_t dz=0.5*(zmax-zmin);
@@ -387,10 +387,10 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    }
    if (snxt<1E20) return snxt;
    // check next segment
-   if (dir[2]==0) return kBig;
+   if (dir[2]==0) return TGeoShape::Big();
    Int_t istep=(dir[2]>0)?1:-1;
    iz+=istep;
-   if (iz<0 || iz>(fNz-2)) return kBig;
+   if (iz<0 || iz>(fNz-2)) return TGeoShape::Big();
    return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
 }      
 
@@ -400,12 +400,12 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 // compute distance from outside point to surface of the tube
    if ((iact<3) && safe) {
       *safe = Safety(point, kFALSE);
-      if ((iact==1) && (*safe>step)) return kBig;
-      if (iact==0) return kBig;
+      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
+      if (iact==0) return TGeoShape::Big();
    }
    // check if ray intersect outscribed cylinder
-   if ((point[2]<fZ[0]) && (dir[2]<=0)) return kBig;
-   if ((point[2]>fZ[fNz-1]) && (dir[2]>=0)) return kBig;
+   if ((point[2]<fZ[0]) && (dir[2]<=0)) return TGeoShape::Big();
+   if ((point[2]>fZ[fNz-1]) && (dir[2]>=0)) return TGeoShape::Big();
 
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    Double_t radmax=0;
@@ -413,7 +413,7 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (r2>(radmax*radmax)) {
       Double_t rpr=-point[0]*dir[0]-point[1]*dir[1];
       Double_t nxy=dir[0]*dir[0]+dir[1]*dir[1];
-      if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) return kBig;
+      if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) return TGeoShape::Big();
    }
 
    // find in which Z segment we are
@@ -431,8 +431,8 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (inphi) {
       phi1=fPhi1;
       if (phi1<0) phi1+=360;
-      phi2=(phi1+fDphi)*kDegRad;
-      phi1=phi1*kDegRad;
+      phi2=(phi1+fDphi)*TMath::DegToRad();
+      phi1=phi1*TMath::DegToRad();
       phi=TMath::ATan2(point[1], point[0]);
       if (phi<0) phi+=2.*TMath::Pi();
       c1=TMath::Cos(phi1);
@@ -693,7 +693,7 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
 {
 // Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
 
-   Double_t safe = kBig;
+   Double_t safe = TGeoShape::Big();
    if (ipl<0 || ipl>fNz-2) return (safmin+1.); // error in input plane
 // Get info about segment.
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
@@ -702,7 +702,7 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
    memcpy(ptnew, point, 3*sizeof(Double_t));
    ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
    safe = TMath::Abs(ptnew[2])-dz;
-   if (safe>safmin) return kBig; // means: stop checking further segments
+   if (safe>safmin) return TGeoShape::Big(); // means: stop checking further segments
    Double_t rmin1 = fRmin[ipl];
    Double_t rmax1 = fRmax[ipl];
    Double_t rmin2 = fRmin[ipl+1];
@@ -742,7 +742,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       safmin = SafetyToSegment(point, ipl);
       if (safmin>1E10) {
          //  something went wrong - point is not inside current segment
-         return kBig;
+         return TGeoShape::Big();
       }
       if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
       // check increasing iplanes
@@ -823,14 +823,14 @@ void TGeoPcon::SetPoints(Double_t *buff) const
         {
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = fRmin[i] * TMath::Cos(phi);
                 buff[indx++] = fRmin[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = fRmax[i] * TMath::Cos(phi);
                 buff[indx++] = fRmax[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
@@ -854,14 +854,14 @@ void TGeoPcon::SetPoints(Float_t *buff) const
         {
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = fRmin[i] * TMath::Cos(phi);
                 buff[indx++] = fRmin[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
-                phi = (fPhi1+j*dphi)*kDegRad;
+                phi = (fPhi1+j*dphi)*TMath::DegToRad();
                 buff[indx++] = fRmax[i] * TMath::Cos(phi);
                 buff[indx++] = fRmax[i] * TMath::Sin(phi);
                 buff[indx++] = fZ[i];

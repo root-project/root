@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.13 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.14 2003/11/28 13:52:35 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -147,7 +147,7 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       Double_t d2=(x2-x0)*(x2-x0)+(y2-y0)*(y2-y0);
       Double_t x3,y3;
    
-      Double_t safr=kBig;
+      Double_t safr=TGeoShape::Big();
       Double_t safz = TMath::Min(safz1,safz2);
       for (Int_t i=0; i<8; i++) {
          if (fRmax<fRmin) {
@@ -169,12 +169,12 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       }
       safr=TMath::Sqrt(d1)-1.0E-3;   
       *safe = TMath::Min(safz, safr);
-      if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
    // compute distance to surface 
    // Do Z
-   Double_t snxt = kBig;
+   Double_t snxt = TGeoShape::Big();
    if (dir[2]>0) {
       snxt=safz1/dir[2];
    } else {
@@ -208,7 +208,7 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
-   Double_t snxt=kBig;
+   Double_t snxt=TGeoShape::Big();
    Double_t safz=TMath::Abs(point[2])-fDz;
    Double_t a2=fRmin*fRmin;
    Double_t b2=fRmax*fRmax;
@@ -234,18 +234,18 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       if (safz>0) {
          *safe=TMath::Sqrt((*safe)*(*safe)+safz*safz);
       } 
-      if (iact==0) return kBig;
-      if ((iact==1) && (step<*safe)) return kBig;
+      if (iact==0) return TGeoShape::Big();
+      if ((iact==1) && (step<*safe)) return TGeoShape::Big();
    }
    // compute vector distance
-   if ((safz>0) && (point[2]*dir[2]>=0)) return kBig;
+   if ((safz>0) && (point[2]*dir[2]>=0)) return TGeoShape::Big();
    Double_t zi;
    if (dir[2]!=0) {
       Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
       Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
       Double_t w=point[0]*point[0]*b2+point[1]*point[1]*a2-a2*b2;
       Double_t d=v*v-u*w;
-      if (d<0) return kBig;
+      if (d<0) return TGeoShape::Big();
       Double_t dsq=TMath::Sqrt(d);
       Double_t tau[2];
       tau[0]=(-v+dsq)/u;
@@ -259,7 +259,7 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
    }   
    // do z
-   zi=kBig;
+   zi=TGeoShape::Big();
    if (safz>0) {
       if (point[2]>0) zi=fDz;
       if (point[2]<0) zi=-fDz;     
@@ -334,7 +334,7 @@ Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
    Double_t y0 = TMath::Abs(point[1]);
    Double_t x1, y1, dx, dy;
    Double_t safr, safz;
-   safr = safz = kBig;
+   safr = safz = TGeoShape::Big();
    if (in) {
       x1 = fRmin*TMath::Sqrt(1.-(y0*y0)/(fRmax*fRmax));
       y1 = fRmax*TMath::Sqrt(1.-(x0*x0)/(fRmin*fRmin));
@@ -417,7 +417,7 @@ void TGeoEltu::SetPoints(Double_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = j*dphi*kDegRad;
+            phi = j*dphi*TMath::DegToRad();
             sph=TMath::Sin(phi);
             cph=TMath::Sin(phi);
             r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
@@ -463,7 +463,7 @@ void TGeoEltu::SetPoints(Float_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = j*dphi*kDegRad;
+            phi = j*dphi*TMath::DegToRad();
             sph=TMath::Sin(phi);
             cph=TMath::Cos(phi);
             r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
