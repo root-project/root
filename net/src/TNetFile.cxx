@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.10 2000/12/19 14:33:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.11 2001/01/07 15:30:11 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -119,6 +119,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    Int_t sec;
 
    fOffset = 0;
+   fCache  = 0;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -214,6 +215,7 @@ TNetFile::~TNetFile()
 
    Close();
    SafeDelete(fSocket);
+   SafeDelete(fCache);
 }
 
 //______________________________________________________________________________
@@ -245,6 +247,7 @@ void TNetFile::Close(Option_t *opt)
 
    if (!fSocket) return;
 
+   if (fCache && IsWritable()) fCache->Flush();
    TFile::Close(opt);
    fSocket->Send(kROOTD_CLOSE);
 }
@@ -310,6 +313,16 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
+   if (fCache) {
+      Int_t st;
+      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
+         Error("ReadBuffer", "error reading from cache");
+         return kTRUE;
+      }
+      if (st > 0)
+         return result;
+   }
+
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
@@ -364,6 +377,16 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
    if (!fSocket || !fWritable) return kTRUE;
 
    Bool_t result = kFALSE;
+
+   if (fCache) {
+      Int_t st;
+      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
+         Error("WriteBuffer", "error writing to cache");
+         return kTRUE;
+      }
+      if (st > 0)
+         return result;
+   }
 
    gSystem->IgnoreInterrupt();
 
@@ -437,4 +460,19 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
       break;
    }
+}
+
+//______________________________________________________________________________
+void TNetFile::UseCache(Int_t maxCacheSize, Int_t pageSize)
+{
+   // Activate caching. Use maxCacheSize to specify the maximum cache size
+   // in MB's (default is 10 MB) and pageSize to specify the page size
+   // (default is 512 KB).
+
+   if (fCache) {
+      if (IsWritable())
+         fCache->Flush();
+      delete fCache;
+   }
+   fCache = new TCache(maxCacheSize, this, pageSize);
 }
