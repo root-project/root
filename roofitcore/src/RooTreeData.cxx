@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.42 2002/04/12 19:06:22 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.43 2002/05/03 01:02:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -811,7 +811,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   RooAbsRealLValue* dataVar = (RooAbsRealLValue*) _vars.find(var->GetName()) ;
   Int_t nEnt(numEntries(kTRUE)) ;
   if (dataVar->getFitMin()<var->getFitMin() || dataVar->getFitMax()>var->getFitMax()) {
-    RooAbsData* tmp = reduce(*var) ;
+    RooAbsData* tmp = ((RooTreeData*)this)->reduce(*var) ;
     nEnt = tmp->numEntries(kTRUE) ;
     delete tmp ;
   }
