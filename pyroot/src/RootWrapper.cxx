@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.20 2005/03/16 06:15:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.21 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -372,8 +372,10 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef
       return 0;                    // error set in make ROOT class
 
 // instantiate an object of this class
+   PyObject* args = PyTuple_New(0);
    ObjectProxy* pyobj =
-      (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, NULL, NULL );
+      (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, args, NULL );
+   Py_DECREF( args );
    Py_DECREF( pyclass );
 
 // bind, register and return if successful
