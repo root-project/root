@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.18 2000/12/11 10:33:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.19 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -158,6 +158,19 @@ TClass::TClass(const char *name, Version_t cversion,
    fgClassCount++;
    SetUniqueID(fgClassCount);
 
+   //in case a class with the same name had been created by TStreamerInfo
+   //we must delete the old class, importing only the StreamerInfo structure
+   //from the old dummy class.
+   TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   if (oldcl) {
+      TStreamerInfo *info;
+      TIter next(oldcl->GetStreamerInfos());
+      while ((info = (TStreamerInfo*)next())) {
+         fStreamerInfo->Add(info);
+      }
+      oldcl->GetStreamerInfos()->Clear();
+      delete oldcl;
+   }
    gROOT->GetListOfClasses()->Add(this);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.16 2000/12/11 18:06:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.17 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -288,7 +288,8 @@ void TStreamerInfo::BuildCheck()
    if (fClass) {
       array = fClass->GetStreamerInfos();
       if (fClassVersion == fClass->GetClassVersion()) {
-         if (fCheckSum != fClass->GetCheckSum()) {
+         if (array->At(fClassVersion)) {SetBit(kCanDelete); return;}
+         if (fClass->GetListOfDataMembers() && (fCheckSum != fClass->GetCheckSum())) {
             printf("\nWARNING, class:%s StreamerInfo read from file:%s\n",GetName(),gFile->GetName());
             printf("        has the same version:%d than the active class\n",fClassVersion);
             printf("        but a different checksum.\n");
@@ -301,8 +302,7 @@ void TStreamerInfo::BuildCheck()
          }
       }
    } else {
-      fClass = new TClass(GetName(),fClassVersion);
-      array = fClass->GetStreamerInfos();
+      fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
       return; //can do better later, in particular one must support the case
               // when a shared lib is linked after opening a file containing
               // the classes

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.21 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.22 2000/12/14 09:11:25 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -632,8 +632,11 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (!GetListOfClasses()) return 0;
 
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
-   if (cl) return cl;
-
+   if (cl) {
+      if (cl->GetImplFileLine() >= 0) return cl;
+      //we may pass here in case of a dummy class created by TStreamerInfo
+      load = 1;
+   }
    TDataType *objType = gROOT->GetType(name,load);
    if (objType) {
      const Char_t *typdfName = objType->GetTypeName();
