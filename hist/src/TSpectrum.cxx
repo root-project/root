@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.7 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.8 2003/04/14 12:56:34 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2321,18 +2321,18 @@ stav1:
                                 if(a+nip<=0)
                                         a=1;
                                 else
-        		        	a=sqrtl(a+nip);
+        		        	a=sqrt(a+nip); //was a=sqrtl(a+nip);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sp=sp+b;
 			        a=spectrum[i-l+1]/maxch;
         			b=a-nim;
                                 if(a+nim<=0)
                                         a=1;
                                 else
-        			        a=sqrtl(a+nim);
+        			        a=sqrt(a+nim); //was a=sqrtl(a+nim);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sm=sm+b;
         		}
                         a=sp/sm;

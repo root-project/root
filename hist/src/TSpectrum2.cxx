@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.7 2001/06/22 16:10:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.1 2003/04/14 12:56:35 brun Exp $
 // Author: Miroslav Morhac   11/04/2003
 
 /////////////////////////////////////////////////////////////////////////////
@@ -6963,18 +6963,18 @@ ClassImp(TSpectrum2)
                                 if(a+nip<=0)
                                         a=1;
                                 else
-        		        	a=sqrtl(a+nip);
+        		        	a=sqrt(a+nip); //was a=sqrtl(a+nip);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sp=sp+b;
 			        a=source[i-l+1][ymin]/maxch;
         			b=a-nim;
                                 if(a+nim<=0)
                                         a=1;
                                 else
-        			        a=sqrtl(a+nim);
+        			        a=sqrt(a+nim); //was a=sqrtl(a+nim);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sm=sm+b;
         		}
                         a=sp/sm;
@@ -6991,18 +6991,18 @@ ClassImp(TSpectrum2)
                                 if(a+nip<=0)
                                         a=1;
                                 else
-        		        	a=sqrtl(a+nip);
+        		        	a=sqrt(a+nip); //was a=sqrtl(a+nip);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sp=sp+b;
 			        a=source[xmin][i-l+1]/maxch;
         			b=a-nim;
                                 if(a+nim<=0)
                                         a=1;
                                 else
-        			        a=sqrtl(a+nim);
+        			        a=sqrt(a+nim); //was a=sqrtl(a+nim);
         			b=b/a;
-	        		b=expl(b);
+	        		b=exp(b); //was b=expl(b);
 		        	sm=sm+b;
         		}
                         a=sp/sm;
@@ -7020,18 +7020,18 @@ ClassImp(TSpectrum2)
                                         if(a+nip<=0)
                                                 a=1;
                                         else
-                			        a=sqrtl(a+nip);
+                			        a=sqrt(a+nip); //was a=sqrtl(a+nip);
         	        		b=b/a;
-	        	        	b=expl(b);
+	        	        	b=exp(b); //was b=expl(b);
 		        	        spx=spx+b;
         			        a=source[i-l+1][j]/maxch;
                 			b=a-nim;
                                         if(a+nim<=0)
                                                 a=1;
                                         else
-        			                a=sqrtl(a+nim);
+        			                a=sqrt(a+nim); //was a=sqrtl(a+nim);
                 			b=b/a;
-	                		b=expl(b);
+	                		b=exp(b); //was b=expl(b);
 		                	smx=smx+b;
         		        }
         	        	spy=0,smy=0;
@@ -7043,18 +7043,18 @@ ClassImp(TSpectrum2)
                                         if(a+nip<=0)
                                                 a=1;
                                         else
-        			                a=sqrtl(a+nip);
+        			                a=sqrt(a+nip); //was a=sqrtl(a+nip);
                 			b=b/a;
-	                		b=expl(b);
+	                		b=exp(b); //was b=expl(b);
 		                	spy=spy+b;
 			                a=source[i][j-l+1]/maxch;
         			        b=a-nim;
                                         if(a+nim<=0)
                                                 a=1;
                                         else
-        		        	        a=sqrtl(a+nim);
+        		        	        a=sqrt(a+nim); //was a=sqrtl(a+nim);
         			        b=b/a;
-        	        		b=expl(b);
+        	        		b=exp(b); //was b=expl(b);
 	        	        	smy=smy+b;
         	        	}
                                 a=(spx*working_space[i][j+1]+spy*working_space[i+1][j])/(smx+smy);
