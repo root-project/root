@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.74 2001/12/18 14:01:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.75 2002/01/02 21:46:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -397,6 +397,21 @@ void TBranchElement::Browse(TBrowser *b)
       TString name = GetName();
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
+
+      TString mothername;
+      if (GetMother()) {
+         mothername = GetMother()->GetName();
+         pos = mothername.First('[');
+         if (pos!=kNPOS) mothername.Remove(pos);
+
+         Int_t len = mothername.Length();
+         if (len) {
+            if (mothername(len-1)!='.') {
+               mothername.Append(".");
+            }
+            name.Prepend(mothername);
+         }
+      }
 
       GetTree()->Draw(name);
       if (gPad) gPad->Update();
