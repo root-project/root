@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.19 2002/05/23 08:46:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.20 2002/05/31 17:16:11 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -448,6 +448,38 @@ Int_t TGraphAsymmErrors::RemovePoint()
 // Delete point close to the mouse position
 
    Int_t ipoint = TGraph::RemovePoint();
+   if (ipoint < 0) return ipoint;
+
+   Double_t *newEXlow  = new Double_t[fNpoints];
+   Double_t *newEYlow  = new Double_t[fNpoints];
+   Double_t *newEXhigh = new Double_t[fNpoints];
+   Double_t *newEYhigh = new Double_t[fNpoints];
+   Int_t i, j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newEXlow[j]  = fEXlow[i];
+      newEYlow[j]  = fEYlow[i];
+      newEXhigh[j] = fEXhigh[i];
+      newEYhigh[j] = fEYhigh[i];
+   }
+   delete [] fEXlow;
+   delete [] fEYlow;
+   delete [] fEXhigh;
+   delete [] fEYhigh;
+   fEXlow  = newEXlow;
+   fEYlow  = newEYlow;
+   fEXhigh = newEXhigh;
+   fEYhigh = newEYhigh;
+   return ipoint;
+}
+
+//______________________________________________________________________________
+Int_t TGraphAsymmErrors::RemovePoint(Int_t ipnt)
+{
+// Delete point number ipnt
+
+   Int_t ipoint = TGraph::RemovePoint(ipnt);
    if (ipoint < 0) return ipoint;
 
    Double_t *newEXlow  = new Double_t[fNpoints];

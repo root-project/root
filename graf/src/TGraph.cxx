@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.68 2002/05/14 14:02:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.69 2002/05/31 15:22:01 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2851,6 +2851,32 @@ Int_t TGraph::RemovePoint()
    Double_t *newY = new Double_t[fNpoints];
    Int_t j = -1;
    for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newX[j] = fX[i];
+      newY[j] = fY[i];
+   }
+   delete [] fX;
+   delete [] fY;
+   fX = newX;
+   fY = newY;
+   gPad->Modified();
+   return ipoint;
+}
+
+//______________________________________________________________________________
+Int_t TGraph::RemovePoint(Int_t ipoint)
+{
+// Delete point number ipoint
+
+   if (ipoint < 0) return -1;
+   if (ipoint >= fNpoints) return -1;
+   
+   fNpoints--;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   Int_t j = -1;
+   for (Int_t i=0;i<fNpoints+1;i++) {
       if (i == ipoint) continue;
       j++;
       newX[j] = fX[i];

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.24 2002/05/23 08:46:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.25 2002/05/31 17:16:11 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -420,6 +420,30 @@ Int_t TGraphErrors::RemovePoint()
 // Delete point close to the mouse position
 
    Int_t ipoint = TGraph::RemovePoint();
+   if (ipoint < 0) return ipoint;
+
+   Double_t *newEX = new Double_t[fNpoints];
+   Double_t *newEY = new Double_t[fNpoints];
+   Int_t i, j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newEX[j] = fEX[i];
+      newEY[j] = fEY[i];
+   }
+   delete [] fEX;
+   delete [] fEY;
+   fEX = newEX;
+   fEY = newEY;
+   return ipoint;
+}
+
+//______________________________________________________________________________
+Int_t TGraphErrors::RemovePoint(Int_t ipnt)
+{
+// Delete point number ipnt
+
+   Int_t ipoint = TGraph::RemovePoint(ipnt);
    if (ipoint < 0) return ipoint;
 
    Double_t *newEX = new Double_t[fNpoints];
