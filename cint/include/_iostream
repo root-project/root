@@ -102,8 +102,8 @@ std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
 // Value evaluation
 //template<class T> int G__ateval(const T* x) {return(0);}
 template<class T> int G__ateval(const T& x) {return(0);}
-int G__ateval(const char* x) {return(0);}
-int G__ateval(const void* x) {return(0);}
+int G__ateval(const char* const &x) {return(0);}
+int G__ateval(const void* const &x) {return(0);}
 int G__ateval(double x) {return(0);}
 int G__ateval(float x) {return(0);}
 int G__ateval(char x) {return(0);}

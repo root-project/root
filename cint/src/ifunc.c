@@ -3837,6 +3837,7 @@ int formal_isconst;
 #define G__CVCONVMATCH    0x00000001
 #define G__BASECONVMATCH  0x00000001
 #define G__C2P2FCONVMATCH 0x00000001
+#define G__I02PCONVMATCH  0x00000002
 #define G__V2P2FCONVMATCH 0x00000002
 #define G__TOVOIDPMATCH   0x00000003
 
@@ -3929,6 +3930,36 @@ int basetagnum,derivedtagnum;
   return(G__NOMATCH);
 }
 
+#ifndef G__OLDIMPLEMENTATION1959
+/***********************************************************************
+* int G__promotiongrade()
+**********************************************************************/
+#define G__promotiongrade(f,p) G__PROMOTIONMATCH*(G__igrd(f)-G__igrd(p))
+
+static int G__igrd(formal_type,param_type)
+int formal_type;
+int param_type;
+{
+  switch(formal_type) {
+  case 'g': 
+    return(1);
+  case 'b':
+  case 'c':
+    return(2);
+  case 'r':
+  case 's':
+    return(3);
+  case 'h':
+  case 'i':
+    return(4);
+  case 'k':
+  case 'l':
+    return(5);
+  }
+  return(0);
+}
+#endif
+
 #ifndef __CINT__
 #ifndef G__OLDIMPLEMENTATION1928
 struct G__ifunc_table* G__overload_match G__P((char* funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int memfunc_flag,int access,int *pifn,int recursive,int doconvert)) ;
@@ -4008,7 +4039,11 @@ int recursive;
     }
 #ifndef G__OLDIMPLEMENTATION1319
     else if(isupper(formal_type)&&'i'==param_type&&0==libp->para[i].obj.i) {
+#ifndef G__OLDIMPLEMENTATION1956
+      funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
+#else
       funclist->p_rate[i] = G__STDCONVMATCH;
+#endif
     }
 #endif
     
@@ -4018,6 +4053,7 @@ int recursive;
       case 'd': 
       case 'f':
 	switch(param_type) {
+#ifdef G__OLDIMPLEMENTATION1954 /* integral to floating is a conversion */
 	case 'b':
 	case 'c':
 	case 'r':
@@ -4027,10 +4063,11 @@ int recursive;
 	case 'k':
 	case 'l':
 	case 'd':
-	case 'f':
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#endif /* 1954 */
+	case 'f':
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
 	  break;
 	default:
@@ -4050,7 +4087,11 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	default:
 	break;
@@ -4069,13 +4110,17 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	case 'u':
 	  if('e'==G__struct.type[param_tagnum]) {
 	    funclist->p_rate[i] = G__PROMOTIONMATCH;
-	    break;
 	  }
+	  break;
 	default:
 	  break;
 	}
@@ -4093,7 +4138,11 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	default:
 	  break;
@@ -4112,7 +4161,11 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	default:
 	  break;
@@ -4131,7 +4184,11 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	default:
 	  break;
@@ -4150,7 +4207,11 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
 #endif
+#ifndef G__OLDIMPLEMENTATION1959
+	  funclist->p_rate[i] = G__promotiongrade(formal_type,param_type);
+#else
 	  funclist->p_rate[i] = G__PROMOTIONMATCH;
+#endif
 	  break;
 	default:
 	  break;
@@ -4249,7 +4310,12 @@ int recursive;
 	case 'i':
 	case 'l':
 #ifndef G__OLDIMPLEMENTATION839
-	  if(0==libp->para[i].obj.i) funclist->p_rate[i] = G__STDCONVMATCH;
+	  if(0==libp->para[i].obj.i) 
+#ifndef G__OLDIMPLEMENTATION1956
+	    funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
+#else
+	    funclist->p_rate[i] = G__STDCONVMATCH;
+#endif
 	  break;
 #endif
 	case 'Y':
@@ -5779,11 +5845,16 @@ int doconvert;
       ambiguous = 0;
     }
     else if(func->rate==bestmatch && bestmatch!=G__NOMATCH) {
+#ifdef G__OLDIMPLEMENTATION1953
       match = func;
+#endif
 #ifndef G__OLDIMPLEMENTATION1445
       if(0==G__identical_function(match,func)) ++ambiguous;
 #else
       ++ambiguous;
+#endif
+#ifndef G__OLDIMPLEMENTATION1953
+      match = func;
 #endif
     }
     func = func->prev;

@@ -23,7 +23,11 @@ using namespace std;
 
 #pragma link C++ class string;
 #pragma link C++ typedef string::value_type;
+#if (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+#pragma link C++ class string::iterator;
+#else
 #pragma link C++ typedef string::iterator;
+#endif
 #pragma link C++ typedef string::const_iterator;
 #pragma link C++ typedef string::pointer;
 #pragma link C++ typedef string::const_pointer;

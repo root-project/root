@@ -7972,6 +7972,24 @@ int globalcomp;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1955
+/**************************************************************************
+* G__linknestedtypedef() 
+**************************************************************************/
+static void G__linknestedtypedef(tagnum,globalcomp)
+int tagnum;
+int globalcomp;
+{
+  int i;
+  for(i=0;i<G__newtype.alltype;i++) {
+    if (G__newtype.parent_tagnum[i] == -1) continue;
+    if (G__newtype.parent_tagnum[i]==tagnum) {
+      G__newtype.globalcomp[i] = globalcomp;
+    }
+  }
+}
+#endif
+
 /**************************************************************************
 * G__specify_link()
 *
@@ -8277,6 +8295,10 @@ int link_stub;
 	  ++done;
 #endif
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
+#if  !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
+	  else if (G__NOLINK>G__nestedtypedef)
+	    G__linknestedtypedef(i,globalcomp);
+#endif
 	}
       }
       regfree(&re);
@@ -8298,6 +8320,10 @@ int link_stub;
 	  ++done;
 #endif
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
+#if  !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
+	  else if (G__NOLINK>G__nestedtypedef) 
+	    G__linknestedtypedef(i,globalcomp);
+#endif
 	}
       }
       free(re);
@@ -8321,6 +8347,10 @@ int link_stub;
 #endif
 	  /*G__fprinterr(G__serr,"#pragma link changed %s\n",G__struct.name[i]);*/
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
+#if  !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
+	  else if (G__NOLINK>G__nestedtypedef) 
+	    G__linknestedtypedef(i,globalcomp);
+#endif
 	}
       }
 #endif /* G__REGEXP */
@@ -8362,6 +8392,10 @@ int link_stub;
 	++done;
 #endif
 	if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
+#if  !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
+	else if (G__NOLINK>G__nestedtypedef) 
+	  G__linknestedtypedef(i,globalcomp);
+#endif
 #ifdef G__ROOTSPECIAL
 	G__struct.rootflag[i] = 0;
 	if (rf1 == 1) G__struct.rootflag[i] = G__NOSTREAMER;

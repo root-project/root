@@ -27,7 +27,8 @@ using namespace std;
 #pragma link C++ class vector<long>;
 #pragma link C++ class vector<float>;
 #pragma link C++ class vector<double>;
-#if (G__GNUC<3 || G__GNUC_MINOR<1) && !defined(G__KCC)
+//#if (G__GNUC<3 || G__GNUC_MINOR<1) && !defined(G__KCC)
+#if (!(G__GNUC==3 && G__GNUC_MINOR==1)) && !defined(G__KCC)
 // gcc3.1,3.2 has a problem with iterator<void*,...,void&>
 #pragma link C++ class vector<void*>;
 #endif
