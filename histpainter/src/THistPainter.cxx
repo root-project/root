@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.108 2002/11/22 10:07:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.109 2002/11/27 08:20:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2761,8 +2761,8 @@ void THistPainter::PaintHist(Option_t *)
       if (htype == 0 || htype == 1000) htype = 1001;
    }
 
-   //Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetAbsHNDC() + 0.5);
-   Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetWh()/800. + 0.5);
+   //Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetWh()/800. + 0.5);
+   Width_t lw = (Width_t)fH->GetLineWidth();
 
 //         Code option for GrapHist
 
