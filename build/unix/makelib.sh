@@ -5,6 +5,16 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+if [ "$1" = "-v" ] ; then
+   MAJOR=$2
+   MINOR=$3
+   REVIS=$4
+   shift
+   shift
+   shift
+   shift
+fi
+
 PLATFORM=$1
 LD=$2
 LDFLAGS=$3
@@ -68,13 +78,24 @@ elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA
 else
-   echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
-   $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
+   if [ "x$MAJOR" = "x" ] ; then
+      echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
+      $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
+   else
+      echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA
+      $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS \
+         -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA
+   fi
 fi
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
    exit $linkstat
+fi
+
+if [ "x$MAJOR" != "x" ] && [ -f $LIB.$MAJOR.$MINOR ]; then
+   ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
+   ln -fs $SONAME.$MAJOR        $LIB
 fi
 
 if [ $PLATFORM = "hpux" ]; then

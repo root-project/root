@@ -66,6 +66,7 @@ confhelp() {
     echo "   pythia          Pythia5 EG support, requires libPythia"
     echo "   pythia6         Pythia6 EG support, requires libPythia6"
     echo "   venus           Venus EG support, requires libVenus"
+    echo "   soversion       Set version number in sonames"
     echo "with options, prefix with --with-, enables corresponding support"
     echo "   xpm-libdir      XPM support, path to libXpm"
     echo "   thread-libdir   Thread support, path to libpthread"
@@ -178,6 +179,8 @@ if [ $# -gt 0 ]; then
       --disable-pythia6)      enable_pythia6=no     ;;
       --enable-venus)         enable_venus=yes      ;;
       --disable-venus)        enable_venus=no       ;;
+      --enable-soversion)     enable_soversion=yes  ;;
+      --disable-soversion)    enable_soversion=no   ;;
       ################################################################
       #
       # Build steering option
@@ -209,12 +212,17 @@ fi
 
 ######################################################################
 #
-# STAR Library (Contributed library)
+# Sonames contain version numbers?
 #
-if [ "x$enable_star" = "xyes" -o "$STAR" ]; then
-    enable_star="1"
-else
-    enable_star=""
+if [ "x$enable_soversion" = "xyes" ]; then
+    major=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number`
+    minor=`sed 's|.*\.\(.*\)/.*|\1|' < build/version_number`
+    revis=`sed 's|.*\..*/\(.*\)|\1|' < build/version_number`
+
+    mkliboption="-v $major $minor $revis "
+    unset major
+    unset minor
+    unset revis
 fi
 
 ######################################################################
@@ -413,14 +421,14 @@ if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
     unset ttffonts
 
     # Give up if none of the above found
-    if [ "x$ttflibdir" = "xno" -o \
-         "x$ttfincdir" = "xno" -o \
+    if [ "x$ttflibdir"  = "xno" -o \
+         "x$ttfincdir"  = "xno" -o \
          "x$ttffontdir" = "xno" ]; then
-         enable_ttf="no"
-         unset ttflibdir
-         unset ttflib
-         unset ttfincdir
-         unset ttffontdir
+        enable_ttf="no"
+        unset ttflibdir
+        unset ttflib
+        unset ttfincdir
+        unset ttffontdir
     else
         if [ "x$enable_shared" = "xno" ]; then
             ttflib=${ttflibdir}/${ttflib}
@@ -997,6 +1005,16 @@ if [ "x$enable_afs" = "xyes" ]; then
     fi
 fi
 
+######################################################################
+#
+# STAR Library (Contributed library)
+#
+if [ "x$enable_star" = "xyes" -o "$STAR" ]; then
+    enable_star="1"
+    echo "Building libStar ... yes"
+else
+    enable_star=""
+fi
 
 ######################################################################
 #
@@ -1043,7 +1061,7 @@ if [ -n "$haveconfig" ]; then
     if [ -z "$libdir" ];       then libdir=$prefix/lib/root; fi
     if [ -z "$incdir" ];       then incdir=$prefix/include/root; fi
     if [ -z "$etcdir" ];       then etcdir=/etc/root; fi
-    if [ -z "$etcdir" ];       then mandir=$prefix/share/man/man1; fi
+    if [ -z "$mandir" ];       then mandir=$prefix/share/man/man1; fi
     if [ -z "$datadir" ];      then datadir=$prefix/share/root; fi
     if [ -z "$proofdir" ];     then proofdir=$datadir/proof; fi
     if [ -z "$macrodir" ];     then macrodir=$datadir/macros; fi
@@ -1077,6 +1095,8 @@ else
     incdir=\$\(ROOTSYS\)/include
     etcdir=\$\(ROOTSYS\)
     datadir=\$\(ROOTSYS\)
+    mandir=\$\(ROOTSYS\)/man
+    proofdir=\$\(ROOTSYS\)/proof
     macrodir=\$\(ROOTSYS\)/macros
     cintincdir=\$\(ROOTSYS\)/cint
     iconpath=\$\(ROOTSYS\)/icons
@@ -1102,6 +1122,7 @@ fi
 echo $ac_n "Writing $MAKEOUT ... $ac_c"
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@rootbuild@|$rootbuild|"         \
+    -e "s|@mkliboption@|$mkliboption|"     \
     -e "s|@ldflags@|-L$libdir|"            \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@libdir@|$libdir|"               \

@@ -3,6 +3,7 @@
 ARCH           := @architecture@
 @rootbuild@
 USECONFIG      := @useconfig@
+MKLIBOPTIONS   := @mkliboption@
 
 EXTRA_CFLAGS   := -Iinclude @cflags@
 EXTRA_CXXFLAGS := -Iinclude @cflags@
