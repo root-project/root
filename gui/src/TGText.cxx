@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.9 2000/08/11 14:49:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.10 2000/08/11 15:04:14 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -375,7 +375,7 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
 //______________________________________________________________________________
 Bool_t TGText::LoadBuffer(const char *txtbuf)
 {
-   // Load a 0 terminated buffer. Lines will be split a '\n'.
+   // Load a 0 terminated buffer. Lines will be split at '\n'.
 
    Bool_t      isFirst = kTRUE;
    Bool_t      finished = kFALSE, lastnl = kFALSE;
@@ -642,6 +642,7 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    // Returns false in case of failure (start_src, end_src out of range for
    // src, and ins_pos out of range for this).
 
+   /*
    if ((start_src.fY < 0) || (start_src.fY >= src->RowCount()) ||
        (end_src.fY < 0)   || (end_src.fY >= src->RowCount()))
       return kFALSE;
@@ -651,6 +652,9 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    if ((ins_pos.fY < 0) || (ins_pos.fY > fRowCount))
       return kFALSE;
    if ((ins_pos.fX < 0) || (ins_pos.fX > GetLineLength(ins_pos.fY)))
+      return kFALSE;
+   */
+   if (ins_pos.fY > fRowCount)
       return kFALSE;
 
    TGLongPosition pos;
