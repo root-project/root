@@ -1344,6 +1344,10 @@ int G__update_stdio()
   return(0);
 }
 
+#ifdef G__WIN32 /*vo*/
+static HANDLE handleout;
+#endif
+
 /******************************************************************
 * G__redirectoutput
 ******************************************************************/
@@ -1469,6 +1473,11 @@ char *pipefile;
 	 *   cint> command > filename
 	 *                ^0          */
 	*redirect='\0';
+
+#ifdef G__WIN32 /*vo*/
+   handleout = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+
 	/* open redirect file */
 #ifdef G__REDIRECTIO
 	switch(mode) {
@@ -1476,10 +1485,8 @@ char *pipefile;
 	  *psout = G__sout;
 #ifndef G__WIN32
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
-     G__sout = freopen(filename,openmode,G__sout);
-#else
-     G__sout = fopen(filename,openmode);
 #endif
+	  G__sout = freopen(filename,openmode,G__sout);
 
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
@@ -1492,10 +1499,8 @@ char *pipefile;
 	  *pserr = G__serr;
 #ifndef G__WIN32
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
-     G__serr = freopen(filename,openmode,G__serr);
-#else
-	  G__serr = fopen(filename,openmode);
 #endif
+	  G__serr = freopen(filename,openmode,G__serr);
 	  /*DEBUG G__dumpfile = G__serr; */
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcerr(filename);
@@ -1508,13 +1513,9 @@ char *pipefile;
 #ifndef G__WIN32
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
-	  G__sout = freopen(filename,openmode,G__sout);
-     G__serr = freopen(filename,"a",G__serr);
-#else
-     G__sout = fopen(filename,openmode);
-     G__serr = fopen(filename,"a");
 #endif
-
+	  G__sout = freopen(filename,openmode,G__sout);
+	  G__serr = freopen(filename,"a",G__serr);
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
 	  G__redirectcerr(filename);
@@ -1674,6 +1675,9 @@ char *pipefile;
     G__display_keyword(G__sout,keyword,pipefile);
 #endif
   }
+#ifdef G__WIN32 /*vo*/
+  SetStdHandle(STD_OUTPUT_HANDLE, handleout);
+#endif
 }
 #endif
 
