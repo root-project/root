@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.24 2003/11/10 14:05:01 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.25 2003/11/13 15:15:11 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -257,10 +257,13 @@ krb5_keytab gKeytab = 0;        // to allow specifying on the command line
 krb5_context gKcontext;
 #endif
 
+
 #ifdef R__GLBS
 int gShmIdCred = -1;            // global, to pass the shm ID to proofserv
 gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
 #endif
+
+} //namespace ROOT
 
 // Masks for authentication methods
 const int kAUTH_CLR_MSK = 0x1;
@@ -269,6 +272,7 @@ const int kAUTH_KRB_MSK = 0x4;
 const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
+namespace ROOT {
 //______________________________________________________________________________
 static int rpdstrncasecmp(const char *str1, const char *str2, int n)
 {
@@ -1101,11 +1105,6 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                    theDaemonRc, GetErrno());
          return retval;
       }
-      // Get IP of the host in form of a string
-      char *IP = RpdGetIP(Host);
-      if (gDebug > 2)
-         ErrorInfo("RpdCheckAuthAllow: Host: %s --> IP: %s", Host, IP);
-
       // Now read the entry
       char line[kMAXPATHLEN], host[kMAXPATHLEN], rest[kMAXPATHLEN],
           cmth[kMAXPATHLEN];
@@ -1151,57 +1150,8 @@ int RpdCheckAuthAllow(int Sec, char *Host)
 
             if (strcmp(host, "default")) {
                // now check validity of 'host' format
-               // Try first to understand whether it is an address or a name ...
-               int name = 0, namew = 0, nd = 0, nn = 0, nnmx = 0, nnmi =
-                   strlen(host);
-               for (i = 0; i < (int) strlen(host); i++) {
-                  if (host[i] == '.') {
-                     nd++;
-                     if (nn > nnmx)
-                        nnmx = nn;
-                     if (nn < nnmi)
-                        nnmi = nn;
-                     nn = 0;
-                     continue;
-                  }
-                  int j = (int) host[i];
-                  if (j < 48 | j > 57)
-                     name = 1;
-                  if (host[i] == '*') {
-                     namew = 1;
-                     if (nd > 0)
-                        goto next;
-                  }
-                  nn++;
-               }
-               // Act accordingly ...
-               if (name == 0) {
-                  if (nd < 4) {
-                     if (strlen(host) < 16) {
-                        if (nnmx < 4) {
-                           if (nd == 3 || host[strlen(host) - 1] == '.') {
-                              char *sp = strstr(IP, host);
-                              if (sp == 0 || sp != IP)
-                                 goto next;
-
-                           }
-                        }
-                     }
-                  }
-               } else {
-                  if (namew == 0) {
-                     if (nd > 0) {
-                        if (nd > 1 || nnmi > 0) {
-                           char *sp = strstr(Host, host);
-                           if (sp == 0 || (sp != Host &&
-                               sp != (Host+strlen(Host)-strlen(host))))
-                              goto next;
-                        }
-                     }
-                  } else {
-                     if (RpdCheckHostWild(Host, host))
-                        goto next;
-                  }
+               if (!RpdCheckHost(Host,host)) {
+                  goto next;
                }
             } else {
                // This is a default entry: ignore it if a host-specific entry was already
@@ -1391,9 +1341,6 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       // closing file ...
       fclose(ftab);
 
-      // Free allocated memory
-      if (IP) delete[] IP;
-
       // Use defaults if nothing found
       if (!found) {
          if (gDebug > 2)
@@ -1435,78 +1382,85 @@ int RpdCheckAuthAllow(int Sec, char *Host)
 }
 
 //______________________________________________________________________________
-int RpdCheckHostWild(const char *Host, const char *host)
+int RpdCheckHost(const char *Host, const char *host)
 {
    // Checks if 'host' is compatible with 'Host' taking into account
-   // wild cards in the machine name (first field of FQDN) ...
-   // Returns 0 if successful, 1 otherwise ...
+   // wild cards in the host name
+   // Returns 1 if successful, 0 otherwise ...
 
-   int rc = 0;
-   char *fH, *sH, *dum, *sp, *k;
-   int i, j, lmax;
+   int rc = 1;
 
-   if (gDebug > 2)
-      ErrorInfo("RpdCheckHostWild: analyzing Host:%s host:%s", Host, host);
+   // Strings must be both defined
+   if (!Host || !host)
+      return 0;
 
-   // Max length for dinamic allocation
-   lmax = strlen(Host) > strlen(host) ? strlen(Host) : strlen(host);
+   // If host is a just wild card accept it
+   if (!strcmp(host,"*"))
+      return 1;
 
-   // allocate
-   fH = new char[lmax];
-   sH = new char[lmax];
-   dum = new char[lmax];
-
-   // Determine 'Host' first field (the name) ...
-   for (i = 0; i < (int) strlen(Host); i++) {
-      if (Host[i] == '.')
-         break;
-   }
-   strncpy(fH, Host, i);
-   fH[i] = '\0';
-   // ... and also the second one (the domain)
-   strcpy(sH, Host + i);
-   if (gDebug > 2)
-      ErrorInfo("RpdCheckHostWild: fH:%s sH:%s", fH, sH);
-
-   // Now check the first field ...
-   j = 0;
-   k = fH;
+   // Try now to understand whether it is an address or a name ...
+   int name = 0, i = 0;
    for (i = 0; i < (int) strlen(host); i++) {
-      if (host[i] == '.')
+      if ((host[i] < 48 || host[i] > 57) &&
+           host[i] != '*' && host[i] != '.') {
+         name = 1;
          break;
-      if (host[i] == '*') {
-         if (i > 0) {
-            // this is the part of name before the '*' ....
-            strncpy(dum, host + j, i - j);
-            dum[i - j] = '\0';
-            if (gDebug > 2)
-               ErrorInfo("RpdCheckHostild: k:%s dum:%s", k, dum);
-            sp = strstr(k, dum);
-            if (sp == 0) {
-               rc = 1;
-               goto exit;
-            }
-            j = i + 1;
-            k = sp + strlen(dum) + 1;
-         } else
-            j++;
       }
    }
-   // Now check the domain name (if the name matches ...)
-   if (rc == 0) {
-      strcpy(dum, host + i);
+
+   // If ref host is an IP, get IP of Host
+   char *H;
+   if (!name) {
+      H = RpdGetIP(Host);
       if (gDebug > 2)
-         ErrorInfo("RpdCheckHostild: sH:%s dum:%s", sH, dum);
-      sp = strstr(sH, dum);
-      if (sp == 0)
-         rc = 1;
+         ErrorInfo("RpdCheckHost: Checking Host IP: %s", H);
+   } else {
+      H = new char[strlen(Host)+1];
+      strcpy(H,Host);
+      if (gDebug > 2)
+         ErrorInfo("RpdCheckHost: Checking Host name: %s", H);
    }
 
- exit:
-   // Release allocated memory ...
-   if (fH) delete[] fH;
-   if (sH) delete[] sH;
-   if (dum) delete[] dum;
+   // Check if starts with wild
+   // Starting with '.' defines a full (sub)domain
+   int sos = 0;
+   if (host[0] == '*' || host[0] == '.')
+      sos = 1;
+
+   // Check if ends with wild
+   // Ending with '.' defines a name
+   int eos = 0, le = strlen(host);
+   if (host[le-1] == '*' || host[le-1] == '.')
+      eos = 1;
+
+   int first= 1;
+   int ends= 0;
+   int starts= 0;
+   char *h = new char[strlen(host)+1];
+   strcpy(h,host);
+   char *tk = strtok(h,"*");
+   while (tk) {
+
+      char *ps = strstr(H,tk);
+      if (!ps) {
+         rc = 0;
+         break;
+      }
+      if (!sos && first && ps == H)
+         starts = 1;
+      first = 0;
+
+      if (ps == H + strlen(H) - strlen(tk))
+         ends = 1;
+
+      tk = strtok(0,"*");
+
+   }
+   if (h) delete[] h;
+   if (H) delete[] H;
+
+   if ((!sos || !eos) && !starts && !ends)
+      rc = 0;
 
    return rc;
 }

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.8 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.9 2003/11/13 15:15:11 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -147,7 +147,7 @@ int  RpdCleanupAuthTab(char *Host, int RemId);
 int  RpdCheckAuthTab(int Sec, char *User, char *Host,int RemId, int *OffSet);
 bool RpdReUseAuth(const char *sstr, int kind);
 int  RpdCheckAuthAllow(int Sec, char *Host);
-int  RpdCheckHostWild(const char *Host, const char *host);
+int  RpdCheckHost(const char *Host, const char *host);
 char *RpdGetIP(const char *host);
 void RpdSendAuthList();
 void RpdCheckSession();
