@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.15 2001/06/05 16:42:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.16 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -145,8 +145,9 @@ protected:
 
    static Time_t      GetLastClick();
 
-
    virtual void  *GetSender() { return this; }  //used to set gTQSender
+   virtual void   Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
+                                  UInt_t w, UInt_t h);
    virtual void   DoRedraw();
 
 public:
@@ -210,15 +211,20 @@ public:
    virtual void    DrawCopy(Handle_t id,Int_t x, Int_t y) { }
    virtual void    Activate(Bool_t a) {}
    virtual Bool_t  IsActive() const { return kFALSE; }
+   virtual Bool_t  IsComposite() const { return kFALSE; }
 
    virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
 
    UInt_t GetWidth() const { return fWidth; }
    UInt_t GetHeight() const { return fHeight; }
    TGDimension GetSize() const { return TGDimension(fWidth, fHeight); }
-   Int_t GetX() const { return fX; }
-   Int_t GetY() const { return fY; }
-   Int_t GetBorderWidth() const { return fBorderWidth; }
+   Int_t  GetX() const { return fX; }
+   Int_t  GetY() const { return fY; }
+   Int_t  GetBorderWidth() const { return fBorderWidth; }
+   Bool_t Contains(Int_t x, Int_t y) const
+      { return ((x >= 0) && (x < (Int_t)fWidth) && (y >= 0) && (y < (Int_t)fHeight)); }
+   virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y)
+      { return (Contains(x, y) ? this : 0); }
 
    // Modifiers (without graphic update)
    void SetWidth(UInt_t w) { fWidth = w; }
@@ -257,6 +263,7 @@ public:
                     ULong_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGCompositeFrame();
+   virtual void Cleanup();
 
    virtual UInt_t GetDefaultWidth() const
                  { return GetDefaultSize().fWidth; }
@@ -264,6 +271,9 @@ public:
                  { return GetDefaultSize().fHeight; }
    virtual TGDimension GetDefaultSize() const
                  { return fLayoutManager->GetDefaultSize(); }
+   virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y);
+   virtual Bool_t TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
+                                       Int_t &fx, Int_t &fy);
 
    virtual void   MapSubwindows();
    virtual void   Layout();
@@ -289,6 +299,7 @@ public:
    Bool_t IsVisible(TGFrameElement *ptr) const { return (ptr->fState & kIsVisible); }
    Bool_t IsArranged(TGFrame *f) const;
    Bool_t IsArranged(TGFrameElement *ptr) const { return (ptr->fState & kIsArranged); }
+   Bool_t IsComposite() const { return kTRUE; }
    TList *GetList() { return fList; }
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)

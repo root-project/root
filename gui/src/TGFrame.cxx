@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.15 2002/06/09 23:39:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.16 2002/08/08 02:12:15 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -182,53 +182,61 @@ void TGFrame::RemoveInput(UInt_t emask)
    gVirtualX->SelectInput(fId, fEventMask);
 }
 
-//______________________________________________________________________________
-void TGFrame::DrawBorder()
+//________________________________________________________________________________
+void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
+                                     UInt_t w, UInt_t h)
 {
-   // Draw frame border.
-
-   switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
+   switch (type) {
       case kSunkenFrame:
-         gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x+w-2, y);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x,     y+h-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y+h-1, x+w-1, y+h-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x+w-1, y+h-1, x+w-1, y);
          break;
 
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgBlackGC(),  0, 0, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBlackGC(),  0, 0, 0, fHeight-1);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgShadowGC(), 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x+w-2, y);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x,     y+h-2);
+         gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+w-3, y+1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+1,   y+h-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC(), 1, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 1);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  2, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y+h-1, x+w-1, y+h-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x+w-1, y+h-1, x+w-1, y);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+w-2, y+1,   x+w-2, y+h-2);
          break;
 
       case kRaisedFrame:
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x+w-2, y);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x,     y+h-2);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y+h-1, x+w-1, y+h-1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x+w-1, y+h-1, x+w-1, y);
          break;
 
       case kRaisedFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x+w-2, y);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x,     y+h-2);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+w-3, y+1);
+         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+1,   y+h-3);
 
-         gVirtualX->DrawLine(fId, fgShadowGC(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, fHeight-2, fWidth-2, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC(),   0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  x+w-2, y+h-2, x+w-2, y+1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(),   x,     y+h-1, x+w-1, y+h-1);
+         gVirtualX->DrawLine(fId, GetBlackGC()(),   x+w-1, y+h-1, x+w-1, y);
          break;
 
       default:
          break;
    }
+}
+
+//______________________________________________________________________________
+void TGFrame::DrawBorder()
+{
+   // Draw frame border.
+
+   Draw3dRectangle(fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder),
+                   0, 0, fWidth, fHeight);
 }
 
 //______________________________________________________________________________
@@ -509,6 +517,26 @@ TGCompositeFrame::~TGCompositeFrame()
 }
 
 //______________________________________________________________________________
+void TGCompositeFrame::Cleanup()
+{
+   // Cleanup and delete all objects contained in this composite frame.
+   // This will delete all objects added via AddFrame().
+   // CAUTION: all objects (frames and layouthints) must be unique, i.e.
+   // cannot be shared.
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      delete el->fFrame;
+      delete el->fLayout;
+   }
+   fList->Delete();
+}
+
+//______________________________________________________________________________
 void TGCompositeFrame::SetLayoutManager(TGLayoutManager *l)
 {
    // Set the layout manager for the composite frame.
@@ -684,6 +712,63 @@ void TGCompositeFrame::Layout()
    // Layout the elements of the composite frame.
 
    fLayoutManager->Layout();
+}
+
+//______________________________________________________________________________
+TGFrame *TGCompositeFrame::GetFrameFromPoint(Int_t x, Int_t y)
+{
+   // Get frame located at specified point.
+
+   if (!Contains(x, y)) return 0;
+
+   if (!fList) return this;
+
+   TGFrame *f;
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      //if (el->fFrame->IsVisible()) { //for this need to move IsVisible to TGFrame
+      if (el->fState & kIsVisible) {
+         f = el->fFrame->GetFrameFromPoint(x - el->fFrame->GetX(),
+                                           y - el->fFrame->GetY());
+         if (f) return f;
+      }
+   }
+   return this;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
+                                              Int_t &fx, Int_t &fy)
+{
+   // Translate coordinates to child frame.
+
+   if (child == this) {
+      fx = x;
+      fy = y;
+      return kTRUE;
+   }
+
+   if (!Contains(x, y)) return kFALSE;
+
+   if (!fList) return kFALSE;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      if (el->fFrame == child) {
+         fx = x - el->fFrame->GetX();
+         fy = y - el->fFrame->GetY();
+         return kTRUE;
+      } else if (el->fFrame->IsComposite()) {
+         if (((TGCompositeFrame *)el->fFrame)->TranslateCoordinates(child,
+              x - el->fFrame->GetX(), y - el->fFrame->GetY(), fx, fy))
+            return kTRUE;
+      }
+   }
+   return kFALSE;
 }
 
 
