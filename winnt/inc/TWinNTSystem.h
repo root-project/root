@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.28 2004/02/19 19:08:26 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.29 2004/03/04 09:04:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -71,13 +71,11 @@ class TWin32Timer;
 class TWinNTSystem : public TSystem {
 
 private:
-
    struct group     *fGroups;           // Groups on local computer
    struct passwd    *fPasswords;        // Users on local computer
    int               fNbUsers;          // Number of users on local computer
    int               fNbGroups;         // Number of groups on local computer
    int               fActUser;          // Index of actual user in User list
-
 
    HANDLE            fhProcess;         // Handle of the current process
    HANDLE            fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
@@ -86,15 +84,15 @@ private:
    TWin32Timer      *fWin32Timer;       // Windows -asynch timer
    HIMAGELIST        fhSmallIconList;   // List of the small icons
    HIMAGELIST        fhNormalIconList;  // List of the normal icons
-   const char       *fShellName;        // the name of the "shell" file to pool the icons
-   void              CreateIcons();     // Create a list of the icons for ROOT appl
+   const char       *fShellName;        // The name of the "shell" file to pool the icons
 
+   void              CreateIcons();     // Create a list of the icons for ROOT appl
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            DispatchSynchTimers();
    Bool_t            CheckDescriptors();
    Bool_t            CheckSignals(Bool_t sync);
-
    Bool_t            CountMembers(const char *lpszGroupName);
+   const char       *GetLinkedLibraries();
    Bool_t            GetNbGroups();
    Long_t            LookupSID (const char *lpszAccountName, int what, int &groupIdx, int &memberIdx);
    Bool_t            CollectMembers(const char *lpszGroupName, int &groupIdx, int &memberIdx);
@@ -102,12 +100,12 @@ private:
 
 public:
    TWinNTSystem();
-   ~TWinNTSystem();
+   virtual ~TWinNTSystem();
 
    //---- non-TSystem methods ----------------------------------
-   HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
-   HICON   GetSmallIcon(Int_t IconIdx) { return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
-   HICON   GetNormalIcon(Int_t IconIdx){ return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
+   HIMAGELIST        GetSmallIconList() { return fhSmallIconList; }
+   HICON             GetSmallIcon(Int_t IconIdx) { return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
+   HICON             GetNormalIcon(Int_t IconIdx){ return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
    HIMAGELIST        GetNormalIconList(){ return fhNormalIconList; }
    HANDLE            GetProcess();
    const char        *GetShellName() {return fShellName;}

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.87 2004/05/05 08:59:52 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.88 2004/05/10 12:10:09 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -34,11 +34,11 @@
 #include "TApplication.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
-
 #include "TWin32HookViaThread.h"
 #include "TWin32Timer.h"
 #include "TGWin32Command.h"
 #include "TInterpreter.h"
+#include "TObjString.h"
 
 #include <sys/utime.h>
 #include <process.h>
@@ -2794,6 +2794,66 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
    }
    return name;
 }
+
+//______________________________________________________________________________
+const char *TWinNTSystem::GetLinkedLibraries()
+{
+   // Get list of shared libraries loaded at the start of the executable.
+   // Returns 0 in case list cannot be obtained or in case of error.
+
+   if (!gApplication) return 0;
+
+   static Bool_t once = kFALSE;
+   static TString linkedLibs;
+
+   if (!linkedLibs.IsNull())
+      return linkedLibs;
+
+   if (once)
+      return 0;
+
+   char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
+                              kExecutePermission);
+   if (!exe) {
+      once = kTRUE;
+      return 0;
+   }
+
+   FILE *p = OpenPipe(Form("objdump -p %s", exe), "r");
+   TString odump;
+   while (odump.Gets(p)) {
+      if (odump.Contains("DLL Name:")) {
+         TString delim(" :\t");
+         TObjArray *tok = odump.Tokenize(delim);
+
+         TObjString *dllName = (TObjString*)tok->At(2);
+         if (dllName) {
+            TString dll = dllName->String();
+            if (dll.EndsWith(".dll")) {
+               char *dllPath = DynamicPathName(dll, kTRUE);
+               if (dllPath) {
+                  if (!linkedLibs.IsNull())
+                     linkedLibs += " ";
+                  linkedLibs += dllPath;
+               }
+               delete [] dllPath;
+            }
+         }
+         delete tok;
+      }
+   }
+   ClosePipe(p);
+
+   delete [] exe;
+
+   once = kTRUE;
+
+   if (linkedLibs.IsNull())
+      return 0;
+
+   return linkedLibs;
+}
+
 
 //______________________________________________________________________________
 const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
