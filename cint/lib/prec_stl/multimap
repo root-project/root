@@ -76,7 +76,7 @@ class multimap {
 
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)
 	class const_iterator
-		: public _Bidit<value_type,difference_typ,  const_pointer, const_reference>
+		: public _Bidit<value_type, difference_type,  const_pointer, const_reference>
 	{	// iterator for nonmutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
