@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.20 2000/10/13 19:01:55 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.21 2000/11/02 08:38:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -135,7 +135,7 @@ TPad::TPad(): TVirtualPad()
    fPhi        = 30;
    fNumber     = 0;
    fAbsCoord   = kFALSE;
-   fIsEditable = kTRUE;
+   fEditable   = kTRUE;
    fCrosshair  = 0;
    fCrosshairPos = 0;
    fPadView3D  = 0;
@@ -212,7 +212,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
    fNumber     = 0;
    fAbsCoord   = kFALSE;
-   fIsEditable = kTRUE;
+   fEditable   = kTRUE;
    fPadView3D  = 0;
    fCrosshair  = 0;
    fCrosshairPos = 0;
@@ -2231,6 +2231,17 @@ TObject *TPad::GetPrimitive(const char *name)
 }
 
 //______________________________________________________________________________
+void TPad::GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup)
+{
+//*-*-*-*-*-*-*-*Return lower and upper bounds of the pad in NDC coordinates
+//*-*            ===========================================================
+  xlow = fXlowNDC;
+  ylow = fYlowNDC;
+  xup  = fXlowNDC+fWNDC;
+  yup  = fYlowNDC+fHNDC;
+}
+
+//______________________________________________________________________________
 void TPad::GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2)
 {
 //*-*-*-*-*-*-*-*Return pad world coordinates range*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -3825,7 +3836,7 @@ void TPad::SetEditable(Bool_t mode)
    // If a pad is not editable, one cannot modify the pad and its objects
    // via the mouse.
 
-   fIsEditable = mode;
+   fEditable = mode;
 
    TObject *obj;
    TIter    next(GetListOfPrimitives());
@@ -4012,6 +4023,28 @@ void TPad::Streamer(TBuffer &b)
    TObject *obj;
    if (b.IsReading()) {
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v > 5) {
+         if (!gPad) gPad = new TCanvas(GetName());
+         if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
+         else                fMother = (TPad*)gPad;
+         if (!fMother) fMother = (TPad*)gPad;
+         if (fMother)  fCanvas = fMother->GetCanvas();
+         gPad      = fMother;
+         fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
+         readLevel++;
+         gROOT->SetReadingObject(kTRUE);
+         
+         TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
+
+         fModified = kTRUE;
+         fPadPointer = 0;
+         readLevel--;
+         if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
+         gROOT->SetReadingObject(kFALSE);
+         return;
+      }
+      
+      //====process old versions before automatic schema evolution
       if (v < 5) {   //old TPad in single precision
          if (v < 3) {   //old TPad derived from TWbox
             b.ReadVersion();   //      TVirtualPad::Streamer(b)
@@ -4173,78 +4206,10 @@ void TPad::Streamer(TBuffer &b)
       }
       if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
       b.CheckByteCount(R__s, R__c, TPad::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TPad::IsA(), kTRUE);
-      TVirtualPad::Streamer(b);
-      TAttPad::Streamer(b);
-      b << fX1;
-      b << fY1;
-      b << fX2;
-      b << fY2;
-      b << fBorderSize;
-      b << fBorderMode;
-      b << fLogx;
-      b << fLogy;
-      b << fLogz;
-      b << fXtoAbsPixelk;
-      b << fXtoPixelk;
-      b << fXtoPixel;
-      b << fYtoAbsPixelk;
-      b << fYtoPixelk;
-      b << fYtoPixel;
-      b << fUtoAbsPixelk;
-      b << fUtoPixelk;
-      b << fUtoPixel;
-      b << fVtoAbsPixelk;
-      b << fVtoPixelk;
-      b << fVtoPixel;
-      b << fAbsPixeltoXk;
-      b << fPixeltoXk;
-      b << fPixeltoX;
-      b << fAbsPixeltoYk;
-      b << fPixeltoYk;
-      b << fPixeltoY;
-      b << fXlowNDC;
-      b << fYlowNDC;
-      b << fWNDC;
-      b << fHNDC;
-      b << fAbsXlowNDC;
-      b << fAbsYlowNDC;
-      b << fAbsWNDC;
-      b << fAbsHNDC;
-      b << fUxmin;
-      b << fUymin;
-      b << fUxmax;
-      b << fUymax;
-//-------------------------
-// save objects in pad and their drawing option
-// This should be done automatically by TList::Streamer
-//      b << fPrimitives;
-      nobjects = fPrimitives->GetSize();
-      b << nobjects;
-      TIter next(fPrimitives);
-      while ((obj = next())) {
-         b << obj;
-         nch = 1 + strlen(next.GetOption());
-         b << nch;
-         if (nch) b.WriteFastArray(next.GetOption(),nch);
-      }
-//-------------------------
-      b << fExecs;
-      fName.Streamer(b);
-      fTitle.Streamer(b);
-      b << fPadPaint;
-      b << fGridx;
-      b << fGridy;
-      b << fFrame;
-      b << fView;
-      b << fTheta;
-      b << fPhi;
-      b << fNumber;
-      b << fAbsCoord;
-      b << fTickx;
-      b << fTicky;
-      b.SetByteCount(R__c, kTRUE);
+      TPad::Class()->WriteBuffer(b,this);
    }
 }
 
