@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.6 2000/12/19 15:27:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.7 2001/03/09 17:47:05 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -343,6 +343,7 @@ TString ToLower(const TString&);    // Return lower-case version of argument
 TString ToUpper(const TString&);    // Return upper-case version of argument
 inline  unsigned Hash(const TString& s) { return s.Hash(); }
 inline  unsigned Hash(const TString *s) { return s->Hash(); }
+        unsigned Hash(const char *s);
 
 extern char *Form(const char *fmt, ...);     // format in circular buffer
 extern void  Printf(const char *fmt, ...);   // format and print

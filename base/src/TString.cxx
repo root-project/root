@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.8 2000/12/10 10:55:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.9 2001/03/09 18:11:38 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -135,6 +135,30 @@ inline static void Mash(unsigned& hash, unsigned chars)
    hash = (chars ^
          ((hash << kHashShift) |
           (hash >> (kBitsPerByte*sizeof(unsigned) - kHashShift))));
+}
+
+//______________________________________________________________________________
+unsigned Hash(const char *str)
+{
+   // Return a case-sensitive hash value.
+
+   unsigned len      = strlen(str);
+   unsigned hv       = len; // Mix in the string length.
+   unsigned i        = hv*sizeof(char)/sizeof(unsigned);
+   const unsigned* p = (const unsigned*)str;
+   {
+      while (i--)
+         Mash(hv, *p++);                   // XOR in the characters.
+   }
+   // XOR in any remaining characters:
+   if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
+      unsigned h = 0;
+      const char* c = (const char*)p;
+      while (i--)
+         h = ((h << kBitsPerByte*sizeof(char)) | *c++);
+      Mash(hv, h);
+   }
+   return hv;
 }
 
 //______________________________________________________________________________
@@ -734,7 +758,7 @@ TString* TString::ReadString(TBuffer &b, const TClass *clReq)
    // Read TString object from buffer. Simplified version of
    // TBuffer::ReadObject (does not keep track of multiple
    // references to same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant 
+   // because TBuffer::ReadObject can only handle descendant
    // of TObject
 
    Assert(b.IsReading());
@@ -818,7 +842,7 @@ void TString::WriteString(TBuffer &b, const TString *a)
    // Write TString object to buffer. Simplified version of
    // TBuffer::WriteObject (does not keep track of multiple
    // references to the same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant 
+   // because TBuffer::ReadObject can only handle descendant
    // of TObject
 
    Assert(b.IsWriting());
