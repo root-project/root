@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.13 2001/08/03 14:07:07 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.14 2001/10/25 19:18:40 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -272,7 +272,8 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = 10;
-   fWindows = new XWindow_t[fMaxNumberOfWindows];
+   //fWindows = new XWindow_t[fMaxNumberOfWindows];
+   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
 
@@ -307,7 +308,8 @@ TGX11::TGX11(const TGX11 &org)
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
-   fWindows = new XWindow_t[fMaxNumberOfWindows];
+   //fWindows = new XWindow_t[fMaxNumberOfWindows];
+   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open          = org.fWindows[i].open;
       fWindows[i].double_buffer = org.fWindows[i].double_buffer;
@@ -351,7 +353,7 @@ TGX11::~TGX11()
    // Destructor.
 
    delete fXEvent;
-   if (fWindows) delete [] fWindows;
+   if (fWindows) ::operator delete(fWindows);
 
    Long_t     key, value;
    TExMapIter it(fColors);
@@ -2552,7 +2554,7 @@ void TGX11::SetOpacity(Int_t percent)
    }
    if (ncolors == 0) {
       XDestroyImage(image);
-      delete [] orgcolors;
+      ::operator delete(orgcolors);
       return;
    }
 
@@ -2580,7 +2582,7 @@ void TGX11::SetOpacity(Int_t percent)
       delete [] tmpc;
    }
    XDestroyImage(image);
-   delete [] orgcolors;
+   ::operator delete(orgcolors);
 }
 
 //______________________________________________________________________________
@@ -2592,7 +2594,7 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
    if (maxcolors == 0) {
       ncolors   = 0;
       maxcolors = 100;
-      orgcolors = new ULong_t[maxcolors];
+      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
    }
 
    for (int i = 0; i < ncolors; i++)
@@ -3004,7 +3006,7 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 
    // cleanup
    delete [] xcol;
-   delete [] orgcolors;
+   ::operator delete(orgcolors);
 }
 
 //______________________________________________________________________________
