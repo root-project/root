@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.93 2001/10/14 15:47:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.94 2001/10/16 09:12:06 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -338,20 +338,19 @@ void TStreamerInfo::BuildCheck()
    TObjArray *array;
    if (fClass) {
       array = fClass->GetStreamerInfos();
-      if (fClassVersion == fClass->GetClassVersion()) {
-         TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
-         if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
-         if (fClass->GetListOfDataMembers() && (fCheckSum != fClass->GetCheckSum())) {
+      TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
+      if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
+      if (fClass->GetListOfDataMembers() 
+         && (fClassVersion == fClass->GetClassVersion()) 
+         && (fCheckSum != fClass->GetCheckSum())) {
             printf("\nWARNING, class:%s StreamerInfo read from file:%s\n",GetName(),gDirectory->GetFile()->GetName());
             printf("        has the same version:%d than the active class\n",fClassVersion);
             printf("        but a different checksum.\n");
             printf("        You should update the version to ClassDef(%s,%d).\n",GetName(),fClassVersion+1);
             printf("        Do not try to write objects with the current class definition,\n");
             printf("        the files will not be readable.\n\n");
-            //array->RemoveAt(fClassVersion);
-         } else {
-            if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
-         }
+      } else {
+         if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
       }
    } else {
       fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
