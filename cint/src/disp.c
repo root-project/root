@@ -147,7 +147,11 @@ char* msg;
 #endif
     
 #else
+#ifndef G__OLDIMPLEMENTATION1759
   fprintf(fp,msg);
+#else
+  fprintf(fp,"%s",msg);
+#endif
 #endif
   if(strchr(msg,'\n')) {
     return(G__more_pause(fp,strlen(msg)));
