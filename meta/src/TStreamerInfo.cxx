@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.124 2002/03/27 21:09:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.125 2002/04/01 17:19:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1695,12 +1695,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    for (Int_t i=first;i<last;i++) {
       TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
       fgElement = aElement;
-//#ifdef DEBUG
       if (gDebug > 1) {
          printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),aElement->GetName(),i,fType[i],aElement->ClassName(),b.Length(),(Long_t)pointer, fOffset[i]);
       }
-//#endif
-      switch (fType[i]) {
+      Int_t kase = fType[i];
+SWIT: switch (kase) {
          // read basic types
          case kChar:              ReadBasicType(Char_t)
          case kShort:             ReadBasicType(Short_t)
@@ -1821,6 +1820,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          break;
                         }
         case kOffsetL + kObject:  {
+                         TFile *file = (TFile*)b.GetParent();
+                         if (file && file->GetVersion() < 30208) {kase = kStreamer; goto SWIT;} 
                          TClass *cl = aElement->GetClassPointer();
                          if (cl->GetClassInfo()) {
                             Int_t size = cl->Size();
@@ -2173,7 +2174,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, offset=%d,  %s, bufpos=%d, nc=%d\n",fClass->GetName(),aElement->GetName(),i,fType[i],offset,aElement->ClassName(),b.Length(),nc);
       }
       switch (fType[i]) {
-         // write basic types
+         // read basic types
          case kChar:              ReadCBasicType(Char_t)
          case kShort:             ReadCBasicType(Short_t)
          case kInt:               ReadCBasicType(Int_t)
@@ -2185,7 +2186,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kUInt:              ReadCBasicType(UInt_t)
          case kULong:             ReadCBasicType(ULong_t)
 
-         // write array of basic types  array[8]
+         // read array of basic types  array[8]
          case kOffsetL + kChar:   ReadCBasicArray(Char_t)
          case kOffsetL + kShort:  ReadCBasicArray(Short_t)
          case kOffsetL + kInt:    ReadCBasicArray(Int_t)
@@ -2197,7 +2198,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetL + kUInt:   ReadCBasicArray(UInt_t)
          case kOffsetL + kULong:  ReadCBasicArray(ULong_t)
 
-         // write pointer to an array of basic types  array[n]
+         // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   ReadCBasicPointer(Char_t)
          case kOffsetP + kShort:  ReadCBasicPointer(Short_t)
          case kOffsetP + kInt:    ReadCBasicPointer(Int_t)
