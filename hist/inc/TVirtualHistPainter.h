@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.5 2002/07/15 10:46:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.6 2002/07/16 13:59:19 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
    virtual TObjArray *GetStack() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
+   virtual void       ProcessMessage(const char *mess, const TObject *obj) = 0;
    virtual void       SetHistogram(TH1 *h) = 0;
    virtual void       SetStack(TObjArray *stack) = 0;
 
