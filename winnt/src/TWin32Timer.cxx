@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name$:$Id$
+// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>
@@ -120,7 +120,7 @@ static unsigned int _stdcall ROOT_TimerLoop(void *threadcmd)
   {
      if (EventLoopStop = (!(erret=GetMessage(&msg,NULL,0,0)) || erret == -1))
                                                                    continue;
-     if (msg.hwnd == NULL & (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD))
+     if (msg.hwnd == NULL && (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD))
            if (TWin32HookViaThread::ExecuteEvent(&msg, msg.message==ROOT_SYNCH_CMD)) continue;
 
      TranslateMessage(&msg);
