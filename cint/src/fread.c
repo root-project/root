@@ -2136,7 +2136,6 @@ char *endmark;
   int c,prev;
   short nest=0,single_quote=0,double_quote=0,flag=0;
   
-  
   do {
     c=G__fgetc() ;
     
@@ -2833,7 +2832,11 @@ char *string,*endmark;
     if(ignoreflag==0) {
       string[i++] = c ;
 #ifndef G__OLDIMPLEMENTATION1331
+#ifndef G__OLDIMPLEMENTATION2029
       G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,{string[i]='\0';return(EOF);});
+#else
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
 #endif
     }
     

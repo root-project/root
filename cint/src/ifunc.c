@@ -919,6 +919,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
   G__func_page=G__p_ifunc->page;
   func_now = G__func_now;
 
+#ifndef G__OLDIMPLEMENTATION2027
+  if('~'==funcheader[0] && 0==ifunc->hash[0]) {
+    G__p_ifunc=ifunc;
+    G__func_now=0;
+    G__func_page=ifunc->page;
+    func_now = G__func_now;
+  }
+#endif
 
   if('*'==funcheader[0]) {
     if('*'==funcheader[1]) {
@@ -1405,7 +1413,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
   if(G__p_ifunc->ansi[func_now]==1) {
 #endif
     
-    if(isvoid) {
+    if(isvoid
+#ifndef G__OLDIMPLEMENTATION2027
+       || '~'==funcheader[0]
+#endif
+       ) {
       G__p_ifunc->para_nu[func_now]=0;
       G__p_ifunc->para_def[func_now][0]=(char*)NULL;
       G__p_ifunc->para_default[func_now][0]=(G__value*)NULL;
@@ -2039,6 +2051,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	     * in function argument. Do not know exactly why... */
 	    && (store_ifunc_tmp==G__p_ifunc && func_now==G__p_ifunc->allifunc) 
 #endif
+#endif
+#ifndef G__OLDIMPLEMENTATION2027
+	    && '~'!=funcheader[0]
 #endif
 	    ) {
 #ifndef G__OLDIMPLEMENTATION1706

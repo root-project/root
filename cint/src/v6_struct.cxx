@@ -1001,6 +1001,17 @@ int type;
       }
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION2027
+    G__struct.memfunc[i]->hash[0]=0;
+    G__struct.memfunc[i]->funcname[0]=(char*)malloc(2);
+    G__struct.memfunc[i]->funcname[0][0]=0;
+    G__struct.memfunc[i]->para_nu[0]=0;
+    G__struct.memfunc[i]->pentry[0] = &G__struct.memfunc[i]->entry[0];
+    G__struct.memfunc[i]->pentry[0]->bytecode=(struct G__bytecodefunc*)NULL;
+    G__struct.memfunc[i]->friendtag[0]=(struct G__friendtag*)NULL;
+
+    G__struct.memfunc[i]->allifunc = 1;
+#endif
 
     /***********************************************************
      * Allocate and initialize class inheritance table
@@ -2134,6 +2145,112 @@ char type;
 
 }
 
+#ifndef G__OLDIMPLEMENTATION2030
+/******************************************************************
+ * G__callanyfunc()
+ ******************************************************************/
+int G__callfunc0(result,ifunc,ifn,libp,p)
+G__value *result;
+struct G__ifunc_table *ifunc;
+int ifn;
+struct G__param* libp;
+void* p;
+{
+  int stat=0;
+  long store_struct_offset;
+
+  if(!ifunc->hash[ifn] || !ifunc->pentry[ifn]) {
+    /* The function is not defined or masked */
+    *result = G__null;
+    return(stat);
+  }
+
+  store_struct_offset = G__store_struct_offset;
+  G__store_struct_offset = (long)p;
+
+#ifdef G__EXCEPTIONWRAPPER
+  if(-1==ifunc->pentry[ifn]->size) {
+    /* compiled function. should be stub */
+    G__InterfaceMethod pfunc = (G__InterfaceMethod)ifunc->pentry[ifn]->tp2f;
+    stat=G__ExceptionWrapper(pfunc,result,(char*)NULL,libp,1);
+  }
+  else if(G__BYTECODE_SUCCESS==ifunc->pentry[ifn]->bytecodestatus) {
+    /* bytecode function */
+    struct G__bytecodefunc *pbc = ifunc->pentry[ifn]->bytecode;
+    stat=G__ExceptionWrapper(G__exec_bytecode,result,(char*)pbc,libp,1);
+  }
+  else {
+    /* interpreted function */
+    /* stat=G__ExceptionWrapper(G__interpret_func,result,ifunc->funcname[ifn]
+       ,libp,ifunc->hash[ifn]);  this was wrong! */
+    stat=G__interpret_func(result,ifunc->funcname[ifn],libp,ifunc->hash[ifn]
+			   ,ifunc,G__EXACT,G__TRYDESTRUCTOR);
+  }
+#else
+  if(-1==ifunc->pentry[ifn]->size) {
+    /* compiled function. should be stub */
+    G__InterfaceMethod pfunc = (G__InterfaceMethod)ifunc->pentry[ifn]->tp2f;
+    stat=(*pfunc)(result,(char*)NULL,libp,1);
+  }
+  else if(G__BYTECODE_SUCCESS==ifunc->pentry[ifn]->bytecodestatus) {
+    /* bytecode function */
+    struct G__bytecodefunc *pbc = ifunc->pentry[ifn]->bytecode;
+    stat=G__exec_bytecode(result,(char*)pbc,libp,1);
+  }
+  else {
+    /* interpreted function */
+    stat=G__interpret_func(result,ifunc->funcname[ifn],libp,ifunc->hash[ifn]
+			   ,ifunc,G__EXACT,G__TRYDESTRUCTOR);
+  }
+#endif
+
+  G__store_struct_offset = store_struct_offset;
+
+  return(stat);
+}
+
+/******************************************************************
+ * G__calldtor
+ ******************************************************************/
+int G__calldtor(p,tagnum,isheap)
+void* p;
+int tagnum;
+int isheap;
+{
+  int stat;
+  G__value result;
+  struct G__ifunc_table *ifunc;
+  struct G__param para;
+  int ifn=0;
+  long store_gvp;
+
+  if(-1==tagnum) return(0);
+
+  /* destructor must be the first function in the table. -> 2027 */
+  ifunc = G__struct.memfunc[tagnum];
+
+  store_gvp = G__getgvp();
+  if(isheap) {
+    /* p is deleted either with free() or delete */
+    G__setgvp(G__PVOID);
+  }
+  else {
+    /* In callfunc0, G__store_sturct_offset is also set to p.
+     * Let G__operator_delete() return without doing nothing */
+    G__setgvp((long)p);
+  }
+
+  /* call destructor */
+  para.paran=0;
+  para.parameter[0][0]=0;
+  para.para[0] = G__null;
+  stat = G__callfunc0(&result,ifunc,ifn,&para,p);
+
+  G__setgvp(store_gvp);
+
+  return(stat);
+}
+#endif
 
 /*
  * Local Variables:

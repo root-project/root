@@ -52,6 +52,7 @@ using namespace std;
 #pragma link C++ function operator+(const string&,const string&);
 #endif
 
+//#if G__ROOT
 #pragma link C++ function operator<(const char*,const string&);
 #pragma link C++ function operator>(const char*,const string&);
 #pragma link C++ function operator==(const char*,const string&);
@@ -67,6 +68,7 @@ using namespace std;
 #pragma link C++ function operator<=(const string&,const char*);
 #pragma link C++ function operator>=(const string&,const char*);
 #pragma link C++ function operator+(const string&,const char*);
+//#endif // G__ROOT
 
 #endif // __MAKECINT__
 

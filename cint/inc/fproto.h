@@ -822,6 +822,11 @@ int G__GetShlFilenum G__P(());
 int G__loadfile_tmpfile G__P((FILE *fp));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2030
+int G__callfunc0 G__P((G__value *result,struct G__ifunc_table *ifunc,int ifn,struct G__param* libp,void* p));
+int G__calldtor G__P((void* p,int tagnum,int isheap));
+#endif
+
 #ifdef __cplusplus
 }
 #endif

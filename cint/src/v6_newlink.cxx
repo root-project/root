@@ -7314,10 +7314,17 @@ G__incsetup setup_memfunc;
     G__struct.incsetup_memvar[tagnum] = setup_memvar;
   else
     G__struct.incsetup_memvar[tagnum] = 0;
-  if(0==G__struct.memfunc[tagnum]->allifunc 
+  if(
+#ifndef G__OLDIMPLEMENTATION2027
+     1==G__struct.memfunc[tagnum]->allifunc 
+#else
+     0==G__struct.memfunc[tagnum]->allifunc 
+#endif
      || 'n'==G__struct.type[tagnum]
      || (
-#ifndef G__OLDIMPLEMENTATION2012
+#if !defined(G__OLDIMPLEMENTATION2027)
+	 -1!=G__struct.memfunc[tagnum]->pentry[1]->size
+#elif !defined(G__OLDIMPLEMENTATION2012)
 	 -1!=G__struct.memfunc[tagnum]->pentry[0]->size
 #else
 	 -1!=G__struct.memfunc[tagnum]->pentry[0]->filenum
@@ -7618,7 +7625,23 @@ int isvirtual;
 #endif
 {
 #ifndef G__SMALLOBJECT
+#ifndef G__OLDIMPLEMENTATION2027
+  int store_func_now;
+  struct G__ifunc_table *store_p_ifunc;
+  int dtorflag=0;
+#endif
+
   G__func_now=G__p_ifunc->allifunc;
+
+#ifndef G__OLDIMPLEMENTATION2027
+  if('~'==funcname[0] && 0==G__struct.memfunc[G__p_ifunc->tagnum]->hash[0]) {
+    store_func_now = G__func_now;
+    store_p_ifunc = G__p_ifunc;
+    G__p_ifunc = G__struct.memfunc[G__p_ifunc->tagnum];
+    G__func_now = 0;
+    dtorflag=1;
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1543
   G__savestring(&G__p_ifunc->funcname[G__func_now],funcname);
@@ -7776,15 +7799,38 @@ int isvirtual;
        free((void*)G__p_ifunc->funcname[func_now]);
        G__p_ifunc->funcname[func_now] = (char*)NULL;
      }
-#endif
+#endif /* 1706 */
    }
    else {
+#ifndef G__OLDIMPLEMENTATION2027
+     if(dtorflag) {
+       G__func_now = store_func_now;
+       G__p_ifunc = store_p_ifunc;
+     }
+     else {
+       G__memfunc_next();
+     }
+#else /* 2027 */
      G__memfunc_next();
+#endif /* 2027 */
    }
  }
-#else
+#else /* 1706 */
+
+#ifndef G__OLDIMPLEMENTATION2027
+ if(dtorflag) {
+    G__func_now = store_func_now;
+    G__p_ifunc = store_p_ifunc;
+  }
+  else {
+    G__memfunc_next();
+  }
+#else /* 2027 */
   G__memfunc_next();
-#endif
+#endif /* 2027 */
+
+#endif /* 1706 */
+
 
 #endif
   return(0);

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150128
-#define G__CINTVERSIONSTR  "5.15.128, Mar 16 2004"
+#define G__CINTVERSION      50150129
+#define G__CINTVERSIONSTR  "5.15.129, Mar 21 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -56,9 +56,6 @@
 /* Define G__FIX1 if you have problem defining variable argument functions
  * such as printf, fprintf, etc... in Windows */
 /* #define G__FIX1 */
-#ifdef __sun
-#define G__FIX1
-#endif
 
 /* 1885 has side-effect in building ROOT */
 #define G__OLDIMPLEMENTATION1885
@@ -834,7 +831,7 @@ typedef struct {
 
 #ifndef G__OLDIMPLEMENTATION2021
 #ifndef G__ANSI
-#if (__GNUC__>=3)
+#if (__GNUC__>=3)  /* ||defined(__SUNPRO_CC)||defined(__SUNPRO_C) */
 #define G__ANSI
 #endif
 #endif

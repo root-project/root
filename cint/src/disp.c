@@ -2137,7 +2137,7 @@ void* G__get_errmsgcallback()
 *  In case you have problem compiling following function, define G__FIX1
 * in G__ci.h
 **************************************************************************/
-#if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1)
+#if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1) || defined(__sun)
 int G__fprinterr(FILE* fp,char* fmt,...)
 #elif defined(__GNUC__)
 int G__fprinterr(fp,fmt)

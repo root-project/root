@@ -3266,6 +3266,18 @@ G__value *rslt;
       }
     }
 
+#ifndef G__OLDIMPLEMENTATION2031
+    else if(strncmp("$",com,1)==0) {
+      /*******************************************************
+       * Execute shell command
+       *******************************************************/
+      char *combuf = (char*)malloc(strlen(string)+30);
+      sprintf(combuf,"sh -I -c %s",string);
+      system(combuf);
+      free((void*)combuf);
+    }
+#endif
+
     else if(strncmp("!",com,1)==0) {
       /*******************************************************
        * Execute shell command
