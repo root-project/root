@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.27 2003/12/02 07:49:11 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.28 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -359,7 +359,7 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
 //______________________________________________________________________________
 Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range to remote file via rootd daemon.
+   // Write specified byte range to remote file via rfiod daemon.
    // Returns kTRUE in case of error.
 
    if (!IsOpen() || !fWritable) return kTRUE;
