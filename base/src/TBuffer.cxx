@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.63 2004/03/22 15:04:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.64 2004/03/26 12:03:12 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2284,7 +2284,7 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, TClass *cl)
          *this >> version;
       }
    }
-   if (version <= 0 && cl && cl->IsForeign()) {
+   if (version <= 0 && cl && cl->GetClassVersion() != 0) {
       UInt_t checksum = 0;
       *this >> checksum;
       //find the version number in the StreamerInfos corresponding to checksum
