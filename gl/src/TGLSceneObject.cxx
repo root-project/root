@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.15 2004/11/15 14:59:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -65,7 +65,7 @@ static GLUquadric *GetQuadric()
          } else {
             gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
 //            gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
-            gluQuadricNormals(fQuad, GLU_SMOOTH);
+            gluQuadricNormals(fQuad, (GLenum)GLU_SMOOTH);
          }
       }
       ~Init()
