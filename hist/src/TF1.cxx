@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.17 2001/05/04 13:19:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.18 2001/05/17 07:39:24 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -587,6 +587,7 @@ void TF1::Draw(Option_t *option)
 //*-*   "SAME"  superimpose on top of existing picture
 //*-*   "L"     connect all computed points with a straight line
 //*-*   "C"     connect all computed points with a smooth curve.
+//*-*   "FC"    draw a fill area below a smooth curve
 //*-*
 //*-* Note that the default value is "L". Therefore to draw on top
 //*-* of an existing picture, specify option "LSAME"
@@ -615,6 +616,7 @@ void TF1::Draw(Option_t *option)
 //*-*   "SAME"  superimpose on top of existing picture
 //*-*   "L"     connect all computed points with a straight line
 //*-*   "C"     connect all computed points with a smooth curve.
+//*-*   "FC"    draw a fill area below a smooth curve
 //*-*
 //*-* Note that the default value is "L". Therefore to draw on top
 //*-* of an existing picture, specify option "LSAME"
