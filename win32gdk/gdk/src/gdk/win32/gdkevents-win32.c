@@ -150,6 +150,55 @@ static gboolean use_IME_COMPOSITION = FALSE;
 
 static gboolean first_move = FALSE;	// bb add
 
+
+static gboolean doesnt_want_key(gint mask, MSG * xevent)
+{
+   return (((xevent->message == WM_KEYUP || xevent->message == WM_SYSKEYUP)
+            && !(mask & GDK_KEY_RELEASE_MASK))
+           ||
+           ((xevent->message == WM_KEYDOWN
+             || xevent->message == WM_SYSKEYDOWN)
+            && !(mask & GDK_KEY_PRESS_MASK)));
+}
+
+static gboolean doesnt_want_char(gint mask, MSG * xevent)
+{
+   return !(mask & (GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK));
+}
+
+static gboolean doesnt_want_button_press(gint mask, MSG * xevent)
+{
+   return !(mask & GDK_BUTTON_PRESS_MASK);
+}
+
+static gboolean doesnt_want_button_release(gint mask, MSG * xevent)
+{
+   return !(mask & GDK_BUTTON_RELEASE_MASK);
+}
+
+static gboolean doesnt_want_button_motion(gint mask, MSG * xevent)
+{
+   return !((mask & GDK_POINTER_MOTION_MASK)
+            || ((xevent->wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON))
+                && (mask & GDK_BUTTON_MOTION_MASK))
+            || ((xevent->wParam & MK_LBUTTON)
+                && (mask & GDK_BUTTON1_MOTION_MASK))
+            || ((xevent->wParam & MK_MBUTTON)
+                && (mask & GDK_BUTTON2_MOTION_MASK))
+            || ((xevent->wParam & MK_RBUTTON)
+                && (mask & GDK_BUTTON3_MOTION_MASK)));
+}
+
+static gboolean doesnt_want_scroll(gint mask, MSG * xevent)
+{
+#if 0
+   return !(mask & GDK_SCROLL_MASK);
+#else
+   return !(mask & GDK_BUTTON_PRESS_MASK);
+#endif
+}
+
+
 static LRESULT
 inner_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -613,10 +662,15 @@ find_window_for_pointer_event (GdkWindow*  reported_window,
   	if (p_grab_window == NULL || !p_grab_owner_events)
   		return reported_window;
 
+   if (p_grab_window && p_grab_owner_events) {
+      if (!doesnt_want_button_motion(GDK_WINDOW_WIN32DATA(p_grab_window)->event_mask, msg)) {
+         gdk_window_unref (reported_window);
+         gdk_window_ref (p_grab_window);
+         return p_grab_window;
+      }
+   }
+
   	points = MAKEPOINTS (msg->lParam);
-   //vo: ++ coordinates - dirty trick for TRootContextMenu
-  	pt.x = points.x+1;
-  	pt.y = points.y+1;
   	ClientToScreen (msg->hwnd, &pt);
 
   	GDK_NOTE (EVENTS, g_print ("Finding window for grabbed pointer event at (%ld, %ld)\n",
@@ -4394,7 +4448,7 @@ propagate(GdkWindow ** window,
 {
 	gboolean in_propagation = FALSE;
 
-   if (grab_window != NULL) {
+   if (grab_window != NULL && !grab_owner_events) {
       /* Event source is grabbed with owner_events FALSE */
       GDK_NOTE(EVENTS, g_print("...grabbed, owner_events FALSE, "));
       if ((*doesnt_want_it) (grab_mask, xevent)) {
@@ -4448,53 +4502,6 @@ propagate(GdkWindow ** window,
       } else
          return TRUE;
    }
-}
-
-static gboolean doesnt_want_key(gint mask, MSG * xevent)
-{
-   return (((xevent->message == WM_KEYUP || xevent->message == WM_SYSKEYUP)
-            && !(mask & GDK_KEY_RELEASE_MASK))
-           ||
-           ((xevent->message == WM_KEYDOWN
-             || xevent->message == WM_SYSKEYDOWN)
-            && !(mask & GDK_KEY_PRESS_MASK)));
-}
-
-static gboolean doesnt_want_char(gint mask, MSG * xevent)
-{
-   return !(mask & (GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK));
-}
-
-static gboolean doesnt_want_button_press(gint mask, MSG * xevent)
-{
-   return !(mask & GDK_BUTTON_PRESS_MASK);
-}
-
-static gboolean doesnt_want_button_release(gint mask, MSG * xevent)
-{
-   return !(mask & GDK_BUTTON_RELEASE_MASK);
-}
-
-static gboolean doesnt_want_button_motion(gint mask, MSG * xevent)
-{
-   return !((mask & GDK_POINTER_MOTION_MASK)
-            || ((xevent->wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON))
-                && (mask & GDK_BUTTON_MOTION_MASK))
-            || ((xevent->wParam & MK_LBUTTON)
-                && (mask & GDK_BUTTON1_MOTION_MASK))
-            || ((xevent->wParam & MK_MBUTTON)
-                && (mask & GDK_BUTTON2_MOTION_MASK))
-            || ((xevent->wParam & MK_RBUTTON)
-                && (mask & GDK_BUTTON3_MOTION_MASK)));
-}
-
-static gboolean doesnt_want_scroll(gint mask, MSG * xevent)
-{
-#if 0
-   return !(mask & GDK_SCROLL_MASK);
-#else
-   return !(mask & GDK_BUTTON_PRESS_MASK);
-#endif
 }
 
 static char *decode_key_lparam(LPARAM lParam)
