@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.50 2004/05/24 15:39:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.51 2004/07/02 13:42:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1215,6 +1215,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //
 //   NOTE that if a TProfile named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
+//   The X axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
   opt.ToLower();
@@ -1248,6 +1249,13 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      }
   }
   if (pname != name)  delete [] pname;
+  
+// Copy attributes
+  h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+  h1->SetLineColor(this->GetLineColor());
+  h1->SetFillColor(this->GetFillColor());
+  h1->SetMarkerColor(this->GetMarkerColor());
+  h1->SetMarkerStyle(this->GetMarkerStyle());
 
 // Fill the profile histogram
   Double_t cont;
@@ -1296,6 +1304,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //
 //   NOTE that if a TProfile named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
+//   The Y axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
   opt.ToLower();
@@ -1329,6 +1338,13 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      }
   }
   if (pname != name)  delete [] pname;
+  
+// Copy attributes
+  h1->GetXaxis()->ImportAttributes(this->GetYaxis());
+  h1->SetLineColor(this->GetLineColor());
+  h1->SetFillColor(this->GetFillColor());
+  h1->SetMarkerColor(this->GetMarkerColor());
+  h1->SetMarkerStyle(this->GetMarkerStyle());
 
 // Fill the profile histogram
   Double_t cont;
@@ -1382,6 +1398,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //
 //   NOTE that if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
+//   The X axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
   opt.ToLower();
@@ -1416,7 +1433,14 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      if (opt.Contains("e")) h1->Sumw2();
   }
   if (pname != name)  delete [] pname;
-
+  
+// Copy attributes
+  h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+  h1->SetLineColor(this->GetLineColor());
+  h1->SetFillColor(this->GetFillColor());
+  h1->SetMarkerColor(this->GetMarkerColor());
+  h1->SetMarkerStyle(this->GetMarkerStyle());
+  
 // Fill the projected histogram
   Double_t cont,err,err2;
   for (Int_t binx =0;binx<=nx+1;binx++) {
@@ -1474,6 +1498,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //
 //   NOTE that if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
+//   The Y axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
   opt.ToLower();
@@ -1508,6 +1533,13 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      if (opt.Contains("e")) h1->Sumw2();
   }
   if (pname != name)  delete [] pname;
+  
+// Copy attributes
+  h1->GetXaxis()->ImportAttributes(this->GetYaxis());
+  h1->SetLineColor(this->GetLineColor());
+  h1->SetFillColor(this->GetFillColor());
+  h1->SetMarkerColor(this->GetMarkerColor());
+  h1->SetMarkerStyle(this->GetMarkerStyle());
 
 // Fill the projected histogram
   Double_t cont,err,err2;
