@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.138 2003/10/07 11:10:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.139 2003/10/07 15:45:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -391,7 +391,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
 //
-//  varexp is an expression of the general form 
+//  varexp is an expression of the general form
 //   - "e1"           produces a 1-d histogram of expression "e1"
 //   - "e1:e2"        produces a 2-d histogram (or profile) of "e1" versus "e2"
 //   - "e1:e2:e3"     produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
@@ -1189,8 +1189,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    Init(TTree *tree);\n");
       fprintf(fp,"   Bool_t  Notify();\n");
       fprintf(fp,"   Bool_t  Process(Int_t entry);\n");
-      fprintf(fp,"   Bool_t  ProcessCut(Int_t entry);\n");
-      fprintf(fp,"   void    ProcessFill(Int_t entry);\n");
       fprintf(fp,"   void    SetOption(const char *option) { fOption = option; }\n");
       fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
       fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
