@@ -16,7 +16,7 @@ oldFormulaTest.log:  runoldFormulaTest.C
 	$(CMDECHO) root.exe -q -b -l runoldFormulaTest.C > oldFormulaTest.log
 
 oldFormulaTest:oldFormulaTest.log
-	$(CMDECHO) diff -b oldFormulaTest.log oldFormulaTest.ref
+	$(CMDECHO) diff -bw oldFormulaTest.log oldFormulaTest.ref
 
 testWithFailure:
 ifeq ($(FAIL),)

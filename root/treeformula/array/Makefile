@@ -30,7 +30,7 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 	$(CMDECHO) echo arrayDrawTest > /dev/null
-	$(CMDECHO) diff -b arrayDrawTest.good arrayDrawTest.output
+	$(CMDECHO) diff -bw arrayDrawTest.good arrayDrawTest.output
 
 arrayEventListTest.log: eventlist.C
 	$(CMDECHO) root.exe -b -l -q eventlist.C > arrayEventListTest.log 2>&1 
@@ -42,14 +42,14 @@ boolOptTest.log: boolOpt.C
 	$(CMDECHO) root.exe -b -l -q boolOpt.C > boolOptTest.log 2>&1 
 
 boolOptTest: boolOptTest.log
-	$(CMDECHO) diff -b boolOptTest.ref boolOptTest.log
+	$(CMDECHO) diff -bw boolOptTest.ref boolOptTest.log
 
 indexMultiDim.log: indexMultiDim.C orange.root
 	$(CMDECHO) root.exe -b -l -q indexMultiDim.C > indexMultiDim.log 2>&1 || \
 		diff -b indexMultiDim.ref indexMultiDim.log
 
 indexMultiDimTest: indexMultiDim.log
-	$(CMDECHO) diff -b indexMultiDim.ref indexMultiDim.log
+	$(CMDECHO) diff -bw indexMultiDim.ref indexMultiDim.log
 
 testWithFailure:
 ifeq ($(FAIL),)
