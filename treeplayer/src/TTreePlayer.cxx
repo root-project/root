@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.100 2002/07/16 20:35:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.101 2002/07/25 18:13:35 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -660,7 +660,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     ===============================
 //
 //  Entry$:  A TTree::Draw formula can use the special variable Entry$
-//  to access the entry number being read.  For example to draw every 
+//  to access the entry number being read.  For example to draw every
 //  other entry use:
 //    tree.Draw("myvar","Entry$%2==0");
 //
@@ -668,7 +668,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  Entries$  : return the total number of entries (== TTree::GetEntries())
 //  Length$   : return the total number of element of this formula for this
 //  		   entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this 
+//  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
 //     Making a Profile histogram
@@ -813,13 +813,14 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
    Bool_t CanRebin = kTRUE;
    if (opt.Contains("same")) CanRebin = kFALSE;
-  
+
    Int_t nbinsx=0, nbinsy=0, nbinsz=0;
    Double_t xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0;
-   
+
    fHistogram = 0;
    char *hname = 0;
    char *hnamealloc = 0;
+   i = 0;
    for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
       if (varexp0[k]=='>' && varexp0[k-1]=='>') {
          i = (int)( &(varexp0[k-1]) - varexp0 );  //  length of varexp0 before ">>"
@@ -895,7 +896,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
 	     ncomma++; 	       // number of arguments
 	     cdummy = pstart;
-             
+
 	     //   number of columns
 	     ncols  = 1;
 	     for (j=0;j<i;j++)  if (varexp[j] == ':') ncols++;
@@ -1483,7 +1484,7 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
 
       // Grab the array size of the formulas for this entry
       ndata = fManager->GetNdata();
-      
+
       // no data at all, let's move on to the next entry.
       if (!ndata) continue;
 
@@ -1695,7 +1696,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    Bool_t ischain = fTree->InheritsFrom("TChain");
    Bool_t isHbook = fTree->InheritsFrom("THbookTree");
    if (isHbook) strcpy(treefile,fTree->GetTitle());
-   
+
 //======================Generate classname.h=====================
    // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
@@ -1894,9 +1895,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             leafcountName = b2len;
          }
          if (dimensions) {
-            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
+            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(), stars,
                               branchname,blen,dimensions,leafcountName);
-            else      fprintf(fp,"   %-14s %s%s[%d]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
+            else      fprintf(fp,"   %-14s %s%s[%d]%s;   //[%s]\n",leaf->GetTypeName(), stars,
                               branchname,len,dimensions,leafcountName);
             delete dimensions;
          } else {
@@ -3252,7 +3253,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
         }
         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h1,fVmin[0],fVmax[0]);
-     }     
+     }
      h1->FillN(nfill, fV1, fW);
 //__________________________2-D histogram_______________________
   } else if (action ==  2) {
@@ -3266,7 +3267,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
         }
         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
-     }  
+     }
      for(i=0;i<nfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
 //__________________________Profile histogram_______________________
   } else if (action ==  4) {
@@ -3295,7 +3296,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         }
         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
      }
-     
+
      if (!strstr(option,"same") && !strstr(option,"goff")) {
         UInt_t statbit = h2->TestBit(TH1::kNoStats);
         h2->SetBit(TH1::kNoStats);
@@ -3341,7 +3342,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
         }
         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
      }
-     
+
      if (action == 3 || !h3->TestBit(kCanDelete)) {
         for (i=0;i<nfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
      }
