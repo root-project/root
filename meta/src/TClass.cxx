@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.141 2004/03/11 06:17:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.142 2004/03/26 22:40:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,6 +62,101 @@ extern long G__globalvarpointer;
 Int_t  TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
 
+class TDumpMembers : public TMemberInspector {
+
+public:
+   TDumpMembers() { }
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+};
+
+//______________________________________________________________________________
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+{
+   // Print value of member mname.
+   //
+   // This method is called by the ShowMembers() method for each
+   // data member when object.Dump() is invoked.
+   //
+   //    cl    is the pointer to the current class
+   //    pname is the parent name (in case of composed objects)
+   //    mname is the data member name
+   //    add   is the data member address
+
+   const Int_t kvalue = 30;
+#ifdef R__B64
+   const Int_t ktitle = 50;
+#else
+   const Int_t ktitle = 42;
+#endif
+   const Int_t kline  = 1024;
+   Int_t cdate = 0;
+   Int_t ctime = 0;
+   UInt_t *cdatime = 0;
+   char line[kline];
+   TDataMember *member = cl->GetDataMember(mname);
+   if (!member) return;
+   TDataType *membertype = member->GetDataType();
+   Bool_t isdate = kFALSE;
+   if (strcmp(member->GetName(),"fDatime") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
+      isdate = kTRUE;
+   }
+
+   Int_t i;
+   for (i = 0;i < kline; i++) line[i] = ' ';
+   line[kline-1] = 0;
+   sprintf(line,"%s%s ",pname,mname);
+   i = strlen(line); line[i] = ' ';
+
+   // Encode data value or pointer value
+   char *pointer = (char*)add;
+   char **ppointer = (char**)(pointer);
+
+   if (member->IsaPointer()) {
+      char **p3pointer = (char**)(*ppointer);
+      if (!p3pointer)
+         sprintf(&line[kvalue],"->0");
+      else if (!member->IsBasic())
+         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
+      else if (membertype) {
+         if (!strcmp(membertype->GetTypeName(), "char")) {
+            i = strlen(*ppointer);
+            if (kvalue+i >= kline) i=kline-kvalue;
+            strncpy(&line[kvalue],*ppointer,i);
+            line[kvalue+i] = 0;
+         } else {
+            strcpy(&line[kvalue], membertype->AsString(p3pointer));
+         }
+      } else if (!strcmp(member->GetFullTypeName(), "char*") ||
+                 !strcmp(member->GetFullTypeName(), "const char*")) {
+         i = strlen(*ppointer);
+         if (kvalue+i >= kline) i=kline-kvalue;
+         strncpy(&line[kvalue],*ppointer,i);
+         line[kvalue+i] = 0;
+      } else {
+         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
+      }
+   } else if (membertype)
+       if (isdate) {
+          cdatime = (UInt_t*)pointer;
+          TDatime::GetDateTime(cdatime[0],cdate,ctime);
+          sprintf(&line[kvalue],"%d/%d",cdate,ctime);
+       } else {
+         strcpy(&line[kvalue], membertype->AsString(pointer));
+       }
+   else
+      sprintf(&line[kvalue],"->%lx ", (Long_t)pointer);
+
+   // Encode data member title
+   if (isdate == kFALSE && strcmp(member->GetFullTypeName(), "char*") &&
+       strcmp(member->GetFullTypeName(), "const char*")) {
+      i = strlen(&line[0]); line[i] = ' ';
+      Int_t lentit = strlen(member->GetTitle());
+      if (lentit > 250-ktitle) lentit = 250-ktitle;
+      strncpy(&line[ktitle],member->GetTitle(),lentit);
+      line[ktitle+lentit] = 0;
+   }
+   Printf("%s", line);
+}
 
 class TBuildRealData : public TMemberInspector {
 
@@ -952,6 +1047,59 @@ void TClass::Draw(Option_t *option)
    if (gPad) gPad->DrawClassObject(this,option);
 
    if (padsav) padsav->cd();
+}
+
+//______________________________________________________________________________
+void TClass::Dump(void *obj) const
+{
+   // Dump contents of object on stdout.
+   // Using the information in the object dictionary
+   // each data member is interpreted.
+   // If a data member is a pointer, the pointer value is printed
+   // 'obj' is assume to point to an object of the class describe by this TClass
+   //
+   // The following output is the Dump of a TArrow object:
+   //   fAngle                   0           Arrow opening angle (degrees)
+   //   fArrowSize               0.2         Arrow Size
+   //   fOption.*fData
+   //   fX1                      0.1         X of 1st point
+   //   fY1                      0.15        Y of 1st point
+   //   fX2                      0.67        X of 2nd point
+   //   fY2                      0.83        Y of 2nd point
+   //   fUniqueID                0           object unique identifier
+   //   fBits                    50331648    bit field status word
+   //   fLineColor               1           line color
+   //   fLineStyle               1           line style
+   //   fLineWidth               1           line width
+   //   fFillColor               19          fill area color
+   //   fFillStyle               1001        fill area style
+
+   Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
+   char parent[256];
+   parent[0] = 0;
+   TDumpMembers dm;
+   if (fShowMembers) {
+      fShowMembers(obj,dm, parent);
+   } else {
+      //Always call ShowMembers via the interpreter. A direct call like
+      //      realDataObject->ShowMembers(brd, parent);
+      //will not work if the class derives from TObject but not as primary
+      //inheritance.
+      R__LOCKGUARD(gCINTMutex);
+      G__CallFunc func;
+      void *address;
+      long  offset;
+      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
+                                         "TMemberInspector&,char*", &offset));
+      if (!func.IsValid()) {
+         Printf("==>No Showmembers functions ... dumping disabled\n");
+      } else {
+         func.SetArg((long)&dm);
+         func.SetArg((long)parent);
+         address = (void*)((long)obj + offset);
+         func.Exec(address);
+      }
+   }
 }
 
 //______________________________________________________________________________

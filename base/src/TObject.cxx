@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.56 2003/11/24 09:02:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.57 2003/12/09 17:49:03 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -54,108 +54,15 @@
 #include "TMath.h"
 #include "TSystem.h"
 
-
-
-Long_t TObject::fgDtorOnly = 0;
-Bool_t TObject::fgObjectStat = kTRUE;
-
-
 class TDumpMembers : public TMemberInspector {
-
+   // Implemented in TClass.cxx
 public:
    TDumpMembers() { }
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
 
-//______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
-{
-   // Print value of member mname.
-   //
-   // This method is called by the ShowMembers() method for each
-   // data member when object.Dump() is invoked.
-   //
-   //    cl    is the pointer to the current class
-   //    pname is the parent name (in case of composed objects)
-   //    mname is the data member name
-   //    add   is the data member address
-
-   const Int_t kvalue = 30;
-#ifdef R__B64
-   const Int_t ktitle = 50;
-#else
-   const Int_t ktitle = 42;
-#endif
-   const Int_t kline  = 1024;
-   Int_t cdate = 0;
-   Int_t ctime = 0;
-   UInt_t *cdatime = 0;
-   char line[kline];
-   TDataMember *member = cl->GetDataMember(mname);
-   if (!member) return;
-   TDataType *membertype = member->GetDataType();
-   Bool_t isdate = kFALSE;
-   if (strcmp(member->GetName(),"fDatime") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
-      isdate = kTRUE;
-   }
-
-   Int_t i;
-   for (i = 0;i < kline; i++) line[i] = ' ';
-   line[kline-1] = 0;
-   sprintf(line,"%s%s ",pname,mname);
-   i = strlen(line); line[i] = ' ';
-
-   // Encode data value or pointer value
-   char *pointer = (char*)add;
-   char **ppointer = (char**)(pointer);
-
-   if (member->IsaPointer()) {
-      char **p3pointer = (char**)(*ppointer);
-      if (!p3pointer)
-         sprintf(&line[kvalue],"->0");
-      else if (!member->IsBasic())
-         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
-      else if (membertype) {
-         if (!strcmp(membertype->GetTypeName(), "char")) {
-            i = strlen(*ppointer);
-            if (kvalue+i >= kline) i=kline-kvalue;
-            strncpy(&line[kvalue],*ppointer,i);
-            line[kvalue+i] = 0;
-         } else {
-            strcpy(&line[kvalue], membertype->AsString(p3pointer));
-         }
-      } else if (!strcmp(member->GetFullTypeName(), "char*") ||
-                 !strcmp(member->GetFullTypeName(), "const char*")) {
-         i = strlen(*ppointer);
-         if (kvalue+i >= kline) i=kline-kvalue;
-         strncpy(&line[kvalue],*ppointer,i);
-         line[kvalue+i] = 0;
-      } else {
-         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
-      }
-   } else if (membertype)
-       if (isdate) {
-          cdatime = (UInt_t*)pointer;
-          TDatime::GetDateTime(cdatime[0],cdate,ctime);
-          sprintf(&line[kvalue],"%d/%d",cdate,ctime);
-       } else {
-         strcpy(&line[kvalue], membertype->AsString(pointer));
-       }
-   else
-      sprintf(&line[kvalue],"->%lx ", (Long_t)pointer);
-
-   // Encode data member title
-   if (isdate == kFALSE && strcmp(member->GetFullTypeName(), "char*") &&
-       strcmp(member->GetFullTypeName(), "const char*")) {
-      i = strlen(&line[0]); line[i] = ' ';
-      Int_t lentit = strlen(member->GetTitle());
-      if (lentit > 250-ktitle) lentit = 250-ktitle;
-      strncpy(&line[ktitle],member->GetTitle(),lentit);
-      line[ktitle+lentit] = 0;
-   }
-   Printf("%s", line);
-}
-
+Long_t TObject::fgDtorOnly = 0;
+Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject)
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.40 2004/02/19 20:00:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.41 2004/02/25 14:03:37 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -57,8 +57,8 @@ friend class ROOT::TGenericClassInfo;
 public:
    // TClass status bits
    enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded    = BIT(15), kIsTObject = BIT(16), 
-          kIsForeign   = BIT(17), kIsEmulation = BIT(18), 
+          kUnloaded    = BIT(15), kIsTObject = BIT(16),
+          kIsForeign   = BIT(17), kIsEmulation = BIT(18),
           kStartWithTObject = BIT(19)  // see comments for IsStartingWithTObject()
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
@@ -108,7 +108,7 @@ private:
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char*name, const char* signature);
    TStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo) return fCurrentInfo; 
+      if (fCurrentInfo) return fCurrentInfo;
       else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
    }
    void Init(const char *name, Version_t cversion, const type_info *info,
@@ -149,6 +149,8 @@ public:
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
+   void               Dump() const { TDictionary::Dump(); }
+   void               Dump(void* obj) const;
    char              *EscapeChars(char * text) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
@@ -199,7 +201,7 @@ public:
    Bool_t             IsFolder() const {return kTRUE;}
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
-   Bool_t             IsStartingWithTObject() const; 
+   Bool_t             IsStartingWithTObject() const;
    Bool_t             IsTObject() const;
    void               MakeCustomMenuList();
    void              *New(ENewType defConstructor = kClassNew);
@@ -230,7 +232,7 @@ public:
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
    static VoidFuncPtr_t  GetDict (const char *cname);
    static VoidFuncPtr_t  GetDict (const type_info& info);
-     
+
    static Int_t       AutoBrowse(TObject *obj,TBrowser *browser);
    static ENewType    IsCallingNew();
    static TClass     *Load(TBuffer &b);
@@ -262,7 +264,7 @@ namespace ROOT {
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
 
-   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION 
+   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
       // This can only be used when the template overload resolution can distringuish between
       // T* and T**
       template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
