@@ -100,10 +100,19 @@ TList *TGraphPainter::GetContourList(Double_t contour)
    // finds them and returns them in a graphs' list.
 
    // Exit if the contour is outisde the Z range.
-   Double_t zmin = fGraph2D->GetZmin();
-   Double_t zmax = fGraph2D->GetZmax();
+   Double_t zmin = gCurrentHist->GetMinimum();
+   Double_t zmax = gCurrentHist->GetMaximum();
+   if (Hoption.Logz) {
+      if (zmin > 0) {
+         zmin = TMath::Log10(zmin);
+         zmax = TMath::Log10(zmax);
+      } else {
+         return 0;
+      }
+   }
    if(contour<zmin || contour>zmax) {
-      Error("GetContourLIst", "Contour level outside the Z scope");
+      Error("GetContourList", "Contour level (%g) outside the Z scope [%g,%g]",
+      contour,zmin,zmax);
       return 0;
    }
 
@@ -143,7 +152,7 @@ TList *TGraphPainter::GetContourList(Double_t contour)
       X0   = fX[P0]; X2 = fX[P0];
       Y0   = fY[P0]; Y2 = fY[P0];
       Z0   = fZ[P0]; Z2 = fZ[P0];
-
+   
       // Order along Z axis the points (Xi,Yi,Zi) where "i" belongs to {0,1,2}
       // After this Z0 < Z1 < Z2
       I0=0, I1=0, I2=0;
@@ -155,6 +164,12 @@ TList *TGraphPainter::GetContourList(Double_t contour)
       X1 = fX[T[I1]-1];
       Y1 = fY[T[I1]-1];
       Z1 = fZ[T[I1]-1];
+
+      if (Hoption.Logz) {
+         Z0 = TMath::Log10(Z0);
+         Z1 = TMath::Log10(Z1);
+         Z2 = TMath::Log10(Z2);
+      }
 
       if(contour >= Z0 && contour <=Z2) {
          R20 = (contour-Z0)/(Z2-Z0);
@@ -355,15 +370,19 @@ void TGraphPainter::Paint(Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintContour(Option_t * /*option*/)
 {
-   // Paints the 2D graph as a contour plot
+   // Paints the 2D graph as a contour plot. Delaunay triangles are used
+   // to compute the contours.
 
-   Int_t ndivz   = gCurrentHist->GetContour();
-   if (ndivz == 0 ) {
-      ndivz = gStyle->GetNumberContours();
-      gCurrentHist->SetContour(ndivz);
+   // Initialize the levels on the Z axis
+   Int_t ncolors  = gStyle->GetNumberOfColors();
+   Int_t ndiv   = gCurrentHist->GetContour();
+   if (ndiv == 0 ) {
+      ndiv = gStyle->GetNumberContours();
+      gCurrentHist->SetContour(ndiv);
    }
+   Int_t ndivz  = TMath::Abs(ndiv);
+   if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
 
-   Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t theColor;
    TList *l;
    TGraph *g;
@@ -372,7 +391,7 @@ void TGraphPainter::PaintContour(Option_t * /*option*/)
 
    if (!fNdt) FindTriangles();
 
-   for (Int_t k=0; k<ndivz; k++) {
+   for (Int_t k=0; k<ndiv; k++) {
       c = gCurrentHist->GetContourLevelPad(k);
       l = GetContourList(c);
       TIter next(l);   
@@ -563,7 +582,7 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
 
    TView *view = gPad->GetView();
    if (!view) {
-      Error("PaintTriangles", "No TView in current pad");
+      Error("PaintPolyMarker", "No TView in current pad");
       return;
    }
 
@@ -676,6 +695,16 @@ void TGraphPainter::PaintTriangles(Option_t *option)
       nblev = nbins+1;
       glev = new Double_t[nblev];
       for (Int_t i = 0; i < nblev; ++i) glev[i] = BinLow+i*BinWidth;
+   }
+   
+   // Initialize the levels on the Z axis
+   if (tri1 || tri2) {
+      Int_t ndiv   = gCurrentHist->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         gCurrentHist->SetContour(ndiv);
+      }
+      if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
    }
 
    // For each triangle, compute the distance between the triangle centre

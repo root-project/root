@@ -814,7 +814,7 @@ L1:
                      goto L2;
                   }
                }
-               Error("Interpolate", "Should not get to here");
+///            Error("Interpolate", "Should not get to here");
                // may as well soldier on
                F  = M;
                O1 = P;
@@ -870,12 +870,12 @@ L50:
             if (ndegen > 0) {
                // but is degenerate with at least one other,
                // haven't figured out what to do if more than 4 points are involved
-               if (ndegen > 1) {
-                  Error("Interpolate", 
-                        "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
-                        P,N,M,degen);
-                  return thevalue;
-               }
+///            if (ndegen > 1) {
+///               Error("Interpolate", 
+///                     "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
+///                     P,N,M,degen);
+///               return thevalue;
+///            }
 
                // we have a quadrilateral which can be split down either diagonal
                // (D<->F or O1<->O2) to form valid Delaunay triangles. Choose diagonal

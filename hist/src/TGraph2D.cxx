@@ -220,31 +220,38 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
 //______________________________________________________________________________
 TGraph2D::TGraph2D(TH2 *h2)
          : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
-           TAttMarker()
+           TAttMarker(), fNpoints(0)
 {
-   // Graph2D constructor with a TH2 as input.
-
+   // Graph2D constructor with a TH2 (h2) as input.
+   // Only the h2's bins within the X and Y axis ranges are used.
+   
    Build(10);
 
    SetName(h2->GetName());
    SetTitle(h2->GetTitle());
 
-   Int_t nbinsX = h2->GetNbinsX();
-   Int_t nbinsY = h2->GetNbinsY();
-
    TAxis *xaxis = h2->GetXaxis();
    TAxis *yaxis = h2->GetYaxis();
+   Int_t Xfirst = xaxis->GetFirst();
+   Int_t Xlast  = xaxis->GetLast();
+   Int_t Yfirst = yaxis->GetFirst();
+   Int_t Ylast  = yaxis->GetLast();
+
+   Double_t hmin = h2->GetMinimum();
+   Double_t hmax = h2->GetMaximum();
 
    Double_t x, y, z;
    Int_t k=0;
 
-   for (Int_t i=1; i<= nbinsX; i++) {
-      for (Int_t j=1; j<= nbinsY; j++) {
-	 x = xaxis->GetBinCenter(i);
-	 y = yaxis->GetBinCenter(j);
+   for (Int_t i=Xfirst; i<= Xlast; i++) {
+      for (Int_t j=Yfirst; j<= Ylast; j++) {
+         x = xaxis->GetBinCenter(i);
+         y = yaxis->GetBinCenter(j);
          z = h2->GetBinContent(i,j);
-         SetPoint(k, x, y, z);
-         k++;
+         if (z>hmin && z<hmax) {
+            SetPoint(k, x, y, z);
+            k++;
+         }
       }
    }
 }
@@ -1055,7 +1062,7 @@ void TGraph2D::Paint(Option_t *option)
           !opt.Contains("psr")) opt.Append("tri0");
    }
 
-   if (opt.Contains("tri")) {
+   if (opt.Contains("tri0")) {
       GetHistogram("empty");
    } else {
       GetHistogram();
@@ -1276,7 +1283,7 @@ void TGraph2D::SetMarginBinsContent(Double_t z)
 {
    // Sets the histogram bin height for points lying outside the TGraphDelaunay
    // convex hull ie: the bins in the margin.
-		      
+      
    fZout = z;
    if (fHistogram) {delete fHistogram; fHistogram = 0;}
 }

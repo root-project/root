@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.158 2004/01/23 23:30:31 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.159 2004/01/27 13:28:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -413,6 +413,8 @@ TList *THistPainter::GetContourList(Double_t contour) const
    TList *hl = fH->GetListOfFunctions();
    dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
    if (!dt) return 0;
+
+   gCurrentHist = fH;
 
    if (!fGraphPainter) ((THistPainter*)this)->fGraphPainter = new TGraphPainter(dt);
 
@@ -2030,7 +2032,8 @@ void THistPainter::PaintContour(Option_t *option)
 //       11  Use colour to distinguish contours. ("cont1")
 //       12  Use line style to distinguish contours. ("cont2")
 //       13  Line style and colour are the same for all contours. ("cont3")
-//       14  same as 1 but uses the "SURF" algorithm ("cont4")
+//       14  Same as 1 but uses the "SURF" algorithm ("cont4")
+//       15  Use Delaunay triangles to compute the contours
 //
 //     When option "List" is specified together with option "cont",
 //     the points used to draw the contours are saved in the TGraph format
@@ -4633,6 +4636,9 @@ void THistPainter::PaintTriangles(Option_t *option)
    dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
    if (!dt) return;
 
+   // If needed, create a TGraphPainter
+   if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
+
    // Define the 3D view
    fXbuf[0] = Hparam.xmin;
    fYbuf[0] = Hparam.xmax;
@@ -4672,7 +4678,6 @@ void THistPainter::PaintTriangles(Option_t *option)
    }
 
    // Paint the triangles
-   if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
    fGraphPainter->Paint(option);
 
    // Paint the Front Box if needed
@@ -4688,6 +4693,8 @@ void THistPainter::PaintTriangles(Option_t *option)
       PaintLegoAxis(axis, 90);
       delete axis;
    }
+   
+   if (Hoption.Zscale) PaintPalette();
 
    delete fLego; fLego = 0;
 }
