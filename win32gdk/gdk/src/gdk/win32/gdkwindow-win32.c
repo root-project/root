@@ -548,6 +548,8 @@ gdk_window_internal_destroy(GdkWindow * window,
    case GDK_WINDOW_TEMP:
    case GDK_WINDOW_FOREIGN:
       if (!GDK_DRAWABLE_DESTROYED(window)) {
+         if (GDK_WINDOW_WIN32DATA(window)->xcursor != NULL)
+            DestroyCursor (GDK_WINDOW_WIN32DATA (window)->xcursor);
          if (private->parent) {
             GdkWindowPrivate *parent_private =
                 (GdkWindowPrivate *) private->parent;
@@ -1841,7 +1843,7 @@ gdk_window_set_icon(GdkWindow * window,
    SendMessage((HWND) GDK_DRAWABLE_XID(window), WM_SETICON, ICON_BIG,
                (LPARAM) hicon);
 
-   DeleteObject(hicon);
+   DestroyIcon(hicon);
    DeleteObject(hbitmap_mask);
 // bb add end  
    /* Nothing to do, really. As we share window classes between windows
