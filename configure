@@ -515,7 +515,7 @@ with options, prefix with --with-, enables corresponding support
    pythia6-libdir  PYHTIA6 support, location of libPythia6
    sapdb-incdir    SapDB support, location of sql.h
    sapdb-libdir    SapDB support, location of libsqlod
-   shift-incdir    RFIO support, location of stage_api.h
+   shift-incdir    RFIO support, location of rfio_api.h
    shift-libdir    RFIO support, location of libshift
    srp             Secure Remote Passwd support, location of SRP distribution
    srp-incdir      SRP support, location header of t_server.h
@@ -1071,12 +1071,12 @@ fi
 #
 # (See http://www.cern.ch)
 #
-# Check for stage_api.h and libshift.a
+# Check for rfio_api.h and libshift.a
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
     # Check for RFIO include and library
-    check_header "stage_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
+    check_header "rfio_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
 	/cern/pro/include /cern/new/include /cern/old/include \
 	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
 	/usr/local/include/shift /usr/include /usr/local/include
@@ -1084,8 +1084,8 @@ if test ! "x$enable_rfio" = "xno" ; then
     shiftincdir=$found_dir
 
     if test ! "x$shiftincdir" = "x"; then
-        message "Checking whether stage_out_hsm declared in $shiftinc"
-        if `grep stage_out_hsm $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
+        message "Checking whether rfio_fchmod declared in $shiftinc"
+        if `grep rfio_fchmod $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
             echo "yes"
         else
             shiftincdir=""
