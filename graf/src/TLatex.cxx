@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.3 2000/06/05 07:26:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.4 2000/06/05 10:13:37 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -14,9 +14,11 @@
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TVirtualPad.h"
+#include "TVirtualPS.h"
 #include "TArc.h"
 
 const Double_t kPI = TMath::Pi();
+const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
 
@@ -893,7 +895,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
          } else {
             fs1 = Readfs();
             Analyse(x,y,spec,text+strlen(tab3[OpAbove])+1,length-strlen(tab3[OpAbove])-1);
-            Float_t sub = GetHeight()*spec.size/12;
+//            Float_t sub = GetHeight()*spec.size/12;
+            Float_t sub = GetHeight()*spec.size/14;
             Float_t x1 , y1 , x2, y2, x3, x4;
             switch(OpAbove) {
             case 0: // bar
@@ -918,10 +921,10 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                break;
             case 3: // hat
                x2 = x+fs1.Width()/2 ;
-               y2 = y-2*sub-fs1.Dessus() ;
-               x1 = x ;
-               y1 = y-fs1.Dessus() ;
-               x3 = x+fs1.Width() ;
+               y1 = y +sub -fs1.Dessus() ;
+               y2 = y1-2*sub;
+               x1 = x2-fs1.Width()/3 ;
+               x3 = x2+fs1.Width()/3 ;
                DrawLine(x1,y1,x2,y2,spec);
                DrawLine(x2,y2,x3,y1,spec);
                break;
@@ -935,10 +938,18 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                DrawLine(x3,y1,x4,y1,spec);
                break;
             case 5: // acute
-               DrawLine(x+fs1.Width()/2-sub,y-sub-fs1.Dessus(),x+fs1.Width()/2+sub,y-3*sub-fs1.Dessus(),spec);
+               x1 = x+fs1.Width()/2-0.5*sub;
+               y1 = y +sub -fs1.Dessus() ;
+               x2 = x1 +2*sub;
+               y2 = y1 -2*sub;
+               DrawLine(x1,y1,x2,y2,spec);
                break;
             case 6: // grave
-               DrawLine(x+fs1.Width()/2-sub,y-3*sub-fs1.Dessus(),x+fs1.Width()/2+sub,y-sub-fs1.Dessus(),spec);
+               x1 = x+fs1.Width()/2-sub;
+               y1 = y-sub-fs1.Dessus() ;
+               x2 = x1 +2*sub;
+               y2 = y1 +2*sub;
+               DrawLine(x1,y1,x2,y2,spec);
                break;
             case 7: // check
                x1 = x+fs1.Width()/2 ;
@@ -1359,6 +1370,7 @@ void TLatex::PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const
 {
 // Main drawing function
 
+      
       TAttText::Modify();  //Change text attributes only if necessary
 
        // do not use Latex if font is low precision
@@ -1366,6 +1378,8 @@ void TLatex::PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const
          gPad->PaintText(x,y,text1);
          return;
       }
+
+      if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
       TString newText = text1;
 
@@ -1431,6 +1445,8 @@ void TLatex::PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const
       SetLineWidth(lineW);
       SetLineColor(lineC);
       delete[] fTabSize;
+      
+      if (gVirtualPS) gVirtualPS->ResetBit(kLatex);
 }
 
 //______________________________________________________________________________
