@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.2 2000/06/28 15:30:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -294,7 +294,7 @@ public:
    virtual int             SetSockOpt(int sock, int kind, int val);
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
-   //---- Script Compiler
+   //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual int             CompileMacro(const char *filename, Option_t *opt="");
    virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetMakeExe() const;

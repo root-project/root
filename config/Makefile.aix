@@ -21,9 +21,9 @@ CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -DG__REGEXP \
 CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -DG__REGEXP -D_POSIX2_SOURCE \
                 -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
                 -DG__REDIRECTIO $(EXTRA_CFLAGS)
-MAKESHAREDLIB = $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \$$SourceFiles ; \
-                /usr/ibmcxx/bin/makeC++SharedLib -o \$$SharedLib \$$LinkedLibs \
-                -p 0 \$$ObjectFiles
+MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
+                \$$SourceFiles ; /usr/ibmcxx/bin/makeC++SharedLib \
+                -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles
 
 # Linker:
 LD            = xlC

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.6 2000/10/10 10:22:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.7 2000/10/17 12:24:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1255,89 +1255,95 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   // (the ... have to be replaced by the actual values and are here only to
   // shorten this comment).
 
-  // Analyze the options
+  // ======= Analyze the options
   Bool_t keep = kFALSE;
   Bool_t recompile = kFALSE;
   if (opt) {
      keep = (strchr(opt,'k')!=0);
      recompile = (strchr(opt,'f')!=0);
   }
+  // if non-zero, build_loc indicates where to build the shared library.
+  TString build_loc = "";
 
-  // Get the right file names for the dictionnary and the shared library
+  // ======= Get the right file names for the dictionnary and the shared library
   TString library = filename;
   ExpandFileName( library );
-  Ssiz_t where = library.Last('.');
 
-  TString extension = filename;
-  extension.Replace( 0, where+1, 0 , 0);
+  TString file_location( DirName( library ) );
+  // so far we do not distinguish
+  if (build_loc.Length()==0) build_loc = file_location;
+
+  Ssiz_t dot_pos = library.Last('.');
+  TString extension = library;
+  extension.Replace( 0, dot_pos+1, 0 , 0);
+  TString filename_noext = library;
+  filename_noext.Remove( dot_pos );
 
   // Extension of shared library is platform dependent!!
-  library.Replace( where+1, library.Length()-where, fSoExt );
+  library.Replace( dot_pos, library.Length()-dot_pos, 
+                   TString("_") + extension + "." + fSoExt );
 
-  TString libname = filename;
-  libname.Remove(where);
-  TString filename_noext = libname;
-  libname.Replace( 0, libname.Last('/')+1, 0, 0);
-  libname.Replace( 0, libname.Last('\\')+1, 0, 0);
+  TString libname ( BaseName( filename_noext ) );
+  libname.Append("_").Append(extension);
 
+  // ======= Check if the library need to loaded or compiled
   if ( gInterpreter->IsLoaded(filename) ) {
-    // the script has already been loaded in interpreted mode
-    // Let's warn the user and unload it.
+     // the script has already been loaded in interpreted mode
+     // Let's warn the user and unload it.
 
-    cerr << "script has already been loaded in interpreted mode" << endl;
-    cerr << "Unloading " << filename << " and compiling it" << endl;
+     cerr << "script has already been loaded in interpreted mode" << endl;
+     cerr << "Unloading " << filename << " and compiling it" << endl;
 
      if ( G__unloadfile( (char*) filename ) != 0 ) {
-      // We can not unload it.
-      return(G__LOADFILE_FAILURE);
-    }
+       // We can not unload it.
+       return(G__LOADFILE_FAILURE);
+     }
   }
 
   Bool_t modified = kFALSE;
   if ( !recompile ) {
-    Long_t lib_time, script_time;
-    if ( GetPathInfo( library, 0, 0, 0, &lib_time ) == 0 ) {
+     Long_t lib_time, script_time;
+     if ( GetPathInfo( library, 0, 0, 0, &lib_time ) == 0 ) {
 
-      // If the time library is older than the script we
-      // are going to recompile !
-      GetPathInfo( filename, 0, 0, 0, &script_time );
-      modified = ( lib_time <= script_time );
-      recompile = modified;
-    } else {
-      recompile = kTRUE;
-    }
+        // If the time library is older than the script we
+        // are going to recompile !
+        GetPathInfo( filename, 0, 0, 0, &script_time );
+        modified = ( lib_time <= script_time );
+        recompile = modified;
+     } else {
+        recompile = kTRUE;
+     }
   }
 
   if ( gInterpreter->IsLoaded(library)
        || strlen(GetLibraries(library,"D")) != 0 ) {
-    // The library has already been built and loaded.
+     // The library has already been built and loaded.
 
-    if (modified)
-      cerr << "Modified ";
-    else
-      cerr << "Unmodified ";
-      cerr << "script has already been compiled and loaded. " << endl;
-    if ( !recompile ) {
-      return G__LOADFILE_SUCCESS;
-    } else {
+     if (modified)
+        cerr << "Modified ";
+     else
+        cerr << "Unmodified ";
+     cerr << "script has already been compiled and loaded. " << endl;
+     if ( !recompile ) {
+        return G__LOADFILE_SUCCESS;
+     } else {
 #ifdef R__KCC
-      cerr << "Shared library can not be updated!" << endl;
+        cerr << "Shared library can not be updated (when using the KCC compiler)!" 
+             << endl;
+        return G__LOADFILE_DUPLICATE;
 #else
-      cerr << "It will be regenerated and reloaded!" << endl;
+        // the following is not working in KCC because it seems that dlclose
+        // does not properly get rid of the object.  It WILL provoke a
+        // core dump at termination.
+
+        cerr << "It will be regenerated and reloaded!" << endl;
+        if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
+          // The library is being used. We can not unload it.
+          return(G__LOADFILE_FAILURE);
+        }
+        Unlink(library);
 #endif
-#ifdef R__KCC
-      return G__LOADFILE_DUPLICATE;
-#else
-      // the following is not working in KCC because it seems that dlclose
-      // does not properly get rid of the object.  It WILL provoke a
-      // core dump at termination.
-      if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
-	// The library is being used. We can not unload it.
-	return(G__LOADFILE_FAILURE);
-      }
-      Unlink(library);
-#endif
-    }
+     }
 
   }
   if (!recompile) {
@@ -1347,29 +1353,28 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
 
   cerr << "Creating shared library " << library << endl;
 
-  TString dict = tmpnam(0);
+  // ======= Select the dictionary name
+  TString dict = BaseName( tmpnam(0) );
   // do a basename to remove /var/tmp
-  // because because some compiler do not add a -I. when compiling
-  // file given by full pathname!
-  dict.Replace( 0, dict.Last('/')+1, 0, 0);
-  // for windows style
-  dict.Replace( 0, dict.Last('\\')+1, 0, 0);
+
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
   dict.ReplaceAll( "-","_" );
   if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
+  dict.Prepend( build_loc + "/" ); 
   TString dicth = dict;
   TString dictObj = dict;
   dict += extension;
   dicth += "h";
   dictObj += fObjExt;
 
-  // Generate a linkdef file
+  // ======= Generate a linkdef file
 
   TString linkdef = tmpnam(0);
   linkdef += "linkdef.h";
   ofstream linkdefFile( linkdef, ios::out );
-  linkdefFile << "// File Automatically generated by the ROOT Script Compiler " << endl;
+  linkdefFile << "// File Automatically generated by the ROOT Script Compiler " 
+              << endl;
   linkdefFile << endl;
   linkdefFile << "#ifdef __CINT__" << endl;
   linkdefFile << endl;
@@ -1388,7 +1393,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   while ( incPath.Index(" :") != -1 ) {
     incPath.ReplaceAll(" :",":");
   }
-  incPath.Prepend(".:");
+  incPath.Prepend(file_location+":.:");
+  if (gDebug>5) cout << "Looking for header in:" << endl << incPath << endl;
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
   for ( int i = 0; i < 6; i++ ) {
     char * name;
@@ -1406,7 +1412,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   linkdefFile << "#endif" << endl;
   linkdefFile.close();
 
-  // Generate a command lines
+  // ======= Generate the three command lines
 
   TString rcint = "rootcint -f ";
   rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
@@ -1420,16 +1426,18 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   // dict.Append(" ").Append(filename);
   cmd.ReplaceAll("$SourceFiles",dict);
   cmd.ReplaceAll("$ObjectFiles",dictObj);
-  cmd.ReplaceAll("$IncludePath",GetIncludePath());
+  cmd.ReplaceAll("$IncludePath",TString(GetIncludePath()) + " -I" + build_loc);
   cmd.ReplaceAll("$SharedLib",library);
   cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
   cmd.ReplaceAll("$LibName",libname);
+  cmd.ReplaceAll("$BuildDir",build_loc);
 
   TString testcmd = fMakeExe;
   TString fakeMain = tmpnam(0);
   fakeMain += extension;
   ofstream fakeMainFile( fakeMain, ios::out );
-  fakeMainFile << "// File Automatically generated by the ROOT Script Compiler " << endl;
+  fakeMainFile << "// File Automatically generated by the ROOT Script Compiler " 
+               << endl;
   fakeMainFile << "int main(char*argc,char**argvv) {};" << endl;
   fakeMainFile.close();
   // We could append this fake main routine to the compilation line.
@@ -1447,9 +1455,18 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   testcmd.ReplaceAll("$ExeName",exec);
   testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
 
-  // Run the build
+  // ======= Run the build
 
+  if (gDebug>3) {
+     cout << "Creating the dictionary files." << endl;
+     if (gDebug>4) cout << rcint << endl;
+  }
   int result = !gSystem->Exec(rcint);
+
+  if (gDebug>3) {
+     cout << "Compiling the dictionary and script files." << endl;
+     if (gDebug>4) cout << cmd << endl;
+  }
   if (result) result = !gSystem->Exec( cmd );
 
   if ( result ) {
@@ -1461,35 +1478,40 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
     // by the library are present.
     G__Set_RTLD_NOW();
 #endif
+    if (gDebug>3) cout << "Loading the shared library." << endl;    
     result = !gSystem->Load(library);
 #ifndef NOCINT
     G__Set_RTLD_LAZY();
 #endif
 
     if ( !result ) {
-      // Try to output unresolved symbols
+      if (gDebug>3) {
+         cout << "Testing for missing symbols:" << endl; 
+         if (gDebug>4) cout << testcmd << endl;
+      }
       gSystem->Exec(testcmd);
       gSystem->Unlink( exec );
     }
 
   };
 
-  if (gDebug>3) {
-     rcint.Prepend("echo ");
-     cmd.Prepend("echo \" ").Append(" \" ");
-     testcmd.Prepend("echo \" ").Append(" \" ");
-     gSystem->Exec(rcint);
-     gSystem->Exec( cmd );
-     gSystem->Exec(testcmd);
-   } else {
+  if (gDebug<=5) {
      gSystem->Unlink( dict );
      gSystem->Unlink( dicth );
      gSystem->Unlink( dictObj );
      gSystem->Unlink( linkdef );
      gSystem->Unlink( fakeMain );
      gSystem->Unlink( exec );
-   }
-
+  } 
+  if (gDebug>6) {
+     rcint.Prepend("echo ");
+     cmd.Prepend("echo \" ").Append(" \" ");
+     testcmd.Prepend("echo \" ").Append(" \" ");
+     gSystem->Exec(rcint);
+     gSystem->Exec( cmd );
+     gSystem->Exec(testcmd);
+  } 
+  
   return result;
 }
 
@@ -1561,6 +1583,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //   $SourceFiles        Name of source files to be compiled
    //   $SharedLib          Name of the shared library being created
    //   $LibName            Name of shared library without extension
+   //   $BuildDir           Directory where the files will be created 
    //   $IncludePath        value of fIncludePath
    //   $LinkedLibs         value of fLinkedLibs
    //   $ObjectFiles        Name of source files to be compiler with
