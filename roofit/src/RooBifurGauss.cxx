@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.cc,v 1.14 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.15 2004/11/29 21:15:48 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -22,7 +22,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.14 2004/11/29 13:06:21 wverkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.15 2004/11/29 21:15:48 wverkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
@@ -61,13 +61,13 @@ Double_t RooBifurGauss::evaluate() const {
   return exp(coef*arg*arg);
 }
 
-Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
 }
 
-Double_t RooBifurGauss::analyticalIntegral(Int_t code) const 
+Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {
   case 1: 
@@ -88,20 +88,20 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code) const
       Double_t xscaleR = root2*sigmaR;
 
       Double_t integral = 0.0;
-      if(x.max() < mean)
+      if(x.max(rangeName) < mean)
       {
-	integral = sigmaL * ( erf((x.max() - mean)/xscaleL) - erf((x.min() - mean)/xscaleL) );
+	integral = sigmaL * ( erf((x.max(rangeName) - mean)/xscaleL) - erf((x.min(rangeName) - mean)/xscaleL) );
       }
-      else if (x.min() > mean)
+      else if (x.min(rangeName) > mean)
       {
-	integral = sigmaR * ( erf((x.max() - mean)/xscaleR) - erf((x.min() - mean)/xscaleR) );
+	integral = sigmaR * ( erf((x.max(rangeName) - mean)/xscaleR) - erf((x.min(rangeName) - mean)/xscaleR) );
       }
       else
       {
-	integral = sigmaR*erf((x.max() - mean)/xscaleR) - sigmaL*erf((x.min() - mean)/xscaleL);
+	integral = sigmaR*erf((x.max(rangeName) - mean)/xscaleR) - sigmaL*erf((x.min(rangeName) - mean)/xscaleL);
       }
-      //      return rootPiBy2*(sigmaR*erf((x.max() - mean)/xscaleR) - 
-      //			sigmaL*erf((x.min() - mean)/xscaleL));
+      //      return rootPiBy2*(sigmaR*erf((x.max(rangeName) - mean)/xscaleR) - 
+      //			sigmaL*erf((x.min(rangeName) - mean)/xscaleL));
       return integral*rootPiBy2;
     }
   }  

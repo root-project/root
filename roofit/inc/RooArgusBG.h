@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooArgusBG.rdl,v 1.8 2003/05/14 05:30:31 wverkerke Exp $
+ *    File: $Id: RooArgusBG.rdl,v 1.9 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,8 +32,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooArgusBG(*this,newname); }
   inline virtual ~RooArgusBG() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
   RooRealProxy m ;

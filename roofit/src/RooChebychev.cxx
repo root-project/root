@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.5 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooChebychev.cc,v 1.6 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -86,16 +86,17 @@ Double_t RooChebychev::evaluate() const
   return sum;
 }
 
-Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
 
-Double_t RooChebychev::analyticalIntegral(Int_t code) const 
+Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
-  Double_t xmin = _x.min(); Double_t xmax = _x.max();
+  // WVE check that this works all right for sub ranges
+  Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
   Double_t norm(0) ;
   switch(_coefList.getSize()) {
   case  7: case  6: norm+=((RooAbsReal&)_coefList[5]).getVal()*(-1 + 18./3. - 48./5. + 32./7.);

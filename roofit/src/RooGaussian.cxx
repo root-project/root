@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussian.cc,v 1.20 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.21 2004/11/29 21:15:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <math.h>
+using std::cout ;
+using std::endl ;
 
 #include "RooFitModels/RooGaussian.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -53,7 +55,7 @@ Double_t RooGaussian::evaluate() const
 
 
 
-Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
@@ -61,7 +63,7 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 
 
-Double_t RooGaussian::analyticalIntegral(Int_t code) const 
+Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
 
@@ -69,7 +71,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code) const
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   
   Double_t xscale = root2*sigma;
-  return rootPiBy2*sigma*(erf((x.max()-mean)/xscale)-erf((x.min()-mean)/xscale));
+  return rootPiBy2*sigma*(erf((x.max(rangeName)-mean)/xscale)-erf((x.min(rangeName)-mean)/xscale));
 }
 
 

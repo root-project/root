@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id: RooParametricStepFunction.cc,v 1.2 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.cc,v 1.3 2004/11/29 21:15:51 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -108,7 +108,7 @@ RooParametricStepFunction::~RooParametricStepFunction()
 }
 
 
-Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
@@ -116,9 +116,11 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 
 
-Double_t RooParametricStepFunction::analyticalIntegral(Int_t code) const 
+Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
+
+  // WVE needs adaptation for integration over sub ranges
 
   Double_t sum(1.0) ;
   return sum;  

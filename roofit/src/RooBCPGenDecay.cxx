@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.12 2004/11/29 21:15:48 wverkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
@@ -136,7 +136,7 @@ Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& a
 
 
 
-Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) const 
+Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* rangeName) const 
 {
   switch(code) {
     // No integration

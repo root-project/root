@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.17 2004/11/29 13:43:44 wverkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.18 2004/11/29 21:15:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -117,7 +117,7 @@ Int_t RooBMixDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& ana
 
 
 
-Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) const 
+Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* rangeName) const 
 {  
   switch(code) {
     // No integration

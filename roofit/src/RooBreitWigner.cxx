@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.cc,v 1.7 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooBreitWigner.cc,v 1.8 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -53,20 +53,20 @@ Double_t RooBreitWigner::evaluate() const
 }
 
 
-Int_t RooBreitWigner::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooBreitWigner::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
 }
 
 
-Double_t RooBreitWigner::analyticalIntegral(Int_t code) const 
+Double_t RooBreitWigner::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {
   case 1: 
     {
       Double_t c = 2./width;
-      return c*(atan(c*(x.max()-mean)) - atan(c*(x.min()-mean)));
+      return c*(atan(c*(x.max(rangeName)-mean)) - atan(c*(x.min(rangeName)-mean)));
     }
   }
   

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooExponential.cc,v 1.9 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooExponential.cc,v 1.10 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,19 +41,19 @@ Double_t RooExponential::evaluate() const{
   return exp(c*x);
 }
 
-Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
 }
 
-Double_t RooExponential::analyticalIntegral(Int_t code) const 
+Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {
   case 1: 
     {
       if(c == 0.0) return 0;
-      return ( exp( c*x.max() ) - exp( c*x.min() ) )/c;
+      return ( exp( c*x.max(rangeName) ) - exp( c*x.min(rangeName) ) )/c;
     }
   }
   

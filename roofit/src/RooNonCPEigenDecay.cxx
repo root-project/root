@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.16 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.17 2004/11/29 21:15:50 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -260,7 +260,7 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( RooArgSet& allVars,
 }
 
 Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex, 
-						     Int_t code ) const 
+						     Int_t code, const char* rangeName ) const 
 {
   // correct for the right/wrong charge...
   Int_t rhoQc = _rhoQ*int(_correctQ);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooArgusBG.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooArgusBG.cc,v 1.12 2004/11/29 21:15:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,7 +64,7 @@ Double_t RooArgusBG::evaluate() const {
 }
 
 
-Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const
+Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (p.arg().isConstant()) {
     // We can integrate over m if power = 0.5
@@ -75,13 +75,13 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
 }
 
 
-Double_t RooArgusBG::analyticalIntegral(Int_t code) const
+Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code==1);
   // Formula for integration over m when p=0.5
   static const Double_t pi = atan2(0.0,-1.0);
-  Double_t min = (m.min() < m0) ? m.min() : m0;
-  Double_t max = (m.max() < m0) ? m.max() : m0;
+  Double_t min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;
+  Double_t max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
   Double_t f1 = (1.-pow(min/m0,2));
   Double_t f2 = (1.-pow(max/m0,2));
   Double_t aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/pow(-c,1.5)*sqrt(pi)*erf(sqrt(-c*f1)));

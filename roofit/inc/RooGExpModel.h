@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.rdl,v 1.10 2003/09/10 04:41:20 wverkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.11 2004/04/05 22:38:35 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,8 +57,8 @@ public:
   virtual ~RooGExpModel();
   
   virtual Int_t basisCode(const char* name) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
@@ -75,9 +75,9 @@ protected:
   RooComplex calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
   Double_t calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const ;
   RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
-	Double_t sig, Double_t rtau, Double_t fsign) const ; // modified FMV,07/24/03
+	                     Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // modified FMV,07/24/03
   Double_t calcSinConvNorm(Double_t sign, Double_t tau, 
-        Double_t sig, Double_t rtau, Double_t fsign) const ; // added FMV,08/18/03
+        Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // added FMV,08/18/03
   //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   virtual Double_t evaluate() const ;

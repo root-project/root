@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.cc,v 1.13 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.14 2004/11/29 21:15:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -133,7 +133,7 @@ Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& a
 
 
 
-Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) const 
+Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* rangeName) const 
 {
   switch(code) {
     // No integration

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooExponential.rdl,v 1.5 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooExponential.rdl,v 1.6 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooExponential(*this,newname); }
   inline virtual ~RooExponential() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
   RooRealProxy x;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.30 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.31 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -279,7 +279,7 @@ Double_t RooGaussModel::evaluate() const
 
 
 
-Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   switch(_basisCode) {    
 
@@ -323,7 +323,7 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
-Double_t RooGaussModel::analyticalIntegral(Int_t code) const 
+Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   static Double_t root2 = sqrt(2.) ;
   //static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
@@ -333,7 +333,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   // Code must be 1 or 2
   assert(code==1||code==2) ;
   if (code==2) {
-    ssfInt = (ssf.max()-ssf.min()) ;
+    ssfInt = (ssf.max(rangeName)-ssf.min(rangeName)) ;
   }
 
 
@@ -350,8 +350,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     Double_t xscale = root2*(sigma*ssf);
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
     
-    Double_t xpmin = (x.min()-(mean*msf))/xscale ;
-    Double_t xpmax = (x.max()-(mean*msf))/xscale ;
+    Double_t xpmin = (x.min(rangeName)-(mean*msf))/xscale ;
+    Double_t xpmax = (x.max(rangeName)-(mean*msf))/xscale ;
  
     Double_t result ;
     if (_asympInt) { // modified FMV, 07/24/03
@@ -384,8 +384,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 
   // *** 3rd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   Double_t c = (sigma*ssf)/(root2*tau) ; 
-  Double_t xpmin = (x.min()-(mean*msf))/tau ;
-  Double_t xpmax = (x.max()-(mean*msf))/tau ;
+  Double_t xpmin = (x.min(rangeName)-(mean*msf))/tau ;
+  Double_t xpmax = (x.max(rangeName)-(mean*msf))/tau ;
   Double_t umin = xpmin/(2*c) ;
   Double_t umax = xpmax/(2*c) ;
 
@@ -529,13 +529,13 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     Double_t tau1 = 1/(1/tau-dgamma/2) ; 
     Double_t tau2 = 1/(1/tau+dgamma/2) ;
     Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
-    Double_t xpmin1 = (x.min()-(mean*msf))/tau1 ;
-    Double_t xpmax1 = (x.max()-(mean*msf))/tau1 ;
+    Double_t xpmin1 = (x.min(rangeName)-(mean*msf))/tau1 ;
+    Double_t xpmax1 = (x.max(rangeName)-(mean*msf))/tau1 ;
     Double_t umin1 = xpmin1/(2*c1) ;
     Double_t umax1 = xpmax1/(2*c1) ;
     Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
-    Double_t xpmin2 = (x.min()-(mean*msf))/tau2 ;
-    Double_t xpmax2 = (x.max()-(mean*msf))/tau2 ;
+    Double_t xpmin2 = (x.min(rangeName)-(mean*msf))/tau2 ;
+    Double_t xpmax2 = (x.max(rangeName)-(mean*msf))/tau2 ;
     Double_t umin2 = xpmin2/(2*c2) ;
     Double_t umax2 = xpmax2/(2*c2) ;
     //Double_t c12 = c1*c1;
@@ -577,13 +577,13 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     Double_t tau1 = 1/(1/tau-dgamma/2) ; 
     Double_t tau2 = 1/(1/tau+dgamma/2) ;
     Double_t c1 = (sigma*ssf)/(root2*tau1) ; 
-    Double_t xpmin1 = (x.min()-(mean*msf))/tau1 ;
-    Double_t xpmax1 = (x.max()-(mean*msf))/tau1 ;
+    Double_t xpmin1 = (x.min(rangeName)-(mean*msf))/tau1 ;
+    Double_t xpmax1 = (x.max(rangeName)-(mean*msf))/tau1 ;
     Double_t umin1 = xpmin1/(2*c1) ;
     Double_t umax1 = xpmax1/(2*c1) ;
     Double_t c2 = (sigma*ssf)/(root2*tau2) ; 
-    Double_t xpmin2 = (x.min()-(mean*msf))/tau2 ;
-    Double_t xpmax2 = (x.max()-(mean*msf))/tau2 ;
+    Double_t xpmin2 = (x.min(rangeName)-(mean*msf))/tau2 ;
+    Double_t xpmax2 = (x.max(rangeName)-(mean*msf))/tau2 ;
     Double_t umin2 = xpmin2/(2*c2) ;
     Double_t umax2 = xpmax2/(2*c2) ;
     //Double_t c12 = c1*c1;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooPolynomial.rdl,v 1.4 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooPolynomial.rdl,v 1.5 2004/04/05 22:38:35 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,8 +35,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooPolynomial(*this, newname); }
   virtual ~RooPolynomial() ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
 

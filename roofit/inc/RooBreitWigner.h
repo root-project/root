@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.rdl,v 1.4 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBreitWigner.rdl,v 1.5 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -30,8 +30,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooBreitWigner(*this,newname); }
   inline virtual ~RooBreitWigner() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
 

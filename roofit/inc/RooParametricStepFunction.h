@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooParametricStepFunction.rdl,v 1.1 2004/04/01 22:57:36 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -32,8 +32,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooParametricStepFunction(*this, newname); }
   virtual ~RooParametricStepFunction() ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   Int_t getnBins();
   Double_t* getLimits();
 

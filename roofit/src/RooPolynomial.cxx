@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooPolynomial.cc,v 1.9 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooPolynomial.cc,v 1.10 2004/11/29 21:15:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -116,7 +116,7 @@ Double_t RooPolynomial::evaluate() const
 }
 
 
-Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
@@ -124,11 +124,11 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
-Double_t RooPolynomial::analyticalIntegral(Int_t code) const 
+Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
 
-  Double_t sum(_x.max()-_x.min()) ;
+  Double_t sum(_x.max(rangeName)-_x.min(rangeName)) ;
 
   const RooArgSet* nset = _coefList.nset() ;
   Int_t order(_lowestOrder) ;
@@ -137,7 +137,7 @@ Double_t RooPolynomial::analyticalIntegral(Int_t code) const
 
   // Primitive = sum(k) coef_k * 1/(k+1) x^(k+1)
   while(coef=(RooAbsReal*)_coefIter->Next()) {
-    sum += coef->getVal(nset)*(pow(_x.max(),order+1)-pow(_x.min(),order+1))/(order+1) ; 
+    sum += coef->getVal(nset)*(pow(_x.max(rangeName),order+1)-pow(_x.min(rangeName),order+1))/(order+1) ; 
     order++ ;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.15 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.16 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -414,7 +414,7 @@ Double_t RooGExpModel::calcSinhConv(Double_t sign, Double_t sign1, Double_t sign
 }
 */
 
-Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   switch(_basisCode) {
 
@@ -456,7 +456,7 @@ Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-Double_t RooGExpModel::analyticalIntegral(Int_t code) const 
+Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   static Double_t root2 = sqrt(2.) ;
 //   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
@@ -465,7 +465,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
   // Code must be 1 or 2
   assert(code==1||code==2) ;
   if (code==2) {
-    ssfInt = (ssf.max()-ssf.min()) ;
+    ssfInt = (ssf.max(rangeName)-ssf.min(rangeName)) ;
   }
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
@@ -488,8 +488,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
 
     //Double_t result = 1.0 ; // WVE inferred from limit(tau->0) of cosBasisNorm
     // finite+asymtotic normalization, added FMV, 07/24/03
-    Double_t xpmin = x.min()/rtau ;
-    Double_t xpmax = x.max()/rtau ;
+    Double_t xpmin = x.min(rangeName)/rtau ;
+    Double_t xpmax = x.max(rangeName)/rtau ;
     Double_t c = sig/(root2*rtau) ;
     Double_t umin = xpmin/(2*c) ;
     Double_t umax = xpmax/(2*c) ;
@@ -520,8 +520,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
     //if (basisSign==Both) result *= 2 ;
     // finite+asymtotic normalization, added FMV, 07/24/03
     Double_t result(0.);
-    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,sig,rtau,fsign);
-    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,sig,rtau,fsign);
+    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,sig,rtau,fsign,rangeName);
+    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,sig,rtau,fsign,rangeName);
     //cout << "Integral 3rd form " << " result= " << result*ssfInt << endl;
     return result*ssfInt ;
   }
@@ -537,8 +537,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
     //if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,omega).im() ;
     //if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,omega).im() ;
     // finite+asymtotic normalization, added FMV, 07/24/03
-    if (basisSign!=Minus) result += -1*calcSinConvNorm(+1,tau,omega,sig,rtau,fsign).im();
-    if (basisSign!=Plus) result += -1*calcSinConvNorm(-1,tau,omega,sig,rtau,fsign).im();
+    if (basisSign!=Minus) result += -1*calcSinConvNorm(+1,tau,omega,sig,rtau,fsign,rangeName).im();
+    if (basisSign!=Plus) result += -1*calcSinConvNorm(-1,tau,omega,sig,rtau,fsign,rangeName).im();
     //cout << "Integral 4th form " << " result= " << result*ssfInt << endl;
     return result*ssfInt ;
   }
@@ -552,8 +552,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
     //if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,omega).re() ;
     //if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,omega).re() ;
     // finite+asymtotic normalization, added FMV, 07/24/03
-    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,omega,sig,rtau,fsign).re();
-    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,omega,sig,rtau,fsign).re();
+    if (basisSign!=Minus) result += calcSinConvNorm(+1,tau,omega,sig,rtau,fsign,rangeName).re();
+    if (basisSign!=Plus) result += calcSinConvNorm(-1,tau,omega,sig,rtau,fsign,rangeName).re();
     //cout << "Integral 5th form " << " result= " << result*ssfInt << endl;
     return result*ssfInt ;
   }
@@ -571,10 +571,10 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
     //if (basisSign!=Minus) result += tau1-tau2 ;
     //if (basisSign!=Plus) result += tau2-tau1 ;
     // finite+asymtotic normalization, added FMV, 07/24/03
-    if (basisSign!=Minus) result += 0.5*(calcSinConvNorm(+1,tau1,sig,rtau,fsign)-
-					 calcSinConvNorm(+1,tau2,sig,rtau,fsign));
-    if (basisSign!=Plus) result += 0.5*(calcSinConvNorm(-1,tau2,sig,rtau,fsign)-
-					calcSinConvNorm(-1,tau1,sig,rtau,fsign));
+    if (basisSign!=Minus) result += 0.5*(calcSinConvNorm(+1,tau1,sig,rtau,fsign,rangeName)-
+					 calcSinConvNorm(+1,tau2,sig,rtau,fsign,rangeName));
+    if (basisSign!=Plus) result += 0.5*(calcSinConvNorm(-1,tau2,sig,rtau,fsign,rangeName)-
+					calcSinConvNorm(-1,tau1,sig,rtau,fsign,rangeName));
     //cout << "Integral 6th form " << " result= " << result*ssfInt << endl;
     return result;
     }
@@ -590,10 +590,10 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
     //if (basisSign==Both) result *= 2 ;
     // finite+asymtotic normalization, added FMV, 07/24/03
     Double_t result(0);
-    if (basisSign!=Minus) result += 0.5*(calcSinConvNorm(+1,tau1,sig,rtau,fsign)+
-					 calcSinConvNorm(+1,tau2,sig,rtau,fsign));
-    if (basisSign!=Plus) result += 0.5*(calcSinConvNorm(-1,tau1,sig,rtau,fsign)+
-					calcSinConvNorm(-1,tau2,sig,rtau,fsign));
+    if (basisSign!=Minus) result += 0.5*(calcSinConvNorm(+1,tau1,sig,rtau,fsign,rangeName)+
+					 calcSinConvNorm(+1,tau2,sig,rtau,fsign,rangeName));
+    if (basisSign!=Plus) result += 0.5*(calcSinConvNorm(-1,tau1,sig,rtau,fsign,rangeName)+
+					calcSinConvNorm(-1,tau2,sig,rtau,fsign,rangeName));
     //cout << "Integral 7th form " << " result= " << result*ssfInt << endl;
     return result;
   
@@ -606,7 +606,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code) const
 
 // modified FMV, 07/24/03. Finite+asymtotic normalization
 RooComplex RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
-					 Double_t sig, Double_t rtau, Double_t fsign) const
+					 Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const
 {
   //  old code (asymptotic normalization only)
   //  RooComplex z(1/tau,sign*omega);
@@ -614,13 +614,13 @@ RooComplex RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t o
 
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t smin1= x.min()/tau;
-  Double_t smax1= x.max()/tau;
+  Double_t smin1= x.min(rangeName)/tau;
+  Double_t smax1= x.max(rangeName)/tau;
   Double_t c1= sig/(root2*tau);
   Double_t umin1= smin1/(2*c1);  
   Double_t umax1= smax1/(2*c1);  
-  Double_t smin2= x.min()/rtau;
-  Double_t smax2= x.max()/rtau;
+  Double_t smin2= x.min(rangeName)/rtau;
+  Double_t smax2= x.max(rangeName)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t umin2= smin2/(2*c2) ;
   Double_t umax2= smax2/(2*c2) ;
@@ -635,17 +635,17 @@ RooComplex RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t o
 
 
 // added FMV, 08/17/03
-Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const
+Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const
 {
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t smin1= x.min()/tau;
-  Double_t smax1= x.max()/tau;
+  Double_t smin1= x.min(rangeName)/tau;
+  Double_t smax1= x.max(rangeName)/tau;
   Double_t c1= sig/(root2*tau);
   Double_t umin1= smin1/(2*c1);  
   Double_t umax1= smax1/(2*c1);  
-  Double_t smin2= x.min()/rtau;
-  Double_t smax2= x.max()/rtau;
+  Double_t smin2= x.min(rangeName)/rtau;
+  Double_t smax2= x.max(rangeName)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t umin2= smin2/(2*c2) ;
   Double_t umax2= smax2/(2*c2) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.rdl,v 1.16 2003/09/10 04:41:20 wverkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.17 2004/04/05 22:38:35 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,8 +48,8 @@ public:
   virtual ~RooGaussModel();
   
   virtual Int_t basisCode(const char* name) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName) const ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);

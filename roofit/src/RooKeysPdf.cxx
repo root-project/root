@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.14 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.15 2004/11/29 21:15:50 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,8 +44,8 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   // cache stuff about x
   sprintf(_varName, "%s", x.GetName());
   RooRealVar real= (RooRealVar&)(_x.arg());
-  _lo = real.getFitMin();
-  _hi = real.getFitMax();
+  _lo = real.getMin();
+  _hi = real.getMax();
   _binWidth = (_hi-_lo)/(_nPoints-1);
 
   // form the lookup table

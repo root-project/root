@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.rdl,v 1.6 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooDstD0BG.rdl,v 1.7 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -34,8 +34,8 @@ public:
     return new RooDstD0BG(*this,newname); }
   inline virtual ~RooDstD0BG() { };
   
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   
 protected:
 
