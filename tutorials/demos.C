@@ -5,7 +5,9 @@
 // To see the HELP of a button, click on the right mouse button.
 
    gROOT->Reset();
-   bar = new TControlBar("vertical", "Demos");
+   gStyle->SetScreenFactor(1); //if you have a large screen, select 1,2 or 1.4
+
+   bar = new TControlBar("vertical", "Demos",10,10);
 
    bar->AddButton("Help on Demos",".x demoshelp.C", "Click Here For Help on Running the Demos");
    bar->AddButton("browser",     "new TBrowser;",  "Start the ROOT Browser");
