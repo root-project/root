@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.44 2002/11/14 17:27:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.45 2002/12/10 17:26:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1956,13 +1956,15 @@ void TSystem::SetObjExt(const char *ObjExt)
 }
 
 //______________________________________________________________________________
-TString TSystem::SplitAclicMode(const char* filename, TString& aclicMode, TString &arguments) const
+TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode, 
+                                TString &arguments, TString &io) const
 {
    // This method split a filename of the form:
    //   [path/]macro.C[+|++[g|O]][(args)].
-   // It stores the ACliC mode [+|++[g|O]] in 'mode'
-   // and the arguments (including paranthesis) in arg
-
+   // It stores the ACliC mode [+|++[g|O]] in 'mode',
+   // the arguments (including paranthesis) in arg
+   // and the I/O indirection in io
+  
    char *fname = Strip(filename);
 
    char *arg = strchr(fname, '(');
@@ -1977,6 +1979,24 @@ TString TSystem::SplitAclicMode(const char* filename, TString& aclicMode, TStrin
       }
       arg++;
    }
+
+   // strip off I/O redirect tokens from filename
+   char *s2   = 0;
+   char *s3;
+   s2 = strstr(fname, ">>");
+   if (!s2) s2 = strstr(fname, "2>");
+   if (!s2) s2 = strchr(fname, '>');
+   s3 = strchr(fname, '<');
+   if (s2 && s3) s2 = s2<s3 ? s2 : s3;
+   if (s3 && !s2) s2 = s3;
+   if (s2) {
+     s2--;
+     while (s2 && *s2 == ' ') s2--;
+     s2++;
+     io = s2; // ssave = *s2;
+     *s2 = 0;
+   } else 
+     io = "";
 
    // remove the possible ACLiC + or ++ and g or O
    char postfix[4];

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.85 2002/12/10 15:14:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.86 2002/12/10 17:26:48 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1300,8 +1300,12 @@ void TROOT::LoadMacro(const char *filename, int *error)
    if (fInterpreter) {
       TString aclicMode;
       TString arguments;
-      TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments);
+      TString io;
+      TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
 
+      if (arguments.Length()) {
+         Warning("LoadMacro", "argument(s) \"%s\" ignored", arguments.Data(), GetMacroPath());
+      }
       char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
       if (!mac) {
          Error("LoadMacro", "macro %s not found in path %s", fname.Data(), GetMacroPath());
@@ -1310,6 +1314,7 @@ void TROOT::LoadMacro(const char *filename, int *error)
       } else {
          fname = mac;
          fname += aclicMode;
+         fname += io;
          fInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)error);
       }
       delete [] mac;
@@ -1330,7 +1335,8 @@ Int_t TROOT::Macro(const char *filename, int *error)
    if (fInterpreter) {
       TString aclicMode;
       TString arguments;
-      TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments);
+      TString io;
+      TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
 
       char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
       if (!mac) {
@@ -1341,6 +1347,7 @@ Int_t TROOT::Macro(const char *filename, int *error)
          fname = mac;
          fname += aclicMode;
          fname += arguments;
+         fname += io;
          result = fInterpreter->ExecuteMacro(fname,
                                              (TInterpreter::EErrorCode*)error);
       }

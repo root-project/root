@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.21 2002/10/25 00:44:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.22 2002/12/10 17:26:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -336,7 +336,7 @@ public:
    virtual void            SetLinkdefSuffix(const char *suffix);
    virtual void            SetSoExt(const char *soExt);
    virtual void            SetObjExt(const char *objExt);
-   virtual TString         SplitAclicMode(const char *filename, TString &mode, TString &args) const;
+   virtual TString         SplitAclicMode(const char* filename, TString &mode, TString &args, TString &io) const;
    virtual void            CleanCompiledMacros();
 
    ClassDef(TSystem,0)  //ABC defining a generic interface to the OS
