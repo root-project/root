@@ -250,6 +250,10 @@ N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
 
+N: Dmytro Kustov
+E: Dmytro.Kustov@cern.ch
+D: OpenBSD port
+
 N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
