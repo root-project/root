@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.7 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.8 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -55,6 +55,28 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   // Constructor with 2 PDFs
   addPdf(pdf1) ;
   addPdf(pdf2) ;    
+}
+
+
+
+RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList, Double_t cutOff=0) :
+  RooAbsPdf(name,title), 
+  _pdfList("_pdfList","List of PDFs",this),
+  _pdfIter(_pdfList.createIterator()), 
+  _cutOff(cutOff)
+{
+  // Constructor with 2 PDFs
+  TIterator* iter = pdfList.createIterator() ;
+  RooAbsPdf* pdf ;
+  while(pdf=(RooAbsPdf*)iter->Next()) {
+    if (pdf->IsA()!=RooAbsPdf::Class()) {
+      cout << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
+	   << pdf->GetName() << " is not a PDF, ignored" << endl ;
+      continue ;
+    }
+    addPdf(*pdf) ;
+  }
+  delete iter ;
 }
 
 
