@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.28 2003/07/09 12:34:36 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.29 2003/07/10 07:41:01 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -47,6 +47,7 @@
 #include <TEnv.h>
 #include <TFile.h>
 #include <TKey.h>
+#include <TVirtualX.h>
 
 enum ETestCommandIdentifiers {
    M_FILE_OPEN,
@@ -712,9 +713,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMain->MapSubwindows();
 
    // we need to use GetDefault...() to initialize the layout algorithm...
-   fMain->Resize(fMain->GetDefaultSize());
-   //Resize(400, 200);
-
+   fMain->Resize();
    fMain->MapWindow();
 
    Connect("Created()", "TestMainFrame", this, "Welcome()");
@@ -1043,7 +1042,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
       fCleanup->Add(tent);
       fF6->AddFrame(tent);
    }
-   fF6->Resize(fF6->GetDefaultSize());
+   fF6->Resize();
 
    // another matrix with text and buttons
    fF7 = new TGGroupFrame(tf, "Tab Handling", kVerticalFrame);
@@ -1075,7 +1074,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fMain->AddFrame(fTab, fL5);
 
    fMain->MapSubwindows();
-   fMain->Resize(fMain->GetDefaultSize());
+   fMain->Resize();
 
    // position relative to the parent's window
    Window_t wdum;
@@ -1417,7 +1416,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fMain->AddFrame(f2, fL2);
 
    fMain->MapSubwindows();
-   fMain->Resize(fMain->GetDefaultSize());
+   fMain->Resize();
 
    // position relative to the parent's window
    Window_t wdum;
@@ -1817,8 +1816,8 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 
    fMain->SetWindowName("List Dir Test");
 
-   fMain->Resize(fMain->GetDefaultSize());
    fMain->MapSubwindows();
+   fMain->Resize();
    fMain->MapWindow();
 }
 
@@ -1920,14 +1919,14 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("File List Test");
-   fMain->Resize(fMain->GetDefaultSize());
    fMain->MapSubwindows();
    fMain->MapWindow();
    fContents->SetDefaultHeaders();
    fContents->DisplayDirectory();
    fContents->AddFile("..");        // up level directory
-   fContents->Layout();
+   fContents->Resize();
    fContents->StopRefreshTimer();   // stop refreshing
+   fMain->Resize();
 }
 
 TestFileList::~TestFileList()
@@ -1973,7 +1972,7 @@ void TestFileList::DisplayFile(const TString &fname)
       // user data is a filename
       entry->SetUserData((void*)StrDup(fname.Data()));
    }
-   fContents->Layout();
+   fMain->Resize();
 }
 
 void TestFileList::DisplayDirectory(const TString &fname)
@@ -1985,7 +1984,7 @@ void TestFileList::DisplayDirectory(const TString &fname)
    fContents->ChangeDirectory(fname);
    fContents->DisplayDirectory();
    fContents->AddFile("..");  // up level directory
-   fContents->Layout();
+   fMain->Resize();
 }
 
 void TestFileList::DisplayObject(const TString& fname,const TString& name)
@@ -2012,7 +2011,10 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    // handle double click
 
    if (btn!=kButton1) return;
- 
+
+   // set kWatch cursor
+   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(17));
+
    TString name(f->GetName());
    const char* fname = (const char*)f->GetUserData();
 
@@ -2023,6 +2025,8 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    } else {
       DisplayDirectory(name);
    }
+   // set kPointer cursor
+   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(14));
 }
 
 
@@ -2380,7 +2384,7 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
 
    fMain->MapSubwindows();
 
-   fMain->Resize(fMain->GetDefaultSize());
+   fMain->Resize();
 
    // position relative to the parent's window
    Window_t wdum;
