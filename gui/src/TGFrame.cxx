@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.91 2004/10/06 14:38:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.92 2004/10/07 08:25:09 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -733,7 +733,7 @@ Int_t TGFrame::GetDropType() const
 //______________________________________________________________________________
 void TGFrame::StartGuiBuilding(Bool_t on)
 {
-   //
+   // Go into GUI building mode.
 
    if (IsEditDisabled()) return;
    if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
@@ -760,7 +760,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fMustCleanup   = 0;
+   fMustCleanup   = kNoCleanup;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -781,7 +781,7 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fMustCleanup   = 0;
+   fMustCleanup   = kNoCleanup;
 
    SetLayoutManager(new TGVerticalLayout(this));
 
@@ -793,8 +793,12 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
-   if (fMustCleanup) Cleanup();
-   if (fList) fList->Delete();
+   if (fMustCleanup != kNoCleanup)
+      Cleanup();
+
+   if (fList)
+      fList->Delete();
+
    delete fList;
    delete fLayoutManager;
 }
@@ -924,13 +928,14 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SetCleanup(Int_t on)
+void TGCompositeFrame::SetCleanup(Int_t mode)
 {
-   // Turn on automatic cleanup of child frames at dtor.
+   // Turn on automatic cleanup of child frames in dtor.
    //
-   // if on is ZERO - no automatic cleanup
-   // if on > 0 - non-propagative cleanup
-   // if on < 0 - propagate Cleanup to all child_composite frames (hierarchical)
+   // if mode = kNoCleanup    - no automatic cleanup
+   // if mode = kLocalCleanup - automatic cleanup in this composite frame only
+   // if mode = kDeepCleanup  - automatic deep cleanup in this composite frame
+   //                           and all child composite frames (hierarchical)
    //
    // Attention!
    //    Hierarchical cleaning is dangerous and must be used with caution.
@@ -938,21 +943,23 @@ void TGCompositeFrame::SetCleanup(Int_t on)
    //    use Clean method in destructor ("custom deallocation").
    //    Adding such component to GUI container which is using hierarchical
    //    cleaning will produce seg. violation when container is deleted.
-   //    The reason is double deletion: first whem Clean method is invoked, 
-   //    then at "custom deallocation". 
-   //    We are going to correct all ROOT code to make it to be 
+   //    The reason is double deletion: first whem Clean method is invoked,
+   //    then at "custom deallocation".
+   //    We are going to correct all ROOT code to make it to be
    //    consitent with hierarchical cleaning scheeme.
 
-   if (on == fMustCleanup) return;
-   fMustCleanup = on;
+   if (mode == fMustCleanup)
+      return;
 
-   if (fMustCleanup < 0) {
+   fMustCleanup = mode;
+
+   if (fMustCleanup == kDeepCleanup) {
       TGFrameElement *el;
       TIter next(fList);
 
       while ((el = (TGFrameElement *) next())) {
          if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
-            el->fFrame->SetCleanup(-1);
+            el->fFrame->SetCleanup(kDeepCleanup);
          }
       }
    }
@@ -972,8 +979,10 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 
-   // if fMustCleanup < 0 - propagate Cleanup to all child_composite frames (hierarchical)
-   if (fMustCleanup < 0) f->SetCleanup(-1);
+   // in case of recusive cleanup, propagate cleanup setting to all
+   // child composite frames
+   if (fMustCleanup == kDeepCleanup)
+      f->SetCleanup(kDeepCleanup);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.16 2004/09/22 18:05:04 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.17 2004/10/06 14:38:19 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -332,7 +332,7 @@ public:
 };
 
 //______________________________________________________________________________
-TGAroundFrame::TGAroundFrame() : TGFrame(gClient->GetDefaultRoot(), 1, 1, 
+TGAroundFrame::TGAroundFrame() : TGFrame(gClient->GetDefaultRoot(), 1, 1,
                                          kTempFrame | kOwnBackground)
 {
    //
@@ -423,7 +423,7 @@ public:
       for (i = 0; i <4; i++) {
          delete fAroundFrame[i];
       }
-  
+
       delete fRepeatTimer;
       delete fGrab;
 
@@ -810,11 +810,11 @@ Bool_t TGuiBldDragManager::IsSelectedVisible()
    if (!fPimpl->fGrab) return kFALSE;
 
    Window_t w = gVirtualX->GetDefaultRootWindow();
-   Window_t src, dst, child; 
+   Window_t src, dst, child;
    Int_t x, y;
 
-   gVirtualX->TranslateCoordinates(fPimpl->fGrab->GetId(), w,  
-                                   fPimpl->fGrab->GetWidth()/2, 
+   gVirtualX->TranslateCoordinates(fPimpl->fGrab->GetId(), w,
+                                   fPimpl->fGrab->GetWidth()/2,
                                    fPimpl->fGrab->GetHeight()/2, x, y, child);
    dst = src = child = w;
 
@@ -883,7 +883,7 @@ void TGuiBldDragManager::HighlightCompositeFrame(Window_t win)
    //
 
    static Window_t gw = 0;
-  
+
    if (!win || (win == gw)) return;
 
    TGWindow *w = fClient->GetWindowById(win);
@@ -894,7 +894,7 @@ void TGuiBldDragManager::HighlightCompositeFrame(Window_t win)
    TGFrame *frame = (TGFrame*)w;
    UInt_t opt = frame->GetOptions();
 
-   if ((opt & kRaisedFrame) || (opt & kSunkenFrame)) return; 
+   if ((opt & kRaisedFrame) || (opt & kSunkenFrame)) return;
 
    gw = win;
    if (fPimpl->fPlane) {
@@ -1621,7 +1621,7 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
          parent->MapWindow();
          fLassoDrawn = kFALSE;
          SelectFrame(parent);
-   
+
          if (fBuilder) {
             fBuilder->UpdateStatusBar("Grab action performed");
          }
@@ -2316,11 +2316,11 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
    frame->Move(x > x0 ? x0 : x, y > y0 ? y0 : y);
    frame->Resize(w, h);
    frame->MapRaised();
-   frame->SetCleanup(-1);
+   frame->SetCleanup(kDeepCleanup);
 
    if (fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) {
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();
-      edit->SetCleanup(-1);
+      edit->SetCleanup(kDeepCleanup);
       ReparentFrames(frame, edit);
       frame->MapRaised();
       edit->SetLayoutBroken();
@@ -3010,7 +3010,7 @@ void TGuiBldDragManager::SetPropertyEditor(TGuiBldEditor *e)
    fEditor->ChangeSelected(fPimpl->fLastFrame);
    Connect("Selected(TGFrame*)", "TGuiBldEditor", fEditor, "ChangeSelected(TGFrame*)");
    fEditor->Connect("UpdateSelected(TGFrame*)", "TGuiBldDragManager", this,
-                    "HandleUpdateSelected(TGFrame*)");   
+                    "HandleUpdateSelected(TGFrame*)");
 }
 
 //______________________________________________________________________________

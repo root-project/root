@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.4 2004/09/22 12:34:10 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.5 2004/10/06 14:38:19 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
 
    fEditor = editor;
    fEditDisabled = kTRUE;
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
    TGFrame *frame = fEditor->GetSelected();
 
    TGCompositeFrame *f = new TGHorizontalFrame(this);
@@ -121,7 +121,7 @@ TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *edi
 
    fEditor = editor;
    fEditDisabled = kTRUE;
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
 
    TGCompositeFrame *f = new TGHorizontalFrame(this);
    f->AddFrame(new TGLabel(f, "Geometry"), new TGLayoutHints(kLHintsNormal, 1, 1));
@@ -213,7 +213,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    fBgndFrame = 0;
    fFgndFrame = 0;
 
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
 
    fBtnGroup = new TGButtonGroup(this,"Border Mode",kVerticalFrame | kFitWidth);
 
@@ -287,7 +287,7 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
    fSelected = 0;
    fEditDisabled = kTRUE;
 
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
 
    TGTab *tab = new TGTab(this, 80, 40);
 

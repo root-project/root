@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.2 2004/10/05 17:36:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.3 2004/10/06 14:38:19 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
 
    fEditDisabled = kTRUE;
 
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
 
    TGWindow *win = fClient->GetWindowByName(name);
 

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.14 2004/08/02 11:43:12 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.15 2004/09/01 14:35:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,6 +17,7 @@
 #pragma link C++ enum EButtonState;
 #pragma link C++ enum EFrameState;
 #pragma link C++ enum EFrameType;
+#pragma link C++ enum EFrameCleanup;
 #pragma link C++ enum EMWMHints;
 #pragma link C++ enum ELayoutHints;
 #pragma link C++ enum ETableLayoutHints;

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.18 2004/09/23 06:37:40 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.19 2004/10/06 14:38:19 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -37,28 +37,28 @@
 #include "TGToolTip.h"
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TGuiBuilder                                                          
-//                                                                      
+//
+// TGuiBuilder
+//
 //
 //  ************************************************
 //                ROOT GUI Builder principles
 //  ************************************************
 //
 //  With the GUI builder, we try to make the next step from WYSIWYG
-//  to embedded editing concept - WYSIWYE ("what you see is what you edit"). 
-//  The ROOT GUI Builder allows modifying real GUI objects.  
+//  to embedded editing concept - WYSIWYE ("what you see is what you edit").
+//  The ROOT GUI Builder allows modifying real GUI objects.
 //  For example, one can edit the existing GUI application $ROOTSYS/tutorials/guitest.C.
 //  GUI components can be added to a design area from a widget palette,
 //  or can be borrowed from another application.
-//  One can drag and and drop TCanvas's menu bar into the application.  
-//  GUI objects can be resized and dragged, copied and pasted. 
-//  ROOT GUI Builder allows changing the layout, snap to grid, change object's 
-//  layout order via the GUI Builder toolbar, or by options in the right-click 
+//  One can drag and and drop TCanvas's menu bar into the application.
+//  GUI objects can be resized and dragged, copied and pasted.
+//  ROOT GUI Builder allows changing the layout, snap to grid, change object's
+//  layout order via the GUI Builder toolbar, or by options in the right-click
 //  context menus.
 //  A final design can be immediatly tested and used, or saved as a C++ macro.
 //  For example, it's possible to rearrange buttons in control bar,
-//  add separators etc. and continue to use a new fancy control bar in the 
+//  add separators etc. and continue to use a new fancy control bar in the
 //  application.
 //
 //  ************************************************
@@ -97,9 +97,9 @@
 //   o Ctrl-H    - switch horizontal-vertical layout
 //   o Ctrl-G    - switch on/off grid
 //   o Ctrl-S    - save action
-//   o Ctrl-O    - open and execute a ROOT macro file.  GUI components created 
-//                 after macro execution will be emebedded to currently edited 
-//                 design area.   
+//   o Ctrl-O    - open and execute a ROOT macro file.  GUI components created
+//                 after macro execution will be emebedded to currently edited
+//                 design area.
 //   o Ctrl-N    - create new main frame
 //
 //Begin_Html
@@ -205,7 +205,7 @@ ClassImp(TGuiBuilder)
 class TGuiBuilderContainer : public TGMdiContainer {
 
 public:
-   TGuiBuilderContainer(const TGMdiMainFrame *p) : 
+   TGuiBuilderContainer(const TGMdiMainFrame *p) :
          TGMdiContainer(p, 10, 10, kOwnBackground) {
       const TGPicture *pbg = fClient->GetPicture("bld_bg.xpm");
       if (pbg) SetBackgroundPixmap(pbg->GetPicture());
@@ -214,7 +214,7 @@ public:
    virtual ~TGuiBuilderContainer() {}
    void SetEditable(Bool_t) {}
    Bool_t HandleEvent(Event_t*) { return kFALSE; }
-}; 
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
@@ -222,7 +222,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
 {
    // ctor
 
-   SetCleanup(-1);
+   SetCleanup(kDeepCleanup);
    fEditDisabled = kTRUE;
 
    if (gDragManager) {
@@ -423,7 +423,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
                         "HandleMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "TGuiBuilder", this,
                       "HandleMenu(Int_t)");
- 
+
    fMain->Connect("FrameClosed(Int_t)", "TGuiBuilder", this, "HandleWindowClosed(Int_t)");
 
    BindKeys();
@@ -554,11 +554,11 @@ void TGuiBuilder::InitMenu()
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry(new TGHotString("&About"), M_HELP_ABOUT);
 
-   fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile, 
+   fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup(new TGHotString("&Windows"), fMenuWindow,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup(new TGHotString("&Help"), fMenuHelp, 
+   fMenuBar->AddPopup(new TGHotString("&Help"), fMenuHelp,
                       new TGLayoutHints(kLHintsTop | kLHintsRight, 4, 4, 0, 0));
 }
 
@@ -642,7 +642,7 @@ void TGuiBuilder::EnableSelectedButtons(Bool_t on)
    if (btn) {
       btn->SetState(on && comp ? kButtonDown : kButtonUp);
       TGToolTip *tt = btn->GetToolTip();
-      tt->SetText(btn->IsDown() ? "Drop Frames (Ctrl-Return)" : 
+      tt->SetText(btn->IsDown() ? "Drop Frames (Ctrl-Return)" :
                                   "Grab Selected Frames (Return)");
    }
 }
@@ -860,7 +860,7 @@ Bool_t TGuiBuilder::SaveProject(Event_t *event)
    fi.fIniDir    = StrDup(dir);
 
    new TGuiBldFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
-  
+
    if (!fi.fFilename) {
       root->SetEditable(kTRUE);
       return kFALSE;
@@ -903,7 +903,7 @@ TGMdiFrame *TGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
    //
 
    const TGWindow *parent = win;
- 
+
    while (parent && (parent != fClient->GetDefaultRoot())) {
       if (parent->InheritsFrom(TGMdiFrame::Class())) {
          fEditable = (TGMdiFrame*)parent;
@@ -997,7 +997,7 @@ void TGuiBuilder::HandleWindowClosed(Int_t id)
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    fEditable = FindEditableMdiFrame(root);
- 
+
    if (id == (Int_t)fEditable->GetId()) {
       fEditable = 0;
    }
@@ -1025,7 +1025,7 @@ void TGuiBuilder::UpdateStatusBar(const char *txt)
 
       if (o && o->InheritsFrom(TGToolTip::Class())) {
          TGToolTip *tip = (TGToolTip*)o;
-         text = tip->GetText()->Data(); 
+         text = tip->GetText()->Data();
       }
    } else {
       text = txt;
@@ -1145,7 +1145,7 @@ TGFrame *TGuiBuilder::VSplitter()
    //
 
    TGHorizontalFrame *ret = new TGHorizontalFrame();
-   ret->SetCleanup(-1);
+   ret->SetCleanup(kDeepCleanup);
    TGVerticalFrame *v1 = new TGVerticalFrame(ret, 40, 10, kSunkenFrame |  kFixedWidth);
    ret->AddFrame(v1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
@@ -1168,7 +1168,7 @@ TGFrame *TGuiBuilder::HSplitter()
    //
 
    TGVerticalFrame *ret = new TGVerticalFrame();
-   ret->SetCleanup(-1);
+   ret->SetCleanup(kDeepCleanup);
    TGHorizontalFrame *v1 = new TGHorizontalFrame(ret, 10, 40, kSunkenFrame | kFixedHeight);
    ret->AddFrame(v1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 

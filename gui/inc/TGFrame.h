@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.55 2004/10/06 12:50:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.56 2004/10/06 14:38:19 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -54,6 +54,13 @@ enum EFrameState {
    kIsVisible  = BIT(0),
    kIsMapped   = kIsVisible,
    kIsArranged = BIT(1)
+};
+
+//---- frame cleanup
+enum EFrameCleanup {
+   kNoCleanup    = 0,
+   kLocalCleanup = 1,
+   kDeepCleanup  = -1
 };
 
 //---- types of frames (and borders)
@@ -247,7 +254,7 @@ public:
    virtual void    SetEditable(Bool_t) {}
    virtual void    SetLayoutBroken(Bool_t = kTRUE) {}
    virtual Bool_t  IsLayoutBroken() const { return kFALSE; }
-   virtual void    SetCleanup(Int_t = 1) {}
+   virtual void    SetCleanup(Int_t = kLocalCleanup) { /* backward compatebility */ }
    virtual Bool_t  MustCleanup() const { return kFALSE; }
 
    virtual void    SetDragType(Int_t type);
@@ -312,7 +319,7 @@ protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
    Bool_t           fLayoutBroken;    // no layout manager is used
-   Int_t            fMustCleanup;     // if non-zero Cleanup() is called in destructor
+   Int_t            fMustCleanup;     // cleanup mode (see EFrameCleanup)
 
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
@@ -325,7 +332,7 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGCompositeFrame();
-   virtual void Cleanup();
+   virtual TList *GetList() const { return fList; }
 
    virtual UInt_t GetDefaultWidth() const
                  { return GetDefaultSize().fWidth; }
@@ -355,28 +362,28 @@ public:
    TGLayoutManager *GetLayoutManager() const { return fLayoutManager; }
    void             SetLayoutManager(TGLayoutManager *l);
 
-   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
-   virtual void RemoveFrame(TGFrame *f);
-   virtual void ShowFrame(TGFrame *f);
-   virtual void HideFrame(TGFrame *f);
-   Int_t  GetState(TGFrame *f) const;
-   Bool_t IsVisible(TGFrame *f) const;
-   Bool_t IsVisible(TGFrameElement *ptr) const { return (ptr->fState & kIsVisible); }
-   Bool_t IsArranged(TGFrame *f) const;
-   Bool_t IsArranged(TGFrameElement *ptr) const { return (ptr->fState & kIsArranged); }
-   Bool_t IsComposite() const { return kTRUE; }
+   virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void   RemoveFrame(TGFrame *f);
+   virtual void   ShowFrame(TGFrame *f);
+   virtual void   HideFrame(TGFrame *f);
+   Int_t          GetState(TGFrame *f) const;
+   Bool_t         IsVisible(TGFrame *f) const;
+   Bool_t         IsVisible(TGFrameElement *ptr) const { return (ptr->fState & kIsVisible); }
+   Bool_t         IsArranged(TGFrame *f) const;
+   Bool_t         IsArranged(TGFrameElement *ptr) const { return (ptr->fState & kIsArranged); }
+   Bool_t         IsComposite() const { return kTRUE; }
    virtual Bool_t IsEditable() const;
    virtual void   SetEditable(Bool_t on = kTRUE);
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
    virtual Bool_t IsLayoutBroken() const
                   { return fLayoutBroken || !fLayoutManager || IsEditable(); }
    virtual void   SetEditDisabled(Bool_t on = kTRUE);
-   virtual void   SetCleanup(Int_t on = 1);
-   virtual Bool_t MustCleanup() const { return (fMustCleanup != 0); }
+   virtual void   SetCleanup(Int_t mode = kLocalCleanup);
+   virtual Bool_t MustCleanup() const { return (fMustCleanup != kNoCleanup); }
+   virtual void   Cleanup();
 
-   TList *GetList() { return fList; }
-   virtual void Print(Option_t *option="") const;
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   Print(Option_t *option="") const;
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)
 };
