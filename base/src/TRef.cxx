@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.10 2002/01/08 11:50:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.11 2002/02/02 11:57:10 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -190,7 +190,7 @@ TRef::TRef(TObject *obj)
    // TRef copy ctor.
 
    *this = obj;
-   fPID = TProcessID::GetProcessID(0);
+   fPID = TProcessID::GetSessionProcessID();
 }
 
 //______________________________________________________________________________
@@ -210,7 +210,7 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      if (!fPID) fPID = TProcessID::GetProcessID(0);
+      if (!fPID) fPID = TProcessID::GetSessionProcessID();
       uid = TProcessID::AssignID(obj);
    }
    SetUniqueID(uid);

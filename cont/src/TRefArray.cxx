@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.5 2001/12/02 15:20:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.6 2002/02/02 11:57:10 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    } else if (s == 0)
       s = TCollection::kInitCapacity;
-   fPID  = TProcessID::GetProcessID(0);
+   fPID  = TProcessID::GetSessionProcessID();
    fUIDs = 0;
    Init(s, lowerBound);
 }
@@ -62,7 +62,7 @@ TRefArray::TRefArray(const TRefArray &a)
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
-   fPID  = TProcessID::GetProcessID(0);
+   fPID  = TProcessID::GetSessionProcessID();
    fUIDs = 0;
    Init(a.fSize, a.fLowerBound);
 
