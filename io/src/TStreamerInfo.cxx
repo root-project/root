@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.92 2001/10/03 16:43:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.93 2001/10/14 15:47:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1773,7 +1773,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             ((TObject*)(pointer+fOffset[i]))->Streamer(b);
                             break;
                          } else {
+                            UInt_t start,count;
+                            //We assume that the class was written with a standard streamer
+                            //We attempt to recover if a version count was not written
+                            b.ReadVersion(&start,&count);
+                            if (count == 0) b.SetBufferOffset(start);
                             cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
+                            if (count > 0) b.CheckByteCount(start,count,cl);
                          }
                          break;
                         }
@@ -2155,8 +2161,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k);
                Int_t *x=(Int_t*)(pointer+offset);
                b >> *x;
-               //Int_t *counter = (Int_t*)fMethod[i];
-               //*counter = *x;
             }
             break;}
 
@@ -2172,10 +2176,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             } else {
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
+                  //We assume that the class was written with a standard streamer
+                  //We attempt to recover if a version count was not written
+                  b.ReadVersion(&start,&count);
+                  if (count == 0) b.SetBufferOffset(start);
                   cl->GetStreamerInfo()->ReadBuffer(b,pointer+offset,-1);
                }
             }
-            //((TObject*)(pointer+offset))->Streamer(b);
             break;}
 
          // Special case for TString, TObject, TNamed
