@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.61 2001/04/12 13:39:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.62 2001/04/12 15:07:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -995,7 +995,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    // create a dummy top level  branch object
    Int_t id = -1;
    if (splitlevel > 0) id = -2;
-   char *dot = strchr(name,'.');
+   char *dot = (char*)strchr(name,'.');
    //char *dot = strchr(name,'_');
    Int_t nch = strlen(name);
    Bool_t dotlast = kFALSE;
