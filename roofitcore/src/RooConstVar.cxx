@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConstVar.cc,v 1.3 2002/09/05 04:33:19 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,7 @@ ClassImp(RooConstVar)
 RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) : 
   RooAbsReal(name,title), _value(value)
 {  
+  setAttribute("Constant",kTRUE) ;
 }
 
 
