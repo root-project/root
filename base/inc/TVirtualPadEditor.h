@@ -47,6 +47,7 @@ public:
    virtual void     Build() { }
    virtual void     Show() { }
    virtual void     Hide() { }
+   virtual void     DeleteEditors() { }
 
    // methods related to the new editor interface
 
