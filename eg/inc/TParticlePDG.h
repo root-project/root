@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TG3ParticlePDG.hh,v 1.4 2001/02/22 14:16:14 murat Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.3 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -91,9 +91,7 @@ public:
 
   Int_t   TrackingCode() { return fTrackingCode; }
 
-  TDecayChannel* DecayChannel(Int_t i) { 
-    return (TDecayChannel*) fDecayList->At(i); 
-  }
+  TDecayChannel* DecayChannel(Int_t i);
 
   TParticlePDG* AntiParticle() { return fAntiParticle; }
 

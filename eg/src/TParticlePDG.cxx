@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.5 2001/08/17 07:32:12 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.6 2002/01/10 20:10:49 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -117,6 +117,12 @@ Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
 					DaughterPdgCode);
   fDecayList->Add(dc);
   return 0;
+}
+
+//_____________________________________________________________________________
+TDecayChannel* TParticlePDG::DecayChannel(Int_t i) 
+{ 
+    return (TDecayChannel*) fDecayList->At(i); 
 }
 
 //_____________________________________________________________________________
