@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.9 2001/04/18 06:29:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.10 2001/04/20 21:21:38 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -40,6 +40,7 @@ protected:
     Int_t               fID;            //element serial number in fInfo
     Int_t               fType;          //branch type
     Int_t               fStreamerType;  //branch streamer type
+    Int_t               fMaximum;       //Maximum entries for a TClonesArray or variable array
     Int_t               fNdata;         //!Number of data in this branch
     TBranchElement     *fBranchCount;   //pointer to branchcount branch
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
@@ -61,11 +62,13 @@ public:
     TStreamerInfo   *GetInfo();
     char    *GetObject() const { return fObject; };
     virtual const char  *GetParentName() const {return fParentName.Data();}
+    virtual Int_t    GetMaximum() const;
     TBranchElement  *GetMother() const;
             Int_t    GetNdata() const {return fNdata;}
             Int_t    GetType()  const {return fType;}
             Int_t    GetStreamerType() const {return fStreamerType;}
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
+    virtual const char *GetTypeName() const;
             Double_t GetValue(Int_t i, Int_t len) const;
             Bool_t   IsFolder() const;
     virtual void     Print(Option_t *option="") const;
@@ -81,7 +84,7 @@ public:
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,4)  //Branch in case of an object
+    ClassDef(TBranchElement,5)  //Branch in case of an object
 };
 
 #endif

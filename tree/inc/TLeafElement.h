@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.6 2001/04/09 08:11:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.7 2001/04/12 19:17:28 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -45,7 +45,9 @@ public:
 
     virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
     TMethodCall     *GetMethodCall(const char *name);
+    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
     virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
+    virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
     virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i, fLen);}
     virtual void    *GetValuePointer() const { return fAbsAddress; }
     virtual Bool_t   IsOnTerminalBranch() const;
