@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.14 2004/10/11 22:58:18 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.15 2004/10/13 15:30:22 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual TObject   *FindObject(const char *name) const;
    TObject           *operator()(const char *name) const;
    virtual TObject   *FindObject(const TObject *obj) const;
+   virtual Int_t      GetEntries() const { return GetSize(); }
    virtual const char *GetName() const;
    virtual TObject  **GetObjectRef(const TObject *obj) const = 0;
    virtual Int_t      GetSize() const { return fSize; }
