@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.120 2002/12/11 12:19:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.121 2002/12/16 20:29:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4376,6 +4376,7 @@ void TH1::UseCurrentStyle()
    SetMarkerColor(gStyle->GetMarkerColor());
    SetMarkerStyle(gStyle->GetMarkerStyle());
    SetMarkerSize(gStyle->GetMarkerSize());
+   SetStats(gStyle->GetOptStat());
 }
 
 //______________________________________________________________________________
