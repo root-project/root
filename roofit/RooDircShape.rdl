@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- * File: $Id: RooDircShape.rdl,v 1.2 2002/05/03 22:53:36 zhanglei Exp $
+ * File: $Id: RooDircShape.rdl,v 1.3 2002/05/24 15:29:25 yeche Exp $
  * Authors:
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
@@ -34,15 +34,19 @@ public:
   RooDircShape(const RooDircShape& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooDircShape(*this,newname); }  
   virtual ~RooDircShape();
+  // set the parameters from your datafile
+  virtual void setParams(TString shapefile);
+  // write out the parameters
+  virtual void writeParams(TString shapefile);
 
-  virtual void formParams(Double_t *srcParamsPtr);
   
 protected:
   
   // Function evaluation
   virtual Double_t evaluate() const ;
-  virtual void formParams(TString shapefile);
-  virtual void formParams(const RooDircShape &other);
+  // these two should not be called directly
+  virtual void setParams(const RooDircShape &other);
+  virtual void setParams(Double_t *srcParamsPtr);
   
   Int_t getCosThetaBin() const;
   Double_t dircCubic() const;

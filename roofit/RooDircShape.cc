@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- * File: $Id: RooDircShape.cc,v 1.1 2002/04/30 18:33:19 zhanglei Exp $
+ * File: $Id: RooDircShape.cc,v 1.2 2002/05/03 22:53:17 zhanglei Exp $
  * Authors:
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
@@ -44,7 +44,7 @@ RooDircShape::RooDircShape(const char *name, const char *title,
   dataType= _dataType=="Data"?0:1;
   hypothesis= _hypothesis=="Kaon"?0:1;
   mrFactor= _useMilliRadian?1.:.001;
-  formParams(_shapefile);
+  setParams(_shapefile);
 }
 
 RooDircShape::RooDircShape(const RooDircShape& other, const char* name) :
@@ -55,7 +55,7 @@ RooDircShape::RooDircShape(const RooDircShape& other, const char* name) :
   runSet(other.runSet), dataType(other.dataType),
   hypothesis(other.hypothesis), mrFactor(other.mrFactor)
 {
-  formParams(other);
+  setParams(other);
 }
 
 RooDircShape::~RooDircShape() 
@@ -159,13 +159,22 @@ Double_t RooDircShape::dircCubic() const{
   return result;
 }
 
-void RooDircShape::formParams(Double_t *srcParamsPtr) {
+void RooDircShape::setParams(Double_t *srcParamsPtr) {
   Int_t pSize=sizeof(ShapeParams)/sizeof(Double_t);
   Double_t *parmPtr((Double_t *) ShapeParams);
   for (Int_t i=0; i<pSize; i++) *parmPtr++=*srcParamsPtr++;
 }
 
-void RooDircShape::formParams(TString shapefile) {
+void RooDircShape::writeParams(TString shapefile) {
+  cout<<"dummy for now\n";
+}
+
+void RooDircShape::setParams(TString shapefile) {
+  // read in the dirc parameterizations from your datafile
+  // if no file is given, use the default ones
+  // ATTN:
+  // for now, always use the default ones
+  // will add more functionality soon!
   
   //             run1/2 data/mc hypo core/tail mean/sigma value
   Double_t myParams [2]    [2]   [2]    [2]       [2]       [19] =
@@ -390,11 +399,11 @@ void RooDircShape::formParams(TString shapefile) {
       }
     };
 
-  formParams((Double_t *) myParams);
+  setParams((Double_t *) myParams);
 }
 
-void RooDircShape::formParams(const RooDircShape &other) {
-  formParams((Double_t *)other.ShapeParams);
+void RooDircShape::setParams(const RooDircShape &other) {
+  setParams((Double_t *)other.ShapeParams);
 }
 
 Bool_t RooDircShape::isValid() const
