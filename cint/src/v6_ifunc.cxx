@@ -192,8 +192,10 @@ int instsize;
   memcpy(bytecode->asm_name,G__asm_name,G__asm_name_p+2);
 #endif
 
+#ifdef G__OLDIMPLEMENtATION1578
   /* store pointer to function */
   ifunc->pentry[ifn]->tp2f = (void*)bytecode;
+#endif
 }
 
 /**************************************************************************
@@ -1968,6 +1970,10 @@ int func_now;
       c=G__fgetname_template(paraname,",)&*[(=");
     }
     if(strcmp(paraname,"unsigned")==0||strcmp(paraname,"signed")==0) {
+#ifndef G__OLDIMPLEMENTATION1582
+      if('u'==paraname[0]) isunsigned=-1;
+      else isunsigned = 0;
+#endif
       switch(c) {
       case ',':
       case ')':
@@ -2003,7 +2009,9 @@ int func_now;
 #endif
 	break;
       }
+#ifdef G__OLDIMPLEMENTATION1582
       isunsigned=-1;
+#endif
     }
 
     /* determine type */

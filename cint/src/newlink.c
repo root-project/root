@@ -2187,6 +2187,12 @@ char *path;
   }
 
   /* G__allincludepath will be given to real preprocessor */
+#ifndef G__OLDIMPLEMENTATION1580
+  if(!G__allincludepath) {
+    G__allincludepath = (char*)malloc(1);
+    G__allincludepath[0] = '\0';
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION928
   store_allincludepath = realloc((void*)G__allincludepath
 				 ,strlen(G__allincludepath)+strlen(temp)+5);
@@ -2488,7 +2494,12 @@ struct G__ifunc_table *ifunc;
 				,ifunc->para_p_tagtable[ifn][k]
 				,ifunc->para_p_typetable[ifn][k]
 				,0
-				,ifunc->para_isconst[ifn][k])
+#ifndef G__OLDIMPLEMENTATION1579
+				,0
+#else
+				,ifunc->para_isconst[ifn][k]
+#endif
+				)
 		,p+2,k,k,k);
       }
     }
@@ -7031,6 +7042,13 @@ int link_stub;
 #endif
     if(p) {
 #if defined(G__REGEXP)
+#ifndef G__OLDIKMPLEMENTATION1583
+      if('.'!=buf[len-2]) {
+	buf[len-1] = '.';
+	buf[len++] = '*';
+	buf[len] = 0;
+      }
+#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7278,6 +7296,14 @@ int link_stub;
 
     if(p) {
 #if defined(G__REGEXP)
+#ifndef G__OLDIKMPLEMENTATION1583
+      int len = strlen(buf);
+      if('.'!=buf[len-2]) {
+	buf[len-1] = '.';
+	buf[len++] = '*';
+	buf[len] = 0;
+      }
+#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7414,6 +7440,14 @@ int link_stub;
 #endif
     if(p) {
 #if defined(G__REGEXP)
+#ifndef G__OLDIKMPLEMENTATION1583
+      int len = strlen(buf);
+      if('.'!=buf[len-2]) {
+	buf[len-1] = '.';
+	buf[len++] = '*';
+	buf[len] = 0;
+      }
+#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");
@@ -7513,6 +7547,14 @@ int link_stub;
 #endif
     if(p) {
 #if defined(G__REGEXP)
+#ifndef G__OLDIKMPLEMENTATION1583
+      int len = strlen(buf);
+      if('.'!=buf[len-2]) {
+	buf[len-1] = '.';
+	buf[len++] = '*';
+	buf[len] = 0;
+      }
+#endif
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
       if(regstat!=0) {
 	G__genericerror("Error: regular expression error");

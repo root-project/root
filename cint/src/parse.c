@@ -830,6 +830,28 @@ int *piout,*pspaceflag,mparen;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1584
+/***********************************************************************
+* G__toLowerString
+***********************************************************************/
+void G__toUniquePath(s)
+char *s;
+{
+  int i=0,j=0;
+  char *d;
+  if(!s) return;
+  d = (char*)malloc(strlen(s)+1);
+  while(s[i]) {
+    d[j] = tolower(s[i]);
+    if(i && '\\'==s[i] && '\\'==s[i-1]) { /* do nothing */ }
+    else { ++j; }
+    ++i;
+  }
+  d[j] = 0;
+  strcpy(s,d);
+  free((void*)d);
+}
+#endif
 
 /***********************************************************************
 * G__setline()
@@ -877,6 +899,13 @@ int *piout;
 	  sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
 	  len=strlen(sysinclude);
 	  lenstl=strlen(sysstl);
+#ifndef G__OLDIMPLEMENTATION1584
+#ifdef G__WIN32
+	  G__toUniquePath(sysinclude);
+	  G__toUniquePath(sysstl);
+	  G__toUniquePath(statement);
+#endif
+#endif
 	  if(strncmp(sysinclude,statement+1,(size_t)len)==0||
 	     strncmp(sysstl,statement+1,(size_t)lenstl)==0) {
 	    G__globalcomp=G__NOLINK;

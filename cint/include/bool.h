@@ -13,5 +13,9 @@ bool bool() { return false; }
 //const bool false=0;
 //const bool FALSE=0;
 
+// This is not needed due to fix 1584
+//#pragma link off class bool;
+//#pragma link off function bool;
+
 #pragma endif
 

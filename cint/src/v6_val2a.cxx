@@ -730,7 +730,11 @@ int type,tagnum,typenum,reftype,isconst;
     case G__PARAREFERENCE:
 #ifndef G__OLDIMPLEMENTATION1112
       if(-1==typenum||G__PARAREFERENCE!=G__newtype.reftype[typenum]) {
-	if(isconst&G__PCONSTVAR) strcpy(string+strlen(string)," const&");
+	if(isconst&G__PCONSTVAR
+#ifndef G__OLDIMPLEMENTATION1574
+	   && 0==(isconst&G__CONSTVAR)
+#endif
+	   ) strcpy(string+strlen(string)," const&");
 	else strcpy(string+strlen(string),"&");
       }
 #else

@@ -516,6 +516,9 @@ int noerror;
       int store_def_tagnum=G__def_tagnum;
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
+#ifndef G__OLDIMPLEMENTATION1584
+      int store_globalcomp = G__globalcomp;
+#endif
       struct G__ifunc_table *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
@@ -528,6 +531,9 @@ int noerror;
       boolflag=1;
       G__loadfile("bool.h");
       i=G__defined_tagname(tagname,noerror);
+#ifndef G__OLDIMPLEMENTATION1584
+      G__globalcomp = store_globalcomp;
+#endif
 #ifndef G__OLDIMPLEMENTATION913
       G__cpp=store_cpp;
       G__globalvarpointer=store_globalvarpointer;

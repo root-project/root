@@ -563,7 +563,11 @@ int isglobal;
       fprintf(G__memhist,"Free(%s)\n",var->varnamebuf[itemp]);
 #endif
       /* ??? Scott Snyder fixed as var->p[itemp]>0x10000 ??? */
-      if(G__NOLINK==cpplink && var->p[itemp]) free((void*)var->p[itemp]);
+      if(G__NOLINK==cpplink && var->p[itemp] 
+#ifndef G__OLDIMPLEMENTATION1576
+	 && -1!=var->p[itemp]
+#endif
+	 ) free((void*)var->p[itemp]);
       
     } /* end of statictype==LOCALSTATIC or COMPILEDGLOBAL */
     

@@ -772,10 +772,15 @@ char *string,*endmark;
 
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
+#ifdef G__OLDIMPLEMENTATION1577
       pp = string+i+1;
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1114
       if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i;
+#ifndef G__OLDIMPLEMENTATION1577
+      pp = string+i+1;
+#endif
 #endif
 
 #ifdef G__MULTIBYTE
@@ -955,10 +960,15 @@ char *string,*endmark;
 
 #ifndef G__OLDIMPLEMENTATION608
     case ',':
+#ifdef G__OLDIMPLEMENTATION1577
       pp = string+i+1;
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1114
       if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i;
+#ifndef G__OLDIMPLEMENTATION1577
+      pp = string+i+1;
+#endif
 #endif
 
 #ifdef G__MULTIBYTE
