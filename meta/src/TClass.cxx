@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.146 2004/05/14 15:03:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.147 2004/05/28 18:14:38 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1448,7 +1448,7 @@ const char *TClass::GetSharedLibs()
    if (fSharedLibs.IsNull())
       fSharedLibs = gInterpreter->GetClassSharedLibs(fName);
 
-   return !fSharedLibs.IsNull() ? fSharedLibs : 0;
+   return !fSharedLibs.IsNull() ? fSharedLibs.Data() : 0;
 }
 
 //______________________________________________________________________________
