@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.1 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.2 2002/02/04 21:22:23 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -159,6 +159,11 @@ void TDSet::Add(TDSet *set)
 
    if (!set)
       return;
+
+   if (set->fName != fName) {
+      Error("Add", "cannot add a set with a different type");
+      return;
+   }
 
    TDSetElement *el;
    TIter next(set->fElements);
