@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -172,7 +172,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
       }
       for (j = m; j <= high; j++) {
         Double_t g = 0.0;
-        for (Int_t i = m; i <= high; i++) {
+        for (i = m; i <= high; i++) {
           const Int_t off_i = i*n;
           g += pO[i]*pV[off_i+j];
         }
