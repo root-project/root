@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.9 2001/05/07 00:09:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.10 2001/05/09 13:08:23 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -268,7 +268,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
-         char *mac, *dir = gSystem->ExpandPathName(argv[i]);
+         char *dir = gSystem->ExpandPathName(argv[i]);
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory make it working directory
@@ -291,13 +291,16 @@ void TApplication::GetOptions(int *argc, char **argv)
                fFiles->Add(new TObjString(argv[i]));
             }
             argv[i] = 0;
-         } else if ((mac = gSystem->Which(TROOT::GetMacroPath(), argv[i],
-                                          kReadPermission))) {
-            // if file add to list of files to be processed
-            if (!fFiles) fFiles = new TObjArray;
-            fFiles->Add(new TObjString(argv[i]));
-            argv[i] = 0;
-            delete [] mac;
+         } else {
+            char *mac, *s = strtok(dir, "+(");
+            if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
+                                      kReadPermission))) {
+               // if file add to list of files to be processed
+               if (!fFiles) fFiles = new TObjArray;
+               fFiles->Add(new TObjString(argv[i]));
+               argv[i] = 0;
+               delete [] mac;
+            }
          }
          delete [] dir;
       }
