@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.15 2002/07/15 15:03:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.16 2002/08/13 21:17:58 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -459,6 +459,7 @@ void THStack::Paint(Option_t *option)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
+   fHistogram->Paint("axissame");
 }
 
 //______________________________________________________________________________
