@@ -7,28 +7,23 @@ MODDIR       := qtroot
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-QTROOTDIR       := $(MODDIR)
-QTROOTDIRS      := $(QTROOTDIR)/src
-QTROOTDIRI      := $(QTROOTDIR)/inc
+QTROOTDIR    := $(MODDIR)
+QTROOTDIRS   := $(QTROOTDIR)/src
+QTROOTDIRI   := $(QTROOTDIR)/inc
 
 ##### libQtRoot #####
-QTROOTL        := $(MODDIRI)/LinkDef.h
-QTROOTDS       := $(MODDIRS)/G__QtRoot.cxx
-QTROOTDO       := $(QTROOTDS:.cxx=.o)
-QTROOTDH       := $(QTROOTDS:.cxx=.h)
+QTROOTL      := $(MODDIRI)/LinkDef.h
+QTROOTDS     := $(MODDIRS)/G__QtRoot.cxx
+QTROOTDO     := $(QTROOTDS:.cxx=.o)
+QTROOTDH     := $(QTROOTDS:.cxx=.h)
 
-QTROOTH1       := TQtRootGuiFactory.h 
+QTROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+QTROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+QTROOTO      := $(QTROOTS:.cxx=.o)
 
-QTROOTH        := $(patsubst %,$(QTROOTDIRI)/%,$(QTROOTH1))
+QTROOTDE     := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
 
-QTROOTS        := $(filter-out $(QTROOTDIRS)/G__%,$(wildcard $(QTROOTDIRS)/*.cxx))
-QTROOTO        := $(QTROOTS:.cxx=.o)
-
-QTROOTDEP      := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
-
-QTROOTLIB      := $(LPATH)/libQtRoot.$(SOEXT)
-
-QTROOTCXXFLAGS := -DQT_DLL -DQT_THREAD_SUPPORT -I. -I$(QTDIR)/include
+QTROOTLIB    := $(LPATH)/libQtRoot.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTROOTH))
@@ -41,19 +36,25 @@ INCLUDEFILES += $(QTROOTDEP)
 include/%.h:    $(QTROOTDIRI)/%.h
 		cp $< $@
 
-$(QTROOTLIB):      $(QTROOTO) $(QTROOTDO) $(MAINLIBS) $(QTROOTLIBDEP)
+$(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(MAINLIBS) $(QTROOTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(QTROOTO) $(QTROOTDO)" \
-		   "$(QTROOTLIBEXTRA)"
+		   "$(SOFLAGS)" libQtRoot.$(SOEXT) $@ "$(QTROOTO) $(QTROOTDO)" \
+		   "$(QTROOTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
-$(QTROOTDS):      $(QTROOTH) $(QTROOTL) $(ROOTCINTTMP)
+$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(QTROOTH1) $(QTROOTL)
+		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
 
-$(QTROOTDO):      $(QTROOTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(QTROOTCXXFLAGS) -I. -o $@ -c $<
+$(QTROOTDO):    $(QTROOTDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
 
-all-qtroot:        $(QTROOTLIB)
+all-qtroot:     $(QTROOTLIB)
+
+map-qtroot:     $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(QTROOTLIB) \
+		   -d $(QTROOTLIBDEP) -c $(QTROOTL)
+
+map::           map-qtroot
 
 clean-qtroot:
 		@rm -f $(QTROOTO) $(QTROOTDO)
@@ -68,5 +69,4 @@ distclean::     distclean-qtroot
 
 ##### extra rules ######
 $(sort $(QTROOTO)): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(QTROOTCXXFLAGS) -o $@ -c $<
-
+	$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<

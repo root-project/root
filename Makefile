@@ -144,6 +144,11 @@ ifneq ($(XMLCLILIB),)
 MODULES      += xml
 endif
 endif
+ifneq ($(QTINCDIR),)
+ifneq ($(QTLIB),)
+MODULES      += qt qtroot
+endif
+endif
 ifneq ($(TABLE),)
 MODULES      += table
 endif
@@ -171,7 +176,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot xml ruby
+                mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

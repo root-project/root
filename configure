@@ -71,6 +71,7 @@ enable_soversion=no
 enable_table=no
 enable_python=no
 enable_ruby=no
+enable_qt=no
 enable_thread=           # must be set explicitely via --enable-thread
 
 #
