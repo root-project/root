@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.97 2004/07/19 14:21:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.98 2004/07/22 06:49:44 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2177,7 +2177,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    mapfileStream.close();
 
    // ======= Generate the rootcint command line
-   TString rcint = "rootcint --mapfile=";
+   TString rcint = "rootcint --lib-list-prefix=";
    rcint += mapfile;
    rcint += " -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");

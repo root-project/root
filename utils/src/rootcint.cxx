@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.176 2004/07/20 23:12:50 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.177 2004/07/22 06:49:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3877,7 +3877,7 @@ int main(int argc, char **argv)
       fprintf(stderr,"Usage: %s [-v][-v0-4] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
-                     "and must be bofore the -f flags\n");
+                     "and must be before the -f flags\n");
       fprintf(stderr,"For more extensive help type: %s -h\n", argv[0]);
       return 1;
    } else {
