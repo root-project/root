@@ -1,4 +1,4 @@
-/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.4 2004/02/08 15:46:38 brun Exp $ */
+/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.5 2004/10/08 09:07:10 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -28,6 +28,12 @@
 #pragma link C++ function operator * ( const TMatrix &, const TVector3 &);
 
 #pragma link C++ class TVector2-;
+#pragma link C++ function operator + ( const TVector2 &, const TVector2 & );
+#pragma link C++ function operator - ( const TVector2 &, const TVector2 & );
+#pragma link C++ function operator * ( const TVector2 &, const TVector2 & );
+#pragma link C++ function operator * ( const TVector2 &, Double_t  );
+#pragma link C++ function operator * ( Double_t, const TVector2 & );
+#pragma link C++ function operator / ( const TVector2 &, Double_t);
 
 #pragma link C++ class TRotation+;
 #pragma link C++ class TGenPhaseSpace+;
