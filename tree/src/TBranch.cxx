@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.58 2003/05/15 08:43:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.59 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1081,7 +1081,7 @@ void TBranch::ResetAddress()
       leaf->SetAddress(0);
    }
    Int_t nbranches = fBranches.GetEntriesFast();
-   for (Int_t i=0;i<nbranches;i++)  {
+   for (i=0;i<nbranches;i++)  {
       TBranch *abranch = (TBranch*)fBranches[i];
       abranch->ResetAddress();
    }
