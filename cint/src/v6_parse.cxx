@@ -2296,7 +2296,12 @@ int breakcontinue;
 #ifndef G__OLDIMPLEMENTATION1672
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1695
+  if(G__no_exec_compile) return(0);
+  else return(1);
+#else
   return(1);
+#endif
 }
 
 /***********************************************************************

@@ -1179,7 +1179,7 @@ int tagnum;
  * G__va_arg_setalign()
  **************************************************************************/
 #ifdef G__VAARG_INC_COPY_N
-static int G__va_arg_align_size=4;
+static int G__va_arg_align_size=G__VAARG_INC_COPY_N;
 #else
 static int G__va_arg_align_size=0;
 #endif
@@ -1198,6 +1198,16 @@ void* p;
 G__value *pval;
 int objsize;
 {
+#ifndef G__OLDIMPLEMENTATION1696
+#ifdef G__VAARG_PASS_BY_REFERENCE
+  if(objsize>G__VAARG_PASS_BY_REFERENCE) {
+    if(pval->ref>0x1000) *(long*)(p) = pval->ref;
+    else *(long*)(p) = (long)G__int(*pval);
+    return;
+  }
+
+#endif
+#endif
   switch(t) {
   case 'c':
   case 'b':
@@ -1241,10 +1251,13 @@ G__va_arg_buf* pbuf;
 struct G__param *libp;
 int n;
 {
-  int i;
-  int j=0;
   int objsize;
   int type;
+  int i;
+#if defined(__hpux) || defined(__hppa__)
+  int j2=G__VAARG_SIZE;
+#endif
+  int j=0;
   int mod;
 #ifdef G__VAARG_NOSUPPORT
   G__genericerror("Limitation: Variable argument is not supported for this platform");
@@ -1252,13 +1265,42 @@ int n;
   for(i=n;i<libp->paran;i++) {
     objsize = G__sizeof(&libp->para[i]);
     type = libp->para[i].type;
+
+    /* Platform that decrements address */
+#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+    /* nothing */
+#elif defined(__hpux) || defined(__hppa__)
+    if(objsize > G__VAARG_PASS_BY_REFERENCE) {
+      j2 = j2 - sizeof(long);
+      j=j2;
+    }
+    else {
+      j2 = (j - objsize) & (objsize > 4 ? __DW_MASK : __WORD_MASK);
+      j = j2 + ((8 - objsize) % 4);
+    }
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+    /* nothing */
+#elif defined(__PPC__) || defined(__ppc__) || defined(_AIX) || defined (__APPLE__)
+    /* nothing */
+#else
+    /* nothing */
+#endif
     
     G__va_arg_copyvalue(type,(void*)(&pbuf->d[j]),&libp->para[i],objsize);
 
-#if defined(G__VAARG_INC_COPY_N)
+    /* Platform that increments address */
+#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
     j += objsize;
     mod = j%G__va_arg_align_size;
     if(mod) j = j-mod+G__va_arg_align_size;
+#elif defined(__hpux) || defined(__hppa__)
+    /* nothing */
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+    j += objsize;
+    mod = j%G__va_arg_align_size;
+    if(mod) j = j-mod+G__va_arg_align_size;
+#elif defined(__PPC__) || defined(__ppc__) || defined(_AIX) || defined (__APPLE__)
+    j =  G__va_align_ppc(j, objsize) + G__va_rounded_size_ppc(objsize);
 #else
     j += objsize;
     mod = j%G__va_arg_align_size;
@@ -1270,7 +1312,7 @@ int n;
 
 #ifdef G__VAARG_COPYFUNC
 /**************************************************************************
- * G__va_arg_copyfunc()
+ * G__va_arg_copyfunc() , Never used so far
  **************************************************************************/
 void G__va_arg_copyfunc(fp,ifunc,ifn)
 FILE* fp;

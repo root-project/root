@@ -11,6 +11,16 @@
  *
  ************************************************************************/
 
+#ifdef G__BORLANDCC5
+#define G__ANSI
+#endif
+
+#ifdef G__ANSI
+#define G__P(funcparam) funcparam
+#else
+#define G__P(funcparam) ()
+#endif
+
 
  /***********************************************************************/
  /* char *G__calc(char *expression)                                     */
@@ -179,39 +189,47 @@ struct G__input_file {
 /**************************************************************************
  * main-functions
  **************************************************************************/
-int G__exec_statement();
-char *G__getexpr(); 
-char *G__calc(); 
-int isexponent(char* expression4,int lenexpr);
-int library_func(char* result7,char* funcname,struct G__param* libp);
-int G__defined(char* macro);
-int G__test(char* expression2);
+int G__exec_statement G__P((struct G__input_file *fin));
+char *G__getexpr G__P((char *expression)); 
+char *G__calc G__P((char *exprwithspace)); 
+int isexponent G__P((char* expression4,int lenexpr));
+int library_func G__P((char* result7,char* funcname,struct G__param* libp));
+int G__defined G__P((char* macro));
+int G__test G__P((char* expression2));
 
 
 /**************************************************************************
  * sub-functions
  **************************************************************************/
 
-char *G__letvariable();
-char *G__getequal(),*G__getandor();
-char *G__getprod(),*G__getpower(),*G__getitem();
-char *G__getvalue(),*G__getvariable(),*G__getfunction();
-char *G__checkBase(),*G__getbase();
-char G__getoperator(),G__getdigit();
-double G__atodouble();
-void G__bstore();
-/* int isfloating(); */
-int G__recursive_check();
-void G__varmonitor();
-void G__init_var_array();
-void G__charformatter();
-char *G__strip_quotation(),*G__add_quotation();
-void G__error_clear();
-int G__isvalue();
+char *G__letvariable G__P((char *item,char *expression,struct G__var_array *varglobal,struct G__var_array *varlocal));
+char *G__getequal G__P((char *expression2));
+char *G__getandor G__P((char *expression2));
+char *G__getprod G__P((char *expression1));
+char *G__getpower G__P((char *expression2));
+char *G__getitem G__P((char *item));
+char *G__getvalue G__P((char *item,int *known1));
+char *G__getvariable G__P((char *item,int *known2,struct G__var_array *varglobal,struct G__var_array *varlocal));
+char *G__getfunction G__P((char *item,int *known3));
+char *G__checkBase G__P((char *string,int *known4));
+char *G__getbase G__P((char *expression,int base,int digit));
+char G__getoperator G__P((char newoperator,char oldoperator));
+char G__getdigit G__P((int number));
+double G__atodouble G__P((char *string));
+void G__bstore G__P((char operator,char *expression3,char *defined,char *undefined));
+/* int isfloating G__P(()); */
+int G__recursive_check G__P((char *varname,char *result7));
+void G__varmonitor G__P((struct G__var_array *var));
+void G__init_var_array G__P((struct G__var_array *var));
+void G__charformatter G__P((char *result, int ifmt, struct G__param *libp));
+char *G__strip_quotation G__P((char *string));
+char *G__add_quotation G__P((char *string));
+void G__error_clear G__P((void));
+int G__isvalue G__P((char *temp));
 #ifndef G__OLDIMPLEMENTATION1616
-int G__fgetc();
+int G__fgetc G__P((FILE *fp));
 #else
-char G__fgetc();
+char G__fgetc G__P((FILE *fp));
 #endif
 
 /**************************************************************************
@@ -1828,25 +1846,18 @@ char G__getdigit(number)
   case 8:
   case 9:
     return( number + '0' );
-    break;
   case 10:
     return('a');
-    break;
   case 11:
     return('b');
-    break;
   case 12:
     return('c');
-    break;
   case 13:
     return('d');
-    break;
   case 14:
     return('e');
-    break;
   case 15:
     return('f');
-    break;
   default:
     return('x');
   }
@@ -2285,10 +2296,8 @@ int isoperator(c)
   case '%':
   case '|':
     return(1);
-    break;
   default:
     return(0);
-    break;
   }
 }
 
@@ -2319,72 +2328,56 @@ char G__getoperator(newoperator,oldoperator)
     switch(oldoperator) {
     case '+':
       return('I');
-      break;
     case '-':
       return('-');
-      break;
     default:
       return(oldoperator);
-      break;
     }
     break;
   case '-':
     switch(oldoperator) {
     case '+':
       return('-');
-      break;
     case '-':
       return('D');
-      break;
     default:
       return(oldoperator);
-      break;
     }
     break;
   case '&':
     switch(oldoperator) {
     case '&':
       return('A');
-      break;
     default:
       return(oldoperator);
-      break;
     }
     break;
   case '|':
     switch(oldoperator) {
     case '|':
       return('O');
-      break;
     default:
       return(oldoperator);
-      break;
     }
     break;
   case '*':
     switch(oldoperator) {
     case '/':
       return('/');
-      break;
     case '*':
       return('^');
-      break;
     default:
       return(newoperator);
-      break;
     }
     break;
   case '/':
     switch(oldoperator) {
     case '/':
       return('*');
-      break;
     case '*':
       return('/');
-      break;
     default:
       return(newoperator);
-      break;
     }
     break;
   case '!':
@@ -2393,31 +2386,24 @@ char G__getoperator(newoperator,oldoperator)
     switch(oldoperator) {
     default:
       return(newoperator);
-      break;
     }
     break;
   case '=':
     switch(oldoperator) {
     case '=':
       return('E');
-      break;
     case '!':
       return('N');
-      break;
     case '<':
       return('L');
-      break;
     case '>':
       return('G');
-      break;
     default:
       return(newoperator);
-      break;
     }
     break;
   default:
     return(oldoperator);
-    break;
   }
 }
 

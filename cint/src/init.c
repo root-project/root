@@ -2113,6 +2113,9 @@ void G__platformMacro()
 #ifdef __ppc__  /* Motorola Power-PC */
   sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
 #endif
+#ifdef __PPC__  /* IBM Power-PC */
+  sprintf(temp,"G__PPC=%ld",(long)__PPC__); G__add_macro(temp);
+#endif
 #ifdef __mips__ /* MIPS architecture */
   sprintf(temp,"G__mips=%ld",(long)__mips__); G__add_macro(temp);
 #endif

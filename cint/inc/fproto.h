@@ -163,9 +163,9 @@ int G__parenthesiserror G__P((char *expression,char *funcname));
 int G__commenterror G__P((void));
 int G__changeconsterror G__P((char *item,char *categ));
 int G__printlinenum G__P((void));
-int G__autocc G__P(());
-int G__init_readline G__P(());
-int G__using_namespace G__P(());
+int G__autocc G__P((void));
+int G__init_readline G__P((void));
+int G__using_namespace G__P((void));
 
 #ifdef G__FRIEND
 int G__parse_friend G__P((int *piout,int *pspaceflag,int mparen));
@@ -308,7 +308,7 @@ G__value G__execfuncmacro G__P((char *item,int *done));
 int G__transfuncmacro G__P((char *item,struct G__Deffuncmacro *deffuncmacro,struct G__Callfuncmacro *callfuncmacro,fpos_t call_pos,char *p,int nobraces,int nosemic));
 int G__replacefuncmacro G__P((char *item,struct G__Callfuncmacro *callfuncmacro,struct G__Charlist *callpara,struct G__Charlist *defpara,FILE *def_fp,fpos_t def_pos,int nobraces,int nosemic));
 int G__execfuncmacro_noexec G__P((char* macroname));
-int G__maybe_finish_macro G__P(());
+int G__maybe_finish_macro G__P((void));
 #else
 int G__transfuncmacro G__P((char *item,struct G__Deffuncmacro *deffuncmacro,struct G__Callfuncmacro *callfuncmacro,fpos_t call_pos,char *p));
 int G__replacefuncmacro G__P((char *item,struct G__Callfuncmacro *callfuncmacro,struct G__Charlist *callpara,struct G__Charlist *defpara,FILE *def_fp,fpos_t def_pos));
@@ -653,18 +653,18 @@ int G__check_nonull G__P((int p,long l,G__value *result7,char *funcname));
 #endif
 G__UINT32 G__getsecuritycode G__P((char *string));
 #endif
-void G__cpp_setupG__stream G__P(());
-void G__cpp_setupG__API G__P(());
-void G__c_setupG__stdstrct G__P(());
-int G__setautoccnames G__P(());
+void G__cpp_setupG__stream G__P((void));
+void G__cpp_setupG__API G__P((void));
+void G__c_setupG__stdstrct G__P((void));
+int G__setautoccnames G__P((void));
 int G__appendautocc G__P((FILE *fp));
-int G__isautoccupdate G__P(());
+int G__isautoccupdate G__P((void));
 void G__free_friendtag G__P((struct G__friendtag *friendtag));
 
-int G__free_exceptionbuffer G__P(());
+int G__free_exceptionbuffer G__P((void));
 int G__exec_try G__P((char* statement));
 int G__exec_throw G__P((char* statement));
-int G__ignore_catch G__P(());
+int G__ignore_catch G__P((void));
 int G__exec_catch G__P((char* statement));
 
 
@@ -672,7 +672,7 @@ void G__cppstub_memfunc G__P((FILE* fp));
 void G__cppstub_func G__P((FILE* fp));
 void G__set_stubflags G__P((struct G__dictposition *dictpos));
 
-void G__set_DLLflag G__P(());
+void G__set_DLLflag G__P((void));
 void G__setPROJNAME G__P((char* proj));
 
 #ifdef G__ERROR_HANDLE
@@ -691,19 +691,19 @@ extern int G__SetGlobalcomp G__P((char *funcname,char *param,int globalcomp));
 extern void G__more_col G__P((int len));
 extern int G__more G__P((FILE* fp,char *msg));
 extern int G__more_pause G__P((FILE* fp,int len));
-extern void G__redirect_on();
-extern void G__redirect_off();
+extern void G__redirect_on G__P((void));
+extern void G__redirect_off G__P((void));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION842
-void G__init_jumptable_bytecode G__P(());
+void G__init_jumptable_bytecode G__P((void));
 void G__add_label_bytecode G__P((char *label));
 void G__add_jump_bytecode G__P((char *label));
-void G__resolve_jumptable_bytecode G__P(());
+void G__resolve_jumptable_bytecode G__P((void));
 #endif
 
-extern void G__LockCriticalSection G__P(());
-extern void G__UnlockCriticalSection G__P(());
+extern void G__LockCriticalSection G__P((void));
+extern void G__UnlockCriticalSection G__P((void));
 
 #ifndef G__OLDIMPLEMENTATION1401
 extern void G__asm_tovalue_p2p G__P((G__value *result));

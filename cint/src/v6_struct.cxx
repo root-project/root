@@ -496,6 +496,16 @@ int noerror;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1697
+  for(i=G__struct.alltag-1;i>=0;i--) {
+    if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0&&
+       (((char*)NULL==p&&-1==G__struct.parent_tagnum[i])||
+	env_tagnum==G__struct.parent_tagnum[i])) {
+      return(i);
+    }
+  }
+#endif
+
   for(i=G__struct.alltag-1;i>=0;i--) {
     if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0&&
 #ifndef G__OLDIMPLEMENTATION1010
