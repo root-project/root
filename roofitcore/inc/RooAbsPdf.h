@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.50 2002/01/25 00:23:06 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.51 2002/02/23 03:03:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@ class TPaveText;
 class TH1F;
 class TH2F;
 class TList ;
+class RooIntegratorConfig ;
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -118,7 +119,13 @@ public:
 
   inline Bool_t isSelectedComp() const { return _selectComp ; }
 
-
+  const RooIntegratorConfig* getNormIntConfig() const ;
+  const RooIntegratorConfig* getDefaultNormIntConfig() const ;
+  const RooIntegratorConfig* getSpecialNormIntConfig() const ;
+  static void setDefaultNormIntConfig(const RooIntegratorConfig& config) ;
+  void setNormIntConfig() ;
+  void setNormIntConfig(const RooIntegratorConfig& config) ;
+  
 private:
 
   // This forces definition copy ctor in derived classes 
@@ -164,6 +171,10 @@ protected:
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
+
+
+  RooIntegratorConfig* _specNormIntConfig ;
+  static RooIntegratorConfig* _defaultNormIntConfig ;
 
   friend class RooAddPdf ;
   void selectComp(Bool_t flag) { _selectComp = flag ; }

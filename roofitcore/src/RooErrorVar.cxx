@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooErrorVar.cc,v 1.2 2001/11/19 07:23:55 verkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.3 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@
 
 #include "RooFitCore/RooErrorVar.hh"
 #include "RooFitCore/RooAbsBinning.hh"
+#include "RooFitCore/RooStreamParser.hh"
 
 ClassImp(RooErrorVar)
 ;
@@ -123,3 +124,31 @@ void RooErrorVar::setFitRange(Double_t min, Double_t max)
   setShapeDirty() ;  
 }
 
+
+
+Bool_t RooErrorVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+{
+  // Read object contents from given stream
+
+  TString token,errorPrefix("RooErrorVar::readFromStream(") ;
+  errorPrefix.Append(GetName()) ;
+  errorPrefix.Append(")") ;
+  RooStreamParser parser(is,errorPrefix) ;
+  Double_t value(0) ;
+
+    // Compact mode: Read single token
+  if (parser.readDouble(value,verbose)) return kTRUE ;
+  if (isValidReal(value,verbose)) {
+    setVal(value) ;
+    return kFALSE ;
+  } else {
+    return kTRUE ;
+  }
+}
+
+
+void RooErrorVar::writeToStream(ostream& os, Bool_t compact) const
+{
+  // Write value only
+  os << getVal() ;
+}

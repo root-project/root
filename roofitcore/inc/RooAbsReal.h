@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.47 2002/02/09 02:01:23 davidk Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.48 2002/03/07 06:22:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -100,7 +100,12 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
+  const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
+
 protected:
+
+  // Hook for objects with normalization-dependent parameters interperetation
+  virtual void selectNormalization(const RooArgSet* depSet=0) {} ;
 
   // Helper functions for plotting
   Bool_t plotSanityChecks(RooPlot* frame) const ;

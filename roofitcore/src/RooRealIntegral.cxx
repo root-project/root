@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.53 2002/02/06 01:31:38 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.54 2002/02/13 02:50:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,7 @@ ClassImp(RooRealIntegral)
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsReal& function, const RooArgSet& depList,
-				 const RooArgSet* funcNormSet) :
+				 const RooArgSet* funcNormSet, const RooIntegratorConfig* config) :
   RooAbsReal(name,title), _mode(0),
   _function("function","Function to be integrated",this,
 	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
@@ -51,7 +51,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
-  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
+  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig(config)
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -459,15 +459,27 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   if(_numIntegrand->getDimension() == 1) {
     if(RooNumber::isInfinite(_numIntegrand->getMinLimit(0)) ||
        RooNumber::isInfinite(_numIntegrand->getMaxLimit(0))) {
-      _numIntEngine= new RooImproperIntegrator1D(*_numIntegrand);
+      if (_iconfig) {
+	_numIntEngine= new RooImproperIntegrator1D(*_numIntegrand,*_iconfig);
+      } else {
+	_numIntEngine= new RooImproperIntegrator1D(*_numIntegrand);
+      }
     }
     else {
-      _numIntEngine= new RooIntegrator1D(*_numIntegrand);
+      if (_iconfig) {
+	_numIntEngine= new RooIntegrator1D(*_numIntegrand,*_iconfig);
+      } else {
+	_numIntEngine= new RooIntegrator1D(*_numIntegrand);
+      }
     }
   }
   else {
     // let the constructor check that the domain is finite
-    _numIntEngine= new RooMCIntegrator(*_numIntegrand);
+    if (_iconfig) {
+      _numIntEngine= new RooMCIntegrator(*_numIntegrand,*_iconfig);
+    } else {
+      _numIntEngine= new RooMCIntegrator(*_numIntegrand);
+    }
   }
   if(0 == _numIntEngine || !_numIntEngine->isValid()) {
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
@@ -708,7 +720,7 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     _intList.printToStream(os,Standard,deeper);
     os << indent << "  Analytically integrated args using mode " << _mode << " are ";
     _anaList.printToStream(os,Standard,deeper);
-    os << indent << "  Arguments included in Jacobean are ";
+    os << indent << "  Arguments included in Jacobian are ";
     _jacList.printToStream(os,Standard,deeper);
     os << indent << "  Factorized arguments are ";
     _facList.printToStream(os,Standard,deeper);

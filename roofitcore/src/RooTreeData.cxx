@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.36 2002/02/23 02:14:54 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.37 2002/03/07 06:22:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -117,6 +117,11 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
+  if (!tmp) {
+    cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+    RooErrorHandler::softAbort() ;
+  }
+
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
   cloneVar->attachDataSet(*this) ;
 
@@ -141,6 +146,10 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
+  if (!tmp) {
+    cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+    RooErrorHandler::softAbort() ;
+  }
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
   cloneVar->attachDataSet(*this) ;
 
@@ -165,7 +174,11 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   RooFormulaVar* cloneVar(0) ;
   if (cutVar) {
     cloneVarSet = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
-    cloneVar = (RooFormulaVar*) cloneVarSet->find(cutVar->GetName()) ;
+    if (!cloneVarSet) {
+      cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+      RooErrorHandler::softAbort() ;
+    }
+   cloneVar = (RooFormulaVar*) cloneVarSet->find(cutVar->GetName()) ;
     cloneVar->attachDataSet(*t) ;
   }
 
@@ -582,6 +595,10 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 
   // Clone variable and attach to cloned tree 
   RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  
+  if (!newVarCloneList) {
+    cout << "RooTreeData::addColumn(" << GetName() << ") Couldn't deep-clone variable to add, abort." << endl ;
+    return 0 ;
+  }
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
   newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
 
@@ -629,6 +646,10 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
     
     // Clone variable and attach to cloned tree 
     RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;  
+    if (!newVarCloneList) {
+      cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
+      return 0 ;
+    }
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
     newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
     newVarClone->recursiveRedirectServers(*holderSet,kFALSE) ;
@@ -685,6 +706,10 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
   RooArgSet* cloneSet(0) ;
   if (splitCat.isDerived()) {
     cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
+    if (!cloneSet) {
+      cout << "RooTreeData::split(" << GetName() << ") Couldn't deep-clone splitting category, abort." << endl ;
+      return 0 ;
+    }
     cloneCat = (RooAbsCategory*) cloneSet->find(splitCat.GetName()) ;
     cloneCat->attachDataSet(*this) ;
   } else {
@@ -1019,6 +1044,10 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
     // Clone derived variable 
     tableSet = (RooArgSet*) RooArgSet(cat).snapshot(kTRUE) ;
+    if (!tableSet) {
+      cout << "RooTreeData::table(" << GetName() << ") Couldn't deep-clone table category, abort." << endl ;
+      return 0 ;
+    }
     tableVar = (RooAbsCategory*) tableSet->find(cat.GetName()) ;
     ownPlotVar = kTRUE ;    
 

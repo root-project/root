@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooErrorVar.rdl,v 1.2 2001/11/19 07:23:55 verkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.3 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,6 +41,14 @@ public:
   virtual void setVal(Double_t value) {
     ((RooRealVar&)_realVar.arg()).setVal(value) ; // dummy because we overloaded getVal()
   }
+
+  // We implement a fundamental type of AbsArg that can be stored in a dataset
+  inline virtual Bool_t isFundamental() const { return kTRUE ; }
+//   virtual Bool_t isDerived() const { return kFALSE ; }
+
+  // I/O streaming interface (machine readable)
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Set/get finite fit range limits
   void setFitMin(Double_t value) ;

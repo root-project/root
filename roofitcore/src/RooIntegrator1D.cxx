@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.11 2001/09/15 00:26:02 david Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.12 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 #include <assert.h>
 
@@ -36,9 +37,36 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
   _valid= initialize();
 } 
 
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
+  RooAbsIntegrator(function), 
+  _rule(config.summationRule1D()), 
+  _maxSteps(config.maxSteps1D()), 
+  _eps(config.epsilon1D())
+{
+  // Use this form of the constructor to integrate over the function's default range.
+  _useIntegrandLimits= kTRUE;
+  _valid= initialize();
+} 
+
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _eps(eps)
+{
+  // Use this form of the constructor to override the function's default range.
+
+  _useIntegrandLimits= kFALSE;
+  _xmin= xmin;
+  _xmax= xmax;
+  _valid= initialize();
+} 
+
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+				const RooIntegratorConfig& config) :
+  RooAbsIntegrator(function), 
+  _rule(config.summationRule1D()), 
+  _maxSteps(config.maxSteps1D()), 
+  _eps(config.epsilon1D())
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -129,6 +157,7 @@ Double_t RooIntegrator1D::integral()
       // extrapolate the results of recent refinements and check for a stable result
       extrapolate(j);
       if(fabs(_extrapError) <= _eps*fabs(_extrapValue)) return _extrapValue;
+      if(fabs(_extrapValue) <= _eps) return _extrapValue ;
     }
     // update the step size for the next refinement of the summation
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;

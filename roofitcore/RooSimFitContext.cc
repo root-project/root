@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.16 2002/02/20 19:46:21 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.17 2002/02/26 01:32:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,7 +19,7 @@
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooArgList.hh"
-
+#include "RooFitCore/RooErrorHandler.hh"
 ClassImp(RooSimFitContext)
 ;
 
@@ -38,6 +38,10 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
 
   TString simCatName(simCat.GetName()) ;
   TList* dsetList = data->split(simCat) ;
+  if (!dsetList) {
+    cout << "RooSimFitContext::RooSimFitContext(" << GetName() << ") unable to split dataset, abort" << endl ;
+    RooErrorHandler::softAbort() ;
+  }
 
   // WVE clone simcat and attach to dataset!
   

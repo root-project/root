@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.14 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.15 2001/10/22 07:12:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -99,7 +99,7 @@ Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 {
   Bool_t ret=RooArgSet::replace(var1,var2) ;
   if (ret) {
-    _owner->removeServer((RooAbsArg&)var1) ;
+    if (!isOwning()) _owner->removeServer((RooAbsArg&)var1) ;
     _owner->addServer((RooAbsArg&)var2,_owner->isValueServer(var1),
 		                       _owner->isShapeServer(var2)) ;
   }
@@ -110,7 +110,7 @@ Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) 
 {
   Bool_t ret=RooArgSet::remove(var,silent,matchByNameOnly) ;
-  if (ret) {
+  if (ret && !isOwning()) {
     _owner->removeServer((RooAbsArg&)var) ;
   }
   return ret ;
@@ -119,12 +119,14 @@ Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNa
 
 void RooSetProxy::removeAll() 
 {
-  TIterator* iter = createIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    _owner->removeServer(*arg) ;
+  if (!isOwning()) {
+    TIterator* iter = createIterator() ;
+    RooAbsArg* arg ;
+    while (arg=(RooAbsArg*)iter->Next()) {
+      _owner->removeServer(*arg) ;
+    }
+    delete iter ;
   }
-  delete iter ;
 
   RooArgSet::removeAll() ;
 }

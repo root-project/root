@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.24 2001/11/28 23:13:55 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.25 2001/12/01 08:12:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,8 +49,22 @@ public:
   const RooArgList& pdfList() const { return _pdfList ; }
   const RooArgList& coefList() const { return _coefList ; }
 
+  void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
 
 protected:
+
+  virtual void selectNormalization(const RooArgSet* depSet=0) ;
+
+  mutable RooSetProxy _refCoefNorm ;
+  Bool_t _projectCoefs ;
+
+  void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0) const ;
+  mutable RooArgSet* _lastCoefProjSet ;
+  mutable RooArgSet* _lastCoefProjIntSet ;
+  mutable RooListProxy _pdfProjList ;
+
+  void updateCoefCache(const RooArgSet* nset) const ;
+  mutable Double_t* _coefCache ;
   
   friend class RooAddGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 

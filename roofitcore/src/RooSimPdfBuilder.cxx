@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.13 2002/02/13 18:57:31 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.14 2002/03/07 06:22:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -630,6 +630,10 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   if (auxSplitCats) {
     // Deep clone auxililary split cats
     auxSplitCloneSet = (RooArgSet*) auxSplitCats->snapshot(kTRUE) ;
+    if (!auxSplitCloneSet) {
+      cout << "RooSimPdfBuilder::buildPdf(" << GetName() << ") Couldn't deep-clone set auxiliary splitcats, abort." << endl ;
+      return 0 ;
+    }
 
     TIterator* iter = auxSplitCats->createIterator() ;
     RooAbsArg* arg ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.14 2001/11/14 18:42:35 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.15 2001/12/01 08:12:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -164,11 +164,20 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   RooAbsArg* var ;
 
   // Add external dependents
+  Bool_t error(kFALSE) ;
   if (deepCopy) {
     // Recursively add clones of all servers
     while (var=(RooAbsArg*)vIter->Next()) {
-      snapshot->addServerClonesToList(*var) ;
+      error |= snapshot->addServerClonesToList(*var) ;
     }
+  }
+
+  // Handle eventual error conditions
+  if (error) {
+    cout << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << endl ;
+    snapshot->_ownCont = kTRUE ;    
+    delete snapshot ;
+    return 0 ;
   }
 
   // Redirect all server connections to internal list members
@@ -185,21 +194,31 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 
 
 
-void RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
+Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 {
   // Add clones of servers of given argument to list
+  Bool_t ret(kFALSE) ;
 
   TIterator* sIter = var.serverIterator() ;
   RooAbsArg* server ;
   while (server=(RooAbsArg*)sIter->Next()) {
-    if (!find(server->GetName())) {
+    RooAbsArg* tmp = find(server->GetName()) ;
+    if (!tmp) {
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
       add(*serverClone) ;      
-      addServerClonesToList(*server) ;
+      ret |= addServerClonesToList(*server) ;
+    } else {
+//       if (tmp != server && !tmp->isCloneOf(*server)) {
+// 	cout << "RooAbsCollection::snapshot() ERROR: multiple non-cloned objects with name '" 
+// 	     << server->GetName() << "' detected: " 
+// 	     << tmp << "," << server << endl ;
+// 	ret = kTRUE ;
+//       }
     }
   }
   delete sIter ;
+  return ret ;
 }
 
 RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other) {

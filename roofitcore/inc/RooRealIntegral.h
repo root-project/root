@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.26 2001/10/13 21:53:21 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.27 2001/10/31 07:19:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,6 +24,7 @@ class TH1F ;
 class RooAbsCategory ;
 class RooRealVar ;
 class RooAbsIntegrator ;
+class RooIntegratorConfig ;
 
 class RooRealIntegral : public RooAbsReal {
 public:
@@ -31,7 +32,7 @@ public:
   // Constructors, assignment etc
   inline RooRealIntegral() : _valid(kFALSE),_numIntEngine(0),_numIntegrand(0) { }
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
-		  const RooArgSet* funcNormSet=0) ;
+		  const RooArgSet* funcNormSet=0, const RooIntegratorConfig* config=0) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
   virtual ~RooRealIntegral();
@@ -66,6 +67,8 @@ protected:
   mutable RooSetProxy _facList ;
   RooRealProxy       _function ; // must after set proxies
   RooArgSet*      _funcNormSet ;
+
+  const RooIntegratorConfig* _iconfig ;
   
   void prepareACleanFunc() const ;
   void restoreACleanFunc() const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.cc,v 1.5 2001/09/22 00:30:58 david Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.6 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 #include <math.h>
 #include <assert.h>
@@ -29,7 +30,23 @@ ClassImp(RooMCIntegrator)
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
-  _genType(genType), _mode(mode), _alpha(1.5)
+  _genType(genType), _mode(mode), _alpha(1.5),
+  _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
+{
+  // check that our grid initialized without errors
+  if(!(_valid= _grid.isValid())) return;
+  if(_verbose) _grid.Print();
+} 
+
+RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooIntegratorConfig& config) :
+  RooAbsIntegrator(function), _grid(function), 
+  _verbose(config.verboseMC()),
+  _genType(config.generatorTypeMC()), 
+  _mode(config.samplingModeMC()), 
+  _alpha(config.alphaMC()),
+  _nRefineIter(config.nRefineIterMC()),
+  _nRefinePerDim(config.nRefinePerDimMC()),
+  _nIntegratePerDim(config.nIntegratePerDimMC())
 {
   // check that our grid initialized without errors
   if(!(_valid= _grid.isValid())) return;
@@ -52,8 +69,8 @@ Double_t RooMCIntegrator::integral() {
   // high statistics integration.
 
   _timer.Start(kTRUE);
-  vegas(AllStages,1000*_grid.getDimension(),5);
-  return vegas(ReuseGrid,5000*_grid.getDimension(),1);
+  vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
+  return vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
 }
 
 Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) {

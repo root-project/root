@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.18 2001/10/22 07:12:14 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.19 2001/12/06 07:06:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,6 +47,19 @@ public:
   const RooArgList& pdfList() const { return _pdfList ; }
 
 protected:
+
+  void syncAnaInt(Int_t code) const ;  
+  void syncAnaInt(RooArgSet& partIntSet, Int_t code) const ;
+  mutable RooArgSet* _lastEvalNSet ;
+  mutable Int_t      _evalCode ;
+  mutable Int_t _lastAICode1 ;
+  mutable Int_t _lastAICode2 ;
+  mutable Int_t _nextSet ;
+  mutable RooSetProxy _partIntSet1 ;
+  mutable RooSetProxy _partIntSet2 ;
+  mutable TIterator* _intIter1 ;    //! Iterator of PDF list
+  mutable TIterator* _intIter2 ;    //! Iterator of PDF list
+  mutable TIterator* _intIter  ;    //! Iterator of PDF list
 
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 

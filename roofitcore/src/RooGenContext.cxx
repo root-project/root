@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.25 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.26 2002/01/30 18:27:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.25 2001/11/14 18:42:37 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.26 2002/01/30 18:27:40 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -50,6 +50,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // is independent of any existing objects.
   RooArgSet nodes(model,model.GetName());
   _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
+  if (!_cloneSet) {
+    cout << "RooGenContext::RooGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
 
   // Find the clone in the snapshot list
   _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());

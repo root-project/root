@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.64 2001/11/19 07:23:52 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.65 2001/12/02 23:25:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -113,6 +113,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   setValueDirty() ;
   setShapeDirty() ;
 
+  setAttribute(Form("CloneOf(%08x)",&other)) ;
+
   RooTrace::create(this) ;
 }
 
@@ -154,6 +156,13 @@ RooAbsArg::~RooAbsArg()
   RooTrace::destroy(this) ;
 }
 
+
+Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const 
+{
+  // Check if this object was created as a clone of 'other' 
+  return (getAttribute(Form("CloneOf(%08x)",&other)) ||
+	  other.getAttribute(Form("CloneOf(%08x)",this))) ;
+}
 
 
 void RooAbsArg::setAttribute(const Text_t* name, Bool_t value) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvGenContext.cc,v 1.2 2001/11/02 03:05:10 verkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.3 2001/11/05 18:50:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -38,6 +38,11 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
 
   // Clone PDF and change model to internal truth model
   _pdfCloneSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
+  if (!_pdfCloneSet) {
+    cout << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
+
   RooConvolutedPdf* pdfClone = (RooConvolutedPdf*) _pdfCloneSet->find(model.GetName()) ;
   RooTruthModel truthModel("truthModel","Truth resolution model",(RooRealVar&)*pdfClone->convVar()) ;
   pdfClone->changeModel(truthModel) ;
@@ -49,6 +54,10 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
 
   // Clone resolution model and use as normal PDF
   _modelCloneSet = (RooArgSet*) RooArgSet(*model._convSet.at(0)).snapshot(kTRUE) ;
+  if (!_modelCloneSet) {
+    cout << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
   RooResolutionModel* modelClone = (RooResolutionModel*) 
     _modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing") ;
   _modelCloneSet->addOwned(*modelClone) ;

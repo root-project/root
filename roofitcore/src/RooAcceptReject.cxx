@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.21 2001/11/27 23:19:04 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.22 2002/02/05 20:07:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooErrorHandler.hh"
 
 #include "TString.h"
 #include "TIterator.h"
@@ -31,7 +32,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.21 2001/11/27 23:19:04 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.22 2002/02/05 20:07:58 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -45,6 +46,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
   _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
+  if (!_cloneSet) {
+    cout << "RooAcceptReject::RooAcceptReject(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
 
   // Find the clone in the snapshot list
   _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());

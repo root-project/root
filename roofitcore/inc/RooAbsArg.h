@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.63 2001/12/02 23:25:54 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.64 2002/03/07 06:22:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,7 +46,8 @@ public:
   }
 
   // Accessors to client-server relation information 
-  Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
+  virtual Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
+  Bool_t isCloneOf(const RooAbsArg& other) const ; 
   Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const ;
   Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const ;
   Bool_t overlaps(const RooAbsArg& testArg) const ;
@@ -83,6 +84,7 @@ public:
 
   // Parameter & dependents interpretation of servers
   friend class RooProdPdf ;
+  friend class RooAddPdf ;
   RooArgSet* getParameters(const RooAbsData* set) const ;
   RooArgSet* getParameters(const RooArgSet& set) const { return getParameters(&set) ; }
   virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
@@ -134,6 +136,7 @@ protected:
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;
   friend class RooAbsReal ;
+
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
   void setOperMode(OperMode mode) { _operMode = mode ; operModeHook() ; }
   virtual void operModeHook() {} ;

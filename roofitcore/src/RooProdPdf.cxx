@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.18 2001/10/22 07:12:13 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.19 2001/12/06 07:06:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,6 +46,16 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
+  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+  _intIter1(_partIntSet1.createIterator()),
+  _intIter2(_partIntSet2.createIterator()),
+  _lastAICode1(-1),
+  _lastAICode2(-1),
+  _intIter(0),  
+  _nextSet(1),
+  _lastEvalNSet((RooArgSet*)-1),
+  _evalCode(0),
   _cutOff(cutOff),
   _codeReg(10),
   _extendedIndex(-1)
@@ -59,6 +69,16 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
+  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+  _intIter1(_partIntSet1.createIterator()),
+  _intIter2(_partIntSet2.createIterator()),
+  _lastAICode1(-1),
+  _lastAICode2(-1),
+  _intIter(0),
+  _nextSet(1),
+  _lastEvalNSet((RooArgSet*)-1),
+  _evalCode(0),
   _cutOff(cutOff),
   _codeReg(10),
   _extendedIndex(-1)
@@ -105,6 +125,16 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
+  _partIntSet1("partIntSet1","Primary set of partial integrals",this,kFALSE,kFALSE),
+  _partIntSet2("partIntSet2","Alternate set of partial integrals",this,kFALSE,kFALSE),
+  _intIter1(_partIntSet1.createIterator()),
+  _intIter2(_partIntSet2.createIterator()),
+  _lastAICode1(-1),
+  _lastAICode2(-1),
+  _intIter(0),
+  _nextSet(1),
+  _lastEvalNSet((RooArgSet*)-1),
+  _evalCode(0),
   _cutOff(cutOff),
   _codeReg(10),
   _extendedIndex(-1)
@@ -157,6 +187,16 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
+  _partIntSet1("partIntSet1",this,other._partIntSet1),
+  _partIntSet2("partIntSet2",this,other._partIntSet2),
+  _intIter1(_partIntSet1.createIterator()),
+  _intIter2(_partIntSet2.createIterator()),
+  _lastAICode1(-1),
+  _lastAICode2(-1),
+  _intIter(0),
+  _nextSet(1),
+  _lastEvalNSet((RooArgSet*)-1),
+  _evalCode(0),
   _cutOff(other._cutOff),
   _codeReg(other._codeReg),
   _extendedIndex(other._extendedIndex)
@@ -170,6 +210,7 @@ RooProdPdf::~RooProdPdf()
   // Destructor
 
   delete _pdfIter ;
+  delete _intIter ;
 }
 
 
@@ -177,18 +218,16 @@ Double_t RooProdPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
 
-  Double_t value(1) ;
-    
-  // Calculate running product of pdfs
-  RooAbsReal* pdf ;
-  _pdfIter->Reset() ;
-  const RooArgSet* nset(_pdfList.nset()) ;
-  while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
-    value *= pdf->getVal(nset) ;
-    if (value<_cutOff) break ;
+  const RooArgSet* nset = _pdfList.nset() ;
+  if (nset != _lastEvalNSet) {
+    RooArgSet allVars ;
+    RooArgSet analVars ;
+    _evalCode = getAnalyticalIntegralWN(allVars,analVars,nset) ;
+    _lastEvalNSet = (RooArgSet*) nset ;
+   //cout << "RooProdPdf::evaluate(" << GetName() << "): new code = " << _evalCode << endl ;    
   }
 
-  return value ;
+  return analyticalIntegralWN(_evalCode,nset) ;
 }
 
 
@@ -250,51 +289,131 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   // each component is capable of analytically integrating the common set, and combines the components 
   // individual integration codes into a single integration code valid for RooProdPdf.
 
+  if (_forceNumInt) return 0 ;
+
+//   cout << "RooProdPdf::getAIWN(" << GetName() << ")" << endl 
+//        << "                   allVars = " ; allVars.Print("1") ;
+//   cout << "                   normSet = " ; if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
+  
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t code(0), n(0) ;
   Bool_t allFact(kTRUE) ;
-  Int_t* subCode = new Int_t[_pdfList.getSize()] ;
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-    Bool_t fact(kTRUE) ;
+
+    // Check if all dependents of this PDF component appear in the normalization set
+    Bool_t fact(kFALSE) ;
     RooArgSet *pdfDepList = pdf->getDependents(normSet) ;
-    TIterator* depIter = pdfDepList->createIterator() ;
-    RooAbsArg* dep ;
-    while(dep=(RooAbsArg*)depIter->Next()) {
-      if (!allVars.find(dep->GetName())) {
-	fact=kFALSE ;
-	allFact=kFALSE ;
+    if (pdfDepList->getSize()>0) {
+      fact=kTRUE ;
+      TIterator* depIter = pdfDepList->createIterator() ;
+      RooAbsArg* dep ;
+      while(dep=(RooAbsArg*)depIter->Next()) {
+	if (!allVars.find(dep->GetName())) {
+	  fact=kFALSE ;
+	}
       }
     }
-    if (fact) {
-      // Factorize, i.e. drop this component pdf
-      analVars.add(*pdfDepList) ;
-      //cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
-      subCode[n] = -1 ;
-    } else {
-      // Determine partial integration code
-      RooArgSet subAnalVars ;
-      subCode[n] = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;      
-      analVars.add(subAnalVars) ;
-      //cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
-    }
-    delete depIter ;
+    if (!fact) allFact=kFALSE ;
     delete pdfDepList ;
-    n++ ;
   }
 
-//   cout << "RooProdPdf::getAI(" << GetName() << ") analytically integrates " ; analVars.Print("1") ;
-//   RooArgSet tmp(allVars) ;
-//   tmp.remove(analVars,kTRUE,kTRUE) ;
-//   cout << "RooProdPdf::getAI(" << GetName() << ") not integrated " ; tmp.Print("1") ;
 
-  Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize())+1 ;
-  delete[] subCode ;
+  analVars.add(allVars) ;
 
-  // This PDF is by construction normalized
-  return allFact?-1:masterCode ;
+  if (allFact) {
+    // Fully factorizing integral has special code 1000
+    return 1000 ;
+  } else {
+    // Partial integral product. Code assigned by registry
+    Int_t code(2) ;
+    RooArgSet* iSet = (RooArgSet*) analVars.snapshot(kFALSE) ;
+    RooArgSet* nSet = normSet ? ((RooArgSet*)normSet->snapshot(kFALSE)) : 0 ;
+    Int_t masterCode = _codeReg.store(&code,1,iSet,nSet)+1 ;    
+    return masterCode ;
+  }
+  return 0 ;
 }
 
+
+void RooProdPdf::syncAnaInt(Int_t code) const
+{  
+  // Do we need to do anything?
+
+  if (code == _lastAICode1) {
+    _intIter = _intIter1 ;
+    return ;
+  }
+
+  if (code == _lastAICode2) {
+    _intIter = _intIter2 ;
+    return ;
+  }
+
+  if (_nextSet==1) {
+    syncAnaInt(_partIntSet1,code) ;
+    _lastAICode1 = code ;
+    _nextSet = 2 ;
+    _intIter = _intIter1 ;
+  } else {
+    syncAnaInt(_partIntSet2,code) ;
+    _lastAICode2 = code ;
+    _nextSet = 1;
+    _intIter = _intIter2 ;
+  }
+}
+
+
+
+void RooProdPdf::syncAnaInt(RooArgSet& partIntSet, Int_t code) const
+{
+  partIntSet.removeAll() ;
+
+  // Retrieve information from registry
+  RooArgSet* intSet ;
+  RooArgSet* normSet ;
+  _codeReg.retrieve(code-1,intSet,normSet) ;
+
+//   cout << "RooProdPdf::syncAnaInt code = " << code << endl;
+//   cout << "intSet  = " ; intSet->Print("1") ;
+//   cout << "normSet = " ; if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
+
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  Bool_t allFact(kTRUE) ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+
+    // Check if all dependents of this PDF component appear in the normalization set
+    Bool_t fact(kFALSE) ;
+    RooArgSet *pdfDepList = pdf->getDependents(normSet) ;
+    if (pdfDepList->getSize()>0) {
+      fact=kTRUE ;
+      TIterator* depIter = pdfDepList->createIterator() ;
+      RooAbsArg* dep ;
+      while(dep=(RooAbsArg*)depIter->Next()) {
+	if (!intSet->find(dep->GetName())) {
+	  fact=kFALSE ;
+	}
+      }
+    }
+    if (!fact) allFact=kFALSE ;
+
+    // fact = true if all pdf dependents are in normalization set
+
+    if (fact) {
+      // This product term factorizes, no partial integral needs to be created
+    } else if (normSet && pdfDepList->getSize()==0) {
+    } else {
+      RooArgSet* iSet = pdf->getDependents(intSet) ;
+      RooAbsReal* partInt = pdf->createIntegral(*iSet,*pdfDepList) ;
+      partInt->setOperMode(operMode()) ;
+      partIntSet.addOwned(*partInt) ;
+      delete iSet ;
+    }
+
+    delete pdfDepList ;
+  }
+}
 
 Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
@@ -305,25 +424,25 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
     return getVal(normSet) ;
   }
 
-  // Full integration scenario
-  if (code==-1) {
+  // Full normalized integration scenario
+  if (code==1000) {
     return 1.0 ;
   }
 
   // Partial integration scenarios
-  RooAbsReal* pdf ;
-  _pdfIter->Reset() ;
-  Int_t n(0) ;
-  Double_t value(1) ;
-  const Int_t* subCode = _codeReg.retrieve(code-1) ;
-
+  syncAnaInt(code) ;
+  
   // Calculate running product of pdfs, skipping factorized components
-  while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
-    if (subCode[n]>=0) {
-      value *= pdf->analyticalIntegralWN(subCode[n],normSet) ;
+  RooAbsReal* partInt ;
+  Double_t value(1.0) ;
+  _intIter->Reset() ;
+  while(partInt=(RooAbsReal*)_intIter->Next()) {    
+    Double_t piVal = partInt->getVal() ;
+    value *= piVal ;
+    if (value<_cutOff) {
+      //cout << "RooProdPdf::aIWN(" << GetName() << ") calculation cut off after " << partInt->GetName() << endl ; 
+      break ;
     }
-    if (value<_cutOff) break ;
-    n++ ;
   }
 
   return value ;

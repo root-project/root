@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.5 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.6 2001/09/22 00:30:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,8 +15,8 @@
 
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooGrid.hh"
-
 #include "TStopwatch.h"
+class RooIntegratorConfig ;
 
 class RooMCIntegrator : public RooAbsIntegrator {
 public:
@@ -26,6 +26,7 @@ public:
   enum GeneratorType { QuasiRandom, PseudoRandom };
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
 		  GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
+  RooMCIntegrator(const RooAbsFunc& function, const RooIntegratorConfig& config);
   virtual ~RooMCIntegrator();
 
   virtual Bool_t checkLimits() const;
@@ -51,6 +52,9 @@ protected:
   Double_t _alpha;
   Int_t _mode;
   GeneratorType _genType;
+  Int_t _nRefineIter ;
+  Int_t _nRefinePerDim ;
+  Int_t _nIntegratePerDim ;
 
   TStopwatch _timer;
 

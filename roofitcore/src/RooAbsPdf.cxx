@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.59 2001/12/02 08:13:00 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.60 2002/02/13 02:03:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -124,16 +124,18 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooNLLBinding.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 ClassImp(RooAbsPdf) 
 ;
 
 
 Int_t RooAbsPdf::_verboseEval(0) ;
+RooIntegratorConfig* RooAbsPdf::_defaultNormIntConfig(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _lastNormSet(0), _selectComp(kTRUE)
+  RooAbsReal(name,title), _norm(0), _lastNormSet(0), _selectComp(kTRUE), _specNormIntConfig(0)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -143,7 +145,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0), _selectComp(kTRUE)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _lastNormSet(0), _selectComp(kTRUE), _specNormIntConfig(0)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -158,6 +160,12 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
   // Copy constructor
   resetErrorCounters() ;
   setTraceCounter(0) ;
+
+  if (other._specNormIntConfig) {
+    _specNormIntConfig = new RooIntegratorConfig(*other._specNormIntConfig) ;
+  } else {
+    _specNormIntConfig = 0 ;
+  }
 }
 
 
@@ -165,6 +173,7 @@ RooAbsPdf::~RooAbsPdf()
 {
   // Destructor
   if (_norm) delete _norm ;
+  if (_specNormIntConfig) delete _specNormIntConfig ;
 }
 
 
@@ -362,13 +371,64 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
   } else {
     TString ntitle(GetTitle()) ; ntitle.Append(" Integral") ;
-    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList) ;
+    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList,0,getNormIntConfig()) ;
   }
 
   // Allow optional post-processing
   syncNormalizationPostHook(_norm,nset) ;
  
   if (!fullNorm) delete depList ;
+}
+
+
+
+const RooIntegratorConfig* RooAbsPdf::getNormIntConfig() const 
+{
+  const RooIntegratorConfig* config = getSpecialNormIntConfig() ;
+  if (config) return config ;
+  return getDefaultNormIntConfig() ;
+}
+
+
+const RooIntegratorConfig* RooAbsPdf::getDefaultNormIntConfig() const 
+{
+  if (!_defaultNormIntConfig) {
+    _defaultNormIntConfig = new RooIntegratorConfig ;
+  }
+  return _defaultNormIntConfig ;
+}
+
+
+const RooIntegratorConfig* RooAbsPdf::getSpecialNormIntConfig() const 
+{
+  return _specNormIntConfig ;
+}
+
+
+void RooAbsPdf::setDefaultNormIntConfig(const RooIntegratorConfig& config) 
+{
+  if (_defaultNormIntConfig) {
+    delete _defaultNormIntConfig ;
+  }
+  _defaultNormIntConfig = new RooIntegratorConfig(config) ;
+}
+
+
+void RooAbsPdf::setNormIntConfig(const RooIntegratorConfig& config) 
+{
+  if (_specNormIntConfig) {
+    delete _specNormIntConfig ;
+  }
+  _specNormIntConfig = new RooIntegratorConfig(config) ;  
+}
+
+
+void RooAbsPdf::setNormIntConfig() 
+{
+  if (_specNormIntConfig) {
+    delete _specNormIntConfig ;
+  }
+  _specNormIntConfig = 0 ;
 }
 
 
@@ -976,6 +1036,10 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOp
 
   // Clone for plotting
   RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  if (!cloneList) {
+    cout << "RooAbsPdf::plotNLLOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
+    return frame ;
+  }
   RooAbsPdf* clone     = (RooAbsPdf*) cloneList->find(GetName()) ;
   RooAbsRealLValue* cloneVar = (RooAbsRealLValue*) cloneList->find(plotVar->GetName()) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.7 2001/12/01 08:12:48 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.8 2002/02/06 01:31:38 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -119,6 +119,11 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
   // Clone the index category
   _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(kTRUE) ;
+  if (!_idxCatSet) {
+    cout << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
+  
   _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
 }
 

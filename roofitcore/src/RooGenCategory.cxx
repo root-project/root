@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.10 2001/10/13 21:53:21 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.11 2001/12/03 20:16:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -29,6 +29,7 @@
 #include "RooFitCore/RooGenCategory.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooMapCatEntry.hh"
+#include "RooFitCore/RooErrorHandler.hh"
 
 ClassImp(RooGenCategory)
 
@@ -120,6 +121,10 @@ void RooGenCategory::updateIndexList()
 
   // DeepClone super category for iteration
   RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCatProxy.arg()).snapshot(kTRUE) ;
+  if (!tmp) {
+    cout << "RooGenCategory::updateIndexList(" << GetName() << ") Couldn't deep-clone super category, abort," << endl ;
+    RooErrorHandler::softAbort() ;
+  }
   RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCatProxy.arg().GetName()) ;
 
   TIterator* sIter = superClone->typeIterator() ;

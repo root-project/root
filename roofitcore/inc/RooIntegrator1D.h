@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.8 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.9 2001/09/15 00:26:03 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 #define ROO_INTEGRATOR_1D
 
 #include "RooFitCore/RooAbsIntegrator.hh"
+class RooIntegratorConfig ;
 
 class RooIntegrator1D : public RooAbsIntegrator {
 public:
@@ -23,8 +24,11 @@ public:
   enum SummationRule { Trapezoid, Midpoint };
   RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
 		  Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) ;
   RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, 
+		  const RooIntegratorConfig& config) ;
   virtual ~RooIntegrator1D();
 
   virtual Bool_t checkLimits() const;

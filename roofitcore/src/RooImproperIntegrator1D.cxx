@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.5 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 #include <iostream.h>
 #include <math.h>
@@ -29,10 +30,24 @@ ClassImp(RooImproperIntegrator1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooImproperIntegrator1D.cc,v 1.4 2001/09/25 01:15:59 verkerke Exp $";
+"$Id: RooImproperIntegrator1D.cc,v 1.5 2001/10/08 05:20:17 verkerke Exp $";
 
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)
+{
+  initialize(function) ;
+}
+
+
+RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
+  RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)
+{
+  initialize(function) ;
+}
+
+
+
+void RooImproperIntegrator1D::initialize(const RooAbsFunc& function) 
 {
   if(!isValid()) {
     cout << "RooImproperIntegrator: cannot integrate invalid function" << endl;

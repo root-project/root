@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.75 2002/02/15 01:47:22 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.76 2002/03/07 06:22:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,6 +37,7 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooScaledFunc.hh"
 #include "RooFitCore/RooDataProjBinding.hh"
+#include "RooFitCore/RooAddPdf.hh"
 
 #include <iostream.h>
 
@@ -304,8 +305,8 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 {
   TString name(GetName()) ;
   TString title(GetTitle()) ;
+  name.Append("_Int[") ;
   if (iset.getSize()>0) {
-    name.Append("_Int[") ;
     TIterator* iter = iset.createIterator() ;
     RooAbsArg* arg ;
     Bool_t first(kTRUE) ;
@@ -318,10 +319,9 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
       name.Append(arg->GetName()) ;
     }
     delete iter ;
-    name.Append("]") ;
   }
+  name.Append("]_Norm[") ;
   if (nset && nset->getSize()>0) {
-    name.Append("_Norm[") ;
     Bool_t first(kTRUE); 
     TIterator* iter  = nset->createIterator() ;
     RooAbsArg* arg ;
@@ -333,12 +333,20 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
       }
       name.Append(arg->GetName()) ;
     }
-    name.Append("]") ;
     delete iter ;
   }
+  name.Append("]") ;
 
   title.Prepend("Integral of ") ;
   return new RooRealIntegral(name,title,*this,iset,nset) ;
+}
+
+
+
+const RooAbsReal* RooAbsReal::createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const 
+{
+  RooArgSet* cloneSet = new RooArgSet() ;
+  return createProjection(depVars,&projVars,cloneSet) ; 
 }
 
 
@@ -427,6 +435,10 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
   cloneSet= (RooArgSet*)RooArgSet(*this).snapshot();
+  if (!cloneSet) {
+    cout << "RooAbsPdf::createProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    return 0 ;
+  }
   RooAbsReal *clone= (RooAbsReal*)cloneSet->find(GetName());
 
   // The remaining entries in our list of leaf nodes are the the external
@@ -653,6 +665,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   // Clone the plot variable
   RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
   RooArgSet* plotCloneSet = (RooArgSet*) RooArgSet(*realVar).snapshot(kTRUE) ;
+  if (!plotCloneSet) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
+    return frame ;
+  }
   RooRealVar* plotVar = (RooRealVar*) plotCloneSet->find(realVar->GetName());
 
   // Inform user about projections
@@ -665,6 +681,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 	 << " projects with data variables " ; projDataNeededVars->Print("1") ;
   }
 
+
+
   // Create projection integral
   RooArgSet* projectionCompList ;
 
@@ -676,12 +694,26 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   deps->remove(*plotVar,kTRUE,kTRUE) ;
   deps->add(*plotVar) ;
 
-  const RooAbsReal *projection = createProjection(*deps, &projectedVars, projectionCompList) ;
+  RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList) ;
+
+  if (projDataNeededVars && projDataNeededVars->getSize()>0) {
+    // Optionally fix RooAddPdf normalizations
+    RooArgSet fullNormSet(*deps) ;
+    fullNormSet.add(projectedVars) ;
+    fullNormSet.add(*projDataNeededVars) ;
+    RooArgSet* compSet = projection->getComponents() ;
+    TIterator* iter = compSet->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+      if (pdf) {
+	pdf->selectNormalization(&fullNormSet) ;
+      } 
+    }
+    delete iter ;
+    delete compSet ;
+  }
   delete deps ;
-
-  // Reset name of projection to name of PDF to get appropriate curve name
-  //((RooAbsArg*)projection)->SetName(GetName()) ;
-
 
   // Apply data projection, if requested
   if (projData && projDataNeededVars && projDataNeededVars->getSize()>0) {
@@ -856,6 +888,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   RooArgSet *posProjCompList, *negProjCompList ;
   const RooAbsReal *posProj = funcPos->createProjection(RooArgSet(*plotVar,*asymPos), &projectedVars, posProjCompList) ;
   const RooAbsReal *negProj = funcNeg->createProjection(RooArgSet(*plotVar,*asymNeg), &projectedVars, negProjCompList) ;
+  if (!posProj || !negProj) {
+    cout << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
+    return frame ; 
+  }
 
   // Create a RooFormulaVar representing the asymmetry
   TString asymName(GetName()) ;
