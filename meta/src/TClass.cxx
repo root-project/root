@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.104 2002/12/06 06:40:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.105 2002/12/20 08:11:38 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -828,7 +828,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase *base = (TStreamerBase*)element;
             TClass *baseclass = base->GetClassPointer();
-            Int_t subOffset = baseclass->GetBaseClassOffset(cl); 
+            Int_t subOffset = baseclass->GetBaseClassOffset(cl);
             if (subOffset != -1) return offset+subOffset;
             offset += baseclass->Size();
          }
@@ -948,7 +948,7 @@ TRealData *TClass::GetRealData(const char *name) const
    char starname[1024];
    Int_t nch = dot-name;
    strncpy(starname,name,nch);
-   sprintf(starname+nch,".*%s",dot+1);   
+   sprintf(starname+nch,".*%s",dot+1);
    rd = (TRealData*)fRealData->FindObject(starname);
    if (rd) return rd;
 
@@ -1487,7 +1487,8 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 void *TClass::New(ENewType defConstructor)
 {
    // Return a pointer to a newly allocated object of this class.
-   // The class must have a default constructor.
+   // The class must have a default constructor. For meaning of
+   // defConstructor, see TClass::IsCallingNew().
 
    if (fNew) {
       fgCallingNew = defConstructor;
@@ -1532,7 +1533,8 @@ void *TClass::New(ENewType defConstructor)
 void *TClass::New(void *arena, ENewType defConstructor)
 {
    // Return a pointer to a newly allocated object of this class.
-   // The class must have a default constructor.
+   // The class must have a default constructor. For meaning of
+   // defConstructor, see TClass::IsCallingNew().
 
    if (fNew) {
       fgCallingNew = defConstructor;
