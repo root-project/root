@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooPolynomial.cc,v 1.2 2001/09/26 21:44:06 verkerke Exp $
+ *    File: $Id: RooPolynomial.cc,v 1.3 2001/10/08 05:21:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -38,7 +38,7 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
   _lowestOrder(lowestOrder) 
 {
   // Constructor
-  _coefIter = coefList.createIterator() ;
+  _coefIter = _coefList.createIterator() ;
 
   // Check lowest order
   if (_lowestOrder<1) {
