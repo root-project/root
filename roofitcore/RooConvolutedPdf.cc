@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.31 2002/04/10 20:59:04 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.32 2002/05/15 01:40:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -238,7 +238,7 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars,
   RooArgSet dummy ;
   Bool_t pdfCanDir = (getGenerator(*convVar(),dummy) != 0) ;
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
-  Bool_t resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) ;
+  Bool_t resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) && conv->isDirectGenSafe(*convVar()) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
