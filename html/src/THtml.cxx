@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.44 2003/10/02 11:44:40 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.45 2003/10/12 07:25:29 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -522,11 +522,13 @@ ofstream classFile;
 
                // make a link to the base class
                classFile << htmlFile;
-               classFile << "\">" << inheritFrom->GetName() << "</a>";
+               classFile << "\">";
+               ReplaceSpecialChars(classFile, inheritFrom->GetName());
+               classFile << "</a>";
                delete[]htmlFile;
                htmlFile = 0;
             } else
-               classFile << inheritFrom->GetName();
+               ReplaceSpecialChars(classFile, inheritFrom->GetName());
          }
 
          classFile << "</h2>" << endl;
@@ -2780,6 +2782,11 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
          filename = classPtr->GetImplFileName();
       else 
          filename = classPtr->GetDeclFileName();
+
+      // classes without Impl/DeclFileName don't have docs,
+      // and classes without docs don't have output file names
+      if (!filename) 
+         return 0;
 
       char varName[80];
       const char *colon = strchr(filename, ':');
