@@ -50,7 +50,7 @@ typedef int (*G__InterfaceMethod)();
 #endif
 
 #define G__INFO_BUFLEN 50
-#define G__INFO_TITLELEN 256
+#define G__INFO_TITLELEN 512
 
 #include "Property.h"
 #include "Class.h"
