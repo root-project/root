@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.56 2001/04/19 08:38:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.57 2001/04/19 13:09:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1024,18 +1024,14 @@ Int_t TStreamerInfo::New(const char *p)
    
    TIter next(fElements);
    TStreamerElement *element;
-   //fSize = 0;
-//printf("Creating New:%s of length:%d at:%x\n",GetName(),fSize,p);
    while ((element = (TStreamerElement*)next())) {
       Int_t etype = element->GetType();
       if (element->GetOffset() == kMissing) continue;
-// element->ls();
       if (etype == kObjectp) {
          // if the option "->" is given in the data member comment field 
          // it is assumed that the object exist before reading data in.
          // In this case an object must be created
          if (strstr(element->GetTitle(),"->") == element->GetTitle()) {
-// printf("We are here at A\n");
             char line[200];
             char pname[100];
             char clonesClass[40];
@@ -1053,9 +1049,9 @@ Int_t TStreamerInfo::New(const char *p)
             }
             // object is created via the interpreter
             sprintf(pname,"R__%s_%s",GetName(),element->GetName());
-            sprintf(line,"%s* %s = (%s*)0x%x; *%s = new %s(%s);",
+            sprintf(line,"%s* %s = (%s*)0x%lx; *%s = new %s(%s);",
                element->GetTypeName(),pname,element->GetTypeName(),
-               (Seek_t)((char*)p + element->GetOffset()),pname,
+               (Long_t)((char*)p + element->GetOffset()),pname,
                element->GetClassPointer()->GetName(),clonesClass);
                gROOT->ProcessLine(line);
          }
@@ -1064,8 +1060,6 @@ Int_t TStreamerInfo::New(const char *p)
           etype == kTObject || etype == kTString || etype == kTNamed) {
          TClass *cle = element->GetClassPointer();
          if (!cle) continue;
-//         printf("New object class: %s fSize=%d, at %x\n",GetName(),fSize,(Seek_t)((char*)p + element->GetOffset()));
-//printf("We are here at B, offset=%d\n",element->GetOffset());
          cle->New((char*)p + element->GetOffset());
       }
    }
