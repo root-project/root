@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.1 2001/01/15 07:25:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.2 2001/01/16 16:24:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -253,7 +253,6 @@ void TBranchElement::SetAddress(void *add)
    fReadEntry = -1;
    
    fAddress = (char*)add;
-   char *pointer   = fAddress;
    void **ppointer = (void**)add;
    TObject *obj = (TObject*)(*ppointer);
    TClass *cl = gROOT->GetClass(fClassName.Data());
@@ -264,7 +263,6 @@ void TBranchElement::SetAddress(void *add)
    Int_t *leafOffsets;
    if (!fInfo) {
       TStreamerInfo::Optimize(kFALSE);
-      pointer = (char*)obj;
       cl->BuildRealData((void*)obj);
       fInfo = cl->GetStreamerInfo(fClassVersion);
       leafOffsets = fInfo->GetOffsets();
