@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.9 2004/02/18 20:13:42 brun Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.10 2004/07/08 14:40:28 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -86,6 +86,17 @@ enum EWidgetMessageTypes {
       kDOCK_UNDOCK        = 2,
       kDOCK_SHOW          = 3,
       kDOCK_HIDE          = 4,
+   kC_MDI              = 15,
+      kMDI_CURRENT        = 1,
+      kMDI_CREATE         = 2,
+      kMDI_CLOSE          = 4,
+      kMDI_RESTORE        = 8,
+      kMDI_MOVE           = 16,
+      kMDI_SIZE           = 32,
+      kMDI_MINIMIZE       = 64,
+      kMDI_MAXIMIZE       = 128,
+      kMDI_HELP           = 256,
+      kMDI_MENU           = 512,
    kC_USER             = 1001,
    kC_MSGMAX           = 10000
 };

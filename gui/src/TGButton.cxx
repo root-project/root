@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.34 2004/06/10 14:25:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.35 2004/08/21 07:05:35 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -152,10 +152,10 @@ void TGButton::SetDown(Bool_t on)
 {
 
    // Set button state down according to the parameter 'on'.
-   
+
    if (GetState() == kButtonDisabled) return;
-   
-   on ? SetState(kButtonDown) : SetState(kButtonUp); 
+
+   on ? SetState(kButtonDown) : SetState(kButtonUp);
 }
 //______________________________________________________________________________
 void TGButton::SetGroup(TGButtonGroup *group)
@@ -177,8 +177,8 @@ Bool_t TGButton::HandleButton(Event_t *event)
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   Bool_t in = (event->fX >= 0) && (event->fY >= 0) && 
-               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight); 
+   Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
+               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
 
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
@@ -204,7 +204,7 @@ Bool_t TGButton::HandleButton(Event_t *event)
                            (Long_t) fUserData);
    }
 
-   if (in) { 
+   if (in) {
       EmitSignals(was);
    }
    return kTRUE;
@@ -249,7 +249,7 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      SetState(kButtonDown); 
+      SetState(kButtonDown);
    } else {
       SetState(kButtonUp);
    }
@@ -629,10 +629,10 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
 }
 
 //______________________________________________________________________________
-TGPictureButton::TGPictureButton(const TGWindow *p, const char* pic,
-   Int_t id, GContext_t norm, UInt_t option ) : TGButton(p, id, norm, option)
+TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
+   Int_t id, GContext_t norm, UInt_t option) : TGButton(p, id, norm, option)
 {
-   // Create a picture button. pic - file name of the picture
+   // Create a picture button. Where pic is the file name of the picture.
 
    if (!pic || !strlen(pic)) {
       Error("TGPictureButton", "pixmap not found for button");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.40 2004/06/04 16:05:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -73,7 +73,9 @@ enum EFrameType {
    kFixedSize       = (kFixedWidth | kFixedHeight),
    kOwnBackground   = BIT(10),
    kTransientFrame  = BIT(11),
-   kTempFrame       = BIT(12)
+   kTempFrame       = BIT(12),
+   kMdiMainFrame    = BIT(13),
+   kMdiFrame        = BIT(14)
 };
 
 //---- MWM hints stuff
