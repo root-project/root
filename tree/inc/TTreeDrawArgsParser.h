@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.1 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.2 2005/03/17 11:39:34 brun Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -67,6 +67,7 @@ protected:
    Double_t       fParameters[9];     // parameters in brackets
 
    Bool_t         fShouldDraw;        // if to draw the plot
+   Bool_t         fOptionSame;        // if option contained "same"
    TObject       *fOriginal;          // original plot (if it is to be reused)
    Bool_t         fDrawProfile;       // true if the options contain :"prof"
    EOutputType    fOutputType;        // type of the output
@@ -93,6 +94,7 @@ public:
    TString        GetProofSelectorName() const;
    TString        GetObjectName() const { return fName; }
    TString        GetObjectTitle() const;
+   Bool_t         GetOptionSame() const { return fOptionSame; }
    TObject       *GetOriginal() const { return fOriginal; }
    TString        GetSelection() const { return fSelection; }
    TString        GetVarExp(Int_t num) const;

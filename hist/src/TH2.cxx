@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.67 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.68 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1277,7 +1277,7 @@ Int_t TH2::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored if limits are not all the same.
+   //If overflows are present and limits are different the function will fail.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
@@ -1374,16 +1374,21 @@ Int_t TH2::Merge(TCollection *list)
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny = 0; biny <= ny + 1; biny++) {
-         if ((!same) && (biny == 0 || biny == ny + 1))
-            continue;         // skip overlows if merging histograms with different limits
          iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
          for (binx = 0; binx <= nx + 1; binx++) {
-            if ((!same) && (binx == 0 || binx == nx + 1))
-               continue;
             ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             bin = binx +(nx+2)*biny;
             ibin = ix +(nbix+2)*iy;
             cu  = h->GetBinContent(bin);
+            if ((!same) && (binx == 0 || binx == nx + 1
+                         || biny == 0 || biny == ny + 1)) {
+               if (cu != 0) {
+                  Error("Merge", "Cannot merge histograms - the histograms have"
+                                 " different limits and undeflows/overflows are present."
+                                 " The initial histogram is now broken!");
+                  return -1;
+               }
+            }
             AddBinContent(ibin,cu);
             if (fSumw2.fN) {
                Double_t error1 = h->GetBinError(bin);

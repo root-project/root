@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.31 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.32 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1266,7 +1266,7 @@ Int_t TProfile2D::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored if limits are not all the same.
+   //If overflows are present and limits are different the function will fail.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
@@ -1360,14 +1360,19 @@ Int_t TProfile2D::Merge(TCollection *list)
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny = 0; biny <= ny + 1; biny++) {
-         if ((!same) && (biny == 0 || biny == ny + 1))
-            continue;
          iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
          for (binx = 0; binx <= nx + 1; binx++) {
-            if ((!same) && (binx == 0 || binx == nx + 1))
-               continue;
             ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             bin = binx +(nx+2)*biny;
+            if ((!same) && (binx == 0 || binx == nx + 1
+                         || biny == 0 || biny == ny + 1)) {
+               if (h->GetW()[bin] != 0) {
+                  Error("Merge", "Cannot merge histograms - the histograms have"
+                                 " different limits and undeflows/overflows are present."
+                                 " The initial histogram is now broken!");
+                  return -1;
+               }
+            }
             ibin = ix +(nbix+2)*iy;
             fArray[ibin]             += h->GetW()[bin];
             fSumw2.fArray[ibin]      += h->GetW2()[bin];

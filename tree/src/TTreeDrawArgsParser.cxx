@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.1 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.2 2005/03/17 11:39:34 brun Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -72,6 +72,7 @@ void TTreeDrawArgsParser::ClearPrevious()
    fShouldDraw = kTRUE;
    fOriginal = 0;
    fDrawProfile = kFALSE;
+   fOptionSame = kFALSE;
    fOutputType = kUNKNOWN;
 }
 
@@ -118,11 +119,13 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 Bool_t TTreeDrawArgsParser::ParseName(TString name)
 {
    // Syntax:
-   // [[+]name[(num1 [, [num2] ] [, [num3] ] ...)]]
+   // [' '*][[\+][' '*]name[(num1 [, [num2] ] [, [num3] ] ...)]]
    // num's are floating point numbers
    // sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
    // to apropriate values.
    // Returns fKALSE in case of an error.
+
+   name.ReplaceAll(" ", "");
 
    if (name.Length() != 0 && name[0] == '+') {
       fAdd = kTRUE;
@@ -210,6 +213,9 @@ Bool_t TTreeDrawArgsParser::ParseOption()
    }
    if (fOption.Contains("prof")) {
       fDrawProfile = kTRUE;
+   }
+   if (fOption.Contains("same")) {
+      fOptionSame = kTRUE;
    }
    return true;
 }

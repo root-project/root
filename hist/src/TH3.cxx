@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.59 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.60 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1194,7 +1194,7 @@ Int_t TH3::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored if limits are not all the same.
+   //If overflows are present and limits are different the function will fail.
    //The function returns the merged number of entries if the merge is 
    //successfull, -1 otherwise.
    //
@@ -1306,20 +1306,24 @@ Int_t TH3::Merge(TCollection *list)
       ny   = h->GetYaxis()->GetNbins();
       nz   = h->GetZaxis()->GetNbins();
       for (binz = 0; binz <= nz + 1; binz++) {
-         if ((!same) && (binz == 0 || binz == nz + 1))
-            continue;            // skip overlows if merging histograms with different limits
          iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
          for (biny = 0; biny <= ny + 1; biny++) {
-            if ((!same) && (biny == 0 || biny == ny + 1))
-               continue;
             iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
             for (binx = 0; binx <= nx + 1; binx++) {
-               if ((!same) && (binx == 0 || binx == nx + 1))
-                  continue;
                ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                bin = binx +(nx+2)*(biny + (ny+2)*binz);
                ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
                cu  = h->GetBinContent(bin);
+               if ((!same) && (binx == 0 || binx == nx + 1
+                            || biny == 0 || biny == ny + 1
+                            || binz == 0 || binz == nz + 1)) {
+                  if (cu != 0) {
+                     Error("Merge", "Cannot merge histograms - the histograms have"
+                                    " different limits and undeflows/overflows are present."
+                                    " The initial histogram is now broken!");
+                     return -1;
+                  }
+               }
                AddBinContent(ibin,cu);
                if (fSumw2.fN) {
                   Double_t error1 = h->GetBinError(bin);

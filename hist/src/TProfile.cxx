@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.56 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.57 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1169,7 +1169,7 @@ Int_t TProfile::Merge(TCollection *list)
    //This function computes the min/max for the x axis,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored if limits are not all the same.
+   //If overflows are present and limits are different the function will fail.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
@@ -1247,8 +1247,14 @@ Int_t TProfile::Merge(TCollection *list)
    while ((h = (TProfile*)nextin())) {
       nx = h->GetXaxis()->GetNbins();
       for (bin = 0; bin <= nx + 1; bin++) {
-         if ((!same) && (bin == 0 || bin == nx + 1))
-            continue;
+         if ((!same) && (bin == 0 || bin == nx + 1)) {
+            if (h->GetW()[bin] != 0) {
+               Error("Merge", "Cannot merge histograms - the histograms have"
+                              " different limits and undeflows/overflows are present."
+                              " The initial histogram is now broken!");
+               return -1;
+            }
+         }
          ibin = fXaxis.FindBin(h->GetBinCenter(bin));
          fArray[ibin]             += h->GetW()[bin];
          fSumw2.fArray[ibin]      += h->GetW2()[bin];

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.229 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.230 2005/03/18 22:41:26 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3635,7 +3635,7 @@ Int_t TH1::Merge(TCollection *list)
 // add bin contents, errors and statistics.
 // If all histograms have bin labels, bins with identical labels
 // will be merged, no matter what their order is.
-// Overflows and underflows are omitted if limits are not all the same.
+// If overflows are present and limits are different the function will fail.
 // The function returns the merged number of entries if the merge is
 // successfull, -1 otherwise.
 //
@@ -3772,8 +3772,14 @@ Int_t TH1::Merge(TCollection *list)
       for (binx=0;binx<=nx+1;binx++) {
          cu  = h->GetBinContent(binx);
          if (!allHaveLabels || !binx || binx==nx+1) {
-            if ((!same) && (binx == 0 || binx == nx + 1))
-               continue;
+            if ((!same) && (binx == 0 || binx == nx + 1)) {
+               if (cu != 0) {
+                  Error("Merge", "Cannot merge histograms - the histograms have"
+                                 " different limits and undeflows/overflows are present."
+                                 " The initial histogram is now broken!");
+                  return -1;
+               }
+            }
             Bool_t canRebin=TestBit(kCanRebin);
             ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
             ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
