@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.rdl,v 1.1 2001/12/01 00:11:21 croat Exp $
+ *    File: $Id: RooKeysPdf.rdl,v 1.2 2002/01/22 19:53:42 verkerke Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -27,13 +27,15 @@ class RooKeysPdf : public RooAbsPdf {
 public:
   enum Mirror { NoMirror, MirrorLeft, MirrorRight, MirrorBoth };
   RooKeysPdf(const char *name, const char *title,
-             RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror );
+             RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
+	     Double_t rho=1);
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
   virtual ~RooKeysPdf();
   
   void LoadDataSet( RooDataSet& data);
-  
+  Double_t _rho;
+
 protected:
   
   RooRealProxy _x ;

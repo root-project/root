@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.10 2001/08/27 17:55:12 raven Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.1 2001/12/01 00:11:21 croat Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -25,14 +25,15 @@ ClassImp(RooKeysPdf)
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
-                       Mirror mirror) :
+                       Mirror mirror, Double_t rho) :
   RooAbsPdf(name,title),
   _x("x","Dependent",this,x),
   _nEvents(0),
   _dataPts(0),
   _weights(0),
   _mirrorLeft( mirror==MirrorLeft || mirror==MirrorBoth ),
-  _mirrorRight( mirror==MirrorRight || mirror==MirrorBoth )
+  _mirrorRight( mirror==MirrorRight || mirror==MirrorBoth ),
+  _rho(rho)
 {
   // cache stuff about x
   sprintf(_varName, "%s", x.GetName());
@@ -48,7 +49,8 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
   _dataPts(0), _weights(0),
-  _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ) {
+  _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
+  _rho( other._rho ) {
 
   // cache stuff about x
   sprintf(_varName, "%s", other._varName );
@@ -100,7 +102,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   Double_t mean=x1/x0;
   Double_t sigma=sqrt(x2/_nEvents-mean*mean);
-  Double_t h=pow(Double_t(4)/Double_t(3),0.2)*pow(_nEvents,-0.2);
+  Double_t h=pow(Double_t(4)/Double_t(3),0.2)*pow(_nEvents,-0.2)*_rho;
   Double_t hmin=h*sigma*sqrt(2)/10;
   Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
 
