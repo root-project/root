@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.cxx,v 1.4 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -334,7 +334,8 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
    bool first = true, canhasblock = true;
 
    // producing list of elements inside class element
-   for (int n=0;n<=elements->GetLast();n++) {
+   Int_t n;
+   for (n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
 
       Int_t typ = dtdType(el);
@@ -376,7 +377,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
      fs << "          xmlns:" << clname << " CDATA \"" << XmlClassNameSpaceRef(info->GetClass()) << "\"" << endl;
    fs << "          " << xmlNames_ClassVersion << " CDATA #IMPLIED" << endl;
 
-   for (int n=0;n<=elements->GetLast();n++) {
+   for (n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       if (dtdType(el) == dtd_attr)
         fs << "          " << GetElName(el) << " CDATA #REQUIRED" << endl;
@@ -385,7 +386,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
 
    // produce description for each element
 
-   for (int n=0;n<=elements->GetLast();n++) {
+   for (n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       int eltype = dtdType(el);
       Int_t arrlen = el->GetArrayLength();
@@ -568,7 +569,8 @@ void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
    }
 */
 
-   for (int n=0;n<MaxBaseTypeNum;n++) {
+   int n;
+   for (n=0;n<MaxBaseTypeNum;n++) {
       const char* iname = dtdBaseTypeName(n);
       if (strlen(iname)>0)
         ProduceDtdForItem(fs, iname);
@@ -576,7 +578,7 @@ void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
 
    fs << "<!ELEMENT " << xmlNames_Array << " ";
    bool first = true;
-   for (int n=0;n<MaxBaseTypeNum;n++) {
+   for (n=0;n<MaxBaseTypeNum;n++) {
       const char* iname = dtdBaseTypeName(n);
       if (strlen(iname)>0) {
          fs << (first ? "(": "|") << iname;
