@@ -39,6 +39,8 @@ template <class T, class Distance> struct random_access_iterator {};
 struct output_iterator;
 #endif
 
+#if !(defined G__VISUAL && (G__MSC_VER>=1300))
+
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
@@ -147,7 +149,7 @@ class reverse_iterator
   Iterator current;
 #endif
  public:
-#if defined(G__KCC)
+#if defined(G__KCC) 
    typedef Iterator iterator_type;
    typedef typename iterator_traits<Iterator>::difference_type difference_type;
    typedef typename iterator_traits<Iterator>::reference reference;
@@ -206,8 +208,12 @@ class reverse_iterator<T*> {
 };
 #endif
 
-#ifdef G__VISUAL
-// VC++5.0 has different symbol names
+#endif
+
+#if defined(G__VISUAL) 
+
+#if G__MSC_VER<1300
+// VC++5.0 has different symbol names for a few tags
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_tag
@@ -266,7 +272,354 @@ inline random_access_iterator_tag
 _Iter_cat(const T*) {
     return random_access_iterator_tag();
 }
+
+#else // if G__MSC_VER>=1300 
+
+// Many of the MS C++ 7.x class have one additional 
+// typedef
+
+// ITERATOR TAGS
+struct input_iterator_tag {};
+struct output_iterator_tag {};
+struct forward_iterator_tag : public input_iterator_tag {};
+struct bidirectional_iterator_tag :  public forward_iterator_tag {};
+struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+
+struct _Int_iterator_tag {}; 
+
+// POINTER ITERATOR TAGS
+struct _Nonscalar_ptr_iterator_tag {};
+struct _Scalar_ptr_iterator_tag {};
+
+// TEMPLATE CLASS iterator
+template<class _Category,
+	class _Ty,
+	class _Diff = ptrdiff_t,
+	class _Pointer = _Ty *,
+	class _Reference = _Ty&>
+		struct iterator
+	{	// base type for all iterator classes
+	typedef _Category iterator_category;
+	typedef _Ty value_type;
+	typedef _Diff difference_type;
+	typedef _Diff distance_type;	// retained
+	typedef _Pointer pointer;
+	typedef _Reference reference;
+	};
+
+template<class _Ty,
+	class _Diff,
+	class _Pointer,
+	class _Reference>
+	struct _Bidit
+		: public iterator<bidirectional_iterator_tag, _Ty, _Diff,
+			_Pointer, _Reference>
+	{	// base for bidirectional iterators
+	};
+
+template<class _Ty,
+	class _Diff,
+	class _Pointer,
+	class _Reference>
+	struct _Ranit
+		: public iterator<random_access_iterator_tag, _Ty, _Diff,
+			_Pointer, _Reference>
+	{	// base for random-access iterators
+	};
+
+struct _Outit
+	: public iterator<output_iterator_tag, void, void,
+		void, void>
+	{	// base for output iterators
+	};
+
+// TEMPLATE CLASS iterator_traits
+template<class _Iter>
+	struct iterator_traits
+	{	// get traits from iterator _Iter
+	typedef typename _Iter::iterator_category iterator_category;
+	typedef typename _Iter::value_type value_type;
+	typedef typename _Iter::difference_type difference_type;
+	typedef difference_type distance_type;	// retained
+	typedef typename _Iter::pointer pointer;
+	typedef typename _Iter::reference reference;
+	};
+
+template<class _Ty>
+	struct iterator_traits<_Ty *>
+	{	// get traits from pointer
+	typedef random_access_iterator_tag iterator_category;
+	typedef _Ty value_type;
+	typedef ptrdiff_t difference_type;
+	typedef ptrdiff_t distance_type;	// retained
+	typedef _Ty *pointer;
+	typedef _Ty& reference;
+	};
+
+template<class _Ty>
+	struct iterator_traits<const _Ty *>
+	{	// get traits from const pointer
+	typedef random_access_iterator_tag iterator_category;
+	typedef _Ty value_type;
+	typedef ptrdiff_t difference_type;
+	typedef ptrdiff_t distance_type;	// retained
+	typedef const _Ty *pointer;
+	typedef const _Ty& reference;
+	};
+
+template<> struct iterator_traits<_Bool>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<char>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<signed char>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<unsigned char>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+ #ifdef _NATIVE_WCHAR_T_DEFINED
+template<> struct iterator_traits<wchar_t>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+ #endif /* _NATIVE_WCHAR_T_DEFINED */
+
+template<> struct iterator_traits<short>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<unsigned short>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<int>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<unsigned int>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<long>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<unsigned long>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+#ifdef _LONGLONG
+template<> struct iterator_traits<_LONGLONG>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+
+template<> struct iterator_traits<_ULONGLONG>
+	{	// get traits from integer type
+	typedef _Int_iterator_tag iterator_category;
+	};
+#endif /* _LONGLONG */
+
+
+// TEMPLATE CLASS reverse_iterator
+template<class _RanIt>
+class reverse_iterator
+  : public iterator<typename iterator_traits<_RanIt>::iterator_category,
+                    typename iterator_traits<_RanIt>::value_type,
+		    typename iterator_traits<_RanIt>::difference_type,
+		    typename iterator_traits<_RanIt>::pointer,
+		    typename iterator_traits<_RanIt>::reference>
+{	// wrap iterator to run it backwards
+public:
+  typedef reverse_iterator<_RanIt> _Myt;
+  typedef typename iterator_traits<_RanIt>::difference_type difference_type;
+  typedef typename iterator_traits<_RanIt>::pointer pointer;
+  typedef typename iterator_traits<_RanIt>::reference reference;
+  typedef _RanIt iterator_type;
+  
+  reverse_iterator();
+  explicit reverse_iterator(_RanIt _Right);
+  // cint can't parse:
+  // template<class _Other> reverse_iterator(const reverse_iterator<_Other>& _Right);
+
+  _RanIt base() const;
+
+  reference operator*() const;
+  pointer operator->() const;
+  _Myt& operator++();
+  _Myt operator++(int);
+  _Myt& operator--();
+  _Myt operator--(int);
+  bool _Equal(const _Myt& _Right) const;
+  _Myt& operator+=(difference_type _Off);
+  _Myt operator+(difference_type _Off) const;
+  _Myt& operator-=(difference_type _Off);
+  _Myt operator-(difference_type _Off) const;
+  reference operator[](difference_type _Off) const;
+  bool _Less(const _Myt& _Right) const;
+  difference_type _Minus(const _Myt& _Right) const;
+
+protected:
+  
+  _RanIt current;	// the wrapped iterator
+};
+
+// TEMPLATE CLASS reverse_bidirectional_iterator (retained)
+template<class _BidIt,
+	class _Ty,
+	class _Reference = _Ty&,
+	class _Pointer = _Ty *,
+	class _Diff = ptrdiff_t>
+	class reverse_bidirectional_iterator
+		: public _Bidit<_Ty, _Diff, _Pointer, _Reference>
+	{	// wrap bidirectional iterator to run it backwards
+public:
+	typedef reverse_bidirectional_iterator<_BidIt, _Ty, _Reference,
+		_Pointer, _Diff> _Myt;
+	typedef _BidIt iterator_type;
+
+          reverse_bidirectional_iterator();
+          explicit reverse_bidirectional_iterator(_BidIt _Right);
+          _BidIt base() const;
+          _Reference operator*() const;
+          _Pointer operator->() const;
+          _Myt& operator++();
+          _Myt operator++(int);
+          _Myt& operator--();
+          _Myt operator--(int);
+          bool operator==(const _Myt& _Right) const;
+          bool operator!=(const _Myt& _Right) const;
+
+protected:
+          // _BidIt current;	// the wrapped iterator
+	};
+
+// TEMPLATE CLASS _Revbidit
+template<class _BidIt,
+	class _BidIt2 = _BidIt>
+	class _Revbidit
+		: public iterator<
+			typename iterator_traits<_BidIt>::iterator_category,
+			typename iterator_traits<_BidIt>::value_type,
+			typename iterator_traits<_BidIt>::difference_type,
+			typename iterator_traits<_BidIt>::pointer,
+			typename iterator_traits<_BidIt>::reference>
+	{	// wrap bidirectional iterator to run it backwards
+public:
+	typedef _Revbidit<_BidIt, _BidIt2> _Myt;
+	typedef typename iterator_traits<_BidIt>::difference_type _Diff;
+	typedef typename iterator_traits<_BidIt>::pointer _Pointer;
+	typedef typename iterator_traits<_BidIt>::reference _Reference;
+	typedef _BidIt iterator_type;
+
+          _Revbidit();
+          explicit _Revbidit(_BidIt _Right);
+          _Revbidit(const _Revbidit<_BidIt2>& _Other);
+          _BidIt base() const;
+          _Reference operator*() const;
+          _Pointer operator->() const;
+          _Myt& operator++();
+          _Myt operator++(int);
+          _Myt& operator--();
+          _Myt operator--(int);
+          bool operator==(const _Myt& _Right) const;
+          bool operator!=(const _Myt& _Right) const;
+
+protected:
+	//_BidIt current;
+	};
+
+// TEMPLATE CLASS istreambuf_iterator
+template<class _Elem,
+	class _Traits>
+	class istreambuf_iterator
+		: public iterator<input_iterator_tag,
+			_Elem, typename _Traits::off_type, _Elem *, _Elem&>
+	{	// wrap stream buffer as input iterator
+public:
+	typedef istreambuf_iterator<_Elem, _Traits> _Myt;
+	typedef _Elem char_type;
+	typedef _Traits traits_type;
+	typedef basic_streambuf<_Elem, _Traits> streambuf_type;
+	typedef basic_istream<_Elem, _Traits> istream_type;
+	typedef typename traits_type::int_type int_type;
+
+          istreambuf_iterator(streambuf_type *_Sb = 0) _THROW0();
+          istreambuf_iterator(istream_type& _Istr) _THROW0();
+          _Elem operator*() const;
+          _Myt& operator++();
+          _Myt operator++(int);
+          bool equal(const _Myt& _Right) const;
+
+private:
+	void _Inc()
+	_Elem _Peek()
+	streambuf_type *_Strbuf;	// the wrapped stream buffer
+	bool _Got;	// true if _Val is valid
+	_Elem _Val;	// next element to deliver
+	};
+
+
+// TEMPLATE CLASS ostreambuf_iterator
+template<class _Elem,
+	class _Traits>
+	class ostreambuf_iterator
+		: public _Outit
+	{	// wrap stream buffer as output iterator
+	typedef ostreambuf_iterator<_Elem, _Traits> _Myt;
+public:
+	typedef _Elem char_type;
+	typedef _Traits traits_type;
+	typedef basic_streambuf<_Elem, _Traits> streambuf_type;
+	typedef basic_ostream<_Elem, _Traits> ostream_type;
+
+          ostreambuf_iterator(streambuf_type *_Sb) _THROW0();
+          ostreambuf_iterator(ostream_type& _Ostr) _THROW0();
+          _Myt& operator=(_Elem _Right);
+          _Myt& operator*();
+          _Myt& operator++();
+          _Myt& operator++(int);
+          bool failed() const _THROW0();
+private:
+	bool _Failed;	// true if any stores have failed
+	streambuf_type *_Strbuf;	// the wrapped stream buffer
+	};
+
+template<class _Category,
+	class _Ty,
+	class _Diff = ptrdiff_t,
+	class _Pointer = _Ty *,
+	class _Reference = _Ty&>
+		struct iterator
+	{	// base type for all iterator classes
+	typedef _Category iterator_category;
+	typedef _Ty value_type;
+	typedef _Diff difference_type;
+	typedef _Diff distance_type;	// retained
+	typedef _Pointer pointer;
+	typedef _Reference reference;
+	};
+
 #endif
+
+#endif
+
 
 #if (G__GNUC>=3) && !defined(G__KCC)
 

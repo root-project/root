@@ -78,7 +78,86 @@ class vector {
    typedef typename std::reverse_iterator<iterator>       reverse_iterator;
    typedef typename std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+#elif defined(G__VISUAL) && (G__MSC_VER>=1300)
+
+        // CLASS const_iterator
+	class const_iterator;
+	friend class const_iterator;
+
+	class const_iterator
+		: public _Ranit<T, difference_type, const_pointer, const_reference>
+		{	// iterator for nonmutable vector
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef T value_type;
+		typedef Allocator::difference_type difference_type;
+		typedef const_pointer pointer;
+		typedef const_reference reference;
+
+		const_iterator();
+		const_iterator(pointer _Ptr);
+
+		const_reference operator*() const;
+
+
+		const_pointer operator->() const;
+		const_iterator& operator++();
+		const_iterator operator++(int);
+		const_iterator& operator--();
+		const_iterator operator--(int);
+		const_iterator& operator+=(difference_type _Off);
+		const_iterator operator+(difference_type _Off) const;
+		const_iterator& operator-=(difference_type _Off);
+		const_iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		const_reference operator[](difference_type _Off) const;
+		bool operator==(const const_iterator& _Right) const;
+		bool operator!=(const const_iterator& _Right) const;
+		bool operator<(const const_iterator& _Right) const;
+		bool operator>(const const_iterator& _Right) const;
+		bool operator<=(const const_iterator& _Right) const;
+		bool operator>=(const const_iterator& _Right) const;
+		friend const_iterator operator+(difference_type _Off,
+			const const_iterator& _Right);
+		pointer _Myptr;	// offset of element in vector
+        };
+
+	// CLASS iterator
+	class iterator;
+	friend class iterator;
+
+	class iterator
+		: public const_iterator
+		{	// iterator for mutable vector
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef T value_type;
+		typedef Allocator::diffrence_type difference_type;
+		typedef Allocator::pointer pointer;
+		typedef Allocator::reference reference;
+
+		iterator();
+		iterator(pointer _Ptr);
+		reference operator*() const;
+		pointer operator->() const;
+		iterator& operator++();
+		iterator operator++(int);
+		iterator& operator--();
+		iterator operator--(int);
+		iterator& operator+=(difference_type _Off);
+		iterator operator+(difference_type _Off) const;
+		iterator& operator-=(difference_type _Off);
+		iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		reference operator[](difference_type _Off) const;
+		friend iterator operator+(difference_type _Off,
+			const iterator& _Right);
+		};
+
+	typedef std::reverse_iterator<iterator> reverse_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__VISUAL)
 
 #ifndef G__OLDIMPLEMENTATION1703
   class iterator {
@@ -126,13 +205,16 @@ class vector {
   typedef vector<T, Allocator> vector_type;
   typedef std::__normal_iterator<T*, vector_type> iterator;
   typedef std::__normal_iterator<T*, vector_type> const_iterator;
+
 #else
   typedef T* iterator;
   typedef const T* const_iterator;
 #endif
 
 
-#if defined(G__BORLANDCC5)
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+  // already done above
+#elif defined(G__BORLANDCC5)
   typedef reverse_iterator<iterator> reverse_iterator;
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__AIX)
   typedef reverse_iterator<const_iterator> const_reverse_iterator;
