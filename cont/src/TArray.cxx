@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.cxx,v 1.3 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.cxx,v 1.4 2002/05/03 14:30:42 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -106,15 +106,6 @@ void TArray::WriteArray(TBuffer &b, const TArray *a)
       // Write byte count
       b.SetByteCount(cntpos);
    }
-}
-
-//______________________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArray *&obj)
-{
-   // Read TArray object from buffer. Function declared in ClassDef.
-
-   obj = (TArray *) TArray::ReadArray(buf, TArray::Class());
-   return buf;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.5 2002/05/03 15:41:50 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -307,7 +307,7 @@ TMapIter::TMapIter(const TMap *m, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TMapIter::TMapIter(const TMapIter &iter)
+TMapIter::TMapIter(const TMapIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

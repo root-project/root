@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.22 2002/03/15 17:25:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.25 2002/05/09 20:21:59 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -45,7 +45,9 @@ class TGlobal;
 class TFunction;
 class TFolder;
 class TPluginManager;
-
+namespace ROOT {
+   class TMapTypeToTClass;
+}
 
 class TROOT : public TDirectory {
 
@@ -60,6 +62,8 @@ private:
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
 protected:
+   typedef ROOT::TMapTypeToTClass IdMap_t;
+
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
    Int_t           fVersionInt;           //ROOT version in integer format (501)
    Int_t           fVersionDate;          //Date of ROOT version (ex 951226)
@@ -83,6 +87,7 @@ protected:
    TObject         *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
    TSeqCollection  *fClasses;             //List of classes definition
+   IdMap_t         *fIdMap;               //Map from typeid to TClass pointer
    TSeqCollection  *fTypes;               //List of data types definition
    TSeqCollection  *fGlobals;             //List of global variables
    TSeqCollection  *fGlobalFunctions;     //List of global functions
@@ -117,6 +122,7 @@ protected:
 public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
+   void              AddClass(TClass *);
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    virtual TObject  *FindObject(const char *name) const;
@@ -130,6 +136,7 @@ public:
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
+   TClass           *GetClass(const type_info &typeinfo, Bool_t load=kTRUE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetCutClassName() const {return fCutClassName.Data();}
    const char       *GetDefCanvasName() const {return fDefCanvasName.Data();}
@@ -193,6 +200,7 @@ public:
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() {return fReadingObject;}
+   void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }

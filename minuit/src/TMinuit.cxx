@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.16 2002/02/13 11:34:41 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.19 2002/05/18 08:22:00 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -287,8 +287,16 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 //*-*-*-*-*-*-*-*-*-*-*Minuit normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   fEmpty      = 1;
+   BuildArrays(25);
+
+   fStatus     = 0;
+   fEmpty      = 0;
    fMethodCall = 0;
+   SetMaxIterations();
+
+   mninit(5,6,7);
+   gMinuit = this;
+   gROOT->GetListOfSpecials()->Add(gMinuit);
 
 }
 
@@ -313,7 +321,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 }
 
 //______________________________________________________________________________
-TMinuit::TMinuit(const TMinuit &)
+TMinuit::TMinuit(const TMinuit &minuit) : TNamed(minuit)
 {
    // Private TMinuit copy ctor. TMinuit can not be copied.
 
@@ -2309,11 +2317,11 @@ L205:
 //______________________________________________________________________________
 void TMinuit::mnemat(Double_t *emat, Int_t ndim)
 {
-//*-*-*-*-*-*Calculates the external error matrix from the internal matrix*-*
-//*-*        =============================================================
-//*-*        Calculates the external error matrix from the internal
-//*-*        to be called by user.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// Calculates the external error matrix from the internal matrix
+//
+// Note that if the matrix is declared like Double_t matrix[5][5]
+// in the calling program, one has to call mnemat with, eg
+//     gMinuit->mnemat(&matrix[0][0],5);
 
     /* System generated locals */
     Int_t emat_dim1, emat_offset;

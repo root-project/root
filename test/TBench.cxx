@@ -10,7 +10,11 @@
 #include "TBench.h"
 
 THit hit;
-const char *demofile = "/tmp/bench.root";
+#ifdef R__WIN32
+ const char *demofile = "$TMP/bench.root";
+#else
+ const char *demofile = "/tmp/bench.root";
+#endif
 
 //-------------------------------------------------------------
 ClassImp(THit)
@@ -52,12 +56,17 @@ void THit::Set(int t) {
   for (int i=0; i<10; i++) fTime[i] = t+i;
 }
 
+#if 0
+#if defined(R__TEMPLATE_OVERLOAD_BUG)
+template <>
+#endif
 TBuffer &operator>>(TBuffer &buf, THit *&obj)
 {
    obj = new THit();
    obj->Streamer(buf);
    return buf;
 }
+#endif
 
 TBuffer &operator<<(TBuffer &buf, const THit *obj)
 {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.6 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.8 2002/06/11 15:47:35 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -51,6 +51,7 @@ typedef Long_t  Long64_t;
 
 class TList;
 class TDSet;
+class TEventList;
 
 
 class TDSetElement : public TObject {
@@ -98,22 +99,26 @@ public:
    TDSet(const char *type, const char *objname = "*", const char *dir = "/");
    virtual ~TDSet();
 
-   void        SetObjName(const char *objname);
-   void        SetDirectory(const char *dir);
+   Int_t                 Process(const char *selector, Long64_t nentries = -1,
+                                 Long64_t first = 0, TEventList *evl = 0);
 
-   const char *GetType() const { return fName; }
-   const char *GetObjName() const { return fObjName; }
-   const char *GetDirectory() const { return fTitle; }
+   void                  Print(Option_t *option="") const;
+   void                  SetObjName(const char *objname);
+   void                  SetDirectory(const char *dir);
 
-   virtual void        Add(const char *file, const char *objname = 0,
-                           const char *dir = 0, Long64_t first = 0,
-                           Long64_t num = -1);
-   virtual void        Add(TDSet *set);
-   virtual void        AddFriend(TDSet *friendset);
+   const char           *GetType() const { return fName; }
+   const char           *GetObjName() const { return fObjName; }
+   const char           *GetDirectory() const { return fTitle; }
 
-   virtual Bool_t      IsTree() const { return fIsTree; }
-   virtual Bool_t      IsValid() const { return !fName.IsNull(); }
-   virtual TList      *GetListOfElements() const { return fElements; }
+   virtual void          Add(const char *file, const char *objname = 0,
+                             const char *dir = 0, Long64_t first = 0,
+                             Long64_t num = -1);
+   virtual void          Add(TDSet *set);
+   virtual void          AddFriend(TDSet *friendset);
+
+   virtual Bool_t        IsTree() const { return fIsTree; }
+   virtual Bool_t        IsValid() const { return !fName.IsNull(); }
+   virtual TList        *GetListOfElements() const { return fElements; }
 
    virtual void           Reset();
    virtual TDSetElement  *Next();

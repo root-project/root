@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: TPoint.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: TPoint.h,v 1.2 2002/05/03 14:30:41 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -33,7 +33,7 @@
 class TPoint {
 
 public:    // for easy access
-#ifndef WIN32
+#if !defined(WIN32) && !defined(G__WIN32)
    SCoord_t    fX;         //X device coordinate
    SCoord_t    fY;         //Y device coordinate
 #else

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.6 2001/08/15 15:01:54 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.7 2001/11/16 02:47:36 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -471,7 +471,7 @@ TOrdCollectionIter::TOrdCollectionIter(const TOrdCollection *col, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TOrdCollectionIter::TOrdCollectionIter(const TOrdCollectionIter &iter)
+TOrdCollectionIter::TOrdCollectionIter(const TOrdCollectionIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

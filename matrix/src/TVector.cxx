@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.8 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.10 2002/05/08 20:10:34 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -911,6 +911,28 @@ Bool_t TVector::IsValid() const
    return kTRUE;
 }
 
+void TVector::SetElements(const Float_t *elements)
+{
+  if (!IsValid()) {
+    Error("SetElements", "vector is not initialized");
+    return;
+  }
+  memcpy(fElements,elements,fNrows*sizeof(Float_t));
+}
+
+TVector::TVector(Int_t n, const Float_t *elements)
+{
+   Allocate(n);
+   SetElements(elements);
+}
+
+TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
+{
+   Allocate(upb-lwb+1, lwb);
+   SetElements(elements);
+}
+
+
 Bool_t AreCompatible(const TVector &v1, const TVector &v2)
 {
    if (!v1.IsValid()) {
@@ -937,7 +959,7 @@ TVector &TVector::operator=(const TVector &source)
    return *this;
 }
 
-TVector::TVector(const TVector &another)
+TVector::TVector(const TVector &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

@@ -647,6 +647,9 @@ int *known3;
     mem+=3;
     opx="->";
   }
+  else {
+    opx="";
+  }
  
   res = G__getexpr(mem);
   if(!res.type) {
@@ -662,6 +665,8 @@ int *known3;
     return(G__null);
   }
 
+  /* For the time being, pointer to member function can only be handed as
+   * function name */
   strcpy(buf2,*(char**)res.obj.i);
 
   sprintf(expr,"%s%s%s%s",buf,opx,buf2,parameter1);
@@ -690,6 +695,25 @@ int *known3;
   result3 = G__getitem(item);
   if(0==result3.type) return(G__null);
   *known3 = 1;
+
+#ifndef G__OLDIMPLEMENTATION1660
+  if(2==libp->paran && strstr(libp->parameter[1],"][")) {
+    char arg[G__ONELINE];
+    char *p=arg;
+    int k;
+    strcpy(p,libp->parameter[1]);
+    i=1;
+    while(*p) {
+      k=0;
+      if(*p=='[') ++p; 
+      while(*p && *p!=']') libp->parameter[i][k++] = *p++;
+      libp->parameter[i][k++] = 0;
+      if(*p==']') ++p; 
+      ++i;
+    }
+    libp->paran = i;
+  }
+#endif
 
   for(i=1;i<libp->paran;i++) {
     char arg[G__ONELINE];
@@ -910,6 +934,8 @@ int memfunc_flag;
   int store_cp_asm=0;
 #endif
 
+  /*DEBUG*/ /* fprintf(stderr,"%s %d %d\n",item,*known3,memfunc_flag); */
+
   store_exec_memberfunc = G__exec_memberfunc;
   store_memberfunc_tagnum = G__memberfunc_tagnum;
   store_memberfunc_struct_offset=G__memberfunc_struct_offset;
@@ -974,6 +1000,13 @@ int memfunc_flag;
    * put null char to the end of function name
    ******************************************************/
   funcname[ig15++]='\0';
+
+#ifndef G__OLDIMPLEMENTATION1657
+  if(strchr(funcname,'.') || strstr(funcname,"->")) {
+    result3=G__null;
+    return(result3);
+  }
+#endif
   
 #ifndef G__OLDIMPLEMENTATION1560
   /******************************************************
@@ -1333,12 +1366,16 @@ int memfunc_flag;
 	oprp=1;
       }
       else {
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Empty arg%d",1);
+	  G__printlinenum();
+	}
+      }
+#else
+      if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: Empty arg%d",1);
 	G__printlinenum();
       }
-#else
-      G__fprinterr(G__serr,"Warning: Empty arg%d",1);
-      G__printlinenum();
 #endif
     }
     fpara.paran=0;
@@ -1429,8 +1466,10 @@ int memfunc_flag;
 #endif
 #ifndef G__OLDIMPLEMENTATION1221
       if(0==fpara.parameter[ig15][0]) {
-	G__fprinterr(G__serr,"Warning: Empty arg%d",ig15+1);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Empty arg%d",ig15+1);
+	  G__printlinenum();
+	}
       }
 #endif
       fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.65 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.69 2002/05/31 15:22:01 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1248,12 +1248,16 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
             eu *= eu;
          }
       } else {
-         xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-         xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-         xx[0] = xm; fm = grF1->EvalPar(xx,u);
-         xx[0] = xp; fp = grF1->EvalPar(xx,u);
-         eux = (fp-fm)/2;
-         eu = ey*ey +eux*eux;
+         if (ex > 0) {
+            xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+            xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+            xx[0] = xm; fm = grF1->EvalPar(xx,u);
+            xx[0] = xp; fp = grF1->EvalPar(xx,u);
+            eux = (fp-fm)/2;
+            eu = ey*ey +eux*eux;
+         } else {
+            eu = ey*ey;
+         }
       }
       if (eu <= 0) eu = 1;
       if (flag == 2) {
@@ -2040,7 +2044,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
    const char *where = "PaintGraphHist";
 
-   const Int_t NPMXFA= 99;
    Int_t OptionLine , OptionAxis , OptionCurve, OptionStar , OptionMark;
    Int_t OptionBar  , OptionRot  , OptionOne;
    Int_t OptionFill , OptionZ;
@@ -2223,20 +2226,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               continue;
            }
-           if (npt >= NPMXFA) {
-              gxwork[npt-1] = gxwork[npt-2];
-              gywork[npt-1] = gywork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gxwork[0] = gxwork[npt-1];
-              npt      = 2;
-           }
         }  //endfor (j=first; j<=last;j++) {
      }
      else {
@@ -2270,20 +2259,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
               }
               continue;
-           }
-           if (npt >= NPMXFA) {
-              gywork[npt-1] = gywork[npt-2];
-              gxwork[npt-1] = gxwork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gywork[0] = gywork[npt-1];
-              npt      = 2;
            }
         }  //endfor (j=first; j<=last;j++)
      }
@@ -2498,12 +2473,16 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
         if (!OptionRot) {
           Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
+          if (ix < 0) ix = 0;
+          if (ix >= nrPix) ix = nrPix-1;
           Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
           if (minPix[ix] > yPixel) minPix[ix] = yPixel;
           if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
           (nrEntries[ix])++;
         } else {
           Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip]))-ay1Pix;
+          if (iy < 0) iy = 0;
+          if (iy >= nrPix) iy = nrPix-1;;
           Int_t xPixel = gPad->XtoAbsPixel(gPad->XtoPad(xw));
           if (minPix[iy] > xPixel) minPix[iy] = xPixel;
           if (maxPix[iy] < xPixel) maxPix[iy] = xPixel;
@@ -2872,6 +2851,32 @@ Int_t TGraph::RemovePoint()
    Double_t *newY = new Double_t[fNpoints];
    Int_t j = -1;
    for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newX[j] = fX[i];
+      newY[j] = fY[i];
+   }
+   delete [] fX;
+   delete [] fY;
+   fX = newX;
+   fY = newY;
+   gPad->Modified();
+   return ipoint;
+}
+
+//______________________________________________________________________________
+Int_t TGraph::RemovePoint(Int_t ipoint)
+{
+// Delete point number ipoint
+
+   if (ipoint < 0) return -1;
+   if (ipoint >= fNpoints) return -1;
+   
+   fNpoints--;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   Int_t j = -1;
+   for (Int_t i=0;i<fNpoints+1;i++) {
       if (i == ipoint) continue;
       j++;
       newX[j] = fX[i];

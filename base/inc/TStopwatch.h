@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -41,6 +41,9 @@ private:
    EState       fState;           //stopwatch state
    Int_t        fCounter;         //number of times the stopwatch was started
 
+   static Double_t GetRealTime();
+   static Double_t GetCPUTime();
+
 public:
    TStopwatch();
    void        Start(Bool_t reset = kTRUE);
@@ -53,8 +56,6 @@ public:
    void        ResetRealTime(Double_t time = 0) { Stop(); fTotalRealTime = time; }
    Double_t    CpuTime();
    void        Print(Option_t *option="") const;
-   static Double_t GetRealTime();
-   static Double_t GetCPUTime();
 
    ClassDef(TStopwatch,0)  //A stopwatch which times real and cpu time
 };

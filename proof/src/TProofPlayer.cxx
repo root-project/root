@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.4 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.7 2002/06/14 10:29:06 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TProofPlayer::TProofPlayer()
 {
    // Default ctor.
 
-   fInput    = new THashList;
+   fInput    = new TList;
    fOutput   = 0;
    fSelector = 0;
 }
@@ -94,7 +94,11 @@ void TProofPlayer::ClearInput()
 //______________________________________________________________________________
 TObject *TProofPlayer::GetOutput(const char *name) const
 {
-   return fOutput->FindObject(name);
+   if (fOutput != 0) {
+      return fOutput->FindObject(name);
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -117,7 +121,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    Info("Process","Enter");
 
-   delete fSelector;
+   fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {
@@ -221,8 +225,13 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Long64_t nentries, Long64_t first,
                                   TEventList *evl)
 {
+   // Process specified TDSet on PROOF.
+   // Returns -1 in case error, 0 otherwise.
 
 Info("Process","---- Start ----");
+
+   delete fOutput;
+   fOutput = new TList;
 
    TString filename = selector_file;
    filename = filename.Strip(TString::kTrailing,'+');
@@ -282,6 +291,10 @@ Info("Process","Create Proxy DSet");
       delete fPacketizer;
       fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
                                  first, nentries);
+      
+      if ( !fPacketizer->IsValid() ) {
+         return -1;
+      }
    }
 
    mesg << set << fn << fInput << nentries << first; // no evl yet
@@ -305,8 +318,6 @@ Info("Process","Calling Merge Output");
 void TProofPlayerRemote::MergeOutput()
 {
 Info("MergeOutput","Enter");
-   delete fOutput;
-   fOutput = new THashList;
 
    if ( fOutputLists == 0 ) {
       Info("MergeOutput","Leave (empty)");

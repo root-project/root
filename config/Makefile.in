@@ -46,6 +46,10 @@ OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
+OPENIVLIBDIR   := @openivlibdir@
+OPENIVLIB      := @openivlib@
+OPENIVINCDIR   := @openivincdir@
+
 CERNLIBDIR     := @cernlibdir@
 CERNLIBS       := @cernlibs@
 
@@ -67,6 +71,10 @@ SHIFTLIB       := @shiftlib@
 DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
 DCAPINCDIR     := @dcapincdir@
+
+ALIENLIBDIR    := @alienlibdir@
+ALIENCLILIB    := @alienlib@
+ALIENINCDIR    := @alienincdir@
 
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
@@ -95,7 +103,7 @@ SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
-STAR           := @enable_star@
+TABLE          := @enable_table@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.17 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.18 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -107,7 +107,7 @@ TFolder::TFolder() : TNamed()
 }
 
 //______________________________________________________________________________
-TFolder::TFolder(const TFolder &folder)
+TFolder::TFolder(const TFolder &folder) : TNamed(folder)
 {
    ((TFolder&)folder).Copy(*this);
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.21 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.23 2002/06/14 10:29:06 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -957,7 +957,7 @@ Int_t TProof::Collect(TMonitor *mon)
          case kPROOF_OUTPUTLIST:
             {
 Info("Collect","Got kPROOF_OUTPUTLIST");
-               TList *out = (TList *) mess->ReadObject(THashList::Class());
+               TList *out = (TList *) mess->ReadObject(TList::Class());
                fPlayer->StoreOutput(out); // Adopts the list
 Info("Collect","Done kPROOF_OUTPUTLIST");
             }
@@ -1211,11 +1211,10 @@ Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
                       Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
+   // Returns -1 in case of error, 0 otherwise.
 
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
-
-   fPlayer->GetOutputList()->Delete();
 
    return fPlayer->Process(set, selector, nentries, first, evl);
 }
@@ -1753,7 +1752,7 @@ void TProof::ShowPackages(Bool_t all)
 {
    // List contents of package directory. If all is true show all package
    // directries also on slaves. If everything is ok all package directories
-   // are to be the same.
+   // should be the same.
 
    if (!IsValid()) return;
 
@@ -1768,7 +1767,7 @@ void TProof::ShowEnabledPackages(Bool_t all)
 {
    // List which packages are enabled. If all is true show enabled packages
    // for all slaves. If everything is ok all package directories
-   // are to be the same.
+   // should be the same.
 
    if (!IsValid()) return;
 
@@ -1797,6 +1796,11 @@ void TProof::ClearPackage(const char *package)
    // Remove a specific package.
 
    if (!IsValid()) return;
+
+   if (!package || !strlen(package)) {
+      ClearPackages();
+      return;
+   }
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(5) << TString(package);
@@ -1831,8 +1835,7 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
 
    TString spar = par;
    if (!spar.EndsWith(".par")) {
-      Error("UploadPackage", "package %s has not correct extension,"
-            " must be .par", par);
+      Error("UploadPackage", "package %s must have extension .par", par);
       return -1;
    }
 
@@ -1858,7 +1861,8 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
       sl->GetSocket()->Recv(reply);
       if (reply->What() != kPROOF_CHECKFILE) {
          // remote directory is locked, upload file via TFTP
-         if (IsMaster()) parallel = 1;
+         if (IsMaster())
+            parallel = 1;  // assume LAN
          {
             TFTP ftp(TString("root://")+sl->GetName(), parallel);
             if (!ftp.IsZombie()) {

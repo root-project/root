@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.11 2002/02/03 16:13:40 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.13 2002/05/09 08:09:35 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TProcessID::~TProcessID()
 }
 
 //______________________________________________________________________________
-TProcessID::TProcessID(const TProcessID &ref)
+TProcessID::TProcessID(const TProcessID &ref) : TNamed(ref)
 {
    // TProcessID copy ctor.
 }
@@ -293,7 +293,9 @@ UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
    if (!pid) pid = fgPID;
    TObjArray *pids = file->GetListOfProcessIDs();
    Int_t npids = file->GetNProcessIDs();
-   if (npids > 0 && pids->At(npids-1) == pid) return (UShort_t)npids-1;
+   for (Int_t i=0;i<npids;i++) {
+      if (pids->At(i) == pid) return (UShort_t)i;
+   }
     
    TDirectory *dirsav = gDirectory;
    file->cd();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.7 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.8 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -121,7 +121,7 @@ TTask::~TTask() {
 }
 
 //______________________________________________________________________________
-TTask::TTask(const TTask &task) {
+TTask::TTask(const TTask &task) : TNamed(task) {
 
    fTasks = new TList();
 }

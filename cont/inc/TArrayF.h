@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.6 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.12 2002/06/10 20:02:07 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -38,25 +38,46 @@ public:
    TArrayF    &operator=(const TArrayF &rhs);
    virtual    ~TArrayF();
 
-   void        Adopt(Int_t n, Float_t *array);
-   void        AddAt(Float_t c, Int_t i);
-   Float_t     At(Int_t i) const ;
-   void        Copy(TArrayF &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
-   Float_t    *GetArray() const { return fArray; }
-   Stat_t      GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void        Reset(Float_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void        Set(Int_t n);
-   void        Set(Int_t n, const Float_t *array);
-   Float_t    &operator[](Int_t i);
-   Float_t     operator[](Int_t i) const;
+   void           Adopt(Int_t n, Float_t *array);
+   void           AddAt(Float_t c, Int_t i);
+   Float_t        At(Int_t i) const ;
+   void           Copy(TArrayF &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   const Float_t *GetArray() const { return fArray; }
+   Float_t       *GetArray() { return fArray; }
+   Stat_t         GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
+   void           Reset()             {memset(fArray, 0, fN*sizeof(Float_t));}
+   void           Reset(Float_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void           Set(Int_t n);
+   void           Set(Int_t n, const Float_t *array);
+   Float_t       &operator[](Int_t i);
+   Float_t        operator[](Int_t i) const;
      
    ClassDef(TArrayF,1)  //Array of floats
 };
 
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
+{
+   // Read TArrayF object from buffer.
+
+   obj = (TArrayF *) TArray::ReadArray(buf, TArrayF::Class());
+   return buf;
+}
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator<<(TBuffer &buf, const TArrayF *obj) 
+{
+   // Write a TArrayF object into buffer
+   return buf << (TArray*)obj;
+}
+
 inline Float_t TArrayF::At(Int_t i) const
 {
-   if (!BoundsOk("TArrayF::At", i))
-      i = 0;
+   if (!BoundsOk("TArrayF::At", i)) return 0;
    return fArray[i];
 }
 
@@ -69,8 +90,7 @@ inline Float_t &TArrayF::operator[](Int_t i)
 
 inline Float_t TArrayF::operator[](Int_t i) const
 {
-   if (!BoundsOk("TArrayF::operator[]", i))
-      i = 0;
+   if (!BoundsOk("TArrayF::operator[]", i)) return 0;
    return fArray[i];
 }
 

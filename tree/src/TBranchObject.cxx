@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.19 2002/04/04 07:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.21 2002/05/07 16:46:23 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
    SetName(name);
    SetTitle(name);
    fCompress = compress;
-   if (compress == -1) {
+   if (compress == -1 && gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
@@ -292,6 +292,20 @@ void TBranchObject::SetAddress(void *add)
       return;
    }
    if (!cl->GetListOfRealData())  cl->BuildRealData(obj);
+   if (cl->InheritsFrom("TClonesArray")) {
+      char **clpointer = (char**)add;
+      char *objadd = *clpointer;
+      TClonesArray *clones = (TClonesArray*)objadd;
+      if (!clones) {
+         Error("SetAddress","Pointer to TClonesArray is null");
+         return;
+      }
+      TClass *clm = clones->GetClass();
+      if (clm) {
+			clm->BuildRealData(); //just in case clm derives from an abstract class
+			clm->GetStreamerInfo();
+		}
+   }
    char *fullname = new char[200];
    const char *bname = GetName();
    Int_t lenName = strlen(bname);

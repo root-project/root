@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.7 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.9 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -90,9 +90,10 @@ public:
 
    virtual void SetViewMode(EListViewMode ViewMode);
 
-   void   Activate(Bool_t a);
+   virtual void   Activate(Bool_t a);
    Bool_t IsActive() const { return fActive; }
-   const TGString  *GetItemName() const { return fName; }
+   TGString  *GetItemName() const { return fName; }
+   void SetItemName(const char *name) { *fName = name; }
    const TGPicture *GetPicture() const { return fCurrent; }
    void             SetUserData(void *userData) { fUserData = userData; }
    void            *GetUserData() const { return fUserData; }
@@ -102,31 +103,26 @@ public:
    virtual TGDimension GetDefaultSize() const;
    virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }
 
+    virtual void DrawCopy(Handle_t id,Int_t x, Int_t y);
+
   ClassDef(TGLVEntry,0)  // Item that goes into a TGListView container
 };
 
 
 
-class TGLVContainer : public TGCompositeFrame {
+class TGLVContainer : public TGContainer {
 
 friend class TGClient;
 
 protected:
-   TGLVEntry         *fLastActive;    // last active list view item
    TGLayoutHints     *fItemLayout;    // item layout hints
    EListViewMode      fViewMode;      // list view viewing mode
    Int_t             *fCpos;          // position of sub names
    Int_t             *fJmode;         // alignment of sub names
-   Int_t              fXp, fYp;       // previous pointer position
-   Int_t              fX0, fY0;       // corner of rubber band box
-   Int_t              fXf, fYf;       // other corner of rubber band box
-   Int_t              fTotal;         // total items
-   Int_t              fSelected;      // number of selected items
-   Bool_t             fDragging;      // true if in dragging mode
    TGListView        *fListView;      // listview which contains this container
-   const TGWindow    *fMsgWindow;     // window handling container messages
+   TGLVEntry         *fLastActive;    // last active item
 
-   static TGGC  fgLineGC;
+   virtual void ActivateItem(TGFrameElement* el);
 
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
@@ -134,28 +130,16 @@ public:
                  ULong_t back = GetDefaultFrameBackground());
    virtual ~TGLVContainer();
 
+   TGListView  *GetListView() const { return fListView; }
+
    virtual void AddItem(TGLVEntry *item)
               { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
 
-   virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void SetListView(TGListView *lv) { fListView = lv; }
-
-   virtual void SelectAll();
-   virtual void UnSelectAll();
-   virtual void InvertSelection();
-   virtual void RemoveAll();
-   virtual void RemoveItem(TGLVEntry *item);
    virtual void RemoveItemWithData(void *userData);
-
    virtual void SetViewMode(EListViewMode ViewMode);
+   Int_t GetViewMode() const { return fViewMode; }
    virtual void SetColumns(Int_t *cpos, Int_t *jmode);
-
-   virtual const TGLVEntry *GetNextSelected(void **current);
-   virtual Int_t NumItems() const { return fTotal; }
-   virtual Int_t NumSelected() const { return fSelected; }
 
    virtual TGDimension GetMaxItemSize() const;
    virtual Int_t       GetMaxSubnameWidth(Int_t idx) const;

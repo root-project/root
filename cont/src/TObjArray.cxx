@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.13 2001/11/16 02:47:36 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.15 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
 }
 
 //______________________________________________________________________________
-TObjArray::TObjArray(const TObjArray &a)
+TObjArray::TObjArray(const TObjArray &a) : TSeqCollection()
 {
    // Create a copy of TObjArray a. Note, does not copy the kIsOwner flag.
 
@@ -596,7 +596,7 @@ TObjArrayIter::TObjArrayIter(const TObjArray *arr, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter)
+TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

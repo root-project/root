@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.12 2002/01/27 16:49:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.16 2002/05/10 11:07:22 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <string>
+#include <map>
+#include "Riostream.h"
 
 #include "TClassTable.h"
 #include "TClass.h"
@@ -28,6 +31,8 @@
 #include "TError.h"
 #include "TRegexp.h"
 
+#include "TObjString.h"
+#include "TMap.h"
 
 TClassTable *gClassTable;
 
@@ -37,8 +42,82 @@ int          TClassTable::fgSize;
 int          TClassTable::fgTally;
 Bool_t       TClassTable::fgSorted;
 int          TClassTable::fgCursor;
+TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable)
+
+//______________________________________________________________________________
+namespace ROOT {
+   //#define R__USE_STD_MAP
+   class TMapTypeToClassRec {
+#if defined R__USE_STD_MAP
+     // This wrapper class allow to avoid putting #include <map> in the
+     // TROOT.h header file.
+   public:
+#ifdef R__GLOBALSTL
+      typedef map<string,ClassRec_t*> IdMap_t;
+#else
+      typedef std::map<std::string,ClassRec_t*> IdMap_t;
+#endif
+      typedef IdMap_t::key_type                 key_type;
+      typedef IdMap_t::const_iterator           const_iterator;
+      typedef IdMap_t::size_type                size_type;
+#ifdef R__WIN32
+      // Window's std::map does NOT defined mapped_type
+      typedef ClassRec_t*                       mapped_type;
+#else
+      typedef IdMap_t::mapped_type              mapped_type;
+#endif
+
+   private:
+      IdMap_t fMap;
+
+   public:
+      void Add(const key_type &key, mapped_type &obj) {
+         fMap[key] = obj;
+      }
+
+      mapped_type Find(const key_type &key) const {
+
+         IdMap_t::const_iterator iter = fMap.find(key);
+         mapped_type cl = 0;
+         if (iter != fMap.end()) cl = iter->second;
+         return cl;
+      }
+
+      void Remove(const key_type &key) { fMap.erase(key); }
+
+      void printall() {
+         cerr << "Printing the typeinfo map in TClassTable\n";
+         for (const_iterator iter = fMap.begin();
+              iter != fMap.end();
+              iter++) {
+            cerr << "Key: " << iter->first.c_str()
+                 << " points to " << iter->second << endl;
+         }
+      }
+#else
+   private:
+      TMap fMap;
+   public:
+      void Add(const char* key, ClassRec_t *&obj) {
+         TObjString *realkey = new TObjString(key);
+         fMap.Add(realkey, (TObject*)obj);
+      }
+      ClassRec_t* Find(const char* key) const {
+         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+         if (a) return (ClassRec_t*) a->Value();
+         return 0;
+      }
+      void Remove(const char* key) {
+         TObjString realkey(key);
+         TObject *actual = fMap.Remove(&realkey);
+         delete actual;
+      }
+
+#endif
+   };
+}
 
 //______________________________________________________________________________
 TClassTable::TClassTable()
@@ -49,6 +128,7 @@ TClassTable::TClassTable()
       Error("TClassTable", "only one instance of TClassTable allowed");
    fgSize  = (int)TMath::NextPrime(1000);
    fgTable = new ClassRec_t* [fgSize];
+   fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(ClassRec_t*));
 }
 
@@ -107,8 +187,8 @@ void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
 
 //______________________________________________________________________________
-void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict,
-                      Int_t pragmabits)
+void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
+                      VoidFuncPtr_t dict, Int_t pragmabits)
 {
    // Add a class to the class table (this is a static function).
 
@@ -126,6 +206,9 @@ void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict,
    r->id   = id;
    r->bits = pragmabits;
    r->dict = dict;
+   r->info = &info;
+
+   fgIdMap->Add(info.name(),r);
 
    fgTally++;
    fgSorted = kFALSE;
@@ -154,6 +237,7 @@ void TClassTable::Remove(const char *cname)
             prev->next = r->next;
          else
             fgTable[slot] = r->next;
+         fgIdMap->Remove(r->info->name());
          delete [] r->name;
          delete r;
          fgTally--;
@@ -191,6 +275,7 @@ ClassRec_t *TClassTable::FindElement(const char *cname, Bool_t insert)
    r->name = 0;
    r->id   = 0;
    r->dict = 0;
+   r->info = 0;
    r->next = fgTable[slot];
    fgTable[slot] = r;
 
@@ -229,11 +314,30 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
 }
 
 //______________________________________________________________________________
-static int ClassComp(const void *a, const void *b)
+VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
 {
-   // Function used for sorting classes alphabetically.
+   // Given the class name returns the Dictionary() function of a class
+   // (uses hash of name).
 
-   return strcmp((*(ClassRec_t **)a)->name, (*(ClassRec_t **)b)->name);
+#ifdef DEBUG_ID
+   cerr << "While Table searches for " << info.name() << " at " << &info << endl;
+   fgIdMap->printall();
+#endif
+
+   ClassRec_t *r = fgIdMap->Find(info.name());
+   if (r) return r->dict;
+   return 0;
+}
+
+
+//______________________________________________________________________________
+extern "C" {
+   static int ClassComp(const void *a, const void *b)
+   {
+      // Function used for sorting classes alphabetically.
+
+      return strcmp((*(ClassRec_t **)a)->name, (*(ClassRec_t **)b)->name);
+   }
 }
 
 //______________________________________________________________________________
@@ -310,6 +414,7 @@ void TClassTable::Terminate()
          for (ClassRec_t *r = fgTable[i]; r; ) {
             ClassRec_t *t = r;
             r = r->next;
+            fgIdMap->Remove(r->info->name());
             delete [] t->name;
             delete t;
          }
@@ -319,28 +424,51 @@ void TClassTable::Terminate()
 }
 
 //______________________________________________________________________________
-void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
-              Int_t pragmabits)
+void ROOT::AddClass(const char *cname, Version_t id,
+                    const type_info& info,
+                    VoidFuncPtr_t dict,
+                    Int_t pragmabits)
 {
    // Global function called by the ctor of a class's init class
    // (see the ClassImp macro).
 
-   TClassTable::Add(cname, id, dict, pragmabits);
+   TClassTable::Add(cname, id, info, dict, pragmabits);
 }
 
 //______________________________________________________________________________
-void RemoveClass(const char *cname)
+void ROOT::ResetClassVersion(TClass* cl, const char* cname, Short_t newid)
+{
+   // Update the version number.  This is called via the RootClassVersion macro
+
+   if (cname) {
+      ClassRec_t *r = TClassTable::FindElement(cname,kFALSE);
+      if (r) r->id = newid;
+   }
+   if (cl) {
+      if (cl->fVersionUsed) {
+         // Problem, the reset is called after the first usage!
+         Error("ResetClassVersion","Version number of %s can not be changed after first usage!",
+               cl->GetName());
+      } else {
+         cl->SetClassVersion(newid);
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void ROOT::RemoveClass(const char *cname)
 {
    // Global function called by the dtor of a class's init class
    // (see the ClassImp macro).
 
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
-   if (cname) { 
+   if (cname) {
      // Let's still remove this information to allow reloading later.
      // Anyway since the shared library has been unloaded, the dictionary
      // pointer is now invalid ....
-     // We still keep the TClass object around because TFile needs to 
+     // We still keep the TClass object around because TFile needs to
      // get to the TStreamerInfo.
      if (gROOT && gROOT->GetListOfClasses()) {
         TClass *cl = gROOT->GetClass(cname, kFALSE);
@@ -349,3 +477,26 @@ void RemoveClass(const char *cname)
      TClassTable::Remove(cname);
    }
 }
+
+//______________________________________________________________________________
+TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
+                                    Int_t line)
+{
+   // Global function to register the implementation file and line of
+   // a class template (i.e. NOT a concrete class).
+
+   static TList table;
+
+   TString classname(name);
+   Ssiz_t loc = classname.Index("<");
+   if (loc >= 1) classname.Remove(loc);
+   if (file) {
+      TNamed *obj = new TNamed((const char*)classname, file);
+      obj->SetUniqueID(line);
+      table.Add(obj);
+      return obj;
+   } else {
+      return (TNamed*)table.FindObject(classname);
+   }
+}
+

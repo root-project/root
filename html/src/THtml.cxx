@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.20 2002/04/17 21:14:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.21 2002/04/25 06:30:15 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -245,12 +245,13 @@ enum EFileType { kSource, kInclude, kTree };
 // Usage:
 // -----
 //
-//     Root> gHtml.MakeAll()             // invoke a make for all classes
-//     Root> gHtml.MakeClass("TMyClass") // create a HTML files for that class only
-//     Root> gHtml.MakeIndex()           // creates an index files only
-//     Root> gHtml.MakeTree("TMyClass")  // creates an inheritance tree for a class
+//     Root> THtml html;                // create a THtml object
+//     Root> html.MakeAll()             // invoke a make for all classes
+//     Root> html.MakeClass("TMyClass") // create a HTML files for that class only
+//     Root> html.MakeIndex()           // creates an index files only
+//     Root> html.MakeTree("TMyClass")  // creates an inheritance tree for a class
 //
-//     Root> gHtml.Convert( hist1.mac, "Histogram example" )
+//     Root> html.Convert( hist1.mac, "Histogram example" )
 //
 //
 // Environment variables:
@@ -275,8 +276,8 @@ ClassImp(THtml)
 //______________________________________________________________________________
     THtml::THtml()
 {
-   // Create a THtml object. Use object directly or via the global
-   // pointer gHtml. In case output directory does not exist an error
+   // Create a THtml object.
+   // In case output directory does not exist an error
    // will be printed and gHtml stays 0 also zombie bit will be set.
 
    fLen = 1024;

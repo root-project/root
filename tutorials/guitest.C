@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.14 2001/12/28 12:54:17 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.15 2002/03/22 12:57:06 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -246,7 +246,6 @@ private:
    TGButton            *fOkButton, *fCancelButton, *fStartB, *fStopB;
    TGButton            *fBtn1, *fBtn2, *fChk1, *fChk2, *fRad1, *fRad2;
    TGPictureButton     *fPicBut1;
-   TGRadioButton       *fRadio1, *fRadio2;
    TGCheckButton       *fCheck1;
    TGCheckButton       *fCheckMulti;
    TGListBox           *fListBox;

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.6 2001/08/23 22:11:48 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.7 2001/12/17 13:14:35 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -74,7 +74,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
 }
 
 //______________________________________________________________________________
-TParticle::TParticle(const TParticle &p)
+TParticle::TParticle(const TParticle &p) : TObject(p), TAttLine(p), TAtt3D(p)
 {
     // copy constructor
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.7 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.9 2002/05/30 21:27:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
 
    Int_t          GetEntryId() const { return fEntryId; }
    const char    *GetName() const { return fLabel ? fLabel->GetString() : 0; }
-   Int_t          GetStatus() const { return fStatus; }
+   virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
 };
 
@@ -147,36 +147,36 @@ public:
                UInt_t options = 0);
    virtual ~TGPopupMenu();
 
-   void     AddEntry(TGHotString *s, Int_t id, void *ud = 0,
-                     const TGPicture *p = 0, TGMenuEntry *before = 0);
-   void     AddEntry(const char *s, Int_t id, void *ud = 0,
-                     const TGPicture *p = 0, TGMenuEntry *before = 0);
-   void     AddSeparator(TGMenuEntry *before = 0);
-   void     AddLabel(TGHotString *s, const TGPicture *p = 0,
-                     TGMenuEntry *before = 0);
-   void     AddLabel(const char *s, const TGPicture *p = 0,
-                     TGMenuEntry *before = 0);
-   void     AddPopup(TGHotString *s, TGPopupMenu *popup,
-                     TGMenuEntry *before = 0);
-   void     AddPopup(const char *s, TGPopupMenu *popup,
-                     TGMenuEntry *before = 0);
-   void     EnableEntry(Int_t id);
-   void     DisableEntry(Int_t id);
-   Bool_t   IsEntryEnabled(Int_t id);
-   void     HideEntry(Int_t id);
-   Bool_t   IsEntryHidden(Int_t id);
-   void     DefaultEntry(Int_t id);
-   void     CheckEntry(Int_t id);
-   void     UnCheckEntry(Int_t id);
-   Bool_t   IsEntryChecked(Int_t id);
-   void     RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast);
-   Bool_t   IsEntryRChecked(Int_t id);
-   void     PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_pointer);
-   Int_t    EndMenu(void *&userData);
-   void     DeleteEntry(Int_t id);
-   void     DeleteEntry(TGMenuEntry *entry);
-   TGMenuEntry    *GetEntry(Int_t id);
-   TGMenuEntry    *GetEntry(const char *s);
+   virtual void AddEntry(TGHotString *s, Int_t id, void *ud = 0,
+                         const TGPicture *p = 0, TGMenuEntry *before = 0);
+   virtual void AddEntry(const char *s, Int_t id, void *ud = 0,
+                         const TGPicture *p = 0, TGMenuEntry *before = 0);
+   virtual void AddSeparator(TGMenuEntry *before = 0);
+   virtual void AddLabel(TGHotString *s, const TGPicture *p = 0,
+                         TGMenuEntry *before = 0);
+   virtual void AddLabel(const char *s, const TGPicture *p = 0,
+                         TGMenuEntry *before = 0);
+   virtual void AddPopup(TGHotString *s, TGPopupMenu *popup,
+                         TGMenuEntry *before = 0);
+   virtual void AddPopup(const char *s, TGPopupMenu *popup,
+                         TGMenuEntry *before = 0);
+   virtual void EnableEntry(Int_t id);
+   virtual void DisableEntry(Int_t id);
+   virtual Bool_t IsEntryEnabled(Int_t id);
+   virtual void   HideEntry(Int_t id);
+   virtual Bool_t IsEntryHidden(Int_t id);
+   virtual void   DefaultEntry(Int_t id);
+   virtual void   CheckEntry(Int_t id);
+   virtual void   UnCheckEntry(Int_t id);
+   virtual Bool_t IsEntryChecked(Int_t id);
+   virtual void   RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast);
+   virtual Bool_t IsEntryRChecked(Int_t id);
+   virtual void   PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_pointer);
+   virtual Int_t  EndMenu(void *&userData);
+   virtual void   DeleteEntry(Int_t id);
+   virtual void   DeleteEntry(TGMenuEntry *entry);
+   virtual TGMenuEntry *GetEntry(Int_t id);
+   virtual TGMenuEntry *GetEntry(const char *s);
    const TList    *GetListOfEntries() const { return fEntryList; }
    virtual void    DrawBorder();
    virtual Bool_t  HandleButton(Event_t *event);
@@ -187,6 +187,7 @@ public:
 
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
+   virtual void Activate(Bool_t) { }
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };
@@ -232,7 +233,7 @@ public:
                UInt_t options = 0);
    virtual ~TGMenuTitle() { if (fLabel) delete fLabel; }
 
-   void         SetState(Bool_t state);
+   virtual void SetState(Bool_t state);
    Bool_t       GetState() const { return fState; }
    Int_t        GetHotKeyCode() const { return fHkeycode; }
    TGPopupMenu *GetMenu() const { return fMenu; }

@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
+# $Id: makerpmspec.sh,v 1.3 2002/01/22 10:53:28 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -15,8 +15,8 @@ tgtdir=rpm
 curdir=`pwd`
 
 ### echo %%% Packages ordered by preference
-pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-star root-shift root-cint root-bin libroot-dev libroot"
-pkgs=`./configure linux --pkglist --enable-soversion --enable-star --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
+pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
+pkgs=`./configure linux --pkglist --enable-soversion --enable-table --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
 lvls="preinst postinst prerm postrm"
 
 # ROOT version 
@@ -71,6 +71,9 @@ sed -e "s|@libdir@|${libdir}|" \
 
 #
 # $Log: makerpmspec.sh,v $
+# Revision 1.3  2002/01/22 10:53:28  rdm
+# port to Debian distribution of GNU/Hurd by Christian Holm.
+#
 # Revision 1.2  2002/01/20 14:23:52  rdm
 # Mega patch by Christian Holm concerning the configure, build and
 # Debian and RedHat packaging scripts. The configure script has been

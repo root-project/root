@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.22 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.25 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -102,6 +102,7 @@ public:
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
    Int_t            GetSize() const;
    virtual void     Init(TObject *obj=0);
+   virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
    virtual void     Update(TClass *oldClass, TClass *newClass);
@@ -220,6 +221,24 @@ public:
    virtual void   SetArrayDim(Int_t dim);
 
    ClassDef(TStreamerObjectPointer,2)  //Streamer element of type pointer to a TObject
+};
+
+//________________________________________________________________________
+class TStreamerObjectAnyPointer : public TStreamerElement {
+   
+public:
+
+   TStreamerObjectAnyPointer();
+   TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName);
+   virtual       ~TStreamerObjectAnyPointer();
+   TClass        *GetClass() const {return fClassObject;}
+   const char    *GetInclude() const;
+   Int_t          GetSize() const;
+   virtual void   Init(TObject *obj=0);
+   virtual Bool_t IsaPointer() const {return kTRUE;}
+   virtual void   SetArrayDim(Int_t dim);
+   
+   ClassDef(TStreamerObjectAnyPointer,1)  //Streamer element of type pointer to a non TObject
 };
 
 //________________________________________________________________________

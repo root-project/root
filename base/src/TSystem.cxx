@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.35 2002/03/26 16:06:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.36 2002/03/29 18:18:11 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -664,7 +664,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = (char *)fname + strspn(fname, " \t\f\r");
-   if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
+   //VP  if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
 
    strcat(inp, c);
 

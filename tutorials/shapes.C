@@ -5,6 +5,12 @@
    gROOT->Reset();
    c1 = new TCanvas("c1","Geometry Shapes",200,10,700,500);
 
+   //delete previous geometry objects in case this script is reexecuted
+   if (gGeometry) {
+      gGeometry->GetListOfNodes()->Delete();
+      gGeometry->GetListOfShapes()->Delete();
+   }
+
    //  Define some volumes
    brik = new TBRIK("BRIK","BRIK","void",200,150,150);
    trd1 = new TTRD1("TRD1","TRD1","void",200,50,100,100);

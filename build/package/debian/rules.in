@@ -2,7 +2,7 @@
 # 
 # GNU copyright 1997 by Joey Hess.
 #
-# $Id: rules.in,v 1.1 2001/04/23 14:09:55 rdm Exp $
+# $Id: rules.in,v 1.2 2002/01/20 14:23:52 rdm Exp $
 #
 # Rules file for ROOT packages for Debian GNU/Linux 
 #
@@ -24,7 +24,7 @@ export DH_OPTIONS
 # Order of the packages are important for when we move files around
 #
 BUILDPREFIX = $(shell pwd)/debian/tmp
-
+ALLPKGS	    = @pkgs@
 #
 # Some notes about this target:
 #
@@ -137,10 +137,15 @@ install: build
 	  < $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx > foo
 	mv foo $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx
 
-	# for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
+	# Fix some errouneous permissions 
+	chmod 644 $(BUILDPREFIX)@prefix@/include/root/TFileIter.h \
+		$(BUILDPREFIX)@prefix@/include/root/TDsKey.h
+	chmod 755 $(BUILDPREFIX)@prefix@/share/root/cint/lib/pthread/setup
+
+	for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
 	# First move for the arch-dependent packages, then for the 
 	# arch-independet packages
-	dh_movefiles -a -i 
+	# dh_movefiles -a -i 
 
 	# This is for alternatives registration, if one want's to install 
 	# Richard Kreckels cint package next to ROOT
@@ -212,6 +217,7 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installdocs
+	dh_installmime 
 	# dh_installexamples
 	dh_installmenu
 	# dh_installemacsen
@@ -244,6 +250,16 @@ binary: binary-indep binary-arch
 
 #
 # $Log: rules.in,v $
+# Revision 1.2  2002/01/20 14:23:52  rdm
+# Mega patch by Christian Holm concerning the configure, build and
+# Debian and RedHat packaging scripts. The configure script has been
+# rationalized (introduction of two shell functions to find package
+# headers and libraries). Extensive update of the INSTALL writeup,
+# including description of all new packages (SapDB, PgSql, etc.).
+# More options to the root-config script. Man page for memprobe.
+# Big overhaul of the Debian and RedHat packaging scripts, supporting
+# the new libraries.
+#
 # Revision 1.1  2001/04/23 14:09:55  rdm
 # part of the debian ad redhat package system.
 #

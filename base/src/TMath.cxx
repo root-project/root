@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.19 2002/02/18 18:09:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.21 2002/05/30 15:56:29 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMath.h"
+#include "TError.h"
 #include <math.h>
 #include <string.h>
 
@@ -167,7 +168,7 @@ Int_t TMath::Nint(Double_t x)
 //______________________________________________________________________________
 Float_t *TMath::Cross(Float_t v1[3],Float_t v2[3],Float_t out[3])
 {
-   // Calculate the Cross Product of two vectors
+   // Calculate the Cross Product of two vectors:
    //         out = [v1 x v2]
 
     out[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -180,8 +181,8 @@ Float_t *TMath::Cross(Float_t v1[3],Float_t v2[3],Float_t out[3])
 //______________________________________________________________________________
 Double_t *TMath::Cross(Double_t v1[3],Double_t v2[3],Double_t out[3])
 {
-   // Calculate the Cross Product of two vectors
-   //         out = [v1 x v2]
+   // Calculate the Cross Product of two vectors:
+   //   out = [v1 x v2]
 
     out[0] = v1[1] * v2[2] - v1[2] * v2[1];
     out[1] = v1[2] * v2[0] - v1[0] * v2[2];
@@ -238,9 +239,9 @@ Double_t TMath::Erfc(Double_t x)
 Double_t TMath::Freq(Double_t x)
 {
    // Computation of the normal frequency function freq(x).
-   // Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x
+   // Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x.
    //
-   // translated from CERNLIB C300 by Rene Brun
+   // Translated from CERNLIB C300 by Rene Brun.
 
    const Double_t C1 = 0.56418958354775629;
    const Double_t W2 = 1.41421356237309505;
@@ -426,7 +427,7 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 {
-   // Calculate a Breit Wigner function with mean and gamma
+   // Calculate a Breit Wigner function with mean and gamma.
 
    Double_t bw = gamma/((x-mean)*(x-mean) + gamma*gamma/4);
    return bw/(2*Pi());
@@ -435,11 +436,11 @@ Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 //______________________________________________________________________________
 Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma)
 {
-   // Calculate a gaussian function with mean and sigma
+   // Calculate a gaussian function with mean and sigma.
 
-    if (sigma == 0) return 1.e30;
-    Double_t arg = (x-mean)/sigma;
-    return TMath::Exp(-0.5*arg*arg);
+   if (sigma == 0) return 1.e30;
+   Double_t arg = (x-mean)/sigma;
+   return TMath::Exp(-0.5*arg*arg);
 }
 
 //______________________________________________________________________________
@@ -545,26 +546,23 @@ Double_t TMath::LnGamma(Double_t z)
 //______________________________________________________________________________
 Float_t TMath::Normalize(Float_t v[3])
 {
-   // Normalize a vector v in place
-   // Return:
-   //    The norm of the original vector
+   // Normalize a vector v in place.
+   // Returns the norm of the original vector.
 
-    Float_t d = Sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-    if (d != 0)
-    {
+   Float_t d = Sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+   if (d != 0) {
       v[0] /= d;
       v[1] /= d;
       v[2] /= d;
-    }
-    return d;
+   }
+   return d;
 }
 
 //______________________________________________________________________________
 Double_t TMath::Normalize(Double_t v[3])
 {
-   // Normalize a vector v in place
-   //  Return:
-   //    The norm of the original vector
+   // Normalize a vector v in place.
+   // Returns the norm of the original vector.
 
     Double_t d = Sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
     if (d != 0)
@@ -579,14 +577,13 @@ Double_t TMath::Normalize(Double_t v[3])
 //______________________________________________________________________________
 Float_t *TMath::Normal2Plane(Float_t p1[3],Float_t p2[3],Float_t p3[3], Float_t normal[3])
 {
-   // Calculate a normal vector of a plane
+   // Calculate a normal vector of a plane.
    //
    //  Input:
    //     Float_t *p1,*p2,*p3  -  3 3D points belonged the plane to define it.
    //
    //  Return:
    //     Pointer to 3D normal vector (normalized)
-   //
 
    Float_t v1[3], v2[3];
 
@@ -605,14 +602,13 @@ Float_t *TMath::Normal2Plane(Float_t p1[3],Float_t p2[3],Float_t p3[3], Float_t 
 //______________________________________________________________________________
 Double_t *TMath::Normal2Plane(Double_t p1[3],Double_t p2[3],Double_t p3[3], Double_t normal[3])
 {
-   // Calculate a normal vector of a plane
+   // Calculate a normal vector of a plane.
    //
    //  Input:
    //     Float_t *p1,*p2,*p3  -  3 3D points belonged the plane to define it.
    //
    //  Return:
    //     Pointer to 3D normal vector (normalized)
-   //
 
    Double_t v1[3], v2[3];
 
@@ -698,7 +694,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
    //           However, remember that the formula is only valid for "large" n.
    // Theta function inversion formula is used for z <= 1
    //
-   // This function was translated by Rene Brun from PROBKL in CERNLIB
+   // This function was translated by Rene Brun from PROBKL in CERNLIB.
 
    // cons[j] = -0.5*(PI*2*j-1)/2(**2
    const Double_t cons[3] = { -1.233700550136 , -11.10330496 , -30.84251376};
@@ -738,8 +734,8 @@ Double_t TMath::KolmogorovProb(Double_t z)
 //______________________________________________________________________________
 Int_t TMath::LocMin(Int_t n, const Short_t *a)
 {
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
 
   if  (n <= 0) return -1;
   Short_t xmin = a[0];
@@ -756,8 +752,8 @@ Int_t TMath::LocMin(Int_t n, const Short_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMin(Int_t n, const Int_t *a)
 {
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
 
   if  (n <= 0) return -1;
   Int_t xmin = a[0];
@@ -774,8 +770,8 @@ Int_t TMath::LocMin(Int_t n, const Int_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMin(Int_t n, const Float_t *a)
 {
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
 
   if  (n <= 0) return -1;
   Float_t xmin = a[0];
@@ -792,8 +788,8 @@ Int_t TMath::LocMin(Int_t n, const Float_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMin(Int_t n, const Double_t *a)
 {
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
 
   if  (n <= 0) return -1;
   Double_t xmin = a[0];
@@ -810,8 +806,8 @@ Int_t TMath::LocMin(Int_t n, const Double_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMin(Int_t n, const Long_t *a)
 {
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
 
   if  (n <= 0) return -1;
   Long_t xmin = a[0];
@@ -828,8 +824,8 @@ Int_t TMath::LocMin(Int_t n, const Long_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMax(Int_t n, const Short_t *a)
 {
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
 
   if  (n <= 0) return -1;
   Short_t xmax = a[0];
@@ -846,8 +842,8 @@ Int_t TMath::LocMax(Int_t n, const Short_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMax(Int_t n, const Int_t *a)
 {
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
 
   if  (n <= 0) return -1;
   Int_t xmax = a[0];
@@ -864,8 +860,8 @@ Int_t TMath::LocMax(Int_t n, const Int_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMax(Int_t n, const Float_t *a)
 {
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
 
   if  (n <= 0) return -1;
   Float_t xmax = a[0];
@@ -882,8 +878,8 @@ Int_t TMath::LocMax(Int_t n, const Float_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMax(Int_t n, const Double_t *a)
 {
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
 
   if  (n <= 0) return -1;
   Double_t xmax = a[0];
@@ -900,8 +896,8 @@ Int_t TMath::LocMax(Int_t n, const Double_t *a)
 //______________________________________________________________________________
 Int_t TMath::LocMax(Int_t n, const Long_t *a)
 {
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
 
   if  (n <= 0) return -1;
   Long_t xmax = a[0];
@@ -918,7 +914,7 @@ Int_t TMath::LocMax(Int_t n, const Long_t *a)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Short_t *array, Short_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -939,7 +935,7 @@ Int_t TMath::BinarySearch(Int_t n, const Short_t *array, Short_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Short_t **array, Short_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -960,7 +956,7 @@ Int_t TMath::BinarySearch(Int_t n, const Short_t **array, Short_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Int_t *array, Int_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -981,7 +977,7 @@ Int_t TMath::BinarySearch(Int_t n, const Int_t *array, Int_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Int_t **array, Int_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1002,7 +998,7 @@ Int_t TMath::BinarySearch(Int_t n, const Int_t **array, Int_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Float_t *array, Float_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1023,7 +1019,7 @@ Int_t TMath::BinarySearch(Int_t n, const Float_t *array, Float_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Float_t **array, Float_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1044,7 +1040,7 @@ Int_t TMath::BinarySearch(Int_t n, const Float_t **array, Float_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Double_t *array, Double_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1065,7 +1061,7 @@ Int_t TMath::BinarySearch(Int_t n, const Double_t *array, Double_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Double_t **array, Double_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1086,7 +1082,7 @@ Int_t TMath::BinarySearch(Int_t n, const Double_t **array, Double_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Long_t *array, Long_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1107,7 +1103,7 @@ Int_t TMath::BinarySearch(Int_t n, const Long_t *array, Long_t value)
 //______________________________________________________________________________
 Int_t TMath::BinarySearch(Int_t n, const Long_t **array, Long_t value)
 {
-   // Binary search in an array of n values to locate value
+   // Binary search in an array of n values to locate value.
    //
    // Array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
@@ -1128,13 +1124,13 @@ Int_t TMath::BinarySearch(Int_t n, const Long_t **array, Long_t value)
 //_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
 {
-   //  Sort the n1 elements of the Short_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
+   // Sort the n1 elements of the Short_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
@@ -1194,13 +1190,13 @@ void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
 //_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
 {
-   //  Sort the n1 elements of the Int_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
+   // Sort the n1 elements of the Int_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
@@ -1260,13 +1256,13 @@ void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
 //_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
 {
-   //  Sort the n1 elements of the Float_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
+   // Sort the n1 elements of the Float_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
@@ -1326,13 +1322,13 @@ void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
 //_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
 {
-   //  Sort the n1 elements of the Double_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
+   // Sort the n1 elements of the Double_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
@@ -1392,13 +1388,13 @@ void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
 //_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
 {
-   //  Sort the n1 elements of the Long_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
+   // Sort the n1 elements of the Long_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
@@ -1459,87 +1455,87 @@ void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
 //______________________________________________________________________________
 void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
 {
-// bubble sort variant to obtain the order of an array's elements into an index
-// in order to do more useful things than the standard built in functions.
-// *arr1 is unchanged; 
-// *arr2 is the array of indicies corresponding to the decending value of arr1
-//  with arr2[0] corresponding to the largest arr1 value and arr2[Narr] the
-//  smallest.
-//
-//  Author:        Adrian Bevan                    bevan@slac.stanford.edu
-//  Copyright:     Liverpool University, July 2001
+   // Bubble sort variant to obtain the order of an array's elements into
+   // an index in order to do more useful things than the standard built
+   // in functions.
+   // *arr1 is unchanged;
+   // *arr2 is the array of indicies corresponding to the decending value
+   // of arr1 with arr2[0] corresponding to the largest arr1 value and
+   // arr2[Narr] the smallest.
+   //
+   //  Author:        Adrian Bevan (bevan@slac.stanford.edu)
+   //  Copyright:     Liverpool University, July 2001
 
-  if (Narr <= 0) return;
-  double *localArr1 = new double[Narr];
-  int    *localArr2 = new int[Narr];
-  int iEl;
-  int iEl2;
+   if (Narr <= 0) return;
+   double *localArr1 = new double[Narr];
+   int    *localArr2 = new int[Narr];
+   int iEl;
+   int iEl2;
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    localArr1[iEl] = arr1[iEl];
-    localArr2[iEl] = iEl;
-  }
+   for(iEl = 0; iEl < Narr; iEl++) {
+      localArr1[iEl] = arr1[iEl];
+      localArr2[iEl] = iEl;
+   }
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
-      if(localArr1[iEl2-1] < localArr1[iEl2]) {
-        double tmp        = localArr1[iEl2-1];
-        localArr1[iEl2-1] = localArr1[iEl2];
-        localArr1[iEl2]   = tmp;
+   for (iEl = 0; iEl < Narr; iEl++) {
+      for (iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
+         if (localArr1[iEl2-1] < localArr1[iEl2]) {
+            double tmp        = localArr1[iEl2-1];
+            localArr1[iEl2-1] = localArr1[iEl2];
+            localArr1[iEl2]   = tmp;
 
-        int    tmp2       = localArr2[iEl2-1];
-        localArr2[iEl2-1] = localArr2[iEl2];
-        localArr2[iEl2]   = tmp2;
+            int    tmp2       = localArr2[iEl2-1];
+            localArr2[iEl2-1] = localArr2[iEl2];
+            localArr2[iEl2]   = tmp2;
+         }
       }
-    }
-  }
+   }
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    arr2[iEl] = localArr2[iEl];
-  }
-  delete [] localArr2;
-  delete [] localArr1;
+   for (iEl = 0; iEl < Narr; iEl++) {
+      arr2[iEl] = localArr2[iEl];
+   }
+   delete [] localArr2;
+   delete [] localArr1;
 }
-
 
 //______________________________________________________________________________
 void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 {
-// opposite ordering of the array arr2[] to that of BubbleHigh.
-//
-//  Author:        Adrian Bevan                    bevan@slac.stanford.edu
-//  Copyright:     Liverpool University, July 2001
-   
-  if (Narr <= 0) return;
-  double *localArr1 = new double[Narr];
-  int    *localArr2 = new int[Narr];
-  int iEl;
-  int iEl2;
+   // Opposite ordering of the array arr2[] to that of BubbleHigh.
+   //
+   //  Author:        Adrian Bevan (bevan@slac.stanford.edu)
+   //  Copyright:     Liverpool University, July 2001
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    localArr1[iEl] = arr1[iEl];
-    localArr2[iEl] = iEl;
-  }
+   if (Narr <= 0) return;
+   double *localArr1 = new double[Narr];
+   int    *localArr2 = new int[Narr];
+   int iEl;
+   int iEl2;
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
-      if(localArr1[iEl2-1] > localArr1[iEl2]) {
-        double tmp        = localArr1[iEl2-1];
-        localArr1[iEl2-1] = localArr1[iEl2];
-        localArr1[iEl2]   = tmp;
+   for (iEl = 0; iEl < Narr; iEl++) {
+      localArr1[iEl] = arr1[iEl];
+      localArr2[iEl] = iEl;
+   }
 
-        int    tmp2       = localArr2[iEl2-1];
-        localArr2[iEl2-1] = localArr2[iEl2];
-        localArr2[iEl2]   = tmp2;
+   for (iEl = 0; iEl < Narr; iEl++) {
+      for (iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
+         if (localArr1[iEl2-1] > localArr1[iEl2]) {
+            double tmp        = localArr1[iEl2-1];
+            localArr1[iEl2-1] = localArr1[iEl2];
+            localArr1[iEl2]   = tmp;
+
+            int    tmp2       = localArr2[iEl2-1];
+            localArr2[iEl2-1] = localArr2[iEl2];
+            localArr2[iEl2]   = tmp2;
+         }
       }
-    }
-  }
+   }
 
-  for(iEl = 0; iEl < Narr; iEl++) {
-    arr2[iEl] = localArr2[iEl];
-  }
-  delete [] localArr2;
-  delete [] localArr1;
+   for (iEl = 0; iEl < Narr; iEl++) {
+      arr2[iEl] = localArr2[iEl];
+   }
+   delete [] localArr2;
+   delete [] localArr1;
 }
 
 #ifdef OLD_HASH
@@ -1665,24 +1661,28 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
    static const ULong_t msk[] = { 0x11111111, 0x33333333, 0x77777777, 0xffffffff };
 
    const UChar_t *uc = (const UChar_t *) txt;
-   ULong_t u = 0, uu = 0;
-   UShort_t *s = (UShort_t *) &u;
+   ULong_t uu = 0;
+   union {
+      ULong_t  u;
+      UShort_t s[2];
+   } u;
+   u.u = 0;
    Int_t i, idx;
 
    for (i = 0; i < ntxt; i++) {
       idx = (uc[i] ^ i) & 255;
       uu  = (uu << 1) ^ (utab[idx] & msk[i & 3]);
-      if (i & 3 == 3) u ^= uu;
+      if (i & 3 == 3) u.u ^= uu;
    }
-   if (i & 3) u ^= uu;
+   if (i & 3) u.u ^= uu;
 
-   u *= 1879048201;      // prime number
-   s[0] += s[1];
-   u *= 1979048191;      // prime number
-   s[1] ^= s[0];
-   u *= 2079048197;      // prime number
+   u.u *= 1879048201;      // prime number
+   u.s[0] += u.s[1];
+   u.u *= 1979048191;      // prime number
+   u.s[1] ^= u.s[0];
+   u.u *= 2079048197;      // prime number
 
-   return u;
+   return u.u;
 }
 
 #endif
@@ -1696,485 +1696,489 @@ ULong_t TMath::Hash(const char *txt)
 //______________________________________________________________________________
 Double_t TMath::BesselI0(Double_t x)
 {
-// Computation of the modified Bessel function I_0(x) for any real x.
-//
-// The algorithm is based on the article by Abramowitz and Stegun [1]
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-//
-// [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
-//     Applied Mathematics Series vol. 55 (1964), Washington.
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the modified Bessel function I_0(x) for any real x.
+   //
+   // The algorithm is based on the article by Abramowitz and Stegun [1]
+   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+   //
+   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //     Applied Mathematics Series vol. 55 (1964), Washington.
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- // Parameters of the polynomial approximation
- const Double_t p1=1.0,          p2=3.5156229,    p3=3.0899424,
-                p4=1.2067492,    p5=0.2659732,    p6=3.60768e-2,  p7=4.5813e-3;
+   // Parameters of the polynomial approximation
+   const Double_t p1=1.0,          p2=3.5156229,    p3=3.0899424,
+                  p4=1.2067492,    p5=0.2659732,    p6=3.60768e-2,  p7=4.5813e-3;
 
- const Double_t q1= 0.39894228,  q2= 1.328592e-2, q3= 2.25319e-3,
-                q4=-1.57565e-3,  q5= 9.16281e-3,  q6=-2.057706e-2,
-                q7= 2.635537e-2, q8=-1.647633e-2, q9= 3.92377e-3;
+   const Double_t q1= 0.39894228,  q2= 1.328592e-2, q3= 2.25319e-3,
+                  q4=-1.57565e-3,  q5= 9.16281e-3,  q6=-2.057706e-2,
+                  q7= 2.635537e-2, q8=-1.647633e-2, q9= 3.92377e-3;
 
- Double_t ax = TMath::Abs(x);
+   Double_t ax = TMath::Abs(x);
 
- Double_t y=0, result=0;
+   Double_t y=0, result=0;
 
- if (ax < 3.75) {
-    y = pow(x/3.75,2);
-    result = p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7)))));
- } else {
-    y = 3.75/ax;
-    result = (TMath::Exp(ax)/TMath::Sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
- }
- return result;
+   if (ax < 3.75) {
+      y = pow(x/3.75,2);
+      result = p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7)))));
+   } else {
+      y = 3.75/ax;
+      result = (TMath::Exp(ax)/TMath::Sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
+   }
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselK0(Double_t x)
 {
-// Computation of the modified Bessel function K_0(x) for positive real x.
-//
-// The algorithm is based on the article by Abramowitz and Stegun [1]
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-//
-// [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
-//     Applied Mathematics Series vol. 55 (1964), Washington.
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the modified Bessel function K_0(x) for positive real x.
+   //
+   // The algorithm is based on the article by Abramowitz and Stegun [1]
+   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+   //
+   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //     Applied Mathematics Series vol. 55 (1964), Washington.
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- // Parameters of the polynomial approximation
- const Double_t p1=-0.57721566,  p2=0.42278420,   p3=0.23069756,
-                p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-5;
+   // Parameters of the polynomial approximation
+   const Double_t p1=-0.57721566,  p2=0.42278420,   p3=0.23069756,
+                  p4= 3.488590e-2, p5=2.62698e-3,   p6=1.0750e-4,    p7=7.4e-5;
 
- const Double_t q1= 1.25331414,  q2=-7.832358e-2, q3= 2.189568e-2,
-                q4=-1.062446e-2, q5= 5.87872e-3,  q6=-2.51540e-3,  q7=5.3208e-4;
+   const Double_t q1= 1.25331414,  q2=-7.832358e-2, q3= 2.189568e-2,
+                  q4=-1.062446e-2, q5= 5.87872e-3,  q6=-2.51540e-3,  q7=5.3208e-4;
 
- if (x <= 0) {
-    printf(" *K0* Invalid argument x = %g\n",x);
-    return 0;
- }
+   if (x <= 0) {
+      Error("TMath::BesselK0", "*K0* Invalid argument x = %g\n",x);
+      return 0;
+   }
 
- Double_t y=0,result=0;
+   Double_t y=0,result=0;
 
- if (x <= 2) {
-    y = x*x/4.;
-    result = (-log(x/2.)*TMath::BesselI0(x))+(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
- } else {
-    y = 2./x;
-    result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
- }
- return result;
+   if (x <= 2) {
+      y = x*x/4.;
+      result = (-log(x/2.)*TMath::BesselI0(x))+(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
+   } else {
+      y = 2./x;
+      result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
+   }
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselI1(Double_t x)
 {
-// Computation of the modified Bessel function I_1(x) for any real x.
-//
-// The algorithm is based on the article by Abramowitz and Stegun [1]
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-//
-// [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
-//     Applied Mathematics Series vol. 55 (1964), Washington.
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the modified Bessel function I_1(x) for any real x.
+   //
+   // The algorithm is based on the article by Abramowitz and Stegun [1]
+   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+   //
+   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //     Applied Mathematics Series vol. 55 (1964), Washington.
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- // Parameters of the polynomial approximation
- const Double_t p1=0.5,          p2=0.87890594,   p3=0.51498869,
-                p4=0.15084934,   p5=2.658733e-2,  p6=3.01532e-3,  p7=3.2411e-4;
+   // Parameters of the polynomial approximation
+   const Double_t p1=0.5,          p2=0.87890594,   p3=0.51498869,
+                  p4=0.15084934,   p5=2.658733e-2,  p6=3.01532e-3,  p7=3.2411e-4;
 
- const Double_t q1= 0.39894228,  q2=-3.988024e-2, q3=-3.62018e-3,
-                q4= 1.63801e-3,  q5=-1.031555e-2, q6= 2.282967e-2,
-                q7=-2.895312e-2, q8= 1.787654e-2, q9=-4.20059e-3;
+   const Double_t q1= 0.39894228,  q2=-3.988024e-2, q3=-3.62018e-3,
+                  q4= 1.63801e-3,  q5=-1.031555e-2, q6= 2.282967e-2,
+                  q7=-2.895312e-2, q8= 1.787654e-2, q9=-4.20059e-3;
 
- Double_t ax = TMath::Abs(x);
+   Double_t ax = TMath::Abs(x);
 
- Double_t y=0, result=0;
+   Double_t y=0, result=0;
 
- if (ax < 3.75) {
-    y = pow(x/3.75,2);
-    result = x*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
- } else {
-    y = 3.75/ax;
-    result = (exp(ax)/sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
-    if (x < 0) result = -result;
- }
- return result;
+   if (ax < 3.75) {
+      y = pow(x/3.75,2);
+      result = x*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
+   } else {
+      y = 3.75/ax;
+      result = (exp(ax)/sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
+      if (x < 0) result = -result;
+   }
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselK1(Double_t x)
 {
-// Computation of the modified Bessel function K_1(x) for positive real x.
-//
-// The algorithm is based on the article by Abramowitz and Stegun [1]
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-//
-// [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
-//     Applied Mathematics Series vol. 55 (1964), Washington.
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the modified Bessel function K_1(x) for positive real x.
+   //
+   // The algorithm is based on the article by Abramowitz and Stegun [1]
+   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+   //
+   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //     Applied Mathematics Series vol. 55 (1964), Washington.
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- // Parameters of the polynomial approximation
- const Double_t p1= 1.,          p2= 0.15443144,  p3=-0.67278579,
-                p4=-0.18156897,  p5=-1.919402e-2, p6=-1.10404e-3,  p7=-4.686e-5;
+   // Parameters of the polynomial approximation
+   const Double_t p1= 1.,          p2= 0.15443144,  p3=-0.67278579,
+                  p4=-0.18156897,  p5=-1.919402e-2, p6=-1.10404e-3,  p7=-4.686e-5;
 
- const Double_t q1= 1.25331414,  q2= 0.23498619,  q3=-3.655620e-2,
-                q4= 1.504268e-2, q5=-7.80353e-3,  q6= 3.25614e-3,  q7=-6.8245e-4;
+   const Double_t q1= 1.25331414,  q2= 0.23498619,  q3=-3.655620e-2,
+                  q4= 1.504268e-2, q5=-7.80353e-3,  q6= 3.25614e-3,  q7=-6.8245e-4;
 
- if (x <= 0) {
-    printf(" *K1* Invalid argument x = %g\n",x);
-    return 0;
- }
+   if (x <= 0) {
+      Error("TMath::BesselK1", "*K1* Invalid argument x = %g\n",x);
+      return 0;
+   }
 
- Double_t y=0,result=0;
+   Double_t y=0,result=0;
 
- if (x <= 2) {
-    y = x*x/4.;
-    result = (log(x/2.)*TMath::BesselI1(x))+(1./x)*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
- } else {
-    y = 2./x;
-    result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
- }
- return result;
+   if (x <= 2) {
+      y = x*x/4.;
+      result = (log(x/2.)*TMath::BesselI1(x))+(1./x)*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
+   } else {
+      y = 2./x;
+      result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
+   }
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselK(Int_t n,Double_t x)
 {
-// Computation of the Integer Order Modified Bessel function K_n(x)
-// for n=0,1,2,... and positive real x.
-//
-// The algorithm uses the recurrence relation
-//
-//               K_n+1(x) = (2n/x)*K_n(x) + K_n-1(x)
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the Integer Order Modified Bessel function K_n(x)
+   // for n=0,1,2,... and positive real x.
+   //
+   // The algorithm uses the recurrence relation
+   //
+   //               K_n+1(x) = (2n/x)*K_n(x) + K_n-1(x)
+   //
+   // as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- if (x <= 0 || n < 0) {
-    printf(" *K* Invalid argument(s) (n,x) = (%d, %g)\n",n,x);
-    return 0;
- }
+   if (x <= 0 || n < 0) {
+      Error("TMath::BesselK", "*K* Invalid argument(s) (n,x) = (%d, %g)\n",n,x);
+      return 0;
+   }
 
- if (n==0) return TMath::BesselK0(x);
- if (n==1) return TMath::BesselK1(x);
+   if (n==0) return TMath::BesselK0(x);
+   if (n==1) return TMath::BesselK1(x);
 
- // Perform upward recurrence for all x
- Double_t tox = 2./x;
- Double_t bkm = TMath::BesselK0(x);
- Double_t bk  = TMath::BesselK1(x);
- Double_t bkp = 0;
- for (Int_t j=1; j<n; j++) {
-    bkp = bkm+Double_t(j)*tox*bk;
-    bkm = bk;
-    bk  = bkp;
- }
- return bk;
+   // Perform upward recurrence for all x
+   Double_t tox = 2./x;
+   Double_t bkm = TMath::BesselK0(x);
+   Double_t bk  = TMath::BesselK1(x);
+   Double_t bkp = 0;
+   for (Int_t j=1; j<n; j++) {
+      bkp = bkm+Double_t(j)*tox*bk;
+      bkm = bk;
+      bk  = bkp;
+   }
+   return bk;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselI(Int_t n,Double_t x)
 {
-// Computation of the Integer Order Modified Bessel function I_n(x)
-// for n=0,1,2,... and any real x.
-//
-// The algorithm uses the recurrence relation
-//
-//               I_n+1(x) = (-2n/x)*I_n(x) + I_n-1(x)
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
-//
-//--- NvE 12-mar-2000 UU-SAP Utrecht
+   // Computation of the Integer Order Modified Bessel function I_n(x)
+   // for n=0,1,2,... and any real x.
+   //
+   // The algorithm uses the recurrence relation
+   //
+   //               I_n+1(x) = (-2n/x)*I_n(x) + I_n-1(x)
+   //
+   // as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
+   //
+   //--- NvE 12-mar-2000 UU-SAP Utrecht
 
- Int_t iacc = 40; // Increase to enhance accuracy
- Double_t bigno = 1.e10, bigni = 1.e-10;
+   Int_t iacc = 40; // Increase to enhance accuracy
+   Double_t bigno = 1.e10, bigni = 1.e-10;
 
- if (n < 0) {
-     printf(" *I* Invalid argument (n,x) = (%d, %g)\n",n,x);
-     return 0;
- }
+   if (n < 0) {
+      Error("TMath::BesselI", "*I* Invalid argument (n,x) = (%d, %g)\n",n,x);
+      return 0;
+   }
 
- if (n==0) return TMath::BesselI0(x);
- if (n==1) return TMath::BesselI1(x);
+   if (n==0) return TMath::BesselI0(x);
+   if (n==1) return TMath::BesselI1(x);
 
- if (TMath::Abs(x) < 1.e-10) return 0;
+   if (TMath::Abs(x) < 1.e-10) return 0;
 
- Double_t tox = 2./TMath::Abs(x);
- Double_t bip = 0,bim = 0;
- Double_t bi  = 1;
- Double_t result = 0;
- Int_t m = 2*((n+Int_t(sqrt(Float_t(iacc*n))))); // Downward recurrence from even m
- for (Int_t j=m; j<=1; j--) {
-    bim = bip+Double_t(j)*tox*bi;
-    bip = bi;
-    bi  = bim;
-    // Renormalise to prevent overflows
-    if (TMath::Abs(bi) > bigno)  {
-       result *= bigni;
-       bi     *= bigni;
-       bip    *= bigni;
-    }
-    if (j==n) result=bip;
- }
+   Double_t tox = 2./TMath::Abs(x);
+   Double_t bip = 0,bim = 0;
+   Double_t bi  = 1;
+   Double_t result = 0;
+   Int_t m = 2*((n+Int_t(sqrt(Float_t(iacc*n))))); // Downward recurrence from even m
+   for (Int_t j=m; j<=1; j--) {
+      bim = bip+Double_t(j)*tox*bi;
+      bip = bi;
+      bi  = bim;
+      // Renormalise to prevent overflows
+      if (TMath::Abs(bi) > bigno)  {
+         result *= bigni;
+         bi     *= bigni;
+         bip    *= bigni;
+      }
+      if (j==n) result=bip;
+   }
 
- result *= TMath::BesselI0(x)/bi; // Normalise with BesselI0(x)
- if ((x < 0) && (n%2 == 1)) result = -result;
+   result *= TMath::BesselI0(x)/bi; // Normalise with BesselI0(x)
+   if ((x < 0) && (n%2 == 1)) result = -result;
 
- return result;
+   return result;
 }
 
 //______________________________________________________________________________
-Double_t TMath::BesselJ0(Double_t x) {
-//Returns the Bessel function J0(x) for any real x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+Double_t TMath::BesselJ0(Double_t x)
+{
+   // Returns the Bessel function J0(x) for any real x.
+   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-       Double_t ax,z;
-       double xx,y,ans,ans1,ans2;
+   Double_t ax,z;
+   Double_t xx,y,ans,ans1,ans2;
 
-       if ((ax=fabs(x)) < 8.0) {
-           y=x*x;
-           ans1=57568490574.0+y*(-13362590354.0+y*(651619640.7
-               +y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));
-           ans2=57568490411.0+y*(1029532985.0+y*(9494680.718
-               +y*(59272.64853+y*(267.8532712+y*1.0))));
-           ans=ans1/ans2;
-       } else {
-           z=8.0/ax;
-           y=z*z;
-           xx=ax-0.785398164;
-           ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-               +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-           ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-               +y*(-0.6911147651e-5+y*(0.7621095161e-6
-               -y*0.934935152e-7)));
-           ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-       }return ans;
+   if ((ax=fabs(x)) < 8.0) {
+      y=x*x;
+      ans1=57568490574.0+y*(-13362590354.0+y*(651619640.7
+           +y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));
+      ans2=57568490411.0+y*(1029532985.0+y*(9494680.718
+           +y*(59272.64853+y*(267.8532712+y*1.0))));
+      ans=ans1/ans2;
+   } else {
+      z=8.0/ax;
+      y=z*z;
+      xx=ax-0.785398164;
+      ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
+           +y*(-0.2073370639e-5+y*0.2093887211e-6)));
+      ans2=-0.1562499995e-1+y*(0.1430488765e-3
+           +y*(-0.6911147651e-5+y*(0.7621095161e-6
+           -y*0.934935152e-7)));
+      ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
+   }
+   return ans;
 }
 
 //______________________________________________________________________________
-Double_t TMath::BesselJ1(Double_t x) {
-//Returns the Bessel function J1(x) for any real x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+Double_t TMath::BesselJ1(Double_t x)
+{
+   // Returns the Bessel function J1(x) for any real x.
+   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-     Double_t ax,z;
-     Double_t xx,y,ans,ans1,ans2;
+   Double_t ax,z;
+   Double_t xx,y,ans,ans1,ans2;
 
-     if ((ax=fabs(x)) < 8.0) {
-         y=x*x;
-         ans1=x*(72362614232.0+y*(-7895059235.0+y*(242396853.1
-             +y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));
-         ans2=144725228442.0+y*(2300535178.0+y*(18583304.74
-             +y*(99447.43394+y*(376.9991397+y*1.0))));
-         ans=ans1/ans2;
-     } else {
-         z=8.0/ax;
-         y=z*z;
-         xx=ax-2.356194491;
-         ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-             +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-         ans2=0.04687499995+y*(-0.2002690873e-3
-             +y*(0.8449199096e-5+y*(-0.88228987e-6
-             +y*0.105787412e-6)));
-         ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-         if (x < 0.0) ans = -ans;
-     }return ans;
+   if ((ax=fabs(x)) < 8.0) {
+      y=x*x;
+      ans1=x*(72362614232.0+y*(-7895059235.0+y*(242396853.1
+           +y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));
+      ans2=144725228442.0+y*(2300535178.0+y*(18583304.74
+           +y*(99447.43394+y*(376.9991397+y*1.0))));
+      ans=ans1/ans2;
+   } else {
+      z=8.0/ax;
+      y=z*z;
+      xx=ax-2.356194491;
+      ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
+           +y*(0.2457520174e-5+y*(-0.240337019e-6))));
+      ans2=0.04687499995+y*(-0.2002690873e-3
+           +y*(0.8449199096e-5+y*(-0.88228987e-6
+           +y*0.105787412e-6)));
+      ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
+      if (x < 0.0) ans = -ans;
+   }
+   return ans;
 }
 
 //______________________________________________________________________________
-Double_t TMath::BesselY0(Double_t x) {
-//Returns the Bessel function Y0(x) for positive x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+Double_t TMath::BesselY0(Double_t x)
+{
+   // Returns the Bessel function Y0(x) for positive x.
+   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-       Double_t z,xx,y,ans,ans1,ans2;
+   Double_t z,xx,y,ans,ans1,ans2;
 
-       if (x < 8.0) { 
-           y=x*x;
-           ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6
-               +y*(10879881.29+y*(-86327.92757+y*228.4622733))));
-           ans2=40076544269.0+y*(745249964.8+y*(7189466.438
-               +y*(47447.26470+y*(226.1030244+y*1.0))));
-           ans=(ans1/ans2)+0.636619772*TMath::BesselJ0(x)*log(x);
-       } else {
-         z=8.0/x;
-         y=z*z;
-         xx=x-0.785398164;
-         ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-             +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-         ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-             +y*(-0.6911147651e-5+y*(0.7621095161e-6
-             +y*(-0.934945152e-7)))); 
-         ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-     }return ans;
+   if (x < 8.0) {
+      y=x*x;
+      ans1=-2957821389.0+y*(7062834065.0+y*(-512359803.6
+           +y*(10879881.29+y*(-86327.92757+y*228.4622733))));
+      ans2=40076544269.0+y*(745249964.8+y*(7189466.438
+           +y*(47447.26470+y*(226.1030244+y*1.0))));
+      ans=(ans1/ans2)+0.636619772*TMath::BesselJ0(x)*log(x);
+   } else {
+      z=8.0/x;
+      y=z*z;
+      xx=x-0.785398164;
+      ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
+           +y*(-0.2073370639e-5+y*0.2093887211e-6)));
+      ans2=-0.1562499995e-1+y*(0.1430488765e-3
+           +y*(-0.6911147651e-5+y*(0.7621095161e-6
+           +y*(-0.934945152e-7))));
+      ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
+   }
+   return ans;
 }
 
 //______________________________________________________________________________
-Double_t TMath::BesselY1(Double_t x) {
-//Returns the Bessel function Y1(x) for positive x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
+Double_t TMath::BesselY1(Double_t x)
+{
+   // Returns the Bessel function Y1(x) for positive x.
+   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-     Double_t z,xx,y,ans,ans1,ans2;
+   Double_t z,xx,y,ans,ans1,ans2;
 
-     if (x < 8.0) { 
-         y=x*x;
-         ans1=x*(-0.4900604943e13+y*(0.1275274390e13
-             +y*(-0.5153438139e11+y*(0.7349264551e9
-             +y*(-0.4237922726e7+y*0.8511937935e4)))));
-         ans2=0.2499580570e14+y*(0.4244419664e12
-             +y*(0.3733650367e10+y*(0.2245904002e8
-             +y*(0.1020426050e6+y*(0.3549632885e3+y)))));
-           ans=(ans1/ans2)+0.636619772*(TMath::BesselJ1(x)*log(x)-1.0/x);
-       } else {
-           z=8.0/x;
-           y=z*z;
-           xx=x-2.356194491;
-           ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-                 +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-           ans2=0.04687499995+y*(-0.2002690873e-3 
-                 +y*(0.8449199096e-5+y*(-0.88228987e-6
-                 +y*0.105787412e-6)));
-           ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-       }return ans;
+   if (x < 8.0) {
+      y=x*x;
+      ans1=x*(-0.4900604943e13+y*(0.1275274390e13
+           +y*(-0.5153438139e11+y*(0.7349264551e9
+           +y*(-0.4237922726e7+y*0.8511937935e4)))));
+      ans2=0.2499580570e14+y*(0.4244419664e12
+           +y*(0.3733650367e10+y*(0.2245904002e8
+           +y*(0.1020426050e6+y*(0.3549632885e3+y)))));
+      ans=(ans1/ans2)+0.636619772*(TMath::BesselJ1(x)*log(x)-1.0/x);
+   } else {
+      z=8.0/x;
+      y=z*z;
+      xx=x-2.356194491;
+      ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
+           +y*(0.2457520174e-5+y*(-0.240337019e-6))));
+      ans2=0.04687499995+y*(-0.2002690873e-3
+           +y*(0.8449199096e-5+y*(-0.88228987e-6
+           +y*0.105787412e-6)));
+      ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
+   }
+   return ans;
 }
 
-//______________________________________________________________________________   
+//______________________________________________________________________________
 Double_t TMath::Struve(Int_t n, Double_t x)
 {
-//   Struve Functions of Orders Zero and One 
-//
-//  n = 0; compute Struve function of order 0
-//  n = 1; compute Struve function of order 1
-//
-//  converted from CERNLIB M342 by Rene Brun
+   // Struve Functions of Orders Zero and One.
+   //
+   //  n = 0; compute Struve function of order 0
+   //  n = 1; compute Struve function of order 1
+   //
+   // Converted from CERNLIB M342 by Rene Brun.
 
-    const Int_t n1 = 15;
-    const Int_t n2 = 25;
-    const Int_t n3 = 16;
-    const Int_t n4 = 22;
-    const Double_t c1[16] = { 1.00215845609911981, -1.63969292681309147,
-                              1.50236939618292819, -.72485115302121872,
-                               .18955327371093136, -.03067052022988,
-                               .00337561447375194, -2.6965014312602e-4,
-                              1.637461692612e-5,   -7.8244408508e-7,
-                              3.021593188e-8,      -9.6326645e-10,
-                              2.579337e-11,        -5.8854e-13,
-                              1.158e-14,           -2e-16 };
-    const Double_t c2[26] = {  .99283727576423943, -.00696891281138625,
-                              1.8205103787037e-4,  -1.063258252844e-5,
-                              9.8198294287e-7,     -1.2250645445e-7,
-                              1.894083312e-8,      -3.44358226e-9,
-                              7.1119102e-10,       -1.6288744e-10,
-                              4.065681e-11,        -1.091505e-11,
-                              3.12005e-12,         -9.4202e-13,
-                              2.9848e-13,          -9.872e-14,
-                              3.394e-14,           -1.208e-14,
-                              4.44e-15,            -1.68e-15,
-                              6.5e-16,             -2.6e-16,
-                              1.1e-16,             -4e-17,
-                              2e-17,               -1e-17 };
-    const Double_t c3[17] = { .5578891446481605,   -.11188325726569816,
-                             -.16337958125200939,   .32256932072405902,
-                             -.14581632367244242,   .03292677399374035,
-                             -.00460372142093573,  4.434706163314e-4,
-                             -3.142099529341e-5,   1.7123719938e-6,
-                             -7.416987005e-8,      2.61837671e-9,
-                             -7.685839e-11,        1.9067e-12,
-                             -4.052e-14,           7.5e-16,
-                             -1e-17 };
-    const Double_t c4[23] = { 1.00757647293865641,  .00750316051248257,
-                             -7.043933264519e-5,   2.66205393382e-6,
-                             -1.8841157753e-7,     1.949014958e-8,
-                             -2.6126199e-9,        4.236269e-10,
-                             -7.955156e-11,        1.679973e-11,
-                             -3.9072e-12,          9.8543e-13,
-                             -2.6636e-13,          7.645e-14,
-                             -2.313e-14,           7.33e-15,
-                             -2.42e-15,            8.3e-16,
-                             -3e-16,               1.1e-16,
-                             -4e-17,               2e-17,-1e-17 };
+   const Int_t n1 = 15;
+   const Int_t n2 = 25;
+   const Int_t n3 = 16;
+   const Int_t n4 = 22;
+   const Double_t c1[16] = { 1.00215845609911981, -1.63969292681309147,
+                             1.50236939618292819, -.72485115302121872,
+                              .18955327371093136, -.03067052022988,
+                              .00337561447375194, -2.6965014312602e-4,
+                             1.637461692612e-5,   -7.8244408508e-7,
+                             3.021593188e-8,      -9.6326645e-10,
+                             2.579337e-11,        -5.8854e-13,
+                             1.158e-14,           -2e-16 };
+   const Double_t c2[26] = {  .99283727576423943, -.00696891281138625,
+                             1.8205103787037e-4,  -1.063258252844e-5,
+                             9.8198294287e-7,     -1.2250645445e-7,
+                             1.894083312e-8,      -3.44358226e-9,
+                             7.1119102e-10,       -1.6288744e-10,
+                             4.065681e-11,        -1.091505e-11,
+                             3.12005e-12,         -9.4202e-13,
+                             2.9848e-13,          -9.872e-14,
+                             3.394e-14,           -1.208e-14,
+                             4.44e-15,            -1.68e-15,
+                             6.5e-16,             -2.6e-16,
+                             1.1e-16,             -4e-17,
+                             2e-17,               -1e-17 };
+   const Double_t c3[17] = { .5578891446481605,   -.11188325726569816,
+                            -.16337958125200939,   .32256932072405902,
+                            -.14581632367244242,   .03292677399374035,
+                            -.00460372142093573,  4.434706163314e-4,
+                            -3.142099529341e-5,   1.7123719938e-6,
+                            -7.416987005e-8,      2.61837671e-9,
+                            -7.685839e-11,        1.9067e-12,
+                            -4.052e-14,           7.5e-16,
+                            -1e-17 };
+   const Double_t c4[23] = { 1.00757647293865641,  .00750316051248257,
+                            -7.043933264519e-5,   2.66205393382e-6,
+                            -1.8841157753e-7,     1.949014958e-8,
+                            -2.6126199e-9,        4.236269e-10,
+                            -7.955156e-11,        1.679973e-11,
+                            -3.9072e-12,          9.8543e-13,
+                            -2.6636e-13,          7.645e-14,
+                            -2.313e-14,           7.33e-15,
+                            -2.42e-15,            8.3e-16,
+                            -3e-16,               1.1e-16,
+                            -4e-17,               2e-17,-1e-17 };
 
-    const Double_t c0  = 2/TMath::Pi();
-    const Double_t cc  = 2/(3*TMath::Pi());
+   const Double_t c0  = 2/TMath::Pi();
+   const Double_t cc  = 2/(3*TMath::Pi());
 
-    Int_t i, i1;
-    Double_t alfa, h, r, y, b0, b1, b2;
-    Double_t v = TMath::Abs(x);
+   Int_t i, i1;
+   Double_t alfa, h, r, y, b0, b1, b2;
+   Double_t v = TMath::Abs(x);
 
-    switch(n) {
-//___________________________________________________________
-       case 0: {
-           v = TMath::Abs(x);
-           if (v < 8) {
-	      y = v/8;
-	      h = 2*y*y -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n1; i >= 0; --i) {
-	         b0 = c1[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = y*(b0 - h*b2);
-           } else {
-	      r = 1/v;
-	      h = 128*r*r -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n2; i >= 0; --i) {
-	         b0 = c2[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = TMath::BesselY0(v) + r*c0*(b0 - h*b2);
-           }
-           if (x < 0)  h = -h;
-           return h;
-        }
-//___________________________________________________________     
-        case 1: {
-           if (v == 0) {
-	      h = 0;
-           } else if (v <= 0.3) {
-	      y = v*v;
-	      r = 1;
-	      h = 1;
-	      i1 = (Int_t)(-8. / TMath::Log10(v));
-	      for (i = 1; i <= i1; ++i) {
-	         h = -h*y / ((2*i+ 1)*(2*i + 3));
-	         r += h;
-	      }
-	      h = cc*y*r;
-           } else if (v < 8) {
-	      h = v*v/32 -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n3; i >= 0; --i) {
-	         b0 = c3[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = b0 - h*b2;
-           } else {
-	      h = 128/(v*v) -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n4; i >= 0; --i) {
-	         b0 = c4[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = TMath::BesselY1(v) + c0*(b0 - h*b2);
-           }
-           return h;
-       }
-    }
-    return 0;
+   switch(n) {
+      //___________________________________________________________
+      case 0: {
+         v = TMath::Abs(x);
+         if (v < 8) {
+            y = v/8;
+            h = 2*y*y -1;
+            alfa = h + h;
+            b1 = 0;
+            b2 = 0;
+            for (i = n1; i >= 0; --i) {
+               b0 = c1[i] + alfa*b1 - b2;
+               b2 = b1;
+               b1 = b0;
+            }
+            h = y*(b0 - h*b2);
+         } else {
+            r = 1/v;
+            h = 128*r*r -1;
+            alfa = h + h;
+            b1 = 0;
+            b2 = 0;
+            for (i = n2; i >= 0; --i) {
+               b0 = c2[i] + alfa*b1 - b2;
+               b2 = b1;
+               b1 = b0;
+            }
+            h = TMath::BesselY0(v) + r*c0*(b0 - h*b2);
+         }
+         if (x < 0)  h = -h;
+         return h;
+      }
+      //___________________________________________________________
+      case 1: {
+         if (v == 0) {
+            h = 0;
+         } else if (v <= 0.3) {
+            y = v*v;
+            r = 1;
+            h = 1;
+            i1 = (Int_t)(-8. / TMath::Log10(v));
+            for (i = 1; i <= i1; ++i) {
+               h = -h*y / ((2*i+ 1)*(2*i + 3));
+               r += h;
+            }
+            h = cc*y*r;
+         } else if (v < 8) {
+            h = v*v/32 -1;
+            alfa = h + h;
+            b1 = 0;
+            b2 = 0;
+            for (i = n3; i >= 0; --i) {
+               b0 = c3[i] + alfa*b1 - b2;
+               b2 = b1;
+               b1 = b0;
+            }
+            h = b0 - h*b2;
+         } else {
+            h = 128/(v*v) -1;
+            alfa = h + h;
+            b1 = 0;
+            b2 = 0;
+            for (i = n4; i >= 0; --i) {
+               b0 = c4[i] + alfa*b1 - b2;
+               b2 = b1;
+               b1 = b0;
+            }
+            h = TMath::BesselY1(v) + c0*(b0 - h*b2);
+         }
+         return h;
+      }
+   }
+   return 0;
 }

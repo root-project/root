@@ -947,12 +947,21 @@ void G__define_type()
 	  do {
 	    c=G__fgetstream(memname,"=,}");
 	    if(c=='=') {
+#ifndef G__OLDIMPLEMENTATION1676
+	      int store_prerun = G__prerun;
+#endif
 #ifndef G__OLDIMPLEMENTATION1337
 	      char store_var_type = G__var_type;
 	      G__var_type = 'p';
 #endif
+#ifndef G__OLDIMPLEMENTATION1676
+	      G__prerun = 0;
+#endif
 	      c=G__fgetstream(val,",}");
 	      enumval=G__getexpr(val);
+#ifndef G__OLDIMPLEMENTATION1676
+	      G__prerun = store_prerun;
+#endif
 #ifndef G__OLDIMPLEMENTATION1337
 	      G__var_type = store_var_type;
 #endif

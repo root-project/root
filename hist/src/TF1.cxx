@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.36 2002/04/10 17:20:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.37 2002/04/13 14:00:19 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -472,7 +472,7 @@ TF1::~TF1()
 }
 
 //______________________________________________________________________________
-TF1::TF1(const TF1 &f1)
+TF1::TF1(const TF1 &f1) : TFormula(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
    ((TF1&)f1).Copy(*this);
 }

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.14 2002/02/23 16:01:44 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.16 2002/05/30 19:43:07 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -337,6 +337,7 @@ Long_t TThread::Join(Long_t jid, void **ret)
 //______________________________________________________________________________
 Long_t TThread::SelfId()
 {
+   if(!fgThreadImp) return -1L;
    Long_t id = fgThreadImp->SelfId();
    if (!id) id = -1L;  // in some implementations 0 is main thread
    return id;
@@ -482,7 +483,8 @@ ULong_t TThread::Call(void *p2f,void *arg)
    void *iPointer2Function;
    G__CallFunc fFunc;
    int iPointerType = G__UNKNOWNFUNC;
-
+   {
+   R__LOCKGUARD(gCINTMutex);
    // reconstruct function name
    fname=G__p2f2funcname(p2f);
    iPointer2Function=p2f;
@@ -512,7 +514,7 @@ ULong_t TThread::Call(void *p2f,void *arg)
          ::Error("TThread:Call", "no overloading parameter matches");
       }
    }
-
+   }
    // check what kind of pointer is it
    switch(iPointerType) {
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.5 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -111,7 +111,7 @@ TExec::~TExec()
 }
 
 //______________________________________________________________________________
-TExec::TExec(const TExec &)
+TExec::TExec(const TExec &e) : TNamed(e)
 {
    TNamed::Copy(*this);
 }

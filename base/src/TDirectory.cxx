@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.23 2002/04/01 17:08:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.24 2002/04/13 14:25:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -118,7 +118,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
 }
 
 //______________________________________________________________________________
-TDirectory::TDirectory(const TDirectory &directory)
+TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 {
    ((TDirectory&)directory).Copy(*this);
 }

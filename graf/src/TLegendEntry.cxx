@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.6 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.7 2002/01/24 11:39:28 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TLegendEntry::TLegendEntry(TObject* obj, const char* label, Option_t* option )
 }
 
 //____________________________________________________________________________
-TLegendEntry::TLegendEntry( const TLegendEntry &entry )
+TLegendEntry::TLegendEntry( const TLegendEntry &entry ) : TObject(entry), TAttText(entry), TAttLine(entry), TAttFill(entry), TAttMarker(entry)
 {
   // TLegendEntry copy constructor
   ((TLegendEntry&)entry).Copy(*this);

@@ -20,11 +20,13 @@ found_hdr=no
 noact="no"
 
 enable_afs=no
+enable_alien=yes
 enable_cern=yes
 enable_dcache=yes
 enable_krb5=yes
 enable_mysql=yes
 enable_opengl=yes
+enable_openiv=yes
 enable_pgsql=yes
 enable_pythia=yes
 enable_pythia6=yes
@@ -35,7 +37,7 @@ enable_shadowpw=
 enable_shared=yes
 enable_soversion=no
 enable_srp=yes
-enable_star=no
+enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_exceptions=yes
 enable_ttf=yes
@@ -45,8 +47,8 @@ show_pkglist=no
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
-         enable_srp enable_star enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions"
+         enable_srp enable_table enable_thread enable_ttf enable_venus \
+         enable_krb5 enable_exceptions enable_openiv enable_alien"
 
 
 ######################################################################
@@ -291,15 +293,17 @@ confhelp() {
     echo "   shared          Use shared 3rd party libraries if possible"
     echo "   rpath           Set library path on executables"
     echo "   thread          Thread support"
-    echo "   star            Build STAR contrib library"
+    echo "   table           Build libTable contrib library"
     echo "   ttf             True Type Font support, requires libtff"
     echo "   opengl          OpenGL support, requires libGL and libGLU"
+    echo "   openiv          OpenInventor support, requires libInventor and libInventorXt"
     echo "   cern            CERNLIB usage, build h2root and g2root"
     echo "   mysql           MySQL support, requires libmysqlclient"
     echo "   pgsql           PostgreSQL support, requires libpq"
     echo "   sapdb           SapDB support, requires libsqlod and libsqlrte"
-    echo "   rfio            SHIFT support, requires libshift.a from CERN"
-    echo "   dcache          dCache support, requires dcap library from DESY"
+    echo "   rfio            SHIFT support, requires libshift from CERN"
+    echo "   dcache          dCache support, requires libdcap from DESY"
+    echo "   alien           AliEn support, requires libAliEn from ALICE"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
     echo "   krb5            Kerberos5 support, requires Kerberos libs"
@@ -316,6 +320,8 @@ confhelp() {
     echo "   ttf-fontdir     TTF support, location of TTF fonts"
     echo "   opengl-incdir   OpenGL support, location of GL/gl.h"
     echo "   opengl-libdir   OpenGL support, location of libGL"
+    echo "   openiv-incdir   OpenInventor support, location of Inventor/SoType.h"
+    echo "   openiv-libdir   OpenInventor support, location of libInventor"
     echo "   mysql-incdir    MySQL support, location of mysql.h"
     echo "   mysql-libdir    MySQL support, location of libmysqlclient"
     echo "   pgsql-incdir    PostgreSQL support, location of libpq-fe.h"
@@ -329,6 +335,8 @@ confhelp() {
     echo "   shift-libdir    RFIO support, location of libshift"
     echo "   dcap-incdir     dCache support, location of dcap.h"
     echo "   dcap-libdir     dCache support, location of libdcap"
+    echo "   alien-incdir    AliEn support, location of AliEn.h"
+    echo "   alien-libdir    AliEn support, location of libAliEn"
     echo "   srp             Secure Remote Passwd support, location of SRP distribution"
     echo "   srp-incdir      SRP support, location header of t_server.h"
     echo "   srp-libdir      SRP support, location header of libsrp.a"
@@ -402,6 +410,8 @@ if test $# -gt 0 ; then
       --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-openiv-incdir=*)  openivincdir=$optarg  ; enable_openiv="yes"  ;;
+      --with-openiv-libdir=*)  openivlibdir=$optarg  ; enable_openiv="yes"  ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
@@ -415,6 +425,8 @@ if test $# -gt 0 ; then
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
+      --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -557,7 +569,7 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|linuxdeb)
+linux|linuxdeb|linuxicc|linuxecc)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
@@ -565,7 +577,7 @@ linux|linuxdeb)
 esac
 if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
-	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+	$THREAD $THREAD/lib /usr/lib32 /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
 	/usr/X11/lib /usr/shlib
     threadlib=$found_lib
@@ -632,7 +644,7 @@ fi
 # (see mesa3d.org)
 #
 if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
-    # Check for Mesa OpenGL compatible include and library
+    # Check for OpenGL compatible include and library
     check_header "GL/gl.h" "$openglincdir" $OPENGL $OPENGL/include \
 	/usr/include /usr/include/X11 /usr/X11/include \
 	/usr/X11R6/include /usr/local/include/X11 \
@@ -661,9 +673,56 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
     openglulibdir=$found_dir
 
     if test "x$openglincdir" = "x" || \
-	test "x$opengllib" = "x" || \
-        test "x$openglulib" = "x" ; then
+       test "x$opengllib" = "x" || \
+       test "x$openglulib" = "x" ; then
         enable_opengl="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% OpenInventor Support - Third party libraries
+#
+# (see http://oss.sgi.com/projects/inventor/)
+#
+if test "x$enable_opengl" = "xno" ; then
+    enable_openiv="no"
+fi
+if test ! "x$enable_openiv" = "xno" && test ! "$platform" = "win32" ; then
+    # Check for OpenInventor compatible include and library
+    check_header "Inventor/SoType.h" "$openivincdir" $IVROOT $IVROOT/include \
+	$IVROOT/usr/include /usr/include /usr/include/X11 /usr/X11/include \
+	/usr/X11R6/include /usr/local/include/X11 \
+	/usr/local/X11R6/include /usr/local/include \
+	/usr/include/inventor /usr/local/include/inventor \
+	/usr/inventor/include /usr/local/inventor/include \
+	/usr/inventor/usr/include /usr/local/inventor/usr/include \
+	/usr/local/inventor /opt/inventor /opt/inventor/include \
+	/opt/inventor/usr/include
+    openivinc=$found_hdr
+    openivincdir=$found_dir
+
+    openivlibdirs="$IVROOT $IVROOT/lib $IVROOT/usr/lib /usr/lib /usr/local/lib \
+	/usr/lib/X11 /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+        /usr/X11/lib /usr/lib/inventor /usr/local/lib/inventor \
+	/usr/inventor/lib /usr/inventor/usr/lib /usr/local/inventor/lib \
+	/usr/local/inventor/usr/lib /usr/inventor /usr/local/inventor \
+	/opt/inventor /opt/inventor/lib /opt/inventor/usr/lib"
+
+    keep=$openivlibdir
+    check_library "libInventor" "$enable_shared" \
+	"$openivlibdir" $openivlibdirs
+    openivlib=$found_lib
+    openivlibdir=$found_dir
+
+    check_library "libInventorXt" "$enable_shared" \
+	"$keep" $openivlibdirs
+    openivlib="$openivlib $found_lib"
+    openivlibdir="$openivlibdir $found_dir"
+
+    if test "x$openivincdir" = "x" || \
+       test "x$openivlib" = "x" ; then
+        enable_openiv="no"
     fi
 fi
 
@@ -762,20 +821,20 @@ if test ! "x$enable_sapdb" = "xno"; then
     check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
 	/opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
 	/usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
-        /usr/sapdb/web/incl /usr/include/sapdb /usr/local/include/sapdb \
+	/usr/sapdb/web/incl /usr/include/sapdb /usr/local/include/sapdb \
 	/usr/local/sapdb/include /usr/local/sapdb/web/incl /usr/sapdb \
-        /usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
+	/usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
     sapdbinc=$found_hdr
     sapdbincdir=$found_dir
 
     check_library "libsqlod" "$enable_shared" "$sapdblibdir" \
 	$SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
-                 /usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
-                 /usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
-                 /usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
-                 /usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
-                 /opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
-            /usr/local/sapdb/web/lib /opt/sapdb/web/lib
+	/usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
+	/usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
+	/usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
+	/usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
+	/opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
+	/usr/local/sapdb/web/lib /opt/sapdb/web/lib
     sapdblib=$found_lib
     sapdblibdir=$found_dir
 
@@ -912,9 +971,8 @@ fi
 # Check for libdcap
 #
 if test ! "x$enable_dcache" = "xno" ; then
-    check_header "dcap.h" /products/dcache/include /opt/dcache/include \
-	/usr/include /usr/local/include
-
+    check_header "dcap.h" "$dcapincdir" /products/dcache/include \
+	/opt/dcache/include /usr/include /usr/local/include
     dcapincdir=$found_dir
 
     check_library "libdcap" "$enable_shared" "$dcaplibdir" \
@@ -922,8 +980,33 @@ if test ! "x$enable_dcache" = "xno" ; then
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
-    if test "x$dcapnincdir" = "x" || test "x$dcaplib" = "x"; then
+    if test "x$dcapincdir" = "x" || test "x$dcaplib" = "x"; then
         enable_dcache="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% AliEn Support - Third party libraries
+#
+# (See http://alien.cern.ch)
+#
+# Check for libAliEn
+#
+if test ! "x$enable_alien" = "xno" ; then
+    check_header "AliEn.h" "$alienincdir" $ALIEN $ALIEN/include \
+	/opt/alien/include /usr/local/alien/include /usr/include \
+	/usr/local/include
+    alienincdir=$found_dir
+
+    check_library "libAliEn" "$enable_shared" "$alienlibdir" \
+	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib \
+	/usr/lib /usr/local/lib
+    alienlib=$found_lib
+    alienlibdir=$found_dir
+
+    if test "x$alienincdir" = "x" || test "x$alienlib" = "x"; then
+        enable_alien="no"
     fi
 fi
 
@@ -1144,13 +1227,13 @@ echo $enable_shadowpw
 
 ######################################################################
 #
-### echo %%% STAR Library - Contributed library
+### echo %%% Table Library - Contributed library
 #
-if test "x$enable_star" = "xyes" || test ! "x$STAR" = "x"; then
-    enable_star="1"
-    echo "Building libStar ... yes"
+if test "x$enable_table" = "xyes" || test ! "x$TABLE" = "x"; then
+    enable_table="1"
+    echo "Building libTable ... yes"
 else
-    enable_star=""
+    enable_table=""
 fi
 
 
@@ -1171,33 +1254,15 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pgsql" = "xyes" && pkglist="$pkglist root-pgsql"
     test "x$enable_sapdb" = "xyes" && pkglist="$pkglist root-sapdb"
     test "x$enable_pythia" = "xyes" && test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-pythia"
-    test "x$enable_star" = "x1" && pkglist="$pkglist root-star"
+    test "x$enable_table" = "x1" && pkglist="$pkglist root-table"
     test "x$enable_rfio" = "xyes" && pkglist="$pkglist root-shift"
     test "x$enable_srputil" = "xyes" && pkglist="$pkglist root-srp"
 
-    pkglist="$pkglist root-cint root-bin root-doc libroot-dev libroot"
+    pkglist="$pkglist root-cint root-doc libroot-dev root-bin libroot"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     echo "packages: $pkglist"
     exit 0
-
-    #      echo "AFS:                           $enable_afs"
-    #      echo "HBOOK conversion applications: $enable_cern"
-    #      echo "MySQL:                         $enable_mysql"
-    #      echo "OpenGL:                        $enable_opengl"
-    #      echo "PostGreSQL:                    $enable_pgsql"
-    #      echo "Pythia5 event generator:       $enable_pythia"
-    #      echo "Pythia6 event generator:       $enable_pythia6"
-    #      echo "SHIFT:                         $enable_rfio"
-    #      echo "Run-time path information:     $enable_rpath"
-    #      echo "SapDB:                         $enable_sapdb"
-    #      echo "Shared third party libraries:  $enable_shared"
-    #      echo "Version # in SO name:          $enable_soversion"
-    #      echo "SRP:                           $enable_srp"
-    #      echo "STAR extra library:            $enable_star"
-    #      echo "POSIX Threads:                 $enable_thread"
-    #      echo "True Type Fonts:               $enable_ttf"
-    #      echo "Venus Event Generator:         $enable_venus"
 fi
 
 ######################################################################
@@ -1243,6 +1308,9 @@ if test -f system.rootrc ; then
 fi
 if test -d new ; then
    rm -rf new
+fi
+if test -d star ; then
+   rm -rf star
 fi
 
 ######################################################################
@@ -1349,7 +1417,7 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@srcdir@|$srcdir|"                \
     -e "s|@xpmlibdir@|$xpmlibdir|"          \
     -e "s|@xpmlib@|$xpmlib|"                \
-    -e "s|@enable_star@|$enable_star|"      \
+    -e "s|@enable_table@|$enable_table|"    \
     -e "s|@enable_thread@|$enable_thread|"  \
     -e "s|@threadlibdir@|$threadlibdir|"    \
     -e "s|@threadlib@|$threadlib|"          \
@@ -1361,6 +1429,9 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@opengllibdir@|$opengllibdir|"    \
     -e "s|@openglulib@|$openglulib|"        \
     -e "s|@opengllib@|$opengllib|"          \
+    -e "s|@openivincdir@|$openivincdir|"    \
+    -e "s|@openivlibdir@|$openivlibdir|"    \
+    -e "s|@openivlib@|$openivlib|"          \
     -e "s|@mysqlincdir@|$mysqlincdir|"      \
     -e "s|@mysqllibdir@|$mysqllibdir|"      \
     -e "s|@mysqllib@|$mysqllib|"            \
@@ -1377,6 +1448,9 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@dcapincdir@|$dcapincdir|"        \
     -e "s|@dcaplibdir@|$dcaplibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"              \
+    -e "s|@alienincdir@|$alienincdir|"      \
+    -e "s|@alienlibdir@|$alienlibdir|"      \
+    -e "s|@alienlib@|$alienlib|"            \
     -e "s|@srplib@|$srplib|"                \
     -e "s|@srpincdir@|$srpincdir|"          \
     -e "s|@srplibdir@|$srplibdir|"          \

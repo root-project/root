@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.cxx,v 1.5 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TArrayD::TArrayD(Int_t n, const Double_t *array)
 }
 
 //______________________________________________________________________________
-TArrayD::TArrayD(const TArrayD &array)
+TArrayD::TArrayD(const TArrayD &array) : TArray(array)
 {
    // Copy constructor.
 
@@ -95,8 +95,7 @@ void TArrayD::AddAt(Double_t c, Int_t i)
 {
    // Add double c at position i. Check for out of bounds.
 
-   if (!BoundsOk("TArrayD::AddAt", i))
-      i = 0;
+   if (!BoundsOk("TArrayD::AddAt", i)) return;
    fArray[i] = c;
 }
 
@@ -130,13 +129,13 @@ void TArrayD::Set(Int_t n, const Double_t *array)
 {
    // Set size of this array to n doubles and set the contents
 
-   if (n < 0 || array == 0) return;
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
    }
    fN = n;
    if (fN == 0) return;
+   if (array == 0) return;
    if (!fArray) fArray = new Double_t[fN];
    memcpy(fArray,array, n*sizeof(Double_t));
 }
@@ -156,11 +155,3 @@ void TArrayD::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayD *&obj)
-{
-   // Read TArrayD object from buffer. Declared in ClassDef.
-
-   obj = (TArrayD *) TArray::ReadArray(buf, TArrayD::Class());
-   return buf;
-}

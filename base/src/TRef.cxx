@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.13 2002/03/25 20:21:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.15 2002/05/18 08:21:58 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -194,7 +194,7 @@ TRef::TRef(TObject *obj)
 }
 
 //______________________________________________________________________________
-TRef::TRef(const TRef &ref)
+TRef::TRef(const TRef &ref) : TObject(ref)
 {
    *this = ref;
 }
@@ -382,10 +382,16 @@ void TRef::Streamer(TBuffer &R__b)
       //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
       Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
       if (execid) SetBit(execid);
+      if (gDebug > 1) {
+         printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+      }      
    } else {
       TObject::Streamer(R__b);
 
       pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
+      if (gDebug > 1) {
+         printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+      }      
    }
 }

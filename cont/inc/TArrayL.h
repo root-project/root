@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.11 2002/06/10 20:02:07 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -38,25 +38,48 @@ public:
    TArrayL    &operator=(const TArrayL &rhs);
    virtual    ~TArrayL();
 
-   void       Adopt(Int_t n, Long_t *array);
-   void       AddAt(Long_t c, Int_t i);
-   Long_t     At(Int_t i) const;
-   void       Copy(TArrayL &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
-   Long_t    *GetArray() const { return fArray; }
-   Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Long_t val=0) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void       Set(Int_t n);
-   void       Set(Int_t n, const Long_t *array);
-   Long_t    &operator[](Int_t i);
-   Long_t     operator[](Int_t i) const;
+   void          Adopt(Int_t n, Long_t *array);
+   void          AddAt(Long_t c, Int_t i);
+   Long_t        At(Int_t i) const;
+   void          Copy(TArrayL &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   const Long_t *GetArray() const { return fArray; }
+   Long_t       *GetArray() { return fArray; }
+   Stat_t        GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
+   void          Reset()           {memset(fArray, 0, fN*sizeof(Long_t));}
+   void          Reset(Long_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void          Set(Int_t n);
+   void          Set(Int_t n, const Long_t *array);
+   Long_t       &operator[](Int_t i);
+   Long_t        operator[](Int_t i) const;
 
    ClassDef(TArrayL,1)  //Array of longs
 };
 
+
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayL *&obj)
+{
+   // Read TArrayL object from buffer.
+
+   obj = (TArrayL *) TArray::ReadArray(buf, TArrayL::Class());
+   return buf;
+}
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator<<(TBuffer &buf, const TArrayL *obj) 
+{
+   // Write a TArrayL object into buffer
+   return buf << (TArray*)obj;
+}
+
 inline Long_t TArrayL::At(Int_t i) const
 {
-   if (!BoundsOk("TArrayL::At", i))
-      i = 0;
+   if (!BoundsOk("TArrayL::At", i)) return 0;
    return fArray[i];
 }
 
@@ -69,8 +92,7 @@ inline Long_t &TArrayL::operator[](Int_t i)
 
 inline Long_t TArrayL::operator[](Int_t i) const
 {
-   if (!BoundsOk("TArrayL::operator[]", i))
-      i = 0;
+   if (!BoundsOk("TArrayL::operator[]", i)) return 0;
    return fArray[i];
 }
 

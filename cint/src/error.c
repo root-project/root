@@ -493,8 +493,10 @@ int G__commenterror()
 int G__changeconsterror(item,categ)
 char *item,*categ;
 {
-  G__fprinterr(G__serr,"Warning: Re-initialization %s %s",categ,item);
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: Re-initialization %s %s",categ,item);
+    G__printlinenum();
+  }
   if(0==G__prerun) {
     G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
@@ -916,9 +918,12 @@ void G__printerror(funcname,ipara,paran)
 char *funcname;
 int ipara,paran;
 {
-  G__fprinterr(G__serr,"Warning: %s() expects %d parameters, %d parameters given"
-	  ,funcname,ipara,paran);
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr
+		 ,"Warning: %s() expects %d parameters, %d parameters given"
+		 ,funcname,ipara,paran);
+    G__printlinenum();
+  }
   G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;

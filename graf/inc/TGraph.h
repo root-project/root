@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.22 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.23 2002/04/27 07:49:00 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -105,6 +105,7 @@ public:
         virtual void     Print(Option_t *chopt="") const;
         static  void     RemoveFunction(TGraph *gr, TObject *obj);
         virtual Int_t    RemovePoint(); // *MENU*
+        virtual Int_t    RemovePoint(Int_t ipoint);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetEditable(Bool_t editable=kTRUE); // *MENU*
         virtual void     SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}

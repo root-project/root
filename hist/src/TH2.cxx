@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.27 2002/02/25 16:05:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.29 2002/05/18 08:22:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1492,7 +1492,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const TH2C &h2c)
+TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
    ((TH2C&)h2c).Copy(*this);
 }
@@ -1711,7 +1711,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const TH2S &h2s)
+TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
    ((TH2S&)h2s).Copy(*this);
 }
@@ -1947,7 +1947,7 @@ TH2F::TH2F(const TMatrix &m)
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const TH2F &h2f)
+TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
    ((TH2F&)h2f).Copy(*this);
 }
@@ -2170,7 +2170,7 @@ TH2D::TH2D(const TMatrixD &m)
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const TH2D &h2d)
+TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
    ((TH2D&)h2d).Copy(*this);
 }

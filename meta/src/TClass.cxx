@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.72 2002/04/04 17:32:13 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.78 2002/06/18 07:00:33 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TMethodCall.h"
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TVirtualPad.h"
@@ -203,6 +204,9 @@ TClass::TClass() : TDictionary()
    fAllPubMethod   = 0;
    fCheckSum       = 0;
    fStreamerInfo   = 0;
+   fShowMembers    = 0;
+   fIsA            = 0;
+   fTypeInfo       = 0;
 
    ResetInstanceCount();
 
@@ -220,42 +224,7 @@ TClass::TClass(const char *name) : TDictionary()
    // Normally you would use gROOT->GetClass("class") to get access to a
    // TClass object for a certain class.
 
-   if (!gROOT)
-      ::Fatal("TClass::TClass", "ROOT system not initialized");
-
-   fName           = name;
-   fClassVersion   = 0;
-   fDeclFileName   = "";
-   fImplFileName   = "";
-   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
-   fImplFileLine   = 0;
-   fBase           = 0;
-   fData           = 0;
-   fMethod         = 0;
-   fRealData       = 0;
-   fClassInfo      = 0;
-   fAllPubData     = 0;
-   fAllPubMethod   = 0;
-   fCheckSum       = 0;
-   fStreamerInfo   = 0;
-
-   ResetInstanceCount();
-
-   fClassMenuList  = new TList();
-   fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
-
-   if (!fClassInfo) {
-      if (!gInterpreter)
-         ::Fatal("TClass::TClass", "gInterpreter not initialized");
-
-      gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-      if (!fClassInfo) {
-         gInterpreter->InitializeDictionaries();
-         gInterpreter->SetClassInfo(this);
-      }
-      if (!fClassInfo)
-         ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
-   }
+   Init(name,0, 0, 0, 0, "", "", -2, 0);
 }
 
 //______________________________________________________________________________
@@ -264,6 +233,33 @@ TClass::TClass(const char *name, Version_t cversion,
         : TDictionary()
 {
    // Create a TClass object. This object contains the full dictionary
+   // of a class. It has list to baseclasses, datamembers and methods.
+
+   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il);
+   SetBit(kUnloaded);
+}
+
+//______________________________________________________________________________
+TClass::TClass(const char *name, Version_t cversion,
+               const type_info &info, IsAFunc_t isa,
+               ShowMembersFunc_t showmembers,
+               const char *dfil, const char *ifil, Int_t dl, Int_t il)
+  : TDictionary()
+{
+   // Create a TClass object. This object contains the full dictionary
+   // of a class. It has list to baseclasses, datamembers and methods.
+
+   // use info
+   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il);
+}
+
+//______________________________________________________________________________
+void TClass::Init(const char *name, Version_t cversion,
+                  const type_info *typeinfo, IsAFunc_t isa,
+                  ShowMembersFunc_t showmembers,
+                  const char *dfil, const char *ifil, Int_t dl, Int_t il)
+{
+   // Initialize a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
 
    if (!gROOT)
@@ -283,6 +279,9 @@ TClass::TClass(const char *name, Version_t cversion,
    fAllPubData     = 0;
    fAllPubMethod   = 0;
    fCheckSum       = 0;
+   fTypeInfo       = typeinfo;
+   fIsA            = isa;
+   fShowMembers    = showmembers;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
 
    ResetInstanceCount();
@@ -294,11 +293,11 @@ TClass::TClass(const char *name, Version_t cversion,
       return;
    }
 
-   if (oldcl) gROOT->GetListOfClasses()->Remove(oldcl);
+   if (oldcl) gROOT->RemoveClass(oldcl);
 
    SetBit(kLoading);
    // Advertise ourself as the loading class for this class name
-   gROOT->GetListOfClasses()->Add(this);
+   gROOT->AddClass(this);
 
    if (!fClassInfo) {
       if (!gInterpreter)
@@ -309,7 +308,7 @@ TClass::TClass(const char *name, Version_t cversion,
          gInterpreter->InitializeDictionaries();
          gInterpreter->SetClassInfo(this);
          if (IsZombie()) {
-            gROOT->GetListOfClasses()->Remove(this);
+            gROOT->RemoveClass(this);
             return;
          }
       }
@@ -367,6 +366,9 @@ TClass::TClass(const char *name, Version_t cversion,
       }
       if (cursav) cursav->cd();
    }
+   fProperty = -1;
+   fInterStreamer = 0;
+
    ResetBit(kLoading);
 
    fClassMenuList = new TList();
@@ -405,13 +407,25 @@ TClass::~TClass()
    delete fStreamerInfo;
 
    if (fDeclFileLine >= -1)
-      gROOT->GetListOfClasses()->Remove(this);
+      gROOT->RemoveClass(this);
 
    delete fClassInfo;
 
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList;
+}
+
+//______________________________________________________________________________
+void TClass::AddImplFile(const char* filename, int line) {
+   
+   // Currently reset the implementation file and line.
+   // In the close future, it will actually add this file and line
+   // to a "list" of implementation files.
+
+   fImplFileName = filename;
+   fImplFileLine = line;
+
 }
 
 //______________________________________________________________________________
@@ -484,19 +498,54 @@ void TClass::BuildRealData(void *pointer)
       //yet loaded.
       InheritsFrom(TObject::Class());
 
-      //Always call ShowMembers via the interpreter. A direct call like
-      //      realDataObject->ShowMembers(brd, parent);
-      //will not work if the class derives from TObject but not as primary
-      //inheritance.
-      G__CallFunc func;
-      void *address;
-      long  offset;
-      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                   "TMemberInspector&,char*", &offset).InterfaceMethod());
-      func.SetArg((long)&brd);
-      func.SetArg((long)parent);
-      address = (void*)((long)realDataObject + offset);
-      func.Exec(address);
+      if (fShowMembers) {
+         // printf("Running local ShowMembers Methods for %s\n",GetName());
+         // This should always works since 'pointer' should be pointing
+         // to an object of the actual type of this TClass object.
+         fShowMembers(realDataObject, brd, parent);
+      } else {
+         //Always call ShowMembers via the interpreter. A direct call like
+         //      realDataObject->ShowMembers(brd, parent);
+         //will not work if the class derives from TObject but not as primary
+         //inheritance.
+         R__LOCKGUARD(gCINTMutex);
+         G__CallFunc func;
+         void *address;
+         long  offset;
+         func.SetFunc(fClassInfo->GetMethod("ShowMembers",
+                                            "TMemberInspector&,char*", &offset).InterfaceMethod());
+         if (!func.IsValid()) {
+            ::Error("BuildRealData","Can not find any ShowMembers function for %s!",GetName());
+         } else {
+            func.SetArg((long)&brd);
+            func.SetArg((long)parent);
+            address = (void*)((long)realDataObject + offset);
+            func.Exec(address);
+         }
+#if 0
+         // Not data member call ShowMembers, let try for the global
+         // scope ShowMembers.
+         G__ClassInfo gcl("ROOT");
+         long offset;
+         char *proto = new char[strlen(GetName())+31];
+         sprintf(proto,"%s*,TMemberInspector&,char*",GetName());
+         G__MethodInfo methodinfo = gcl.GetMethod("ShowMembers",proto,&offset);
+         delete proto;
+         func.SetFunc(methodinfo.InterfaceMethod());
+         if (gDebug >= 0) {
+            printf("No ShowMembers Methods for %s\n",GetName());
+            if (func.IsValid()) {
+               printf("Found global ShowMembers for %s \n",GetName());
+            } else {
+               printf("DID NOT find global ShowMembers for %s \n",GetName());
+            }
+         }
+         func.SetArg(((long)realDataObject + offset));
+         func.SetArg((long)&brd);
+         func.SetArg((long)parent);
+         func.Exec(0);
+#endif
+      }
 
       // take this opportunity to build the real data for base classes
       // In case one base class is abstract, it would not be possible later
@@ -579,6 +628,42 @@ char *TClass::EscapeChars(char *text) const
    }
    name[icur+1] = 0;
    return name;
+}
+
+//______________________________________________________________________________
+TClass *TClass::GetActualClass(const void *object) const
+{
+   // Return a pointer the the real class of the object.
+   // This is equivalent to object->IsA() when the class has a ClassDef.
+   // It is REQUIRED that object is coming from a proper pointer to the
+   // class represented by 'this'.
+   // Example: Special case:
+   //    class MyClass : public AnotherClass, public TObject
+   // then on return, one must do:
+   //    TObject *obj = (TObject*)((void*)myobject)directory->Get("some object of MyClass");
+   //    MyClass::Class()->GetActualClass(obj); // this would be wrong!!!
+   // Also if the class represented by 'this' and NONE of its parents classes
+   // have a virtual ptr table, the result will be 'this' and NOT the actual
+   // class.
+
+   if (object==0 || !IsLoaded() ) return (TClass*)this;
+
+   if (fIsA) {
+      return fIsA(object); // ROOT::IsA((ThisClass*)object);
+   } else {
+      //Always call IsA via the interpreter. A direct call like
+      //      object->IsA(brd, parent);
+      //will not work if the class derives from TObject but not as primary
+      //inheritance.
+      TMethodCall method((TClass*)this, "IsA", "");
+      if (!method.GetMethod()) {
+         Error("IsA","Can not find any IsA function for %s!",GetName());
+         return (TClass*)this;
+      }
+      char * char_result = 0;
+      method.Execute((void*)object, &char_result);
+      return (TClass*)char_result;
+   }
 }
 
 //______________________________________________________________________________
@@ -1097,6 +1182,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    // Need to go through those loops to get the signature from
    // the valued params (i.e. from "1.0,3" to "double,int")
 
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc  func;
    long         offset;
    func.SetFunc(GetClassInfo(), name, params, &offset);
@@ -1360,15 +1446,6 @@ Int_t TClass::Size() const
 }
 
 //______________________________________________________________________________
-Long_t TClass::Property() const
-{
-   // Get property description word. For meaning of bits see EProperty.
-
-   if (!fClassInfo) return 0;
-   return GetClassInfo()->Property();
-}
-
-//______________________________________________________________________________
 TClass *TClass::Load(TBuffer &b)
 {
    // Load class description from I/O buffer and return class object.
@@ -1392,8 +1469,31 @@ void TClass::Store(TBuffer &b) const
 }
 
 //______________________________________________________________________________
-TClass *CreateClass(const char *cname, Version_t id, const char *dfil,
-                    const char *ifil, Int_t dl, Int_t il)
+TClass *ROOT::CreateClass(const char *cname, Version_t id,
+                          const type_info &info, IsAFunc_t isa,
+                          ShowMembersFunc_t show,
+                          const char *dfil, const char *ifil,
+                          Int_t dl, Int_t il)
+{
+   // Global function called by a class' static Dictionary() method
+   // (see the ClassDef macro).
+
+   // When called via TMapFile (e.g. Update()) make sure that the dictionary
+   // gets allocated on the heap and not in the mapped file.
+   if (gMmallocDesc) {
+      void *msave  = gMmallocDesc;
+      gMmallocDesc = 0;
+      TClass *cl   = new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+      gMmallocDesc = msave;
+      return cl;
+   }
+   return new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+}
+
+//______________________________________________________________________________
+TClass *ROOT::CreateClass(const char *cname, Version_t id,
+                          const char *dfil, const char *ifil,
+                          Int_t dl, Int_t il)
 {
    // Global function called by a class' static Dictionary() method
    // (see the ClassDef macro).
@@ -1427,6 +1527,39 @@ Bool_t TClass::IsLoaded() const
    // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
 
    return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
+}
+
+//______________________________________________________________________________
+Bool_t  TClass::IsTObject() const
+{ 
+   if (fProperty==(-1)) Property();
+   return TestBit(kIsTObject);
+}
+
+//______________________________________________________________________________
+Bool_t  TClass::IsForeign() const
+{ 
+   if (fProperty==(-1)) Property();
+   return TestBit(kIsForeign);
+}
+
+//______________________________________________________________________________
+Long_t TClass::Property() const
+{
+   if (fProperty!=(-1)) return fProperty;
+   if (!fClassInfo)     return 0;
+   Long_t dummy;
+   TClass *kl = (TClass *)this; 
+   kl->fProperty = fClassInfo->Property();
+   if (InheritsFrom(TObject::Class())) {
+      kl->SetBit(kIsTObject);
+   }
+   if (!fClassInfo->HasMethod("Streamer") || 
+       !fClassInfo->GetMethod("Streamer","TBuffer&",&dummy).IsValid() ) {
+
+      kl->SetBit(kIsForeign);
+   }
+   return fProperty;
 }
 
 //______________________________________________________________________________
@@ -1567,7 +1700,7 @@ TStreamerInfo *TClass::SetStreamerInfo(Int_t version, const char *info)
 }
 
 //______________________________________________________________________________
-UInt_t TClass::GetCheckSum() const
+UInt_t TClass::GetCheckSum(UInt_t code) const
 {
 //   Compute and/or return the class check sum.
 //  The class ckecksum is used by the automatic schema evolution algorithm
@@ -1575,10 +1708,13 @@ UInt_t TClass::GetCheckSum() const
 //  The check sum is built from the names/types of base classes and
 //  data members
 //  Algorithm from Victor Perevovchikov (perev@bnl.gov)
-
+//
+//  if code==1 data members of type enum are not counted in the checksum
+   
    int il;
 
    UInt_t id = fCheckSum;
+   if (code == 1) id = 0;
    if (id) return id;
 
    TString name = GetName();
@@ -1612,7 +1748,7 @@ UInt_t TClass::GetCheckSum() const
 
        if ( prop&kIsStatic)             continue;
        name = tdm->GetName(); il = name.Length();
-       if ( prop&kIsEnum) id = id*3 + 1;
+       if ( (code != 1) && prop&kIsEnum) id = id*3 + 1;
 
        int i;
        for (i=0; i<il; i++) id = id*3+name[i];
@@ -1621,7 +1757,9 @@ UInt_t TClass::GetCheckSum() const
 
        int dim = tdm->GetArrayDim();
        if (prop&kIsArray) {
-         for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);}
+          for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);
+       }
+         
      }/*EndMembLoop*/
    }
    ((TClass*)this)->fCheckSum =id;
@@ -1753,3 +1891,41 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
 
    return 0;
 }
+
+//______________________________________________________________________________
+void TClass::Streamer(void *object, TBuffer &b)
+{
+   if (IsTObject()) {           // TObject, regular case
+
+      if (!fInterStreamer) {
+         fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         fOffsetStreamer = GetBaseClassOffset(TObject::Class());
+      }
+      TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+      tobj->Streamer(b);
+
+   } else if (!IsForeign()) {   // Instrumented class 
+
+      if (!fInterStreamer) {
+        fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+      }
+
+      G__CallFunc func;
+      func.SetFunc((G__InterfaceMethod)fInterStreamer);
+      // set arguments
+      func.SetArg((Long_t)&b);
+      // call function
+      func.Exec((char*)((Long_t)object + fOffsetStreamer) );
+
+   } else {                      // Foreign class
+     
+      if (b.IsReading()) 
+         ReadBuffer (b, object);             
+      else             
+         WriteBuffer(b, object);
+
+   }
+
+}
+
+

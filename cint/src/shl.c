@@ -7,7 +7,7 @@
  * Description:
  *  Define macro
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -906,8 +906,10 @@ char *shlfile;
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
-      G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
+	G__printlinenum();
+      }
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
 #endif
@@ -1044,7 +1046,9 @@ char *shlfile;
     return(EXIT_FAILURE);
   }
   if(G__asm_dbg&&0==cintdll) {
-    G__fprinterr(G__serr,"Warning: No CINT symbol table in %s\n",shlfile);
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: No CINT symbol table in %s\n",shlfile);
+    }
   }
 
 
@@ -1318,6 +1322,20 @@ int *known3;
 #ifdef G__TRUEP2F
   ifunc=G__p2f2funchandle((void*)result3.obj.i,G__p_ifunc,&ig15);
   if(ifunc) sprintf(result7,"%s%s",ifunc->funcname[ig15],parameter1);
+#ifdef G__PTR2MEMFUNC
+#ifndef G__OLDIMPLEMENTATION1654
+  else {
+    int itag;
+    for(itag=0;itag<G__struct.alltag;itag++) {
+      ifunc=G__p2f2funchandle((void*)result3.obj.i,G__struct.memfunc[itag],&ig15);
+      if(ifunc && ifunc->staticalloc[ig15]) {
+	sprintf(result7,"%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
+	break;
+      }
+    }
+  }
+#endif
+#endif
 #else
   ifunc=G__p_ifunc;
   do {

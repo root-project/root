@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.2 2000/11/21 20:41:17 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.3 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -585,13 +585,13 @@ const Double_t &TMatrixDDiag::operator()(Int_t i) const
       return err;
    }
 
-   if (i > fNdiag || i < 1) {
-      Error("TMatrixDDiag", "TMatrixDDiag index %d is out of diag boundaries [1,%d]",
-            i, fNdiag);
+   if (i >= fNdiag || i < 0) {
+      Error("TMatrixDDiag", "TMatrixDDiag index %d is out of diag boundaries [0,%d]",
+            i, fNdiag-1);
       return err;
    }
 
-   return fMatrix->fIndex[i-1][i-1];
+   return fMatrix->fIndex[i][i];
 }
 
 Double_t &TMatrixDDiag::operator()(Int_t i)

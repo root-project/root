@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.45 2002/04/09 15:29:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.50 2002/06/12 20:29:47 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TChain::TChain(): TTree()
    fTreeOffsetLen  = 100;
    fNtrees         = 0;
    fTreeNumber     = -1;
-   fTreeOffset     = 0;
+   fTreeOffset     = new Int_t[fTreeOffsetLen];
    fTree           = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
@@ -680,10 +680,11 @@ Int_t TChain::LoadTree(Int_t entry)
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
+      element->SetNumberEntries(nentries);
       if (entry > fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
-         if (fTreeNumber < fNtrees) return LoadTree(entry);
-         else                       fReadEntry = -2;
+         if (fTreeNumber < fNtrees && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
+         else  fReadEntry = -2;
       }
    }
 
@@ -695,9 +696,12 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
+      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
+   }
+   next.Reset();
+   while ((element = (TChainElement*)next())) {
       void *add = element->GetBaddress();
       if (add)        fTree->SetBranchAddress(element->GetName(),add);
-      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
    }
 
    if (cursav) cursav->cd();
@@ -945,7 +949,7 @@ void TChain::Print(Option_t *option) const
       TFile *file = TFile::Open(element->GetTitle());
       if (!file->IsZombie()) {
          TTree *tree = (TTree*)file->Get(element->GetName());
-         tree->Print(option);
+         if (tree) tree->Print(option);
       }
       delete file;
    }
@@ -1026,10 +1030,11 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
-   if (!element) {
+   if (element)
+      fStatus->Remove (element);
+   else
       element = new TChainElement(bname,"");
-      fStatus->Add(element);
-   }
+   fStatus->Add(element);
 
    element->SetStatus(status);
 

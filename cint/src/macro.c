@@ -860,8 +860,10 @@ int G__execfuncmacro_noexec (char* macroname)
 #ifndef G__OLDIMPLEMENTATION1152
   if(p) *p='\0';
   else {
-    G__fprinterr(G__serr,"Warning: %s  Syntax error???",macroname);
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: %s  Syntax error???",macroname);
+      G__printlinenum();
+    }
   }
 #else
   *p='\0';

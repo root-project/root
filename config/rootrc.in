@@ -107,6 +107,7 @@ Gui.MimeTypeFile:           $(HOME)/.root.mimes
 Browser.IconStyle:          small
 # Can be either name, type, size, date
 Browser.SortBy:             name
+Browser.GroupView:          1000
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros
 Rint.Load:               rootalias.C
@@ -133,6 +134,7 @@ Proofd.Authentication:  0
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
 +Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle
++Plugin.TGrid:       ^alien    TAlien        RAliEn
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

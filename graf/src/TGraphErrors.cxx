@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.22 2002/02/25 23:10:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.25 2002/05/31 17:16:11 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -304,7 +304,7 @@ void TGraphErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-   if (strchr(option,'X')) {TGraph::Paint(option); return;}
+   if (strchr(option,'X') || strchr(option,'x')) {TGraph::Paint(option); return;}
    Bool_t brackets = kFALSE;
    if (strstr(option,"[]")) brackets = kTRUE;
    Bool_t endLines = kTRUE;
@@ -439,6 +439,30 @@ Int_t TGraphErrors::RemovePoint()
 }
 
 //______________________________________________________________________________
+Int_t TGraphErrors::RemovePoint(Int_t ipnt)
+{
+// Delete point number ipnt
+
+   Int_t ipoint = TGraph::RemovePoint(ipnt);
+   if (ipoint < 0) return ipoint;
+
+   Double_t *newEX = new Double_t[fNpoints];
+   Double_t *newEY = new Double_t[fNpoints];
+   Int_t i, j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newEX[j] = fEX[i];
+      newEY[j] = fEY[i];
+   }
+   delete [] fEX;
+   delete [] fEY;
+   fEX = newEX;
+   fEY = newEY;
+   return ipoint;
+}
+
+//______________________________________________________________________________
 void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -550,6 +574,10 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    fX[i] = x;
    fY[i] = y;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
 }
 
 //______________________________________________________________________________

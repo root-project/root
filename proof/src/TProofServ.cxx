@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.23 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.24 2002/04/25 11:27:11 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -614,7 +614,8 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             TMD5    md5;
             (*mess) >> filenam >> md5;
             if (filenam.BeginsWith("-")) {
-               // install package
+               // install package:
+               // compare md5's, untar, store md5 in PROOF-INF, remove par file
                //...
                UnlockPackage();
                break;
@@ -624,7 +625,7 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
                filenam = filenam.Strip(TString::kLeading, '+');
                TString packf = fPackageDir + "/" + filenam;
                LockPackage();
-               TMD5 *md5local = TMD5::FileChecksum(packf);
+               TMD5 *md5local = TMD5::FileChecksum(packf); // read md5 from PROOF-INF
                if (md5local && md5 == (*md5local)) {
                   // package already on server, unlock directory
                   UnlockPackage();
@@ -668,9 +669,11 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
-            LockCache();
-            gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-            UnlockCache();
+            if (size > 0) {
+               LockCache();
+               gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
+               UnlockCache();
+            }
             if (IsMaster())
                fProof->SendFile(name, bin);
          }

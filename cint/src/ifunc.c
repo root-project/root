@@ -114,8 +114,10 @@ struct G__param *libp; /* argument buffer */
      0!=libp->para[itemp].obj.i &&
      G__VARIABLE==p_ifunc->para_isconst[ifn][itemp]) {
 #ifdef G__OLDIMPLEMENTATION1167
-    G__fprinterr(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
+      G__printlinenum();
+    }
 #endif
   }
 }
@@ -212,7 +214,7 @@ int G__exec_bytecode(result7,funcname,libp,hash)
 G__value *result7; /* result buffer */
 char *funcname; /* contains struct G__bytecode* */
 struct G__param *libp; /* argument buffer */
-int hash; /* not use */
+int hash; /* not used */
 {
   int i;
   struct G__bytecodefunc *bytecode;
@@ -1236,9 +1238,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 && strncmp(funcheader,"ClassDef",8)!=0
 #endif
 	 ) {
-	G__fprinterr(G__serr,"Warning: Unknown type %s in function argument"
-		,paraname);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Unknown type %s in function argument"
+		       ,paraname);
+	  G__printlinenum();
+	}
       }
 #endif
       G__p_ifunc->ansi[func_now]=0;
@@ -1437,10 +1441,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
     if(G__tagdefining>=0) ++G__struct.isabstract[G__tagdefining];
 #ifndef G__OLDIMPLEMENTATION1232
     if('~'==G__p_ifunc->funcname[func_now][0]) {
-      G__fprinterr(G__serr,"Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
-	      ,G__p_ifunc->funcname[func_now]
-	      );
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
+		     ,G__p_ifunc->funcname[func_now]
+		     );
+	G__printlinenum();
+      }
     }
 #endif
     if(0==strncmp(paraname,"const",5))
@@ -1906,7 +1912,7 @@ int func_now;
   char paraname[G__ONELINE];
   char name[G__ONELINE];
   int c=0,iin=0;
-  int tagnum,typenum,type,pointlevel,reftype;
+  int tagnum,typenum,type=0,pointlevel,reftype;
   int isunsigned,isdefault;
   int ip,itemp;
   int store_var_type;
@@ -2069,7 +2075,49 @@ int func_now;
     else if(strcmp(paraname,"int")==0) type='i'+isunsigned;
     else if(strcmp(paraname,"char")==0) type='c'+isunsigned;
     else if(strcmp(paraname,"short")==0) type='s'+isunsigned ;
-    else if(strcmp(paraname,"long")==0) type='l'+isunsigned;
+    else if(strcmp(paraname,"long")==0) {
+#ifndef G__OLDIMPLEMENTATION1668
+      if(','!=c && ')'!=c) {
+	fpos_t pos;
+	int store_line = G__ifile.line_number;
+	int store_c = c;
+	fgetpos(G__ifile.fp,&pos);
+	c=G__fgetname(paraname,",)&*[(=");
+	if(strcmp(paraname,"long")==0 || strcmp(paraname,"double")==0) {
+	  if(0==G__defined_macro("G__LONGLONG_H")) {
+	    int store_def_struct_member = G__def_struct_member;
+	    G__def_struct_member = 0;
+	    G__loadfile("long.dll"); 
+	    G__def_struct_member = store_def_struct_member;
+	  }
+	  if(strcmp(paraname,"long")==0) {
+	    type='u';
+	    tagnum=G__defined_tagname("G__longlong",2);
+	    typenum=G__search_typename("long long",'u',tagnum,G__PARANORMAL);
+	  }
+	  else if(strcmp(paraname,"double")==0) {
+	    type='u';
+	    tagnum=G__defined_tagname("G__longdouble",2);
+	    typenum=G__search_typename("long double",'u',tagnum,G__PARANORMAL);
+	  }
+	}
+	else if(strcmp(paraname,"int")==0) {
+	  type='l'+isunsigned;
+	}
+	else {
+	  G__ifile.line_number = store_line;
+	  fsetpos(G__ifile.fp,&pos);
+	  c = store_c;
+	  type='l'+isunsigned;
+	}
+      }
+      else {
+	type='l'+isunsigned;
+      }
+#else
+      type='l'+isunsigned;
+#endif
+    }
     else if(strcmp(paraname,"float")==0) type='f'+isunsigned;
     else if(strcmp(paraname,"double")==0) type='d'+isunsigned;
 #ifndef G__OLDIMPLEMENTATION1604
@@ -2105,10 +2153,12 @@ int func_now;
 	    type='i'+isunsigned;
 #ifndef G__OLDIMPLEMENTATION1126
 	    if(!isdigit(paraname[0]) && 0==isunsigned) {
-	      G__fprinterr(G__serr,
-            "Warning: Unknown type '%s' in function argument handled as int"
-		      ,paraname);
-	      G__printlinenum();
+	      if(G__dispmsg>=G__DISPWARN) {
+		G__fprinterr(G__serr,
+	"Warning: Unknown type '%s' in function argument handled as int"
+			     ,paraname);
+		G__printlinenum();
+	      }
 	    }
 #endif
 	  }
@@ -3848,7 +3898,7 @@ int recursive;
 	  /* reference to derived class can be converted to reference to base 
 	   * class. add offset, modify char *parameter and G__value *param */
 	  {
-	    int rate_inheritance = 
+	    unsigned int rate_inheritance = 
 	      G__rate_inheritance(formal_tagnum,param_tagnum);
 	    if(G__NOMATCH!=rate_inheritance) {
 	      funclist->p_rate[i] = G__STDCONVMATCH+rate_inheritance;
@@ -3866,7 +3916,7 @@ int recursive;
 	   * G__value *param
 	   */
 	  {
-	    int rate_inheritance = 
+	    unsigned int rate_inheritance = 
 	      G__rate_inheritance(formal_tagnum,param_tagnum);
 	    if(G__NOMATCH!=rate_inheritance) {
 	      funclist->p_rate[i] = G__STDCONVMATCH+rate_inheritance;
@@ -4786,7 +4836,7 @@ int scopetagnum;
 char *funcname;
 struct G__param *libp;
 struct G__funclist *funclist;
-int bestmatch;
+unsigned int bestmatch;
 {
   G__fprinterr(G__serr,"Calling : ");
   G__display_param(G__serr,scopetagnum,funcname,libp);
@@ -4808,13 +4858,13 @@ int bestmatch;
 * If match found, expand template, parse as pre-run 
 ***********************************************************************/
 struct G__funclist* G__add_templatefunc(funcnamein,libp,hash,funclist
-					,p_ifunc,recursive)
+					,p_ifunc,isrecursive)
 char *funcnamein;
 struct G__param *libp;
 int hash;
 struct G__funclist *funclist;
 struct G__ifunc_table *p_ifunc; 
-int recursive;
+int isrecursive;
 {
   struct G__Definetemplatefunc *deftmpfunc;
   struct G__Charlist call_para;
@@ -4923,6 +4973,14 @@ int recursive;
 	    ifunc->hash[ifn] = hash;
 	  }
 #endif
+#ifndef G__OLDIMPLEMENTATION1655
+	  if(0==ifunc->pentry[ifn]->p) {
+	    /* This was only a prototype template, search for definition
+	     * template */
+	    deftmpfunc = deftmpfunc->next;
+	    continue;
+	  }
+#endif
 	  funclist = G__funclist_add(funclist,ifunc,ifn,0);
 	  if(ifunc->para_nu[ifn]<libp->paran ||
 	     (ifunc->para_nu[ifn]>libp->paran&&
@@ -4930,7 +4988,7 @@ int recursive;
 	    funclist->rate = G__NOMATCH;
 	  }
 	  else {
-	    G__rate_parameter_match(libp,ifunc,ifn,funclist,recursive);
+	    G__rate_parameter_match(libp,ifunc,ifn,funclist,isrecursive);
 	  }
 	}
       }
@@ -4951,13 +5009,13 @@ int recursive;
 /***********************************************************************
 * G__rate_binary_operator()
 **********************************************************************/
-struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,recursive)
+struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,isrecursive)
 struct G__param *libp;
 int tagnum;
 char* funcname;
 int hash;
 struct G__funclist *funclist;
-int recursive;
+int isrecursive;
 {
   int i;
   struct G__param fpara;
@@ -4989,13 +5047,13 @@ int recursive;
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
 #ifndef G__OLDIMPLEMENTATION1315
-	   || (recursive && p_ifunc->isexplicit[ifn])
+	   || (isrecursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	}
 	else {
 	  funclist = G__funclist_add(funclist,p_ifunc,ifn,0);
-	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,recursive);
+	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,isrecursive);
 	  funclist->ifunc = 0; /* added as dummy */
 	}
       }
@@ -5051,7 +5109,7 @@ struct G__ifunc_table* G__overload_match(funcname
 					 ,memfunc_flag
 					 ,access
 					 ,pifn
-					 ,recursive)
+					 ,isrecursive)
 char* funcname;
 struct G__param *libp;
 int hash;
@@ -5059,7 +5117,7 @@ struct G__ifunc_table *p_ifunc;
 int memfunc_flag;
 int access;
 int *pifn;
-int recursive;
+int isrecursive;
 {
   struct G__funclist *funclist = (struct G__funclist*)NULL;
   struct G__funclist *match = (struct G__funclist*)NULL;
@@ -5100,13 +5158,13 @@ int recursive;
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
 #ifndef G__OLDIMPLEMENTATION1315
-	   || (recursive && p_ifunc->isexplicit[ifn])
+	   || (isrecursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	  funclist->rate = G__NOMATCH;
 	}
 	else {
-	  G__rate_parameter_match(libp,p_ifunc,ifn,funclist,recursive);
+	  G__rate_parameter_match(libp,p_ifunc,ifn,funclist,isrecursive);
 	}
 	if(G__EXACTMATCH==(funclist->rate&0xffffff00)) match = funclist;
       }
@@ -5119,13 +5177,13 @@ int recursive;
    *    rate parameter match */
   if(!match) {
     funclist =  G__add_templatefunc(funcname,libp,hash,funclist
-				    ,store_ifunc,recursive);
+				    ,store_ifunc,isrecursive);
   }
 
 #ifndef G__OLDIMPLEMENTATION1427
   if(!match && (G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag)) {
     funclist = G__rate_binary_operator(libp,G__tagnum,funcname,hash
-				       ,funclist,recursive);
+				       ,funclist,isrecursive);
   }
 #endif
 
@@ -5180,7 +5238,7 @@ int recursive;
 
   if(ambiguous && G__EXACTMATCH!=bestmatch 
 #ifndef G__OLDIMPLEMENTATION1363
-     && !recursive
+     && !isrecursive
 #endif
      ) {
     /* error, ambiguous overloading resolution */
@@ -6851,9 +6909,12 @@ asm_ifunc_start:   /* loop compilation execution label */
        ***************************************************/
     case 'y': /* void */
       if(G__RETURN_NORMAL==G__return) {
-	G__fprinterr(G__serr,"Warning: Return value of void %s() ignored"
-		,p_ifunc->funcname[ifn]);
-	G__genericerror((char*)NULL);
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Return value of void %s() ignored"
+		       ,p_ifunc->funcname[ifn]);
+	  G__printlinenum();
+	  /* G__genericerror((char*)NULL); */
+	}
       }
       *result7 = G__null ;
       break;
@@ -7272,10 +7333,12 @@ asm_ifunc_start:   /* loop compilation execution label */
       G__destroy(localvar,G__BYTECODELOCAL_VAR) ;
       free((void*)localvar);
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,
-		"Warning: Bytecode compilation of %s failed. Maybe slow"
-		,p_ifunc->funcname[ifn]);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,
+		       "Warning: Bytecode compilation of %s failed. Maybe slow"
+		       ,p_ifunc->funcname[ifn]);
+	  G__printlinenum();
+	}
       }
       if(G__return>=G__RETURN_IMMEDIATE) G__return=G__RETURN_NON;
       G__security_error=G__NOERROR;

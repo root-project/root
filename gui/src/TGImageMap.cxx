@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.1 2000/10/19 10:40:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.2 2000/12/22 12:36:00 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -164,7 +164,7 @@ TGRegion::TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding)
 }
 
 //______________________________________________________________________________
-TGRegion::TGRegion(const TGRegion &r)
+TGRegion::TGRegion(const TGRegion &r) : TObject(r)
 {
    // Region copy constructor.
 

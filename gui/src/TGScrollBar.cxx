@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.5 2000/10/08 14:27:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.6 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -211,7 +211,7 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
                                     kRaisedFrame);
 
-   gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
                     kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    fDragging = kFALSE;
@@ -242,6 +242,19 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
    // Handle a mouse button event in a horizontal scrolbar.
 
    if (event->fType == kButtonPress) {
+      if (event->fCode == kButton2) {
+         fX0 = event->fX - fSliderSize/2;
+         fX0 = TMath::Max(fX0, fgScrollBarWidth);
+         fX0 = TMath::Min(fX0, fgScrollBarWidth + fSliderRange);
+         fPos = (fX0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
+
+         fPos = TMath::Max(fPos, 0);
+         fPos = TMath::Min(fPos, fRange-fPsize);
+         fSlider->Move(fX0, 0);
+
+         SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
+         return kTRUE;
+      }
 
       // fUser[0] contains the subwindow (child) in which the event occured
       // (see GX11Gui.cxx)
@@ -282,7 +295,6 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          fSlider->Move(fX0, 0);
 
          SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
-
       }
 
       // last argument kFALSE forces all specified events to this window
@@ -401,7 +413,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
                                     kRaisedFrame);
 
-   gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
                     kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
    fDragging = kFALSE;
@@ -433,6 +445,19 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
    // Handle mouse button event in vertical scrollbar.
 
    if (event->fType == kButtonPress) {
+      if (event->fCode == kButton2) {
+         fY0 = event->fY - fSliderSize/2;
+         fY0 = TMath::Max(fY0, fgScrollBarWidth);
+         fY0 = TMath::Min(fY0, fgScrollBarWidth + fSliderRange);
+         fPos = (fY0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
+
+         fPos = TMath::Max(fPos, 0);
+         fPos = TMath::Min(fPos, fRange-fPsize);
+         fSlider->Move(0, fY0);
+
+         SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
+         return kTRUE;
+      }
 
       // fUser[0] contains the subwindow (child) in which the event occured
       // (see GX11Gui.cxx)

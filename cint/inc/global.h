@@ -694,6 +694,8 @@ extern int G__init;
 extern int G__last_error;
 #endif
 
+extern int G__dispmsg;
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.53 2002/03/27 07:04:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.55 2002/05/30 19:43:07 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -413,6 +413,7 @@ void TCint::UpdateListOfGlobals()
    // Update the list of pointers to global variables. This function
    // is called by TROOT::GetListOfGlobals().
 
+   R__LOCKGUARD(gCINTMutex);
    G__DataMemberInfo t, *a;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -435,6 +436,7 @@ void TCint::UpdateListOfGlobalFunctions()
    // Update the list of pointers to global functions. This function
    // is called by TROOT::GetListOfGlobalFunctions().
 
+   R__LOCKGUARD(gCINTMutex);
    G__MethodInfo t, *a;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -457,6 +459,7 @@ void TCint::UpdateListOfTypes()
    // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
+   R__LOCKGUARD(gCINTMutex);
    G__TypedefInfo t;
    while (t.Next()) {
       if (t.IsValid() && t.Name()) {
@@ -476,6 +479,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 {
    // Set pointer to CINT's G__ClassInfo in TClass.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!cl->fClassInfo || reload) {
       // In the case where the class is not loaded and belongs to a namespace
       // or is nested, looking for the full class name is outputing a lots of
@@ -555,6 +559,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 {
    // Create list of pointers to base class(es) for TClass cl.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!cl->fBase) {
 
       cl->fBase = new TList;
@@ -575,6 +580,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 {
    // Create list of pointers to data members for TClass cl.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!cl->fData) {
 
       cl->fData = new TList;
@@ -595,6 +601,7 @@ void TCint::CreateListOfMethods(TClass *cl)
 {
    // Create list of pointers to methods for TClass cl.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!cl->fMethod) {
 
       cl->fMethod = new TList;
@@ -615,6 +622,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 {
    // Create list of pointers to method arguments for TMethod m.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!m->fMethodArgs) {
 
       m->fMethodArgs = new TList;
@@ -637,8 +645,9 @@ void *TCint::GetInterfaceMethod(TClass *cl, char *method, char *params)
    // parameters params (params is a string of actual arguments, not formal
    // ones). If the class is 0 the global function list will be searched.
 
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc  func;
-   long         offset;
+   Long_t       offset;
 
    if (cl)
       func.SetFunc(cl->GetClassInfo(), method, params, &offset);
@@ -656,8 +665,9 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *pro
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
    // function list will be searched.
 
+   R__LOCKGUARD(gCINTMutex);
    G__InterfaceMethod f;
-   long               offset;
+   Long_t             offset;
 
    if (cl)
       f = cl->GetClassInfo()->GetMethod(method, proto, &offset).InterfaceMethod();
@@ -673,9 +683,10 @@ void TCint::Execute(const char *function, const char *params, int *error)
 {
    // Execute a global function with arguments params.
 
-   long         offset;
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc  func;
    G__ClassInfo cl;
+   Long_t       offset;
 
    // set pointer to interface method and arguments
    func.SetFunc(&cl, function, params, &offset);
@@ -691,9 +702,9 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
 {
    // Execute a method from class cl with arguments params.
 
+   R__LOCKGUARD(gCINTMutex);
    void       *address;
    long        offset;
-   R__LOCKGUARD(gCINTMutex);
    G__CallFunc func;
 
    // set pointer to interface method and arguments

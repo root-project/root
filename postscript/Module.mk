@@ -61,3 +61,9 @@ distclean-postscript: clean-postscript
 		   $(POSTSCRIPTLIB)
 
 distclean::     distclean-postscript
+
+##### extra rules ######
+ifeq ($(ARCH),alphacxx6)
+$(POSTSCRIPTDIRS)/TPostScript.o: $(POSTSCRIPTDIRS)/TPostScript.cxx
+	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+endif

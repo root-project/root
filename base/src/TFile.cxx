@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.59 2002/04/01 17:12:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.63 2002/05/18 10:45:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -42,8 +42,6 @@
 
 TFile *gFile;                 //Pointer to current file
 
-const Int_t  TFile::kBegin = 64;
-const Char_t TFile::kUnits = 4;
 
 Double_t TFile::fgBytesRead  = 0;
 Double_t TFile::fgBytesWrite = 0;
@@ -218,6 +216,19 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fOption = "READ";
    }
 
+   // support dumping to /dev/null on UNIX
+   Bool_t devnull = kFALSE;
+   if (!strcmp(fname1, "/dev/null") &&
+       !gSystem->AccessPathName(fname1, kWritePermission)) {
+      devnull  = kTRUE;
+      create   = kTRUE;
+      recreate = kFALSE;
+      update   = kFALSE;
+      read     = kFALSE;
+      fOption  = "CREATE";
+      SetBit(kDevNull);
+   }
+
    const char *fname;
    if ((fname = gSystem->ExpandPathName(fname1))) {
       SetName(fname);
@@ -235,7 +246,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       create   = kTRUE;
       fOption  = "CREATE";
    }
-   if (create && !gSystem->AccessPathName(fname, kFileExists)) {
+   if (create && !devnull && !gSystem->AccessPathName(fname, kFileExists)) {
       Error("TFile", "file %s already exists", fname);
       goto zombie;
    }
@@ -296,7 +307,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-TFile::TFile(const TFile &file)
+TFile::TFile(const TFile &file) : TDirectory()
 {
    ((TFile&)file).Copy(*this);
 }
@@ -430,6 +441,9 @@ void TFile::Init(Bool_t create)
          TDirectory::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
+      } else if (fBEGIN+nbytes == fEND) {
+         Warning("TFile","Opening a file with no keys");
+         gDirectory = this;
       } else {
          if (fEND > size) {
             Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
@@ -746,7 +760,7 @@ Seek_t TFile::GetSize() const
 }
 
 //______________________________________________________________________________
-TList *TFile::GetStreamerInfoList() 
+TList *TFile::GetStreamerInfoList()
 {
 // Read the list of TStreamerInfo objects written to this file.
 // The function returns a TList. It is the user'responsability
@@ -1561,6 +1575,10 @@ void TFile::ReadStreamerInfo()
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
       list = (TList*)key->ReadObj();
+      if (!list) {
+         gDirectory->GetListOfKeys()->Remove(key);
+         MakeZombie();
+      }
       delete [] buffer;
       delete key;
    } else {
@@ -1569,7 +1587,7 @@ void TFile::ReadStreamerInfo()
 
    if (list == 0) return;
    if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
-//list->Dump();
+
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
    TIter next(list);
@@ -1596,7 +1614,7 @@ void TFile::ShowStreamerInfo()
    TList *list = GetStreamerInfoList();
 
    if (!list) return;
-   
+
    list->ls();
    delete list;
 }
@@ -1762,6 +1780,8 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
 Int_t TFile::SysSync(Int_t fd)
 {
    // Interface to system fsync. All arguments like in POSIX fsync().
+
+   if (TestBit(kDevNull)) return 0;
 
 #ifndef WIN32
    return ::fsync(fd);

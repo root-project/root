@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.18 2002/04/19 12:52:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.21 2002/05/09 20:21:59 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -190,7 +190,7 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    if (!gInterpreter) return 0;
 
    Long_t faddr = 0;
-   if (cl->GetDeclFileLine() == -1) {
+   if (!cl->IsLoaded()) { 
       // interpreted class
       G__MethodInfo meth;
       long offset;
@@ -234,7 +234,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    if (!gInterpreter) return 0;
 
    Long_t faddr = 0;
-   if (cl->GetDeclFileLine() == -1) {
+   if (!cl->IsLoaded()) {
       // interpreted class
       G__CallFunc  func;
       long         offset;
@@ -500,6 +500,8 @@ TQObject::~TQObject()
    // TQObject Destructor.
    //    - delete all connections and signal list
 
+   if (!gROOT) return;
+   
    Destroyed();   // emit "Destroyed()" signal
 
    TQConnectionList *list = 0;

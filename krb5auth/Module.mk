@@ -46,7 +46,7 @@ clean::         clean-krb5auth
 distclean-krb5auth: clean-krb5auth
 		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHLIB)
 
-distclean::     distclean-srputils
+distclean::     distclean-krb5auth
 
 ##### extra rules ######
 $(KRB5AUTHO): %.o: %.cxx

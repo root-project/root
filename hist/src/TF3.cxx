@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.2 2000/06/13 10:38:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.5 2002/05/29 18:39:44 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TH3.h"
 #include "TVirtualPad.h"
 #include "TRandom.h"
+#include "TPainter3dAlgorithms.h"
 
 ClassImp(TF3)
 
@@ -105,7 +106,7 @@ TF3::~TF3()
 }
 
 //______________________________________________________________________________
-TF3::TF3(const TF3 &f3)
+TF3::TF3(const TF3 &f3) : TF2(f3)
 {
    ((TF3&)f3).Copy(*this);
 }
@@ -147,7 +148,7 @@ void TF3::Draw(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   if (!opt.Contains("s")) gPad->Clear();
+   if (gPad && !opt.Contains("same")) gPad->Clear();
 
    AppendPad(option);
 
@@ -274,11 +275,53 @@ Bool_t TF3::IsInside(const Double_t *x) const
 }
 
 //______________________________________________________________________________
-void TF3::Paint(Option_t *)
+void TF3::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*Paint this 2-D function with its current attributes*-*-*-*-*
+//*-*-*-*-*-*-*-*-*Paint this 3-D function with its current attributes*-*-*-*-*
 //*-*              ===================================================
 
+
+   TString opt = option;
+   opt.ToLower();
+   if (!opt.Contains("same")) gPad->Clear();
+
+//*-*-  Create a temporary histogram and fill each channel with the function value
+   if (!fHistogram) {
+      fHistogram = new TH3F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax
+                                                    ,fNpy,fYmin,fYmax
+                                                    ,fNpz,fZmin,fZmax);
+      if (!fHistogram) return;
+      fHistogram->SetDirectory(0);
+   }
+
+   if (gROOT->LoadClass("THistPainter","HistPainter")) return;
+   char *cmd;
+   cmd = Form("TPainter3dAlgorithms::SetF3((TF3*)0x%lx);",(Long_t)this);
+   gROOT->ProcessLine(cmd);
+   fHistogram->Paint("tf3");
+}
+
+//______________________________________________________________________________
+void TF3::SetClippingBoxOff()
+{
+   // Set the function clipping box (for drawing) "off".
+   if (gROOT->LoadClass("THistPainter","HistPainter")) return;
+   char *cmd;
+   cmd = Form("TPainter3dAlgorithms::SetF3ClippingBoxOff();");
+   gROOT->ProcessLine(cmd);
+}
+
+//______________________________________________________________________________
+void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
+{
+   // Set the function clipping box (for drawing) "on" and define the clipping box.
+   // xclip, yclip and zclip is a point within the function range. All the
+   // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
+   if (gROOT->LoadClass("THistPainter","HistPainter")) return;
+   char *cmd;
+   cmd = Form("TPainter3dAlgorithms::SetF3ClippingBoxOn(%g,%g,%g);",
+              (Double_t)xclip, (Double_t)yclip, (Double_t)zclip);
+   gROOT->ProcessLine(cmd);
 }
 
 //______________________________________________________________________________

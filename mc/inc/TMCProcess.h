@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TMCProcess.h,v 1.19 2002/04/08 15:06:08 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TMCProcess.h,v 1.2 2002/04/26 08:46:10 brun Exp $
 // Author: Alice collaboration  
 
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. */
@@ -10,7 +10,7 @@
 //
 #include "Rtypes.h"
    
-const Int_t kMaxMCProcess = 33;
+const Int_t kMaxMCProcess = 34;
 
 enum TMCProcess
 {
@@ -95,7 +95,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Cerenkov feed back photon",
   "Cerenkov photon reflection",
   "Cerenkov photon refraction",
-  "Synchrotron radiation"
+  "Synchrotron radiation",
   "Unknown process"
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.9 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.11 2002/05/18 08:21:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -34,7 +34,7 @@ ClassImp(TNamed)
 
 
 //______________________________________________________________________________
-TNamed::TNamed(const TNamed &named)
+TNamed::TNamed(const TNamed &named) : TObject(named)
 {
    // TNamed copy ctor.
 
@@ -102,7 +102,7 @@ void TNamed::ls(Option_t *) const
 
    TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete)) << endl;
+        << Int_t(TestBit(kCanDelete)) << " at: "<<this<< endl;
 }
 
 //______________________________________________________________________________

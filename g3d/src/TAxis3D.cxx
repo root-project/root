@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.7 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.8 2002/04/06 21:24:29 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -117,7 +117,7 @@ TAxis3D::TAxis3D(Option_t *): TNamed(TAxis3D::rulerName,"ruler")
 }
 
 //______________________________________________________________________________
-TAxis3D::TAxis3D(const TAxis3D &axis)
+TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 {
    ((TAxis3D&)axis).Copy(*this);
 }

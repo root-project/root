@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.6 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.7 2001/12/27 17:21:43 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -586,29 +586,31 @@ void TPadOpenGLView::MoveModelView(const char *cmd, int mlsecc)
 //*-*              = 0;  No slowdown. It is painting as fast as the
 //*-*                    present CPU allows
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  Int_t lcmd = strlen(cmd);
-  if (lcmd)  {
-    Int_t i = 0;
+   Int_t lcmd = strlen(cmd);
+   if (lcmd)  {
+      Int_t i = 0;
             // Estimate the time for a single step
-    Int_t quant = 0;
-    TStopwatch *stopwatch=0;
-    if (mlsecc > 0) {
-      quant = Int_t(Double_t(mlsecc)/lcmd);
-      if (quant > 0) stopwatch = new TStopwatch;
-      else printf(" Display time too small !\n");
-    }
-           // Start stopwatch
-    if (stopwatch)  stopwatch->Start();
-    for (i=0;i<lcmd;i++) {
-       MoveModelView(cmd[i]);
-       // Estimate sleep time
-      if (stopwatch) {
-        Int_t sleeptime = Int_t(i*quant-stopwatch->GetRealTime()*1000);
-        if (sleeptime > 0) gSystem->Sleep(sleeptime);
+      Int_t quant = 0;
+      TStopwatch stopwatch;
+      if (mlsecc > 0) {
+         quant = Int_t(Double_t(mlsecc)/lcmd);
+         if (quant <= 0)
+            printf(" Display time too small !\n");
       }
-    }
-  }
+           // Start stopwatch
+      if (quant > 0) stopwatch.Start();
+      for (i=0;i<lcmd;i++) {
+         MoveModelView(cmd[i]);
+         // Estimate sleep time
+         if (quant > 0) {
+            Int_t sleeptime = Int_t(i*quant-stopwatch.RealTime()*1000);
+            if (sleeptime > 0) gSystem->Sleep(sleeptime);
+            stopwatch.Start();
+         }
+      }
+   }
 }
+
 //______________________________________________________________________________
 void TPadOpenGLView::Paint(Option_t *)
 {

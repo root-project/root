@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.19 2002/03/17 00:26:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.20 2002/04/19 18:23:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -110,10 +110,10 @@ private:
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
    };
-#if !defined(__HP_aCC) || __HP_aCC >= 53000
-   typedef std::map<TString, MD5Mod_t> FileMap_t;
-#else
+#ifdef R__GLOBALSTL
    typedef map<TString, MD5Mod_t> FileMap_t;
+#else
+   typedef std::map<TString, MD5Mod_t> FileMap_t;
 #endif
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 

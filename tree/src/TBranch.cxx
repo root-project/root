@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.40 2002/04/06 14:55:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.42 2002/05/29 21:06:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
+#include "TStreamerInfo.h"
 
 TBranch *gBranch;
 
@@ -813,11 +814,17 @@ Stat_t TBranch::GetTotalSize() const
 // Return total number of bytes in the branch (including current buffer)
 // =====================================================================
 
+   Stat_t totbytes = fTotBytes + this->IsA()->GetStreamerInfo()->GetSize();
+   totbytes += 3*4*fMaxBaskets; //fBasketBytes,fBasketEntry, fBasketSeek
+   for (Int_t i=0;i<fNleaves;i++) {
+      TLeaf *leaf = (TLeaf*)fLeaves.At(i);
+      totbytes += leaf->IsA()->GetStreamerInfo()->GetSize();
+   }
    TBasket *basket = (TBasket*)fBaskets.Last();
-   if (!basket) return fTotBytes;
+   if (!basket) return totbytes;
    TBuffer *buf    = basket->GetBufferRef();
-   if (!buf)    return fTotBytes;
-   return fTotBytes + buf->Length();
+   if (!buf)    return totbytes;
+   return totbytes + buf->Length();
 }
 
 

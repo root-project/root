@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.9 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.10 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -86,7 +86,7 @@ TPolyMarker::~TPolyMarker()
 }
 
 //______________________________________________________________________________
-TPolyMarker::TPolyMarker(const TPolyMarker &polymarker)
+TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), TAttMarker(polymarker)
 {
    ((TPolyMarker&)polymarker).Copy(*this);
 }

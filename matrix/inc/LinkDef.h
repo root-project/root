@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.2 2000/06/16 15:15:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -52,6 +52,8 @@
 #pragma link C++ function Compare(const TMatrixD&,const TMatrixD&);
 #pragma link C++ function AreCompatible(const TMatrixD&,const TMatrixD&);
 #pragma link C++ function E2Norm(const TMatrixD&,const TMatrixD&);
+
+#pragma link C++ function operator()(Int_t) const;
 
 #pragma link C++ class TVector-;
 #pragma link C++ class TMatrix-;

@@ -7,7 +7,7 @@
  * Description:
  *  Interactive interface
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -3474,8 +3474,13 @@ G__value *rslt;
 	  case '}':
 	    if((single_quote==0)&&(double_quote==0)) temp--;
 	    break;
+#ifndef G__OLDIMPLEMENTATION1679
+	  case '\\':
+	    ++temp1;
+	    break;
+#endif
 	  }
-	  temp1++;
+	  ++temp1;
 	}
 	if (temp>0) {
 	  fprintf(ftemp.fp,"%s\n",com);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.91 2002/04/29 17:11:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.99 2002/06/04 07:22:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -615,6 +615,7 @@ void TH1::Add(TF1 *f1, Double_t c1)
 // Performs the operation: this = this + c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
@@ -648,8 +649,11 @@ void TH1::Add(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             cu  = c1*f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             Double_t error1 = GetBinError(bin);
             AddBinContent(bin,cu);
             if (fSumw2.fN) {
@@ -1004,6 +1008,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
 // Performs the operation: this = this/(c1*f1)
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Divide
@@ -1037,9 +1042,12 @@ void TH1::Divide(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             Double_t error1 = GetBinError(bin);
             cu  = c1*f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             if (cu) w = GetBinContent(bin)/cu;
             else    w = 0;
             SetBinContent(bin,w);
@@ -1321,7 +1329,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
 //     If option "A" is specified, the value of the function is added to the
 //     existing bin contents
 //     If option "S" is specified, the value of the function is used to
-//     generate an integer value, distributed according to the Poisson
+//     generate a value, distributed according to the Poisson
 //     distribution, with f1 as the mean.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1349,7 +1357,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
             bin = GetBin(binx,biny,binz);
             x[0]  = fXaxis.GetBinCenter(binx);
             fu = f1->Eval(x[0],x[1],x[2]);
-            if (stat) fu = gRandom->Poisson(fu);
+            if (stat) fu = gRandom->PoissonD(fu);
             if (fSumw2.fN) e = fSumw2.fArray[bin];
             AddBinContent(bin,fu);
             if (fSumw2.fN) fSumw2.fArray[bin] = e+ fu*fu;
@@ -1728,6 +1736,29 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //     You can redefine this default value by calling :
 //       TVirtualFitter::Fitter(0,150); //to get a maximum of 150 parameters
+//
+//      Excluding points
+//      ================
+//     Use TF1::RejectPoint inside your fitting function to exclude points
+//     within a certain range from the fit. Example:
+//     Double_t fline(Double_t *x, Double_t *par)
+//     {
+//         if (x[0] > 2.5 && x[0] < 3.5) {
+//           TF1::RejectPoint();
+//           return 0;
+//        }
+//        return par[0] + par[1]*x[0];
+//     }
+//     
+//     void exclude() {
+//        TF1 *f1 = new TF1("f1","[0] +[1]*x +gaus(2)",0,5);
+//        f1->SetParameters(6,-1,5,3,0.2);
+//        TH1F *h = new TH1F("h","background + signal",100,0,5);
+//        h->FillRandom("f1",2000);
+//        TF1 *fline = new TF1("fline",fline,0,5,2);
+//        fline->SetParameters(2,-1);
+//        h->Fit("fline","l");
+//     }
 //
 //      Warning when using the option "0"
 //      =================================
@@ -3130,6 +3161,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
 // Performs the operation: this = this*c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Multiply
@@ -3163,9 +3195,12 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             Double_t error1 = GetBinError(bin);
             cu  = f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             w = GetBinContent(bin)*c1*cu;
             SetBinContent(bin,w);
             if (fSumw2.fN) {
@@ -3378,6 +3413,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
+//
+//   NOTE3: This function cannot be used with variable bin size histograms.
 
    Int_t nbins   = fXaxis.GetNbins();
    Axis_t xmin  = fXaxis.GetXmin();
@@ -3388,6 +3425,10 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    }
    if (fDimension > 1 || InheritsFrom("TProfile")) {
       Error("Rebin", "Operation valid on 1-D histograms only");
+      return 0;
+   }
+   if (fXaxis.GetXbins()->GetSize() > 0) {
+      Error("Rebin", "Cannot rebin variable bin size histograms");
       return 0;
    }
    Int_t newbins = nbins/ngroup;
@@ -3810,6 +3851,8 @@ void  TH1::Smooth(Int_t ntimes)
    for (i=0;i<nbins;i++) {
       SetBinContent(i+1,XX[i]);
    }
+   delete [] XX;
+   
    if (gPad) gPad->Modified();
 }
 
@@ -3997,29 +4040,81 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
-   //Note the following restrictions in the code generated:
-   // - variable bin size not implemented
-   // - Objects in list of functions not saved (fits)
-
+   Bool_t nonEqiX = kFALSE;
+   Bool_t nonEqiY = kFALSE;
+   Bool_t nonEqiZ = kFALSE;
+   Int_t i;
+   
+   // Check if the histogram has equidistant X bins or not.  If not, we
+   // create an array holding the bins. 
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
+      nonEqiX = kTRUE;
+      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN 
+ 	 << "] = {";
+      for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetXaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+   // If the histogram is 2 or 3 dimensional, check if the histogram
+   // has equidistant Y bins or not.  If not, we create an array
+   // holding the bins.  
+   if (fDimension > 1 && GetYaxis()->GetXbins()->fN && 
+       GetYaxis()->GetXbins()->fArray) {
+      nonEqiY = kTRUE;
+      out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN 
+ 	  << "] = {";
+      for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetYaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+   // IF the histogram is 3 dimensional, check if the histogram
+   // has equidistant Z bins or not.  If not, we create an array
+   // holding the bins.  
+   if (fDimension > 2 && GetZaxis()->GetXbins()->fN && 
+       GetZaxis()->GetXbins()->fArray) {
+      nonEqiZ = kTRUE;
+      out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN 
+ 	 << "] = {";
+      for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetZaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+     
    char quote = '"';
-   out<<"   "<<endl;
-   out<<"   "<<"TH1"<<" *";
+   out <<"   "<<endl;
+   out <<"   "<<"TH1"<<" *";
 
-   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-                 <<","<<GetXaxis()->GetNbins()
-                 <<","<<GetXaxis()->GetXmin()
-                 <<","<<GetXaxis()->GetXmax();
+   out << GetName() << " = new " << ClassName() << "(" << quote 
+       << GetName() << quote << "," << quote<< GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
+   if (nonEqiX)
+      out << ", xAxis";
+   else 
+      out << "," << GetXaxis()->GetXmin()
+	  << "," << GetXaxis()->GetXmax();
    if (fDimension > 1) {
-              out<<","<<GetYaxis()->GetNbins()
-                 <<","<<GetYaxis()->GetXmin()
-                 <<","<<GetYaxis()->GetXmax();
+      out << "," << GetYaxis()->GetNbins();
+      if (nonEqiY) 
+         out << ", yAxis";
+      else 
+         out << "," << GetYaxis()->GetXmin()
+	     << "," << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
-              out<<","<<GetZaxis()->GetNbins()
-                 <<","<<GetZaxis()->GetXmin()
-                 <<","<<GetZaxis()->GetXmax();
+      out << "," << GetZaxis()->GetNbins();
+      if (nonEqiZ) 
+         out << ", zAxis";
+      else
+         out << "," << GetZaxis()->GetXmin()
+	     << "," << GetZaxis()->GetXmax();
    }
-              out<<");"<<endl;
+   out << ");" << endl;
    if (TMath::Abs(GetBarOffset()) > 1e-5) {
       out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
    }
@@ -4047,6 +4142,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    if (fOption.Length() != 0) {
       out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
    }
+   
+   // save bin contents
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = GetBinContent(bin);
@@ -4054,6 +4151,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
+   
+   // save bin errors
    if (fSumw2.fN) {
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = GetBinError(bin);
@@ -4062,6 +4161,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
+   
+   // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
       out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
@@ -4078,6 +4179,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
    }
 
+   // save attributes
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
@@ -5074,7 +5176,7 @@ TH1C::~TH1C()
 }
 
 //______________________________________________________________________________
-TH1C::TH1C(const TH1C &h1c)
+TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
    ((TH1C&)h1c).Copy(*this);
 }
@@ -5279,7 +5381,7 @@ TH1S::~TH1S()
 }
 
 //______________________________________________________________________________
-TH1S::TH1S(const TH1S &h1s)
+TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
    ((TH1S&)h1s).Copy(*this);
 }
@@ -5491,7 +5593,7 @@ TH1F::TH1F(const TVector &v)
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const TH1F &h)
+TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
    ((TH1F&)h).Copy(*this);
 }
@@ -5695,7 +5797,7 @@ TH1D::~TH1D()
 }
 
 //______________________________________________________________________________
-TH1D::TH1D(const TH1D &h1d)
+TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 {
    ((TH1D&)h1d).Copy(*this);
 }

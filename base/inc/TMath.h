@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.15 2002/02/18 10:06:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.16 2002/03/29 18:02:47 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -187,7 +187,7 @@ public:
    static Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
    static Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
    static Double_t Struve(Int_t n, Double_t x);      // Struve functions of order 0 and 1
-   
+
    ClassDef(TMath,0)  //Interface to math routines
 };
 
@@ -344,10 +344,10 @@ extern "C" {
    extern double log(double);
    extern double log10(double);
 #ifndef R__WIN32
-#   ifndef finite
+#   if !defined(finite) || defined(R__GNU)
        extern int finite(double);
 #   endif
-#   ifndef isnan
+#   if !defined(isnan) || defined(R__GNU)
        extern int isnan(double);
 #   endif
 #endif

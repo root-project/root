@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -173,8 +173,8 @@ TLorentzRotation::TLorentzRotation(const TRotation & r)
     fzx(r.ZX()), fzy(r.ZY()), fzz(r.ZZ()), fzt(0.0),
     ftx(0.0),    fty(0.0),    ftz(0.0),    ftt(1.0) {}
 
-TLorentzRotation::TLorentzRotation(const TLorentzRotation & r)
-  : fxx(r.fxx), fxy(r.fxy), fxz(r.fxz), fxt(r.fxt),
+TLorentzRotation::TLorentzRotation(const TLorentzRotation & r) : TObject(r),
+    fxx(r.fxx), fxy(r.fxy), fxz(r.fxz), fxt(r.fxt),
     fyx(r.fyx), fyy(r.fyy), fyz(r.fyz), fyt(r.fyt),
     fzx(r.fzx), fzy(r.fzy), fzz(r.fzz), fzt(r.fzt),
     ftx(r.ftx), fty(r.fty), ftz(r.ftz), ftt(r.ftt) {}

@@ -76,8 +76,15 @@ endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
+ifneq ($(DCAPINCDIR),)
 ifneq ($(DCAPLIB),)
 MODULES      += dcache
+endif
+endif
+ifneq ($(ALIENINCDIR),)
+ifneq ($(ALIENCLILIB),)
+MODULES      += alien
+endif
 endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
@@ -91,8 +98,8 @@ endif
 ifneq ($(FVENUSLIB),)
 MODULES      += venus
 endif
-ifneq ($(STAR),)
-MODULES      += star
+ifneq ($(TABLE),)
+MODULES      += table
 endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
@@ -106,8 +113,8 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
-                pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook
+                pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
+                rootd proofd dcache hbook alien
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -136,6 +143,15 @@ PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
 endif
 
+##### gcc version #####
+
+ifneq ($(findstring g++,$(CXX)),)
+GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f1)
+GCC_MINOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f2)
+endif
+
 ##### f77 options #####
 
 ifeq ($(F77LD),)
@@ -146,6 +162,12 @@ F77OPT       := $(OPT)
 endif
 ifeq ($(F77LDFLAGS),)
 F77LDFLAGS   := $(LDFLAGS)
+endif
+
+ifeq ($(GCC_MAJOR),3)
+ifeq ($(GCC_MINOR),1)
+F77LDFLAGS   += -lfrtbegin
+endif
 endif
 
 ##### utilities #####
@@ -359,13 +381,12 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
-	@rm -rf htmldoc
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
-	@rm -rf bin lib include system.rootrc config/Makefile.config \
+	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   test/Makefile etc/system.rootrc etc/root.mimes
 
 version: $(CINTTMP)
@@ -583,7 +604,7 @@ showbuild:
 	@echo "FPYTHIALIBDIR      = $(FPYTHIALIBDIR)"
 	@echo "FPYTHIA6LIBDIR     = $(FPYTHIA6LIBDIR)"
 	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
-	@echo "STAR               = $(STAR)"
+	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"

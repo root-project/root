@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.12 2002/02/23 18:41:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.17 2002/05/10 21:32:09 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -129,11 +129,11 @@ public:
    virtual void   Disconnected(const char * /*signal_name*/) { }
 
    virtual void   Destroyed()
-                  { Emit("Destroyed()"); }                 //*SIGNAL*
+                  { Emit("Destroyed()"); }                 // *SIGNAL*
    virtual void   ChangedBy(const char *method)
-                  { Emit("ChangedBy(char*)", method); }    //*SIGNAL*
+                  { Emit("ChangedBy(char*)", method); }    // *SIGNAL*
    virtual void   Message(const char *msg)
-                  { Emit("Message(char*)", msg); }         //*SIGNAL*
+                  { Emit("Message(char*)", msg); }         // *SIGNAL*
 
    static Bool_t  Connect(TQObject *sender,
                           const char *signal,
@@ -196,9 +196,12 @@ friend class TQObject;
 
 public:
    TQClass(const char *name, Version_t cversion,
+           const type_info &info, IsAFunc_t isa,
+           ShowMembersFunc_t showmembers,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
-           TQObject(), TClass(name, cversion, dfil, ifil, dl, il) { }
+           TQObject(), 
+           TClass(name, cversion, info,isa,showmembers, dfil, ifil, dl, il) { }
 
    virtual ~TQClass() { Disconnect(); }
 
@@ -217,17 +220,39 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 
 //---- ClassImpQ macro ----------------------------------------------
 //
-// This macro corresponds to the ClassImp macro and should be used
+// This macro used to correspond to the ClassImp macro and should be used
 // for classes derived from TQObject instead of the ClassImp macro.
 // This macro makes it possible to have a single connection from
 // all objects of the same class.
+// *** It is now obsolete ***
 
 #define ClassImpQ(name) \
-   void name::Dictionary() { \
-      fgIsA = new TQClass(Class_Name(), Class_Version(),  \
-                          DeclFileName(), ImplFileName(),  \
-                          DeclFileLine(), ImplFileLine()); \
-   } \
-   _ClassImp_(name)
+   ClassImp(name)
+
+
+//---- Class Initialization Behavior --------------------------------------
+//
+// This Class and Function are automatically used for classes inheriting from
+// TQObject. They make it possible to have a single connection from all
+// objects of the same class.
+namespace ROOT {
+   class TDefaultInitBehavior;
+   class TQObjectInitBehavior : public TDefaultInitBehavior {
+   public:
+      virtual TClass *CreateClass(const char *cname, Version_t id,
+                                  const type_info &info, IsAFunc_t isa,
+                                  ShowMembersFunc_t show,
+                                  const char *dfil, const char *ifil,
+                                  Int_t dl, Int_t il) const {
+         return new TQClass(cname, id, info, isa, show, dfil, ifil,dl, il);
+      }
+   };
+
+   inline const TQObjectInitBehavior *DefineBehavior(TQObject *, TQObject *)
+   {
+      TQObjectInitBehavior *Default = new TQObjectInitBehavior;
+      return Default;
+   }
+}
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.12 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.13 2002/01/24 11:39:27 rdm Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -147,7 +147,7 @@ TPolyMarker3D::~TPolyMarker3D()
 }
 
 //______________________________________________________________________________
-TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &polymarker)
+TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &polymarker) : TObject(polymarker), TAttMarker(polymarker), TAtt3D(polymarker)
 {
    // 3-D polymarker copy ctor.
 

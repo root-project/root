@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.5 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TArrayS::TArrayS(Int_t n, const Short_t *array)
 }
 
 //______________________________________________________________________________
-TArrayS::TArrayS(const TArrayS &array)
+TArrayS::TArrayS(const TArrayS &array) : TArray(array)
 {
    // Copy constructor.
 
@@ -95,8 +95,7 @@ void TArrayS::AddAt(Short_t c, Int_t i)
 {
    // Add short c at position i. Check for out of bounds.
 
-   if (!BoundsOk("TArrayS::AddAt", i))
-      i = 0;
+   if (!BoundsOk("TArrayS::AddAt", i)) return;
    fArray[i] = c;
 }
 
@@ -130,13 +129,13 @@ void TArrayS::Set(Int_t n, const Short_t *array)
 {
    // Set size of this array to n shorts and set the contents.
 
-   if (n < 0 || array == 0) return;
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
    }
    fN = n;
    if (fN == 0) return;
+   if (array == 0) return;
    if (!fArray) fArray = new Short_t[fN];
    memcpy(fArray,array, n*sizeof(Short_t));
 }
@@ -156,11 +155,3 @@ void TArrayS::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayS *&obj)
-{
-   // Read TArrayS object from buffer. Declared in ClassDef.
-
-   obj = (TArrayS *) TArray::ReadArray(buf, TArrayS::Class());
-   return buf;
-}

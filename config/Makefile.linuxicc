@@ -4,10 +4,10 @@ PLATFORM      = linux
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
-NOOPT         =
+NOOPT         = -O0
 else
 OPT           = -O
-NOOPT         =
+NOOPT         = -O0
 endif
 
 # Compiler:
@@ -25,7 +25,7 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) \
 # Linker:
 LD            = icc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Qoption,ld,-soname,
+SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
@@ -37,10 +37,8 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = ifc
 F77FLAGS      =
-F77LIBS       =
 # check path for g2c
-#F77LIBS       = -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 -lg2c \
-#                -lF90 -lCEPCF90 -lintrins
+F77LIBS       = `gcc -print-file-name=libg2c.a` -lF90 -lCEPCF90 -lintrins
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \

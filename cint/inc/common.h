@@ -7,7 +7,7 @@
  * Description:
  * Common header file for cint parser.
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,6 +21,15 @@
 #ifndef G__COMMON_H
 #define G__COMMON_H
 
+
+/**************************************************************************
+* Note, Warning message display flag
+**************************************************************************/
+#define G__DISPNONE  0
+#define G__DISPERR   1
+#define G__DISPWARN  2
+#define G__DISPNOTE  3
+#define G__DISPALL   4
 
 /**************************************************************************
 * HSTD local facilities are turned on by defining G__HSTD. 
@@ -887,7 +896,7 @@ struct G__AppPragma {
 #define G__EUC           1
 #define G__SJIS          2
 #define G__JIS           3
-#define G__ONEBYTE       4
+#define G__ONEBYTE       4 /* ISO-8859-x */
 
 /* checking both EUC and S-JIS by flag */
 #define G__IsDBCSLeadByte(c) ((0x80&c)&&G__EUC!=G__lang&&G__CodingSystem(c)) 

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.4 2001/01/09 16:33:15 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.5 2001/07/09 10:57:05 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -42,7 +42,7 @@ Int_t DoubleMax(const void *a, const void *b)
 }
 
 //__________________________________________________________________________________________________
-TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen)
+TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen) : TObject(gen)
 {
    fNt      = gen.fNt;
    fWtMax   = gen.fWtMax;

@@ -89,13 +89,13 @@ char *expression;
     memarena = G__int(G__getexpr(arena));
     arenaflag=1;
 #ifndef G__OLDIMPLEMENTATION705
+#ifdef G__ASM
     if(G__asm_noverflow) {
       G__asm_inst[G__asm_cp] = G__SETGVP;
       G__asm_inst[G__asm_cp+1] = 0;
       G__inc_cp_asm(2,0);
-#ifdef G__ASM
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP 0\n",G__asm_cp);
 #endif
     }
 #endif
@@ -171,6 +171,13 @@ char *expression;
 #endif
     if(initializer) {
       pinc=1;
+#ifndef G__OLDIMPLEMENTATION1658
+      if(-1==tagnum) {
+	*initializer = 0;
+	tagnum = G__defined_tagname(basictype,1);
+	*initializer = '(';
+      }
+#endif
 #ifndef G__OLDIMPLEMENTATION1052
       if(-1!=tagnum) sprintf(construct,"%s%s"
 			     ,G__struct.name[tagnum],initializer);
@@ -439,10 +446,14 @@ char *expression;
 #ifdef G__ASM
       if(memarena && G__asm_noverflow) {
 	G__asm_inst[G__asm_cp] = G__SETGVP;
+#ifndef G__OLDIMPLEMENTATION1659
+	G__asm_inst[G__asm_cp+1] = -1;
+#else
 	G__asm_inst[G__asm_cp+1] = store_globalvarpointer;
+#endif
 	G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
 #endif
       }
 #endif
@@ -582,6 +593,18 @@ char *expression;
 #endif /* G__ASM */
 #endif /* G__ASM_IFUNC */
 #endif /* ON597 */
+#ifndef G__OLDIMPLEMENTATION1659
+#ifdef G__ASM
+      if(memarena && G__asm_noverflow) {
+	G__asm_inst[G__asm_cp] = G__SETGVP;
+	G__asm_inst[G__asm_cp+1] = -1;
+	G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1'\n",G__asm_cp);
+#endif
+      }
+#endif
+#endif /* ON1659 */
     }
   } /* end of if(var_type=='u') */
   else if(initializer) {
@@ -637,6 +660,18 @@ char *expression;
       G__inc_cp_asm(1,0);
     }
 #endif /* ASM */
+#ifndef G__OLDIMPLEMENTATION1659
+#ifdef G__ASM
+    if(memarena && G__asm_noverflow) {
+      G__asm_inst[G__asm_cp] = G__SETGVP;
+      G__asm_inst[G__asm_cp+1] = -1;
+      G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP -1''\n",G__asm_cp);
+#endif
+    }
+#endif
+#endif /* ON1659 */
   }
   
 #ifndef G__OLDIMPLEMENTATION683
