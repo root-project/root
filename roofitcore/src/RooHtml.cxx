@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.4 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.1 2001/10/04 00:37:18 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,8 +65,8 @@ void RooHtml::WriteHtmlHeader(ofstream &out, const char *title) {
     << "</table></center>" << endl;
 }
 
-void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
-			      const char *author="", const char *copyright="") {
+void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUpdate,
+			      const char *author, const char *copyright) {
   // Write a custom html footer for RooFit class documentation to the specified output stream.  
 
   // lastUpdate will be the CVS tag in case of .rdl and .cc files: clean it up a bit

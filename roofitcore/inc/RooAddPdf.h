@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.16 2001/09/27 18:22:28 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.17 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,14 +52,14 @@ public:
 
 protected:
 
-  mutable RooAICRegistry _codeReg ;
+  mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 
-  RooListProxy _pdfList ;
-  RooListProxy _coefList ;
-  TIterator* _pdfIter ; //! do not persist
-  TIterator* _coefIter ; //! do not persist
+  RooListProxy _pdfList ;  //  List of component PDFs
+  RooListProxy _coefList ; //  List of coefficients
+  TIterator* _pdfIter ;    //! Iterator over PDF list
+  TIterator* _coefIter ;   //! Iterator over coefficient list
 
-  Bool_t _haveLastCoef ;
+  Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.7 2001/09/11 00:30:30 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.8 2001/10/04 01:44:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -103,7 +103,7 @@ RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
 
 
 
-RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut=0) 
+RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut) 
 {
   // Create a subset of the data set by applying the given cut on the data points
   // and reducing the dimensions to the specified set.

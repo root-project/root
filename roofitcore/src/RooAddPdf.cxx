@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.15 2001/09/27 18:22:28 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.16 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,14 +20,24 @@
 // -- CLASS DESCRIPTION --
 // RooAddPdf is an efficient implementation of a sum of PDFs of the form 
 //
-//  (c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
+//  c_1*PDF_1 + c_2*PDF_2 + ... c_n*PDF_n 
 //
-// The coefficient of the last PDF is calculated automatically from the
-// normalization condition. RooAddPdf relies on each component PDF
-// to be normalized and will perform no normalization other than calculating
-// the proper last coefficient c_n.
-// An additional condition for this is that each coefficient c_k may
-// not overlap (i.e. share servers) with pdf_k.
+// or 
+//
+//  c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
+//
+// The first form is for extended likelihood fits, where the
+// expected number of events is Sum(i) c_i
+//
+// In the second form, the sum of the coefficients is enforced to be one,
+// and the coefficient of the last PDF is calculated from that condition.
+//
+// RooAddPdf relies on each component PDF to be normalized and will perform 
+// no normalization other than calculating the proper last coefficient c_n, if requested.
+// An (enforced) condition for this assuption is that each PDF(i) is independent
+// of each coefficient(i).
+//
+// 
 
 #include "TIterator.h"
 #include "TList.h"
@@ -61,7 +71,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _codeReg(10),
   _haveLastCoef(kFALSE)
 {
-  // Constructor with two PDFs
+  // Special constructor with two PDFs and one coefficient (most frequent use case)
 
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
@@ -78,6 +88,13 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _codeReg(10),
   _haveLastCoef(kFALSE)
 { 
+  // Generic constructor from list of PDFs and list of coefficients.
+  // Each pdf list element (i) is paired with coefficient list element (i).
+  // The number of coefficients must be either equal to the number of PDFs,
+  // in which case extended MLL fitting is enabled, or be one less.
+  //
+  // All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
+
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
  
@@ -148,7 +165,8 @@ RooAddPdf::~RooAddPdf()
 
 Double_t RooAddPdf::evaluate() const 
 {
-  // Calculate the current value of this object
+  // Calculate the current value
+
   const RooArgSet* nset = _pdfList.nset() ;
   
   Double_t value(0) ;
@@ -199,9 +217,10 @@ Double_t RooAddPdf::evaluate() const
 
 Bool_t RooAddPdf::checkDependents(const RooArgSet* nset) const 
 {
-  // Check if PDF is valid with dependent configuration given by specified data set
+  // Check if PDF is valid for given normalization set.
+  // Coeffient and PDF must be non-overlapping, but pdf-coefficient 
+  // pairs may overlap each other
 
-  // Coeffient and PDF should be non-overlapping, but coef/pdf pairs can overlap each other
   Bool_t ret(kFALSE) ;
 
   _pdfIter->Reset() ;
@@ -227,7 +246,13 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
-    // This PDF is by construction normalized
+  //
+  // RooAddPdf queries each component PDF for its analytical integration capability of the requested
+  // set ('allVars'). It finds the largest common set of variables that can be integrated
+  // by all components. If such a set exists, it reconfirms that each component is capable of
+  // analytically integrating the common set, and combines the components individual integration
+  // codes into a single integration code valid for RooAddPdf.
+
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   RooArgSet allAnalVars(allVars) ;
@@ -288,6 +313,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
+
   if (code==0) return getVal() ;
 
   const Int_t* subCode = _codeReg.retrieve(code-1) ;
@@ -350,6 +376,8 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 
 Double_t RooAddPdf::expectedEvents() const 
 {  
+  // Return the number of expected events, which is the sum of all coefficients
+
   // Calculate the current value of this object
   _coefIter->Reset() ;
 
@@ -369,7 +397,8 @@ Double_t RooAddPdf::expectedEvents() const
 RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions,
 			       Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const 
 {
-  // Plot selected components 
+  // Plot only the PDF components listed in 'compSet' of this PDF on 'frame'. 
+  // See RooAbsReal::plotOn() for a description of the remaining arguments and other features
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.11 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.12 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,9 +23,10 @@
 //  PDF_1 * PDF_2 * ... * PDF_N
 //
 // RooProdPdf relies on each component PDF to be normalized and will perform no 
-// explicit normalization itself. 
-// A condition for this to work is that each pdf in the product may not share
-// any servers with any other PDF. 
+// explicit normalization itself. No PDF may share any dependents with any other PDF. 
+// 
+// To construct a product of PDFs that share dependents, and thus require explicit
+// normalization of the product, use RooGenericPdf.
 
 #include "TIterator.h"
 #include "RooFitCore/RooProdPdf.hh"
@@ -54,9 +55,24 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   _cutOff(cutOff),
   _codeReg(10)
 {
-  // Constructor with 2 PDFs
-  addPdf(pdf1) ;
-  addPdf(pdf2) ;    
+  // Constructor with 2 PDFs (most frequent use case).
+  // 
+  // The optional cutOff parameter can be used as a speed optimization if
+  // one or more of the PDF have sizable regions with very small values,
+  // which would pull the entire product of PDFs to zero in those regions.
+  //
+  // After each PDF multiplication, the running product is compared with
+  // the cutOff parameter. If the running product is smaller than the
+  // cutOff value, the product series is terminated and remaining PDFs
+  // are not evaluated.
+  //
+  // There is no magic value of the cutOff, the user should experiment
+  // to find the appropriate balance between speed and precision.
+  // If a cutoff is specified, the PDFs most likely to be small should
+  // be put first in the product. The default cutOff value is zero.
+
+  _pdfList.add(pdf1) ;
+  _pdfList.add(pdf2) ;
 }
 
 
@@ -68,7 +84,22 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList,
   _cutOff(cutOff),
   _codeReg(10)
 {
-  // Constructor with 2 PDFs
+  // Constructor from a list of PDFs
+  // 
+  // The optional cutOff parameter can be used as a speed optimization if
+  // one or more of the PDF have sizable regions with very small values,
+  // which would pull the entire product of PDFs to zero in those regions.
+  //
+  // After each PDF multiplication, the running product is compared with
+  // the cutOff parameter. If the running product is smaller than the
+  // cutOff value, the product series is terminated and remaining PDFs
+  // are not evaluated.
+  //
+  // There is no magic value of the cutOff, the user should experiment
+  // to find the appropriate balance between speed and precision.
+  // If a cutoff is specified, the PDFs most likely to be small should
+  // be put first in the product. The default cutOff value is zero.
+
   TIterator* iter = pdfList.createIterator() ;
   RooAbsPdf* pdf ;
   while(pdf=(RooAbsPdf*)iter->Next()) {
@@ -77,7 +108,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList,
 	   << pdf->GetName() << " is not a PDF, ignored" << endl ;
       continue ;
     }
-    addPdf(*pdf) ;
+    _pdfList.add(*pdf) ;
   }
   delete iter ;
 }
@@ -102,17 +133,9 @@ RooProdPdf::~RooProdPdf()
 }
 
 
-
-void RooProdPdf::addPdf(RooAbsPdf& pdf) 
-{    
-  // Add PDF to product of PDFs
-  _pdfList.add(pdf) ;
-}
-
-
 Double_t RooProdPdf::evaluate() const 
 {
-  // Calculate current value of object
+  // Calculate current unnormalized value of object
 
   Double_t value(1) ;
     
@@ -132,12 +155,19 @@ Double_t RooProdPdf::evaluate() const
 Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
-  // If any analytical integration is possible, return integration scenario code
+  // If any analytical integration is possible, return integration scenario code.
+  //
+  // RooProdPdf implements two strategies in implementing analytical integrals
+  //
+  // First, PDF components whose entire set of dependents are requested to be integrated
+  // can be dropped from the product, as they will integrate out to 1 by construction
+  //
+  // Second, RooProdPdf queries each remaining component PDF for its analytical integration 
+  // capability of the requested set ('allVars'). It finds the largest common set of variables 
+  // that can be integrated by all remaining components. If such a set exists, it reconfirms that 
+  // each component is capable of analytically integrating the common set, and combines the components 
+  // individual integration codes into a single integration code valid for RooProdPdf.
 
-  // Determine if we can express the integral as a partial product of pdfs:
-  // If integration is requested over all of a component pdfs' dependents
-  // we know a priori, because the pdf is by construction normalized, that
-  // it will evaluate to 1 and can thus be dropped from the product.
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t code(0), n(0) ;
@@ -182,6 +212,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
+
   //cout << "RooProdPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
 
   // No integration scenario

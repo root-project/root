@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.12 2001/09/17 18:48:16 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.13 2001/09/24 23:06:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,6 +12,47 @@
 
 // -- CLASS DESCRIPTION --
 // 
+//  RooResolutionModel is the base class of for PDFs that represent a
+//  resolution model that can be convoluted with physics a physics model of the form
+//
+//    Phys(x,a,b) = Sum_k coef_k(a) * basis_k(x,b)
+//  
+//  where basis_k are a limited number of functions in terms of the variable
+//  to be convoluted and coef_k are coefficients independent of the convolution
+//  variable.
+//  
+//  Classes derived from RooResolutionModel implement 
+//         _ _                        _                  _
+//   R_k(x,b,c) = Int(dx') basis_k(x',b) * resModel(x-x',c)
+// 
+//  which RooConvolutedPdf uses to construct the pdf for [ Phys (x) R ] :
+//          _ _ _                 _          _ _
+//    PDF(x,a,b,c) = Sum_k coef_k(a) * R_k(x,b,c)
+//
+//  A minimal implementation of a RooResolutionModel consists of a
+//
+//    Int_t basisCode(const char* name)   
+//
+//  function indication which basis functions this resolution model supports, and
+//
+//    Double_t evaluate() 
+//
+//  Implementing the resolution model, optionally convoluted with one of the
+//  supported basis functions. RooResolutionModel objects can be used as regular
+//  PDFs (They inherit from RooAbsPdf), or as resolution model convoluted with
+//  a basis function. The implementation of evaluate() can identify the requested
+//  from of use from the basisCode() function. If zero, the regular PDF value
+//  should be calculated. If non-zero, the models value convoluted with the
+//  basis function identified by the code should be calculated.
+//
+//  Optionally, analytical integrals can be advertised and implemented, in the
+//  same way as done for regular PDFS (see RooAbsPdf for further details).
+//  Also in getAnalyticalIntegral()/analyticalIntegral() the implementation
+//  should use basisCode() to determine for which scenario the integral is
+//  requested.
+//
+//  The choice of basis returned by basisCode() is guaranteed not to change
+//  of the lifetime of a RooResolutionModel object.
 
 #include <iostream.h>
 #include "RooFitCore/RooResolutionModel.hh"
@@ -26,6 +67,7 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
   RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x),
   _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
 {
+  // Constructor with convolution variable 'x'
   if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
 }
 
@@ -34,13 +76,14 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
   RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x),
   _ownBasis(kFALSE), _normSpecial(0), _lastNormSetSpecial(0)
 {
+  // Copy constructor
+
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;
     _ownBasis = kTRUE ;
     //_basis = other._basis ;
   }
 
-  // Copy constructor
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
     RooAbsArg* basisServer ;
@@ -65,6 +108,10 @@ RooResolutionModel::~RooResolutionModel()
 
 RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
 {
+  // Instantiate a clone of this resolution model representing a convolution with given
+  // basis function. The owners object name is incorporated in the clones name
+  // to avoid multiple convolution objects with the same name in complex PDF structures.
+
   // Check that primary variable of basis functions is our convolution variable  
   if (basis->findServer(0) != x.absArg()) {
     cout << "RooResolutionModel::convolution(" << GetName() 
@@ -97,6 +144,9 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
 
 void RooResolutionModel::changeBasis(RooFormulaVar* basis) 
 {
+  // Change the basis function we convolute with.
+  // For one-time use by convolution() only.
+
   // Remove client-server link to old basis
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
@@ -125,6 +175,9 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
 
 const RooRealVar& RooResolutionModel::basisConvVar() const 
 {
+  // Return the convolution variable of the selection basis function.
+  // This is, by definition, the first parameter of the basis function
+
   // Convolution variable is by definition first server of basis function
   TIterator* sIter = basis().serverIterator() ;
   RooRealVar* var = (RooRealVar*) sIter->Next() ;
@@ -136,6 +189,7 @@ const RooRealVar& RooResolutionModel::basisConvVar() const
 
 RooRealVar& RooResolutionModel::convVar() const 
 {
+  // Return the convolution variable of the resolution model
   return (RooRealVar&) x.arg() ;
 }
 
@@ -143,6 +197,10 @@ RooRealVar& RooResolutionModel::convVar() const
 
 Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 {
+  // Modified version of RooAbsPdf::getVal(). If used as regular PDF, 
+  // call RooAbsPdf::getVal(), otherwise return unnormalized value
+  // regardless of specified normalization set
+
   if (!_basis) return RooAbsPdf::getVal(nset) ;
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
@@ -163,6 +221,9 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 
 Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) 
 {
+  // Forward redirectServers call to our basis function, which is not connected to either resolution
+  // model or the physics model.
+
   if (!_basis) return kFALSE ;
 
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
@@ -189,7 +250,7 @@ Bool_t RooResolutionModel::traceEvalHook(Double_t value) const
 
 void RooResolutionModel::normLeafServerList(RooArgSet& list) const 
 {
-  // Fill list with leaf server nodes of normalization integral 
+  // Return the list of servers used by our normalization integral
   _norm->leafNodeServerList(&list) ;
 }
 
@@ -197,6 +258,11 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 
 Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const 
 {
+  // Replica of RooAbsPdf::getNorm that uses a separate cache to store normalization
+  // integral. Used by RooConvolutedPdf::analyticalIntegralWN(), which, for
+  // normalized integrals, must retrieve two different integrals for each convolution 
+  // object. Using RooAbsPdf::getNorm for both would lead to 100% cache misses.
+
   if (!nset) return getVal() ;
 
   if (nset != _lastNormSetSpecial) {

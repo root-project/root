@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.10 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.11 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -65,15 +65,16 @@ protected:
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const ;
   virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const ;
 
-  const RooRealVar* convVar() const ;  // Convolution variable 
-  RooListProxy _convSet  ;             // Set of resModel X basisFunc convolution
-  TList _basisList ;                   // List of created basis functions
-  mutable RooArgSet* _convNormSet ;    // Dummy data set for convolution integrations
-  mutable TIterator* _convSetIter ;    //! do not persist
+  const RooRealVar* convVar() const ;  //  Convolution variable 
+
+  RooListProxy _convSet  ;             //  Set of (resModel (x) basisFunc) convolution objects
+  TList _basisList ;                   //  List of created basis functions
+  mutable RooArgSet* _convNormSet ;    //  Subset of last normalization that applies to convolutions
+  mutable TIterator* _convSetIter ;    //! Iterator over _convNormSet
 
   mutable RooAICRegistry _codeReg ; 
 
-  ClassDef(RooConvolutedPdf,1) // Abstract Resolution Model
+  ClassDef(RooConvolutedPdf,1) // Abstract Convoluted Physics Model
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.38 2001/09/28 21:59:27 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.39 2001/10/03 16:16:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,18 +14,84 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION --
+//
 // RooAbsPdf is the abstract interface for all probability density functions
 // The class provides hybrid analytical/numerical normalization for its implementations,
 // error tracing and a MC generator interface.
 //
-// Implementations need to provide the evaluate() member, which returns the (unnormalized)
-// PDF value, and optionally indicate support for analytical integration of certain
-// variables by reimplementing the getAnalyticalIntegral/analyticalIntegral members.
+// A minimal implementation of a PDF class derived from RooAbsPdf should overload
+// the evaluate() function. This functions should return PDFs value.
 //
-// Implementation should not attempt to perform normalization internally, since they
-// do not have the information to do it correctly: integrated dependents may be derived
-// and have jacobian terms that are invisible from within the class.
+// Normalization/Integration issues
+// --------------------------------
+//
+// --> No explicit attempt should be made to normalize the functions output in 
+//     evaluate. 
+//
+// RooAbsPdf objects do not have a static concept of what variables are 
+// parameters and what variables are dependents (which need to be integrated over for a 
+// correct PDF normalization). Instead the choice of normalization is always specified 
+// each time a normalized values is requested from the PDF via the getVal() method, so
+// there is not a unique choice of normalization
+//
+// Any variable of the PDF, including dependents that need to be integrated over,
+// may be a non-trivial function of other variables. A simple integration over the variable 
+// would miss possible Jacobian term leading to a wrong normalization.
+//
+// RooAbsPdf manages the entire normalization logic of each PDF with help of 
+// a RooRealIntegral object, which coordinates the integration of a given
+// choice of normalization. By default RooRealIntegral will perform a fully numeric
+// integration of all dependents. However, PDFs can advertise one or more (partial)
+// analytical integrals of their function, and these will be used by RooRealIntegral,
+// if it determines that this is safe (i.e. no hidden Jacobian terms, multiplication
+// with other PDFs that have one or more dependents in commen etc)
+//
+// To implement analytical integrals, two functions must be implemented. First,
+//
+// Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)
 // 
+// advertises the analytical integrals that are supported. 'integSet' is the set
+// of dependents for which integration is requested. The function should copy
+// the subset of dependents it can analytically integrate to anaIntSet and
+// return a unique identification code for this integration configuration.
+// If no integration can be performed, zero should be returned.
+// Second,
+//
+// Double_t analyticalIntegral(Int_t code)
+//
+// Implements the actual analytical integral(s) advertised by getAnalyticalIntegral.
+// This functions will only be called with codes returned by getAnalyticalIntegral,
+// except code zero.
+//
+// The integration range for real each dependent to be integrated can be obtained
+// from the dependents' proxy functions min() and max(). Never call these proxy 
+// functions for any proxy not known to be a dependent via the integration code.
+// Doing so may be ill-defined, e.g. in case the proxy holds a function, and will
+// trigger an assert. Integrated category dependents should always be summed over
+// all of their states.
+//
+//
+// Direct generation of dependents 
+// -------------------------------
+//
+// Any PDF dependent can be generated with the accept/reject method, but for certain
+// PDFs more efficient methods may be implemented. To implement direct generation
+// of one or more dependents, two functions need to be implemented, similar to
+// those for analytical integrals
+//
+// Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars) and
+// void generateEvent(Int_t code)
+//
+// The first function advertises dependents that can be generated, similar to the way
+// analytical integrals are advertised. The second function implements the generator
+// for the advertised dependents
+//
+// The generated dependent values should be store in the proxy objects. For this
+// the assignment operator can be used (i.e. xProxy = 3.0 ). Never call assign
+// to any proxy not known to be a dependent via the generation code.
+// Doing so may be ill-defined, e.g. in case the proxy holds a function, and will
+// trigger an assert
+
 
 #include <iostream.h>
 #include <math.h>
@@ -89,14 +155,16 @@ RooAbsPdf::~RooAbsPdf()
 Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 {
   // Return current value, normalizated by integrating over
-  // all dependents in nset. A null data set pointer will return 
-  // the unnormalized value
+  // the dependents in 'nset'. If 'nset' is 0, the unnormalized value. 
+  // is returned. All elements of 'nset' must be lvalues
+
 
   // Unnormalized values are not cached
   // Doing so would be complicated as _norm->getVal() could
   // spoil the cache and interfere with returning the cached
   // return value. Since unnormalized calls are typically
   // done in integration calls, there is no performance hit.
+
   if (!nset) {
     Double_t val = traceEval(nset) ;
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
@@ -127,7 +195,11 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
 Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const
 {
-  // Implement pass-through scenario, defer other codes to subclass implementations
+  // Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
+  //
+  // This function applies the normalization specified by 'normSet' to the integral returned
+  // by RooAbsReal::analyticalIntegral()
+
   if (code==0) return getVal(normSet) ;
   if (normSet) {
     return analyticalIntegral(code) / getNorm(normSet) ;
@@ -168,8 +240,8 @@ void RooAbsPdf::traceEvalPdf(Double_t value) const
 
 Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 {
-  // Return the normalization factor for this PDF consisting of the
-  // integral over all dependents listed in nset
+  // Return the integral of this PDF over all elements of 'nset'. 
+
 
   if (!nset) return 1 ;
 
@@ -183,25 +255,24 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 
 void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 {
-  // Synchronize internal caches to hold values appropriate for
-  // integration over the dependents in nset
+  // Verify that the normalization integral cached with this PDF
+  // is valid for given set of normalization dependents
+  //
+  // If not, the cached normalization integral (if any) is deleted
+  // and a new integral is constructed for use with 'nset'
+  // Elements in 'nset' can be discrete and real, but must be lvalues
+  //
+  // By default, only actual dependents of the PDF listed in 'nset'
+  // are integration. This behaviour can be modified in subclasses
+  // by overloading the syncNormalizationPreHook() function. 
+  // 
+  // For functions that declare to be self-normalized by overloading the
+  // selfNormalized() function, a unit normalization is always constructed
+
 
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
-
-  // Check if data sets have identical contents
-//   if (_lastNormSet) {
-//     RooNameSet newNames(*nset) ;
-//     if (newNames==_lastNameSet) {
-//       if (_verboseEval>1) {
-// 	cout << "RooAbsPdf::syncNormalization(" << GetName() << ") new data and old data sets are identical" << endl ;
-//       }
-//       return ;
-//     }
-//   }
-  
   _lastNormSet = (RooArgSet*) nset ;
-  //_lastNameSet.refill(*nset) ;
 
   // Update dataset pointers of proxies
   ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
@@ -228,7 +299,6 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
     delete dIter ;
     
   }
-
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
@@ -297,7 +367,9 @@ Bool_t RooAbsPdf::traceEvalHook(Double_t value) const
 
 void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 {
-  // Reset error counter to given value 
+  // Reset error counter to given value, limiting the number
+  // of future error messages for this pdf to 'resetValue'
+
   _errorCount = resetValue ;
   _negCount   = resetValue ;
 }
@@ -306,9 +378,13 @@ void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 
 void RooAbsPdf::setTraceCounter(Int_t value)
 {
-  // Reset trace counter to given value
+  // Reset trace counter to given value, limiting the
+  // number of future trace messages for this pdf to 'value'
   _traceCount = value ;
 }
+
+
+
 
 void RooAbsPdf::operModeHook() 
 {
@@ -319,7 +395,9 @@ void RooAbsPdf::operModeHook()
 
 Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const 
 {
-  // Return the log of the current value 
+  // Return the log of the current value with given normalization
+  // An error message is printed if the argument of the log is negative.
+
   Double_t prob = getVal(nset) ;
   if(prob <= 0) {
 
@@ -347,6 +425,13 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
 Double_t RooAbsPdf::extendedTerm(UInt_t observed) const 
 {
+  // Returned the extended likelihood term (Nexpect - Nobserved*log(NExpected)
+  // of this PDF for the given number of observed events
+  //
+  // For successfull operation the PDF implementation must indicate
+  // it is extendable by overloading canBeExtended() and must
+  // implemented the expectedEvents() function.
+
   // check if this PDF supports extended maximum likelihood fits
   if(!canBeExtended()) {
     cout << fName << ": this PDF does not support extended maximum likelihood"
@@ -364,7 +449,7 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
   // calculate and return the negative log-likelihood of the Poisson
   // factor for this dataset, dropping the constant log(observed!)
   Double_t extra= expected - observed*log(expected);
-
+  
   Bool_t trace(kFALSE) ;
   if(trace) {
     cout << fName << "::extendedTerm: expected " << expected << " events, got "
@@ -379,6 +464,41 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
 const RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
 {
   // Fit this PDF to given data set
+  //
+  // The dataset can be either binned, in which case a binned maximum likelihood fit
+  // is performed, or unbinned, in which case an unbinned maximum likelihood fit is performed
+  //
+  // Available fit options:
+  //
+  //  "m" = MIGRAD only, i.e. no MINOS 
+  //  "s" = estimate step size with HESSE before starting MIGRAD
+  //  "h" = run HESSE after MIGRAD
+  //  "e" = Perform extended MLL fit
+  //  "0" = Run MIGRAD with strategy MINUIT 0 (no correlation matrix calculation at end)
+  // 
+  //  "q" = Switch off verbose mode
+  //  "l" = Save log file with parameter values at each MINUIT step
+  //  "v" = Show changed parameters at each MINUIT step
+  //  "t" = Time fit 
+  //  "r" = Save fit output in RooFitResult object (return value is object RFR pointer)
+  //
+  // Available optimizer options
+  //
+  //  "p" = Cache and precalculate components of PDF that exclusively depend on constant parameters
+  //  "d" = Trim unused elements from data set
+  //  "c" = Streamline dirty state propagation
+  //  "s" = Calculate and update likelihood components of RooSimultaneous fit independently for each component
+  //
+  // The actual fit is performed to a temporary copy of both PDF and data set. Several optimization
+  // algorithm are run to increase the efficiency of the likelihood calculation and may increase
+  // the speed of complex fits up to an order of magnitude. All optimizations are exact, i.e the fit result
+  // of any fit should _exactly_ the same with and without optimization. We strongly encourage to keep
+  // to stick to the default optimizer setting (all on). If for any reason you see a difference in the result
+  // with and without optimizer, please file a bug report.
+  //
+  // The function always return null unless the "r" fit option is specified. In that case a pointer to a RooFitResult
+  // is returned. The RooFitResult object contains the full fit output, including the correlation matrix.
+
   RooFitContext context(&data,this) ;
   return context.fit(fitOpt,optOpt) ;
 }
@@ -460,7 +580,7 @@ void RooAbsPdf::generateEvent(Int_t code) {
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, 
 			   Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
 {
-  // Plot ourselves on given frame with optional scale factor
+  // Plot outself on 'frame'. See RooAbsReal::plotOn() for details.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.18 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.19 2001/09/28 21:59:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,6 +12,44 @@
 
 // -- CLASS DESCRIPTION --
 // 
+//  RooConvolutedPdf is the base class of for PDFs that represents a
+//  physics model that can be convoluted with a resolution model
+//  
+//  To achieve factorization between the physics model and the resolution
+//  model, each physics model must be able to be written in the form
+//           _ _                 _              _ 
+//    Phys(x,a,b) = Sum_k coef_k(a) * basis_k(x,b)
+//  
+//  where basis_k are a limited number of functions in terms of the variable
+//  to be convoluted and coef_k are coefficients independent of the convolution
+//  variable.
+//  
+//  Classes derived from RooResolutionModel implement 
+//         _ _                        _                  _
+//   R_k(x,b,c) = Int(dx') basis_k(x',b) * resModel(x-x',c)
+// 
+//  which RooConvolutedPdf uses to construct the pdf for [ Phys (x) R ] :
+//          _ _ _                 _          _ _
+//    PDF(x,a,b,c) = Sum_k coef_k(a) * R_k(x,b,c)
+//
+//  A minimal implementation of a RooConvolutedPdf physics model consists of
+//  
+//  - A constructor that declares the required basis functions using the declareBasis() method.
+//    The declareBasis() function assigns a unique identifier code to each declare basis
+//
+//  - An implementation of coefficient(Int_t code) returning the coefficient value for each
+//    declared basis function
+//
+//  Optionally, analytical integrals can be provided for the coefficient functions. The
+//  interface for this is quite similar to that for integrals of regular PDFs. Two functions,
+//
+//   Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) 
+//   Double_t coefAnalyticalIntegral(Int_t coef, Int_t code),
+//
+//  advertise the coefficient integration capabilities and implement them respectively.
+//  Please see RooAbsPdf for additional details. Advertised analytical integrals must be
+//  valid for all coefficients.
+
 
 #include <iostream.h>
 #include "RooFitCore/RooConvolutedPdf.hh"
@@ -31,7 +69,8 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
   _codeReg(10)
 {
-  // Constructor
+  // Constructor. The supplied resolution model must be constructed with the same
+  // convoluted variable as this physics model ('convVar')
   _convNormSet = new RooArgSet(convVar,"convNormSet") ;
 }
 
@@ -74,6 +113,17 @@ RooConvolutedPdf::~RooConvolutedPdf()
 
 Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& params) 
 {
+  // Declare a basis function for use in this physics model. The string expression 
+  // must be a valid RooFormulVar expression representing the basis function, referring
+  // to the convolution variable as '@0', and any additional parameters (supplied in
+  // 'params' as '@1','@2' etc.
+  //
+  // The return value is a unique identifier code, that will be passed to coefficient()
+  // to identify the basis function for which the coefficient is requested. If the
+  // resolution model used does not support the declared basis function, code -1 is
+  // returned. 
+  //
+
   // Sanity check
   if (!_model || !_convVar) {
     cout << "RooConvolutedPdf::declareBasis(" << GetName() << "): ERROR attempt to "
@@ -111,6 +161,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
 
 const RooRealVar* RooConvolutedPdf::convVar() const
 {
+  // Return a pointer to the convolution variable instance used in the resolution model
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
   if (!conv) return 0 ;  
   return &conv->convVar() ;
@@ -120,7 +171,10 @@ const RooRealVar* RooConvolutedPdf::convVar() const
 
 Double_t RooConvolutedPdf::evaluate() const
 {
-
+  // Calculate the current unnormalized value of the PDF
+  //
+  // PDF = sum_k coef_k * [ basis_k (x) ResModel ]
+  //
   Double_t result(0) ;
 
   _convSetIter->Reset() ;
@@ -139,6 +193,11 @@ Double_t RooConvolutedPdf::evaluate() const
 
 RooArgSet* RooConvolutedPdf::parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars) const
 {
+  // Auxiliary function for getAnalyticalIntegral parses integrated request represented by 'intSet' 
+  // The integration request is split in a set of coefficient dependents and a set of convoluted dependents
+  // From the coefficient set, the analytical integration code of the coefficient is determined.
+  // A clone of convolution dependents set is passed as return value.
+
   // Split allVars in a list for coefficients and a list for convolutions
   RooArgSet allVarsCoef("allVarsCoef") ;
   RooArgSet allVarsConv("allVarsConvInt") ;
@@ -181,8 +240,25 @@ RooArgSet* RooConvolutedPdf::parseIntegrationRequest(const RooArgSet& intSet, In
 
 
 Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
-					      RooArgSet& analVars, const RooArgSet* normSet) const 
+	  				        RooArgSet& analVars, const RooArgSet* normSet) const 
 {
+  // Determine which part given integral can be performed analytically.
+  //
+  // A RooConvolutedPdf will always claim to analytically integrate all dependents of the
+  // basis function (x) resolution model convolutions. These dependents are not actually
+  // integrated in analyticalIntegralWN() but passed down the the resolution model objects
+  // which will process these integrals internally.
+  //
+  // The ability to handle integration of coefficient depedents is determined from 
+  // getCoefAnalyticalIntegral().
+  //
+  // The entire procedure is repeated twice: once for the integral requested and once for
+  // the normalization of that integral. The output, 2 coefficient integration codes and
+  // two sets of integration dependents to pass down to the resolution model objects,
+  // are stored in an AICRegistry objects, which assigns a unique 'master' integration
+  // code for each configuration.
+
+
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
 
@@ -229,6 +305,29 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
 Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
+  // Return analytical integral defined by given scenario code.
+  //
+  // For unnormalized integrals this is
+  //                    _                _     
+  //   PDF = sum_k Int(dx) coef_k * Int(dy) [ basis_k (x) ResModel ].
+  //       _
+  // where x is the set of coefficient dependents to be integrated
+  // and y the set of basis function dependents to be integrated. 
+  //
+  // For normalized integrals this becomes
+  //
+  //         sum_k Int(dx) coef_k * Int(dy) [ basis_k (x) ResModel ].
+  //  PDF =  --------------------------------------------------------
+  //         sum_k Int(dv) coef_k * Int(dw) [ basis_k (x) ResModel ].
+  //
+  // where x is the set of coefficient dependents to be integrated,
+  // y the set of basis function dependents to be integrated,
+  // v is the set of coefficient dependents over which is normalized and
+  // w is the set of basis function dependents over which is normalized.
+  //
+  // Set x must be contained in v and set y must be contained in w.
+  //
+
   // Handle trivial passthrough scenario
   if (code==0) return getVal(normSet) ;
 
@@ -286,6 +385,9 @@ Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
 Int_t RooConvolutedPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
+  // Default implementation of function advertising integration capabilities: no integrals
+  // are advertised.
+
   return 0 ;
 }
 
@@ -293,6 +395,9 @@ Int_t RooConvolutedPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet&
 
 Double_t RooConvolutedPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const 
 {
+  // Default implementation of function implementing advertised integrals. Only
+  // the pass-through scenario (no integration) is implemented.
+
   if (code==0) return coefficient(coef) ;
   cout << "RooConvolutedPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
   assert(0) ;
@@ -303,7 +408,15 @@ Double_t RooConvolutedPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const
 
 Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 {
-  // Force 'analytical' integration of whatever is delegated to the convolution integrals
+  // This function forces RooRealIntegral to offer all integration dependents
+  // to RooConvolutedPdf::getAnalyticalIntegralWN() for consideration for
+  // analytical integration, if RRI considers this to be unsafe (e.g. due
+  // to hidden Jacobian terms). 
+  //
+  // RooConvolutedPdf will not attempt to actually integrate all these dependents
+  // but feed them to the resolution models integration interface, which will
+  // make the final determination on how to integrate these dependents.
+
   return kTRUE ;
 }                                                                                                                         
                
@@ -312,6 +425,18 @@ Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 
 Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
+  // Overload of hook function in RooAbsPdf::syncNormalization(). This functions serves
+  // two purposes: 
+  //
+  //   - Modify default normalization behaviour of RooAbsPdf: integration requests over
+  //     unrelated variables are properly executed (introducing a trivial multiplication
+  //     for each unrelated dependent). This is necessary if composite resolution models
+  //     are used in which the components do not necessarily all have the same set
+  //     of dependents.
+  //
+  //   - Built the sub set of normalization dependents that is contained the basis function/
+  //     resolution model convolution (to be used in syncNormalizationPostHook().
+
   delete _convNormSet ;
   RooArgSet convNormArgs("convNormArgs") ;
 
@@ -340,8 +465,19 @@ Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
   return kFALSE ;
 }
 
+
+
+
 void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
+  // Overload of hook function in RooAbsPdf::syncNormalization(). This function propagates
+  // the syncNormalization() call to all basis-function/resolution-model convolution component
+  // objects and fixes the physics models client-server links by adding each variable that
+  // serves any of the convolution objects normalizations. PDFs by default have all client-server
+  // links that control the unnormalized value (as returned by evaluate()), but convoluted PDFs
+  // have a non-trivial normalization term that may introduc dependencies on additional server
+  // that exclusively appear in the normalization.
+
   TIterator* cvIter = _convSet.createIterator() ;
   RooResolutionModel* conv ;
 

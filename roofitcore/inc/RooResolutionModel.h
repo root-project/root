@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.rdl,v 1.7 2001/09/17 18:48:16 verkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.8 2001/09/24 23:06:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -41,10 +41,10 @@ public:
 
 protected:
 
-  static RooFormulaVar* _identity ;
+  static RooFormulaVar* _identity ;  // Identity basis function pointer
 
   friend class RooAddModel ;
-  RooRealProxy x ; // Dependent/convolution variable
+  RooRealProxy x ;                   // Dependent/convolution variable
 
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return kTRUE ; } ;
 
@@ -55,12 +55,12 @@ protected:
 
   friend class RooConvolutedPdf ;
   virtual Double_t getNormSpecial(const RooArgSet* set=0) const ;
-  mutable RooRealIntegral* _normSpecial ; //!
-  mutable RooArgSet* _lastNormSetSpecial ; //!
+  mutable RooRealIntegral* _normSpecial ;   //! Cached 'special' normalization integral
+  mutable RooArgSet* _lastNormSetSpecial ;  //! Normalization set used to create cached 'special' integral
 
-  Int_t _basisCode ;
-  RooFormulaVar* _basis ;
-  Bool_t _ownBasis ;
+  Int_t _basisCode ;         // Identifier code for selected basis function
+  RooFormulaVar* _basis ;    // Basis function convolved with this resolution model
+  Bool_t _ownBasis ;         // Flag indicating ownership of _basis 
 
   ClassDef(RooResolutionModel,1) // Abstract Resolution Model
 };
