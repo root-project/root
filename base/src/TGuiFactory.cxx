@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.2 2001/10/02 09:07:43 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TContextMenuImp.h"
 #include "TControlBarImp.h"
 #include "TInspectorImp.h"
+#include "TROOT.h"
 
 TGuiFactory *gGuiFactory = 0;
 TGuiFactory *gBatchGuiFactory = 0;
@@ -110,6 +111,10 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
 {
    // Create a batch version of TInspectorImp.
 
-   return new TInspectorImp(obj, width, height);
+   if (gROOT->IsBatch()) 
+      return new TInspectorImp(obj, width, height);
+   else 
+      gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)obj));
+   return 0;
 }
 

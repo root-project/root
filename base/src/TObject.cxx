@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.42 2002/08/06 21:29:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.43 2002/08/23 09:12:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -52,6 +52,8 @@
 #include "TDatime.h"
 #include "TProcessID.h"
 #include "TMath.h"
+#include "TSystem.h"
+
 
 
 Long_t TObject::fgDtorOnly = 0;
@@ -611,15 +613,7 @@ void TObject::Inspect() const
    */
    //End_Html
 
-#ifdef WIN32
-#ifdef GDK_WIN32
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
-#else
    gGuiFactory->CreateInspectorImp(this, 400, 200);
-#endif
-#else
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
-#endif
 }
 
 //______________________________________________________________________________
