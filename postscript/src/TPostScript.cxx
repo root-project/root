@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.46 2004/02/12 09:46:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.47 2004/03/17 17:35:32 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -711,6 +711,8 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    //  If nn<0 the line is clipped as a fill area.
 
    Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
    if (nn > 0) {
       n = nn;
       SetLineStyle(fLineStyle);
@@ -728,9 +730,9 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    WriteInteger(ixd0);
    WriteInteger(iyd0);
    if( n <= 1) {
-      if( n == 0) return;
+      if( n == 0) goto END;
       PrintFast(2," m");
-      return;
+      goto END;
    }
 
    PrintFast(2," m");
@@ -772,6 +774,11 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    } else {
       PrintFast(2," f");
    }
+END:
+   if (nn < 0) {
+      SetLineStyle(linestylesav);
+      SetLineWidth(linewidthsav);
+   }
 }
 
 //______________________________________________________________________________
@@ -787,6 +794,8 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    //  If nn<0 the line is clipped as a fill area.
 
    Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
    if (nn > 0) {
       n = nn;
       SetLineStyle(fLineStyle);
@@ -804,9 +813,9 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    WriteInteger(ixd0);
    WriteInteger(iyd0);
    if( n <= 1) {
-      if( n == 0) return;
+      if( n == 0) goto END;
       PrintFast(2," m");
-      return;
+      goto END;
    }
 
    PrintFast(2," m");
@@ -847,6 +856,11 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
       PrintFast(2," s");
    } else {
       PrintFast(2," f");
+   }
+END:
+   if (nn < 0) {
+      SetLineStyle(linestylesav);
+      SetLineWidth(linewidthsav);
    }
 }
 
@@ -991,6 +1005,10 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
                                     180, 90,135, 45,150, 30,120, 60};
    Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = 0;
+   Int_t jxd0 = XtoPS(xw[0]);
+   Int_t jyd0 = YtoPS(yw[0]);
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
       n = nn;
@@ -1007,7 +1025,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       if (fais == 3 || fais == 2) {
          if (fasi > 100 && fasi <125) {
             DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
-            return;
+            goto END;
          }
          if (fasi > 0 && fasi < 26) {
             SetFillPatterns(fasi, Int_t(fFillColor));
@@ -1015,16 +1033,14 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       }
    }
 
-   Int_t jxd0 = XtoPS(xw[0]);
-   Int_t jyd0 = YtoPS(yw[0]);
    ixd0 = jxd0;
    iyd0 = jyd0;
    WriteInteger(ixd0);
    WriteInteger(iyd0);
    if( n <= 1) {
-      if( n == 0) return;
+      if( n == 0) goto END;
       PrintFast(2," m");
-      return;
+      goto END;
    }
 
    PrintFast(2," m");
@@ -1059,7 +1075,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(3," cl");
       PrintFast(2," s");
    } else {
-      if (fais == 0) {PrintFast(5," cl s"); return;}
+      if (fais == 0) {PrintFast(5," cl s"); goto END;}
       if (fais == 3 || fais == 2) {
          if (fasi > 0 && fasi < 26) {
             PrintFast(3," FA");
@@ -1067,9 +1083,14 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
             fGreen = -1;
             fBlue  = -1;
          }
-         return;
+         goto END;
       }
       PrintFast(2," f");
+   }
+END:
+   if (nn < 0) {
+      SetLineStyle(linestylesav);
+      SetLineWidth(linewidthsav);
    }
 }
 
@@ -1094,6 +1115,10 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
                                     180, 90,135, 45,150, 30,120, 60};
    Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = 0;
+   Int_t jxd0 = XtoPS(xw[0]);
+   Int_t jyd0 = YtoPS(yw[0]);
+   Style_t linestylesav = fLineStyle;
+   Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
       n = nn;
@@ -1110,7 +1135,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       if (fais == 3 || fais == 2) {
          if (fasi > 100 && fasi <125) {
             DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
-            return;
+            goto END;
          }
          if (fasi > 0 && fasi < 26) {
             SetFillPatterns(fasi, Int_t(fFillColor));
@@ -1118,16 +1143,14 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
 
-   Int_t jxd0 = XtoPS(xw[0]);
-   Int_t jyd0 = YtoPS(yw[0]);
    ixd0 = jxd0;
    iyd0 = jyd0;
    WriteInteger(ixd0);
    WriteInteger(iyd0);
    if( n <= 1) {
-      if( n == 0) return;
+      if( n == 0) goto END;
       PrintFast(2," m");
-      return;
+      goto END;
    }
 
    PrintFast(2," m");
@@ -1162,7 +1185,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(3," cl");
       PrintFast(2," s");
    } else {
-      if (fais == 0) {PrintFast(5," cl s"); return;}
+      if (fais == 0) {PrintFast(5," cl s"); goto END;}
       if (fais == 3 || fais == 2) {
          if (fasi > 0 && fasi < 26) {
             PrintFast(3," FA");
@@ -1170,9 +1193,14 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
             fGreen = -1;
             fBlue  = -1;
          }
-         return;
+         goto END;
       }
       PrintFast(2," f");
+   }
+END:
+   if (nn < 0) {
+      SetLineStyle(linestylesav);
+      SetLineWidth(linewidthsav);
    }
 }
 
