@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.70 2004/06/10 14:38:40 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.71 2004/06/10 18:58:32 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2226,7 +2226,9 @@ Int_t TGWin32::InitWindow(ULong_t win)
    }
    attributes.window_type = GDK_WINDOW_CHILD;
    gCws->window = gdk_window_new(wind, &attributes, attr_mask);
+   HWND hwnd = ::GetForegroundWindow();
    gdk_window_show((GdkWindow *) gCws->window);
+   if (hwnd) ::SetForegroundWindow(hwnd);
    GdiFlush();
 
    // Initialise the window structure
@@ -4360,7 +4362,9 @@ void TGWin32::MapWindow(Window_t id)
 {
    // Map window on screen.
 
+   HWND hwnd = ::GetForegroundWindow();
    gdk_window_show((GdkWindow *)id);
+   if (hwnd) ::SetForegroundWindow(hwnd);
 }
 
 //______________________________________________________________________________
@@ -4368,9 +4372,11 @@ void TGWin32::MapSubwindows(Window_t id)
 {
    //
 
+   HWND hwnd = ::GetForegroundWindow();
    HWND wp;
    EnumChildWindows((HWND) GDK_DRAWABLE_XID((GdkWindow *) id),
                     EnumChildProc, (LPARAM) NULL);
+   if (hwnd) ::SetForegroundWindow(hwnd);
 }
 
 //______________________________________________________________________________
@@ -4378,8 +4384,10 @@ void TGWin32::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
 
-   gdk_window_show((GdkWindow *) id);
-   gdk_window_raise((GdkWindow *) id);
+   HWND hwnd = ::GetForegroundWindow();
+   gdk_window_show((GdkWindow *)id);
+   gdk_window_raise((GdkWindow *)id);
+   if (hwnd) ::SetForegroundWindow(hwnd);
 }
 
 //______________________________________________________________________________
@@ -6095,7 +6103,6 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    MapEventMask(evmask, xevmask);
 
    if (grab) {
-      WindowAttributes_t wa;
       if(!::IsWindowVisible((HWND)GDK_DRAWABLE_XID(id))) return;
       gdk_pointer_grab((GdkWindow *) id, owner_events, (GdkEventMask) xevmask,
                        (GdkWindow *) confine, (GdkCursor *) cursor,
