@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.98 2001/10/25 10:33:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.99 2001/10/25 10:45:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2810,6 +2810,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
          Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
          for (j=0;j<nbranches;j++) {
             bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
+            if (!bson) continue;
             if (!bson->TestBit(kDoNotProcess)) {
                branch->ResetBit(kDoNotProcess);
                break;
