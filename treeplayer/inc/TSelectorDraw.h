@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.1 2003/01/10 14:53:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.2 2003/01/11 09:07:20 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -92,7 +92,6 @@ public:
     virtual Double_t *GetV2() const   {return fV2;}
     virtual Double_t *GetV3() const   {return fV3;}
     virtual Double_t *GetW() const    {return fW;}
-    virtual void      Init(TTree *tree);
     virtual void      MakeIndex(TString &varexp, Int_t *index);
     virtual Bool_t    Notify();
     virtual Bool_t    Process(Int_t entry) { return kFALSE; }
@@ -102,7 +101,6 @@ public:
     virtual void      TakeAction();
     virtual void      TakeEstimate();
     virtual void      Terminate();
-    virtual void      UpdateFormulaLeaves();
 
     ClassDef(TSelectorDraw,1)  //A specialized TSelector for TTree::Draw
 };

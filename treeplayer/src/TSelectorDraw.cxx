@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.1 2003/01/10 14:53:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.2 2003/01/11 09:07:20 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -16,37 +16,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <string.h>
-#include <stdio.h>
-
-#include "snprintf.h"
-
-#include "Riostream.h"
 #include "TSelectorDraw.h"
 #include "TROOT.h"
-#include "TSystem.h"
-#include "TFile.h"
-#include "TMath.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TView.h"
 #include "TPolyMarker.h"
 #include "TPolyMarker3D.h"
 #include "TDirectory.h"
-#include "TClonesArray.h"
-#include "TClass.h"
 #include "TVirtualPad.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TTreeFormulaManager.h"
-#include "TGaxis.h"
-#include "TBrowser.h"
-#include "TStyle.h"
 #include "TEnv.h"
 #include "TTree.h"
 #include "TEventList.h"
 #include "THLimitsFinder.h"
-#include "TPluginManager.h"
 
 ClassImp(TSelectorDraw)
 
@@ -772,16 +757,7 @@ const char *TSelectorDraw::GetNameByIndex(TString &varexp, Int_t *index,Int_t co
   i1 = index[colindex] + 1;
   n  = index[colindex+1] - i1;
   column = varexp(i1,n);
-//  return (const char*)Form((const char*)column);
   return column.Data();
-}
-
-
-//______________________________________________________________________________
-void TSelectorDraw::Init(TTree *tree)
-{
- //Attach a new TTree during the loop
-   
 }
 
 
@@ -808,8 +784,12 @@ Bool_t TSelectorDraw::Notify()
 {
  //This function is called at the first entry of a new  tree in a chain.
    
-   return kTRUE;
-   
+   if (fVar1) fVar1->UpdateFormulaLeaves();
+   if (fVar2) fVar2->UpdateFormulaLeaves();
+   if (fVar3) fVar3->UpdateFormulaLeaves();
+   if (fVar4) fVar4->UpdateFormulaLeaves();
+   if (fSelect) fSelect->UpdateFormulaLeaves();
+   return kTRUE;   
 }
 
 //______________________________________________________________________________
@@ -1157,18 +1137,4 @@ void TSelectorDraw::Terminate()
    if (fSelectedRows == 0) fDraw = 1; // do not draw
    
    SetStatus(fSelectedRows);
-}
-
-//______________________________________________________________________________
-void TSelectorDraw::UpdateFormulaLeaves()
-{
-   // this function is called by TChain::LoadTree when a new Tree is loaded.
-   // Because Trees in a TChain may have a different list of leaves, one
-   // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
-
-   if (fVar1) fVar1->UpdateFormulaLeaves();
-   if (fVar2) fVar2->UpdateFormulaLeaves();
-   if (fVar3) fVar3->UpdateFormulaLeaves();
-   if (fVar4) fVar4->UpdateFormulaLeaves();
-   if (fSelect) fSelect->UpdateFormulaLeaves();
 }

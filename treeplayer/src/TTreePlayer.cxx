@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.114 2003/01/10 14:51:51 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.115 2003/01/11 09:07:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2537,5 +2537,5 @@ void TTreePlayer::UpdateFormulaLeaves()
    // Because Trees in a TChain may have a different list of leaves, one
    // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
 
-   if (fSelector) fSelector->UpdateFormulaLeaves();
+   if (fSelector) fSelector->Notify();
 }
