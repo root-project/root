@@ -380,7 +380,11 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
                 !strstr(s,"@AEPAXI@Z")   && !strstr(s,"AEPAXI@Z")    &&
                 !strstr(s,"real@"))
 */
-            if (!strstr(s,"AEPAXI@Z") && !strstr(s,"real@"))
+              const char *scalarPrefix = "??_G";
+              const char *vectorPrefix = "??_E";
+              if (strncmp(s,scalarPrefix,strlen(scalarPrefix))!=0 && 
+                  strncmp(s,vectorPrefix,strlen(vectorPrefix))!=0 &&
+                 !strstr(s,"real@"))
             {
               SectChar = pSectionHeaders[pSymbolTable->SectionNumber-1].Characteristics;
               if (!pSymbolTable->Type  && (SectChar & IMAGE_SCN_MEM_WRITE)) {
