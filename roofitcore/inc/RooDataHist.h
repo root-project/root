@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataHist.rdl,v 1.1 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -31,25 +31,25 @@ public:
   // Constructors, factory methods etc.
   RooDataHist() ; 
   RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
+  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1) ;
+  virtual void add(const RooArgSet& row, Double_t weight=1.0) ;
+  void add(const RooAbsData& dset, const RooFormulaVar* cutVar=0, Double_t weight=1.0 ) ;
+  void add(const RooAbsData& dset, const char* cut, Double_t weight=1.0 ) ;
   virtual const RooArgSet* RooDataHist::get(Int_t masterIdx) const ;
+  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ; 
 
   virtual Double_t weight() const { return _curWeight ; }
 
   virtual void reset() ;
-
-  // Plot the distribution of a real valued arg
-  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const ;
-
  
 protected:
  
+  void initialize() ;
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;

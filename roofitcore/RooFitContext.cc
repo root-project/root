@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.24 2001/09/11 00:30:32 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.25 2001/09/11 22:21:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -645,7 +645,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
     _dataClone->get(index);
 
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
-    if(term == 0) return 0;
+    if(term == 0 && _dataClone->weight()) return 0;
     result-= term;
   }
 

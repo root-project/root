@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataSet.rdl,v 1.31 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,27 +52,19 @@ public:
   virtual void add(const RooArgSet& row, Double_t weight=1.0);
   void append(RooDataSet& data) ;
 
-  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
   // Plot the distribution of a real valued arg
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
-  TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
-			const char *name= "hist") const;	 
   TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts="", 
 			const char *name= "hist") const;	 
   TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
-  // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, 
-			     TString indent= "") const;
+protected:
 
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
-
-protected:
 
   ClassDef(RooDataSet,1) // Unbinned data set
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.rdl,v 1.7 2001/05/14 22:54:18 verkerke Exp $
+ *    File: $Id: Roo1DTable.rdl,v 1.8 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,7 @@ public:
   Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);
   Roo1DTable(const Roo1DTable& other) ;
 
-  virtual void fill(RooAbsCategory& cat) ;
+  virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) ;
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
@@ -37,8 +37,8 @@ protected:
 
   
   TObjArray _types ;
-  Int_t* _count ; //! do not persist
-  Int_t _nOverflow ;
+  Double_t* _count ; //! do not persist
+  Double_t  _nOverflow ;
 
   ClassDef(Roo1DTable,1) // 1-dimensional table
 };

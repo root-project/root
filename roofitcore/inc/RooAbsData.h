@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.4 2001/09/11 00:30:30 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.5 2001/09/11 19:09:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -62,7 +62,7 @@ public:
   virtual Double_t weight() const = 0 ; 
   virtual const RooArgSet* get(Int_t index) const = 0 ;
 
-  virtual Int_t numEntries() const = 0 ;
+  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;
   virtual void reset() = 0 ;
 
   // Plot the distribution of a real valued arg

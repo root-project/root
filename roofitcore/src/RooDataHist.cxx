@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataHist.cc,v 1.1 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,8 +32,23 @@ RooDataHist::RooDataHist()
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars) : 
   RooTreeData(name,title,vars), _curWeight(0) 
 {
+  initialize() ;
+}
+
+
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data) :
+  RooTreeData(name,title,vars), _curWeight(0)
+{
+  initialize() ;
+  add(data) ;
+}
+
+
+
+void RooDataHist::initialize()
+{
   // Allocate coefficients array
-  _idxMult = new Int_t[vars.getSize()] ;
+  _idxMult = new Int_t[_vars.getSize()] ;
 
   _arrSize = 1 ;
   _iterator->Reset() ;
@@ -53,6 +68,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
   // Allocate and initialize weight array 
   _wgt = new Double_t[_arrSize] ;
+  for (i=0 ; i<_arrSize ; i++) _wgt[i] = 0 ;
 
 
   // Fill TTree with bin center coordinates
@@ -73,9 +89,25 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
+
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   RooTreeData(other,newname), _curWeight(0) 
 {
+  Int_t i ;
+
+  Int_t nVar = _vars.getSize() ;
+  _idxMult = new Int_t[nVar] ;
+  for (i=0 ; i<nVar ; i++) {
+    _idxMult[i] = other._idxMult[i] ;  
+  }
+
+  // Allocate and initialize weight array 
+  _arrSize = other._arrSize ;
+  _wgt = new Double_t[_arrSize] ;
+  for (i=0 ; i<_arrSize ; i++) {
+    _wgt[i] = other._wgt[i] ;
+  }  
+
 }
 
 
@@ -83,15 +115,15 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 			 const RooFormulaVar* cutVar, Bool_t copyCache) :
   RooTreeData(name,title,h,varSubset,cutVar, copyCache)
 {
-  // Need to collapse weight matrix here
-  assert(0) ;
 }
 
 
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache) 
 {
-  return new RooDataHist(GetName(), GetTitle(), this, varSubset, cutVar, copyCache) ;
+  RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), varSubset) ;
+  rdh->add(*this,cutVar) ;
+  return rdh ;
 }
 
 
@@ -115,10 +147,60 @@ Int_t RooDataHist::calcTreeIndex() const {
 }
 
 
+
+
 void RooDataHist::add(const RooArgSet& row, Double_t weight) 
 {
   _vars = row ;
   _wgt[calcTreeIndex()] += weight ;
+}
+
+
+void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t weight) 
+{  
+  RooFormulaVar cutVar("select",cut,*dset.get()) ;
+  return add(dset,&cutVar,weight) ;
+}
+
+
+
+void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Double_t weight) 
+{
+  RooFormulaVar* cloneVar(0) ;
+  RooArgSet* tmp ;
+  if (cutVar) {
+    // Deep clone cutVar and attach clone to this dataset
+    tmp = RooArgSet(*cutVar).snapshot() ;
+    cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
+    cloneVar->attachDataSet(dset) ;
+    cloneVar->Print("v") ;
+  }
+
+
+  Int_t i ;
+  for (i=0 ; i<dset.numEntries() ; i++) {
+    const RooArgSet* row = dset.get(i) ;
+    if (!cloneVar || cloneVar->getVal()) {
+      add(*row,weight*dset.weight()) ;
+    }
+  }
+
+  if (cloneVar) {
+    delete tmp ;
+  } 
+}
+
+
+Int_t RooDataHist::numEntries(Bool_t useWeights) const 
+{
+  if (!useWeights) return RooTreeData::numEntries() ;
+
+  Int_t i ;
+  Double_t n(0) ;
+  for (i=0 ; i<_arrSize ; i++) {
+    n+= _wgt[i] ;
+  }
+  return Int_t(n) ;
 }
 
 
@@ -138,19 +220,10 @@ void RooDataHist::reset()
 const RooArgSet* RooDataHist::get(Int_t masterIdx) const  
 {
   _curWeight = _wgt[masterIdx] ;
-  return RooTreeData::get(masterIdx) ;
+  return RooTreeData::get(masterIdx) ;  
 }
 
 
-Roo1DTable* RooDataHist::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
-{
-  return 0 ;
-}
 
-
-RooPlot* RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
-{
-  return 0 ;
-}
 
 

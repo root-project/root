@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataSet.cc,v 1.46 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -114,117 +114,12 @@ void RooDataSet::append(RooDataSet& data) {
 
 
 
-RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
-{
-  // Fill a histogram of values calculated from events in our dataset.
-
-  if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
-    return 0;
-  }
-  RooAbsReal *var= frame->getPlotVar();
-  if(0 == var) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: frame does not specify a plot variable" << endl;
-    return 0;
-  }
-
-  // create a temporary histogram of this variable
-  TH1F *hist= createHistogram(*var, cuts, "plot");
-  if(0 == hist) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: createHistogram() failed" << endl;
-    return 0;
-  }
-
-  // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist);
-  if(0 == graph) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: unable to create a RooHist object" << endl;
-    delete hist;
-    return 0;
-  }
-
-  // initialize the frame's normalization setup, if necessary
-  frame->updateNormVars(_vars);
-
-  // add the RooHist to the specified plot
-  frame->addPlotable(graph,drawOptions);
-
-  // cleanup
-  delete hist;
-
-  return frame;  
-}
-
-TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const char *name) const
-{
-  // Create a TH1F histogram of the distribution of the specified variable
-  // using this dataset. Apply any cuts to select which events are used.
-  // The variable being plotted can either be contained directly in this
-  // dataset, or else be a function of the variables in this dataset.
-  // The histogram will be created using RooAbsReal::createHistogram() with
-  // the name provided (with our dataset name prepended).
-
-  Bool_t ownPlotVar(kFALSE) ;
-  // Is this variable in our dataset?
-  RooAbsReal* plotVar= (RooAbsReal*)_vars.find(var.GetName());
-  if(0 == plotVar) {
-    // Is this variable a client of our dataset?
-    if (!var.dependsOn(_vars)) {
-      cout << GetName() << "::createHistogram: Argument " << var.GetName() 
-	   << " is not in dataset and is also not dependent on data set" << endl ;
-      return 0 ; 
-    }
-
-    // Clone derived variable 
-    plotVar = (RooAbsReal*) var.Clone()  ;
-    ownPlotVar = kTRUE ;
-
-    //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    plotVar->redirectServers(const_cast<RooArgSet&>(_vars)) ;
-  }
-
-  // Create selection formula if selection cuts are specified
-  RooFormula* select(0) ;
-  if(0 != cuts && strlen(cuts)) {
-    select=new RooFormula(cuts,cuts,_vars);
-    if (!select || !select->ok()) {
-      delete select;
-      return 0 ;
-    }
-  }
-  
-  TString histName(name);
-  histName.Prepend("_");
-  histName.Prepend(fName);
-
-  // WVE use var instead of plotVar, otherwise binning properties
-  // of data set copy of plot var are always used.
-  TH1F *histo= var.createHistogram(histName.Data(), "Events");
-
-  // Dump contents   
-  Int_t nevent= (Int_t)_tree->GetEntries();
-  for(Int_t i=0; i < nevent; ++i) {
-    Int_t entryNumber=_tree->GetEntryNumber(i);
-    if (entryNumber<0) break;
-    get(entryNumber);
-
-    if (select && select->eval()==0) continue ;
-    histo->Fill(plotVar->getVal()) ;
-  }
-
-  if (ownPlotVar) delete plotVar ;
-  if (select) delete select ;
-
-  return histo ;
-}
-
 TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts, const char *name) const
 {
   return createHistogram(var1, var2, var1.getPlotBins(), var2.getPlotBins(), cuts, name);
 }
+
+
 
 TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, Int_t nx, Int_t ny, const char* cuts, const char *name) const
 {
@@ -313,73 +208,6 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
 
   return histogram ;
 }
-
-
-Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
-{
-  // Create and fill a 1-dimensional table for given category column
-
-  // First see if var is in data set 
-  RooAbsCategory* tableVar = (RooAbsCategory*) _vars.find(cat.GetName()) ;
-  Bool_t ownPlotVar(kFALSE) ;
-  if (!tableVar) {
-    if (!cat.dependsOn(_vars)) {
-      cout << "RooDataSet::Table(" << GetName() << "): Argument " << cat.GetName() 
-	   << " is not in dataset and is also not dependent on data set" << endl ;
-      return 0 ; 
-    }
-
-    // Clone derived variable 
-    tableVar = (RooAbsCategory*) cat.Clone()  ;
-    ownPlotVar = kTRUE ;    
-
-    //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    tableVar->redirectServers(_vars) ;
-  }
-
-  Roo1DTable* table = tableVar->createTable("dataset") ;
-  
-  // Dump contents   
-  Int_t nevent= (Int_t)_tree->GetEntries();
-  for(Int_t i=0; i < nevent; ++i) {
-    Int_t entryNumber=_tree->GetEntryNumber(i);
-    if (entryNumber<0) break;
-    get(entryNumber);
-    table->fill(*tableVar) ;
-  }
-
-  if (ownPlotVar) delete tableVar ;
-
-  return table ;
-}
-
-
-
-void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this dataset to the specified output stream.
-  //
-  //   Standard: number of entries
-  //      Shape: list of variables we define & were generated with
-
-  oneLinePrint(os,*this);
-  if(opt >= Standard) {
-    os << indent << "  Contains " << GetEntries() << " entries" << endl;
-    if(opt >= Shape) {
-      os << indent << "  Defines ";
-      TString deeper(indent);
-      deeper.Append("  ");
-      _vars.printToStream(os,Standard,deeper);
-      os << indent << "  Caches ";
-      _cachedVars.printToStream(os,Standard,deeper);
-      
-      if(_truth.getSize() > 0) {
-	os << indent << "  Generated with ";
-	_truth.printToStream(os,Shape,deeper);
-      }
-    }
-  }
-}
-
 
 
 RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,

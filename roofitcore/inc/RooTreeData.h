@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooTreeData.rdl,v 1.1 2001/09/11 00:30:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -60,8 +60,13 @@ public:
 
   RooAbsArg* addColumn(RooAbsArg& var) ;
 
-  virtual Int_t numEntries() const { return (Int_t)GetEntries() ; }
+  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const { return (Int_t)GetEntries() ; }
   virtual void reset() { Reset() ; }
+
+  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
+  TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
+			const char *name= "hist") const;	 
 
   // Forwarded from TTree
   inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
@@ -72,6 +77,8 @@ public:
 
   // WVE Debug stuff
   void dump() ;
+
+  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
 
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 

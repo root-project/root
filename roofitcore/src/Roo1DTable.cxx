@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.5 2001/05/17 00:43:14 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.6 2001/08/23 01:21:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -41,7 +41,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
   delete tIter ;
 
   // Create counter array and initialize
-  _count = new Int_t[nbin] ;
+  _count = new Double_t[nbin] ;
   for (int i=0 ; i<nbin ; i++) _count[i] = 0 ;
 }
 
@@ -60,7 +60,7 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) : RooTable(other), _nOverflow(ot
   }
 
   // Create counter array and initialize
-  _count = new Int_t[nbin] ;
+  _count = new Double_t[nbin] ;
   for (int i=0 ; i<nbin ; i++) _count[i] = other._count[i] ;
 }
 
@@ -75,7 +75,7 @@ Roo1DTable::~Roo1DTable()
 }
 
 
-void Roo1DTable::fill(RooAbsCategory& cat) 
+void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight) 
 {
   // Increment the counter of the table slot with
   // the name corresponding to that of the current 
@@ -87,12 +87,12 @@ void Roo1DTable::fill(RooAbsCategory& cat)
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
     if (cat.getIndex()==entry->getVal()) {
-      _count[i]++ ;
+      _count[i] += weight ; ;
       found=kTRUE ;
     }
   }  
 
-  if (!found) _nOverflow++ ;
+  if (!found) _nOverflow += weight ;
 }
 
 
@@ -106,7 +106,7 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
 
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
-  Int_t maxCount(1) ;
+  Double_t maxCount(1) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
     labelWidth=strlen(entry->GetName())>labelWidth
