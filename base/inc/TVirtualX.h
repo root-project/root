@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.6 2000/10/19 10:42:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.7 2001/04/03 10:34:27 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -104,6 +104,8 @@ public:
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const { return kFALSE; }
    virtual Int_t     InitWindow(ULong_t window);
+   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   virtual void      RemoveWindow(ULong_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy) { ix = iy = 0; }
@@ -302,6 +304,8 @@ inline void      TVirtualX::GetRGB(Int_t, Float_t &r, Float_t &g, Float_t &b) { 
 inline void      TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *) { w = h = 0; }
 inline Window_t  TVirtualX::GetWindowID(Int_t) { return 0; }
 inline Int_t     TVirtualX::InitWindow(ULong_t) { return 0; }
+inline Int_t     TVirtualX::AddWindow(ULong_t, UInt_t, UInt_t) { return 0; }
+inline void      TVirtualX::RemoveWindow(ULong_t) { }
 inline void      TVirtualX::MoveWindow(Int_t, Int_t, Int_t) { }
 inline Int_t     TVirtualX::OpenPixmap(UInt_t, UInt_t) { return 0; }
 inline void      TVirtualX::ReadGIF(Int_t, Int_t, const char *) { }

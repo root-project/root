@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.8 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.9 2001/02/21 07:31:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -177,7 +177,8 @@ public:
    void              SetWindowSize(UInt_t ww, UInt_t wh) { fCanvasImp->SetWindowSize(ww, wh); }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
-   void              SetSelected(TObject *obj) {fSelected = obj;}
+   void              SetSelected(TObject *obj) { fSelected = obj; }
+   void              SetSelectedPad(TPad *pad) { fSelectedPad = pad; }
    void              Show() { fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.2 2000/10/13 09:54:28 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.3 2001/03/28 10:20:14 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -327,6 +327,7 @@ TGX11::TGX11(const TGX11 &org)
       fWindows[i].hclip         = org.fWindows[i].hclip;
       fWindows[i].new_colors    = org.fWindows[i].new_colors;
       fWindows[i].ncolors       = org.fWindows[i].ncolors;
+      fWindows[i].shared        = org.fWindows[i].shared;
    }
 
    for (i = 0; i < kNumCursors; i++)
@@ -396,7 +397,10 @@ void TGX11::CloseWindow()
 {
    // Delete current window.
 
-   CloseWindow1();
+   if (gCws->shared)
+      gCws->open = 0;
+   else
+      CloseWindow1();
 
    // Never close connection. TApplication takes care of that
    //   if (!gCws) Close();    // close X when no open window left
@@ -1013,6 +1017,7 @@ again:
    gCws->width          = wval;
    gCws->height         = hval;
    gCws->new_colors     = 0;
+   gCws->shared         = kFALSE;
 
    return wid;
 }
@@ -1090,8 +1095,82 @@ again:
    gCws->width          = wval;
    gCws->height         = hval;
    gCws->new_colors     = 0;
+   gCws->shared         = kFALSE;
 
    return wid;
+}
+
+//______________________________________________________________________________
+Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
+{
+   // Register a window created by Qt as a ROOT window (like InitWindow()).
+
+   Int_t wid;
+
+   // Select next free window number
+
+again:
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+      if (!fWindows[wid].open) {
+         fWindows[wid].open = 1;
+         fWindows[wid].double_buffer = 0;
+         gCws = &fWindows[wid];
+         break;
+      }
+
+   if (wid == fMaxNumberOfWindows) {
+      int newsize = fMaxNumberOfWindows + 10;
+      fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
+                                  fMaxNumberOfWindows*sizeof(XWindow_t));
+      for (int i = fMaxNumberOfWindows; i < newsize; i++)
+         fWindows[i].open = 0;
+      fMaxNumberOfWindows = newsize;
+      goto again;
+   }
+
+   gCws->window = qwid;
+
+   //init Xwindow_t struct
+   gCws->drawing        = gCws->window;
+   gCws->buffer         = 0;
+   gCws->double_buffer  = 0;
+   gCws->ispixmap       = 0;
+   gCws->clip           = 0;
+   gCws->width          = w;
+   gCws->height         = h;
+   gCws->new_colors     = 0;
+   gCws->shared         = kTRUE;
+
+   return wid;
+}
+
+//______________________________________________________________________________
+void TGX11::RemoveWindow(ULong_t qwid)
+{
+   // Remove a window created by Qt (like CloseWindow1()).
+
+   Int_t wid;
+
+   SelectWindow(qwid);
+
+   if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
+
+   if (gCws->new_colors) {
+      XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
+      delete [] gCws->new_colors;
+      gCws->new_colors = 0;
+   }
+
+   gCws->open = 0;
+
+   // make first window in list the current window
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+      if (fWindows[wid].open) {
+         gCws = &fWindows[wid];
+         return;
+      }
+
+   gCws = 0;
 }
 
 //______________________________________________________________________________

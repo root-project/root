@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.6 2000/11/21 16:24:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.7 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -185,6 +185,7 @@ public:
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;
    virtual void     SetBorderMode(Short_t bordermode) = 0;
    virtual void     SetBorderSize(Short_t bordersize) = 0;
+   virtual void     SetCanvas(TCanvas *c) = 0;
    virtual void     SetCanvasSize(UInt_t ww, UInt_t wh) = 0;
    virtual void     SetCrosshair(Int_t crhair=1) = 0;
    virtual void     SetCursor(ECursor cursor) = 0;

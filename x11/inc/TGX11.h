@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.6 2000/10/19 10:42:31 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.7 2001/04/03 10:34:28 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -73,6 +73,7 @@ struct XWindow_t {
    UInt_t   hclip;                // height of the clipping rectangle
    ULong_t *new_colors;           // new image colors (after processing)
    Int_t    ncolors;              // number of different colors
+   Bool_t   shared;               // notify when window is shared
 };
 
 
@@ -161,6 +162,8 @@ public:
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);
+   Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   void      RemoveWindow(ULong_t qwid);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenDisplay(Display *display);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
