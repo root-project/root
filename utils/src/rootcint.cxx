@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.119 2002/12/14 07:14:44 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.120 2002/12/17 07:00:30 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -559,7 +559,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified = false)
          GetFullyQualifiedName(*(m.Type()), full);
          typeName = full.c_str();
       } else {
-         typeName = type->TrueName();
+         typeName = type->Name();
       }
       static const char *constwd = "const";
       const char *s; int lev=0;
@@ -583,7 +583,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified = false)
          GetFullyQualifiedName(*(m.Type()),typeName);
          return typeName;
       } else {
-         return m.Type()->TrueName();
+         return m.Type()->Name();
       }
    }
 }
@@ -3018,15 +3018,6 @@ void WriteShadowClass(G__ClassInfo &cl)
             if (type_name[type_name.length()-1]=='&') {
                type_name[type_name.length()-1]='*';
             }
-            // Add the '::' prefix in the case the datamember's class is nested in the local class or in a namespace.
-            //string memberType;
-            //GetFullyQualifiedName(...,memberType);
-            const char *prefix = "";
-            if ( (type_name.find(cl.Fullname())==0) || (type_name.find("::")!= string::npos) )
-               prefix="::";
-            else
-               prefix = "";
-            //fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
             fprintf(fp,"         %s %s", type_name.c_str(),d.Name());
          }
 
