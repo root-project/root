@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.20 2004/01/27 13:28:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.21 2004/01/27 19:56:49 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2364,7 +2364,13 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    
    i = (int)(7 * sigma + 0.5);
    i = 2 * i;
-   double *working_space = new double [6 * (size + i)];    
+   Int_t wslen = 6*(size+i);
+   double *working_space = new double [wslen];
+
+   // Initialize the working space
+   for ( Int_t kinit = 0; kinit < wslen; kinit++ ) {
+     working_space[kinit] = 0.0;
+   }
    for(i = 0; i < size_ext; i++){
       if(i < shift)
          working_space[i + size_ext] = source[0];
