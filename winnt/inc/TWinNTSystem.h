@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.12 2002/02/26 17:57:20 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.13 2002/10/25 17:38:00 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -200,7 +200,9 @@ public:
    void              Unload(const char *module);
    void              ListSymbols(const char *module, const char *re = "");
    void              ListLibraries(const char *regexp = "");
-   const char       *GetLibraries(const char *regexp = "", const char* option = "");
+   const char       *GetLibraries(const char *regexp = "",
+                                  const char *option = "",
+                                  Bool_t isRegexp = kTRUE);
 
    //---- Time & Date
    TTime             Now();

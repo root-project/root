@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.35 2002/10/25 17:38:00 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.36 2002/11/13 22:25:01 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -699,7 +699,7 @@ Bool_t TWinNTSystem::ProcessEvents()
 
    if (!gROOT->IsBatch())
       DispatchOneEvent(kTRUE);
-   
+
    return intr;
 }
 
@@ -1576,7 +1576,8 @@ void TWinNTSystem::ListLibraries(const char *regexp)
 }
 
 //______________________________________________________________________________
-const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
+const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options
+                                       Bool_t isRegexp)
 {
    // Return a space separated list of loaded shared libraries.
    // This list is of a format suitable for a linker, i.e it may contain
@@ -1588,14 +1589,14 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
    //   L: list the .LIB rather than the .DLL (this is intended for linking)
    //      [This options is not the default]
 
-   TString libs( TSystem::GetLibraries( regexp, options ) );
+   TString libs(TSystem::GetLibraries(regexp, options, isRegexp));
    TString ntlibs;
    TString opt = options;
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("\\.dll$", kFALSE);
-      TRegexp user_lib("\\.lib$", kFALSE);
+      TRegexp user_dll("\\.dll$");
+      TRegexp user_lib("\\.lib$");
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;

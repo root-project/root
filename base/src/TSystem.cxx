@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.43 2002/11/05 08:15:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.44 2002/11/14 17:27:27 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1074,7 +1074,8 @@ void TSystem::ListLibraries(const char *regexp)
 }
 
 //______________________________________________________________________________
-const char *TSystem::GetLibraries(const char *regexp, const char *options)
+const char *TSystem::GetLibraries(const char *regexp, const char *options,
+                                  Bool_t isRegexp)
 {
    // Return a space separated list of loaded shared libraries.
    // This list is of a format suitable for a linker, i.e it may contain
@@ -1107,7 +1108,8 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options)
          index = libs.Index(separator,&end,start);
          if (index >= 0) {
             s = libs(index,end);
-            if (s.Index(user_re) != kNPOS) {
+            if ((isRegexp && s.Index(user_re) != kNPOS) ||
+                (!isRegexp && s.Index(regexp) != kNPOS)) {
                if (!fListLibs.IsNull())
                   fListLibs.Append(" ");
                fListLibs.Append(s);
@@ -1464,7 +1466,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   }
 
   if ( gInterpreter->IsLoaded(library)
-       || strlen(GetLibraries(library,"D")) != 0 ) {
+       || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
      // The library has already been built and loaded.
 
      ::Warning("ACLiC","%s script has already been compiled and loaded",
@@ -1954,6 +1956,69 @@ void TSystem::SetObjExt(const char *ObjExt)
 }
 
 //______________________________________________________________________________
+TString TSystem::SplitAclicMode(const char* filename, TString& aclicMode, TString &arguments) const
+{
+   // This method split a filename of the form:
+   //   [path/]macro.C[+|++[g|O]][(args)].
+   // It stores the ACliC mode [+|++[g|O]] in 'mode'
+   // and the arguments (including paranthesis) in arg
+
+   char *fname = Strip(filename);
+
+   char *arg = strchr(fname, '(');
+   // special case for $(HOME)/aap.C(10)
+   while (arg && *(arg-1) == '$' && *(arg+1))
+      arg = strchr(arg+1, '(');
+   if (arg) {
+      *arg = 0;
+      char *t = arg-1;
+      while (*t == ' ') {
+         *t = 0; t--;
+      }
+      arg++;
+   }
+
+   // remove the possible ACLiC + or ++ and g or O
+   char postfix[4];
+   postfix[0] = 0;
+   int len = strlen(fname);
+   const char *mode = 0;
+   if (len > 1) {
+      if (strcmp(fname+len-1, "g") == 0)
+         mode = "g";
+      else if (strcmp(fname+len-1, "O") == 0)
+         mode = "O";
+      if (mode)
+         len--;
+   }
+   Bool_t compile = !strncmp(fname+len-1, "+", 1);
+   Bool_t remove  = !strncmp(fname+len-2, "++", 2);
+   if (compile) {
+      if (mode) {
+         fname[len] = 0;
+      }
+      if (remove) {
+         fname[strlen(fname)-2] = 0;
+         strcpy(postfix, "++");
+      } else {
+         fname[strlen(fname)-1] = 0;
+         strcpy(postfix, "+");
+      }
+      if (mode)
+         strcat(postfix, mode);
+   }
+
+   TString resFilename = fname;
+   aclicMode = postfix;
+   arguments = "(";
+   if (arg) arguments += arg;
+   else arguments = "";
+
+   delete []fname;
+   return resFilename;
+}
+
+//______________________________________________________________________________
 void TSystem::CleanCompiledMacros()
 {
    // Remove the shared libs produced by the CompileMacro() function.
@@ -1963,3 +2028,4 @@ void TSystem::CleanCompiledMacros()
    while ((lib = (TObjString*)next()))
       Unlink(lib->GetString().Data());
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.20 2002/10/18 14:58:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.21 2002/10/25 00:44:53 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -290,7 +290,9 @@ public:
    virtual void            Unload(const char *module);
    virtual void            ListSymbols(const char *module, const char *re = "");
    virtual void            ListLibraries(const char *regexp = "");
-   virtual const char     *GetLibraries(const char *regexp = "", const char* option = "");
+   virtual const char     *GetLibraries(const char *regexp = "",
+                                        const char *option = "",
+                                        Bool_t isRegexp = kTRUE);
 
    //---- RPC
    virtual TInetAddress    GetHostByName(const char *server);
@@ -334,6 +336,7 @@ public:
    virtual void            SetLinkdefSuffix(const char *suffix);
    virtual void            SetSoExt(const char *soExt);
    virtual void            SetObjExt(const char *objExt);
+   virtual TString         SplitAclicMode(const char *filename, TString &mode, TString &args) const;
    virtual void            CleanCompiledMacros();
 
    ClassDef(TSystem,0)  //ABC defining a generic interface to the OS

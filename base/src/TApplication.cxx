@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.39 2002/10/25 10:40:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.40 2002/10/25 12:30:30 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -598,52 +598,25 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
    }
 
    if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
-      char *fn = Strip(line+3);
-      // See if script compilation requested
-      char postfix[4];
-      postfix[0] = 0;
-      int len = strlen(fn);
-      const char *mode = 0;
-      if (len > 1) {
-         if (strcmp(fn+len-1, "g") == 0)
-            mode = "g";
-         else if (strcmp(fn+len-1, "O") == 0)
-            mode = "O";
-         if (mode)
-            len--;
-      }
-      Bool_t compile = !strncmp(fn+len-1, "+", 1);
-      Bool_t remove  = !strncmp(fn+len-2, "++", 2);
-      if (compile) {
-         if (mode) {
-           fn[len] = 0;
-         }
-         if (remove) {
-            fn[strlen(fn)-2] = 0;
-            strcpy(postfix, "++");
-         } else {
-            fn[strlen(fn)-1] = 0;
-            strcpy(postfix, "+");
-         }
-         if (mode)
-            strcat(postfix, mode);
-      }
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
+      TString aclicMode;
+      TString arguments;
+      TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments);
+      
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
       if (!mac)
-         Error("ProcessLine", "macro %s not found in path %s", fn,
+         Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
                TROOT::GetMacroPath());
       else {
          char cmd = line[1];
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".%c %s%s", cmd, mac, postfix),
+           gInterpreter->ProcessLineSynch(Form(".%c %s%s", cmd, fname.Data(), aclicMode.Data()),
                                           (TInterpreter::EErrorCode*)err);
          else {
-           gInterpreter->ProcessLine(Form(".%c %s%s", cmd, mac, postfix),
+           gInterpreter->ProcessLine(Form(".%c %s%s", cmd, fname.Data(), aclicMode.Data()),
                                      (TInterpreter::EErrorCode*)err);
          }
       }
 
-      delete [] fn;
       delete [] mac;
 
       return;
@@ -682,55 +655,14 @@ void TApplication::ProcessFile(const char *name, int *error)
 
    Int_t nch = strlen(name);
    if (nch == 0) return;
-
-   char *fname = Strip(name);
-   if (fname[nch-1] == ';') { nch--; fname[nch] = 0; }
-   char *arg = strchr(fname, '(');
-   // special case for $(HOME)/aap.C(10)
-   while (arg && *(arg-1) == '$' && *(arg+1))
-      arg = strchr(arg+1, '(');
-   if (arg) {
-      *arg = 0;
-      char *t = arg-1;
-      while (*t == ' ') {
-         *t = 0; t--;
-      }
-   }
-
-   // strip off I/O redirect tokens from filename
-   char ssave = 0;
-   char *s2   = 0;
-   if (!arg) {
-      char *s3;
-      s2 = strstr(fname, ">>");
-      if (!s2) s2 = strstr(fname, "2>");
-      if (!s2) s2 = strchr(fname, '>');
-      s3 = strchr(fname, '<');
-      if (s2 && s3) s2 = s2<s3 ? s2 : s3;
-      if (s3 && !s2) s2 = s3;
-      if (s2) {
-         s2--;
-         while (s2 && *s2 == ' ') s2--;
-         s2++;
-         ssave = *s2;
-         *s2 = 0;
-      }
-   }
-
-   // See if script compilation requested
-   char compile[3];
-   compile[0] = 0;
-   if (!strcmp(fname+strlen(fname)-2,"++")) {
-      strcpy(compile ,"++");
-      fname[strlen(fname)-2] = 0;
-   } else if (!strcmp(fname+strlen(fname)-1,"+")) {
-      strcpy(compile, "+");
-      fname[strlen(fname)-1] = 0;
-   }
+   
+   TString aclicMode;
+   TString arguments;
+   TString fname = gSystem->SplitAclicMode(name, aclicMode, arguments);
 
    char *exnam = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
    if (!exnam) {
-      Error("ProcessFile", "macro %s not found in path %s", fname,
+      Error("ProcessFile", "macro %s not found in path %s", fname.Data(),
             TROOT::GetMacroPath());
       delete [] fname;
       return;
@@ -795,24 +727,16 @@ void TApplication::ProcessFile(const char *name, int *error)
 
    if (!execute) {
       int exlen = strlen(exnam);
-      if (arg) exlen += strlen(arg+1)+1;
-      if (s2)  exlen += strlen(s2+1)+1;
-      char *exname = new char [exlen + strlen(compile) + 1];
+      exlen += arguments.Length()+1;
+      char *exname = new char [exlen + aclicMode.Length() + 1];
 
       strcpy(exname, exnam);
       if (!tempfile) {
          // We have a script that does NOT contain an unamed macro,
          // so we can call the script compiler on it.
-         strcat(exname,compile);
+         strcat(exname,aclicMode.Data());
       }
-      if (arg)  {
-         *arg  = '(';
-         strcat(exname, arg);
-      }
-      if (s2) {
-         *s2 = ssave;
-         strcat(exname, s2);
-      }
+      strcat(exname, arguments.Data());
 
       if (tempfile) {
          gInterpreter->ProcessLineSynch(Form(".x %s", exname),
@@ -825,7 +749,6 @@ void TApplication::ProcessFile(const char *name, int *error)
    }
 
    delete [] exnam;
-   delete [] fname;
 }
 
 //______________________________________________________________________________
