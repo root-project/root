@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.13 2002/08/05 16:51:17 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.14 2002/09/16 16:06:37 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -34,7 +34,7 @@
 #include "TGraph.h"
 #include "TMath.h"
 int Error;   //to be removed soon
-#define PAWC_SIZE 2000000
+#define PAWC_SIZE 10000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
@@ -643,7 +643,7 @@ void convert_directory(const char *dir)
   Int_t *lenbool  = new Int_t[nvar];
   UChar_t *boolarr = new UChar_t[10000];
   x = new float[nvar];
-  char *bigbuf = new char[500000];
+  char *bigbuf = new char[2500000];
 
   chtag_out[nvar*Nchar]=0;
   for (i=0;i<80;i++)chtitl[i]=0;
