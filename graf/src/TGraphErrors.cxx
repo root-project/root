@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.16 2001/10/12 07:49:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.17 2001/12/10 21:11:17 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -185,9 +185,23 @@ void TGraphErrors::Apply(TF1 *f)
 void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
 {
   for (Int_t i=0;i<fNpoints;i++) {
-     if (fX[i] -fEX[i] < xmin) xmin = fX[i]-fEX[i];
+     if (fX[i] -fEX[i] < xmin) {
+        if (gPad->GetLogx()) {
+           if (fEX[i] < fX[i]) xmin = fX[i]-fEX[i];
+           else                xmin = fX[i]/3;
+        } else {
+          xmin = fX[i]-fEX[i];
+        } 
+     } 
      if (fX[i] +fEX[i] > xmax) xmax = fX[i]+fEX[i];
-     if (fY[i] -fEY[i] < ymin) ymin = fY[i]-fEY[i];
+     if (fY[i] -fEY[i] < ymin) {
+        if (gPad->GetLogy()) {
+           if (fEY[i] < fY[i]) ymin = fY[i]-fEY[i];
+           else                ymin = fY[i]/3;
+        } else {
+          ymin = fY[i]-fEY[i];
+        } 
+     } 
      if (fY[i] +fEY[i] > ymax) ymax = fY[i]+fEY[i];
   }
 }
