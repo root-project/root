@@ -20,7 +20,7 @@ OPT           = -O2
 NOOPT         =
 endif
 
-ifeq (EXCEPTIONS,yes)
+ifeq ($(EXCEPTIONS),yes)
 EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions
