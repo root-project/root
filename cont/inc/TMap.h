@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.8 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.9 2001/12/07 21:58:59 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -60,6 +60,7 @@ public:
    TObject         **GetObjectRef(TObject *obj) const {return fTable->GetObjectRef(obj);}
    TObject          *GetValue(TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
+   void              Print(Option_t *option="") const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
 

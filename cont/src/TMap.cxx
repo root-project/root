@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.5 2002/05/03 15:41:50 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.6 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBrowser.h"
+#include "TRegexp.h"
 
 ClassImp(TMap)
 
@@ -205,6 +206,31 @@ TIterator *TMap::MakeIterator(Bool_t dir) const
 }
 
 //______________________________________________________________________________
+void TMap::Print(Option_t *option) const
+{
+   // Print all objects in this collection.
+   // Wildcarding supported, eg option="xxx*" prints only objects
+   // with names xxx*.
+
+   TRegexp re(option,kTRUE);
+   Int_t nch = strlen(option);
+   TIter next(fTable);
+   TAssoc *a;
+
+   while ((a = (TAssoc*) next())) {
+      TString s = a->Key()->GetName();
+      if (nch && s != option && s.Index(re) == kNPOS) continue;
+      printf("Key:   ");
+      a->Key()->Print(option);
+      if (TStorage::IsOnHeap(a->Value())) {
+         printf("Value: ");
+         a->Value()->Print();
+      } else
+         printf("Value: 0x%x\n", a->Value());
+   }
+}
+
+//______________________________________________________________________________
 void TMap::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 {
    // Rehash the underlaying THashTable (see THashTable::Rehash()).
@@ -215,7 +241,8 @@ void TMap::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 //______________________________________________________________________________
 TObject *TMap::Remove(TObject *key)
 {
-   // Remove the (key,value) pair with key from the map.
+   // Remove the (key,value) pair with key from the map. Returns the key
+   // object or 0 in case key was not found.
 
    if (!key) return 0;
 
@@ -260,10 +287,11 @@ void TMap::Streamer(TBuffer &b)
       TObject::Streamer(b);
       fName.Streamer(b);
       b << GetSize();
-      TIter next(this);
-      while ((obj = next())) {
-         b << obj;
-         b << GetValue(obj);
+      TIter next(fTable);
+      TAssoc *a;
+      while ((a = (TAssoc*) next())) {
+         b << a->Key();
+         b << a->Value();
       }
       b.SetByteCount(R__c, kTRUE);
    }
@@ -280,10 +308,10 @@ void TAssoc::Browse(TBrowser *b)
    if (b) {
       if (fKey)   b->Add(fKey);
       if (fValue) b->Add(fValue);
-    } else {
+   } else {
       if (fKey)   fKey->Browse(b);
       if (fValue) fValue->Browse(b);
-    }
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
