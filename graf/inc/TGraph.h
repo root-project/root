@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.18 2002/03/28 16:55:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.19 2002/03/29 07:20:52 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -90,12 +90,12 @@ public:
         TAxis           *GetXaxis() const ;
         TAxis           *GetYaxis() const ;
         virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y);
-        virtual void     InitExpo();
-        virtual void     InitGaus();
-        virtual void     InitPolynom();
+        virtual void     InitExpo(Int_t first=0, Int_t last=0);
+        virtual void     InitGaus(Int_t first=0, Int_t last=0);
+        virtual void     InitPolynom(Int_t first=0, Int_t last=0);
         virtual Int_t    InsertPoint(); // *MENU*
-        virtual void     LeastSquareFit(Int_t n, Int_t m, Double_t *a);
-        virtual void     LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
+        virtual void     LeastSquareFit(Int_t m, Double_t *a, Int_t first=0, Int_t last=0);
+        virtual void     LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Int_t first, Int_t last);
         virtual void     Paint(Option_t *chopt="");
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
