@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.112 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.113 2002/11/18 21:48:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2680,9 +2680,9 @@ Axis_t TH1::GetRandom()
       if (integral == 0 || fIntegral == 0) return 0;
    }
    Double_t r1 = gRandom->Rndm();
-   Int_t ibin = TMath::BinarySearch(nbinsx,&fIntegral[0],r1);
+   Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
    return GetBinLowEdge(ibin+1)
-      +GetBinWidth(ibin+1)*(fIntegral[ibin+1]-r1)/(fIntegral[ibin+1] - fIntegral[ibin]);
+      +GetBinWidth(ibin+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
 }
 
 //______________________________________________________________________________

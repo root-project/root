@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.35 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.36 2002/11/18 21:49:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -759,11 +759,11 @@ void TH2::GetRandom2(Axis_t &x, Axis_t &y)
       if (integral == 0 || fIntegral == 0) return;
    }
    Float_t r1 = gRandom->Rndm();
-   Int_t ibin = TMath::BinarySearch(nbins,&fIntegral[0],r1);
+   Int_t ibin = TMath::BinarySearch(nbins,fIntegral,r1);
    Int_t biny = ibin/nbinsx;
    Int_t binx = ibin - nbinsx*biny;
    x = fXaxis.GetBinLowEdge(binx+1)
-      +fXaxis.GetBinWidth(binx+1)*(fIntegral[ibin+1]-r1)/(fIntegral[ibin+1] - fIntegral[ibin]);
+      +fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
    y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
 }
 

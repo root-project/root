@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.26 2002/09/17 08:31:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.27 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -593,12 +593,12 @@ void TH3::GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z)
       if (integral == 0 || fIntegral == 0) return;
    }
    Float_t r1 = gRandom->Rndm();
-   Int_t ibin = TMath::BinarySearch(nbins,&fIntegral[0],r1);
+   Int_t ibin = TMath::BinarySearch(nbins,fIntegral,r1);
    Int_t binz = ibin/nxy;
    Int_t biny = (ibin - nxy*binz)/nbinsx;
    Int_t binx = ibin - nbinsx*(biny + nbinsy*binz);
    x = fXaxis.GetBinLowEdge(binx+1)
-      +fXaxis.GetBinWidth(binx+1)*(fIntegral[ibin+1]-r1)/(fIntegral[ibin+1] - fIntegral[ibin]);
+      +fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
    y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
    z = fZaxis.GetBinLowEdge(binz+1) + fZaxis.GetBinWidth(binz+1)*gRandom->Rndm();
 }
