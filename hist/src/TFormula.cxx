@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.23 2001/07/17 20:11:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.24 2001/08/28 21:47:01 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -883,7 +883,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      SetNumber(200);
+                      if (fNpar == 2) SetNumber(200);
                    }
                 }
             } else if (chaine(4,1) == "(") {
@@ -905,7 +905,7 @@ if (err==0) {
                             if (inter+2>fNpar) fNpar = inter+2;
                             if (fNpar>=MAXPAR) err=7; // too many parameters
                             if (!err) fNoper++;
-                            SetNumber(200);
+                            if (fNpar == 2) SetNumber(200);
                          } else err=20;
                       } else err = 20; // non integer value for parameter number
                     } else {
@@ -960,7 +960,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      SetNumber(100);
+                      if (fNpar == 3) SetNumber(100);
                    }
                 }
             } else if (chaine(4,1) == "(" && err==0) {
@@ -982,7 +982,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             SetNumber(100);
+                             if(fNpar == 3) SetNumber(100);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1037,7 +1037,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      SetNumber(400);
+                      if (fNpar == 3) SetNumber(400);
                    }
                 }
             } else if (chaine(6,1) == "(" && err==0) {
@@ -1059,7 +1059,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             SetNumber(400);
+                             if (fNpar == 3) SetNumber(400);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
