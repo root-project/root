@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.2 2000/05/23 15:10:58 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.3 2000/06/11 12:12:34 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -376,7 +376,7 @@ int main(int /* argc */, char **argv)
    // start server version
    sprintf(arg0, "%s/bin/proofserv.%s", argv[0], vtag);
    argvv[0] = arg0;
-   argvv[1] = master ? "proofserv" : "proofslave";
+   argvv[1] = (char *)(master ? "proofserv" : "proofslave");
    argvv[2] = argv[0];
    argvv[3] = 0;
 #if defined(__linux)
