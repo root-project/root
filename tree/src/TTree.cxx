@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.59 2001/04/11 07:22:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.60 2001/04/11 17:31:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -662,11 +662,15 @@ TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int
 //    will not be created.
 
    if (clonesaddress == 0) return 0;
+   
    char *cpointer =(char*)clonesaddress;
    char **ppointer =(char**)cpointer;
    TClonesArray *list = (TClonesArray*)(*ppointer);
    if (list == 0) return 0;
    gTree = this;
+   if (fgBranchStyle == 1) {
+      return Bronch(name,"TClonesArray",clonesaddress,bufsize,splitlevel+1);
+   }
    if (splitlevel) {
       TBranchClones *branch = new TBranchClones(name,clonesaddress,bufsize,-1,splitlevel);
       fBranches.Add(branch);
@@ -960,6 +964,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       Error("Bronch","Cannot find class:%s",classname);
       return 0;
    }
+   //build the StreamerInfo if first time for the class
+   //if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
+   TStreamerInfo::Optimize(kFALSE);
+
    Bool_t delobj = kFALSE;
    char **ppointer = (char**)add;
    char *objadd = *ppointer;
@@ -981,11 +989,8 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       *ppointer = objadd;
       delobj = kTRUE;
    }
-   
-   //build the StreamerInfo if first time for the class
-   //if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
-   TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
+   
 
    // create a dummy top level  branch object
    Int_t id = -1;
