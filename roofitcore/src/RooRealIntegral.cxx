@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.50 2001/11/19 07:23:57 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.51 2001/11/27 23:19:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,13 +28,13 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooMultiCatIter.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooImproperIntegrator1D.hh"
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooInvTransform.hh"
+#include "RooFitCore/RooSuperCategory.hh"
 
 ClassImp(RooRealIntegral) 
 ;
@@ -638,12 +638,17 @@ Double_t RooRealIntegral::sum() const
  
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;
-    RooMultiCatIter sumIter(_sumList) ;
-    Int_t counter(0) ;
 
-    while(sumIter.Next()) {
+    RooSuperCategory sumCat("sumCat","sumCat",_sumList) ;
+    TIterator* sumIter = sumCat.typeIterator() ;
+    Int_t counter(0) ;
+    RooCatType* type ;
+    while(type=(RooCatType*)sumIter->Next()) {
+      sumCat.setIndex(type->getVal()) ;
       total += integrate() / jacobianProduct() ;
     }
+
+    delete sumIter ;
     return total ;
 
   } else {

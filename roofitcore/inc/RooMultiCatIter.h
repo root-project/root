@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.rdl,v 1.4 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.5 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,7 +16,9 @@
 #include <iostream.h>
 #include "TIterator.h"
 #include "RooFitCore/RooArgSet.hh"
+#include "TObjString.h"
 class RooCategory ;
+class RooCatType ;
 
 typedef TIterator* pTIterator ;
 typedef RooAbsCategoryLValue* pRooCategory ;
@@ -35,14 +37,17 @@ public:
 
 protected:
   void initialize(const RooArgSet& catList) ;
+  TObjString* compositeLabel() ;
 
   RooArgSet        _catList  ;   // Set of categories iterated over
   pTIterator*      _iterList ;   // Array of category type iterators 
   pRooCategory*  _catPtrList ;   // Array of pointers to original categories
+  RooCatType*   _curTypeList ;   // List of current types
   Int_t _nIter ;                 // Number of categories/iterators in use
   Int_t _curIter ;               // Current location of master iterator
+  TObjString _compositeLabel ;
 
-  ClassDef(RooMultiCatIter,0) // Iterator over all state permuotations of a list of categories
+  ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
 };
 
 #endif

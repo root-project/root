@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.13 2001/10/08 05:20:22 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.14 2001/10/23 00:45:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -85,16 +85,16 @@ void RooSuperCategory::updateIndexList()
   // Update the list of super-category states 
 
   clearTypes() ;
-  RooArgSet* catListClone = (RooArgSet*) _catSet.snapshot(kTRUE) ;
+//   RooArgSet* catListClone = (RooArgSet*) _catSet.snapshot(kTRUE) ;
+
   RooMultiCatIter mcIter(_catSet) ;
-
-  while(mcIter.Next()) {
+  TObjString* obj ;
+  while(obj = (TObjString*) mcIter.Next()) {
     // Register composite label
-    defineType(currentLabel()) ;
+    defineType(obj->String()) ;
   }
-
-  _catSet = *catListClone ;
-  delete catListClone ;
+//   _catSet = *catListClone ;
+//   delete catListClone ;
 
   // Renumbering will invalidate cache
   setValueDirty() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.3 2001/11/07 02:54:41 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.4 2001/11/21 21:35:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -33,6 +33,7 @@
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooCustomizer.hh"
 #include "RooFitCore/RooThresholdCategory.hh"
+#include "RooFitCore/RooMultiCategory.hh"
 #include "RooFitCore/RooSuperCategory.hh"
 #include "RooFitCore/RooSimultaneous.hh"
 #include "RooFitCore/RooSimFitContext.hh"
@@ -236,7 +237,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       Mode mode(SplitCat) ;
 
       char* splitCatName ;
-      RooAbsCategoryLValue* splitCat ;
+      RooAbsCategory* splitCat ;
 
       while(token) {
 	switch (mode) {
@@ -248,7 +249,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      // Composite splitting category
 	      
 	      // Check if already instantiated
-	      splitCat = (RooAbsCategoryLValue*) _compSplitCatSet.find(splitCatName) ;	      
+	      splitCat = (RooAbsCategory*) _compSplitCatSet.find(splitCatName) ;	      
 	      TString origCompCatName(splitCatName) ;
 	      if (!splitCat) {
 		// Build now
@@ -257,16 +258,22 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		RooArgSet compCatSet ;
 		while(catName) {
 		  RooAbsArg* cat = splitCatSet.find(catName) ;
+		  
+		  // If not, check if it is an auxiliary splitcat
+		  if (!cat) {
+		    cat = (RooAbsCategory*) auxSplitSet.find(catName) ;
+		  }
+
 		  if (!cat) {
 		    cout << "RooSimPdfBuilder::buildPdf: ERROR " << catName
-			 << " is not a valid category for splitting" << endl ;
+			 << " not found in the primary or auxilary splitcat list" << endl ;
 		    customizerList.Delete() ;
 		    return 0 ;
 		  }
 		  compCatSet.add(*cat) ;
 		  catName = strtok_r(0,",",&tokptr) ;
 		}		
-		splitCat = new RooSuperCategory(origCompCatName,origCompCatName,compCatSet) ;
+		splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
 		_compSplitCatSet.addOwned(*splitCat) ;
 		//cout << "composite splitcat: " << splitCat->GetName() ;
 	      }
@@ -274,11 +281,11 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      // Simple splitting category
 	      
 	      // First see if it is a simple splitting category
-	      splitCat = (RooAbsCategoryLValue*) splitCatSet.find(splitCatName) ;
+	      splitCat = (RooAbsCategory*) splitCatSet.find(splitCatName) ;
 
 	      // If not, check if it is an auxiliary splitcat
 	      if (!splitCat) {
-		splitCat = (RooAbsCategoryLValue*) auxSplitSet.find(splitCatName) ;
+		splitCat = (RooAbsCategory*) auxSplitSet.find(splitCatName) ;
 	      }
 
 	      if (!splitCat) {
