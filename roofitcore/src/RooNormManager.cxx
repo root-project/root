@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooNormManager.cc,v 1.1 2002/08/21 23:06:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -100,6 +100,12 @@ void RooNormManager::setNormalization(const RooAbsArg* self, const RooArgSet* ns
 //        << _size << ":" << norm << "=" << norm->GetName() << endl ;
   _norm[_size] = norm ;
   _size++ ;
+
+  if (_lastNorm==0) {
+    _lastNorm = norm ;
+    _lastNormSet = (RooArgSet*) nset ;
+    _lastNameSet = (RooNameSet*) &_nsetCache[_size].nameSet1() ;    
+  }
 }
 
 
