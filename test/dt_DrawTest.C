@@ -138,7 +138,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
 
    // Test string operations
    DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",(level>0));
-   DrawSkippable(tree,"fEvtHdr.fEvtNum","strstr(fType,\"1\") ","+hString",(level>0));
+   DrawSkippable(tree,"fEvtHdr.fEvtNum","1 && strstr(fType,\"1\") ","+hString",(level>0));
    tree->SetAlias("typ","fType");
    DrawSkippable(tree,"strstr(typ,\"1\") ", "hAliasStr", 1);
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.122 2003/07/05 20:44:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.123 2003/07/07 19:34:04 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -76,11 +76,12 @@ ClassImp(TTreeFormula)
 // dimensions encountered in the analysis of the expression.
 class DimensionInfo : public TObject {
 public:
-  Int_t fCode;
+  Int_t fCode;  // Location of the leaf in TTreeFormula::fCode
+  Int_t fOper;  // Location of the Operation using the leaf in TTreeFormula::fOper
   Int_t fSize;
   TFormLeafInfoMultiVarDim* fMultiDim;
-  DimensionInfo(Int_t code, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
-    : fCode(code), fSize(size), fMultiDim(multiDim) {};
+  DimensionInfo(Int_t code, Int_t oper, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
+    : fCode(code), fOper(oper), fSize(size), fMultiDim(multiDim) {};
   ~DimensionInfo() {};
 };
 
@@ -1612,9 +1613,9 @@ Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code) {
 
 //______________________________________________________________________________
 Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim) {
-   // This method is store the dimension information for later usage.
+   // This method stores the dimension information for later usage.
 
-   DimensionInfo * info = new DimensionInfo(code,size,multidim);
+   DimensionInfo * info = new DimensionInfo(code,fNoper,size,multidim);
    fDimensionSetup->Add(info);
    fCumulSizes[code][fNdimensions[code]] = size;
    fNdimensions[code] ++;
@@ -4070,7 +4071,10 @@ void TTreeFormula::ResetDimensions() {
          last_code = info->fCode;
          fNdimensions[last_code] = 0;
       }
-      if (fOper[last_code]>=105000 && fOper[last_code]<110000) {
+
+      if (fOper[info->fOper]>=105000 && fOper[info->fOper]<110000) {
+
+
          // We have a string used as a string (and not an array of number)
          // We need to determine which is the last dimension and skip it.
          DimensionInfo *nextinfo = (DimensionInfo*)next();
