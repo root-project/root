@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.39 2003/06/04 20:17:12 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.40 2003/08/21 17:07:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -96,13 +96,9 @@ const Bool_t kFALSE  = 0;
 
 const Int_t     kMaxUShort   = 65534;
 const Int_t     kMaxShort    = kMaxUShort >> 1;
-const UInt_t    kMaxUInt     = 4294967295;
+const UInt_t    kMaxUInt     = UInt_t(~0);
 const Int_t     kMaxInt      = Int_t(kMaxUInt >> 1);
-#ifndef __CINT__
-const ULong64_t kMaxULong64  = R__LL(18446744073709551615);
-#else
-const ULong64_t kMaxULong64  = ~R__LL(0);
-#endif
+const ULong64_t kMaxULong64  = ULong64_t(~R__LL(0));
 const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
 const size_t    kBitsPerByte = 8;
 const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
