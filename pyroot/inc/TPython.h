@@ -1,5 +1,8 @@
-#ifndef PYROOT_TPYTHON_H
-#define PYROOT_TPYTHON_H
+// @(#)root/pyroot:$Name$:$Id$
+// Author: Wim Lavrijsen   April 2004 
+
+#ifndef ROOT_TPython
+#define ROOT_TPython
 
 // ROOT
 class TObject;
@@ -23,4 +26,4 @@ private:
    static bool initialize_();
 };
 
-#endif // !PYROOT_TPYTHON_H
+#endif

@@ -1,4 +1,4 @@
-# File: PyROOT/src/ROOT.py
+# @(#)root/pyroot:$Name$:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 04/02/04
