@@ -5,7 +5,7 @@ test: tests
 
 
 SUBDIRS = stl specialobj template other typedef_global const typedef templateMembers \
-	function array
+	function array operator
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
