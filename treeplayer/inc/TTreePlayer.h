@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
             void      FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax);
     virtual void      Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     GetDimension() {return fDimension;}
     TH1              *GetHistogram() {return fHistogram;}
     TTreeFormula     *GetMultiplicity()   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);

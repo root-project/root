@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name$:$Id$
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2686,7 +2686,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       if (print_fval || print_ferrors) {
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             if (print_ferrors) {
-               sprintf(fstats,"%-8s = %s%s +- %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
+               sprintf(fstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
                sprintf(t,fstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
@@ -2830,9 +2830,9 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       sprintf(t,"Chi2 / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
       stats->AddText(t);
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
-         sprintf(t,"%-8s = %5.4g +- %5.4g ",fit->GetParName(ipar)
-                                       ,(Float_t)fit->GetParameter(ipar)
-                                       ,(Float_t)fit->GetParError(ipar));
+         sprintf(t,"%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
+                                   ,(Float_t)fit->GetParameter(ipar)
+                                   ,(Float_t)fit->GetParError(ipar));
          t[32] = 0;
          stats->AddText(t);
       }

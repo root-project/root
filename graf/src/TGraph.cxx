@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -751,7 +751,7 @@ TF1 *TGraph::GetFunction(const char *name)
 // Functions such as TGraph::Fit store the fitted function in the list of
 // functions of this graph.
 
-   if (fFunctions) return 0;
+   if (!fFunctions) return 0;
    return (TF1*)fFunctions->FindObject(name);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -56,6 +56,11 @@ TPave::TPave(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
 //  option = "NDC" x1,y1,x2,y2 are given in NDC
 //  option = "ARC" corners are rounded
 //
+//  IMPORTANT NOTE:
+//  Because TPave objects (and objects deriving from TPave) have their
+//  master coordinate system in NDC, one cannot use the TBox functions
+//  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+//  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fBorderSize   = bordersize;
    fOption       = option;

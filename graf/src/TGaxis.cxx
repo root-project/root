@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.2 2000/05/18 16:55:39 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1151,7 +1151,7 @@ L110:
                      double tmpdb;
                      int tmplast, tmpfirst;
                      strcpy(CHTEMP,&LABEL[first]);
-                     sprintf(LABEL,"%7.5f",modf(Wlabel,&tmpdb));
+                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 
 //*-*-              Here we eliminate the non significiant 0 after '.'

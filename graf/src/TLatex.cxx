@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -365,7 +365,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             case '\'' : quote1 = !quote1 ; break ;
             case '"'  : quote2  = !quote2 ; break ;
          }
-         if (quote1 || quote2) continue ;
+         //if (quote1 || quote2) continue ;
          switch (text[i]) {
          case '{': if (NbCroch==0) {
                       if (!(i>0 && text[i-1] == '@')) NbBrackets++;
@@ -1148,7 +1148,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                case '\'' : quote1 = !quote1 ; break ; // single quote symbol not correctly interpreted when PostScript
                case '"'  : quote2 = !quote2 ;  break ;
             }
-            if (quote1 || quote2) continue ;
+            //if (quote1 || quote2) continue ;
             if (text[i] == '@') {  // @ symbol not correctly interpreted when PostScript
                p = &text[i] ;
                if ( *(p+1) == '{' || *(p+1) == '}' || *(p+1) == '[' || *(p+1) == ']') {
@@ -1451,10 +1451,10 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
            case '"' : quote1 = !quote1 ; break ;
            case '\'': quote2 = !quote2 ; break ;
          }
-         if (quote1 || quote2) {
-            i++;
-            continue ;
-         }
+         //if (quote1 || quote2) {
+         //   i++;
+         //   continue ;
+         //}
          strncpy(buf,&text[i],TMath::Min(7,length-i));
          opFound = kFALSE ;
 

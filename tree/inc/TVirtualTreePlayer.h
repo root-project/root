@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual void           Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                             ,Int_t nentries, Int_t firstentry) = 0;
+    virtual Int_t          GetDimension() = 0;
     virtual TH1           *GetHistogram() = 0;
     virtual void           GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed) = 0;
     virtual Int_t          GetSelectedRows() = 0;

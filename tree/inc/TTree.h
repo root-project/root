@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.2 2000/05/19 08:50:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -97,7 +97,6 @@ protected:
     Int_t         fReadEntry;         //Number of the entry being processed
     Int_t         fTotalBuffers;      //Total number of bytes in branch buffers
     Int_t         fEstimate;          //Number of entries to estimate histogram limits
-    Int_t         fDimension;         //Dimension of the current expression
     Int_t         fPacketSize;        //Number of entries in one packet for parallel root
     TDirectory    *fDirectory;        //Pointer to directory holding this tree
     TObjArray     fBranches;          //List of Branches
@@ -145,7 +144,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      DropBuffers(Int_t nbytes);
     virtual Int_t     Fill();
-    virtual void      Fit(const char *formula ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
+    virtual void      Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
@@ -224,6 +223,8 @@ public:
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(Int_t ww=520, Int_t wh=400); // *MENU*
+    virtual void      UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" 
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
     ClassDef(TTree,4)  //Tree descriptor (the main ROOT I/O class)

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -54,6 +54,11 @@ TPaveText::TPaveText(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Option_t *o
 // By default, text items inherits from the default pavetext AttText.
 // A title can be added later to this pavetext via TPaveText::SetLabel.
 //
+//  IMPORTANT NOTE:
+//  Because TPave objects (and objects deriving from TPave) have their
+//  master coordinate system in NDC, one cannot use the TBox functions
+//  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+//  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLines   = new TList(this);
    fMargin  = 0.05;

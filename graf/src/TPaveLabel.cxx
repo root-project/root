@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -45,6 +45,11 @@ TPaveLabel::TPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, const cha
 // The Pave is by default defined bith bordersize=5 and option ="br".
 // The text size is automatically computed as a function of the pave size.
 //
+//  IMPORTANT NOTE:
+//  Because TPave objects (and objects deriving from TPave) have their
+//  master coordinate system in NDC, one cannot use the TBox functions
+//  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+//  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLabel  = label;
 }
