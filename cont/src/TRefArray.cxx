@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.12 2001/10/02 17:29:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.1 2001/10/03 19:55:27 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 // The TRefArray can be filled with:                                    //
 //     array.Add(obj)                                                   //
 //     array.AddAt(obj,i)                                               //
-//     array[i] = obj                                                   //
+//     but not array[i] = obj  !!!                                      //
 //                                                                      //
 // The array elements can be retrieved with:                            //
 //     TObject *obj = array.At(i);                                      //
@@ -91,7 +91,7 @@ void TRefArray::AddFirst(TObject *obj)
    // first element that might have been there. To have insertion semantics
    // use either a TList or a TOrdCollection.
 
-   fUIDs[0] = (ULong_t)obj;
+   fUIDs[0] = MakeUID(obj);
    if (obj) obj->SetBit(kIsReferenced);
    Changed();
 }
@@ -161,7 +161,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
    }
    if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
-   fUIDs[idx-fLowerBound] = (ULong_t)obj;
+   fUIDs[idx-fLowerBound] = MakeUID(obj);
    if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -175,7 +175,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
 
    if (!BoundsOk("AddAt", idx)) return;
 
-   fUIDs[idx-fLowerBound] = (ULong_t)obj;
+   fUIDs[idx-fLowerBound] = MakeUID(obj);
    if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
@@ -191,7 +191,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
        Int_t i;
        for (i = 0; i < fSize; i++)
           if (!fUIDs[i]) {         // Add object at position i
-             fUIDs[i] = (ULong_t)obj;
+             fUIDs[i] = MakeUID(obj);
              if (obj) obj->SetBit(kIsReferenced);
              fLast = TMath::Max(i, GetAbsLast());
              Changed();
@@ -212,8 +212,7 @@ TObject *TRefArray::After(TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == fSize-1) return 0;
 
-   return (TObject*)fUIDs[idx+1];
-   return 0;
+   return MakeObject(fUIDs[idx+1]);
 }
 
 //______________________________________________________________________________
@@ -226,8 +225,7 @@ TObject *TRefArray::Before(TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return 0;
 
-   return (TObject*)fUIDs[idx-1];
-   return 0;
+   return MakeObject(fUIDs[idx-1]);
 }
 
 //______________________________________________________________________________
@@ -342,7 +340,7 @@ TObject *TRefArray::First() const
 {
    // Return the object in the first slot.
 
-   return (TObject*)fUIDs[0];
+   return MakeObject(fUIDs[0]);
 }
 
 //______________________________________________________________________________
@@ -353,7 +351,7 @@ TObject *TRefArray::Last() const
    if (fLast == -1)
       return 0;
    else
-      return (TObject*)fUIDs[GetAbsLast()];
+      return MakeObject(fUIDs[GetAbsLast()]);
 }
 
 //______________________________________________________________________________
@@ -483,7 +481,7 @@ TObject *TRefArray::RemoveAt(Int_t idx)
 
    TObject *obj = 0;
    if (fUIDs[i]) {
-      obj = (TObject*)fUIDs[i];
+      obj = MakeObject(fUIDs[i]);
       fUIDs[i] = 0;
       // recalculate array size
       if (i == fLast)
@@ -505,7 +503,7 @@ TObject *TRefArray::Remove(TObject *obj)
 
    if (idx == -1) return 0;
 
-   TObject *ob = (TObject*)fUIDs[idx];
+   TObject *ob = MakeObject(fUIDs[idx]);
    fUIDs[idx] = 0;
    // recalculate array size
    if (idx == fLast)

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.9 2001/10/02 17:29:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.1 2001/10/03 19:55:26 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -30,6 +30,9 @@
 #endif
 #ifndef ROOT_TProcessID
 #include "TProcessID.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 
 class TRefArray : public TSeqCollection {
@@ -88,7 +91,9 @@ public:
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TRefArray has to be sorted, -1 == not found !!
 
-   ClassDef(TRefArray,1)  //An array of references to TObjects
+   static ULong_t   MakeUID(TObject *obj) {return (ULong_t)((char*)obj - (char*)gSystem);}
+   static TObject  *MakeObject(ULong_t uid) {return (TObject*)(uid + (char*)gSystem);}
+        ClassDef(TRefArray,1)  //An array of references to TObjects
 };
 
 
@@ -147,12 +152,12 @@ inline TObject *TRefArray::At(Int_t i) const
    // Return the object at position i. Returns 0 if i is out of bounds.
   if (i >= 0 && i < fSize) {
    TObject *obj = 0;
-      if (fUIDs[i] & 1) return (TObject*)fUIDs[i];
+      if (!fRefBits.TestBitNumber(i)) return MakeObject(fUIDs[i]);
       if (!fPID) return 0;
       obj = fPID->GetObjectWithID(fUIDs[i]);
       if (obj) {
          ((TBits&)fRefBits).ResetBitNumber(i);
-         fUIDs[i] = (ULong_t)obj;
+         fUIDs[i] = MakeUID(obj);
       }
       return obj;
    }
