@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.2 2000/06/28 15:27:32 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -181,7 +181,7 @@ void TSocket::Close(Option_t *option)
    // shut down the connection. This will close the connection also
    // for the parent of this process. Also called via the dtor (without
    // option "force", call explicitely Close("force") if this is desired).
-   
+
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
    if (fSocket != -1) {
@@ -394,8 +394,8 @@ Int_t TSocket::Recv(TMessage *&mess)
    }
    len = net2host(len);  //from network to host byte order
 
-   char *buf = new char[len];
-   if ((n = gSystem->RecvRaw(fSocket, buf, len, 0)) <= 0) {
+   char *buf = new char[len+sizeof(UInt_t)];
+   if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
       delete [] buf;
       mess = 0;
       return n;
@@ -404,7 +404,7 @@ Int_t TSocket::Recv(TMessage *&mess)
    fBytesRecv  += n + sizeof(UInt_t);
    fgBytesRecv += n + sizeof(UInt_t);
 
-   mess = new TMessage(buf, len);
+   mess = new TMessage(buf, len+sizeof(UInt_t));
 
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };

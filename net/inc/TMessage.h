@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -43,8 +43,9 @@ private:
 
 public:
    TMessage(UInt_t what = kMESS_ANY);
-   virtual ~TMessage();
+   virtual ~TMessage() { }
 
+   void     Forward();
    TClass  *GetClass() const { return fClass; }
    void     Reset();
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
