@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.28 2004/03/15 15:01:41 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.29 2004/04/20 09:27:03 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -212,10 +212,11 @@ void TRint::Run(Bool_t retrn)
 
    // Process shell command line input files
    if (InputFiles()) {
-      Int_t nfile = 0;
-      TObjString *file;
       TIter next(InputFiles());
       RETRY {
+         retval = 0; error = 0;
+         Int_t nfile = 0;
+         TObjString *file;
          while ((file = (TObjString *)next())) {
             char cmd[256];
             if (!fNcmd)
@@ -231,14 +232,14 @@ void TRint::Run(Bool_t retrn)
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
             fNcmd++;
-            retval = ProcessLine(cmd,kFALSE,&error);
-            if (error!=0) break;
+            retval = ProcessLine(cmd, kFALSE, &error);
+            if (error != 0) break;
          }
       } ENDTRY;
 
       if (QuitOpt()) {
          if (retrn) return;
-         Terminate(error==0 ? retval : error);
+         Terminate(error == 0 ? retval : error);
       }
 
       ClearInputFiles();
