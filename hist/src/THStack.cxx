@@ -1,4 +1,4 @@
-// Author: Rene Brun   12/10/2000
+// Author: Rene Brun   10/12/2001
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -224,10 +224,12 @@ Double_t THStack::GetMaximum(Option_t *option)
        BuildStack();
        h = (TH1*)fStack->At(nhists-1);
        themax = h->GetMaximum();
+       if (strstr(opt.Data(),"e1")) themax += TMath::Sqrt(TMath::Abs(themax));
    } else {
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
          them = h->GetMaximum();
+         if (strstr(opt.Data(),"e1")) them += TMath::Sqrt(TMath::Abs(them));
          if (them > themax) themax = them;
       }
    }
