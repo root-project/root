@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.11 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.12 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -98,6 +98,7 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ;
+  void copyList(TList& dest, const TList& source) const ;
 
 private:
 

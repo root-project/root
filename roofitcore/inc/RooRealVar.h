@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.8 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.9 2001/04/05 01:49:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ public:
   RooRealVar(const char* name, const RooRealVar& other);
   virtual TObject* Clone() { return new RooRealVar(*this); }
   virtual ~RooRealVar();
-  RooRealVar& operator=(RooRealVar& other) ;
+  RooRealVar& operator=(const RooRealVar& other) ;
   
   // Parameter value and error accessors
   virtual operator Double_t&();
@@ -69,7 +69,7 @@ public:
 
 protected:
 
-  virtual RooAbsArg& operator=(RooAbsArg& other) ;
+  virtual RooAbsArg& operator=(const RooAbsArg& other) ;
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   Double_t chopAt(Double_t what, Int_t where) ;

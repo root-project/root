@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.11 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.12 2001/04/05 01:49:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,8 +51,9 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 RooAbsArg::RooAbsArg(const char* name, const RooAbsArg& other)
   : TNamed(name,other.GetTitle())
 {
-  // Copy constructor transfers attributes and servers from the original
-  // object. The newly created object has no clients and has its dirty
+  // Copy constructor transfers all properties of the original
+  // object, except for this list of clients. The newly created 
+  // object has an empty client list and has its dirty
   // flags set.
   initCopy(other) ;
 }
@@ -62,8 +63,9 @@ RooAbsArg::RooAbsArg(const char* name, const RooAbsArg& other)
 RooAbsArg::RooAbsArg(const RooAbsArg& other)
   : TNamed(other)
 {
-  // Copy constructor transfers attributes and servers from the original
-  // object. The newly created object has no clients and has its dirty
+  // Copy constructor transfers all properties of the original
+  // object, except for this list of clients. The newly created 
+  // object has an empty client list and has its dirty
   // flags set.
   initCopy(other) ;
 }
@@ -124,7 +126,8 @@ RooAbsArg::~RooAbsArg()
 
 RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) 
 {  
-  // Assignment operator.
+  // Assignment operator: copies value contents and server list of 'other' object
+  // All other properties are untouched.
 
   // Base class operator
   TNamed::operator=(other) ;
@@ -369,7 +372,8 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
     newServer = newSet.find(oldServer->GetName()) ;
     if (!newServer) {
       if (mustReplaceAll) {
-	cout << "RooAbsArg::redirectServers: server " << oldServer->GetName() << " not redirected" << endl ;
+	cout << "RooAbsArg::redirectServers: server " << oldServer->GetName() 
+	     << " not redirected" << endl ;
 	ret = kTRUE ;
       }
       continue ;
@@ -395,7 +399,8 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
 
 void RooAbsArg::attachToTree(TTree& t, Int_t bufSize=32000)
 {
-  cout << "RooAbsArg::attachToTree(" << GetName() << "): Cannot be attached to a TTree" << endl ;
+  cout << "RooAbsArg::attachToTree(" << GetName() 
+       << "): Cannot be attached to a TTree" << endl ;
 }
 
 
@@ -404,6 +409,22 @@ Bool_t RooAbsArg::isValid() const
 {
   return kTRUE ;
 }
+
+
+
+
+void RooAbsArg::copyList(TList& dest, const TList& source) const 
+{
+  dest.Clear() ;
+
+  TIterator* sIter = source.MakeIterator() ;
+  TObject* obj ;
+  while (obj = sIter->Next()) {
+    dest.Add(obj) ;
+  }
+  delete sIter ;
+}
+
 
 
 

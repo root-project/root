@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.4 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.5 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -57,7 +57,7 @@ RooAbsReal::~RooAbsReal()
 }
 
 
-RooAbsReal& RooAbsReal::operator=(RooAbsReal& other)
+RooAbsReal& RooAbsReal::operator=(const RooAbsReal& other)
 {
   RooAbsArg::operator=(other) ;
 
@@ -68,9 +68,9 @@ RooAbsReal& RooAbsReal::operator=(RooAbsReal& other)
 }
 
 
-RooAbsArg& RooAbsReal::operator=(RooAbsArg& aother)
+RooAbsArg& RooAbsReal::operator=(const RooAbsArg& aother)
 {
-  return operator=((RooAbsReal&)aother) ;
+  return operator=((const RooAbsReal&)aother) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.6 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.7 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,8 +56,8 @@ public:
 
 protected:
 
-  RooAbsCategory& operator=(RooAbsCategory& other) ; 
-  virtual RooAbsArg& operator=(RooAbsArg& other) ; 
+  RooAbsCategory& operator=(const RooAbsCategory& other) ; 
+  virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
   void initCopy(const RooAbsCategory& other) ;
 
   // Ordinal index representation is strictly for internal use

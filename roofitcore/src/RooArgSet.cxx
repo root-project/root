@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.8 2001/03/29 01:06:43 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.9 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -162,13 +162,13 @@ void RooArgSet::addServerClonesToList(RooAbsArg& var)
 
 RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
   // Assignment operator
-  
+  RooAbsArg *elem, *theirs ;
   Int_t index(GetSize());
   while(--index >= 0) {
-    RooAbsArg* mine= (RooAbsArg*)At(index);
-    RooAbsArg* theirs= other.find(mine->GetName());
+    elem= (RooAbsArg*)At(index);
+    theirs= other.find(elem->GetName());
     if(!theirs) continue;
-    *mine = *theirs ;
+    (*elem) = (*theirs) ;
   }
   return *this;
 }

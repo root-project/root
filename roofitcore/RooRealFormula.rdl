@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.rdl,v 1.4 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooRealFormula.rdl,v 1.5 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ public:
   RooRealFormula(const char *name, const char *title, RooArgSet& dependents);
   RooRealFormula(const RooRealFormula& other);
   RooRealFormula(const char* name, const RooRealFormula& other);
-  RooRealFormula& operator=(RooRealFormula& other);
+  RooRealFormula& operator=(const RooRealFormula& other);
   virtual TObject* Clone() { return new RooRealFormula(*this); }
   virtual ~RooRealFormula();
 
@@ -43,7 +43,7 @@ public:
 
 protected:
 
-  RooAbsArg& operator=(RooAbsArg& aother) ;
+  RooAbsArg& operator=(const RooAbsArg& aother) ;
   
   // Function evaluation
   virtual Double_t evaluate() const ;

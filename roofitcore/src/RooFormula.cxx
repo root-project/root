@@ -111,7 +111,7 @@ TObject* RooFormula::Clone() {
 }
 
 
-RooFormula& RooFormula::operator=(RooFormula& other) 
+RooFormula& RooFormula::operator=(const RooFormula& other) 
 {
   // to be implemented
   return *this ;

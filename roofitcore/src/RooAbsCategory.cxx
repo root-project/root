@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.6 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.7 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -70,7 +70,7 @@ RooAbsCategory::~RooAbsCategory()
 }
 
 
-RooAbsCategory& RooAbsCategory::operator=(RooAbsCategory& other)
+RooAbsCategory& RooAbsCategory::operator=(const RooAbsCategory& other)
 {
   RooAbsArg::operator=(other) ;
 
@@ -84,9 +84,9 @@ RooAbsCategory& RooAbsCategory::operator=(RooAbsCategory& other)
   return *this ;
 }
 
-RooAbsArg& RooAbsCategory::operator=(RooAbsArg& aother)
+RooAbsArg& RooAbsCategory::operator=(const RooAbsArg& aother)
 {
-  return operator=((RooAbsCategory&)aother) ;
+  return operator=((const RooAbsCategory&)aother) ;
 }
 
 

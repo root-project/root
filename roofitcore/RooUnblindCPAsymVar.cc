@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.2 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.3 2001/03/29 22:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,14 +26,14 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					     const char *blindString, RooAbsReal& cpasym)
-  : RooAbsReal(name,title), _blindEngine(blindString), _asym(&cpasym) 
+  : RooDerivedReal(name,title), _blindEngine(blindString), _asym(&cpasym) 
 {  
   addServer(cpasym) ;
 }
 
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char* name, const RooUnblindCPAsymVar& other) : 
-  RooAbsReal(name, other), _blindEngine(other._blindEngine), _asym(other._asym)
+  RooDerivedReal(name, other), _blindEngine(other._blindEngine), _asym(other._asym)
 {
 }
 
@@ -46,13 +46,6 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 Double_t RooUnblindCPAsymVar::evaluate() const
 {
   return _blindEngine.UnHideAsym(_asym->getVal());
-}
-
-
-Double_t RooUnblindCPAsymVar::getVal() const
-{
-  // Call parent class implementation
-  return RooAbsReal::getVal() ;
 }
 
 
