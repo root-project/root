@@ -102,19 +102,13 @@ sgicc)
 sgiegcs)
    # SGI 6.x with EGCS
    auxcflags="-fsigned-char"
-   auxlibs="-lstdc++ -lm -ldl"
+   auxlibs="-lgen -lstdc++ -lm -ldl"
    auxglibs=${auxlibs}
    ;;
 sgin32egcs)
    # SGI 6.x with EGCS with n32 ABI
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
-   ;;
-sgigcc)
-   # SGI with GCC
-   auxcflags="-fsigned-char"
-   auxlibs="-lg++ -lm -ldl"
    auxglibs=${auxlibs}
    ;;
 sgikcc)
