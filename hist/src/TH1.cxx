@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.220 2005/02/03 13:03:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.221 2005/02/04 13:07:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4050,60 +4050,40 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    if (achoice == 'Z') axis = &fZaxis;
    Axis_t cxmin = axis->GetXmin();
    Axis_t cxmax = axis->GetXmax();
-   if (cxmin > cxmax) return;
+   if (cxmin >= cxmax) return;
+   if (axis->GetNbins() <= 0) return;
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
    Axis_t range = cxmax-cxmin;
-   Axis_t xmin=0,xmax=0;
+   Axis_t binsize = range / axis->GetNbins();
+   Axis_t xmin=cxmin,xmax=cxmax;
 
     //recompute new axis limits by doubling the current range
    Int_t bin;
    Int_t ntimes = 0;
-   if (x < cxmin) {
-      while (1) {
-         ntimes++;
-         if (ntimes > 64) break;
-         range *= 2;
-         if (x < cxmax-range) continue;
-         xmin = cxmin - range/2;
-         xmax = xmin + range;
-         if (x < xmin) {
-            xmin = cxmax - range;
-            xmax = cxmax;
-         }
-         if ( xmin < 0 && x >= 0) {
-            xmin = 0;
-            xmax = range;
-         }
-         if (xmax >= 0 && cxmax <= 0) {
-            xmax = 0;
-            xmin = xmax - range;
-         }
+   while (x < xmin) {
+      if (ntimes++ > 64)
          break;
+      xmin = xmin - range;
+      range *= 2;
+      binsize *= 2;
+      // make sure that the merging will be correct
+      if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
+         xmin += 0.5 * binsize;
+         xmax += 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
       }
-   } else {
-      //if ( !(x < cxmax)) return; //to catch NaN
-      while (1) {
-         ntimes++;
-         if (ntimes > 64) break;
-         range *= 2;
-         if (x >= cxmin+range) continue;
-         xmax = cxmax + range/4;
-         xmin = xmax - range;
-         if (x >= xmax) {
-            xmax = cxmin + range;
-            xmin = cxmin;
-         }
-         if ( xmax > 0 && x < 0) {
-            xmax = 0;
-            xmin = -range;
-         }
-         if (xmin < 0 && cxmin >= 0) {
-            xmin = 0;
-            xmax = xmin + range;
-         }
+   }
+   while (x >= xmax) {
+      if (ntimes++ > 64)
          break;
+      xmax = xmax + range;      
+      range *= 2;
+      binsize *= 2;
+      // make sure that the merging will be correct
+      if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
+         xmin -= 0.5 * binsize;
+         xmax -= 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
       }
    }
 
