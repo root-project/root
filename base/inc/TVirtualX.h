@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.19 2003/02/17 18:33:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.20 2003/07/08 15:42:25 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -347,10 +347,15 @@ public:
    virtual void         glShadeModel(UInt_t mode);
    virtual void         glNormal3fv(const Float_t *norm);
 
+   static TVirtualX    *&Instance();
+
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 
-R__EXTERN TVirtualX  *gVirtualX;
+#ifndef __CINT__
+#define gVirtualX (TVirtualX::Instance())
+R__EXTERN TVirtualX* (*gPtr2VirtualX)();
+#endif
 R__EXTERN TVirtualX  *gGXBatch;
 
 //--- inlines ------------------------------------------------------------------

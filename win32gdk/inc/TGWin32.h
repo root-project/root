@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.11 2003/03/10 07:57:14 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.12 2003/03/28 21:27:48 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGWIN32
-#define ROOT_TGWIN32
+#ifndef ROOT_TGWin32
+#define ROOT_TGWin32
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,7 @@
 #ifndef ROOT_TTF
 #include "TTF.h"
 #endif
+
 
 #if !defined(__CINT__)
 
@@ -64,88 +65,14 @@ typedef unsigned long KeySym;
 
 #define None 0 /* universal null resource or null atom */
 
-struct ThreadParam_t {
-
-    HANDLE          hThrSem;
-    GdkDrawable    *Drawable;
-    GdkWindowAttr   xattr;
-    GdkGC          *GC;
-    GdkColor        color;
-    GdkGCValues     gcvals;
-    GdkEvent        event;
-    GdkRectangle    region;
-
-    signed char     dashes[32];
-    void           *pParam;
-    void           *pParam1;
-    void           *pParam2;
-    Float_t         fParam;
-    Float_t         fParam1;
-    Float_t         fParam2;
-    Int_t           iParam;
-    Int_t           iParam1;
-    Int_t           iParam2;
-    UInt_t          uiParam;
-    UInt_t          uiParam1;
-    UInt_t          uiParam2;
-    Long_t          lParam;
-    Long_t          lParam1;
-    Long_t          lParam2;
-    ULong_t         ulParam;
-    ULong_t         ulParam1;
-    ULong_t         ulParam2;
-    char            *sParam;
-    Int_t           x;
-    Int_t           x1;
-    Int_t           x2;
-    Int_t           y;
-    Int_t           y1;
-    Int_t           y2;
-    Int_t           w;
-    Int_t           h;
-    Int_t           xpos;
-    Int_t           ypos;
-    Int_t           angle1;
-    Int_t           angle2;
-    Bool_t          bFill;
-
-    char           *sRet;
-    Int_t           iRet;
-    Int_t           iRet1;
-    UInt_t          uiRet;
-    UInt_t          uiRet1;
-    Long_t          lRet;
-    Long_t          lRet1;
-    ULong_t         ulRet;
-    void           *pRet;
-    void           *pRet1;
-
-};
-
-struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;           // drawing area, equal to window or buffer
-   GdkDrawable *window;            // win32 window
-   GdkDrawable *buffer;            // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
-};
-
+struct XWindow_t;
+////////////////////////////////////////////////////////////////////////////////
 class TGWin32 : public TVirtualX {
 
 private:
 
    enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-                        kBLeft, kBCenter, kBRight };
+                 kBLeft, kBCenter, kBRight };
 
    FT_Vector   fAlign;                 // alignment vector
 
@@ -188,36 +115,29 @@ private:
    void MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox = kTRUE);
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
-   static DWORD __stdcall ThreadStub(void *Parameter) {
-        ((TGWin32*)Parameter)->GdkThread();
-        return 0;
-   }
-   void GdkThread();
+   Bool_t NeedSplash();
 
 protected:
+   static TGWin32 *fgRealObject;    // singleton
 
-   LPCRITICAL_SECTION  flpCriticalSection; // pointer to critical section object
-   DWORD            fIDThread;       // ID of the separate Thread to work out event loop
-   HANDLE           hGDKThread;
-   ThreadParam_t    fThreadP;
-
-   GdkVisual  *fVisual;
-   GdkColormap  *fColormap;           //Default colormap, 0 if b/w
-   Int_t      fScreenNumber;       //Screen number
-   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
-   Int_t      fTextAlignH;         //Text Alignment Horizontal
-   Int_t      fTextAlignV;         //Text Alignment Vertical
-   Int_t      fTextAlign;          //Text alignment (set in SetTextAlign)
-   Float_t    fCharacterUpX;       //Character Up vector along X
-   Float_t    fCharacterUpY;       //Character Up vector along Y
-   Float_t    fTextMagnitude;      //Text Magnitude
-   Int_t      fDepth;              //Number of color planes
-   Int_t      fRedDiv;             //Red value divider, -1 if no TrueColor visual
-   Int_t      fGreenDiv;           //Green value divider
-   Int_t      fBlueDiv;            //Blue value divider
-   Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
-   Int_t      fGreenShift;         //Bits to left shift green
-   Int_t      fBlueShift;          //Bits to left shift blue
+   GdkVisual  *fVisual;             //
+   GdkColormap  *fColormap;         // Default colormap, 0 if b/w
+   Int_t      fScreenNumber;        // Screen number
+   Bool_t     fHasTTFonts;          // True when TrueType fonts are used
+   Int_t      fTextAlignH;          // Text Alignment Horizontal
+   Int_t      fTextAlignV;          // Text Alignment Vertical
+   Int_t      fTextAlign;           // Text alignment (set in SetTextAlign)
+   Float_t    fCharacterUpX;        // Character Up vector along X
+   Float_t    fCharacterUpY;        // Character Up vector along Y
+   Float_t    fTextMagnitude;       // Text Magnitude
+   Int_t      fDepth;               // Number of color planes
+   Int_t      fRedDiv;              // Red value divider, -1 if no TrueColor visual
+   Int_t      fGreenDiv;            // Green value divider
+   Int_t      fBlueDiv;             // Blue value divider
+   Int_t      fRedShift;            // Bits to left shift red, -1 if no TrueColor visual
+   Int_t      fGreenShift;          // Bits to left shift green
+   Int_t      fBlueShift;           // Bits to left shift blue
+   Handle_t   fXEvent;              // Current native (GDK) event
 
    // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
@@ -236,8 +156,8 @@ public:
    Int_t     SetTextFont(char *fontname, ETextSetMode mode);
    void      SetTextSize(Float_t textsize);
 
-   Bool_t    Init();
-   UInt_t	 ExecCommand(TGWin32Command *);
+   Bool_t    Init(void *display=0);
+   //UInt_t	 ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();
@@ -262,7 +182,6 @@ public:
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
-   Int_t     OpenDisplay();
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);
    void      ReadGIF(Int_t x0, Int_t y0, const char *file);
@@ -320,7 +239,7 @@ public:
                              Int_t depth, UInt_t clss,
                              void *visual, SetWindowAttributes_t *attr,
                              UInt_t wtype);
-   Int_t        OpenDisplay(const char *dpyName);
+   Int_t        OpenDisplay(const char *dpyName=0);
    void         CloseDisplay();
    Display_t    GetDisplay() const;
    Visual_t     GetVisual() const { return 0; }
@@ -497,8 +416,11 @@ public:
    void         glShadeModel(UInt_t mode);
    void         glNormal3fv(const Float_t *norm);
 
+   static inline TVirtualX *Instance() { return fgRealObject; }
+   static TVirtualX *Proxy();
+
    ClassDef(TGWin32,0)  //Interface to Win32
 };
 
-#endif
 
+#endif

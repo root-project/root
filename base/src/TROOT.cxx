@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.98 2003/07/26 05:51:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.99 2003/08/04 20:07:41 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -661,6 +661,9 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
          if (fCanvases->FindObject(canvas))
             where = canvas;
       }
+   }
+   if (!temp && !strcmp(name, "gVirtualX")) {
+      temp = gVirtualX;
    }
    if (!temp) {
       temp  = fFiles->FindObject(name);

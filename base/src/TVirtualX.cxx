@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -28,16 +28,28 @@ Atom_t    gWM_DELETE_WINDOW;
 Atom_t    gMOTIF_WM_HINTS;
 Atom_t    gROOT_MESSAGE;
 
-TVirtualX     *gVirtualX;      //Global pointer to the current graphics interface
+
 TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
+TVirtualX*   (*gPtr2VirtualX)() = 0; // returns pointer to global object
 
 ClassImp(TVirtualX)
+
 
 //______________________________________________________________________________
 TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
       TAttLine(1,1,1),TAttFill(1,1),TAttText(11,0,1,62,0.01), TAttMarker(1,1,1)
 {
    // Ctor of ABC
+}
+
+//______________________________________________________________________________
+TVirtualX *&TVirtualX::Instance()
+{
+   // returns gVirtualX global
+
+   static TVirtualX *instance = 0;
+   if (gPtr2VirtualX) instance = gPtr2VirtualX();
+   return instance;
 }
 
 //______________________________________________________________________________

@@ -59,23 +59,23 @@ EXPORTS
 	gdk_drag_get_selection
 	gdk_drag_motion
 	gdk_drag_status
-	gdk_draw_arc
+	gdk_win32_draw_arc
 	gdk_draw_drawable
 	gdk_draw_gray_image
 	gdk_draw_image
 	gdk_draw_indexed_image
 	gdk_draw_line
-	gdk_draw_lines
+	gdk_win32_draw_lines
 	gdk_draw_point
-	gdk_draw_points
-	gdk_draw_polygon
-	gdk_draw_rectangle
+	gdk_win32_draw_points
+	gdk_win32_draw_polygon
+	gdk_win32_draw_rectangle
 	gdk_draw_rgb_32_image
 	gdk_draw_rgb_image
 	gdk_draw_rgb_image_dithalign
-	gdk_draw_segments
+	gdk_win32_draw_segments
 	gdk_draw_string
-	gdk_draw_text
+	gdk_win32_draw_text
 	gdk_draw_text_wc
 	gdk_drawable_alloc
 	gdk_drawable_get_colormap

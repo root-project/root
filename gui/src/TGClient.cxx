@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.22 2003/05/02 10:28:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.23 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -91,7 +91,14 @@ TGClient::TGClient(const char *dpyName)
       return;
    }
 
-   // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
+   // Initialize internal window list. Use a THashList for fast
+   // finding of windows based on window id (see GetWindowById()).
+
+   fWlist = new THashList(200);
+   fPlist = new TList;
+   fUWHandlers = 0;
+
+  // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
    gSystem->SetDisplay();
 
    // Open the connection to the display
@@ -100,13 +107,19 @@ TGClient::TGClient(const char *dpyName)
             gVirtualX->DisplayName(dpyName));
       gSystem->Exit(1);
    }
+   if (fXfd >= 0) {
+      TGInputHandler *xi = new TGInputHandler(this, fXfd);
+      if (fXfd) gSystem->AddFileHandler(xi);
+      // X11 events are handled via gXDisplay->Notify() in
+      // TUnixSystem::DispatchOneEvent(). When no events available we wait for
+      // events on all TFileHandlers including this one via a select() call.
+      // However, X11 events are always handled via gXDisplay->Notify() and not
+      // via the ReadNotify() (therefore TGInputHandler should not override
+      // TFileHandler::ReadNotify()).
+      gXDisplay = xi;
+   }
 
-   // Initialize internal window list. Use a THashList for fast
-   // finding of windows based on window id (see GetWindowById()).
-
-   fWlist = new THashList(200);
-   fPlist = new TList;
-   fUWHandlers = 0;
+   fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
    // Setup some atoms (defined in TVirtualX)...
 
@@ -120,20 +133,6 @@ TGClient::TGClient(const char *dpyName)
    fGlobalNeedRedraw = kFALSE;
    fForceRedraw      = kFALSE;
    fWaitForWindow    = kNone;
-
-   if (fXfd > 0) {
-      TGInputHandler *xi = new TGInputHandler(this, fXfd);
-      gSystem->AddFileHandler(xi);
-      // X11 events are handled via gXDisplay->Notify() in
-      // TUnixSystem::DispatchOneEvent(). When no events available we wait for
-      // events on all TFileHandlers including this one via a select() call.
-      // However, X11 events are always handled via gXDisplay->Notify() and not
-      // via the ReadNotify() (therefore TGInputHandler should not override
-      // TFileHandler::ReadNotify()).
-      gXDisplay = xi;
-   }
-
-   fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
    fResourcePool = new TGResourcePool(this);
 

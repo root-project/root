@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.3 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -37,9 +37,9 @@ public:
    TAttFill(Color_t fcolor,Style_t fstyle);
    virtual ~TAttFill();
    void             Copy(TAttFill &attfill) const;
-   Color_t          GetFillColor() const { return fFillColor; }
-   Style_t          GetFillStyle() const { return fFillStyle; }
-   Bool_t           IsTransparent() const;
+   virtual Color_t  GetFillColor() const { return fFillColor; }
+   virtual Style_t  GetFillStyle() const { return fFillStyle; }
+   virtual Bool_t   IsTransparent() const;
    virtual void     Modify();
    virtual void     ResetAttFill(Option_t *option="");
    virtual void     SaveFillAttributes(ofstream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);

@@ -40,23 +40,23 @@
 
 static void gdk_win32_drawable_destroy(GdkDrawable * drawable);
 
-static void gdk_win32_draw_rectangle(GdkDrawable * drawable,
+ void gdk_win32_draw_rectangle(GdkDrawable * drawable,
                                      GdkGC * gc,
                                      gint filled,
                                      gint x,
                                      gint y, gint width, gint height);
-static void gdk_win32_draw_arc(GdkDrawable * drawable,
+ void gdk_win32_draw_arc(GdkDrawable * drawable,
                                GdkGC * gc,
                                gint filled,
                                gint x,
                                gint y,
                                gint width,
                                gint height, gint angle1, gint angle2);
-static void gdk_win32_draw_polygon(GdkDrawable * drawable,
+ void gdk_win32_draw_polygon(GdkDrawable * drawable,
                                    GdkGC * gc,
                                    gint filled,
                                    GdkPoint * points, gint npoints);
-static void gdk_win32_draw_text(GdkDrawable * drawable,
+ void gdk_win32_draw_text(GdkDrawable * drawable,
                                 GdkFont * font,
                                 GdkGC * gc,
                                 gint x,
@@ -76,13 +76,13 @@ static void gdk_win32_draw_drawable(GdkDrawable * drawable,
                                     gint ysrc,
                                     gint xdest,
                                     gint ydest, gint width, gint height);
-static void gdk_win32_draw_points(GdkDrawable * drawable,
+ void gdk_win32_draw_points(GdkDrawable * drawable,
                                   GdkGC * gc,
                                   GdkPoint * points, gint npoints);
-static void gdk_win32_draw_segments(GdkDrawable * drawable,
+ void gdk_win32_draw_segments(GdkDrawable * drawable,
                                     GdkGC * gc,
                                     GdkSegment * segs, gint nsegs);
-static void gdk_win32_draw_lines(GdkDrawable * drawable,
+ void gdk_win32_draw_lines(GdkDrawable * drawable,
                                  GdkGC * gc,
                                  GdkPoint * points, gint npoints);
 
@@ -161,7 +161,7 @@ static void gdk_win32_drawable_destroy(GdkDrawable * drawable)
    g_assert_not_reached();
 }
 
-static void
+ void
 gdk_win32_draw_rectangle(GdkDrawable * drawable,
                          GdkGC * gc,
                          gint filled,
@@ -326,7 +326,7 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
                    GDK_GC_FOREGROUND | GDK_GC_BACKGROUND);
 }
 
-static void
+ void
 gdk_win32_draw_arc(GdkDrawable * drawable,
                    GdkGC * gc,
                    gint filled,
@@ -402,7 +402,7 @@ gdk_win32_draw_arc(GdkDrawable * drawable,
    }
 }
 
-static void
+ void
 gdk_win32_draw_polygon(GdkDrawable * drawable,
                        GdkGC * gc,
                        gint filled, GdkPoint * points, gint npoints)
@@ -504,7 +504,7 @@ gdk_draw_text_handler(GdkWin32SingleFont * singlefont,
    SelectObject(argp->hdc, oldfont);
 }
 
-static void
+ void
 gdk_win32_draw_text(GdkDrawable * drawable,
                     GdkFont * font,
                     GdkGC * gc,
@@ -734,7 +734,7 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
    gdk_gc_postdraw(drawable, gc_private, 0);
 }
 
-static void
+ void
 gdk_win32_draw_points(GdkDrawable * drawable,
                       GdkGC * gc, GdkPoint * points, gint npoints)
 {
@@ -760,7 +760,7 @@ gdk_win32_draw_points(GdkDrawable * drawable,
    gdk_gc_postdraw(drawable, gc_private, 0);
 }
 
-static void
+ void
 gdk_win32_draw_segments(GdkDrawable * drawable,
                         GdkGC * gc, GdkSegment * segs, gint nsegs)
 {
@@ -817,7 +817,7 @@ gdk_win32_draw_segments(GdkDrawable * drawable,
                    GDK_GC_FOREGROUND | GDK_GC_BACKGROUND);
 }
 
-static void
+ void
 gdk_win32_draw_lines(GdkDrawable * drawable,
                      GdkGC * gc, GdkPoint * points, gint npoints)
 {
