@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.2 2000/06/05 07:31:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.3 2000/06/12 15:48:03 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -164,8 +164,8 @@ TPad::TPad(): TVirtualPad()
 }
 
 //______________________________________________________________________________
-TPad::TPad(const char *name, const char *title, Float_t xlow,
-           Float_t ylow, Float_t xup, Float_t yup,
+TPad::TPad(const char *name, const char *title, Double_t xlow,
+           Double_t ylow, Double_t xup, Double_t yup,
            Color_t color, Short_t bordersize, Short_t bordermode)
           : TVirtualPad(name,title,xlow,ylow,xup,yup,color,bordersize,bordermode)
 {
@@ -420,7 +420,7 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
    Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
    Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
 
-   Float_t xt=0, yt=0;
+   Double_t xt=0, yt=0;
    Int_t clipped = 0; //this variable could be used in a future version
    while(code1 + code2) {
       clipped = 1;
@@ -467,7 +467,84 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
 
 
 //___________________________________________________________
-Int_t TPad::ClippingCode(Float_t x, Float_t y, Float_t xcl1, Float_t ycl1, Float_t xcl2, Float_t ycl2)
+Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
+{
+//   Clipping routine: Cohen Sutherland algorithm.
+// If Clip ==2 the segment is outside the boundary.
+// If Clip ==1 the segment has one point outside the boundary.
+// If Clip ==0 the segment is inside the boundary.
+//
+// _Input parameters:
+//
+//  x[2], y[2] : Segment coordinates
+//  xclipl, yclipb, xclipr, yclipt : Clipping boundary
+//
+// _Output parameters:
+//
+//  x[2], y[2] : New segment coordinates
+//
+   const Double_t P=10000;
+   Int_t clip = 0;
+
+   for (Int_t i=0;i<2;i++) {
+      if (TMath::Abs(xclipl-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipl;
+      if (TMath::Abs(xclipr-x[i]) <= TMath::Abs(xclipr-xclipl)/P) x[i] = xclipr;
+      if (TMath::Abs(yclipb-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipb;
+      if (TMath::Abs(yclipt-y[i]) <= TMath::Abs(yclipt-yclipb)/P) y[i] = yclipt;
+   }
+
+//Compute the first endpoint codes.
+   Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
+   Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
+
+   Double_t xt=0, yt=0;
+   Int_t clipped = 0; //this variable could be used in a future version
+   while(code1 + code2) {
+      clipped = 1;
+
+//The line lies entirely outside the clipping boundary
+
+      if (code1&code2) {
+         clip = 2;
+         return clip;
+      }
+//The line is subdivided into several parts
+
+      Int_t ic = code1;
+      if (ic == 0) ic = code2;
+      if (ic & 0x1) {
+         yt = y[0] + (y[1]-y[0])*(xclipl-x[0])/(x[1]-x[0]);
+         xt = xclipl;
+      }
+      if (ic & 0x2) {
+         yt = y[0] + (y[1]-y[0])*(xclipr-x[0])/(x[1]-x[0]);
+         xt = xclipr;
+      }
+      if (ic & 0x4) {
+         xt = x[0] + (x[1]-x[0])*(yclipb-y[0])/(y[1]-y[0]);
+         yt = yclipb;
+      }
+      if (ic & 0x8) {
+         xt = x[0] + (x[1]-x[0])*(yclipt-y[0])/(y[1]-y[0]);
+         yt = yclipt;
+      }
+      if (ic == code1) {
+         x[0]  = xt;
+         y[0]  = yt;
+         code1 = ClippingCode(xt,yt,xclipl,yclipb,xclipr,yclipt);
+      } else {
+         x[1]  = xt;
+         y[1]  = yt;
+         code2 = ClippingCode(xt,yt,xclipl,yclipb,xclipr,yclipt);
+      }
+   }
+   clip = clipped;
+   return clip;
+}
+
+
+//___________________________________________________________
+Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, Double_t xcl2, Double_t ycl2)
 {
 //   Compute the endpoint codes for TPad::Clip.
 
@@ -533,7 +610,7 @@ void TPad::CopyPixmap()
 //*-*              ========================================
 
    int px, py;
-   XYtoAbsPixel(GetX1(), GetY2(), px, py);
+   XYtoAbsPixel(fX1, fY2, px, py);
    gVirtualX->CopyPixmap(fPixmapID, px, py);
    if (this == gPad) HighLight(gPad->GetHighLightColor());
 }
@@ -568,12 +645,12 @@ void TPad::CreateNewEllipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 //
 
 
-   static Float_t x0, y0, x1, y1;
+   static Double_t x0, y0, x1, y1;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
    static Int_t linedrawn;
-   Float_t xc,yc,r1,r2;
+   Double_t xc,yc,r1,r2;
    TEllipse *el = 0;
 
    switch (event) {
@@ -632,7 +709,7 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 //
 //
 
-   static Float_t x0, y0, x1, y1;
+   static Double_t x0, y0, x1, y1;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
@@ -640,7 +717,7 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    TLine *line;
    TArrow *arrow;
    TCurlyLine *cline;
-   Float_t radius, phimin,phimax;
+   Double_t radius, phimin,phimax;
 
    switch (event) {
 
@@ -710,7 +787,7 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
    static Bool_t boxdrawn;
    static TPad *padsav;
-   Float_t xlow, ylow, xup, yup;
+   Double_t xlow, ylow, xup, yup;
    TPad * newpad;
 
    switch (event) {
@@ -747,10 +824,10 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
       gPad->Modified(kTRUE);
       gPad->SetDoubleBuffer(1);   // Turn on double buffer mode
       gVirtualX->SetDrawMode(TVirtualX::kCopy);       // set drawing mode back to normal (copy) mode
-      xlow = (Float_t(pxl) - Float_t(px1))/(Float_t(px2) - Float_t(px1));
-      ylow = (Float_t(py1) - Float_t(pyl))/(Float_t(py1) - Float_t(py2));
-      xup  = (Float_t(pxt) - Float_t(px1))/(Float_t(px2) - Float_t(px1));
-      yup  = (Float_t(py1) - Float_t(pyt))/(Float_t(py1) - Float_t(py2));
+      xlow = (Double_t(pxl) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
+      ylow = (Double_t(py1) - Double_t(pyl))/(Double_t(py1) - Double_t(py2));
+      xup  = (Double_t(pxt) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
+      yup  = (Double_t(py1) - Double_t(pyt))/(Double_t(py1) - Double_t(py2));
       gROOT->SetEditorMode();
       boxdrawn = 0;
       if (xup <= xlow || yup <= ylow) return;
@@ -777,15 +854,15 @@ void TPad::CreateNewPave(Int_t event, Int_t px, Int_t py, Int_t mode)
 //
 
 
-   static Float_t x0, y0, x1, y1;
+   static Double_t x0, y0, x1, y1;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
    static Int_t linedrawn;
    const Int_t kTMAX=100;
    Int_t i,pxl,pyl;
-   Float_t temp;
-   Float_t xp0,xp1,yp0,yp1;
+   Double_t temp;
+   Double_t xp0,xp1,yp0,yp1;
    static char atext[kTMAX];
    TObject *pave = 0;
 
@@ -865,7 +942,7 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 // canvas pulldown menu.
 //
    const Int_t kMAX=100;
-   static Float_t xline[kMAX], yline[kMAX];
+   static Double_t xline[kMAX], yline[kMAX];
 
    static Int_t pxold, pyold, px1old, py1old;
    static Int_t npoints = 0;
@@ -900,7 +977,7 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             yline[npoints] = yline[0];
             npoints++;
             gr = (TGraph*)gROOT->ProcessLineFast(
-                 Form("new TCutG(\"CUTG\",%d,(Float_t*)0x%lx,(Float_t*)0x%lx)",
+                 Form("new TCutG(\"CUTG\",%d,(Double_t*)0x%lx,(Double_t*)0x%lx)",
                       npoints,(Long_t)xline,(Long_t)yline));
             if (gr) gr->Draw("L");
          }
@@ -951,7 +1028,7 @@ void TPad::CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode)
    Int_t i, lentext;
    TLatex *newtext;
    TMarker *marker;
-   Float_t x, y;
+   Double_t x, y;
 
    switch (event) {
 
@@ -1101,9 +1178,9 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    if (nx <= 0) nx = 1;
    if (ny <= 0) ny = 1;
    Int_t ix,iy;
-   Float_t x1,y1,x2,y2;
-   Float_t dy = 1/Float_t(ny);
-   Float_t dx = 1/Float_t(nx);
+   Double_t x1,y1,x2,y2;
+   Double_t dy = 1/Double_t(ny);
+   Double_t dx = 1/Double_t(nx);
    TPad *pad;
    char *name = new char [strlen(GetName())+6];
    Int_t n = 0;
@@ -1177,7 +1254,7 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
    TBaseClass *base, *cinherit;
    TText *ptext = 0;
    TString opt=option;
-   Float_t x,y,dy,y1,v1,v2,dv;
+   Double_t x,y,dy,y1,v1,v2,dv;
    Int_t nd,nf,nc,nkd,nkf,i,j;
    TPaveText *pt;
    Int_t maxlev = 4;
@@ -1188,8 +1265,8 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
    if (opt.Contains("7")) maxlev = 7;
 
       // Clear and Set Pad range
-   Float_t xpad = 20.5;
-   Float_t ypad = 27.5;
+   Double_t xpad = 20.5;
+   Double_t ypad = 27.5;
    Clear();
    Range(0,0,xpad,ypad);
 
@@ -1218,15 +1295,15 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
       ncdraw += nc;
    }
 
-   Float_t tsizcm = 0.40;
-   Float_t x1 = 0.25;
-   Float_t x2 = 0;
-   Float_t dx = 3.5;
+   Double_t tsizcm = 0.40;
+   Double_t x1 = 0.25;
+   Double_t x2 = 0;
+   Double_t dx = 3.5;
    if (ncdraw > 4) {
-      dx = dx - 0.42*Float_t(ncdraw-5);
-      tsizcm = tsizcm - 0.03*Float_t(ncdraw-5);
+      dx = dx - 0.42*Double_t(ncdraw-5);
+      tsizcm = tsizcm - 0.03*Double_t(ncdraw-5);
    }
-   Float_t tsiz = 1.2*tsizcm/ypad;
+   Double_t tsiz = 1.2*tsizcm/ypad;
 
    // Now loop on levels
    for (ilevel=nlevel;ilevel>=0;ilevel--) {
@@ -1253,7 +1330,7 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
          if (nd == 0) nkd=0;
          if (nf == 0) nkf=0;
          y1 = v2 - 0.7;
-         v1 = y1 - Float_t(nkf+nkd+nc-1)*dy;
+         v1 = y1 - Double_t(nkf+nkd+nc-1)*dy;
          dv = v2 - v1;
 
          // Create a new PaveText
@@ -1279,7 +1356,7 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
          TDataMember *d;
          TIter        nextd(cl->GetListOfDataMembers());
          while ((d = (TDataMember *) nextd())) {
-            if (i >= nkd) { i = 1; y = y1 - 0.5*dy; x += 1/Float_t(nc); }
+            if (i >= nkd) { i = 1; y = y1 - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
 
             // Take in account the room the array index will occupy
@@ -1297,9 +1374,9 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
          }
 
          // Draw a separator line
-         Float_t ysep;
+         Double_t ysep;
          if (nd) {
-            ysep = y1 - Float_t(nkd)*dy;
+            ysep = y1 - Double_t(nkd)*dy;
             pt->AddLine(0,(ysep-v1)/dv,0,(ysep-v1)/dv);
             ysep -= 0.5*dy;
          } else  ysep = y1;
@@ -1322,7 +1399,7 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
             ) continue;
             fcount++;
             if (fcount > nf) break;
-            if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Float_t(nc); }
+            if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
             ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars((char*)m->GetName()));
 
@@ -1355,7 +1432,7 @@ void TPad::DrawClassObject(TObject *classobj, Option_t *option)
 }
 
 //______________________________________________________________________________
-TH1F *TPad::DrawFrame(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax, const char *title)
+TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
 //  Draw a pad frame
 //  Compute real pad range taking into account all margins
@@ -1381,8 +1458,8 @@ void TPad::DrawColorTable()
 
    Int_t i, j;
    Int_t color;
-   Float_t xlow, ylow, xup, yup, hs, ws;
-   Float_t x1, y1, x2, y2;
+   Double_t xlow, ylow, xup, yup, hs, ws;
+   Double_t x1, y1, x2, y2;
    x1 = y1 = 0;
    x2 = y2 = 20;
 
@@ -1398,14 +1475,14 @@ void TPad::DrawColorTable()
    TBox *box;
    char label[8];
 //*-* draw colortable boxes
-   hs = (y2-y1)/Float_t(5);
-   ws = (x2-x1)/Float_t(10);
+   hs = (y2-y1)/Double_t(5);
+   ws = (x2-x1)/Double_t(10);
    for (i=0;i<10;i++) {
-      xlow = x1 + ws*(Float_t(i)+0.1);
-      xup  = x1 + ws*(Float_t(i)+0.9);
+      xlow = x1 + ws*(Double_t(i)+0.1);
+      xup  = x1 + ws*(Double_t(i)+0.9);
       for (j=0;j<5;j++) {
-         ylow = y1 + hs*(Float_t(j)+0.1);
-         yup  = y1 + hs*(Float_t(j)+0.9);
+         ylow = y1 + hs*(Double_t(j)+0.1);
+         yup  = y1 + hs*(Double_t(j)+0.9);
          color = 10*j + i + 1;
          sprintf(label,"%d",color);
          box = new TBox(xlow, ylow, xup, yup);
@@ -1418,7 +1495,7 @@ void TPad::DrawColorTable()
 }
 
 //______________________________________________________________________________
-void TPad::DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+void TPad::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*Draw line in CurrentPad World coordinates*-*-*-*-*-*-*-*
 //*-*              =========================================
@@ -1432,7 +1509,7 @@ void TPad::DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
 }
 
 //______________________________________________________________________________
-void TPad::DrawLineNDC(Float_t u1, Float_t v1, Float_t u2, Float_t v2)
+void TPad::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
 //*-*-*-*-*-*-*-*-*Draw line in CurrentPad NDC coordinates*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -1446,7 +1523,7 @@ void TPad::DrawLineNDC(Float_t u1, Float_t v1, Float_t u2, Float_t v2)
 }
 
 //______________________________________________________________________________
-void TPad::DrawText(Float_t x, Float_t y, const char *text)
+void TPad::DrawText(Double_t x, Double_t y, const char *text)
 {
 //*-*-*-*-*-*-*-*-*Draw text in CurrentPad World coordinates*-*-*-*-*-*-*-*
 //*-*              =========================================
@@ -1460,7 +1537,7 @@ void TPad::DrawText(Float_t x, Float_t y, const char *text)
 }
 
 //______________________________________________________________________________
-void TPad::DrawTextNDC(Float_t u, Float_t v, const char *text)
+void TPad::DrawTextNDC(Double_t u, Double_t v, const char *text)
 {
 //*-*-*-*-*-*-*-*-*Draw text in CurrentPad NDC coordinates*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -1507,10 +1584,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //  If somebody modifies this function, may be similar changes should also
 //  be applied to TBox::ExecuteEvent.
 
-   static Float_t xmin;
-   static Float_t xmax;
-   static Float_t ymin;
-   static Float_t ymax;
+   static Double_t xmin;
+   static Double_t xmax;
+   static Double_t ymin;
+   static Double_t ymax;
 
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
@@ -1528,8 +1605,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    HideToolTip(event);
 
    parent = GetMother();
-   if (GetXlowNDC() < 0 && event != kButton1Down) return;
-   if (GetYlowNDC() < 0 && event != kButton1Down) return;
+   if (fXlowNDC < 0 && event != kButton1Down) return;
+   if (fYlowNDC < 0 && event != kButton1Down) return;
 
    // keep old range and mouse position
    if (event == kButton1Down) {
@@ -1631,10 +1708,10 @@ again:
 
    case kMouseMotion:
 
-      px1 = XtoAbsPixel(GetX1());
-      py1 = YtoAbsPixel(GetY1());
-      px2 = XtoAbsPixel(GetX2());
-      py2 = YtoAbsPixel(GetY2());
+      px1 = XtoAbsPixel(fX1);
+      py1 = YtoAbsPixel(fY1);
+      px2 = XtoAbsPixel(fX2);
+      py2 = YtoAbsPixel(fY2);
 
       if (px1 < px2) {
          pxl = px1;
@@ -1887,10 +1964,10 @@ again:
          Int_t py2 = YtoAbsPixel(fY2); if (py2 < parentpy2) {py2 = parentpy2; }
 
          // Compute new pad positions in the NDC space of parent
-         fXlowNDC = Float_t(px1 - parentpx1)/Float_t(parentpx2 - parentpx1);
-         fYlowNDC = Float_t(py1 - parentpy1)/Float_t(parentpy2 - parentpy1);
-         fWNDC    = Float_t(px2 - px1)/Float_t(parentpx2 - parentpx1);
-         fHNDC    = Float_t(py2 - py1)/Float_t(parentpy2 - parentpy1);
+         fXlowNDC = Double_t(px1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+         fYlowNDC = Double_t(py1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+         fWNDC    = Double_t(px2 - px1)/Double_t(parentpx2 - parentpx1);
+         fHNDC    = Double_t(py2 - py1)/Double_t(parentpy2 - parentpy1);
       }
 
       // Restore old range
@@ -2092,7 +2169,7 @@ TObject *TPad::GetPrimitive(const char *name)
 }
 
 //______________________________________________________________________________
-void TPad::GetRange(Float_t &x1, Float_t &y1, Float_t &x2, Float_t &y2)
+void TPad::GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2)
 {
 //*-*-*-*-*-*-*-*Return pad world coordinates range*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==================================
@@ -2103,7 +2180,7 @@ void TPad::GetRange(Float_t &x1, Float_t &y1, Float_t &x2, Float_t &y2)
 }
 
 //______________________________________________________________________________
-void TPad::GetRangeAxis(Axis_t &xmin, Axis_t &ymin, Axis_t &xmax, Axis_t &ymax)
+void TPad::GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
 {
 //*-*-*-*-*-*-*-*Return pad axis coordinates range*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ==================================
@@ -2145,21 +2222,21 @@ void TPad::ls(Option_t *option)
 }
 
 //______________________________________________________________________________
-Float_t TPad::PadtoX(Axis_t x) const
+Double_t TPad::PadtoX(Double_t x) const
 {
-   if (fLogx && x < 50) return Float_t(TMath::Exp(2.302585092994*x));
+   if (fLogx && x < 50) return Double_t(TMath::Exp(2.302585092994*x));
    return x;
 }
 
 //______________________________________________________________________________
-Float_t TPad::PadtoY(Axis_t y) const
+Double_t TPad::PadtoY(Double_t y) const
 {
-   if (fLogy && y < 50) return Float_t(TMath::Exp(2.302585092994*y));
+   if (fLogy && y < 50) return Double_t(TMath::Exp(2.302585092994*y));
    return y;
 }
 
 //______________________________________________________________________________
-Float_t TPad::XtoPad(Axis_t x) const
+Double_t TPad::XtoPad(Double_t x) const
 {
    if (fLogx) {
       if (x > 0) x = TMath::Log10(x);
@@ -2169,7 +2246,7 @@ Float_t TPad::XtoPad(Axis_t x) const
 }
 
 //______________________________________________________________________________
-Float_t TPad::YtoPad(Axis_t y) const
+Double_t TPad::YtoPad(Double_t y) const
 {
    if (fLogy) {
       if (y > 0) y = TMath::Log10(y);
@@ -2239,7 +2316,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    if (bordersize <= 0) bordersize = 2;
 
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
-   Float_t xl, xt, yl, yt;
+   Double_t xl, xt, yl, yt;
 
    // GetDarkColor() and GetLightColor() use GetFillColor()
    Color_t oldcolor = GetFillColor();
@@ -2300,14 +2377,14 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    if (!tops) return;
 
 //*-*- same for PostScript
-//   Float_t dx   = (xt - xl) *Float_t(bordersize)/Float_t(pxt - pxl);
+//   Double_t dx   = (xt - xl) *Double_t(bordersize)/Double_t(pxt - pxl);
 //   Int_t border = gVirtualPS->XtoPS(xt) - gVirtualPS->XtoPS(xt-dx);
 
    PaintBorderPS(xl, yl, xt, yt, fBorderMode, bordersize, dark, light);
 }
 
 //______________________________________________________________________________
-void TPad::PaintBorderPS(Float_t xl,Float_t yl,Float_t xt,Float_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light)
+void TPad::PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light)
 {
 //*-*-*-*-*-*-*-*Paint a frame border with Postscript*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ====================================
@@ -2317,7 +2394,7 @@ void TPad::PaintBorderPS(Float_t xl,Float_t yl,Float_t xt,Float_t yt,Int_t bmode
 }
 
 //______________________________________________________________________________
-void TPad::PaintPadFrame(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax)
+void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
 //*-*-*-*-*-*-*-*-*-*Paint histogram/graph frame*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ===========================
@@ -2407,7 +2484,7 @@ void TPad::PaintModified()
 }
 
 //______________________________________________________________________________
-void TPad::PaintBox(Float_t x1, Float_t y1, Float_t x2, Float_t y2, Option_t *)
+void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *)
 {
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
@@ -2454,7 +2531,7 @@ void TPad::PaintBox(Float_t x1, Float_t y1, Float_t x2, Float_t y2, Option_t *)
             else {
                //draw background by blitting all bottom pads
                int px, py;
-               XYtoAbsPixel(GetX1(), GetY2(), px, py);
+               XYtoAbsPixel(fX1, fY2, px, py);
 
                fMother->CopyBackgroundPixmap(px, py);
                CopyBackgroundPixmaps(fMother, this, px, py);
@@ -2499,7 +2576,7 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
    // Copy pixmap of this pad as background of the current pad.
 
    int px, py;
-   XYtoAbsPixel(GetX1(), GetY2(), px, py);
+   XYtoAbsPixel(fX1, fY2, px, py);
    gVirtualX->CopyPixmap(GetPixmapID(), px-x, py-y);
 }
 
@@ -2511,15 +2588,15 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
 
    if (nn <3) return;
    Int_t i,iclip,n=0;
-   Float_t xmin,xmax,ymin,ymax;
-   Float_t u1, v1, u[2],v[2];
+   Double_t xmin,xmax,ymin,ymax;
+   Double_t u1, v1, u[2],v[2];
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
    }
-   Float_t *x = new Float_t[2*nn+1];
-   Float_t *y = new Float_t[2*nn+1];
+   Double_t *x = new Double_t[2*nn+1];
+   Double_t *y = new Double_t[2*nn+1];
 
    for (i=0;i<nn;i++) {
       u[0] = xx[i];
@@ -2585,12 +2662,93 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPad::PaintLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
+{
+//*-*-*-*-*-*-*-*-*Paint fill area in CurrentPad World coordinates*-*-*-*-*-*-*
+//*-*              ===============================================
+
+   if (nn <3) return;
+   Int_t i,iclip,n=0;
+   Double_t xmin,xmax,ymin,ymax;
+   Double_t u1, v1, u[2],v[2];
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   }
+   Double_t *x = new Double_t[2*nn+1];
+   Double_t *y = new Double_t[2*nn+1];
+
+   for (i=0;i<nn;i++) {
+      u[0] = xx[i];
+      v[0] = yy[i];
+      if (i == nn-1) {
+         u[1] = xx[0];
+         v[1] = yy[0];
+      } else {
+         u[1] = xx[i+1];
+         v[1] = yy[i+1];
+      }
+      u1 = u[1];
+      v1 = v[1];
+      iclip = Clip(u,v,xmin,ymin,xmax,ymax);
+      if (iclip == 2) continue;
+      if (iclip == 1) {
+         if (u[0] == u[1] && v[0] == v[1]) continue;
+      }
+      x[n] = u[0];
+      y[n] = v[0];
+      n++;
+      if (iclip) {
+         if (u[1] != u1 || v[1] != v1) {
+            x[n] = u[1];
+            y[n] = v[1];
+            n++;
+         }
+      }
+   }
+   x[n] = x[0];
+   y[n] = y[0];
+   if (n < 3) return;
+
+   TPoint *pxy;
+
+//*-*- Create temporary array to store array in pixel coordinates
+
+   if (!gPad->IsBatch()) {
+      if (n <kPXY) pxy = &gPXY[0];
+      else         pxy = new TPoint[n+1];
+//*-*- convert points from world to pixel coordinates
+      for (i=0;i<n;i++) {
+         pxy[i].fX = gPad->XtoPixel(x[i]);
+         pxy[i].fY = gPad->YtoPixel(y[i]);
+      }
+//*-*- invoke the graphics subsystem
+      if (gVirtualX->GetFillStyle() == 0) {
+         pxy[n].fX = pxy[0].fX;
+         pxy[n].fY = pxy[0].fY;
+         gVirtualX->DrawFillArea(n+1,pxy);
+      } else {
+         gVirtualX->DrawFillArea(n,pxy);
+      }
+      if (n > kPXY) delete [] pxy;
+   }
+
+   if (gVirtualPS) {
+      gVirtualPS->DrawPS(-n, x, y);
+   }
+   delete [] x;
+   delete [] y;
+   Modified();
+}
+
+//______________________________________________________________________________
+void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*Paint line in CurrentPad World coordinates*-*-*-*-*-*-*-*
 //*-*              ==========================================
 
-   Float_t x[2], y[2];
+   Double_t x[2], y[2];
    x[0] = x1;   x[1] = x2;   y[0] = y1;   y[1] = y2;
 
    //If line is totally clipped, return
@@ -2616,11 +2774,11 @@ void TPad::PaintLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
 }
 
 //______________________________________________________________________________
-void TPad::PaintLineNDC(Coord_t u1, Coord_t v1,Coord_t u2, Coord_t v2)
+void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
 //*-*-*-*-*-*-*-*Draw a line with coordinates in NDC*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ===================================
-   static Float_t xw[2], yw[2];
+   static Double_t xw[2], yw[2];
    if (!gPad->IsBatch()) {
       Int_t px1 = UtoPixel(u1);
       Int_t py1 = VtoPixel(v1);
@@ -2631,10 +2789,10 @@ void TPad::PaintLineNDC(Coord_t u1, Coord_t v1,Coord_t u2, Coord_t v2)
    }
 
    if (gVirtualPS) {
-      xw[0] = GetX1() + u1*(GetX2() - GetX1());
-      xw[1] = GetX1() + u2*(GetX2() - GetX1());
-      yw[0] = GetY1() + v1*(GetY2() - GetY1());
-      yw[1] = GetY1() + v2*(GetY2() - GetY1());
+      xw[0] = fX1 + u1*(fX2 - fX1);
+      xw[1] = fX1 + u2*(fX2 - fX1);
+      yw[0] = fY1 + v1*(fY2 - fY1);
+      yw[1] = fY1 + v2*(fY2 - fY1);
       gVirtualPS->DrawPS(2, xw, yw);
       gVirtualPS->PrintFast(2," s");
    }
@@ -2651,7 +2809,26 @@ void TPad::PaintLine3D(Float_t *p1, Float_t *p2)
    if (!fView) return;
 
 //*-*- convert from 3-D to 2-D pad coordinate system
-   Float_t xpad[6];
+   Double_t xpad[6];
+   Double_t temp[3];
+   Int_t i;
+   for (i=0;i<3;i++) temp[i] = p1[i];
+   fView->WCtoNDC(temp, &xpad[0]);
+   for (i=0;i<3;i++) temp[i] = p2[i];
+   fView->WCtoNDC(temp, &xpad[3]);
+   PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
+}
+
+//______________________________________________________________________________
+void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
+{
+//*-*-*-*-*-*-*-*-*Paint 3-D line in the CurrentPad*-*-*-*-*-*-*-*-*-*-*
+//*-*              ================================
+
+   if (!fView) return;
+
+//*-*- convert from 3-D to 2-D pad coordinate system
+   Double_t xpad[6];
    fView->WCtoNDC(p1, &xpad[0]);
    fView->WCtoNDC(p2, &xpad[3]);
    PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
@@ -2668,7 +2845,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
    if (!gPad->IsBatch()) {
       if (n >= kPXY) pxy = new TPoint[n+1];
    }
-   Float_t xmin,xmax,ymin,ymax;
+   Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
@@ -2676,10 +2853,10 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
    }
    Int_t i,j,i1=-1,np=1;
    for (i=0; i<n-1; i++) {
-      float x1=x[i];
-      float y1=y[i];
-      float x2=x[i+1];
-      float y2=y[i+1];
+      Double_t x1=x[i];
+      Double_t y1=y[i];
+      Double_t x2=x[i+1];
+      Double_t y2=y[i+1];
       Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
       if (iclip == 2) {
          i1 = -1;
@@ -2714,7 +2891,63 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPad::PaintPolyLineNDC(Int_t n, Float_t *x, Float_t *y, Option_t *)
+void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *)
+{
+//*-*-*-*-*-*-*-*-*Paint polyline in CurrentPad World coordinates*-*-*-*-*-*-*
+//*-*              ==============================================
+
+   if (n < 2) return;
+   TPoint *pxy = &gPXY[0];
+   if (!gPad->IsBatch()) {
+      if (n >= kPXY) pxy = new TPoint[n+1];
+   }
+   Double_t xmin,xmax,ymin,ymax;
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   }
+   Int_t i,j,i1=-1,np=1;
+   for (i=0; i<n-1; i++) {
+      Double_t x1=x[i];
+      Double_t y1=y[i];
+      Double_t x2=x[i+1];
+      Double_t y2=y[i+1];
+      Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+      if (iclip == 2) {
+         i1 = -1;
+         continue;
+      }
+      np++;
+      if (i1 < 0) i1 = i;
+      if (iclip == 0 && i < n-2) continue;
+      if (!gPad->IsBatch()) {
+         for (j=0;j<np;j++) {
+            pxy[j].fX = XtoPixel(x[i1+j]);
+            pxy[j].fY = YtoPixel(y[i1+j]);
+         }
+         gVirtualX->DrawPolyLine(np,pxy);
+      }
+      if (gVirtualPS) {
+         gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
+      }
+      if (iclip) {
+         x[i] = x1;
+         y[i] = y1;
+         x[i+1] = x2;
+         y[i+1] = y2;
+      }
+      i1 = -1;
+      np = 1;
+   }
+   if (!gPad->IsBatch()) {
+      if (n >= kPXY)   delete [] pxy;
+   }
+   Modified();
+}
+
+//______________________________________________________________________________
+void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
 //*-*-*-*-*-*-*-*-*Paint polyline in CurrentPad NDC coordinates*-*-*-*-*-*-*
 //*-*              ============================================
@@ -2747,7 +2980,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Float_t *x, Float_t *y, Option_t *)
 
 
 //______________________________________________________________________________
-void TPad::PaintPolyLine3D(Int_t n, Float_t *p)
+void TPad::PaintPolyLine3D(Int_t n, Double_t *p)
 {
 //*-*-*-*-*-*-*-*-*Paint 3-D polyline in the CurrentPad*-*-*-*-*-*-*-*-*-*-*
 //*-*              ====================================
@@ -2773,7 +3006,7 @@ void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
    if (!gPad->IsBatch()) {
       if (n >= kPXY) pxy = new TPoint[n+1];
    }
-   Float_t xmin,xmax,ymin,ymax;
+   Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
@@ -2807,7 +3040,51 @@ void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPad::PaintText(Float_t x, Float_t y, const char *text)
+void TPad::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
+{
+//*-*-*-*-*-*-*-*-*Paint polymarker in CurrentPad World coordinates*-*-*-*-*-*
+//*-*              ================================================
+
+   if (n < 0) return;
+   TPoint *pxy = &gPXY[0];
+   if (!gPad->IsBatch()) {
+      if (n >= kPXY) pxy = new TPoint[n+1];
+   }
+   Double_t xmin,xmax,ymin,ymax;
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   }
+   Int_t i,j,i1=-1,np=0;
+   for (i=0; i<n; i++) {
+      if (x[i] >= xmin && x[i] <= xmax && y[i] >= ymin && y[i] <= ymax) {
+         np++;
+         if (i1 < 0) i1 = i;
+         if (i < n-1) continue;
+      }
+      if (np == 0) continue;
+      if (!gPad->IsBatch()) {
+         for (j=0;j<np;j++) {
+            pxy[j].fX = XtoPixel(x[i1+j]);
+            pxy[j].fY = YtoPixel(y[i1+j]);
+         }
+         gVirtualX->DrawPolyMarker(np,pxy);
+      }
+      if (gVirtualPS) {
+         gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
+      }
+      i1 = -1;
+      np = 0;
+   }
+   if (!gPad->IsBatch()) {
+      if (n >= kPXY)   delete [] pxy;
+   }
+   Modified();
+}
+
+//______________________________________________________________________________
+void TPad::PaintText(Double_t x, Double_t y, const char *text)
 {
 //*-*-*-*-*-*-*-*-*Paint text in CurrentPad World coordinates*-*-*-*-*-*-*-*
 //*-*              ==========================================
@@ -2832,7 +3109,7 @@ void TPad::PaintText(Float_t x, Float_t y, const char *text)
 }
 
 //______________________________________________________________________________
-void TPad::PaintTextNDC(Float_t u, Float_t v, const char *text)
+void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
 //*-*-*-*-*-*-*-*-*Paint text in CurrentPad NDC coordinates*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -2849,8 +3126,8 @@ void TPad::PaintTextNDC(Float_t u, Float_t v, const char *text)
    }
 
    if (gVirtualPS) {
-      Float_t x = GetX1() + u*(GetX2() - GetX1());
-      Float_t y = GetY1() + v*(GetY2() - GetY1());
+      Double_t x = fX1 + u*(fX2 - fX1);
+      Double_t y = fY1 + v*(fY2 - fY1);
       if (x < fX1 || x > fX2) return;
       if (y < fY1 || y > fY2) return;
       gVirtualPS->Text(x, y, text);
@@ -2879,8 +3156,8 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
    Int_t dist;
 //*-*- Search if point is in pad itself
-   Float_t x = AbsPixeltoX(px);
-   Float_t y = AbsPixeltoY(py);
+   Double_t x = AbsPixeltoX(px);
+   Double_t y = AbsPixeltoY(py);
    if (this != gPad->GetCanvas()) {
       if (!((x >= fX1 && x <= fX2) && (y >= fY1 && y <= fY2))) return 0;
    }
@@ -3036,9 +3313,9 @@ void TPad::Print(const char *filename, Option_t *option)
       GetCanvas()->SetBatch(kTRUE);
    }
    Int_t pstype = 111;
-   Float_t xcanvas = GetCanvas()->XtoPixel(GetCanvas()->GetX2());
-   Float_t ycanvas = GetCanvas()->YtoPixel(GetCanvas()->GetY1());
-   Float_t ratio   = ycanvas/xcanvas;
+   Double_t xcanvas = GetCanvas()->XtoPixel(GetCanvas()->GetX2());
+   Double_t ycanvas = GetCanvas()->YtoPixel(GetCanvas()->GetY1());
+   Double_t ratio   = ycanvas/xcanvas;
    if (ratio < 1)               pstype = 112;
    if (strstr(opt,"Portrait"))  pstype = 111;
    if (strstr(opt,"Landscape")) pstype = 112;
@@ -3062,7 +3339,7 @@ void TPad::Print(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPad::Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
 //*-*                  =======================================
@@ -3089,7 +3366,7 @@ void TPad::Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
 }
 
 //______________________________________________________________________________
-void TPad::RangeAxis(Axis_t xmin, Axis_t ymin, Axis_t xmax, Axis_t ymax)
+void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set axis coordinate system for the pad*-*-*-*-*-*-*
 //*-*                  =======================================
@@ -3262,15 +3539,15 @@ void TPad::ResizePad(Option_t *option)
       fAbsHNDC     = fHNDC*parent->GetAbsHNDC();
    }
 
-   Float_t ww = (Float_t)gPad->GetWw();
-   Float_t wh = (Float_t)gPad->GetWh();
-   Float_t pxlow   = fAbsXlowNDC*ww;
-   Float_t pylow   = (1-fAbsYlowNDC)*wh;
-   Float_t pxrange = fAbsWNDC*ww;
-   Float_t pyrange = -fAbsHNDC*wh;
+   Double_t ww = (Double_t)gPad->GetWw();
+   Double_t wh = (Double_t)gPad->GetWh();
+   Double_t pxlow   = fAbsXlowNDC*ww;
+   Double_t pylow   = (1-fAbsYlowNDC)*wh;
+   Double_t pxrange = fAbsWNDC*ww;
+   Double_t pyrange = -fAbsHNDC*wh;
 
 //*-*- Linear X axis
-   Float_t xrange  = fX2 - fX1;
+   Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = 0.5 + pxlow - pxrange*fX1/xrange;      //origin at left
    fXtoPixelk = -pxrange*fX1/xrange;
    fXtoPixel  = pxrange/xrange;
@@ -3278,7 +3555,7 @@ void TPad::ResizePad(Option_t *option)
    fPixeltoXk = fX1;
    fPixeltoX  = xrange/pxrange;
 //*-*- Linear Y axis
-   Float_t yrange  = fY2 - fY1;
+   Double_t yrange  = fY2 - fY1;
    fYtoAbsPixelk = 0.5 + pylow - pyrange*fY1/yrange;      //origin at top
    fYtoPixelk = -pyrange - pyrange*fY1/yrange;
    fYtoPixel  = pyrange/yrange;
@@ -3391,7 +3668,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
    }
    out<<"   "<<GetName()<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
    TView *view = GetView();
-   Float_t rmin[3], rmax[3];
+   Double_t rmin[3], rmax[3];
    if (view) {
       view->GetRange(rmin, rmax);
       out<<"   TView *view = new TView(1);"<<endl;
@@ -3536,7 +3813,7 @@ void TPad::SetLogz(Int_t value)
 }
 
 //______________________________________________________________________________
-void TPad::SetPad(Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
+void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 {
 //*-*-*-*-*-*-*-*-*Set canvas range for pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================
@@ -3551,7 +3828,7 @@ void TPad::SetPad(Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
 
 //______________________________________________________________________________
 void TPad::SetPad(const char *name, const char *title,
-                  Float_t xlow, Float_t ylow, Float_t xup, Float_t yup,
+                  Double_t xlow, Double_t ylow, Double_t xup, Double_t yup,
                   Color_t color, Short_t bordersize, Short_t bordermode)
 {
 //*-*-*-*-*-*-*-*-*Set all pad parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
