@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.2 2002/02/04 21:22:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.3 2002/02/04 21:25:47 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//   TDSet objset("MyEvent", "", "/events");                            //
+//   TDSet objset("MyEvent", "*", "/events");                           //
 //   objset.Add("root://cms.cern.ch/user/prod2002/hprod_1.root");       //
 //   ...                                                                //
 //   objset.Add(set2003);                                               //
@@ -47,23 +47,25 @@
 #endif
 
 class TList;
+class TDSet;
 
 
 class TDSetElement : public TObject {
 private:
-   TString   fFileName;   // physical or logical file name
-   TString   fObjName;    // name of objects to be analyzed in this file
-   TString   fDirectory;  // directory in file where to look for objects
+   TString      fFileName;   // physical or logical file name
+   TString      fObjName;    // name of objects to be analyzed in this file
+   TString      fDirectory;  // directory in file where to look for objects
+   const TDSet *fSet;        // set to which element belongs
 
 public:
-   TDSetElement() { }
-   TDSetElement(const char *file, const char *objname = 0,
+   TDSetElement() { fSet = 0; }
+   TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
                 const char *dir = 0);
    virtual ~TDSetElement() { }
 
    const char *GetFileName() const { return fFileName; }
-   const char *GetObjName() const { return fObjName; }
-   const char *GetDirectory() const { return fDirectory; }
+   const char *GetObjName() const;
+   const char *GetDirectory() const;
 
    ClassDef(TDSetElement,1)  // A TDSet element
 };
@@ -79,7 +81,7 @@ private:
 
 public:
    TDSet();
-   TDSet(const char *type, const char *objname = "", const char *dir = "/");
+   TDSet(const char *type, const char *objname = "*", const char *dir = "/");
    virtual ~TDSet();
 
    void        SetObjName(const char *objname);

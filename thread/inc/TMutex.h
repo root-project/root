@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -23,6 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
 #ifndef ROOT_TThread
 #include "TThread.h"
 #endif
@@ -31,7 +34,7 @@
 #endif
 
 
-class TMutex : public TObject {
+class TMutex : public TVirtualMutex {
 
 friend class TCondition;
 
@@ -47,41 +50,9 @@ public:
    Int_t  Lock() ;
    Int_t  TryLock() ;
    Int_t  UnLock() ;
-   Int_t  Acquire() { return Lock(); }
-   Int_t  Release() { return UnLock(); }
    Int_t  CleanUp();
 
    ClassDef(TMutex,0)  // Mutex lock class
 };
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLockGuard                                                           //
-//                                                                      //
-// This class provides mutex resource management in a guaranteed and    //
-// exception safe way. Use like this:                                   //
-// {                                                                    //
-//    TLockGuard guard(mutex);                                          //
-//    ... // do something                                               //
-// }                                                                    //
-// when guard goes out of scope the mutex is unlocked in the TLockGuard //
-// destructor. The exception mechanism takes care of calling the dtors  //
-// of local objects so it is exception safe.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TLockGuard {
-
-private:
-   TMutex *fMutex;
-
-public:
-   TLockGuard(TMutex *mutex) { fMutex = mutex; fMutex->Lock(); }
-   virtual ~TLockGuard() { fMutex->UnLock(); }
-
-   ClassDef(TLockGuard,0)  // Exception safe locking/unlocking of TMutex
-};
-
 
 #endif

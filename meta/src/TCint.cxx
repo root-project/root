@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.47 2001/12/21 14:43:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.48 2001/12/29 13:56:25 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
+#include "TVirtualMutex.h"
 
 #ifdef WIN32
 #  ifndef ROOT_TGWin32Command
@@ -684,6 +685,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
 
    void       *address;
    long        offset;
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc func;
 
    // set pointer to interface method and arguments

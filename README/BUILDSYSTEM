@@ -70,7 +70,7 @@ distclean:                       deletes all files produced in the build
 
 maintainer-clean:                distclean + remove files produced by configure
 
-version:                         after manual update of the file 
+version:                         after manual update of the file
                                  build/version_number this will recreate the
                                  file base/inc/RVersion.h and recompile only
                                  base/src/TROOT.cxx
@@ -102,6 +102,12 @@ showbuild:                       show all macro definitions used during the
 redhat:                          build binary RedHat (rpm) packages
 
 debian:                          build binary Debian (pkg) packages
+
+
+For developers only:
+
+skip <obj or dictionary>:        skip all dependency checking and just
+                                 generate the specified obj or dictionary file
 
 
 In addition each module has the following module specific targets:

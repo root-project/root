@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.10 2001/08/21 17:29:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.11 2002/01/08 08:34:21 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -168,10 +168,14 @@ public:
                                      UInt_t wtype);
    virtual Int_t        OpenDisplay(const char *dpyName);
    virtual void         CloseDisplay() { }
-   virtual Display_t    GetDisplay() { return 0; }
+   virtual Display_t    GetDisplay() const { return 0; }
+   virtual Visual_t     GetVisual() const { return 0; }
+   virtual Int_t        GetScreen() const { return 0; }
+   virtual Int_t        GetDepth() const { return 0; }
+   virtual Colormap_t   GetColormap() const { return 0; }
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
-   virtual Window_t     GetDefaultRootWindow() { return 0; }
-   virtual Window_t     GetParent(Window_t id);
+   virtual Window_t     GetDefaultRootWindow() const { return 0; }
+   virtual Window_t     GetParent(Window_t id) const;
    virtual FontStruct_t LoadQueryFont(const char *font_name);
    virtual FontH_t      GetFontHandle(FontStruct_t fs);
    virtual void         DeleteFont(FontStruct_t fs);
@@ -364,7 +368,7 @@ inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t,
                                             UInt_t) { return 0; }
 inline Int_t        TVirtualX::OpenDisplay(const char *) { return 0; }
 inline Atom_t       TVirtualX::InternAtom(const char *, Bool_t) { return 0; }
-inline Window_t     TVirtualX::GetParent(Window_t) { return 0; }
+inline Window_t     TVirtualX::GetParent(Window_t) const { return 0; }
 inline FontStruct_t TVirtualX::LoadQueryFont(const char *) { return 0; }
 inline FontH_t      TVirtualX::GetFontHandle(FontStruct_t) { return 0; }
 inline void         TVirtualX::DeleteFont(FontStruct_t) { }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.2 2002/02/04 21:22:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.3 2002/02/05 16:10:37 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//   TDSet objset("MyEvent", "", "/events");                            //
+//   TDSet objset("MyEvent", "*", "/events");                           //
 //   objset.Add("root://cms.cern.ch/user/prod2002/hprod_1.root");       //
 //   ...                                                                //
 //   objset.Add(set2003);                                               //
@@ -48,11 +48,12 @@ ClassImp(TDSetElement)
 ClassImp(TDSet)
 
 //______________________________________________________________________________
-TDSetElement::TDSetElement(const char *file, const char *objname,
-                           const char *dir)
+TDSetElement::TDSetElement(const TDSet *set, const char *file,
+                           const char *objname, const char *dir)
 {
    // Create a TDSet element.
 
+   fSet      = set;
    fFileName = file;
 
    if (objname)
@@ -60,6 +61,27 @@ TDSetElement::TDSetElement(const char *file, const char *objname,
    if (dir)
       fDirectory = dir;
 }
+
+//______________________________________________________________________________
+const char *TDSetElement::GetObjName() const
+{
+   // Return object name.
+
+   if (fSet && fObjName.IsNull())
+      return fSet->GetObjName();
+   return fObjName;
+}
+
+//______________________________________________________________________________
+const char *TDSetElement::GetDirectory() const
+{
+   // Return directory where to look for object.
+
+   if (fSet && fDirectory.IsNull())
+      return fSet->GetDirectory();
+   return fDirectory;
+}
+
 
 //______________________________________________________________________________
 TDSet::TDSet()
@@ -84,7 +106,7 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    // Directories can be specified using wildcards, e.g. "*" or "/*"
    // means to look in all top level directories, "/dir/*" in all
    // directories under "/dir", and "/*/*" to look in all directories
-   // two levels deeps.
+   // two levels deep.
 
    fElements = new TList;
    fElements->IsOwner();
@@ -149,7 +171,7 @@ void TDSet::Add(const char *file, const char *objname, const char *dir)
       return;
    }
 
-   fElements->Add(new TDSetElement(file, objname, dir));
+   fElements->Add(new TDSetElement(this, file, objname, dir));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.7 2001/10/25 07:50:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.8 2002/01/10 07:19:31 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TROOT.h"
 #include "Strlen.h"
 #include "Api.h"
+#include "TVirtualMutex.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -114,6 +115,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
    fDtorOnly = kFALSE;
    fRetType  = (EReturnType) -1;
 
+   R__LOCKGUARD(gCINTMutex);
    if (cl)
       fFunc->SetFunc(cl->GetClassInfo(), (char *)method, (char *)params, &fOffset);
    else {
@@ -158,6 +160,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    fDtorOnly = kFALSE;
    fRetType  = (EReturnType) -1;
 
+   R__LOCKGUARD(gCINTMutex);
    if (cl)
       fFunc->SetFuncProto(cl->GetClassInfo(), (char *)method, (char *)proto, &fOffset);
    else {
@@ -209,6 +212,7 @@ void TMethodCall::Execute(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   R__LOCKGUARD(gCINTMutex);
    G__settemplevel(1);
    if (fDtorOnly) {
 #ifdef WIN32
@@ -232,6 +236,7 @@ void TMethodCall::Execute(void *object, const char *params)
 {
    // Execute the method for the specified object and argument values.
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -246,6 +251,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 {
    // Execute the method (with preset arguments) for the specified object.
 
+   R__LOCKGUARD(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -258,6 +264,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 {
    // Execute the method for the specified object and argument values.
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -272,6 +279,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 {
    // Execute the method (with preset arguments) for the specified object.
 
+   R__LOCKGUARD(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -284,6 +292,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 {
    // Execute the method for the specified object and argument values.
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -298,6 +307,7 @@ void TMethodCall::Execute(void *object, char **retText)
 {
    // Execute the method (with preset arguments) for the specified object.
 
+   R__LOCKGUARD(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -310,6 +320,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 {
    // Execute the method for the specified object and argument values.
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -385,5 +396,6 @@ void TMethodCall::SetParamPtrs(void *paramArr)
    // function parameters. At least as many pointers should be present in
    // the array as there are required arguments (all arguments - default args).
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgArray((long *)paramArr);
 }

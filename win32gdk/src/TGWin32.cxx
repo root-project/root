@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.3 2001/11/30 12:39:20 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.4 2002/01/08 08:34:22 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -935,6 +935,7 @@ const char *TGWin32::DisplayName(const char *dpyName)
 void TGWin32::GetPlanes(int &nplanes)
 {
    // Get maximum number of planes.
+
    nplanes = gdk_visual_get_best_depth();
 }
 
@@ -3340,7 +3341,7 @@ Int_t TGWin32::WriteGIF(char *name)
 
    if (out) {
       GIFencode(gCws->width, gCws->height,
-             ncol, r, g, b, scline, GetPixel, PutByte);  
+             ncol, r, g, b, scline, GetPixel, PutByte);
       fclose(out);
       i = 1;
     } else {

@@ -2933,6 +2933,9 @@ struct G__var_array *varglobal,*varlocal;
 	G__ASSIGN_PVAR(char,G__int)
 	break;
 
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'G': /* bool */
+#endif
       case 'B': /* unsigned char pointer */
 	G__ASSIGN_PVAR(unsigned char,G__int)
 	break;
@@ -4044,7 +4047,7 @@ struct G__var_array *varglobal,*varlocal;
 	G__GET_VAR(G__FLOATALLOC,float ,G__letdouble,'f','F')
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g': /* bool */
-	G__GET_VAR(G__INTALLOC ,int ,G__letint ,'g' ,'G')
+	G__GET_VAR(G__INTALLOC ,unsigned char ,G__letint ,'g' ,'G')
 #endif
 
 	  /****************************************
@@ -4060,6 +4063,9 @@ struct G__var_array *varglobal,*varlocal;
 		    ,var->type[ig15])
 	break;
 
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'G': /* bool */
+#endif
       case 'B': /* unsigned char pointer */
 	G__GET_PVAR(unsigned char,G__letint,long ,'b','B')
 	break;
@@ -5251,6 +5257,12 @@ long G__struct_offset; /* used to be int */
 	      G__asm_cp = store_cp + 8;
 	    }
 	  }
+#ifndef G__OLDIMPLEMENTATION1641
+	  else if(!ig2) {
+	    G__fprinterr(G__serr,"Error: Constructor %s not found",result7);
+	    G__genericerror((char*)NULL);
+	  }
+#endif
 	}
 #else
 	G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);
@@ -6741,6 +6753,11 @@ int parameter00;
       }
     break;
     
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g': /* bool */
+    result.obj.i = result.obj.i?1:0;
+  case 'G': /* bool */
+#endif
   case 'b': /* unsigned char */
   case 'B': /* unsigned char pointer */
     G__ALLOC_VAR_REF(G__CHARALLOC,unsigned char,G__int)
@@ -6755,11 +6772,6 @@ int parameter00;
   case 'R': /* unsigned short int pointer */
     G__ALLOC_VAR_REF(G__SHORTALLOC,unsigned short,G__int)
     break;
-
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g': /* bool */
-    result.obj.i = result.obj.i?1:0;
-#endif
 
   case 'i': /* int */
   case 'I': /* int pointer */

@@ -150,6 +150,7 @@ class vector {
   void pop_back(void) ;
   void erase(iterator position) ;
   void erase(iterator first,iterator last) ;
+  void clear() ;
 
 #if (G__GNUC>=3) || defined(G__KCC)
   // doesn't work on VC++ 5.0

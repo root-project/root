@@ -26,6 +26,11 @@ N: Bertrand Bellenot
 E: Bertrand.Bellenot@alcan.com
 D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB.
 
+N: Adrian Bevan
+E: bevan@slac.stanford.edu
+D: class TFeldmanCousins
+D: TMath::BubbleHigh, TMath::BubbleLow
+
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
@@ -116,6 +121,10 @@ D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
 N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
+
+N: Susan Kasahara
+E: schubert@physics.umn.edu
+D: many contributions to the debuging phase of the I/O system
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov

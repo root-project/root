@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.11 2001/07/17 14:38:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.12 2001/12/12 13:56:13 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -260,6 +260,13 @@ void TThread::Constructor()
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev=0; fgMain = this;
+
+   // Creates the mutexes
+   if(!gContainerMutex)
+     gContainerMutex = new TMutex(kTRUE);
+   if(!gCINTMutex)
+     gCINTMutex = new TMutex(kTRUE);
+
 
    UnLock();
    PutComm();

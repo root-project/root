@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.6 2000/10/19 10:41:26 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.1 2000/10/21 09:12:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,6 +27,7 @@
 // Basic GUI types
 typedef ULong_t            Handle_t;     //Generic resource handle
 typedef Handle_t           Display_t;    //Display handle
+typedef Handle_t           Visual_t;     //Visual handle
 typedef Handle_t           Window_t;     //Window handle
 typedef Handle_t           Pixmap_t;     //Pixmap handle
 typedef Handle_t           Drawable_t;   //Drawable handle
@@ -36,8 +37,8 @@ typedef Handle_t           Cursor_t;     //Cursor handle
 typedef Handle_t           FontH_t;      //Font handle (as opposed to Font_t which is an index)
 typedef Handle_t           KeySym_t;     //Key symbol handle
 typedef Handle_t           Atom_t;       //WM token
-typedef ULong_t            GContext_t;   //Graphics context handle (or pointer, needs to be long)
-typedef ULong_t            FontStruct_t; //Pointer to font structure
+typedef Handle_t           GContext_t;   //Graphics context handle
+typedef Handle_t           FontStruct_t; //Pointer to font structure
 typedef UInt_t             Mask_t;       //Structure mask type
 typedef ULong_t            Time_t;       //Event time
 

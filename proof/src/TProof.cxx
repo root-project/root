@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.14 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.15 2002/02/07 18:06:47 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -44,8 +44,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TProofPlayer.h"
-
-class TDSet;
+#include "TDSet.h"
 
 
 TProof *gProof = 0;
@@ -171,7 +170,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fProtocol      = kPROOF_Protocol;
    fMasterServ    = fMaster == "__master__" ? kTRUE : kFALSE;
    fSendGroupView = kTRUE;
-   fImage         = "";
+   fImage         = fMasterServ ? "" : "<local>";
    fIntHandler    = 0;
    fStatus        = 0;
    fParallel      = 0;
@@ -628,16 +627,17 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 }
 
 //______________________________________________________________________________
-Bool_t TProof::IsParallel() const
+Int_t TProof::GetParallel() const
 {
-   // Returns true if PROOF is in parallel mode.
+   // Returns number of slave active in parallel mode. Returns 0 in case
+   // there are no active slaves.
 
-   if (!IsValid()) return kFALSE;
+   if (!IsValid()) return 0;
 
    if (IsMaster())
-      return GetNumberOfActiveSlaves() > 1 ? kTRUE : kFALSE;
-   else
-      return fParallel > 1 ? kTRUE : kFALSE;
+      return GetNumberOfActiveSlaves();
+
+   return fParallel;
 }
 
 //______________________________________________________________________________
@@ -870,6 +870,15 @@ Int_t TProof::Collect(TMonitor *mon)
             if (!mon->GetActive()) loop = 0;
             break;
 
+         case kPROOF_OUTPUTLIST:
+            {
+::Info("TProof::Collect","Got kPROOF_OUTPUTLIST");
+               TList *out = (TList *) mess->ReadObject(THashList::Class());
+               fPlayer->StoreOutput(out); // Adopts the list
+::Info("TProof::Collect","Done kPROOF_OUTPUTLIST");
+            }
+            break;
+
          default:
             Error("Collect", "unknown command received from slave (%d)", what);
             break;
@@ -1045,6 +1054,14 @@ void TProof::MarkBad(TSocket *s)
 
    TSlave *sl = FindSlave(s);
    MarkBad(sl);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Ping()
+{
+   // Ping PROOF. Returns 1 if master server responded.
+
+   return Ping(kActive);
 }
 
 //______________________________________________________________________________
@@ -1228,6 +1245,18 @@ Int_t TProof::SendGroupView()
    if (bad) SendGroupView();
 
    return GetNumberOfActiveSlaves();
+}
+
+//______________________________________________________________________________
+Int_t TProof::Exec(const char *cmd)
+{
+   // Send command to be executed on the PROOF master and/or slaves.
+   // Command can be any legal command line command. Commands like
+   // ".x file.C" or ".L file.C" will cause the file file.C to be send
+   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
+   // succes.
+
+   return Exec(cmd, kActive);
 }
 
 //______________________________________________________________________________

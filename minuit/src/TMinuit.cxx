@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.13 2001/08/22 07:33:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.15 2002/02/13 10:13:11 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -585,6 +585,51 @@ void TMinuit::DeleteArrays()
 }
 
 //______________________________________________________________________________
+Int_t TMinuit::Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag)
+{
+// Evaluate the minimisation function
+//  Input parameters:
+//    npar:    number of currently variable parameters
+//    par:     array of (constant and variable) parameters
+//    flag:    Indicates what is to be calculated (see example below)
+//    grad:    array of gradients
+//  Output parameters:
+//    fval:    The calculated function value. 
+//    grad:    The (optional) vector of first derivatives).
+// 
+// The meaning of the parameters par is of course defined by the user, 
+// who uses the values of those parameters to calculate his function value. 
+// The starting values must be specified by the user.
+// Later values are determined by Minuit as it searches for the minimum 
+// or performs whatever analysis is requested by the user.
+//
+// Note that this virtual function may be redefined in a class derived from TMinuit.
+// The default function calls the function specified in SetFCN
+//
+// Example of Minimisation function:
+/*
+   if (flag == 1) {
+      read input data, 
+      calculate any necessary constants, etc. 
+   }
+   if (flag == 2) {
+      calculate GRAD, the first derivatives of FVAL 
+     (this is optional) 
+   }
+   Always calculate the value of the function, FVAL, 
+   which is usually a chisquare or log likelihood. 
+   if (iflag == 3) {
+      will come here only after the fit is finished. 
+      Perform any final calculations, output fitted data, etc. 
+   }
+*/
+//  See concrete examples in TH1::H1FitChisquare, H1FitLikelihood
+   
+   if (fFCN) (*fFCN)(npar,grad,fval,par,flag);
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TMinuit::FixParameter( Int_t parNo)
 {
 // fix a parameter
@@ -747,7 +792,7 @@ void TMinuit::mnamin()
 	Printf(" FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.");
     }
     mnexin(fX);
-    (*fFCN)(nparx, fGin, fnew, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, fnew, fU, 4);    ++fNfcn;
     fAmin = fnew;
     fEDM  = fBigedm;
 } /* mnamin_ */
@@ -844,7 +889,7 @@ void TMinuit::mncalf(Double_t *pvec, Double_t &ycalf)
 
     nparx = fNpar;
     mninex(&pvec[0]);
-    (*fFCN)(nparx, fGin, f, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, f, fU, 4);    ++fNfcn;
     for (i = 1; i <= fNpar; ++i) {
 	fGrd[i-1] = 0;
 	for (j = 1; j <= fNpar; ++j) {
@@ -976,7 +1021,7 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
     chln.Resize(nx+1);
     for (ix = 1; ix <= nx + 1; ++ix) {
 	fU[ke1-1] = xlo + Double_t(ix-1)*bwidx;
-	(*fFCN)(nparx, fGin, ff, fU, 4);
+	Eval(nparx, fGin, ff, fU, 4);
 	fcnb[ix-1] = ff;
 	if (xb4 < 0 && fU[ke1-1] > 0) ixzero = ix - 1;
 	xb4          = fU[ke1-1];
@@ -1006,7 +1051,7 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
 	for (ix = 1; ix <= nx + 1; ++ix) {
 	    fcna[ix-1] = fcnb[ix-1];
 	    fU[ke1-1] = xlo + Double_t(ix-1)*bwidx;
-	    (*fFCN)(nparx, fGin, ff, fU, 4);
+	    Eval(nparx, fGin, ff, fU, 4);
 	    fcnb[ix-1] = ff;
 	}
 //*-*-                look for contours crossing the FCNxy squares
@@ -1962,7 +2007,7 @@ void TMinuit::mnderi()
 //*-*-                      make sure starting at the right place
 	mninex(fX);
 	nparx = fNpar;
-	(*fFCN)(nparx, fGin, fs1, fU, 4);	++fNfcn;
+	Eval(nparx, fGin, fs1, fU, 4);	++fNfcn;
 	if (fs1 != fAmin) {
 	    df    = fAmin - fs1;
 	    mnwarn("D", "MNDERI", Form("function value differs from AMIN by %12.3g",df));
@@ -2015,11 +2060,11 @@ void TMinuit::mnderi()
 	    stepb4  = step;
 	    fX[i-1] = xtf + step;
 	    mninex(fX);
-	    (*fFCN)(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
+	    Eval(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
 //*-*-        take step negative
 	    fX[i-1] = xtf - step;
 	    mninex(fX);
-	    (*fFCN)(nparx, fGin, fs2, fU, 4);	    ++fNfcn;
+	    Eval(nparx, fGin, fs2, fU, 4);	    ++fNfcn;
 	    grbfor = fGrd[i-1];
 	    fGrd[i-1] = (fs1 - fs2) / (step*2);
 	    fG2[i-1]  = (fs1 + fs2 - fAmin*2) / (step*step);
@@ -2395,7 +2440,7 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
     if (fKe2cr != 0) fU[fKe2cr-1] = fYmidcr + anext*fYdircr;
     mninex(fX);
     nparx = fNpar;
-    (*fFCN)(nparx, fGin, fnext, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, fnext, fU, 4);    ++fNfcn;
     ierev = 0;
     if (fNpar > 0) {
 	fItaur = 1;
@@ -2781,7 +2826,7 @@ L1700:
     iflag = Int_t(fWord7[0]);
     nparx = fNpar;
     f = fUndefi;
-    (*fFCN)(nparx, fGin, f, fU, iflag);    ++fNfcn;
+    Eval(nparx, fGin, f, fU, iflag);    ++fNfcn;
     nowprt = 0;
     if (f != fUndefi) {
 	if (fAmin == fUndefi) {
@@ -2809,7 +2854,7 @@ L1900:
 	iflag = 3;
 	Printf(" CALL TO USER FUNCTION WITH IFLAG = 3");
 	nparx = fNpar;
-	(*fFCN)(nparx, fGin, f, fU, iflag);	++fNfcn;
+	Eval(nparx, fGin, f, fU, iflag);	++fNfcn;
     }
     ierflg = 11;
     if (fCword(0,3) == "END") ierflg = 10;
@@ -3147,7 +3192,7 @@ void TMinuit::mngrad()
 //*-*-                 get user-calculated first derivatives from FCN
     for (i = 1; i <= fNu; ++i) { fGin[i-1] = fUndefi; }
     mninex(fX);
-    (*fFCN)(nparx, fGin, fzero, fU, 2);    ++fNfcn;
+    Eval(nparx, fGin, fzero, fU, 2);    ++fNfcn;
     mnderi();
     for (i = 1; i <= fNpar; ++i) { fGRADgf[i-1] = fGrd[i-1]; }
 //*-*-                   get MINUIT-calculated first derivatives
@@ -3823,7 +3868,7 @@ void TMinuit::mnhess()
 //*-*-                make sure starting at the right place
     mninex(fX);
     nparx = fNpar;
-    (*fFCN)(nparx, fGin, fs1, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
     if (fs1 != fAmin) {
         df    = fAmin - fs1;
 	mnwarn("D", "MNHESS", Form("function value differs from AMIN by %g",df));
@@ -3870,10 +3915,10 @@ void TMinuit::mnhess()
 		fX[i-1] = xtf + d;
 		mninex(fX);
 		nparx = fNpar;
-		(*fFCN)(nparx, fGin, fs1, fU, 4);    ++fNfcn;
+		Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
 		fX[i-1] = xtf - d;
 		mninex(fX);
-		(*fFCN)(nparx, fGin, fs2, fU, 4);    ++fNfcn;
+		Eval(nparx, fGin, fs2, fU, 4);    ++fNfcn;
 		fX[i-1] = xtf;
 		sag = (fs1 + fs2 - fAmin*2)*.5;
 		if (sag != 0) goto L30;
@@ -3938,7 +3983,7 @@ L30:
 	    fX[i-1] = xti + fDirin[i-1];
 	    fX[j-1] = xtj + fDirin[j-1];
 	    mninex(fX);
-	    (*fFCN)(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
+	    Eval(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
 	    fX[i-1] = xti;
 	    fX[j-1] = xtj;
 	    elem = (fs1 + fAmin - fHESSyy[i-1] - fHESSyy[j-1]) / (
@@ -4043,10 +4088,10 @@ void TMinuit::mnhes1()
 	for (icyc = 1; icyc <= ncyc; ++icyc) {
 	    fX[i-1] = xtf + d;
 	    mninex(fX);
-	    (*fFCN)(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
+	    Eval(nparx, fGin, fs1, fU, 4);	    ++fNfcn;
 	    fX[i-1] = xtf - d;
 	    mninex(fX);
-	    (*fFCN)(nparx, fGin, fs2, fU, 4);	    ++fNfcn;
+	    Eval(nparx, fGin, fs2, fU, 4);	    ++fNfcn;
 	    fX[i-1] = xtf;
 //*-*-                                      check if step sizes appropriate
 	    sag    = (fs1 + fs2 - fAmin*2)*.5;
@@ -4234,7 +4279,7 @@ L95:
 //*-*-                                       . . . . . ask if point is new
 L100:
     mninex(fX);
-    (*fFCN)(nparx, fGin, fAmin, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, fAmin, fU, 4);    ++fNfcn;
     for (i = 1; i <= fNpar; ++i) {
 	fDirin[i-1] = reg*fIMPRdsav[i-1];
 	if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L150;
@@ -4541,7 +4586,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
     Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
     Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
     Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
-    Int_t i, nparx, nvmax=0, nxypt, kk, ipt;
+    Int_t i, nparx=0, nvmax=0, nxypt, kk, ipt;
     Bool_t ldebug;
     TString cmess;
     char chpq[13];
@@ -4556,7 +4601,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 //*-*-                             debug check if start is ok
     if (ldebug) {
 	mninex(&start[0]);
-	(*fFCN)(nparx, fGin, f1, fU, 4);	++fNfcn;
+	Eval(nparx, fGin, f1, fU, 4);	++fNfcn;
 	if (f1 != fstart) {
 	    Printf(" MNLINE start point not consistent, F values, parameters=");
 	    for (kk = 1; kk <= fNpar; ++kk) {
@@ -4586,7 +4631,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
     nparx = fNpar;
 
     mninex(fX);
-    (*fFCN)(nparx, fGin, f1, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, f1, fU, 4);    ++fNfcn;
     ++nxypt;
     chpq[nxypt-1] = charal[nxypt-1];
     xpq[nxypt-1] = 1;
@@ -4625,7 +4670,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
        for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
        mninex(fX);
        nparx = fNpar;
-       (*fFCN)(nparx, fGin, f2, fU, 4);    ++fNfcn;
+       Eval(nparx, fGin, f2, fU, 4);    ++fNfcn;
        ++nxypt;
        chpq[nxypt-1] = charal[nxypt-1];
        xpq[nxypt-1]  = slam;
@@ -4683,7 +4728,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
              }
              for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
              mninex(fX);
-             (*fFCN)(nparx, fGin, f3, fU, 4);    ++fNfcn;
+             Eval(nparx, fGin, f3, fU, 4);    ++fNfcn;
              ++nxypt;
              chpq[nxypt-1] = charal[nxypt-1];
              xpq[nxypt-1]  = slam;
@@ -4894,7 +4939,7 @@ L1:
 L2:
     mninex(fX);
     if (fISW[2] == 1) {
-	(*fFCN)(nparx, fGin, fzero, fU, 2);	++fNfcn;
+	Eval(nparx, fGin, fzero, fU, 2);	++fNfcn;
     }
     mnderi();
     if (fISW[1] >= 1) goto L10;
@@ -5011,7 +5056,7 @@ L24:
 //*-*-                                       . get gradient at new point
     mninex(fX);
     if (fISW[2] == 1) {
-	(*fFCN)(nparx, fGin, fzero, fU, 2);	++fNfcn;
+	Eval(nparx, fGin, fzero, fU, 2);	++fNfcn;
     }
     mnderi();
 //*-*-                                        . calculate new EDM
@@ -6545,7 +6590,7 @@ L500:
     for (icall = 1; icall <= nccall; ++icall) {
 	fU[ipar-1] = unext;
 	nparx = fNpar;
-	(*fFCN)(nparx, fGin, fnext, fU, 4);	++fNfcn;
+	Eval(nparx, fGin, fnext, fU, 4);	++fNfcn;
 	++nxypt;
 	fXpt[nxypt-1]  = unext;
 	fYpt[nxypt-1]  = fnext;
@@ -6639,7 +6684,7 @@ void TMinuit::mnseek()
 	    fX[ipar-1] = fSEEKxmid[ipar-1] + (rnum1 + rnum2 - 1)*.5*fDirin[ipar-1];
 	}
 	mninex(fX);
-	(*fFCN)(nparx, fGin, ftry, fU, 4);	++fNfcn;
+	Eval(nparx, fGin, ftry, fU, 4);	++fNfcn;
 	if (ftry < flast) {
 	    if (ftry < fAmin) {
 		fCstatu = "IMPROVEMNT";
@@ -7256,7 +7301,7 @@ L1:
 L4:
 	fX[i-1] = bestx + fDirin[i-1];
 	mninex(fX);
-	(*fFCN)(nparx, fGin, f, fU, 4);	++fNfcn;
+	Eval(nparx, fGin, f, fU, 4);	++fNfcn;
 	if (f <= aming) goto L6;
 //*-*-        failure
 	if (kg == 1) goto L8;
@@ -7305,14 +7350,14 @@ L50:
 	fPstar[i-1] = (alpha + 1)*fPbar[i-1] - alpha*fP[i + jh*fMaxpar - fMaxpar-1];
     }
     mninex(fPstar);
-    (*fFCN)(nparx, fGin, ystar, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, ystar, fU, 4);    ++fNfcn;
     if (ystar >= fAmin) goto L70;
 //*-*-        point * better than jl, calculate new point **
     for (i = 1; i <= fNpar; ++i) {
 	fPstst[i-1] = gamma*fPstar[i-1] + (1 - gamma)*fPbar[i-1];
     }
     mninex(fPstst);
-    (*fFCN)(nparx, fGin, ystst, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
 //*-*-        try a parabola through ph, pstar, pstst.  min = prho
     y1 = (ystar - fSIMPy[jh-1])*rho2;
     y2 = (ystst - fSIMPy[jh-1])*rho1;
@@ -7323,7 +7368,7 @@ L50:
 	fPrho[i-1] = rho*fPbar[i-1] + (1 - rho)*fP[i + jh*fMaxpar - fMaxpar-1];
     }
     mninex(fPrho);
-    (*fFCN)(nparx, fGin, yrho, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, yrho, fU, 4);    ++fNfcn;
     if (yrho  < fSIMPy[jl-1] && yrho < ystst) goto L65;
     if (ystst < fSIMPy[jl-1]) goto L67;
     if (yrho  > fSIMPy[jl-1]) goto L66;
@@ -7356,7 +7401,7 @@ L73:
 	fPstst[i-1] = beta*fP[i + jh*fMaxpar - fMaxpar-1] + (1 - beta)*fPbar[i-1];
     }
     mninex(fPstst);
-    (*fFCN)(nparx, fGin, ystst, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
     if (ystst > fSIMPy[jh-1]) goto L1;
 //*-*-    point ** is better than jh
     if (ystst < fAmin) goto L67;
@@ -7383,7 +7428,7 @@ L80:
 	fPbar[i-1] = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
     }
     mninex(fPbar);
-    (*fFCN)(nparx, fGin, ypbar, fU, 4);    ++fNfcn;
+    Eval(nparx, fGin, ypbar, fU, 4);    ++fNfcn;
     if (ypbar < fAmin) 	mnrazz(ypbar, fPbar, fSIMPy, jh, jl);
     mninex(fX);
     if (fNfcnmx + npfn - fNfcn < fNpar*3) goto L90;

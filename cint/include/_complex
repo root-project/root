@@ -10,9 +10,18 @@
 #endif
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
+#if 1
+#include <typeinfo.h>
+template<class scalar>
+int G__ateval(const complex<scalar>& x) {
+  cout << "(" << typeid(x).name() << ")" << x << endl;
+  return(1);
+}
+#else
 template<class scalar>
 int G__ateval(const complex<scalar>& x) {
   cout << "(complex)" << x << endl;
   return(1);
 }
+#endif
 #endif

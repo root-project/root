@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.1 2001/11/28 15:41:13 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.2 2002/01/08 08:34:22 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -217,10 +217,14 @@ public:
                              UInt_t wtype);
    Int_t        OpenDisplay(const char *dpyName);
    void         CloseDisplay();
-   Display_t    GetDisplay();
+   Display_t    GetDisplay() const;
+   Visual_t     GetVisual() const { return 0; }
+   Int_t        GetScreen() const { return 0; }
+   Int_t        GetDepth() const;
+   Colormap_t   GetColormap() const { return (Colormap_t) fColormap; }
    Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
-   Window_t     GetDefaultRootWindow();
-   Window_t     GetParent(Window_t id);
+   Window_t     GetDefaultRootWindow() const;
+   Window_t     GetParent(Window_t id) const;
    FontStruct_t LoadQueryFont(const char *font_name);
    FontH_t      GetFontHandle(FontStruct_t fs);
    void         DeleteFont(FontStruct_t fs);

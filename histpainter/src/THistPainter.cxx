@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.67 2002/02/06 21:57:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.68 2002/02/07 09:10:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3263,13 +3263,13 @@ void THistPainter::PaintLego()
       raster  = 0;
    }
 
-   TView *view = gPad->GetView();
-   if (view) {
-      for (Int_t iv=0;iv<6;iv++) {
-         fXbuf[iv] = view->GetRmin()[iv];
-         fYbuf[iv] = view->GetRmax()[iv];
-      }
-   }
+   //TView *view = gPad->GetView();
+   //if (view) {
+   //   for (Int_t iv=0;iv<6;iv++) {
+   //      fXbuf[iv] = view->GetRmin()[iv];
+   //      fYbuf[iv] = view->GetRmax()[iv];
+   //   }
+   //}
 
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
 
@@ -3310,7 +3310,7 @@ void THistPainter::PaintLego()
 //     Now ready to draw the lego plot
    Int_t irep = 0;
 
-   view = gPad->GetView();
+   TView *view = gPad->GetView();
    if (!view) {
       Error("PaintLego", "no TView in current pad");
       return;
@@ -4148,13 +4148,13 @@ void THistPainter::PaintSurface()
       fYbuf[2] = z2c;
    }
 
-   TView *view = gPad->GetView();
-   if (view) {
-      for (Int_t iv=0;iv<6;iv++) {
-         fXbuf[iv] = view->GetRmin()[iv];
-         fYbuf[iv] = view->GetRmax()[iv];
-      }
-   }
+   //TView *view = gPad->GetView();
+   //if (view && !gPad->IsModified()) {
+   //   for (Int_t iv=0;iv<6;iv++) {
+   //      fXbuf[iv] = view->GetRmin()[iv];
+   //      fYbuf[iv] = view->GetRmax()[iv];
+   //   }
+   //}
 
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
@@ -4173,14 +4173,6 @@ void THistPainter::PaintSurface()
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-//     Initialize colors for the lighting model
-//   Color_t colormain = fH->GetFillColor();
-//   if (colormain == 1) colormain = 17; //avoid drawing with black
-   //Color_t colordark = colormain + 100;
-   //fLego->SetColorMain(colormain,0);
-   //fLego->SetColorDark(colordark,0);
-   //fLego->SetColorMain(colormain,-1);  // Set Bottom color
-   //fLego->SetColorMain(colormain,99);  // Set Top color
    if (Hoption.Surf == 13) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
 
@@ -4209,7 +4201,7 @@ void THistPainter::PaintSurface()
 
 //     Now ready to draw the surface plot
 
-   view = gPad->GetView();
+   TView *view = gPad->GetView();
    if (!view) {
       Error("PaintSurface", "no TView in current pad");
       return;

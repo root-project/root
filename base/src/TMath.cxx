@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.15 2002/01/23 22:48:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.18 2002/02/18 10:19:12 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1444,6 +1444,93 @@ void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
       index[i]      = index[n1-i-1];
       index[n1-i-1] = iswap;
    }
+}
+
+
+//______________________________________________________________________________
+void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
+{
+// bubble sort variant to obtain the order of an array's elements into an index
+// in order to do more useful things than the standard built in functions.
+// *arr1 is unchanged; 
+// *arr2 is the array of indicies corresponding to the decending value of arr1
+//  with arr2[0] corresponding to the largest arr1 value and arr2[Narr] the
+//  smallest.
+//
+//  Author:        Adrian Bevan                    bevan@slac.stanford.edu
+//  Copyright:     Liverpool University, July 2001
+
+  if (Narr <= 0) return;
+  double *localArr1 = new double[Narr];
+  int    *localArr2 = new int[Narr];
+  int iEl;
+  int iEl2;
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    localArr1[iEl] = arr1[iEl];
+    localArr2[iEl] = iEl;
+  }
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
+      if(localArr1[iEl2-1] < localArr1[iEl2]) {
+        double tmp        = localArr1[iEl2-1];
+        localArr1[iEl2-1] = localArr1[iEl2];
+        localArr1[iEl2]   = tmp;
+
+        int    tmp2       = localArr2[iEl2-1];
+        localArr2[iEl2-1] = localArr2[iEl2];
+        localArr2[iEl2]   = tmp2;
+      }
+    }
+  }
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    arr2[iEl] = localArr2[iEl];
+  }
+  delete [] localArr2;
+  delete [] localArr1;
+}
+
+
+//______________________________________________________________________________
+void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
+{
+// opposite ordering of the array arr2[] to that of BubbleHigh.
+//
+//  Author:        Adrian Bevan                    bevan@slac.stanford.edu
+//  Copyright:     Liverpool University, July 2001
+   
+  if (Narr <= 0) return;
+  double *localArr1 = new double[Narr];
+  int    *localArr2 = new int[Narr];
+  int iEl;
+  int iEl2;
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    localArr1[iEl] = arr1[iEl];
+    localArr2[iEl] = iEl;
+  }
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    for(iEl2 = Narr-1; iEl2 > iEl; --iEl2) {
+      if(localArr1[iEl2-1] > localArr1[iEl2]) {
+        double tmp        = localArr1[iEl2-1];
+        localArr1[iEl2-1] = localArr1[iEl2];
+        localArr1[iEl2]   = tmp;
+
+        int    tmp2       = localArr2[iEl2-1];
+        localArr2[iEl2-1] = localArr2[iEl2];
+        localArr2[iEl2]   = tmp2;
+      }
+    }
+  }
+
+  for(iEl = 0; iEl < Narr; iEl++) {
+    arr2[iEl] = localArr2[iEl];
+  }
+  delete [] localArr2;
+  delete [] localArr1;
 }
 
 #ifdef OLD_HASH

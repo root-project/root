@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.6 2001/10/29 16:23:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.9 2002/02/21 15:40:08 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 // out automatically by ROOT: here's an example:
 // suppose you have a class definition:
 //Begin_Html <pre>
-/**************************************************************************
+/*
 
         class MyClass{
             private:
@@ -46,9 +46,8 @@
                     ...
         }
 
-</pre>
-***************************************************************************/
-//
+*/
+//</pre>
 //End_Html
 // Look at the data member name and method names: a data member name has
 // a prefix letter (f) and has a base name X1 . The methods for getting and
@@ -70,17 +69,17 @@
 
     TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
 
-    TMethodCall *getter = dm-&gt;GetterMethod(); //find a method that gets value!
+    TMethodCall *getter = dm-&gt;GetterMethod(c); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
 
     getter-&gt;Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
 
 
-    TMethodCall *setter = dm-&gt;SetterMethod();
+    TMethodCall *setter = dm-&gt;SetterMethod(c);
     setter-&gt;Execute(c,"0",);   // Set Value 0 !!!
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // This trick is widely used in ROOT TContextMenu and dialogs for obtaining
@@ -101,8 +100,8 @@
         Int_t Get(){ return mydata;};
         void  Set(Int_t i){mydata=i;};
         }
-</pre>
 */
+//</pre>
 //End_Html
 //
 // However, this getting/setting functions are not the only feature of
@@ -126,8 +125,8 @@
 
 <em>*OPTIONS={GetMethod="</em>getter<em>";SetMethod="</em>setter<em>";Items=(</em>it1<em>="</em>title1<em>",</em>it2<em>="</em>title2<em>", ... ) } </em>
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // While parsing this string ROOT firstly looks for command-tokens:
@@ -141,17 +140,16 @@
 // put token ITEMS= and then enclose all options in curly brackets "()".
 // You separate options by comas ",".
 // Each option item may have one of the following forms:
-//Begin_Html
+//Begin_Html <pre>
 /*
-<pre>
          IntegerValue<em>  = "</em>Text Label<em>"</em>
 
          EnumValue   <em>  = "</em>Text Label<em>"</em>
 
         <em>"</em>TextValue<em>" = </em>Text Label<em>"</em>
 
-</pre>
 */
+//</pre>
 //End_Html
 //
 // One can sepcify values as Integers or Enums - when data field is an
@@ -279,6 +277,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
 
             if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
+                // FIXME: wrong in case called derives via multiple inheritance from this class
                 fValueGetter = new TMethodCall(GetClass(),ptr1,"");
 
             continue; //next item!
@@ -288,6 +287,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(tokens[i],"\"");
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (GetClass()->GetMethod(ptr1,"1"))
+                // FIXME: wrong in case called derives via multiple inheritance from this class
                 fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
          }
       }
@@ -479,10 +479,10 @@ Int_t TDataMember::GetOffset() const
 
    //case of an interpreted or fake class
    if (fClass->GetDeclFileLine() < 0) return fInfo->Offset();
-   
+
    //case of a compiled class
    //Note that the offset cannot be computed in case of an abstract class
-   //for which the list of real data has not yet been computed via 
+   //for which the list of real data has not yet been computed via
    //a real daughter class.
    fClass->BuildRealData();
    TIter next(fClass->GetListOfRealData());
@@ -491,6 +491,14 @@ Int_t TDataMember::GetOffset() const
       if (rdm->GetDataMember() == this) return rdm->GetThisOffset();
    }
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDataMember::GetOffsetCint() const
+{
+   // Get offset from "this" using the information in CINT only.
+
+   return fInfo->Offset();
 }
 
 //______________________________________________________________________________
@@ -582,15 +590,26 @@ TList *TDataMember::GetOptions() const
 }
 
 //______________________________________________________________________________
-TMethodCall *TDataMember::GetterMethod()
+TMethodCall *TDataMember::GetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for getting the value of data member
+   // Return a TMethodCall method responsible for getting the value
+   // of data member. The cl argument specifies the class of the object
+   // which will be used to call this method (in case of multiple
+   // inheritance TMethodCall needs to know this to calculate the proper
+   // offset).
 
-   if (!fValueGetter) {
+   if (!fValueGetter || cl) {
+
+      if (!cl) cl = fClass;
+
+      if (fValueGetter) {
+         delete fValueGetter;
+         fValueGetter = 0;
+      }
 
       // try to guess Getter function:
       // we strip the fist character of name of data field ('f') and then
-      // try to find the name of Getter by applying "Get" and "Is"
+      // try to find the name of Getter by applying "Get", "Is" or "Has"
       // as a prefix
 
       const char *dataname = GetName();
@@ -599,22 +618,26 @@ TMethodCall *TDataMember::GetterMethod()
       sprintf(gettername, "Get%s", dataname+1);
       if (strstr(gettername, "Is")) sprintf(gettername, "Get%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
       sprintf(gettername, "Is%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
       sprintf(gettername, "Has%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
    }
 
    return fValueGetter;
 }
 
 //______________________________________________________________________________
-TMethodCall *TDataMember::SetterMethod()
+TMethodCall *TDataMember::SetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for setting the value of data member
+   // Return a TMethodCall method responsible for setting the value
+   // of data member. The cl argument specifies the class of the object
+   // which will be used to call this method (in case of multiple
+   // inheritance TMethodCall needs to know this to calculate the proper
+   // offset).
 
    if (!fValueSetter) {
 
@@ -628,7 +651,7 @@ TMethodCall *TDataMember::SetterMethod()
       sprintf(settername, "Set%s", dataname+1);
       if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
       if (GetClass()->GetMethod(settername, "1"))
-         fValueSetter = new TMethodCall(fClass, settername, "1");
+         fValueSetter = new TMethodCall(cl, settername, "1");
    }
 
    return fValueSetter;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.6 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.7 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #endif
 
 
+class TProof;
 class TSocket;
 
 
@@ -48,6 +49,7 @@ private:
    TString     fConfFile;         //file containing config information
    TString     fLogDir;           //directory containing log files
    TSocket    *fSocket;           //socket connection to client
+   TProof     *fProof;            //PROOF talking to slave servers
    FILE       *fLogFile;          //log file
    Int_t       fProtocol;         //protocol version number
    Int_t       fOrdinal;          //slave ordinal number, -1 for master

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.16 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.17 2002/01/20 10:21:46 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -61,13 +61,13 @@ public:
     TProfile(const TProfile &profile);
     virtual ~TProfile();
     virtual void    Add(TF1 *h1, Double_t c1=1);
-    virtual void    Add(TH1 *h1, Double_t c1=1);
-    virtual void    Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+    virtual void    Add(const TH1 *h1, Double_t c1=1);
+    virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
     virtual void    Copy(TObject &hnew);
     virtual void    Divide(TF1 *h1, Double_t c1=1);
-    virtual void    Divide(TH1 *h1);
-    virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+    virtual void    Divide(const TH1 *h1);
+    virtual void    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
     virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual Int_t   Fill(Axis_t x, Axis_t y);
@@ -91,9 +91,9 @@ public:
     virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
     virtual Int_t   Merge(TCollection *list);
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
-    virtual void    Multiply(TH1 *h1);
-    virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-            TH1D   *ProjectionX(const char *name="_px", Option_t *option="e");
+    virtual void    Multiply(const TH1 *h1);
+    virtual void    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+            TH1D   *ProjectionX(const char *name="_px", Option_t *option="e") const;
             TH1    *Rebin(Int_t ngroup=2, const char*newname="");
     virtual void    Reset(Option_t *option="");
     virtual void    SavePrimitive(ofstream &out, Option_t *option);

@@ -7,7 +7,7 @@
  * Description:
  *  G__value to ASCII expression
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -271,7 +271,7 @@ char *temp;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
-    sprintf(temp,"(bool)%d",(int)buf.obj.i?1:0);
+    sprintf(temp,"(bool)%d",(unsigned char)buf.obj.i?1:0);
     break;
 #endif
   case 'k':

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.15 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.16 2002/01/20 10:21:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -72,16 +72,16 @@ public:
    virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
    virtual void    GetRandom2(Axis_t &x, Axis_t &y);
    virtual void    GetStats(Stat_t *stats) const;
-   virtual Stat_t  Integral(Option_t *option="");
-   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") {return 0;}
-   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="");
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
+   virtual Stat_t  Integral(Option_t *option="") const;
+   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
+   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="") const {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
    virtual Int_t   Merge(TCollection *list);
-      TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option="");   // *MENU*
-      TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option="");   // *MENU*
-          TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option=""); // *MENU*
-          TH1D    *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option=""); // *MENU*
+      TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option="") const;   // *MENU*
+      TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option="") const ;   // *MENU*
+          TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option="") const; // *MENU*
+          TH1D    *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option="") const; // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
 

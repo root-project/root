@@ -144,6 +144,7 @@ class list {
   void push_back(const T& x);
   void erase(iterator position);
   void erase(iterator first,iterator last);
+  void clear() ;
   void pop_front();
   void pop_back();
   list(size_type n,const T& value=T()) ;

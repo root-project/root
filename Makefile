@@ -97,6 +97,9 @@ endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
+ifneq ($(CERNLIBS),)
+MODULES      += hbook
+endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
@@ -223,7 +226,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                static debian redhat \
+                static debian redhat skip \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -232,6 +235,9 @@ all:            rootexecs
 
 fast:           rootexecs
 
+skip:
+		@true;
+
 include $(patsubst %,%/Module.mk,$(MODULES))
 
 -include MyRules.mk            # allow local rules
@@ -239,7 +245,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
       distsrc version importcint install uninstall showbuild changelog html \
       debian redhat),)
-ifeq ($(findstring $(MAKECMDGOALS),fast),)
+ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
 include $(INCLUDEFILES)
 endif
 include build/dummy.d          # must be last include
@@ -591,6 +597,7 @@ showbuild:
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
+	@echo "CERNLIBS           = $(CERNLIBS)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"

@@ -399,7 +399,18 @@ void G__readMAKEINFO()
     else if(argn>2 && strcmp(arg[1],"CPPSRCPOST")==0) 
       strcpy(G__CPPSRCPOST,arg[3]);
     else if(argn>2 && strcmp(arg[1],"OBJPOST")==0) strcpy(G__OBJPOST,arg[3]);
-    else if(argn>2 && strcmp(arg[1],"DLLPOST")==0) strcpy(G__DLLPOST,arg[3]);
+    else if(argn>2 && strcmp(arg[1],"DLLPOST")==0) {
+      strcpy(G__DLLPOST,arg[3]);
+#ifndef G__OLDIMPLEMENTATION1640
+      if(argn>3) {
+	char *p = strrchr(G__object,'.');
+	if(p) {
+	  if('.'==G__DLLPOST[0]) strcpy(p,G__DLLPOST);
+	  else                   strcpy(p+1,G__DLLPOST);
+	}
+      }
+#endif
+    }
 #ifdef G__DJGPP
     else if(argn>2 && strcmp(arg[1],"DJGPPDIR")==0 && 0==G__DJGPPDIR[0]) 
       strcpy(G__DJGPPDIR,arg[3]);
@@ -802,7 +813,9 @@ char **argv;
 #endif
     }
     /*************************************************************************/
-    else if(strcmp(argv[i],"-dl")==0 || strcmp(argv[i],"-sl")==0) {
+    else if(strcmp(argv[i],"-dl")==0 || strcmp(argv[i],"-sl")==0 ||
+	    strcmp(argv[i],"-dll")==0 || strcmp(argv[i],"-DLL")==0 ||
+	    strcmp(argv[i],"-so")==0) {
       i++;
       strcpy(G__object,argv[i]);
       p = strrchr(G__object,'/');

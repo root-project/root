@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.32 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.33 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1385,7 +1385,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
       wth[j] = (b[j] - a[j])*0.5;
    }
 
-   Double_t rgnvol, sum1, sum2, sum3, sum4, sum5, difmax, f2, f3, dif;
+   Double_t rgnvol, sum1, sum2, sum3, sum4, sum5, difmax, f2, f3, dif, aresult;
    Double_t rgncmp=0, rgnval, rgnerr;
    Int_t j1, k, l, m, idvaxn=0, idvax0=0, isbtmp, isbtpp;
 
@@ -1458,6 +1458,11 @@ L90:
    result += rgnval;
    abserr += rgnerr;
    ifncls += irlcls;
+   aresult = TMath::Abs(result);
+   if (aresult < 1e-100) {
+      delete [] wk;
+      return result;
+   }
 
    if (ldv) {
 L110:
@@ -1500,7 +1505,10 @@ L160:
       isbrgn  = isbrgs;
       goto L20;
    }
-   relerr = abserr/TMath::Abs(result);
+   relerr = abserr/aresult;
+   if (relerr < 1e-1 && aresult < 1e-20) ifail = 0;
+   if (relerr < 1e-3 && aresult < 1e-10) ifail = 0;
+   if (relerr < 1e-5 && aresult < 1e-5)  ifail = 0;
    if (isbrgs+irgnst > iwk) ifail = 2;
    if (ifncls+2*irlcls > maxpts) ifail = 1;
    if (relerr < eps && ifncls >= minpts) ifail = 0;

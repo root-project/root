@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.25 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.26 2002/01/24 11:39:30 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,11 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.26  2002/01/24 11:39:30  rdm
+// rename IOSFwd.h and IOStream.h to Riosfwd.h and Riostream.h. The change
+// is necessary because on Windows which is case insensitive IOStream.h
+// hides the real iostream.h.
+//
 // Revision 1.25  2002/01/23 17:52:51  rdm
 // use Riosfwd.h in headers instead of <iosfwd> or many other ifdef'ed variant
 // and Riostream.h in the source instead of <iostream[.h]>, <fstream[.h]> and
@@ -171,7 +176,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TEventList.h"
 #include "TPolyMarker.h"
 #include "TView.h"

@@ -32,6 +32,81 @@ extern void G__set_cpp_environment();
 
 using namespace std;
 
+#ifndef G__OLDIMPLEMENTATION1635
+/********************************************************************
+ * static variables for iostream redirection
+ ********************************************************************/
+static basic_streambuf<ostream::char_type,ostream::traits_type> *G__store_cout;
+static basic_streambuf<ostream::char_type,ostream::traits_type> *G__store_cerr;
+static basic_streambuf<istream::char_type,istream::traits_type> *G__store_cin;
+static ofstream  *G__redirected_cout;
+static ofstream  *G__redirected_cerr;
+static ifstream  *G__redirected_cin;
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__unredirectcout() {
+  if(G__store_cout) {
+    cout.rdbuf(G__store_cout);
+    G__store_cout = 0;
+  }
+  if(G__redirected_cout) {
+    delete G__redirected_cout;
+    G__redirected_cout = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__redirectcout(const char* filename) {
+  G__unredirectcout();
+  G__redirected_cout = new ofstream(filename,ios_base::app);
+  G__store_cout = cout.rdbuf(G__redirected_cout->rdbuf()) ;
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__unredirectcerr() {
+  if(G__store_cerr) {
+    cerr.rdbuf(G__store_cerr);
+    G__store_cerr = 0;
+  }
+  if(G__redirected_cerr) {
+    delete G__redirected_cerr;
+    G__redirected_cerr = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__redirectcerr(const char* filename) {
+  G__unredirectcerr();
+  G__redirected_cerr = new ofstream(filename,ios_base::app);
+  G__store_cerr = cerr.rdbuf(G__redirected_cerr->rdbuf()) ;
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__unredirectcin() {
+  if(G__store_cin) {
+    cin.rdbuf(G__store_cin);
+    G__store_cin = 0;
+  }
+  if(G__redirected_cin) {
+    delete G__redirected_cin;
+    G__redirected_cin = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__redirectcin(const char* filename) {
+  G__unredirectcin();
+  G__redirected_cin = new ifstream(filename,ios_base::in);
+  G__store_cin = cin.rdbuf(G__redirected_cin->rdbuf()) ;
+}
+#endif /* 1635 */
+
 #ifndef G__MEMFUNCBODY
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.12 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.13 2002/02/07 18:06:47 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "MessageTypes.h"
 #endif
 
+
 class TList;
 class TMessage;
 class TSocket;
@@ -41,10 +42,15 @@ class TMonitor;
 class TFile;
 class TSignalHandler;
 class TSlave;
+class TProofServ;
+class TProofInputHandler;
+class TProofInterruptHandler;
 class TProofPlayer;
+class TProofPlayerRemote;
 class TDSet;
 class TEventList;
 class TTree;  // obsolete
+
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol = 1;            // protocol version number
@@ -56,6 +62,11 @@ const char* const kPROOF_WorkDir  = "~/proof";    // default working directory
 
 class TProof : public TObject {
 
+friend class TProofServ;
+friend class TProofInputHandler;
+friend class TProofInterruptHandler;
+friend class TProofPlayer;
+friend class TProofPlayerRemote;
 friend class TSlave;
 
 private:
@@ -88,63 +99,33 @@ private:
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
    TProofPlayer   *fPlayer;     //current player
 
-   Int_t     Init(const char *masterurl, const char *conffile,
-                  const char *confdir, Int_t loglevel);
-   Int_t     Collect(TMonitor *mon);
-   void      ConnectFiles();
-   void      AskStatus();
-   Int_t     GoParallel(Int_t nodes);
-   void      Limits(TSocket *s, TMessage &mess);
-   void      MarkBad(TSlave *sl);
-   void      MarkBad(TSocket *s);
-   Int_t     SendGroupView();
-   Int_t     SendInitialState();
-   Int_t     SendPrint();
+   enum ESlaves { kAll, kActive, kUnique };
+   enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
    TProof() { fSlaves = fActiveSlaves = fBadSlaves = 0; }
    TProof(const TProof &);           // not implemented
    void operator=(const TProof &);   // idem
 
-public:
-   enum ESlaves { kAll, kActive, kUnique };
-   enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
+   Int_t    Init(const char *masterurl, const char *conffile,
+                 const char *confdir, Int_t loglevel);
 
-   TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
-          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 1);
-   virtual ~TProof();
-
-   void    Close(Option_t *option="");
-
-   const char *GetMaster() const { return fMaster.Data(); }
-   const char *GetConfDir() const { return fConfDir.Data(); }
-   const char *GetConfFile() const { return fConfFile.Data(); }
-   const char *GetUser() const { return fUser.Data(); }
-   const char *GetWorkDir() const { return fWorkDir.Data(); }
-   const char *GetImage() const { return fImage.Data(); }
-   Int_t       GetPort() const { return fPort; }
-   Int_t       GetProtocol() const { return fProtocol; }
-   Int_t       GetStatus() const { return fStatus; }
-   Int_t       GetLogLevel() const { return fLogLevel; }
-   void        SetLogLevel(Int_t level);
-
-   TSlave  *FindSlave(TSocket *s) const;
-   void     FindUniqueSlaves();
-   TList   *GetListOfSlaves() const { return fSlaves; }
-   TList   *GetListOfActiveSlaves() const { return fActiveSlaves; }
-   TList   *GetListOfUniqueSlaves() const { return fUniqueSlaves; }
-   TList   *GetListOfBadSlaves() const { return fBadSlaves; }
-   Int_t    GetNumberOfSlaves() const;
-   Int_t    GetNumberOfActiveSlaves() const;
-   Int_t    GetNumberOfUniqueSlaves() const;
-   Int_t    GetNumberOfBadSlaves() const;
-   Double_t GetBytesRead() const { return fBytesRead; }
-   Float_t  GetRealTime() const { return fRealTime; }
-   Float_t  GetCpuTime() const { return fCpuTime; }
-
+   Int_t    Exec(const char *cmd, ESlaves list);
+   Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
+   Int_t    SendCurrentState(ESlaves list = kActive);
+   Int_t    SendFile(const char *file, Bool_t bin = kTRUE, ESlaves list = kUnique);
+   Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
+   Int_t    SendGroupView();
+   Int_t    SendInitialState();
+   Int_t    SendPrint();
+   Int_t    Ping(ESlaves list);
    void     Interrupt(EUrgent type, ESlaves list = kActive);
-   Bool_t   IsMaster() const { return fMasterServ; }
-   Bool_t   IsValid() const { return GetNumberOfActiveSlaves() ? kTRUE : kFALSE; }
-   Bool_t   IsParallel() const;
+   void     ConnectFiles();
+   Int_t    ConnectFile(const TFile *file);
+   Int_t    DisConnectFile(const TFile *file);
+   void     AskStatus();
+   Int_t    GoParallel(Int_t nodes);
+   void     Limits(TSocket *s, TMessage &mess);
+   void     RecvLogFile(TSocket *s, Int_t size);
 
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
    Int_t    Broadcast(const char *mess, Int_t kind = kMESS_STRING, ESlaves list = kActive);
@@ -153,32 +134,67 @@ public:
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
    Int_t    Collect(ESlaves list = kActive);
    Int_t    Collect(const TSlave *sl);
+   Int_t    Collect(TMonitor *mon);
+
+   void     FindUniqueSlaves();
+   TSlave  *FindSlave(TSocket *s) const;
+   TList   *GetListOfSlaves() const { return fSlaves; }
+   TList   *GetListOfActiveSlaves() const { return fActiveSlaves; }
+   TList   *GetListOfUniqueSlaves() const { return fUniqueSlaves; }
+   TList   *GetListOfBadSlaves() const { return fBadSlaves; }
+   Int_t    GetNumberOfSlaves() const;
+   Int_t    GetNumberOfActiveSlaves() const;
+   Int_t    GetNumberOfUniqueSlaves() const;
+   Int_t    GetNumberOfBadSlaves() const;
+   void     MarkBad(TSlave *sl);
+   void     MarkBad(TSocket *s);
 
    void     ActivateAsyncInput();
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
 
-   void     Loop(TTree * /*tree*/) { }  // obsolete
-   Int_t    Process(TDSet *set, const char *selector, Int_t nentries = -1,
-                    Int_t first = 0, TEventList *evl = 0);
-   void     AddInput(TObject *obj);
-   void     ClearInput();
-   TObject *GetOutput(const char *name);
-   TList   *GetOutputList();
-   void     RecvLogFile(TSocket *s, Int_t size);
+   void           SetPlayer(TProofPlayer *player) { fPlayer = player; };
+   TProofPlayer  *GetPlayer() const { return fPlayer; };
 
-   Int_t    DisConnectFile(const TFile *file);
-   Int_t    ConnectFile(const TFile *file);
-   Int_t    Ping(ESlaves list = kActive);
-   Int_t    Exec(const char *cmd, ESlaves list = kActive);
-   Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
-   Int_t    SendCurrentState(ESlaves list = kActive);
-   Int_t    SendFile(const char *file, Bool_t bin = kTRUE, ESlaves list = kUnique);
-   Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
+public:
+   TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
+          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 1);
+   virtual ~TProof();
 
-   Int_t    SetParallel(Int_t nodes = 9999);
+   Int_t       Ping();
+   void        Loop(TTree * /*tree*/) { }  // obsolete
+   Int_t       Exec(const char *cmd);
+   Int_t       Process(TDSet *set, const char *selector, Int_t nentries = -1,
+                       Int_t first = 0, TEventList *evl = 0);
+   void        AddInput(TObject *obj);
+   void        ClearInput();
+   TObject    *GetOutput(const char *name);
+   TList      *GetOutputList();
+   Int_t       SetParallel(Int_t nodes = 9999);
+   void        SetLogLevel(Int_t level);
 
-   void     Print(Option_t *option="") const;
+   void        Close(Option_t *option="");
+   void        Print(Option_t *option="") const;
+
+   const char *GetMaster() const { return fMaster; }
+   const char *GetConfDir() const { return fConfDir; }
+   const char *GetConfFile() const { return fConfFile; }
+   const char *GetUser() const { return fUser; }
+   const char *GetWorkDir() const { return fWorkDir; }
+   const char *GetImage() const { return fImage; }
+   Int_t       GetPort() const { return fPort; }
+   Int_t       GetProtocol() const { return fProtocol; }
+   Int_t       GetStatus() const { return fStatus; }
+   Int_t       GetLogLevel() const { return fLogLevel; }
+   Int_t       GetParallel() const;
+
+   Double_t    GetBytesRead() const { return fBytesRead; }
+   Float_t     GetRealTime() const { return fRealTime; }
+   Float_t     GetCpuTime() const { return fCpuTime; }
+
+   Bool_t      IsMaster() const { return fMasterServ; }
+   Bool_t      IsValid() const { return GetNumberOfActiveSlaves() > 0 ? kTRUE : kFALSE; }
+   Bool_t      IsParallel() const { return GetParallel() > 1 ? kTRUE : kFALSE; }
 
    static Bool_t  IsActive();
    static TProof *This();

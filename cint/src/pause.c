@@ -20,6 +20,15 @@
 
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION1635
+extern void G__redirectcout G__P((const char* filename)) ;
+void G__unredirectcout() ;
+extern void G__redirectcerr G__P((const char* filename)) ;
+extern void G__unredirectcerr() ;
+extern void G__redirectcin G__P((const char* filename)) ;
+extern void G__unredirectcin() ;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION856
 #if defined(G__WIN32)
 #include <windows.h>
@@ -2175,8 +2184,17 @@ G__value *rslt;
 	  fprintf(G__stdout,"Old save file closed\n");
 	  fclose(G__sout);
 	}
+#ifndef G__OLDIMPLEMENTATION1635
+	if(strncmp(">>",com,2)!=0) {
+	  G__sout=fopen(command+index,"w");
+	  fclose(G__sout);
+	}
+	G__sout=fopen(command+index,"a");
+	G__redirectcout(command+index);
+#else /* 1635 */
 	if(strncmp(">>",com,2)==0) G__sout=fopen(command+index,"a");
 	else                       G__sout=fopen(command+index,"w");
+#endif /* 1635 */
 	if(G__sout) {
 	  fprintf(G__stdout,"Output will be saved in file %s! ('>' to display on screen)\n" 
 		 ,command+index);
@@ -2187,7 +2205,12 @@ G__value *rslt;
 	}
       }
       else {
-	if(G__sout && G__sout!=G__stdout) fclose(G__sout);
+	if(G__sout && G__sout!=G__stdout) {
+#ifndef G__OLDIMPLEMENTATION1635
+	  G__unredirectcout();
+#endif /* 1635 */
+	  fclose(G__sout);
+	}
 	G__sout = G__stdout;
 	fprintf(G__stdout,"Output will be displayed on screen!\n");
       }
@@ -2201,8 +2224,17 @@ G__value *rslt;
       else                        index=2;
       while(isspace(command[index])&&command[index]!='\0') index++;
       if((*(command+index))) {
+#ifndef G__OLDIMPLEMENTATION1635
+	if(strncmp(">>",com,2)!=0) {
+	  G__serr=fopen(command+index,"w");
+	  fclose(G__sout);
+	}
+	G__serr=fopen(command+index,"a");
+	G__redirectcerr(command+index);
+#else /* 1635 */
 	if(strncmp("2>>",com,3)==0) G__serr=fopen(command+index,"a");
 	else                        G__serr=fopen(command+index,"w");
+#endif /* 1635 */
 	if(G__serr) {
 	  fprintf(G__stdout,"Error will be saved in file %s! ('2>' to display on screen)\n" 
 		 ,command+index);
@@ -2213,7 +2245,12 @@ G__value *rslt;
 	}
       }
       else {
-	if(G__serr && G__serr!=G__stderr) fclose(G__serr);
+	if(G__serr && G__serr!=G__stderr) {
+#ifndef G__OLDIMPLEMENTATION1635
+	  G__unredirectcerr();
+#endif /* 1635 */
+	  fclose(G__serr);
+	}
 	G__serr = G__stderr;
 	fprintf(G__sout,"Error will be displayed on screen!\n");
       }

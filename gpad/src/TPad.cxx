@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.67 2002/01/30 07:11:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.69 2002/02/13 09:23:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2657,6 +2657,7 @@ void TPad::PaintModified()
    fPadPaint = 1;
    cd();
    if (IsModified() || IsTransparent()) {
+       
        if (fPadView3D)
 #if 1
          fPadView3D->PaintBeginModel();

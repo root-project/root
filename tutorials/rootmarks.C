@@ -20,11 +20,11 @@
    Float_t hsimple_ct = gBenchmark->GetCpuTime("hsimple");
    if (hsimple_rt > 0) {
       if (batch) {
-         rtmark = norm*(0.89/hsimple_rt);
+         rtmark = norm*(0.80/hsimple_rt);
          cpmark = norm*(0.81/hsimple_ct);
       } else {
-         rtmark = norm*(2.27/hsimple_rt);
-         cpmark = norm*(1.32/hsimple_ct);
+         rtmark = norm*(2.01/hsimple_rt);
+         cpmark = norm*(1.25/hsimple_ct);
       }
       printf("hsimple     = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
@@ -36,8 +36,8 @@
          rtmark = norm*(0.44/hsum_rt);
          cpmark = norm*(0.40/hsum_ct);
       } else {
-         rtmark = norm*(1.47/hsum_rt);
-         cpmark = norm*(0.94/hsum_ct);
+         rtmark = norm*(1.25/hsum_rt);
+         cpmark = norm*(0.75/hsum_ct);
       }
       printf("hsum        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
@@ -84,16 +84,16 @@
    Float_t na49_rt = gBenchmark->GetRealTime("na49");
    Float_t na49_ct = gBenchmark->GetCpuTime("na49");
    if (na49_rt > 0) {
-      rtmark = norm*(6.00/na49_rt);
-      cpmark = norm*(5.98/na49_ct);
+      rtmark = norm*(3.30/na49_rt);
+      cpmark = norm*(3.28/na49_ct);
       printf("na49        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t geometry_rt = gBenchmark->GetRealTime("geometry");
    Float_t geometry_ct = gBenchmark->GetCpuTime("geometry");
    if (geometry_rt > 0) {
-      rtmark = norm*(0.73/geometry_rt);
-      cpmark = norm*(0.69/geometry_ct);
+      rtmark = norm*(0.63/geometry_rt);
+      cpmark = norm*(0.61/geometry_ct);
       printf("geometry    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
@@ -117,7 +117,7 @@
          rtmark = norm*(0.85/ntuple1_rt);
          cpmark = norm*(0.78/ntuple1_ct);
       } else {
-         rtmark = norm*(1.28/ntuple1_rt);
+         rtmark = norm*(1.18/ntuple1_rt);
          cpmark = norm*(0.88/ntuple1_ct);
       }
       printf("ntuple1     = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
@@ -126,11 +126,11 @@
    if (rtall) {
       Float_t rtdell, cpdell;
       if (batch) {
-         rtdell    = 9.29;
-         cpdell    = 8.98;
+         rtdell    = 6.46;
+         cpdell    = 6.14;
       } else {
-         rtdell    = 13.03;
-         cpdell    = 10.41;
+         rtdell    = 9.83;
+         cpdell    = 7.43;
       }
       Float_t rootmarks = norm*(rtdell+cpdell)/(rtall+cpall);
       printf("\n");

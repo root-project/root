@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.24 2001/08/30 16:37:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.25 2002/01/07 09:08:41 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -112,8 +112,11 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // object. Use IsZombie() to see if the file is accessable.
    // If the remote daemon thinks the file is still connected, while you are
    // sure this is not the case you can force open the file by preceding the
-   // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
+   // option argument with an "-", e.g.: "-recreate". Do this only
    // in cases when you are very sure nobody else is using the file.
+   // To bypass the writelock on a file, to allow the reading of a file
+   // that is being written by another process, explicitely specifiy the
+   // "+read" option ("read" being the default option).
    // The netopt argument can be used to specify the size of the tcp window in
    // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
    // The default and minimum tcp window size is 65535 bytes.
@@ -133,12 +136,24 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    fOffset    = 0;
    fErrorCode = -1;
 
+   fOption = option;
+
    Bool_t forceOpen = kFALSE;
+   if (option[0] == '-') {
+      fOption   = &option[1];
+      forceOpen = kTRUE;
+   }
+   // accept 'f', like 'frecreate' still for backward compatibility
    if (option[0] == 'F' || option[0] == 'f') {
       fOption   = &option[1];
       forceOpen = kTRUE;
-   } else
-      fOption = option;
+   }
+
+   Bool_t forceRead = kFALSE;
+   if (!strcasecmp(option, "+read")) {
+      fOption   = &option[1];
+      forceRead = kTRUE;
+   }
 
    Bool_t create = kFALSE;
    if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
@@ -193,6 +208,12 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    fSocket->Send(kROOTD_PROTOCOL);
    Recv(fProtocol, kind);
 
+   // Check if rootd supports new options
+   if (forceRead && fProtocol < 5) {
+      Warning("TNetFile", "rootd does not support \"+read\" option");
+      forceRead = kFALSE;
+   }
+
    // Authenticate to remote rootd server
    sec = !strcmp(fUrl.GetProtocol(), "roots") ?
          TAuthenticate::kSRP : TAuthenticate::kNormal;
@@ -210,6 +231,8 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 
    if (forceOpen)
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower("f"+fOption).Data()), kROOTD_OPEN);
+   else if (forceRead)
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
    else
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
 

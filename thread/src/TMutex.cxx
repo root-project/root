@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -23,7 +23,6 @@
 #include "TThreadFactory.h"
 
 
-ClassImp(TLockGuard)
 ClassImp(TMutex)
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.12 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.13 2002/01/08 08:34:22 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -46,6 +46,8 @@ typedef XID Window;
 
 struct GC;
 struct Display;
+struct Visual;
+struct XVisualInfo;
 struct XGCValues;
 struct XSetWindowAttributes;
 struct XColor;
@@ -100,6 +102,8 @@ private:
    void   CloseWindow1();
    void   ClearPixmap(Drawable *pix);
    void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
+   void   FindBestVisual();
+   void   FindUsableVisual(XVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image);
@@ -129,7 +133,12 @@ private:
 
 protected:
    Display   *fDisplay;            //Pointer to display
+   Visual    *fVisual;             //Pointer to visual used by all windows
+   Drawable   fRootWin;            //Root window used as parent of all windows
+   Drawable   fVisRootWin;         //Root window with fVisual to be used to create GC's and XImages
    Colormap   fColormap;           //Default colormap, 0 if b/w
+   ULong_t    fBlackPixel;         //Value of black pixel in colormap
+   ULong_t    fWhitePixel;         //Value of white pixel in colormap
    Int_t      fScreenNumber;       //Screen number
    Int_t      fTextAlignH;         //Text Alignment Horizontal
    Int_t      fTextAlignV;         //Text Alignment Vertical
@@ -137,7 +146,6 @@ protected:
    Float_t    fCharacterUpX;       //Character Up vector along X
    Float_t    fCharacterUpY;       //Character Up vector along Y
    Float_t    fTextMagnitude;      //Text Magnitude
-   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
    Int_t      fDepth;              //Number of color planes
    Int_t      fRedDiv;             //Red value divider, -1 if no TrueColor visual
    Int_t      fGreenDiv;           //Green value divider
@@ -145,6 +153,7 @@ protected:
    Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
    Int_t      fGreenShift;         //Bits to left shift green
    Int_t      fBlueShift;          //Bits to left shift blue
+   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
 
    // needed by TGX11TTF
    Bool_t     AllocColor(Colormap cmap, XColor *color);
@@ -249,10 +258,14 @@ public:
                              UInt_t wtype);
    Int_t        OpenDisplay(const char *dpyName);
    void         CloseDisplay();
-   Display_t    GetDisplay();
+   Display_t    GetDisplay() const;
+   Visual_t     GetVisual() const;
+   Int_t        GetScreen() const;
+   Int_t        GetDepth() const;
+   Colormap_t   GetColormap() const;
    Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
-   Window_t     GetDefaultRootWindow();
-   Window_t     GetParent(Window_t id);
+   Window_t     GetDefaultRootWindow() const;
+   Window_t     GetParent(Window_t id) const;
    FontStruct_t LoadQueryFont(const char *font_name);
    FontH_t      GetFontHandle(FontStruct_t fs);
    void         DeleteFont(FontStruct_t fs);

@@ -30,7 +30,7 @@ PROOFSERV    := bin/proofserv$(EXEEXT)
 
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
-H2ROOTS2     := $(MODDIRS)/hntvar2.f
+H2ROOTS2     := $(HBOOKS2)
 H2ROOTS3     := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)

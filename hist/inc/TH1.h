@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.28 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.29 2002/01/20 10:21:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -116,8 +116,8 @@ public:
     virtual ~TH1();
 
     virtual void     Add(TF1 *h1, Double_t c1=1);
-    virtual void     Add(TH1 *h1, Double_t c1=1);
-    virtual void     Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+    virtual void     Add(const TH1 *h1, Double_t c1=1);
+    virtual void     Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     virtual void     AddBinContent(Int_t bin);
     virtual void     AddBinContent(Int_t bin, Stat_t w);
     static  void     AddDirectory(Bool_t add=kTRUE);
@@ -126,8 +126,8 @@ public:
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
     virtual void     Divide(TF1 *f1, Double_t c1=1);
-    virtual void     Divide(TH1 *h1);
-    virtual void     Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+    virtual void     Divide(const TH1 *h1);
+    virtual void     Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Draw(Option_t *option="");
     virtual TH1     *DrawCopy(Option_t *option="");
     virtual void     DrawPanel(); // *MENU*
@@ -184,7 +184,7 @@ public:
     virtual Stat_t   GetEntries() const;
     virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
-    virtual void     GetLowEdge(Axis_t *edge) {fXaxis.GetLowEdge(edge);}
+    virtual void     GetLowEdge(Axis_t *edge) const {fXaxis.GetLowEdge(edge);}
     virtual Double_t GetMaximum() const;
     virtual Int_t    GetMaximumBin() const;
     virtual Int_t    GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const;
@@ -209,21 +209,21 @@ public:
     virtual Stat_t   GetSumOfWeights() const;
     virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
     virtual Stat_t   GetRMS(Int_t axis=1) const;
-    virtual TAxis   *GetXaxis() {return &fXaxis;}
-    virtual TAxis   *GetYaxis() {return &fYaxis;}
-    virtual TAxis   *GetZaxis() {return &fZaxis;}
-    virtual Stat_t   Integral(Option_t *option="");
-    virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="");
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") {return 0;}
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) {return 0;}
+            TAxis   *GetXaxis() {return &fXaxis;}
+            TAxis   *GetYaxis() {return &fYaxis;}
+            TAxis   *GetZaxis() {return &fZaxis;}
+    virtual Stat_t   Integral(Option_t *option="") const;
+    virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") const {return 0;}
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) const {return 0;}
     virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
     virtual void     LabelsDeflate(Option_t *axis="X");
     virtual void     LabelsInflate(Option_t *axis="X");
     virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
     virtual Int_t    Merge(TCollection *list);
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
-    virtual void     Multiply(TH1 *h1);
-    virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+    virtual void     Multiply(const TH1 *h1);
+    virtual void     Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Paint(Option_t *option="");
     virtual void     Print(Option_t *option="") const;
     virtual void     PutStats(Stat_t *stats);

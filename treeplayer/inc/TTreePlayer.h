@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.16 2002/01/02 21:48:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.17 2002/01/15 10:32:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
     TH1              *GetHistogram() const {return fHistogram;}
     TTreeFormula     *GetMultiplicity() const   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
+    virtual Int_t     GetNfill() const {return fNfill;}
     TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
     const char       *GetScanFileName() const {return fScanFileName;}

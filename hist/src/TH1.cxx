@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.85 2002/02/01 06:55:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.87 2002/02/14 09:35:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -662,7 +662,7 @@ void TH1::Add(TF1 *f1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TH1::Add(TH1 *h1, Double_t c1)
+void TH1::Add(const TH1 *h1, Double_t c1)
 {
 // Performs the operation: this = this + c1*h1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -687,12 +687,12 @@ void TH1::Add(TH1 *h1, Double_t c1)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Add","Attempt to add histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -730,7 +730,7 @@ void TH1::Add(TH1 *h1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TH1::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
+void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 //   -*-*-*Replace contents of this histogram by the addition of h1 and h2*-*-*
 //         ===============================================================
@@ -759,20 +759,20 @@ void TH1::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Add","Attempt to add histograms with different axis limits");
    }
-   if (GetXaxis()->GetXmin() != h2->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h2->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h2->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h2->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h2->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h2->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h2->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h2->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h2->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
        Warning("Add","Attempt to add histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -1053,7 +1053,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TH1::Divide(TH1 *h1)
+void TH1::Divide(const TH1 *h1)
 {
 //   -*-*-*-*-*-*-*-*-*Divide this histogram by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ===========================
@@ -1084,12 +1084,12 @@ void TH1::Divide(TH1 *h1)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Divide","Attempt to divide histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -1132,7 +1132,7 @@ void TH1::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TH1::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //   -*-*-*Replace contents of this histogram by the division of h1 by h2*-*-*
 //         ==============================================================
@@ -1172,20 +1172,20 @@ void TH1::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Divide","Attempt to divide histograms with different axis limits");
    }
-   if (GetXaxis()->GetXmin() != h2->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h2->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h2->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h2->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h2->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h2->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h2->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h2->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h2->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
        Warning("Divide","Attempt to divide histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -2205,7 +2205,6 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
             }
             if (TF1::RejectedPoint()) continue;
             if (Foption.W1) {
-               if (cu == 0) continue;
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
@@ -3168,7 +3167,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TH1::Multiply(TH1 *h1)
+void TH1::Multiply(const TH1 *h1)
 {
 //   -*-*-*-*-*-*-*-*-*Multiply this histogram by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     =============================
@@ -3197,12 +3196,12 @@ void TH1::Multiply(TH1 *h1)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Multiply","Attempt to multiply histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -3242,7 +3241,7 @@ void TH1::Multiply(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TH1::Multiply(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //   -*-*-*Replace contents of this histogram by multiplication of h1 by h2*-*
 //         ================================================================
@@ -3276,20 +3275,20 @@ void TH1::Multiply(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
       return;
    }
 //   - Issue a Warning if histogram limits are different
-   if (GetXaxis()->GetXmin() != h1->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h1->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h1->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h1->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h1->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h1->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h1->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h1->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h1->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h1->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h1->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h1->fZaxis.GetXmax()) {
        Warning("Multiply","Attempt to multiply histograms with different axis limits");
    }
-   if (GetXaxis()->GetXmin() != h2->GetXaxis()->GetXmin() ||
-       GetXaxis()->GetXmax() != h2->GetXaxis()->GetXmax() ||
-       GetYaxis()->GetXmin() != h2->GetYaxis()->GetXmin() ||
-       GetYaxis()->GetXmax() != h2->GetYaxis()->GetXmax() ||
-       GetZaxis()->GetXmin() != h2->GetZaxis()->GetXmin() ||
-       GetZaxis()->GetXmax() != h2->GetZaxis()->GetXmax()) {
+   if (fXaxis.GetXmin() != h2->fXaxis.GetXmin() ||
+       fXaxis.GetXmax() != h2->fXaxis.GetXmax() ||
+       fYaxis.GetXmin() != h2->fYaxis.GetXmin() ||
+       fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
+       fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
+       fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
        Warning("Multiply","Attempt to multiply histograms with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
@@ -4196,7 +4195,7 @@ Stat_t TH1::GetSumOfWeights() const
 
 
 //______________________________________________________________________________
-Stat_t TH1::Integral(Option_t *option)
+Stat_t TH1::Integral(Option_t *option) const
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
 // By default the integral is computed as the sum of bin contents in the range.
@@ -4207,7 +4206,7 @@ Stat_t TH1::Integral(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option)
+Stat_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option) const
 {
 //Return integral of bin contents between binx1 and binx2 for a 1-D histogram
 // By default the integral is computed as the sum of bin contents in the range.

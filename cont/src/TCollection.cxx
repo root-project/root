@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.13 2001/03/29 10:51:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.14 2001/04/19 07:25:18 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TBrowser.h"
 #include "TObjectTable.h"
 #include "TRegexp.h"
+#include "TVirtualMutex.h"
 
 TCollection  *TCollection::fgCurrentCollection = 0;
 TObjectTable *TCollection::fgGarbageCollection = 0;
@@ -390,6 +391,7 @@ void TCollection::StartGarbageCollection()
 //______________________________________________________________________________
 void TCollection::EmptyGarbageCollection()
 {
+   R__LOCKGUARD(gContainerMutex);
    if (fgGarbageStack > 0) fgGarbageStack--;
    if (fgGarbageCollection && fgGarbageStack == 0 && fgEmptyingGarbage == kFALSE) {
       fgEmptyingGarbage = kTRUE;
@@ -402,10 +404,14 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
-   if (fgGarbageCollection && !fgEmptyingGarbage) {
+  if(fgGarbageCollection) {
+    R__LOCKGUARD(gContainerMutex);
+    if(fgGarbageCollection && !fgEmptyingGarbage) {
       fgGarbageCollection->Add(obj);
-   } else
-      delete obj;
+    }
+    else delete obj;
+  } else
+    delete obj;
 }
 
 //______________________________________________________________________________
