@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooNovosibirsk.cc,v 1.1 2001/02/06 22:01:54 htanaka Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.1 2002/02/04 23:42:45 best Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -15,7 +15,7 @@
 // RooNovosibirsk implements the Novosibirsk function 
 //
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 
 #include <math.h>
 

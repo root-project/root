@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormFactor.cc,v 1.4 2001/09/24 23:08:56 verkerke Exp $
+ *    File: $Id: RooFormFactor.cc,v 1.5 2001/10/08 05:21:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 
@@ -36,7 +36,7 @@ ClassImp(RooFormFactor)
   ;
 
 static const char rcsid[] =
-"$Id: RooFormFactor.cc,v 1.4 2001/09/24 23:08:56 verkerke Exp $";
+"$Id: RooFormFactor.cc,v 1.5 2001/10/08 05:21:18 verkerke Exp $";
 
 RooFormFactor::RooFormFactor(const char *name, const char *title,
 			     RooAbsReal& _w, RooAbsReal& _ctl, RooAbsReal& _ctv, 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.cc,v 1.6 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.7 2001/10/08 05:21:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,7 +12,7 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 

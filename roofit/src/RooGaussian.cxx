@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGaussian.cc,v 1.13 2001/10/13 00:39:23 david Exp $
+ *    File: $Id: RooGaussian.cc,v 1.14 2001/10/17 05:15:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,7 +15,7 @@
 // -- CLASS DESCRIPTION [PDF] --
 // Gaussian PDF...
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 

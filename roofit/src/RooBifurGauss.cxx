@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBifurGauss.cc,v 1.7 2001/09/24 23:08:55 verkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.8 2001/10/08 05:21:15 verkerke Exp $
  * Authors:
  *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
  * History:
@@ -12,7 +12,7 @@
  *****************************************************************************/
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 
@@ -22,7 +22,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.7 2001/09/24 23:08:55 verkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.8 2001/10/08 05:21:15 verkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,

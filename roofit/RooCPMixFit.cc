@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.4 2002/02/08 22:58:39 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.5 2002/02/15 11:18:22 gautier Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -261,6 +261,7 @@ void RooCPMixFit::buildDeltatPdfs()
   // Resolution model
   sigC_bias = new RooRealVar("sigC_bias","Signal Core Bias",-0.1652,-5,+5) ;
   sigT_bias = new RooRealVar("sigT_bias","Signal Tail Bias",-0.791,-5,+5) ;
+  sigT_rlif = new RooRealVar("sigT_rlif","Signal Tail GExp lifetime",1.2,0.1,10.0) ;
   sigC_scfa = new RooRealVar("sigC_scfa","Signal Core Scale Factor",1.0902,0.5,5) ;
   sigT_scfa = new RooRealVar("sigT_scfa","Signal Tail Scale Factor",2.004,1,10) ;
   sigC_frac = new RooRealVar("sigC_frac","Signal Core Fraction",0.838,0,1) ;
@@ -284,6 +285,9 @@ void RooCPMixFit::buildDeltatPdfs()
   bgKl_tauB = new RooRealVar("bgKl_tauB","B0 Lifetime",1.3,1.0,2.0,"ps") ;
   dm        = new RooRealVar("dm","B0 mass difference",0.472) ;
  
+  //sig_eta0  = new RooRealVar("sig_eta0","Mistag rate",0.4,0,1) ;
+  //sig_eta1  = new RooRealVar("sig_eta1","Mistag rate",0.4,0,1) ;
+  //sig_eta  = new RooFormulaVar("sig_eta","Mistag rate","@0*@1+@2",RooArgList(*sig_eta0,*dtErr,*sig_eta1)) ;
   sig_eta  = new RooRealVar("sig_eta","Mistag rate",0.4,0,1) ;
   sig_deta = new RooRealVar("sig_deta","Delta mistag rate",0.) ;
   bgC_eta  = new RooRealVar("bgC_eta","Mistag rate",0.4) ;
@@ -322,10 +326,11 @@ void RooCPMixFit::buildDeltatPdfs()
   kbgC_gauss = new RooGaussModel("kbgC_gauss","JPsiKLong backgnd core gauss model",*dtReco,*kbgC_bias,*kbgC_scfa,*dtErr) ;
   kbgT_gauss = new RooGaussModel("kbgT_gauss","JPsiKLong backgnd tail gauss model",*dtReco,*kbgT_bias,*kbgT_scfa,*dtErr) ;
   outl_gauss = new RooGaussModel("outl_gauss","outlier gauss model",*dtReco,*outl_bias,*outl_scfa) ;
+  sigT_gexp  = new RooGExpModel("sigT_gexp","signal tail GExp model",*dtReco,*sigC_scfa,*sigT_rlif,*dtErr) ;
 
   // Construct composite signal and gaussian resolution models 
   sigResModel = new RooAddModel("sigResModel","Signal 3Gauss resolution model",
-				RooArgList(*sigC_gauss,*outl_gauss,*sigT_gauss),RooArgList(*sigC_frac,*sigO_frac)) ;
+				RooArgList(*sigC_gauss,*outl_gauss,*sigT_gexp),RooArgList(*sigC_frac,*sigO_frac)) ;
   bkgResModel = new RooAddModel("bkgResModel","Backgd 2Gauss resolution model",
 				RooArgList(*bkgC_gauss,*outl_gauss),*bkgC_frac) ;
   kbgResModel = new RooAddModel("kbgResModel","JPsiKLong Backgd 3Gauss resolution model",
@@ -439,7 +444,7 @@ void RooCPMixFit::buildSelectionPdfs()
   deArgusSig    = new RooArgusBG("deArgusSig","Argus component of signal DE shape",*dePrime,*deACutoffSig,*deAKappaSig) ;
   deSigKlongRaw = new RooAddPdf("deSigKlongRaw","signal DE shape",RooArgList(*deGaussSig,*deGauss2Sig,*deArgusSig),
 				                                  RooArgList(*deGFracSig,*deG2FracSig)) ;
-  deSigKlong    = new RooGenericPdf("deSigKlong","(abs(@0)<0.010001)*@1",RooArgList(*deltaE,*deSigKlongRaw)) ;
+  deSigKlong    = new RooGenericPdf("deSigKlong","(abs(@0)<0.01001)*@1",RooArgList(*deltaE,*deSigKlongRaw)) ;
 
   // DeltaE signal shape  for JpsiKL EMC/IFR inclusive psi background
   dePol1IPbg     = new RooRealVar("dePol1IPbg","1st order coefficient of inclusive psi polynomial background", 2.066e-2) ;

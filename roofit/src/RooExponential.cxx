@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExponential.cc,v 1.4 2001/09/24 23:08:55 verkerke Exp $
+ *    File: $Id: RooExponential.cc,v 1.5 2001/10/08 05:21:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
@@ -14,7 +14,7 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 

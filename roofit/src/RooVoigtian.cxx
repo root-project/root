@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooVoigtian.cc,v 1.3 2001/09/12 21:49:32 verkerke Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.4 2001/10/08 05:21:19 verkerke Exp $
  * Authors:
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
  * History:
@@ -22,7 +22,7 @@
 // algorithm. Select the faster algorithm either in the constructor, or with
 // the selectFastAlgorithm() method.
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 
 #include <iostream.h>
 #include <math.h>

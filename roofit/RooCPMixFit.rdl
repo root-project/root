@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.rdl,v 1.3 2002/02/07 02:20:18 verkerke Exp $
+ *    File: $Id: RooCPMixFit.rdl,v 1.4 2002/02/08 22:58:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -29,6 +29,7 @@ class RooCustomizer ;
 class RooSimultaneous ;
 class RooStringVar ;
 class RooUnblindPrecision ;
+class RooFormulaVar ;
 #include "RooFitCore/RooArgSet.hh" 
 #include "RooFitCore/RooArgList.hh" 
 
@@ -92,12 +93,15 @@ public:
   RooArgList _pdfProtoOwner ;
 
   // Deltat PDF prototype parameters
-  RooRealVar *sigC_bias,*sigT_bias,*sigC_scfa,*sigT_scfa,*sigC_frac,*sigO_frac,
+  RooRealVar *sigC_bias,*sigT_bias,*sigC_scfa,*sigT_scfa,*sigT_rlif,*sigC_frac,*sigO_frac,
     *bkgC_bias,*bkgC_scfa,*bkgC_frac,*outl_bias,*outl_scfa,*sig_tauB,
-    *bgC_tauB,*bgL_tauB,*bgKl_tauB,*dm,*sig_eta,*bgC_eta,*bgL_eta,*bgP_eta,*bgP_f,
+    *bgC_tauB,*bgL_tauB,*bgKl_tauB,*dm,*sig_eta0,*sig_eta1,*bgC_eta,*bgL_eta,*bgP_eta,*bgP_f,
     *bgC_f,*gold_cpev,*psikl_cpev,*psikstar_cpev,*psix_cpev,*sin2b,*alambda,*effratio,*sig_deta,
     *kbgC_scfa,*kbgC_bias,*kbgC_frac,*kbgT_scfa,*kbgT_bias,*kbgO_frac,
     *klSig_frac,*klBgCcK_frac,*klKstBg_frac,*klKshBg_frac,*klNPLBg_frac,*klNPPBg_frac,*klPsxBg_frac ;
+
+  RooAbsReal
+    *sig_eta ;
 
   // Sin2beta blinding components
   RooUnblindPrecision *sin2b_ub ;
@@ -105,7 +109,7 @@ public:
 
   // Deltat PDF protytype components
   RooResolutionModel 
-    *bkgC_gauss,*kbgC_gauss,*kbgT_gauss,*sigC_gauss,*sigT_gauss,*outl_gauss,*sigResModel,*bkgResModel,*kbgResModel ;
+    *bkgC_gauss,*kbgC_gauss,*kbgT_gauss,*sigC_gauss,*sigT_gauss,*outl_gauss,*sigResModel,*bkgResModel,*kbgResModel,*sigT_gexp ;
   RooAbsPdf  
     *bmixSigModel,*bmixBgCModel,*bmixBgLModel,*bmixBgPModel,*dtSigBMix,*dtBkgBMix,
     *goldSigModel,*goldBgCModel,*goldBgLModel,*goldBgPModel,*dtSigGold,*dtBkgGold,
