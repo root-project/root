@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.47 2005/01/18 21:07:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.48 2005/02/15 17:01:39 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1662,12 +1662,13 @@ void TGMenuTitle::DoRedraw()
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    if (fState) {
-      SetBackgroundColor(GetDefaultSelectedBackground());
-      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fNormGC, GetDefaultSelectedBackground());
+      gVirtualX->FillRectangle(fId,fNormGC,x,y,fWidth,fHeight);
       fLabel->Draw(fId, fSelGC, x, y + max_ascent);
    } else {
-      SetBackgroundColor(GetDefaultFrameBackground());
-      gVirtualX->ClearWindow(fId);
+      gVirtualX->SetForeground(fNormGC,GetDefaultFrameBackground());
+      gVirtualX->FillRectangle(fId,fNormGC,x,y,fWidth,fHeight);
+      gVirtualX->SetForeground(fNormGC,fgBlackPixel);
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
 }
