@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.4 2003/05/23 16:20:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.5 2003/06/24 13:41:59 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -93,6 +93,21 @@ void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacin
 
    fTrash->Add(pbut);
    fTrash->Add(layout);
+}
+
+//______________________________________________________________________________
+void TGToolBar::ChangeIcon(ToolBarData_t *button, const char *new_icon)
+{
+   // Change the icon of a toolbar button. 
+
+   const TGPicture *pic = fClient->GetPicture(new_icon);
+   if (!pic) {
+      Error("ChangeIcon", "pixmap not found: %s", new_icon);
+      return;
+   }
+   fPictures->Add((TObject*)pic);
+
+   ((TGPictureButton *)button->fButton)->SetPicture(pic);
 }
 
 //______________________________________________________________________________
