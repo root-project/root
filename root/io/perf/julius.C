@@ -23,6 +23,10 @@
 #include "TStopwatch.h"
 #include "TTree.h"
 #include "TRandom.h"
+#include "TGraph.h"
+#include "TMultiGraph.h"
+#include "TCanvas.h"
+#include "TLegend.h"
 
 Double_t jwrite(int nrows,int compress) {
         const int nints = 50;
