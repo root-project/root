@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.9 2003/07/24 16:00:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.10 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -559,6 +559,13 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
 					    out << ");" << endl;
       }
       //cf->SavePrimitive(out, option);
+      if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
+         GetTabTab(i)->SaveUserColor(out, option);
+         out << "   TGTabElement *tab" << i << " = "
+             << GetName() << "->GetTabTab(" << i << ");" << endl;
+         out << "   tab" << i << "->ChangeBackground(ucolor);" << endl;
+      }
+
    }
    out << endl << "   " << GetName() << "->SetTab(" << GetCurrent() << ");" << endl;
    out << endl << "   " << GetName() << "->Resize(" << GetName()

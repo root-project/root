@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.26 2003/10/29 11:51:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.27 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -157,7 +157,6 @@ protected:
       { return fClient->GetResourcePool(); }
 
    TString GetOptionString() const;                //used in SavePrimitive()
-   void SaveUserColor(ofstream &out, Option_t *);  //used in SavePrimitive()
 
 public:
    // Default colors and graphics contexts
@@ -239,7 +238,10 @@ public:
    void SetWidth(UInt_t w) { fWidth = w; }
    void SetHeight(UInt_t h) { fHeight = h; }
    void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
+
+   // Printing and saving
    virtual void Print(Option_t *option="") const;
+   void SaveUserColor(ofstream &out, Option_t *);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
