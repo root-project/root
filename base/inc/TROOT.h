@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.26 2002/05/10 21:32:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.27 2002/07/09 21:13:28 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -134,44 +134,44 @@ public:
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
-   void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
-   Bool_t            FromPopUp() const {return fFromPopUp;}
+   void              ForceStyle(Bool_t force = kTRUE) { fForceStyle = force; }
+   Bool_t            FromPopUp() const { return fFromPopUp; }
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
-   TApplication     *GetApplication() const {return fApplication;}
-   TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
-   TClass           *GetClass(const type_info &typeinfo, Bool_t load=kTRUE) const;
+   TApplication     *GetApplication() const { return fApplication; }
+   TClass           *GetClass(const char *name, Bool_t load = kTRUE) const;
+   TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE) const;
    TColor           *GetColor(Int_t color) const;
-   const char       *GetCutClassName() const {return fCutClassName.Data();}
-   const char       *GetDefCanvasName() const {return fDefCanvasName.Data();}
-   Bool_t            GetEditHistograms() const {return fEditHistograms;}
-   Int_t             GetEditorMode() const {return fEditorMode;}
-   Bool_t            GetForceStyle() const {return fForceStyle;}
+   const char       *GetCutClassName() const { return fCutClassName; }
+   const char       *GetDefCanvasName() const { return fDefCanvasName; }
+   Bool_t            GetEditHistograms() const { return fEditHistograms; }
+   Int_t             GetEditorMode() const { return fEditorMode; }
+   Bool_t            GetForceStyle() const { return fForceStyle; }
    VoidFuncPtr_t     GetMakeDefCanvas() const;
-   Int_t             GetVersionDate() const {return fVersionDate;}
-   Int_t             GetVersionTime() const {return fVersionTime;}
-   Int_t             GetVersionInt() const {return fVersionInt;}
-   const char       *GetVersion() const {return fVersion.Data();}
-   TSeqCollection   *GetListOfClasses() const   {return fClasses;}
-   TSeqCollection   *GetListOfColors() const    {return fColors;}
+   Int_t             GetVersionDate() const { return fVersionDate; }
+   Int_t             GetVersionTime() const { return fVersionTime; }
+   Int_t             GetVersionInt() const { return fVersionInt; }
+   const char       *GetVersion() const { return fVersion; }
+   TSeqCollection   *GetListOfClasses() const { return fClasses; }
+   TSeqCollection   *GetListOfColors() const { return fColors; }
    TSeqCollection   *GetListOfTypes(Bool_t load = kFALSE);
    TSeqCollection   *GetListOfGlobals(Bool_t load = kFALSE);
    TSeqCollection   *GetListOfGlobalFunctions(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfFiles() const      {return fFiles;}
-   TSeqCollection   *GetListOfMappedFiles() const{return fMappedFiles;}
-   TSeqCollection   *GetListOfSockets() const    {return fSockets;}
-   TSeqCollection   *GetListOfCanvases() const   {return fCanvases;}
-   TSeqCollection   *GetListOfStyles() const     {return fStyles;}
-   TSeqCollection   *GetListOfFunctions() const  {return fFunctions;}
-   TSeqCollection   *GetListOfGeometries() const {return fGeometries;}
-   TSeqCollection   *GetListOfBrowsers() const   {return fBrowsers;}
-   TSeqCollection   *GetListOfSpecials() const   {return fSpecials;}
-   TSeqCollection   *GetListOfTasks() const      {return fTasks;}
-   TSeqCollection   *GetListOfCleanups() const   {return fCleanups;}
-   TSeqCollection   *GetListOfStreamerInfo() const    {return fStreamerInfo;}
-   TSeqCollection   *GetListOfMessageHandlers() const {return fMessageHandlers;}
-   TList            *GetListOfBrowsables() const {return fBrowsables;}
+   TSeqCollection   *GetListOfFiles() const       { return fFiles; }
+   TSeqCollection   *GetListOfMappedFiles() const { return fMappedFiles; }
+   TSeqCollection   *GetListOfSockets() const     { return fSockets; }
+   TSeqCollection   *GetListOfCanvases() const    { return fCanvases; }
+   TSeqCollection   *GetListOfStyles() const      { return fStyles; }
+   TSeqCollection   *GetListOfFunctions() const   { return fFunctions; }
+   TSeqCollection   *GetListOfGeometries() const  { return fGeometries; }
+   TSeqCollection   *GetListOfBrowsers() const    { return fBrowsers; }
+   TSeqCollection   *GetListOfSpecials() const    { return fSpecials; }
+   TSeqCollection   *GetListOfTasks() const       { return fTasks; }
+   TSeqCollection   *GetListOfCleanups() const    { return fCleanups; }
+   TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
+   TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
+   TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE);
-   TFile            *GetFile() const {return fFile;}
+   TFile            *GetFile() const { return fFile; }
    TFile            *GetFile(const char *name) const;
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
@@ -180,50 +180,50 @@ public:
    TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
    TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
-   TObject          *GetSelectedPrimitive() const {return fPrimitive;}
-   TVirtualPad      *GetSelectedPad() const {return fSelectPad;}
-   Int_t             GetNclasses() const {return fClasses->GetSize();}
-   Int_t             GetNtypes() const {return fTypes->GetSize();}
-   TFolder          *GetRootFolder() const {return fRootFolder;}
-   TProcessUUID     *GetUUIDs() const {return fUUIDs;}
-   void              Idle(UInt_t idleTimeInSec, const char *command=0);
+   TObject          *GetSelectedPrimitive() const { return fPrimitive; }
+   TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
+   Int_t             GetNclasses() const { return fClasses->GetSize(); }
+   Int_t             GetNtypes() const { return fTypes->GetSize(); }
+   TFolder          *GetRootFolder() const { return fRootFolder; }
+   TProcessUUID     *GetUUIDs() const { return fUUIDs; }
+   void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
-   Bool_t            IsFolder() const {return kTRUE;}
+   Bool_t            IsFolder() const { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
-   Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
+   Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
-   void              ls(Option_t *option="") const;
+   void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    void              LoadMacro(const char *filename, Int_t *error = 0);
    Int_t             Macro(const char *filename, Int_t *error = 0);
    void              Message(Int_t id, const TObject *obj);
-   Bool_t            MustClean() {return fMustClean;}
+   Bool_t            MustClean() const { return fMustClean; }
    void              ProcessLine(const char *line, Int_t *error = 0);
    void              ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    void              Proof(const char *cluster = "proof://localhost");
-   Bool_t            ReadingObject() {return fReadingObject;}
+   Bool_t            ReadingObject() const { return fReadingObject; }
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
-   void              SetBatch(Bool_t batch=kTRUE) { fBatch = batch; }
-   void              SetCutClassName(const char *name="TCutG");
-   void              SetDefCanvasName(const char *name="c1") {fDefCanvasName = name;}
-   void              SetEditHistograms(Bool_t flag=kTRUE) {fEditHistograms=flag;}
-   void              SetEditorMode(const char *mode="");
-   void              SetFromPopUp(Bool_t flag=kTRUE) { fFromPopUp = flag; }
-   void              SetInterrupt(Bool_t flag=kTRUE) { fInterrupt = flag; }
+   void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
+   void              SetCutClassName(const char *name = "TCutG");
+   void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
+   void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }
+   void              SetEditorMode(const char *mode = "");
+   void              SetFromPopUp(Bool_t flag = kTRUE) { fFromPopUp = flag; }
+   void              SetInterrupt(Bool_t flag = kTRUE) { fInterrupt = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }
-   void              SetLineHasBeenProcessed() {if (fLineIsProcessing) fLineIsProcessing--;}
-   void              SetReadingObject(Bool_t flag=kTRUE) {fReadingObject = flag;}
-   void              SetMustClean(Bool_t flag=kTRUE) { fMustClean=flag; }
+   void              SetLineHasBeenProcessed() { if (fLineIsProcessing) fLineIsProcessing--; }
+   void              SetReadingObject(Bool_t flag = kTRUE) { fReadingObject = flag; }
+   void              SetMustClean(Bool_t flag = kTRUE) { fMustClean=flag; }
    void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = (TObject*)obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }
-   void              SetStyle(const char *stylename="Default");
+   void              SetStyle(const char *stylename = "Default");
    void              Time(Int_t casetime=1) { fTimer = casetime; }
-   Int_t             Timer() { return fTimer; }
+   Int_t             Timer() const { return fTimer; }
 
    //---- static functions
    static Int_t       DecreaseDirLevel();
