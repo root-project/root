@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.42 2003/03/10 14:57:11 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.43 2003/04/04 00:52:39 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -125,6 +125,8 @@ Rint.History:            $(HOME)/.root_hist
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to
 # try to locate a custom linkdef file when generating the dictionary.
 ACLiC.Linkdef:          _linkdef
+# Set a top directory for storing the libraries produced by ACLiC
+#ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
 
 # Default authentication method for rootd (0=clear, 1=SRP, 2=Krb5)
 Rootd.Authentication:   0

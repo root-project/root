@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.57 2003/03/11 02:27:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.58 2003/03/11 07:57:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1441,6 +1441,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = GetBuildDir();
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
+   if (! IsAbsoluteFileName(build_loc) ) {
+      build_loc = ConcatFileName( WorkingDirectory(), build_loc );
+   }
 
    // ======= Get the right file names for the dictionnary and the shared library
    TString library = filename;
@@ -1944,6 +1947,10 @@ const char *TSystem::GetBuildNode() const
 //______________________________________________________________________________
 const char *TSystem::GetBuildDir() const
 {
+   if (fBuildDir.Length()==0) {
+      if (!gEnv) return "";
+      const_cast<TSystem*>(this)->fBuildDir = gEnv->GetValue("ACLiC.BuildDir","");
+   }
    return fBuildDir;
 }
 
