@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.36 2001/02/24 14:49:04 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.37 2001/02/27 07:11:30 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -330,14 +330,14 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          } else {
             fprintf(fp, "      { TString R__str; R__str.Streamer(R__b); ");
             if (m.Property() & G__BIT_ISPOINTER)
-               fprintf(fp, "(*%s = new string(R__str.Data())); }\n", m.Name());
+               fprintf(fp, "if (*%s) delete *%s; (*%s = new string(R__str.Data())); }\n", m.Name(), m.Name(), m.Name());
             else
                fprintf(fp, "%s = R__str.Data(); }\n", m.Name());
          }
       } else {
          // create write mode
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "      { TString R__str = (*%s)->c_str(); R__str.Streamer(R__b);}\n", m.Name());
+            fprintf(fp, "      { TString R__str; if (*%s) R__str = (*%s)->c_str(); R__str.Streamer(R__b);}\n", m.Name(), m.Name());
          else
             fprintf(fp, "      { TString R__str = %s.c_str(); R__str.Streamer(R__b);}\n", m.Name());
       }
