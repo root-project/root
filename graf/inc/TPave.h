@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -66,6 +66,8 @@ public:
           Double_t    GetX2NDC() const {return fX2NDC;}
           Double_t    GetY1NDC() const {return fY1NDC;}
           Double_t    GetY2NDC() const {return fY2NDC;}
+     virtual ULong_t  Hash() const { return fName.Hash(); }
+     virtual Bool_t   IsSortable() const { return kTRUE; }
         virtual void  ls(Option_t *option="") const;
         virtual void  Paint(Option_t *option="");
         virtual void  PaintPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
