@@ -118,7 +118,7 @@ else
 		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) \
 		--with-afterbase=no \
 		$$MMX \
-		$$NOUNGIF \
+		--with-ungif --with-builtin-ungif \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
 		$$TIFFINCDIR \
