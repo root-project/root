@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.3 2002/02/22 10:41:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.4 2002/04/04 17:32:14 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -259,9 +259,6 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    if (fContextMenu->GetSelectedMenuItem())
       selfobjpos =  fContextMenu->GetSelectedMenuItem()->GetSelfObjectPos();
    else selfobjpos = -1;
-
-   TMethod* method;
-   if ((object && function)) method = (TMethod*) function;
 
    const TGWindow *w;
    if (fContextMenu->GetSelectedCanvas()) {
