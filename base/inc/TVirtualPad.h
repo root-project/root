@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.3 2000/09/29 07:23:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.4 2000/09/29 08:23:07 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -38,6 +38,10 @@
 #include "Buttons.h"
 #endif
 
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
 // forward declarations
 class TObject;
 class TObjLink;
@@ -48,10 +52,13 @@ class TFrame;
 class TBox;
 class TPadView3D;
 
-class TVirtualPad : public TObject, public TAttLine, public TAttFill, public TAttPad {
+class TVirtualPad : public TObject, public TAttLine, public TAttFill,
+                    public TAttPad, public TQObject {
 
 protected:
-   Bool_t       fResizing;         //!true when resizing the pad
+   Bool_t         fResizing;         //!true when resizing the pad
+
+   virtual void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
    TVirtualPad();
