@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.7 2000/10/14 09:41:27 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.8 2000/10/31 11:19:19 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -157,7 +157,7 @@ TObject *TCollection::operator()(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TCollection::FindObject(TObject *obj) const
+TObject *TCollection::FindObject(const TObject *obj) const
 {
    // Find an object in this collection using the object's IsEqual()
    // member function. Requires a sequential scan till the object has
@@ -186,7 +186,7 @@ Int_t TCollection::GrowBy(Int_t delta) const
 }
 
 //______________________________________________________________________________
-Bool_t  TCollection::IsArgNull(const char *where, TObject *obj) const
+Bool_t  TCollection::IsArgNull(const char *where, const TObject *obj) const
 {
    // Returns true if object is a null pointer.
 

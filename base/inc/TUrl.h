@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
    const char *GetOptions() const { return fOptions.Data(); }
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
-   void        Print(Option_t *option="");
+   void        Print(Option_t *option="") const;
 
    ClassDef(TUrl,1)  //Represents an URL
 };

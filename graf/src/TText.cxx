@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.4 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.5 2000/11/21 20:28:13 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -389,7 +389,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TText::ls(Option_t *)
+void TText::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this text with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
@@ -431,7 +431,7 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 }
 
 //______________________________________________________________________________
-void TText::Print(Option_t *)
+void TText::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this text with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================

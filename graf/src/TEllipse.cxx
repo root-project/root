@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.4 2000/11/21 20:24:10 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -406,7 +406,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TEllipse::ls(Option_t *)
+void TEllipse::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this ellipse with its attributes*-*-*-*-*-*-*-*
 //*-*                    =====================================
@@ -459,7 +459,7 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
 }
 
 //______________________________________________________________________________
-void TEllipse::Print(Option_t *)
+void TEllipse::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this ellipse with its attributes*-*-*-*-*-*-*-*-*
 //*-*                  =====================================

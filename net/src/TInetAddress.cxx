@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -104,7 +104,7 @@ const char *TInetAddress::GetHostAddress() const
 }
 
 //______________________________________________________________________________
-void TInetAddress::Print(Option_t *)
+void TInetAddress::Print(Option_t *) const
 {
    // Print internet address as string.
 

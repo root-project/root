@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.6 2000/12/09 16:00:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.7 2000/12/10 17:14:36 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -237,7 +237,7 @@ Int_t TBranchClones::GetEntry(Int_t entry, Int_t getall)
 }
 
 //______________________________________________________________________________
-void TBranchClones::Print(Option_t *option)
+void TBranchClones::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
@@ -246,7 +246,7 @@ void TBranchClones::Print(Option_t *option)
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches[i];
+      TBranch *branch = (TBranch*)fBranches.At(i);
       branch->Print(option);
    }
 }
@@ -267,7 +267,7 @@ void TBranchClones::Reset(Option_t *option)
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (i=0;i<nbranches;i++)  {
-      TBranch *branch = (TBranch*)fBranches[i];
+      TBranch *branch = (TBranch*)fBranches.At(i);
       branch->Reset(option);
    }
    fBranchCount->Reset();

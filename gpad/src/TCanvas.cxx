@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.17 2000/10/08 16:00:33 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.18 2000/10/26 15:32:04 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -650,7 +650,7 @@ void TCanvas::Draw(Option_t *)
 }
 
 //______________________________________________________________________________
-void TCanvas::DrawClone(Option_t *option)
+void TCanvas::DrawClone(Option_t *option) const
 {
    // Draw a clone of this canvas
    // A new canvas is created that is a clone of this canvas
@@ -1134,7 +1134,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TCanvas::ls(Option_t *option)
+void TCanvas::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*List all pads*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          =============

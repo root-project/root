@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.2 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -105,18 +105,6 @@ void TLeafC::Import(TClonesArray *list, Int_t n)
       j += fLen;
    }
 }
-
-
-//______________________________________________________________________________
-void TLeafC::Print(Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*-*Print a description of this leaf*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-
-   TLeaf::Print(option);
-
-}
-
 
 //______________________________________________________________________________
 void TLeafC::ReadBasket(TBuffer &b)

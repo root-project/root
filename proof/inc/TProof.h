@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.5 2000/11/27 10:51:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.6 2000/12/13 12:07:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -171,7 +171,7 @@ public:
 
    Int_t    SetParallel(Int_t nodes = 9999);
 
-   void     Print(Option_t *option="");
+   void     Print(Option_t *option="") const;
 
    static void    SetUser(const char *user);
    static void    SetPasswd(const char *passwd);

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.2 2000/09/05 09:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// $Id: TDataSetIter.h,v 1.2 2000/09/05 09:18:42 brun Exp $
 //
 // TDataSetIter                                                         //
 //                                                                      //
@@ -77,10 +77,10 @@ public:
   virtual Int_t          Flag(const Char_t *path,UInt_t flag=kMark,EBitOpt reset=kSet);
   virtual Int_t          Flag(TDataSet *dataset,UInt_t flag=kMark,EBitOpt reset=kSet);
 
-  virtual TDataSet    *Ls(const Char_t *dirname="",Option_t *opt="");
-  virtual TDataSet    *Ls(const Char_t *dirname,Int_t depth);
-  virtual TDataSet    *ls(const Char_t *dirname="",Option_t *opt="")   {return Ls(dirname,opt);}
-  virtual TDataSet    *ls(const Char_t *dirname,Int_t depth){return Ls(dirname,depth);}
+  virtual TDataSet    *Ls(const Char_t *dirname="",Option_t *opt="") const;
+  virtual TDataSet    *Ls(const Char_t *dirname,Int_t depth) const;
+  virtual TDataSet    *ls(const Char_t *dirname="",Option_t *opt="") const  {return Ls(dirname,opt);}
+  virtual TDataSet    *ls(const Char_t *dirname,Int_t depth) const {return Ls(dirname,depth);}
   virtual TDataSet    *Mkdir(const Char_t *dirname);
   virtual TDataSet    *Md(const Char_t *dirname)                       {return Mkdir(dirname);}
   virtual TString        Path(const Char_t *path)                        {TDataSet *set = Find(path); return set ? TString (""):set->Path();}

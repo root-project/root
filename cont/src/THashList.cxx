@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.3 2000/09/08 16:41:26 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -200,7 +200,7 @@ TObject *THashList::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *THashList::FindObject(TObject *obj) const
+TObject *THashList::FindObject(const TObject *obj) const
 {
    // Find object using its hash value (returned by its Hash() member).
 

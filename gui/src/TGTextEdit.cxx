@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.9 2000/08/30 16:57:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.10 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -264,7 +264,7 @@ Bool_t TGTextEdit::Paste()
 }
 
 //______________________________________________________________________________
-void TGTextEdit::Print(Option_t *)
+void TGTextEdit::Print(Option_t *) const
 {
    // Send current buffer to printer.
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.6 2000/09/08 16:07:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.7 2000/11/21 16:17:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -112,42 +112,42 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
-   virtual TObject    *Clone();
-   virtual Int_t       Compare(TObject *obj);
+   virtual TObject    *Clone() const;
+   virtual Int_t       Compare(const TObject *obj) const;
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option="");
-   virtual void        DrawClass(); // *MENU*
-   virtual void        DrawClone(Option_t *option=""); // *MENU*
-   virtual void        Dump(); // *MENU*
+   virtual void        DrawClass() const; // *MENU*
+   virtual void        DrawClone(Option_t *option="") const; // *MENU*
+   virtual void        Dump() const; // *MENU*
    virtual void        Execute(const char *method,  const char *params);
    virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(TObject *obj) const;
+   virtual TObject    *FindObject(const TObject *obj) const;
    virtual Option_t   *GetDrawOption() const;
    virtual UInt_t      GetUniqueID() const;
    virtual const char *GetName() const;
    virtual const char *GetIconName() const;
    virtual Option_t   *GetOption() const { return ""; }
-   virtual char       *GetObjectInfo(Int_t px, Int_t py);
+   virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
-   virtual ULong_t     Hash();
+   virtual ULong_t     Hash() const;
    virtual Bool_t      InheritsFrom(const char *classname) const;
    virtual Bool_t      InheritsFrom(const TClass *cl) const;
-   virtual void        Inspect(); // *MENU*
+   virtual void        Inspect() const; // *MENU*
    virtual Bool_t      IsFolder() const;
-   virtual Bool_t      IsEqual(TObject *obj);
+   virtual Bool_t      IsEqual(const TObject *obj) const;
    virtual Bool_t      IsSortable() const { return kFALSE; }
            Bool_t      IsOnHeap() const { return TestBit(kIsOnHeap); }
            Bool_t      IsZombie() const { return TestBit(kZombie); }
    virtual Bool_t      Notify();
-   virtual void        ls(Option_t *option="");
+   virtual void        ls(Option_t *option="") const;
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
-   virtual void        Print(Option_t *option="");
+   virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);

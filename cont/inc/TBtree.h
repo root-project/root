@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.2 2000/11/21 16:41:30 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    void        Clear(Option_t *option="");
    void        Delete(Option_t *option="");
    TObject    *FindObject(const char *name) const;
-   TObject    *FindObject(TObject *obj) const;
+   TObject    *FindObject(const TObject *obj) const;
    TIterator  *MakeIterator(Bool_t dir = kIterForward) const;
 
    void        Add(TObject *obj);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttMarker.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -41,9 +41,9 @@ public:
         TAttMarker(Color_t color, Style_t style, Size_t msize);
         virtual ~TAttMarker();
                 void     Copy(TAttMarker &attmarker);
-        virtual Color_t  GetMarkerColor() {return fMarkerColor;}
-        virtual Style_t  GetMarkerStyle() {return fMarkerStyle;}
-        virtual Size_t   GetMarkerSize()  {return fMarkerSize;}
+        virtual Color_t  GetMarkerColor() const {return fMarkerColor;}
+        virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;}
+        virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}
         virtual void     Modify();
         virtual void     ResetAttMarker(Option_t *toption="");
         virtual void     SaveMarkerAttributes(ofstream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);

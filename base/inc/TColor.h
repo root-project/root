@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -42,19 +42,19 @@ public:
    TColor(const TColor &color);
    virtual ~TColor();
            void  Copy(TObject &color);
-   virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) {r = fRed; g = fGreen; b = fBlue;}
-   virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) {h = fHue; l = fLight; s = fSaturation;}
-   Int_t         GetNumber() {return fNumber;}
-   Float_t       GetRed() {return fRed;}
-   Float_t       GetGreen() {return fGreen;}
-   Float_t       GetBlue() {return fBlue;}
-   Float_t       GetHue() {return fHue;}
-   Float_t       GetLight() {return fLight;}
-   Float_t       GetSaturation() {return fSaturation;}
+   virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const {r = fRed; g = fGreen; b = fBlue;}
+   virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const {h = fHue; l = fLight; s = fSaturation;}
+   Int_t         GetNumber() const {return fNumber;}
+   Float_t       GetRed() const {return fRed;}
+   Float_t       GetGreen() const {return fGreen;}
+   Float_t       GetBlue() const {return fBlue;}
+   Float_t       GetHue() const {return fHue;}
+   Float_t       GetLight() const {return fLight;}
+   Float_t       GetSaturation() const {return fSaturation;}
    virtual void  HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    Float_t       HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
-   virtual void  ls(Option_t *option="");
-   virtual void  Print(Option_t *option="");
+   virtual void  ls(Option_t *option="") const;
+   virtual void  Print(Option_t *option="") const;
    virtual void  RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
    virtual void  SetNumber(Int_t number) {fNumber = number;}
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);

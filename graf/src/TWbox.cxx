@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.2 2000/06/13 11:21:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -206,14 +206,6 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
    gPad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
                          GetDarkColor(), GetLightColor());
-}
-
-//______________________________________________________________________________
-void TWbox::Print(Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*-*Dump this wbox with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
-   TBox::Print(option);
 }
 
 //______________________________________________________________________________

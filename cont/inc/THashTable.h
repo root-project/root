@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@ private:
    Int_t       fUsedSlots;     //Number of used slots
    Int_t       fRehashLevel;   //Average collision rate which triggers rehash
 
-   Int_t       GetHashValue(TObject *obj) const;
+   Int_t       GetHashValue(const TObject *obj) const;
    Int_t       GetHashValue(TString &s) { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const
                   { TString s = str; return s.Hash() % fSize; }
@@ -61,7 +61,7 @@ public:
    Int_t         Collisions(TObject *obj) const;
    void          Delete(Option_t *option="");
    TObject      *FindObject(const char *name) const;
-   TObject      *FindObject(TObject *obj) const;
+   TObject      *FindObject(const TObject *obj) const;
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
@@ -78,7 +78,7 @@ inline Float_t THashTable::AverageCollisions() const
       return 0.0;
 }
 
-inline Int_t THashTable::GetHashValue(TObject *obj) const
+inline Int_t THashTable::GetHashValue(const TObject *obj) const
 {
    Int_t i = Int_t(obj->Hash() % fSize);  // need intermediary i for Linux g++
    return i;

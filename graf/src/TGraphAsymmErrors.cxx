@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.4 2000/10/13 07:32:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.5 2000/11/21 20:25:49 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -185,7 +185,7 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
 }
 
 //______________________________________________________________________________
-Double_t TGraphAsymmErrors::GetErrorX(Int_t i)
+Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the quadratic error along X at point i.
@@ -199,7 +199,7 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i)
 }
 
 //______________________________________________________________________________
-Double_t TGraphAsymmErrors::GetErrorY(Int_t i)
+Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the quadratic error along Y at point i.
@@ -290,7 +290,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TGraphAsymmErrors::Print(Option_t *)
+void TGraphAsymmErrors::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Print graph and errors values*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================

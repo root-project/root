@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.17 2000/12/04 16:45:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.18 2000/12/10 17:14:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -111,7 +111,7 @@ protected:
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     
 protected:
-    const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
+    const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
     virtual void     MakeIndex(TString &varexp, Int_t *index);
 
 public:
@@ -150,40 +150,40 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
-    virtual Int_t     GetChainEntryNumber(Int_t entry) {return entry;}
+    virtual Int_t     GetChainEntryNumber(Int_t entry) const {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }
-    TFile            *GetCurrentFile();
-    TDirectory       *GetDirectory() {return fDirectory;}
-    virtual Stat_t    GetEntries()   {return fEntries;}
+    TFile            *GetCurrentFile() const;
+    TDirectory       *GetDirectory() const {return fDirectory;}
+    virtual Stat_t    GetEntries() const   {return fEntries;}
     virtual Int_t     GetEstimate() const { return fEstimate; }
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
             Int_t     GetEvent(Int_t entry=0, Int_t getall=0) {return GetEntry(entry,getall);}
     virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor);
-    virtual Int_t     GetEntryNumberWithIndex(Int_t major, Int_t minor);
-    TEventList       *GetEventList() {return fEventList;}
-    virtual Int_t     GetEntryNumber(Int_t entry);
+    virtual Int_t     GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
+    TEventList       *GetEventList() const {return fEventList;}
+    virtual Int_t     GetEntryNumber(Int_t entry) const;
     TH1              *GetHistogram() {return GetPlayer()->GetHistogram();}
     virtual Int_t    *GetIndex() {return &fIndex.fArray[0];}
     virtual Double_t *GetIndexValues() {return &fIndexValues.fArray[0];}
     virtual TLeaf    *GetLeaf(const char *name);
-    virtual TObjArray       *GetListOfBranches()  {return &fBranches;}
-    virtual TObjArray       *GetListOfLeaves()    {return &fLeaves;}
-    virtual Int_t     GetMaxEntryLoop() {return fMaxEntryLoop;}
-    virtual Double_t  GetMaximum(const char *columname);
-    virtual Double_t  GetMinimum(const char *columname);
-    virtual Int_t     GetMaxVirtualSize() {return fMaxVirtualSize;}
-    virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
+    virtual TObjArray       *GetListOfBranches() {return &fBranches;}
+    virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
+    virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
+    virtual Double_t  GetMaximum(const char *columname) const;
+    virtual Double_t  GetMinimum(const char *columname) const;
+    virtual Int_t     GetMaxVirtualSize() const {return fMaxVirtualSize;}
+    virtual Int_t     GetNbranches() const {return fBranches.GetEntriesFast();}
     TVirtualTreePlayer  *GetPlayer();
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
-    virtual Int_t     GetReadEntry() {return fReadEntry;}
-    virtual Int_t     GetReadEvent() {return fReadEntry;}
-    virtual Int_t     GetScanField() {return fScanField;}
+    virtual Int_t     GetReadEntry()  const {return fReadEntry;}
+    virtual Int_t     GetReadEvent()  const {return fReadEntry;}
+    virtual Int_t     GetScanField()  const {return fScanField;}
     TTreeFormula     *GetSelect()    {return GetPlayer()->GetSelect();}
-    virtual Int_t     GetSelectedRows()  {return GetPlayer()->GetSelectedRows();}
-    virtual Int_t     GetTimerInterval() {return fTimerInterval;}
-    virtual TTree    *GetTree() {return this;}
-    virtual Int_t     GetUpdate() {return fUpdate;}
-    virtual Int_t     GetTreeNumber() {return 0;}
+    virtual Int_t     GetSelectedRows() {return GetPlayer()->GetSelectedRows();}
+    virtual Int_t     GetTimerInterval() const {return fTimerInterval;}
+    virtual TTree    *GetTree() const {return (TTree*)this;}
+    virtual Int_t     GetUpdate() const {return fUpdate;}
+    virtual Int_t     GetTreeNumber() const {return 0;}
     TTreeFormula     *GetVar1() {return GetPlayer()->GetVar1();}
     TTreeFormula     *GetVar2() {return GetPlayer()->GetVar2();}
     TTreeFormula     *GetVar3() {return GetPlayer()->GetVar3();}
@@ -192,8 +192,8 @@ public:
     virtual Double_t *GetV2()   {return GetPlayer()->GetV2();}
     virtual Double_t *GetV3()   {return GetPlayer()->GetV3();}
     virtual Double_t *GetW()    {return GetPlayer()->GetW();}
-    virtual Stat_t    GetTotBytes() {return fTotBytes;}
-    virtual Stat_t    GetZipBytes() {return fZipBytes;}
+    virtual Stat_t    GetTotBytes() const {return fTotBytes;}
+    virtual Stat_t    GetZipBytes() const {return fZipBytes;}
     virtual void      IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
     Bool_t            IsFolder() const {return kTRUE;}
     virtual Int_t     LoadTree(Int_t entry);
@@ -204,7 +204,7 @@ public:
     Bool_t            MemoryFull(Int_t nbytes);
     TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Print(Option_t *option=""); // *MENU*
+    virtual void      Print(Option_t *option="") const; // *MENU*
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""

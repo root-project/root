@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.10 2000/08/10 10:29:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.11 2000/11/21 12:30:39 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1755,7 +1755,7 @@ FormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text) {
 }
 
 //______________________________________________________________________________
-Double_t TLatex::GetHeight()
+Double_t TLatex::GetHeight() const
 {
 // return height of current font in pixels
 
@@ -1868,7 +1868,7 @@ void TLatex::SetLimitIndiceSize(Int_t limitFactorSize)
       fLimitFactorSize = limitFactorSize;
 }
 //______________________________________________________________________________
-void TLatex::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
+void TLatex::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
 // Return text extent for string text
 //  in w return total text width

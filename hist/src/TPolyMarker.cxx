@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.2 2000/09/05 09:21:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.3 2000/11/21 20:35:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TPolyMarker::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-void TPolyMarker::ls(Option_t *)
+void TPolyMarker::ls(Option_t *) const
 {
    TROOT::IndentLevel();
    printf("TPolyMarker  N=%d\n",fN);
@@ -141,7 +141,7 @@ void TPolyMarker::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *opt
 }
 
 //______________________________________________________________________________
-void TPolyMarker::Print(Option_t *)
+void TPolyMarker::Print(Option_t *) const
 {
 
    printf("TPolyMarker  N=%d\n",fN);

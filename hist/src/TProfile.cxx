@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.6 2000/08/15 08:24:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.7 2000/11/21 20:35:46 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -569,7 +569,7 @@ void TProfile::FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Stat_t *w, Int_t stride
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinContent(Int_t bin)
+Stat_t TProfile::GetBinContent(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin content of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -580,7 +580,7 @@ Stat_t TProfile::GetBinContent(Int_t bin)
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinEntries(Int_t bin)
+Stat_t TProfile::GetBinEntries(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin entries of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -590,7 +590,7 @@ Stat_t TProfile::GetBinEntries(Int_t bin)
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinError(Int_t bin)
+Stat_t TProfile::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================

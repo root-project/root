@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.2 2000/11/21 16:26:48 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -57,7 +57,7 @@ void TAttPad::Copy(TAttPad &attpad)
 }
 
 //______________________________________________________________________________
-void TAttPad::Print(Option_t *)
+void TAttPad::Print(Option_t *) const
 {
 }
 

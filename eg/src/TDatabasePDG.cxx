@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.2 2000/05/18 17:14:47 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDatabasePDG.h"
@@ -1664,13 +1664,13 @@ TDatabasePDG *TDatabasePDG::Instance()
 }
 
 //______________________________________________________________________________
-TParticlePDG *TDatabasePDG::GetParticle(const char *name)
+TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 {
    //
    //  Get a pointer to the particle object according to the name given
    //
 
-   if (fParticleList == 0) Init();
+   if (fParticleList == 0) ((TDatabasePDG*)this)->Init();
    TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
    if (!def) {
       Error("GetParticle","No match for %s exists!",name);
@@ -1679,13 +1679,13 @@ TParticlePDG *TDatabasePDG::GetParticle(const char *name)
 }
 
 //______________________________________________________________________________
-TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode)
+TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 {
    //
    //  Get a pointer to the particle object according to the MC code number
    //
 
-   if (fParticleList == 0) Init();
+   if (fParticleList == 0) ((TDatabasePDG*)this)->Init();
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG *)next())) {
@@ -1696,11 +1696,11 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode)
 }
 
 //______________________________________________________________________________
-void TDatabasePDG::Print(Option_t *option)
+void TDatabasePDG::Print(Option_t *option) const
 {
    // Print contents of PDG database.
 
-   if (fParticleList == 0) Init();
+   if (fParticleList == 0) ((TDatabasePDG*)this)->Init();
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG *)next())) {

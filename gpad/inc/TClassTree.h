@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.2 2000/11/21 20:20:30 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    virtual Int_t FindClass(const char *classname);
    const char   *GetClasses() const {return fClasses.Data();}
    virtual const char  *GetSourceDir() const {return fSourceDir.Data();}
-   virtual  void ls(Option_t *option="");
+   virtual  void ls(Option_t *option="") const;
    virtual  void Paint(Option_t *option="");
    virtual  void SaveAs(const char *filename="");
    virtual  void SetClasses(const char *classes, Option_t *option="ID");

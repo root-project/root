@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -218,7 +218,7 @@ Bool_t TGMimeTypes::GetType(const char *filename, char *type)
 }
 
 //______________________________________________________________________________
-void TGMimeTypes::Print(Option_t *)
+void TGMimeTypes::Print(Option_t *) const
 {
    // Print list of mime types.
 

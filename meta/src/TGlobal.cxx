@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TGlobal.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   13/11/95
 
 /*************************************************************************
@@ -101,7 +101,7 @@ const char *TGlobal::GetTitle() const
 }
 
 //______________________________________________________________________________
-Int_t TGlobal::Compare(TObject *obj)
+Int_t TGlobal::Compare(const TObject *obj) const
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -111,7 +111,7 @@ Int_t TGlobal::Compare(TObject *obj)
 }
 
 //______________________________________________________________________________
-ULong_t TGlobal::Hash()
+ULong_t TGlobal::Hash() const
 {
    // Return hash value for TGlobal based on its name.
 

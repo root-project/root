@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TParticlePDG.h"
@@ -45,7 +45,7 @@ TParticlePDG::~TParticlePDG()
 }
 
 //______________________________________________________________________________
-void TParticlePDG::Print(Option_t *)
+void TParticlePDG::Print(Option_t *) const
 {
 //
 //  Print the entire information of this kind of particle

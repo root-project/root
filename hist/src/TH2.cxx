@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.10 2000/10/10 13:01:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.11 2000/11/21 20:34:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -526,7 +526,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 }
 
 //______________________________________________________________________________
-Stat_t TH2::GetCorrelationFactor(Int_t axis1, Int_t axis2)
+Stat_t TH2::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
 {
 //*-*-*-*-*-*-*-*Return correlation factor between axis1 and axis2*-*-*-*-*
 //*-*            ====================================================
@@ -543,7 +543,7 @@ Stat_t TH2::GetCorrelationFactor(Int_t axis1, Int_t axis2)
 }
 
 //______________________________________________________________________________
-Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2)
+Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 {
 //*-*-*-*-*-*-*-*Return covariance between axis1 and axis2*-*-*-*-*
 //*-*            ====================================================
@@ -598,7 +598,7 @@ void TH2::GetRandom2(Axis_t &x, Axis_t &y)
 }
 
 //______________________________________________________________________________
-void TH2::GetStats(Stat_t *stats)
+void TH2::GetStats(Stat_t *stats) const
 {
    // fill the array stats from the contents of this histogram
    // The array stats must be correctly dimensionned in the calling program.
@@ -1205,7 +1205,7 @@ TH1 *TH2C::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH2C::GetBinContent(Int_t bin)
+Stat_t TH2C::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1412,7 +1412,7 @@ TH1 *TH2S::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH2S::GetBinContent(Int_t bin)
+Stat_t TH2S::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1611,7 +1611,7 @@ TH1 *TH2F::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH2F::GetBinContent(Int_t bin)
+Stat_t TH2F::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1818,7 +1818,7 @@ TH1 *TH2D::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH2D::GetBinContent(Int_t bin)
+Stat_t TH2D::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.6 2000/07/12 07:06:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.7 2000/11/21 20:35:04 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -394,7 +394,7 @@ void TH3::GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z)
 }
 
 //______________________________________________________________________________
-void TH3::GetStats(Stat_t *stats)
+void TH3::GetStats(Stat_t *stats) const
 {
    // fill the array stats from the contents of this histogram
    // The array stats must be correctly dimensionned in the calling program.
@@ -1142,7 +1142,7 @@ TH1 *TH3C::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH3C::GetBinContent(Int_t bin)
+Stat_t TH3C::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1342,7 +1342,7 @@ TH1 *TH3S::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH3S::GetBinContent(Int_t bin)
+Stat_t TH3S::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1521,7 +1521,7 @@ TH1 *TH3F::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH3F::GetBinContent(Int_t bin)
+Stat_t TH3F::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -1700,7 +1700,7 @@ TH1 *TH3D::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH3D::GetBinContent(Int_t bin)
+Stat_t TH3D::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;

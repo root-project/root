@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -41,12 +41,12 @@ public:
 				
    virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
 
-   TParticlePDG  *GetParticle(Int_t pdgCode);
-   TParticlePDG  *GetParticle(const char *name);
+   TParticlePDG  *GetParticle(Int_t pdgCode) const;
+   TParticlePDG  *GetParticle(const char *name) const;
    virtual void   Init(); // function which does the real job of initializing the database
    const THashList *ParticleList() const { return fParticleList; }
 
-   virtual void   Print(Option_t *opt = "");
+   virtual void   Print(Option_t *opt = "") const;
    virtual void   ReadPDGTable(const char *filename);
 
    static TDatabasePDG *Instance();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.2 2000/09/06 14:18:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.3 2000/11/21 20:43:33 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -489,7 +489,7 @@ const char *TDataMember::GetTitle() const
 }
 
 //______________________________________________________________________________
-Int_t TDataMember::Compare(TObject *obj)
+Int_t TDataMember::Compare(const TObject *obj) const
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -499,7 +499,7 @@ Int_t TDataMember::Compare(TObject *obj)
 }
 
 //______________________________________________________________________________
-ULong_t TDataMember::Hash()
+ULong_t TDataMember::Hash() const
 {
    // Return hash value for TDataMember based on its name.
 
@@ -540,7 +540,7 @@ Long_t TDataMember::Property() const
 }
 
 //______________________________________________________________________________
-TList *TDataMember::GetOptions()
+TList *TDataMember::GetOptions() const
 {
    // Returns list of options - list of TOptionListItems
 

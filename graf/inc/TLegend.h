@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.2 2000/06/13 11:02:25 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -49,16 +49,16 @@ class TLegend : public TPave , public TAttText {
   virtual void    EditEntryAttLine(); // *MENU*
   virtual void    EditEntryAttMarker(); // *MENU*
   virtual void    EditEntryAttText(); // *MENU*
-  TLegendEntry   *GetEntry();
-  Float_t         GetEntrySeparation() { return fEntrySeparation; }
-  virtual const char *GetHeader();
-  TList          *GetListOfPrimitives() {return fPrimitives;}
-  Float_t         GetMargin() { return fMargin; }
+  TLegendEntry   *GetEntry() const;
+  Float_t         GetEntrySeparation() const { return fEntrySeparation; }
+  virtual const char *GetHeader() const;
+  TList          *GetListOfPrimitives() const {return fPrimitives;}
+  Float_t         GetMargin() const { return fMargin; }
   virtual void    InsertEntry( const char* objectName = "",const char* label = "",
                             Option_t* option = "lpf" ); // *MENU*
   virtual void    Paint( Option_t* option = "" );
   virtual void    PaintPrimitives();
-  virtual void    Print( Option_t* option = "" );
+  virtual void    Print( Option_t* option = "" ) const;
   virtual void    SavePrimitive(ofstream &out, Option_t *option );
   void            SetDefaults() { fEntrySeparation = 0.1; fMargin = 0.25; }
   virtual void    SetEntryLabel( const char* label ); // *MENU*

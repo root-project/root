@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.5 2000/11/06 07:18:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.6 2000/11/21 20:28:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -57,29 +57,29 @@ public:
         TAxis(Int_t nbins, Axis_t *xbins);
         TAxis(const TAxis &axis);
         virtual ~TAxis();
-        virtual void    CenterTitle(Bool_t center=kTRUE);  //*MENU*
+        virtual void    CenterTitle(Bool_t center=kTRUE);  // *MENU*
         const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void    Copy(TObject &axis);
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
         virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t   FindBin(Axis_t x);
-        virtual Int_t   FindFixBin(Axis_t x);
-        virtual Axis_t  GetBinCenter(Int_t bin);
-        virtual char  *GetBinLabel(Int_t bin);
-        virtual Axis_t  GetBinLowEdge(Int_t bin);
-        virtual Axis_t  GetBinUpEdge(Int_t bin);
-        virtual Axis_t  GetBinWidth(Int_t bin);
+        virtual Int_t   FindFixBin(Axis_t x) const;
+        virtual Axis_t  GetBinCenter(Int_t bin) const;
+        virtual char  *GetBinLabel(Int_t bin) const;
+        virtual Axis_t  GetBinLowEdge(Int_t bin) const;
+        virtual Axis_t  GetBinUpEdge(Int_t bin) const;
+        virtual Axis_t  GetBinWidth(Int_t bin) const;
         virtual void    GetCenter(Axis_t *center);
         virtual void    GetLabel(char *label);
         virtual void    GetLowEdge(Axis_t *edge);
                 Int_t   GetNbins() const { return fNbins; }
-        virtual TObject *GetParent() {return fParent;}
-        virtual Bool_t  GetTimeDisplay() {return fTimeDisplay;}
+        virtual TObject *GetParent() const {return fParent;}
+        virtual Bool_t  GetTimeDisplay() const {return fTimeDisplay;}
         virtual const char  *GetTimeFormat() const {return fTimeFormat.Data();}
          const char    *GetTitle() const {return fTitle.Data();}
               TArrayD  *GetXbins() {return &fXbins;}
-                 Int_t  GetFirst();
-                 Int_t  GetLast();
+                 Int_t  GetFirst() const;
+                 Int_t  GetLast() const;
                 Axis_t  GetXmin() const {return fXmin;}
                 Axis_t  GetXmax() const {return fXmax;}
         virtual void    RotateTitle(Bool_t rotate=kTRUE); // *MENU*
@@ -90,10 +90,10 @@ public:
         virtual void    SetLabel(const char *label);
         virtual void    SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void    SetParent(TObject *obj) {fParent = obj;}
-        virtual void    SetRange(Int_t first=0, Int_t last=0);  //*MENU*
-        virtual void    SetTimeDisplay(Int_t value) {fTimeDisplay = value;} //*TOGGLE*
-        virtual void    SetTimeFormat(const char *format="");  //*MENU*
-        virtual void    UnZoom();  //*MENU*
+        virtual void    SetRange(Int_t first=0, Int_t last=0);  // *MENU*
+        virtual void    SetTimeDisplay(Int_t value) {fTimeDisplay = value;} // *TOGGLE*
+        virtual void    SetTimeFormat(const char *format="");  // *MENU*
+        virtual void    UnZoom();  // *MENU*
 
         ClassDef(TAxis,6)  //Axis class
 };

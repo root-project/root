@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.5 2000/08/11 20:10:12 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.6 2000/11/21 20:54:17 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -67,14 +67,14 @@ public:
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
    virtual Int_t      DefinedVariable(TString &variable);
-   virtual Double_t   EvalInstance(Int_t i=0);
-   TMethodCall       *GetMethodCall(Int_t code);
-   virtual Int_t      GetMultiplicity() {return fMultiplicity;}
-   virtual TLeaf     *GetLeaf(Int_t n);
-   virtual Int_t      GetNcodes() {return fNcodes;}
-   virtual Int_t      GetNdata();
-   virtual Double_t   GetValueLeafObject(Int_t i, TLeafObject *leaf);
-   virtual char      *PrintValue(Int_t mode=0);
+   virtual Double_t   EvalInstance(Int_t i=0) const;
+   TMethodCall       *GetMethodCall(Int_t code) const;
+   virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
+   virtual TLeaf     *GetLeaf(Int_t n) const;
+   virtual Int_t      GetNcodes() const {return fNcodes;}
+   virtual Int_t      GetNdata() const;
+   virtual Double_t   GetValueLeafObject(Int_t i, TLeafObject *leaf) const;
+   virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
 
    ClassDef(TTreeFormula,1)  //The Tree formula

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.19 2000/11/21 16:37:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.20 2000/12/02 15:47:42 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -439,7 +439,7 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 }
 
 //______________________________________________________________________________
-TObject *TROOT::FindObject(TObject *) const
+TObject *TROOT::FindObject(const TObject *) const
 {
 // Find an object in one Root folder
 
@@ -611,7 +611,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 }
 
 //______________________________________________________________________________
-const char *TROOT::FindObjectPathName(TObject *obj) const
+const char *TROOT::FindObjectPathName(const TObject *obj) const
 {
 // Return path name of obj somewhere in the //root/.. path
 // The function returns the first occurence of the object in the list of folders
@@ -624,7 +624,7 @@ const char *TROOT::FindObjectPathName(TObject *obj) const
 }
 
 //______________________________________________________________________________
-TClass *TROOT::GetClass(const char *name, Bool_t load)
+TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
@@ -654,7 +654,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load)
 }
 
 //______________________________________________________________________________
-TColor *TROOT::GetColor(Int_t color)
+TColor *TROOT::GetColor(Int_t color) const
 {
 //*-*-*-*-*-*-*-*Return address of color with index color*-*-*-*-*-*-*-*-*
 //*-*            ========================================
@@ -668,7 +668,7 @@ TColor *TROOT::GetColor(Int_t color)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TROOT::GetMakeDefCanvas()
+VoidFuncPtr_t TROOT::GetMakeDefCanvas() const
 {
 //*-*-*-*-*-*-*-*Return default canvas function*-*-*-*-*-*-*-*-*
 //*-*            ==============================
@@ -706,7 +706,7 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
 }
 
 //______________________________________________________________________________
-TFile *TROOT::GetFile(const char *name)
+TFile *TROOT::GetFile(const char *name) const
 {
 //*-*-*-*-*Return pointer to file with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      ================================
@@ -715,7 +715,7 @@ TFile *TROOT::GetFile(const char *name)
 }
 
 //______________________________________________________________________________
-TStyle *TROOT::GetStyle(const char *name)
+TStyle *TROOT::GetStyle(const char *name) const
 {
 //*-*-*-*-*Return pointer to style with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
@@ -724,7 +724,7 @@ TStyle *TROOT::GetStyle(const char *name)
 }
 
 //______________________________________________________________________________
-TObject *TROOT::GetFunction(const char *name)
+TObject *TROOT::GetFunction(const char *name) const
 {
 //*-*-*-*-*Return pointer to function with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      ===================================
@@ -733,7 +733,7 @@ TObject *TROOT::GetFunction(const char *name)
    if (f1) return f1;
 
    if (!TClassTable::GetDict("TF1")) return 0;
-   ProcessLineFast("TF1::InitStandardFunctions();");
+   ((TROOT*)this)->ProcessLineFast("TF1::InitStandardFunctions();");
 
    return fFunctions->FindObject(name);
 }
@@ -748,7 +748,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load)
 }
 
 //______________________________________________________________________________
-TGlobal *TROOT::GetGlobal(TObject *addr, Bool_t load)
+TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load)
 {
    // Return pointer to global variable with address addr. If load is true
    // force reading of all currently defined globals from CINT (more
@@ -833,7 +833,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
 }
 
 //______________________________________________________________________________
-TObject *TROOT::GetGeometry(const char *name)
+TObject *TROOT::GetGeometry(const char *name) const
 {
 //*-*-*-*-*Return pointer to Geometry with name*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      ===================================
@@ -1064,7 +1064,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
 }
 
 //______________________________________________________________________________
-void TROOT::ls(Option_t *option)
+void TROOT::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*To list all objects of the application*-*-*-*-*-*
 //*-*                      ======================================
@@ -1121,7 +1121,7 @@ Int_t TROOT::Macro(const char *filename)
 }
 
 //______________________________________________________________________________
-void  TROOT::Message(Int_t id, TObject *obj)
+void  TROOT::Message(Int_t id, const TObject *obj)
 {
    // Process message id called by obj
 

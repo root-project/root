@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.3 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.4 2000/11/21 20:15:52 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -188,7 +188,7 @@ void TGeometry::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-TObject *TGeometry::FindObject(TObject *) const
+TObject *TGeometry::FindObject(const TObject *) const
 {
 // find object in a geometry node, material, etc
 
@@ -248,7 +248,7 @@ TObjArray *TGeometry::Get(const char *name)
 }
 
 //______________________________________________________________________________
-TMaterial *TGeometry::GetMaterial(const char *name)
+TMaterial *TGeometry::GetMaterial(const char *name) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Material with name*-*-*-*-*-*-*-*-*
 //*-*              ====================================
@@ -257,7 +257,7 @@ TMaterial *TGeometry::GetMaterial(const char *name)
 }
 
 //______________________________________________________________________________
-TMaterial *TGeometry::GetMaterialByNumber(Int_t number)
+TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Material with number*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -273,7 +273,7 @@ TMaterial *TGeometry::GetMaterialByNumber(Int_t number)
 }
 
 //______________________________________________________________________________
-TNode *TGeometry::GetNode(const char *name)
+TNode *TGeometry::GetNode(const char *name) const
 {
 //*-*-*-*-*-*-*Return pointer to node with name in the geometry tree*-*-*-*-*
 //*-*          =====================================================
@@ -285,7 +285,7 @@ TNode *TGeometry::GetNode(const char *name)
 }
 
 //______________________________________________________________________________
-TRotMatrix *TGeometry::GetRotMatrix(const char *name)
+TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to RotMatrix with name*-*-*-*-*-*-*-*-*-*
 //*-*              =====================================
@@ -294,7 +294,7 @@ TRotMatrix *TGeometry::GetRotMatrix(const char *name)
 }
 
 //______________________________________________________________________________
-TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number)
+TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to RotMatrix with number*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -309,7 +309,7 @@ TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number)
 }
 
 //______________________________________________________________________________
-TShape *TGeometry::GetShape(const char *name)
+TShape *TGeometry::GetShape(const char *name) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Shape with name*-*-*-*-*-*-*-*-*-*
 //*-*              =================================
@@ -318,7 +318,7 @@ TShape *TGeometry::GetShape(const char *name)
 }
 
 //______________________________________________________________________________
-TShape *TGeometry::GetShapeByNumber(Int_t number)
+TShape *TGeometry::GetShapeByNumber(Int_t number) const
 {
 //*-*-*-*-*-*-*-*-*Return pointer to Shape with number*-*-*-*-*-*-*-*-*-*
 //*-*              ===================================
@@ -409,7 +409,7 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
 }
 
 //______________________________________________________________________________
-void TGeometry::ls(Option_t *option)
+void TGeometry::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this geometry*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                   ===================

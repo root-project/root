@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.2 2000/06/13 11:10:48 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
         virtual void  Paint(Option_t *option="");
         virtual void  PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       const char *label, Option_t *option="");
-        virtual void  Print(Option_t *option="");
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetLabel(const char *label) {fLabel = label;} // *MENU*
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.5 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.6 2000/11/21 20:26:58 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -207,7 +207,7 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPave::ls(Option_t *)
+void TPave::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this pave with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
@@ -536,7 +536,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 }
 
 //______________________________________________________________________________
-void TPave::Print(Option_t *option)
+void TPave::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this pave with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================

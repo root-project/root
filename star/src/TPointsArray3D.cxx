@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
-// $Id: TPointsArray3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// $Id: TPointsArray3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
 #include <fstream.h>
 #include <iostream.h>
 
@@ -219,7 +219,7 @@ void TPointsArray3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPointsArray3D::ls(Option_t *option)
+void TPointsArray3D::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
@@ -229,7 +229,7 @@ void TPointsArray3D::ls(Option_t *option)
 
 }
 //______________________________________________________________________________
-void TPointsArray3D::Print(Option_t *option)
+void TPointsArray3D::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ==========================================

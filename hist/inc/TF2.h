@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.2 2000/06/13 10:37:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.3 2000/11/21 20:29:29 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -52,16 +52,16 @@ public:
    virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t    GetContour(Double_t *levels=0);
-   virtual Double_t GetContourLevel(Int_t level);
-          Int_t     GetNpy() {return fNpy;}
-   virtual char    *GetObjectInfo(Int_t px, Int_t py);
+   virtual Double_t GetContourLevel(Int_t level) const;
+          Int_t     GetNpy() const {return fNpy;}
+   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
        Double_t     GetRandom();
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) { TF1::GetRange(xmin, xmax); }
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
-   virtual Double_t GetYmin() {return fYmin;}
-   virtual Double_t GetYmax() {return fYmax;}
+   virtual Double_t GetYmin() const {return fYmin;}
+   virtual Double_t GetYmax() const {return fYmax;}
    virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsil=0.000001) {return TF1::Integral(a,b,params,epsil);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsil=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsil=0.000001)

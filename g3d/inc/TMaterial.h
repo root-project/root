@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TMaterial.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -43,12 +43,12 @@ class TMaterial  : public TNamed, public TAttFill {
         TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density);
         TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter);
         virtual ~TMaterial();
-        virtual Int_t     GetNumber()      {return fNumber;}
-        virtual Float_t   GetA()           {return fA;}
-        virtual Float_t   GetZ()           {return fZ;}
-        virtual Float_t   GetDensity()     {return fDensity;}
-        virtual Float_t   GetRadLength()   {return fRadLength;}
-        virtual Float_t   GetInterLength() {return fInterLength;}
+        virtual Int_t     GetNumber() const      {return fNumber;}
+        virtual Float_t   GetA() const           {return fA;}
+        virtual Float_t   GetZ() const           {return fZ;}
+        virtual Float_t   GetDensity() const     {return fDensity;}
+        virtual Float_t   GetRadLength() const   {return fRadLength;}
+        virtual Float_t   GetInterLength() const {return fInterLength;}
 
         ClassDef(TMaterial,3)  //Materials used in the Geometry Shapes
 };

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.5 2000/11/28 09:07:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.6 2000/12/02 16:26:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -75,7 +75,7 @@ void TStreamerElement::Init(TObject *)
 }
 
 //______________________________________________________________________________
-void TStreamerElement::ls(Option_t *)
+void TStreamerElement::ls(Option_t *) const
 {
    char name[128];
    char cdim[8];
@@ -212,7 +212,7 @@ TStreamerBasicPointer::~TStreamerBasicPointer()
 }
 
 //______________________________________________________________________________
-ULong_t TStreamerBasicPointer::GetMethod()
+ULong_t TStreamerBasicPointer::GetMethod() const
 {
    // return address of counter
    
@@ -271,7 +271,7 @@ TStreamerTStringPointer::~TStreamerTStringPointer()
 }
 
 //______________________________________________________________________________
-ULong_t TStreamerTStringPointer::GetMethod()
+ULong_t TStreamerTStringPointer::GetMethod() const
 {
    // return address of counter
    
@@ -328,7 +328,7 @@ TStreamerBasicType::~TStreamerBasicType()
 }
 
 //______________________________________________________________________________
-ULong_t TStreamerBasicType::GetMethod()
+ULong_t TStreamerBasicType::GetMethod() const
 {
    // return address of counter
    
@@ -597,7 +597,7 @@ TStreamerSTL::~TStreamerSTL()
 }
 
 //______________________________________________________________________________
-void TStreamerSTL::ls(Option_t *)
+void TStreamerSTL::ls(Option_t *) const
 {
    char name[128];
    char cdim[8];

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttText.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,11 +43,11 @@ public:
    TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
    virtual ~TAttText();
            void     Copy(TAttText &atttext);
-   Short_t          GetTextAlign() {return fTextAlign;}
-   Float_t          GetTextAngle() {return fTextAngle;}
-   Color_t          GetTextColor() {return fTextColor;}
-   Font_t           GetTextFont()  {return fTextFont;}
-   Float_t          GetTextSize()  {return fTextSize;}
+   Short_t          GetTextAlign() const {return fTextAlign;}
+   Float_t          GetTextAngle() const {return fTextAngle;}
+   Color_t          GetTextColor() const {return fTextColor;}
+   Font_t           GetTextFont()  const {return fTextFont;}
+   Float_t          GetTextSize()  const {return fTextSize;}
    virtual void     Modify();
    virtual void     ResetAttText(Option_t *toption="");
    virtual void     SaveTextAttributes(ofstream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);

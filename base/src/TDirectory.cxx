@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.9 2000/11/27 10:43:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.10 2000/11/27 12:04:01 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -678,7 +678,7 @@ void TDirectory::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TObject *TDirectory::FindObject(TObject *obj) const
+TObject *TDirectory::FindObject(const TObject *obj) const
 {
    // Find object in the list of memory objects.
 
@@ -842,7 +842,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-void TDirectory::ls(Option_t *option)
+void TDirectory::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List Directory contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =======================
@@ -911,7 +911,7 @@ void TDirectory::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TDirectory::Print(Option_t *option)
+void TDirectory::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the directory *-*-*-*-*-*-*-*
 //*-*                    ==================================

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.2 2000/11/21 16:52:19 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -55,11 +55,11 @@ class TGenerator : public TNamed {
         virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
         virtual TObjArray      *ImportParticles(Option_t *option="");
-        virtual TParticle      *GetParticle(Int_t i);
-        Int_t                   GetNumberOfParticles() {return fParticles->GetLast()+1;}
-        virtual TObjArray      *GetListOfParticles() {return fParticles;}
+        virtual TParticle      *GetParticle(Int_t i) const;
+        Int_t                   GetNumberOfParticles() const {return fParticles->GetLast()+1;}
+        virtual TObjArray      *GetListOfParticles() const {return fParticles;}
         virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
-        Float_t                 GetPtCut() {return fPtCut;}
+        Float_t                 GetPtCut() const {return fPtCut;}
         virtual void            Paint(Option_t *option="");
         virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
         virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*

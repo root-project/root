@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -42,11 +42,11 @@ public:
    virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void     FixParameter(Int_t ipar) = 0;
    virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) = 0;
-   virtual TObject *GetObjectFit() = 0;
+   virtual TObject *GetObjectFit() const = 0;
    virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) = 0;
    virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) = 0;
    virtual Double_t GetSumLog(Int_t i) = 0;
-   virtual void     PrintResults(Int_t level, Double_t amin) = 0;
+   virtual void     PrintResults(Int_t level, Double_t amin) const = 0;
    virtual void     ReleaseParameter(Int_t ipar) = 0;
    virtual void     SetFCN(void *fcn) = 0;
    virtual void     SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t)) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.3 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -65,20 +65,20 @@ public:
     virtual void      DeleteBuffer();
     virtual void      FillBuffer(char *&buffer);
     virtual const char *GetClassName() const {return fClassName.Data();}
-    virtual char     *GetBuffer() {return fBuffer+fKeylen;}
-         TBuffer     *GetBufferRef() {return fBufferRef;}
-         Short_t      GetCycle();
-         Short_t      GetKeep();
-           Int_t      GetKeylen()  {return fKeylen;}
-           Int_t      GetNbytes()  {return fNbytes;}
-           Int_t      GetObjlen()  {return fObjlen;}
-           Int_t      GetVersion() {return fVersion;}
-    virtual Seek_t    GetSeekKey()   {return fSeekKey;}
-    virtual Seek_t    GetSeekPdir()  {return fSeekPdir;}
+    virtual char     *GetBuffer() const {return fBuffer+fKeylen;}
+         TBuffer     *GetBufferRef() const {return fBufferRef;}
+         Short_t      GetCycle() const ;
+         Short_t      GetKeep() const;
+           Int_t      GetKeylen() const  {return fKeylen;}
+           Int_t      GetNbytes() const  {return fNbytes;}
+           Int_t      GetObjlen() const  {return fObjlen;}
+           Int_t      GetVersion() const {return fVersion;}
+    virtual Seek_t    GetSeekKey() const  {return fSeekKey;}
+    virtual Seek_t    GetSeekPdir() const {return fSeekPdir;}
     Bool_t            IsFolder() const;
     virtual void      Keep();
-    virtual void      ls(Option_t *option="");
-    virtual void      Print(Option_t *option="");
+    virtual void      ls(Option_t *option="") const;
+    virtual void      Print(Option_t *option="") const;
     virtual Int_t     Read(TObject *obj);
     virtual TObject  *ReadObj();
     virtual void      ReadBuffer(char *&buffer);

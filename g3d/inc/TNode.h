@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.3 2000/11/21 20:13:10 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -69,22 +69,22 @@ protected:
    virtual void        Draw(Option_t *option=""); // *MENU*
    virtual void        DrawOnly(Option_t *option="");
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
-           TList       *GetListOfNodes() {return fNodes;}
-   virtual TRotMatrix  *GetMatrix() {return fMatrix;}
-   virtual TNode       *GetNode(const char *name);
-   virtual char        *GetObjectInfo(Int_t px, Int_t py);
-   const   Option_t    *GetOption() const { return fOption.Data();}
-   virtual TNode       *GetParent() {return fParent;}
-           TShape      *GetShape() {return fShape;}
-   Int_t               GetVisibility() {return fVisibility;}
-   virtual Double_t    GetX() {return fX;}
-   virtual Double_t    GetY() {return fY;}
-   virtual Double_t    GetZ() {return fZ;}
+           TList      *GetListOfNodes() const {return fNodes;}
+   virtual TRotMatrix *GetMatrix() const {return fMatrix;}
+   virtual TNode      *GetNode(const char *name) const;
+   virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
+   const   Option_t   *GetOption() const { return fOption.Data();}
+   virtual TNode      *GetParent() const {return fParent;}
+           TShape     *GetShape() const {return fShape;}
+   Int_t               GetVisibility() const {return fVisibility;}
+   virtual Double_t    GetX() const {return fX;}
+   virtual Double_t    GetY() const {return fY;}
+   virtual Double_t    GetZ() const {return fZ;}
    virtual void        ImportShapeAttributes();
    Bool_t              IsFolder() const;
    virtual void        Local2Master(Double_t *local, Double_t *master);
    virtual void        Local2Master(Float_t *local, Float_t *master);
-   virtual void        ls(Option_t *option="2"); // *MENU*
+   virtual void        ls(Option_t *option="2") const; // *MENU*
    virtual void        Master2Local(Double_t *master, Double_t *local);
    virtual void        Master2Local(Float_t *master, Float_t *local);
    virtual void        Paint(Option_t *option="");

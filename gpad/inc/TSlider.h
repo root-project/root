@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSlider.h,v 1.2 2000/06/13 12:13:48 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -44,9 +44,9 @@ public:
    TSlider();
    TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Color_t color=16, Short_t bordersize=2, Short_t bordermode =-1);
    virtual ~TSlider();
-   TObject      *GetObject() {return fObject;}
-   Double_t      GetMinimum() {return fMinimum;}
-   Double_t      GetMaximum() {return fMaximum;}
+   TObject      *GetObject()  const {return fObject;}
+   Double_t      GetMinimum() const {return fMinimum;}
+   Double_t      GetMaximum() const {return fMaximum;}
    virtual const char *GetMethod() const { return fMethod.Data(); }
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(ofstream &out, Option_t *option);

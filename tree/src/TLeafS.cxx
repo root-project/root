@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.4 2000/09/29 09:49:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -100,7 +100,7 @@ const char *TLeafS::GetTypeName() const
 
 
 //______________________________________________________________________________
-Double_t TLeafS::GetValue(Int_t i)
+Double_t TLeafS::GetValue(Int_t i) const
 {
 //*-*-*-*-*-*-*-*Returns current value of leaf*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            =============================
@@ -125,17 +125,6 @@ void TLeafS::Import(TClonesArray *list, Int_t n)
       j += fLen;
    }
 }
-
-//______________________________________________________________________________
-void TLeafS::Print(Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*-*Print a description of this leaf*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-
-   TLeaf::Print(option);
-
-}
-
 
 //______________________________________________________________________________
 void TLeafS::ReadBasket(TBuffer &b)

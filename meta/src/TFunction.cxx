@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -144,7 +144,7 @@ Int_t TFunction::GetNargsOpt() const
 }
 
 //______________________________________________________________________________
-Int_t TFunction::Compare(TObject *obj)
+Int_t TFunction::Compare(const TObject *obj) const
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -154,7 +154,7 @@ Int_t TFunction::Compare(TObject *obj)
 }
 
 //______________________________________________________________________________
-ULong_t TFunction::Hash()
+ULong_t TFunction::Hash() const
 {
    // Return hash value for TFunction based on its name.
 

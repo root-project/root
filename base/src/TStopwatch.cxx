@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.2 2000/06/22 14:34:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.3 2000/06/22 14:37:24 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -233,13 +233,13 @@ Double_t TStopwatch::GetCPUTime(){
 }
 
 //______________________________________________________________________________
-void TStopwatch::Print(Option_t *)
+void TStopwatch::Print(Option_t *) const
 {
    // Print the real and cpu time passed between the start and stop events.
    // and the number of times (slices) this TStopwatch was called
    // (if this number > 1)
 
-   Double_t  realt = RealTime();
+   Double_t  realt = ((TStopwatch*)this)->RealTime();
 
    Int_t  hours = Int_t(realt / 3600);
    realt -= hours * 3600;
@@ -248,8 +248,8 @@ void TStopwatch::Print(Option_t *)
    Int_t  sec   = Int_t(realt);
    Int_t counter = Counter();
    if (counter <= 1 )
-      Printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime());
+      Printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, ((TStopwatch*)this)->CpuTime());
    else
-      Printf("Real time %d:%d:%d, CP time %.3f, %d slices", hours, min, sec, CpuTime(),counter);
+      Printf("Real time %d:%d:%d, CP time %.3f, %d slices", hours, min, sec, ((TStopwatch*)this)->CpuTime(),counter);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.2 2000/11/23 08:15:39 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.3 2000/11/30 07:46:59 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -93,7 +93,7 @@ const char *TBaseClass::GetTitle() const
 }
 
 //______________________________________________________________________________
-Int_t TBaseClass::Compare(TObject *obj)
+Int_t TBaseClass::Compare(const TObject *obj) const
 {
    // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -103,7 +103,7 @@ Int_t TBaseClass::Compare(TObject *obj)
 }
 
 //______________________________________________________________________________
-ULong_t TBaseClass::Hash()
+ULong_t TBaseClass::Hash() const
 {
    // Return hash value for TBaseClass based on its name.
 

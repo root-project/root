@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.4 2000/11/21 20:26:41 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -195,7 +195,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TMarker::ls(Option_t *)
+void TMarker::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this marker with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ====================================
@@ -230,7 +230,7 @@ void TMarker::PaintMarkerNDC(Double_t, Double_t)
 }
 
 //______________________________________________________________________________
-void TMarker::Print(Option_t *)
+void TMarker::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this marker with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================================

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.3 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.4 2000/11/21 20:16:54 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -352,12 +352,12 @@ void TNode::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-TNode *TNode::GetNode(const char *name)
+TNode *TNode::GetNode(const char *name) const
 {
 //*-*-*-*-*-*-*Return pointer to node with name in the node tree*-*-*-*-*
 //*-*          =================================================
 
-   if (!strcmp(name, GetName())) return this;
+   if (!strcmp(name, GetName())) return (TNode*)this;
    TNode *node, *nodefound;
    TObject *obj;
    if (!fNodes) return 0;
@@ -372,7 +372,7 @@ TNode *TNode::GetNode(const char *name)
 }
 
 //______________________________________________________________________________
-char *TNode::GetObjectInfo(Int_t, Int_t)
+char *TNode::GetObjectInfo(Int_t, Int_t) const
 {
    const char *snull = "";
    if (!gPad) return (char*)snull;
@@ -485,7 +485,7 @@ void TNode::Local2Master(Float_t *local, Float_t *master)
 }
 
 //______________________________________________________________________________
-void TNode::ls(Option_t *option)
+void TNode::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List Referenced object with current parameters*-*-*-*
 //*-*                   ===============================================
@@ -538,7 +538,7 @@ void TNode::ls(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TNode::Master2Local(Double_t *master, Double_t *local)
+void TNode::Master2Local(Double_t *master, Double_t *local) 
 {
 //*-*-*-*-*Convert one point from master system to local reference system*-*-*
 //*-*      ==============================================================

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.2 2000/11/21 20:14:43 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -65,9 +65,9 @@ public:
                    TShape();
                    TShape(const char *name, const char *title, const char *material);
    virtual         ~TShape();
-   TMaterial       *GetMaterial() {return fMaterial;}
-   virtual Int_t   GetNumber() {return fNumber;}
-           Int_t   GetVisibility() {return fVisibility;}
+   TMaterial       *GetMaterial()  const {return fMaterial;}
+   virtual Int_t   GetNumber()     const {return fNumber;}
+           Int_t   GetVisibility() const {return fVisibility;}
    virtual void    Paint(Option_t *option="");
    virtual void    PaintGLPoints(Float_t *vertex);
    virtual void    PaintShape(X3DBuffer *buff, Bool_t rangeView=kFALSE);

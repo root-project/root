@@ -1,6 +1,6 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TNodePosition.cxx,v 1.23 1999/12/21 18:57:14 fine Exp $
+// $Id: TVolumePosition.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 
 #include <iostream.h>
 #include <iomanip.h>
@@ -143,7 +143,7 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t)
+Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 {
    if (!gPad) return "";
    if (!GetNode()) return "";
@@ -271,7 +271,7 @@ void TVolumePosition::Paint(Option_t *)
 }
 
 //_______________________________________________________________________
-void TVolumePosition::Print(Option_t *)
+void TVolumePosition::Print(Option_t *) const
 {
   cout << " Node: " <<   GetNode()->GetName() << endl;
   cout << " Position: x=" <<

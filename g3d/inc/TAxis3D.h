@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.4 2000/11/21 20:11:23 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.3 2000/09/05 09:21:22 brun Exp $
+// $Id: TAxis3D.h,v 1.4 2000/11/21 20:11:23 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -51,7 +51,7 @@ class TView;
 class TAxis3D : public TNamed  {
 
 private:
-    Int_t   AxisChoice(Option_t *axis);
+    Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
 
 protected:
@@ -76,21 +76,21 @@ public:
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
-    virtual Int_t    GetNdivisions(Option_t *axis="X");
-    virtual Color_t  GetAxisColor(Option_t *axis="X");
-    virtual Color_t  GetLabelColor(Option_t *axis="X");
-    virtual Style_t  GetLabelFont(Option_t *axis="X");
-    virtual Float_t  GetLabelOffset(Option_t *axis="X");
-    virtual Float_t  GetLabelSize(Option_t *axis="X");
+    virtual Int_t    GetNdivisions(Option_t *axis="X") const;
+    virtual Color_t  GetAxisColor(Option_t *axis="X") const;
+    virtual Color_t  GetLabelColor(Option_t *axis="X") const;
+    virtual Style_t  GetLabelFont(Option_t *axis="X") const;
+    virtual Float_t  GetLabelOffset(Option_t *axis="X") const;
+    virtual Float_t  GetLabelSize(Option_t *axis="X") const;
     static  TAxis3D *GetPadAxis(TVirtualPad *pad=0);
-    virtual Float_t  GetTitleOffset(Option_t *axis="X");
-    virtual Float_t  GetTickLength(Option_t *axis="X");
+    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
+    virtual Float_t  GetTickLength(Option_t *axis="X") const;
 
-    virtual void     GetCenter(Axis_t *center){fAxis[0].GetCenter(center);}
+    virtual void     GetCenter(Axis_t *center) {fAxis[0].GetCenter(center);}
 
-    virtual void     GetLowEdge(Axis_t *edge){fAxis[0].GetLowEdge(edge);}
+    virtual void     GetLowEdge(Axis_t *edge) {fAxis[0].GetLowEdge(edge);}
 
-    virtual char    *GetObjectInfo(Int_t px, Int_t py);
+    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
 
     Option_t        *GetOption() const {return fOption.Data();}
 

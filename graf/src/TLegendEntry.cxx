@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.2 2000/06/27 06:43:48 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -83,7 +83,7 @@ void TLegendEntry::Copy( TObject &obj )
 }
 
 //____________________________________________________________________________
-void TLegendEntry::Print( Option_t *)
+void TLegendEntry::Print( Option_t *) const
 {
   // dump this TLegendEntry to cout
   TString output;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.19 2000/11/21 20:58:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.20 2000/12/08 08:00:38 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -467,7 +467,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 }
 
 //______________________________________________________________________________
-Double_t TTreeFormula::EvalInstance(Int_t instance)
+Double_t TTreeFormula::EvalInstance(Int_t instance) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -705,7 +705,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 }
 
 //______________________________________________________________________________
-TLeaf *TTreeFormula::GetLeaf(Int_t n)
+TLeaf *TTreeFormula::GetLeaf(Int_t n) const
 {
 //*-*-*-*-*-*-*-*Return leaf corresponding to serial number n*-*-*-*-*-*
 //*-*            ============================================
@@ -715,7 +715,7 @@ TLeaf *TTreeFormula::GetLeaf(Int_t n)
 }
 
 //______________________________________________________________________________
-TMethodCall *TTreeFormula::GetMethodCall(Int_t code)
+TMethodCall *TTreeFormula::GetMethodCall(Int_t code) const
 {
 //*-*-*-*-*-*-*-*Return methodcall corresponding to code*-*-*-*-*-*
 //*-*            =======================================
@@ -728,7 +728,7 @@ TMethodCall *TTreeFormula::GetMethodCall(Int_t code)
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::GetNdata()
+Int_t TTreeFormula::GetNdata() const
 {
 //*-*-*-*-*-*-*-*Return number of data words in the leaf*-*-*-*-*-*-*-*
 //*-*-*-*-*-*-*-*Changed to Return number of available instances in the formula*-*-*-*-*-*-*-*
@@ -771,7 +771,7 @@ Int_t TTreeFormula::GetNdata()
 }
 
 //______________________________________________________________________________
-Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
+Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf) const
 {
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
@@ -800,7 +800,7 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 }
 
 //______________________________________________________________________________
-char *TTreeFormula::PrintValue(Int_t mode)
+char *TTreeFormula::PrintValue(Int_t mode) const
 {
 //*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
 //*-*            ====================================

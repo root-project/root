@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.2 2000/09/05 09:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -313,7 +313,7 @@ Int_t TDataSetIter::Flag(TDataSet *dataset,UInt_t flag,EBitOpt reset)
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::Ls(const Char_t *dirname,Option_t *opt) {
+TDataSet *TDataSetIter::Ls(const Char_t *dirname,Option_t *opt) const {
 //
 //   Ls(const Char_t *dirname,Option_t)
 //
@@ -325,14 +325,14 @@ TDataSet *TDataSetIter::Ls(const Char_t *dirname,Option_t *opt) {
 //
 
   TDataSet *set= 0;
-  if (dirname && strlen(dirname)) set = Find(dirname);
+  if (dirname && strlen(dirname)) set = ((TDataSetIter*)this)->Find(dirname);
   if (!set && dirname==0) set=Cwd();
   if (set) set->ls(opt);
   return set;
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::Ls(const Char_t *dirname,Int_t depth) {
+TDataSet *TDataSetIter::Ls(const Char_t *dirname,Int_t depth) const {
 //
 //   Ls(const Char_t *dirname,Int_t depth)
 //
@@ -347,7 +347,7 @@ TDataSet *TDataSetIter::Ls(const Char_t *dirname,Int_t depth) {
 //               > 0   - print depth levels at most of the dirname TDataSet
 //
   TDataSet *set= fWorkingDataSet;
-  if (dirname && strlen(dirname)) set= Find(dirname);
+  if (dirname && strlen(dirname)) set= ((TDataSetIter*)this)->Find(dirname);
   if (set) set->ls(depth);
   return set;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.8 2000/11/21 20:33:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.9 2000/11/24 10:23:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1739,7 +1739,7 @@ Double_t TFormula::EvalPar(Double_t *x, Double_t *params)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::GetParameter(const char *parName) 
+Double_t TFormula::GetParameter(const char *parName) const
 {
   //return value of parameter named parName
    
@@ -1764,7 +1764,7 @@ const char *TFormula::GetParName(Int_t ipar) const
 }
 
 //______________________________________________________________________________
-Int_t TFormula::GetParNumber(const char *parName) 
+Int_t TFormula::GetParNumber(const char *parName) const
 {
   // return parameter number by name
    
@@ -1775,7 +1775,7 @@ Int_t TFormula::GetParNumber(const char *parName)
 }
 
 //______________________________________________________________________________
-void TFormula::Print(Option_t *)
+void TFormula::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this formula with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================================

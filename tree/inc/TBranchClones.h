@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.2 2000/09/05 09:21:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.3 2000/11/21 20:46:58 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -47,10 +47,10 @@ public:
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
-    virtual Int_t   GetN() {return fN;}
-    TClonesArray    *GetList() {return fList;}
+    virtual Int_t   GetN() const {return fN;}
+    TClonesArray    *GetList() const {return fList;}
     Bool_t          IsFolder() const {return kTRUE;}
-    virtual void    Print(Option_t *option="");
+    virtual void    Print(Option_t *option="") const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *add);
     virtual void    SetBasketSize(Int_t buffsize);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.2 2000/06/13 12:22:49 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -58,14 +58,14 @@ public:
         virtual void      Draw(Option_t *option="");
         virtual void      DrawPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t     GetN(){ return fN;}
-        virtual Float_t  *GetP(){ return fP;}
+        virtual Int_t     GetN() const { return fN;}
+        virtual Float_t  *GetP() const { return fP;}
         Option_t         *GetOption() const {return fOption.Data();}
-        virtual void      ls(Option_t *option="");
+        virtual void      ls(Option_t *option="") const;
         virtual void      Paint(Option_t *option="");
         static  void      PaintH3(TH1 *h, Option_t *option);
         virtual void      PaintPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
-        virtual void      Print(Option_t *option="");
+        virtual void      Print(Option_t *option="") const;
         virtual void      SavePrimitive(ofstream &out, Option_t *option);
         void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
         virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");

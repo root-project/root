@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.10 2000/10/09 13:56:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.11 2000/11/21 20:49:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -266,7 +266,7 @@ TBranch *TChain::GetBranch(const char *name)
 }
 
 //______________________________________________________________________________
-Int_t TChain::GetChainEntryNumber(Int_t entry)
+Int_t TChain::GetChainEntryNumber(Int_t entry) const
 {
 // return absolute entry number in the chain
 // the input parameter entry is the entry number in the current Tree of this chain
@@ -476,7 +476,7 @@ void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 
 
 //______________________________________________________________________________
-void TChain::ls(Option_t *option)
+void TChain::ls(Option_t *option) const
 {
    fFiles->ls(option);
 }
@@ -591,7 +591,7 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
 
 //______________________________________________________________________________
-void TChain::Print(Option_t *option)
+void TChain::Print(Option_t *option) const
 {
    fFiles->ls(option);
 }

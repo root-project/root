@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.6 2000/09/11 06:19:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.7 2000/09/13 12:36:07 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -47,14 +47,14 @@ public:
    virtual void        Clear(Option_t *option="");
    virtual void        Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
    virtual const char *FindFullPathName(const char *name) const;
-   virtual const char *FindFullPathName(TObject *obj) const;
+   virtual const char *FindFullPathName(const TObject *obj) const;
    virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(TObject *obj) const;
+   virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    TCollection        *GetListOfFolders() const { return fFolders; }
    Bool_t              IsFolder() const { return kTRUE; }
    Bool_t              IsOwner()  const { return fIsOwner; }
-   virtual void        ls(Option_t *option="*");  // *MENU*
+   virtual void        ls(Option_t *option="*") const;  // *MENU*
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Remove(TObject *obj);
    virtual void        SetOwner(Bool_t owner=kTRUE) {fIsOwner = owner;}

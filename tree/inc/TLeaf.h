@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.4 2000/11/21 20:48:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,22 +57,22 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual void     Export(TClonesArray *list, Int_t n);
     virtual void     FillBasket(TBuffer &b);
-    TBranch         *GetBranch() { return fBranch; }
-    virtual TLeaf   *GetLeafCount() { return fLeafCount; }
-    virtual TLeaf   *GetLeafCounter(Int_t &countval);
+    TBranch         *GetBranch() const { return fBranch; }
+    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
+    virtual TLeaf   *GetLeafCounter(Int_t &countval) const;
     virtual Int_t    GetLen() const;
-    virtual Int_t    GetLenStatic() { return fLen; }
-    virtual Int_t    GetLenType() { return fLenType; }
-    virtual Int_t    GetMaximum() { return 0; }
-    virtual Int_t    GetMinimum() { return 0; }
-    virtual Int_t    GetNdata() { return fNdata; }
-    virtual Int_t    GetOffset() { return fOffset; }
-    virtual void    *GetValuePointer() { return 0; }
+    virtual Int_t    GetLenStatic() const { return fLen; }
+    virtual Int_t    GetLenType() const { return fLenType; }
+    virtual Int_t    GetMaximum() const { return 0; }
+    virtual Int_t    GetMinimum() const { return 0; }
+    virtual Int_t    GetNdata() const { return fNdata; }
+    virtual Int_t    GetOffset() const { return fOffset; }
+    virtual void    *GetValuePointer() const { return 0; }
     virtual const char *GetTypeName() const { return ""; }
-    virtual Double_t GetValue(Int_t i=0);
+    virtual Double_t GetValue(Int_t i=0) const;
     virtual void     Import(TClonesArray *list, Int_t n);
-    virtual Bool_t   IsRange()    { return fIsRange; }
-    virtual Bool_t   IsUnsigned() { return fIsUnsigned; }
+    virtual Bool_t   IsRange() const    { return fIsRange; }
+    virtual Bool_t   IsUnsigned() const { return fIsUnsigned; }
     virtual void     ReadBasket(TBuffer &) {;}
     virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {;}
             Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
@@ -88,7 +88,7 @@ public:
 };
 
 inline void     TLeaf::Export(TClonesArray *, Int_t) { }
-inline Double_t TLeaf::GetValue(Int_t) { return 0; }
+inline Double_t TLeaf::GetValue(Int_t) const { return 0; }
 inline void     TLeaf::Import(TClonesArray *, Int_t) { }
 inline void     TLeaf::SetAddress(void *) { }
 

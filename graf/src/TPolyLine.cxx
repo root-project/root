@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.4 2000/11/21 20:27:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -355,7 +355,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TPolyLine::ls(Option_t *)
+void TPolyLine::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*List this polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ======================================
@@ -398,7 +398,7 @@ void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *op
 }
 
 //______________________________________________________________________________
-void TPolyLine::Print(Option_t *)
+void TPolyLine::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*Dump this polyline with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================

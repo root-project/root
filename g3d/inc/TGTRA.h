@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -46,15 +46,15 @@ class TGTRA : public TBRIK {
               Float_t alpha2);
         virtual ~TGTRA();
 
-        Float_t         GetTwist()  {return fTwist;}
-        Float_t         GetH1()     {return fH1;}
-        Float_t         GetBl1()    {return fBl1;}
-        Float_t         GetTl1()    {return fTl1;}
-        Float_t         GetAlpha1() {return fAlpha1;}
-        Float_t         GetH2()     {return fH2;}
-        Float_t         GetBl2()    {return fBl2;}
-        Float_t         GetTl2()    {return fTl2;}
-        Float_t         GetAlpha2() {return fAlpha2;}
+        Float_t         GetTwist() const  {return fTwist;}
+        Float_t         GetH1() const     {return fH1;}
+        Float_t         GetBl1() const    {return fBl1;}
+        Float_t         GetTl1() const    {return fTl1;}
+        Float_t         GetAlpha1() const {return fAlpha1;}
+        Float_t         GetH2() const     {return fH2;}
+        Float_t         GetBl2() const    {return fBl2;}
+        Float_t         GetTl2() const    {return fTl2;}
+        Float_t         GetAlpha2() const {return fAlpha2;}
 
         virtual void    SetPoints(Float_t *buff);
 

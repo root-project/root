@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name$:$Id$
+// @(#)root/pythia:$Name:  $:$Id: TMCParticle.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Piotr Golonka   17/09/97
 
 /*************************************************************************
@@ -113,7 +113,7 @@ public:
    virtual void        SetLifetime(Float_t lifetime) {fLifetime=lifetime;}
 
 
-   virtual void        ls(Option_t* option);
+   virtual void        ls(Option_t* option) const;
 
    ClassDef(TMCParticle,1)  // LUJETS particles data record.
 };

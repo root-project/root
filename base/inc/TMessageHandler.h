@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -35,16 +35,16 @@
 class TMessageHandler : public TNamed {
 
 protected:
-   TClass   *fClass;      // class for which message has to be handled
-   TObject  *fMessObj;    // object generating message
-   Int_t     fMessId;     // message id (often matching specific enum in fClass)
-   Int_t     fSize;       // number of different messages handled
-   Int_t    *fCnts;       // count per message
-   Int_t    *fMessIds;    // message ids
-   Bool_t    fDerived;    // if true handle messages also for derived classes
+   const TClass   *fClass;      // class for which message has to be handled
+   const TObject  *fMessObj;    // object generating message
+   Int_t           fMessId;     // message id (often matching specific enum in fClass)
+   Int_t           fSize;       // number of different messages handled
+   Int_t          *fCnts;       // count per message
+   Int_t          *fMessIds;    // message ids
+   Bool_t          fDerived;    // if true handle messages also for derived classes
 
 public:
-   TMessageHandler(TClass *cl, Bool_t derived = kTRUE);
+   TMessageHandler(const TClass *cl, Bool_t derived = kTRUE);
    TMessageHandler(const char *cl, Bool_t derived = kTRUE);
    virtual ~TMessageHandler();
 
@@ -54,11 +54,11 @@ public:
    virtual Int_t   GetMessageCount(Int_t messId) const;
    virtual Int_t   GetTotalMessageCount() const;
    Bool_t          HandleDerived() const { return fDerived; }
-   virtual void    HandleMessage(Int_t id, TObject *obj);
+   virtual void    HandleMessage(Int_t id, const TObject *obj);
 
    virtual Bool_t  Notify();
 
-   virtual void    Print(Option_t *option= "");
+   virtual void    Print(Option_t *option= "") const;
    virtual void    Remove();
 
    ClassDef(TMessageHandler,0)  // Generic message handler

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.17 2000/09/13 12:04:15 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.21 2000/11/21 20:36:46 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -357,7 +357,7 @@ void THistPainter::FitPanel()
 }
 
 //______________________________________________________________________________
-char *THistPainter::GetObjectInfo(Int_t px, Int_t py)
+char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the histogram info (bin number, contents, integral up to bin

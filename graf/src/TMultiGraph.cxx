@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.17 2000/10/12 10:39:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.1 2000/10/12 13:27:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TMultiGraph::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-TH1F *TMultiGraph::GetHistogram()
+TH1F *TMultiGraph::GetHistogram() const
 {
 //    Returns a pointer to the histogram used to draw the axis
 //    Takes into account the two following cases.
@@ -142,7 +142,7 @@ TH1F *TMultiGraph::GetHistogram()
 }
 
 //______________________________________________________________________________
-TAxis *TMultiGraph::GetXaxis()
+TAxis *TMultiGraph::GetXaxis() const
 {
    // Get x axis of the graph.
 
@@ -151,7 +151,7 @@ TAxis *TMultiGraph::GetXaxis()
 }
 
 //______________________________________________________________________________
-TAxis *TMultiGraph::GetYaxis()
+TAxis *TMultiGraph::GetYaxis() const
 {
    // Get y axis of the graph.
 
@@ -264,7 +264,7 @@ void TMultiGraph::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TMultiGraph::Print(Option_t *option)
+void TMultiGraph::Print(Option_t *option) const
 {
 // Print the list of graphs
 

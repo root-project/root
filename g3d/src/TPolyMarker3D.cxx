@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.3 2000/06/30 12:10:55 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.4 2000/09/05 09:21:22 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -271,7 +271,7 @@ void TPolyMarker3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::ls(Option_t *option)
+void TPolyMarker3D::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*List PolyMarker's contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==========================
@@ -487,7 +487,7 @@ void TPolyMarker3D::PaintPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *)
 
 
 //______________________________________________________________________________
-void TPolyMarker3D::Print(Option_t *option)
+void TPolyMarker3D::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Print PolyMarker Info*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          =====================

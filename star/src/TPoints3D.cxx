@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// $Id: TPoints3D.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -168,7 +168,7 @@ void TPoints3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPoints3D::ls(Option_t *option)
+void TPoints3D::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
@@ -179,7 +179,7 @@ void TPoints3D::ls(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPoints3D::Print(Option_t *option)
+void TPoints3D::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ==========================================

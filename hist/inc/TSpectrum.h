@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.2 2000/10/05 06:56:38 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -56,10 +56,10 @@ public:
    virtual  char    *Background2(float **spectrum,int sizex,int sizey,int niter);
    virtual  char    *Deconvolution1(float *source,float *resp,int size,int niter);
    virtual  char    *Deconvolution2(float **source,float **resp,int sizex,int sizey,int niter);
-   virtual  TH1     *GetHistogram() {return fHistogram;}
-   virtual  Int_t    GetNPeaks() {return fNPeaks;}
-   virtual  Float_t *GetPositionX() {return fPositionX;}
-   virtual  Float_t *GetPositionY() {return fPositionY;}
+   virtual  TH1     *GetHistogram() const {return fHistogram;}
+   virtual  Int_t    GetNPeaks() const {return fNPeaks;}
+   virtual  Float_t *GetPositionX() const {return fPositionX;}
+   virtual  Float_t *GetPositionY() const {return fPositionY;}
    virtual  int      PeakEvaluate(double *temp,int size,int xmax,double xmin);
    virtual  Int_t    Search(TH1 *hist, Double_t sigma, Option_t *option="goff");
    virtual  Int_t    Search1(float *spectrum,int size,double sigma);

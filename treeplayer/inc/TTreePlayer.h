@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.9 2000/08/17 09:47:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.10 2000/11/21 20:56:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -90,22 +90,22 @@ public:
             void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax);
     virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
-    virtual Int_t     GetDimension() {return fDimension;}
-    TH1              *GetHistogram() {return fHistogram;}
-    TTreeFormula     *GetMultiplicity()   {return fMultiplicity;}
+    virtual Int_t     GetDimension() const {return fDimension;}
+    TH1              *GetHistogram() const {return fHistogram;}
+    TTreeFormula     *GetMultiplicity() const   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
     TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
-    TTreeFormula     *GetSelect()    {return fSelect;}
-    virtual Int_t     GetSelectedRows() {return fSelectedRows;}
-    TTreeFormula     *GetVar1() {return fVar1;}
-    TTreeFormula     *GetVar2() {return fVar2;}
-    TTreeFormula     *GetVar3() {return fVar3;}
-    TTreeFormula     *GetVar4() {return fVar4;}
-    virtual Double_t *GetV1()   {return fV1;}
-    virtual Double_t *GetV2()   {return fV2;}
-    virtual Double_t *GetV3()   {return fV3;}
-    virtual Double_t *GetW()    {return fW;}
+    TTreeFormula     *GetSelect() const    {return fSelect;}
+    virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
+    TTreeFormula     *GetVar1() const {return fVar1;}
+    TTreeFormula     *GetVar2() const {return fVar2;}
+    TTreeFormula     *GetVar3() const {return fVar3;}
+    TTreeFormula     *GetVar4() const {return fVar4;}
+    virtual Double_t *GetV1() const   {return fV1;}
+    virtual Double_t *GetV2() const   {return fV2;}
+    virtual Double_t *GetV3() const   {return fV3;}
+    virtual Double_t *GetW() const    {return fW;}
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     MakeClass(const char *classname=0, Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.3 2000/11/21 20:46:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.4 2000/11/24 10:29:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -89,55 +89,55 @@ public:
     TBranch(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
     virtual ~TBranch();
 
-    virtual void    Browse(TBrowser *b);
-    virtual void    DropBaskets();
-    virtual Int_t   Fill();
-    virtual char    *GetAddress() {return fAddress;}
-    virtual Int_t   GetBasketSize() {return fBasketSize;}
-    virtual Int_t   GetCompressionLevel() {return fCompress;}
-    virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
-    virtual Int_t   GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
-            Int_t   GetEvent(Int_t entry=0) {return GetEntry(entry);}
-            Int_t   GetEntryOffsetLen() {return fEntryOffsetLen;}
-    virtual TLeaf   *GetLeaf(const char *name);
+    virtual void     Browse(TBrowser *b);
+    virtual void     DropBaskets();
+    virtual Int_t    Fill();
+    virtual char    *GetAddress() const {return fAddress;}
+    virtual Int_t    GetBasketSize() const {return fBasketSize;}
+    virtual Int_t    GetCompressionLevel() const {return fCompress;}
+    virtual Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
+    virtual Int_t    GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
+            Int_t    GetEvent(Int_t entry=0) {return GetEntry(entry);}
+            Int_t    GetEntryOffsetLen() const {return fEntryOffsetLen;}
+    virtual TLeaf   *GetLeaf(const char *name) const;
             TBasket *GetBasket(Int_t basket);
-            Int_t   *GetBasketBytes() {return fBasketBytes;}
-    virtual Seek_t  GetBasketSeek(Int_t basket);
-    TDirectory      *GetDirectory() {return fDirectory;}
+            Int_t   *GetBasketBytes() const {return fBasketBytes;}
+    virtual Seek_t   GetBasketSeek(Int_t basket) const;
+    TDirectory      *GetDirectory() const {return fDirectory;}
     virtual TFile   *GetFile(Int_t mode=0);
     const char      *GetFileName() const {return fFileName.Data();}
-            Int_t   GetOffset() {return fOffset;}
-            Int_t   GetReadBasket() {return fReadBasket;}
-            Int_t   GetReadEntry() {return fReadEntry;}
-            Int_t   GetWriteBasket() {return fWriteBasket;}
-            Stat_t  GetTotBytes() {return fTotBytes;}
-            Stat_t  GetZipBytes() {return fZipBytes;}
-            Int_t   GetEntryNumber() {return fEntryNumber;}
-    TObjArray       *GetListOfBaskets() {return &fBaskets;}
-    TObjArray       *GetListOfBranches() {return &fBranches;}
-    TObjArray       *GetListOfLeaves() {return &fLeaves;}
-            Int_t   GetMaxBaskets()  {return fMaxBaskets;}
-            Int_t   GetNleaves() {return fNleaves;}
-            Stat_t  GetEntries() {return fEntries;}
-           TTree   *GetTree() {return fTree;}
-    virtual Int_t   GetRow(Int_t row);
-    Bool_t          IsAutoDelete();
-    Bool_t          IsFolder() const;
-    virtual void    Print(Option_t *option="");
-    virtual void    ReadBasket(TBuffer &b);
-    virtual void    Reset(Option_t *option="");
-    virtual void    ResetReadEntry() {fReadEntry = -1;}
-    virtual void    SetAddress(void *add);
-    virtual void    SetAutoDelete(Bool_t autodel=kTRUE);
-    virtual void    SetBasketSize(Int_t buffsize) {fBasketSize=buffsize;}
-    virtual void    SetBufferAddress(TBuffer *entryBuffer);
-    virtual void    SetCompressionLevel(Int_t level=1);
-    virtual void    SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
-    virtual void    SetFile(TFile *file=0);
-    virtual void    SetFile(const char *filename);
-    virtual void    SetOffset(Int_t offset=0) {fOffset=offset;}
-    virtual void    SetTree(TTree *tree) { fTree = tree;}
-    virtual void    UpdateAddress() {;}
+            Int_t    GetOffset() const {return fOffset;}
+            Int_t    GetReadBasket() const {return fReadBasket;}
+            Int_t    GetReadEntry() const {return fReadEntry;}
+            Int_t    GetWriteBasket() const {return fWriteBasket;}
+            Stat_t   GetTotBytes() const {return fTotBytes;}
+            Stat_t   GetZipBytes() const {return fZipBytes;}
+            Int_t    GetEntryNumber() const {return fEntryNumber;}
+          TObjArray *GetListOfBaskets()  {return &fBaskets;}
+          TObjArray *GetListOfBranches() {return &fBranches;}
+          TObjArray *GetListOfLeaves()   {return &fLeaves;}
+            Int_t    GetMaxBaskets() const  {return fMaxBaskets;}
+            Int_t    GetNleaves() const {return fNleaves;}
+            Stat_t   GetEntries() const {return fEntries;}
+            TTree   *GetTree() const {return fTree;}
+    virtual Int_t    GetRow(Int_t row);
+    Bool_t           IsAutoDelete() const;
+    Bool_t           IsFolder() const;
+    virtual void     Print(Option_t *option="") const;
+    virtual void     ReadBasket(TBuffer &b);
+    virtual void     Reset(Option_t *option="");
+    virtual void     ResetReadEntry() {fReadEntry = -1;}
+    virtual void     SetAddress(void *add);
+    virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
+    virtual void     SetBasketSize(Int_t buffsize) {fBasketSize=buffsize;}
+    virtual void     SetBufferAddress(TBuffer *entryBuffer);
+    virtual void     SetCompressionLevel(Int_t level=1);
+    virtual void     SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
+    virtual void     SetFile(TFile *file=0);
+    virtual void     SetFile(const char *filename);
+    virtual void     SetOffset(Int_t offset=0) {fOffset=offset;}
+    virtual void     SetTree(TTree *tree) { fTree = tree;}
+    virtual void     UpdateAddress() {;}
 
     ClassDef(TBranch,6)  //Branch descriptor
 };

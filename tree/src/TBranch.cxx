@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.8 2000/10/09 13:55:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.9 2000/11/21 20:49:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -492,7 +492,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
 }
 
 //______________________________________________________________________________
-Seek_t TBranch::GetBasketSeek(Int_t basketnumber)
+Seek_t TBranch::GetBasketSeek(Int_t basketnumber) const
 {
 //*-*-*-*-*Return address of basket in the file*-*-*-*-*-*
 //*-*      ====================================
@@ -635,7 +635,7 @@ TFile *TBranch::GetFile(Int_t mode)
 }
 
 //______________________________________________________________________________
-TLeaf *TBranch::GetLeaf(const char *name)
+TLeaf *TBranch::GetLeaf(const char *name) const
 {
 //*-*-*-*-*-*Return pointer to the 1st Leaf named name in thisBranch-*-*-*-*-*
 //*-*        =======================================================
@@ -660,7 +660,7 @@ Int_t TBranch::GetRow(Int_t)
 
 
 //______________________________________________________________________________
-Bool_t TBranch::IsAutoDelete()
+Bool_t TBranch::IsAutoDelete() const
 {
 //*-*-*-*-*Return TRUE if an existing object in a TBranchObject must be deleted
 //*-*      ==================================================
@@ -680,7 +680,7 @@ Bool_t TBranch::IsFolder() const
 }
 
 //______________________________________________________________________________
-void TBranch::Print(Option_t *)
+void TBranch::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================

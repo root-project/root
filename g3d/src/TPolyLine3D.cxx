@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.2 2000/06/13 12:21:21 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.3 2000/09/05 09:21:22 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -411,7 +411,7 @@ void TPolyLine3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TPolyLine3D::ls(Option_t *option)
+void TPolyLine3D::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
 //*-*                ==========================================
@@ -518,7 +518,7 @@ void TPolyLine3D::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPolyLine3D::Print(Option_t *option)
+void TPolyLine3D::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ==========================================

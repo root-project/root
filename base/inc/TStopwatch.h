@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    void        ResetCpuTime(Double_t time = 0) { Stop();  fTotalCpuTime = time; }
    void        ResetRealTime(Double_t time = 0) { Stop(); fTotalRealTime = time; }
    Double_t    CpuTime();
-   void        Print(Option_t *option="");
+   void        Print(Option_t *option="") const;
    static Double_t GetRealTime();
    static Double_t GetCPUTime();
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.3 2000/11/21 20:50:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.4 2000/12/11 22:17:19 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -204,7 +204,7 @@ Int_t TEventList::GetIndex(Int_t entry) const
 }
 
 //______________________________________________________________________________
-void TEventList::Print(Option_t *option)
+void TEventList::Print(Option_t *option) const
 {
 //          Print contents of this list
 

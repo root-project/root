@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.4 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.5 2000/11/21 20:27:34 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -222,7 +222,7 @@ void TPaveText::EditText()
 }
 
 //______________________________________________________________________________
-TText *TPaveText::GetLine(Int_t number)
+TText *TPaveText::GetLine(Int_t number) const
 {
 //*-*-*-*-*-*-*-*Get Pointer to line number in this pavetext*-*-*-*-*-*-*-*
 //*-*            ===========================================
@@ -238,7 +238,7 @@ TText *TPaveText::GetLine(Int_t number)
 }
 
 //______________________________________________________________________________
-TText *TPaveText::GetLineWith(const char *text)
+TText *TPaveText::GetLineWith(const char *text) const
 {
 //*-*-*-*-*Get Pointer to first containing string text in this pavetext*-*-*-*
 //*-*      ============================================================
@@ -253,7 +253,7 @@ TText *TPaveText::GetLineWith(const char *text)
 }
 
 //______________________________________________________________________________
-TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj)
+TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
 {
 //*-*-*-*-*Get object pointed by the mouse in this pavetext*-*-*-*
 //*-*      ================================================
@@ -319,7 +319,7 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj)
 }
 
 //______________________________________________________________________________
-Int_t TPaveText::GetSize()
+Int_t TPaveText::GetSize() const
 {
 //  return number of text lines (ignoring Tlines, etc)
 
@@ -556,7 +556,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
 }
 
 //______________________________________________________________________________
-void TPaveText::Print(Option_t *option)
+void TPaveText::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this pavetext with its attributes*-*-*-*-*-*-*-*
 //*-*                  =======================================

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.2 2000/06/06 13:07:28 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.3 2000/11/21 20:09:46 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -168,7 +168,7 @@ public:
                                 // ****** overloaded functions of TObject
 
   virtual void      Paint(Option_t *option = "");
-  virtual void      Print(Option_t *option = "");
+  virtual void      Print(Option_t *option = "") const;
   virtual void      Sizeof3D() const;
   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.2 2000/10/10 13:03:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.3 2000/11/21 20:38:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -103,10 +103,10 @@ public:
 
    Int_t GetRowLwb() const     { return fRowLwb; }
    Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
-   Int_t GetNrows() const      { return fNrows; }
+   Int_t GetNrows()  const     { return fNrows; }
    Int_t GetColLwb() const     { return fColLwb; }
    Int_t GetColUpb() const     { return fNcols+fColLwb-1; }
-   Int_t GetNcols() const      { return fNcols; }
+   Int_t GetNcols()  const     { return fNcols; }
    Int_t GetNoElements() const { return fNelems; }
 
    const Double_t &operator()(Int_t rown, Int_t coln) const;
@@ -152,7 +152,7 @@ public:
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="");
+   void Print(Option_t *option="") const;
 
    friend TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);

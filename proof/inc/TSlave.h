@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.2 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.3 2000/12/13 12:07:59 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
 
    void          Close(Option_t *opt = "");
 
-   Int_t         Compare(TObject *obj);
+   Int_t         Compare(const TObject *obj) const;
    Bool_t        IsSortable() const { return kTRUE; }
 
    const char   *GetName() const { return fName.Data(); }
@@ -87,7 +87,7 @@ public:
 
    Bool_t        IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
-   void          Print(Option_t *option="");
+   void          Print(Option_t *option="") const;
 
    ClassDef(TSlave,0)  //PROOF slave server
 };

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.2 2000/10/10 11:13:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.3 2000/11/21 20:39:57 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -130,7 +130,7 @@ public:
    Double_t Norm2Sqr() const;
    Double_t NormInf() const;
 
-   void Print(Option_t *option="");
+   void Print(Option_t *option="") const;
 
    friend TVectorD &operator+=(TVectorD &target, const TVectorD &source);
    friend TVectorD &operator-=(TVectorD &target, const TVectorD &source);

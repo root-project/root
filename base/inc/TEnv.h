@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.3 2000/06/16 17:08:11 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -103,6 +103,7 @@ private:
 
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
    TEnvRec(const char *n, const TString &v, const char *t, EEnvLevel l);
+   Int_t    Compare(const TObject *obj) const;
    void     ChangeValue(const char *v, const char *t, EEnvLevel l);
    void     ChangeValue(const TString &v, const char *t, EEnvLevel l);
    TString  ExpandValue(const char *v);
@@ -111,7 +112,6 @@ private:
    void     Write(TObject *obj);
    Int_t    Write(const char *name=0, Int_t opt=0, Int_t bufs=0)
                                      { return TObject::Write(name, opt, bufs); }
-   Int_t    Compare(TObject *obj);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ public:
    TEnv(const char *name="");
    virtual ~TEnv();
 
-   TOrdCollection     *GetTable() { return fTable; }
+   TOrdCollection     *GetTable() const { return fTable; }
    Bool_t              Defined(const char *name)
                                   { return Getvalue(name) != 0; }
 
@@ -153,8 +153,8 @@ public:
    virtual void        ReadFile(const char *fname, EEnvLevel level);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
-   virtual void        Print(Option_t *option="");
-   virtual void        PrintEnv(EEnvLevel level = kEnvAll);
+   virtual void        Print(Option_t *option="") const;
+   virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
 
    ClassDef(TEnv,0)  //Handle ROOT configuration resources
 };

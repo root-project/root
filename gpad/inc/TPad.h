@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.6 2000/09/29 08:23:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.7 2000/11/21 20:21:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -158,7 +158,7 @@ public:
    virtual void      DeleteExec(const char *name);
    virtual void      Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0); // *MENU*
    virtual void      Draw(Option_t *option="");
-   virtual void      DrawClassObject(TObject *obj, Option_t *option="");
+   virtual void      DrawClassObject(const TObject *obj, Option_t *option="");
    static  void      DrawColorTable();
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
@@ -167,10 +167,10 @@ public:
    void              DrawText(Double_t x, Double_t y, const char *text);
    void              DrawTextNDC(Double_t u, Double_t v, const char *text);
    virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(TObject *obj) const;
+   virtual TObject  *FindObject(const TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*
-   virtual Short_t   GetBorderMode() { return fBorderMode;}
-   virtual Short_t   GetBorderSize() { return fBorderSize;}
+   virtual Short_t   GetBorderMode() const { return fBorderMode;}
+   virtual Short_t   GetBorderSize() const { return fBorderSize;}
    Int_t             GetCrosshair() const {return fCrosshair;}
    virtual Int_t     GetCanvasID() const;
    TFrame           *GetFrame();
@@ -181,58 +181,58 @@ public:
    virtual void      GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2);
    virtual void      GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void      GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup);
-   Double_t          GetXlowNDC() {return fXlowNDC;}
-   Double_t          GetYlowNDC() {return fYlowNDC;}
-   Double_t          GetWNDC() {return fWNDC;}
-   Double_t          GetHNDC() {return fHNDC;}
-   virtual UInt_t    GetWw();
-   virtual UInt_t    GetWh();
-   Double_t          GetAbsXlowNDC() {return fAbsXlowNDC;}
-   Double_t          GetAbsYlowNDC() {return fAbsYlowNDC;}
-   Double_t          GetAbsWNDC() {return fAbsWNDC;}
-   Double_t          GetAbsHNDC() {return fAbsHNDC;}
-   Double_t          GetPhi()   {return fPhi;}
-   Double_t          GetTheta() {return fTheta;}
-   Double_t          GetUxmin() {return fUxmin;}
-   Double_t          GetUymin() {return fUymin;}
-   Double_t          GetUxmax() {return fUxmax;}
-   Double_t          GetUymax() {return fUymax;}
-   Bool_t            GetGridx() {return fGridx;}
-   Bool_t            GetGridy() {return fGridy;}
-   Int_t             GetNumber() {return fNumber;}
-   Int_t             GetTickx() {return fTickx;}
-   Int_t             GetTicky() {return fTicky;}
+   Double_t          GetXlowNDC() const {return fXlowNDC;}
+   Double_t          GetYlowNDC() const {return fYlowNDC;}
+   Double_t          GetWNDC() const {return fWNDC;}
+   Double_t          GetHNDC() const {return fHNDC;}
+   virtual UInt_t    GetWw() const;
+   virtual UInt_t    GetWh() const;
+   Double_t          GetAbsXlowNDC() const {return fAbsXlowNDC;}
+   Double_t          GetAbsYlowNDC() const {return fAbsYlowNDC;}
+   Double_t          GetAbsWNDC() const {return fAbsWNDC;}
+   Double_t          GetAbsHNDC() const {return fAbsHNDC;}
+   Double_t          GetPhi() const   {return fPhi;}
+   Double_t          GetTheta() const {return fTheta;}
+   Double_t          GetUxmin() const {return fUxmin;}
+   Double_t          GetUymin() const {return fUymin;}
+   Double_t          GetUxmax() const {return fUxmax;}
+   Double_t          GetUymax() const {return fUymax;}
+   Bool_t            GetGridx() const {return fGridx;}
+   Bool_t            GetGridy() const {return fGridy;}
+   Int_t             GetNumber() const {return fNumber;}
+   Int_t             GetTickx() const {return fTickx;}
+   Int_t             GetTicky() const {return fTicky;}
    Double_t          GetX1() const { return fX1; }
    Double_t          GetX2() const { return fX2; }
    Double_t          GetY1() const { return fY1; }
    Double_t          GetY2() const { return fY2; }
-   TList            *GetListOfPrimitives() {return fPrimitives;}
-   TList            *GetListOfExecs() {return fExecs;}
-   virtual TObject  *GetPrimitive(const char *name); //obsolete, use FindObject instead
-   virtual TObject  *GetSelected();
-   virtual TObject  *GetPadPointer() {return fPadPointer;}
+   TList            *GetListOfPrimitives() const {return fPrimitives;}
+   TList            *GetListOfExecs() const {return fExecs;}
+   virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
+   virtual TObject  *GetSelected() const;
+   virtual TObject  *GetPadPointer() const {return fPadPointer;}
    TVirtualPad      *GetPadSave() const;
    TVirtualPad      *GetSelectedPad() const;
-   TView            *GetView() {return fView;}
-   TPadView3D       *GetView3D(){return fPadView3D;}// Return 3D View of this TPad
-   Int_t             GetLogx() {return fLogx;}
-   Int_t             GetLogy() {return fLogy;}
-   Int_t             GetLogz() {return fLogz;}
-   virtual TVirtualPad *GetMother() {return fMother;}
+   TView            *GetView() const {return fView;}
+   TPadView3D       *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
+   Int_t             GetLogx() const {return fLogx;}
+   Int_t             GetLogy() const {return fLogy;}
+   Int_t             GetLogz() const {return fLogz;}
+   virtual TVirtualPad *GetMother() const {return fMother;}
    const char       *GetName() const {return fName.Data();}
    const char       *GetTitle() const {return fTitle.Data();}
-   virtual TCanvas  *GetCanvas() { return fCanvas; }
-   virtual TVirtualPad *GetVirtCanvas();
-   Int_t             GetPadPaint() {return fPadPaint;}
-   Int_t             GetPixmapID() {return fPixmapID;}
+   virtual TCanvas  *GetCanvas() const { return fCanvas; }
+   virtual TVirtualPad *GetVirtCanvas() const ;
+   Int_t             GetPadPaint() const {return fPadPaint;}
+   Int_t             GetPixmapID() const {return fPixmapID;}
    virtual Bool_t    HasCrosshair() const {return (Bool_t)fCrosshair;}
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
-   virtual Bool_t    IsBatch();
-   virtual Bool_t    IsEditable() {return fEditable;}
+   virtual Bool_t    IsBatch() const;
+   virtual Bool_t    IsEditable() const {return fEditable;}
    Bool_t            IsFolder() const {return kTRUE;}
-   Bool_t            IsModified() {return fModified;}
-   virtual Bool_t    IsRetained();
-   virtual void      ls(Option_t *option="");
+   Bool_t            IsModified() const {return fModified;}
+   virtual Bool_t    IsRetained() const;
+   virtual void      ls(Option_t *option="") const;
    void              Modified(Bool_t flag=1) { fModified = flag; }
    virtual Bool_t    OpaqueMoving() const;
    virtual Bool_t    OpaqueResizing() const;
@@ -261,7 +261,7 @@ public:
    Double_t          PixeltoY(Int_t py);
    virtual void      PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
    virtual void      Pop();
-   virtual void      Print(const char *filename="");
+   virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
    virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);

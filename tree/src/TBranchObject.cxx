@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.5 2000/12/07 07:26:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.6 2000/12/10 17:14:36 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -195,7 +195,7 @@ Bool_t TBranchObject::IsFolder() const
 }
 
 //______________________________________________________________________________
-void TBranchObject::Print(Option_t *option)
+void TBranchObject::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
@@ -207,7 +207,7 @@ void TBranchObject::Print(Option_t *option)
       Printf("*Entries : %8d : BranchObject (see below)                               *",Int_t(fEntries));
       Printf("*............................................................................*");
       for (i=0;i<nbranches;i++)  {
-         TBranch *branch = (TBranch*)fBranches[i];
+         TBranch *branch = (TBranch*)fBranches.At(i);
          branch->Print(option);
       }
    } else {

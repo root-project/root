@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.11 2000/10/19 12:45:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.12 2000/11/21 16:35:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -268,10 +268,10 @@ const char *TObject::ClassName() const
 }
 
 //______________________________________________________________________________
-TObject *TObject::Clone()
+TObject *TObject::Clone() const
 {
    // Make a clone of an object using the Streamer facility.
-
+   
    //create a buffer where the object will be streamed
    TFile *filsav = gFile;
    gFile = 0;
@@ -291,7 +291,7 @@ TObject *TObject::Clone()
 }
 
 //______________________________________________________________________________
-Int_t TObject::Compare(TObject *)
+Int_t TObject::Compare(const TObject *) const
 {
    // Compare abstract method. Must be overridden if a class wants to be able
    // to compare itself with other objects. Must return -1 if this is smaller
@@ -337,7 +337,7 @@ void TObject::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TObject::DrawClass()
+void TObject::DrawClass() const
 {
    // Draw class inheritance tree of the class to which this object belongs.
    // If a class B inherits from a class A, description of B is drawn
@@ -355,7 +355,7 @@ void TObject::DrawClass()
 }
 
 //______________________________________________________________________________
-void TObject::DrawClone(Option_t *option)
+void TObject::DrawClone(Option_t *option) const
 {
    // Draw a clone of this object in the current pad
 
@@ -374,7 +374,7 @@ void TObject::DrawClone(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TObject::Dump()
+void TObject::Dump() const
 {
    // Dump contents of object on stdout.
    // Using the information in the object dictionary (class TClass)
@@ -400,7 +400,7 @@ void TObject::Dump()
    char parent[256];
    parent[0] = 0;
    TDumpMembers dm;
-   ShowMembers(dm, parent);
+   ((TObject*)this)->ShowMembers(dm, parent);
 }
 
 //______________________________________________________________________________
@@ -452,7 +452,7 @@ TObject *TObject::FindObject(const char *) const
 }
 
 //______________________________________________________________________________
-TObject *TObject::FindObject(TObject *) const
+TObject *TObject::FindObject(const TObject *) const
 {
 // must be redefined in derived classes
 // this function is typycally used with TCollections, but can also be used
@@ -504,7 +504,7 @@ UInt_t TObject::GetUniqueID() const
 }
 
 //______________________________________________________________________________
-char *TObject::GetObjectInfo(Int_t px, Int_t py)
+char *TObject::GetObjectInfo(Int_t px, Int_t py) const
 {
    // Returns string containing info about the object at position (px,py).
    // This method is typically overridden by classes of which the objects
@@ -540,7 +540,7 @@ Bool_t TObject::HandleTimer(TTimer *)
 }
 
 //______________________________________________________________________________
-ULong_t TObject::Hash()
+ULong_t TObject::Hash() const
 {
    // Return hash value for this object.
 
@@ -566,7 +566,7 @@ Bool_t TObject::InheritsFrom(const TClass *cl) const
 }
 
 //______________________________________________________________________________
-void TObject::Inspect()
+void TObject::Inspect() const
 {
    // Dump contents of this object in a graphics canvas.
    // Same action as Dump but in a graphical form.
@@ -596,7 +596,7 @@ Bool_t TObject::IsFolder() const
 }
 
 //______________________________________________________________________________
-Bool_t TObject::IsEqual(TObject *obj)
+Bool_t TObject::IsEqual(const TObject *obj) const
 {
    // Default equal comparison (objects are equal if they have the same
    // address in memory). More complicated classes might want to override
@@ -606,7 +606,7 @@ Bool_t TObject::IsEqual(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TObject::ls(Option_t *)
+void TObject::ls(Option_t *) const
 {
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
@@ -638,7 +638,7 @@ void TObject::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TObject::Pop()
+void TObject::Pop() 
 {
    // Pop on object drawn in a pad to the top of the display list. I.e. it
    // will be drawn last and on top of all other primitives.
@@ -652,7 +652,7 @@ void TObject::Pop()
    while ((obj = next()))
       if (obj == this) {
          char *opt = StrDup(next.GetOption());
-         gPad->GetListOfPrimitives()->Remove(this);
+         gPad->GetListOfPrimitives()->Remove((TObject*)this);
          gPad->GetListOfPrimitives()->AddLast(this, opt);
          gPad->Modified();
          delete [] opt;
@@ -661,7 +661,7 @@ void TObject::Pop()
 }
 
 //______________________________________________________________________________
-void TObject::Print(Option_t *)
+void TObject::Print(Option_t *) const
 {
    // This method must be overridden when a class wants to print itself.
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.22 2000/12/02 16:34:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.23 2000/12/08 16:00:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -787,7 +787,7 @@ void TGraph::FitPanel()
 }
 
 //______________________________________________________________________________
-Double_t TGraph::GetErrorX(Int_t)
+Double_t TGraph::GetErrorX(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -797,7 +797,7 @@ Double_t TGraph::GetErrorX(Int_t)
 }
 
 //______________________________________________________________________________
-Double_t TGraph::GetErrorY(Int_t)
+Double_t TGraph::GetErrorY(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -807,7 +807,7 @@ Double_t TGraph::GetErrorY(Int_t)
 }
 
 //______________________________________________________________________________
-TF1 *TGraph::GetFunction(const char *name)
+TF1 *TGraph::GetFunction(const char *name) const
 {
 //*-*-*-*-*Return pointer to function with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      ===================================
@@ -820,7 +820,7 @@ TF1 *TGraph::GetFunction(const char *name)
 }
 
 //______________________________________________________________________________
-TH1F *TGraph::GetHistogram()
+TH1F *TGraph::GetHistogram() const
 {
 //    Returns a pointer to the histogram used to draw the axis
 //    Takes into account the two following cases.
@@ -849,7 +849,7 @@ void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y)
 }
 
 //______________________________________________________________________________
-TAxis *TGraph::GetXaxis()
+TAxis *TGraph::GetXaxis() const 
 {
    // Get x axis of the graph.
 
@@ -858,7 +858,7 @@ TAxis *TGraph::GetXaxis()
 }
 
 //______________________________________________________________________________
-TAxis *TGraph::GetYaxis()
+TAxis *TGraph::GetYaxis() const 
 {
    // Get y axis of the graph.
 
@@ -2433,7 +2433,7 @@ void TGraph::ComputeLogs(Int_t npoints, Int_t opt)
 
 
 //______________________________________________________________________________
-void TGraph::Print(Option_t *)
+void TGraph::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Print graph values*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================

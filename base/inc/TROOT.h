@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.10 2000/11/27 10:42:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.11 2000/12/02 15:47:42 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -114,60 +114,60 @@ public:
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(TObject *obj) const;
+   virtual TObject  *FindObject(const TObject *obj) const;
    virtual TObject  *FindObjectAny(const char *name) const;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
-   const char       *FindObjectPathName(TObject *obj) const;
+   const char       *FindObjectPathName(const TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() {return fFromPopUp;}
    TApplication     *GetApplication() {return fApplication;}
-   TClass           *GetClass(const char *name, Bool_t load=kTRUE);
-   TColor           *GetColor(Int_t color);
+   TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
+   TColor           *GetColor(Int_t color) const;
    const char       *GetCutClassName() const {return fCutClassName.Data();}
    const char       *GetDefCanvasName() const {return fDefCanvasName.Data();}
-   Bool_t            GetEditHistograms() {return fEditHistograms;}
-   Int_t             GetEditorMode() {return fEditorMode;}
-   Bool_t            GetForceStyle() {return fForceStyle;}
-   VoidFuncPtr_t     GetMakeDefCanvas();
-   Int_t             GetVersionDate() {return fVersionDate;}
-   Int_t             GetVersionTime() {return fVersionTime;}
-   Int_t             GetVersionInt() {return fVersionInt;}
+   Bool_t            GetEditHistograms() const {return fEditHistograms;}
+   Int_t             GetEditorMode() const {return fEditorMode;}
+   Bool_t            GetForceStyle() const {return fForceStyle;}
+   VoidFuncPtr_t     GetMakeDefCanvas() const;
+   Int_t             GetVersionDate() const {return fVersionDate;}
+   Int_t             GetVersionTime() const {return fVersionTime;}
+   Int_t             GetVersionInt() const {return fVersionInt;}
    const char       *GetVersion() const {return fVersion.Data();}
-   TSeqCollection   *GetListOfClasses()   {return fClasses;}
-   TSeqCollection   *GetListOfColors()    {return fColors;}
+   TSeqCollection   *GetListOfClasses() const   {return fClasses;}
+   TSeqCollection   *GetListOfColors() const    {return fColors;}
    TSeqCollection   *GetListOfTypes(Bool_t load = kFALSE);
    TSeqCollection   *GetListOfGlobals(Bool_t load = kFALSE);
    TSeqCollection   *GetListOfGlobalFunctions(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfFiles()      {return fFiles;}
-   TSeqCollection   *GetListOfMappedFiles(){return fMappedFiles;}
-   TSeqCollection   *GetListOfSockets()    {return fSockets;}
-   TSeqCollection   *GetListOfCanvases()   {return fCanvases;}
-   TSeqCollection   *GetListOfStyles()     {return fStyles;}
-   TSeqCollection   *GetListOfFunctions()  {return fFunctions;}
-   TSeqCollection   *GetListOfGeometries() {return fGeometries;}
-   TSeqCollection   *GetListOfBrowsers()   {return fBrowsers;}
-   TSeqCollection   *GetListOfSpecials()   {return fSpecials;}
-   TSeqCollection   *GetListOfTasks()      {return fTasks;}
-   TSeqCollection   *GetListOfCleanups()   {return fCleanups;}
-   TSeqCollection   *GetListOfStreamerInfo()    {return fStreamerInfo;}
-   TSeqCollection   *GetListOfMessageHandlers() {return fMessageHandlers;}
-   TList            *GetListOfBrowsables() {return fBrowsables;}
+   TSeqCollection   *GetListOfFiles() const      {return fFiles;}
+   TSeqCollection   *GetListOfMappedFiles() const{return fMappedFiles;}
+   TSeqCollection   *GetListOfSockets() const    {return fSockets;}
+   TSeqCollection   *GetListOfCanvases() const   {return fCanvases;}
+   TSeqCollection   *GetListOfStyles() const     {return fStyles;}
+   TSeqCollection   *GetListOfFunctions() const  {return fFunctions;}
+   TSeqCollection   *GetListOfGeometries() const {return fGeometries;}
+   TSeqCollection   *GetListOfBrowsers() const   {return fBrowsers;}
+   TSeqCollection   *GetListOfSpecials() const   {return fSpecials;}
+   TSeqCollection   *GetListOfTasks() const      {return fTasks;}
+   TSeqCollection   *GetListOfCleanups() const   {return fCleanups;}
+   TSeqCollection   *GetListOfStreamerInfo() const    {return fStreamerInfo;}
+   TSeqCollection   *GetListOfMessageHandlers() const {return fMessageHandlers;}
+   TList            *GetListOfBrowsables() const {return fBrowsables;}
    TDataType        *GetType(const char *name, Bool_t load = kFALSE);
-   TFile            *GetFile() {return fFile;}
-   TFile            *GetFile(const char *name);
-   TStyle           *GetStyle(const char *name);
-   TObject          *GetFunction(const char *name);
+   TFile            *GetFile() const {return fFile;}
+   TFile            *GetFile(const char *name) const;
+   TStyle           *GetStyle(const char *name) const;
+   TObject          *GetFunction(const char *name) const;
    TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE);
-   TGlobal          *GetGlobal(TObject *obj, Bool_t load = kFALSE);
+   TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE);
    TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
    TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
-   TObject          *GetGeometry(const char *name);
-   TObject          *GetSelectedPrimitive() {return fPrimitive;}
-   TVirtualPad      *GetSelectedPad() {return fSelectPad;}
-   Int_t             GetNclasses() {return fClasses->GetSize();}
-   Int_t             GetNtypes() {return fTypes->GetSize();}
-   TFolder          *GetRootFolder() {return fRootFolder;}
+   TObject          *GetGeometry(const char *name) const;
+   TObject          *GetSelectedPrimitive() const {return fPrimitive;}
+   TVirtualPad      *GetSelectedPad() const {return fSelectPad;}
+   Int_t             GetNclasses() const {return fClasses->GetSize();}
+   Int_t             GetNtypes() const {return fTypes->GetSize();}
+   TFolder          *GetRootFolder() const {return fRootFolder;}
    void              Idle(UInt_t idleTimeInSec, const char *command=0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
@@ -175,11 +175,11 @@ public:
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
    Bool_t            IsProofServ() const { return fName == "Proofserv" ? kTRUE : kFALSE; }
-   void              ls(Option_t *option="");
+   void              ls(Option_t *option="") const;
    Int_t             LoadClass(const char *classname, const char *libname);
    void              LoadMacro(const char *filename);
    Int_t             Macro(const char *filename);
-   void              Message(Int_t id, TObject *obj);
+   void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() {return fMustClean;}
    void              ProcessLine(const char *line);
    void              ProcessLineSync(const char *line);
@@ -200,7 +200,7 @@ public:
    void              SetLineHasBeenProcessed() {if (fLineIsProcessing) fLineIsProcessing--;}
    void              SetReadingObject(Bool_t flag=kTRUE) {fReadingObject = flag;}
    void              SetMustClean(Bool_t flag=kTRUE) { fMustClean=flag; }
-   void              SetSelectedPrimitive(TObject *obj) { fPrimitive = obj; }
+   void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = (TObject*)obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }
    void              SetStyle(const char *stylename="Default");
    void              Time(Int_t casetime=1) { fTimer = casetime; }

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
         virtual void      Copy(TObject &points);
         virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual Int_t     GetLastPosition()       const;
+        virtual Int_t     GetLastPosition() const;
         virtual Int_t     GetN() const;
         virtual Float_t  *GetP() const;
         virtual Float_t   GetX(Int_t idx)  const;
@@ -55,10 +55,10 @@ public:
         virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
         virtual const Float_t  *GetXYZ(Int_t idx);
         virtual Option_t *GetOption() const ;
-        virtual Bool_t    Is3D();
-        virtual void      ls(Option_t *option="");
+        virtual Bool_t    Is3D() const;
+        virtual void      ls(Option_t *option="") const;
         virtual void      PaintPoints(Int_t , Float_t *,Option_t *){;}
-        virtual void      Print(Option_t *option="");
+        virtual void      Print(Option_t *option="") const;
         virtual Int_t     SetLastPosition(Int_t idx);
         virtual void      SetOption(Option_t *option="");
         virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
@@ -79,7 +79,7 @@ inline const Float_t  *TPointsArray3D::GetXYZ(Int_t idx)                    {ret
 inline Float_t  *TPointsArray3D::GetXYZ(Float_t *xyz,Int_t idx,Int_t num)  const
                           {return (Float_t  *)memcpy(xyz,&fP[3*idx],3*num*sizeof(Float_t));}
 inline Option_t *TPointsArray3D::GetOption() const                          {return fOption.Data();}
-inline Bool_t    TPointsArray3D::Is3D()                                     {return kTRUE;}
+inline Bool_t    TPointsArray3D::Is3D() const                               {return kTRUE;}
 inline void      TPointsArray3D::SetOption(Option_t *option)                {fOption = option;}
 
 inline Int_t     TPointsArray3D::Size() const                               {return fLastPoint+1;}

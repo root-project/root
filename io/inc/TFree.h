@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.h,v 1.2 2000/11/21 16:15:29 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -39,8 +39,8 @@ public:
                TFree     *AddFree(TList *lfree, Seek_t first, Seek_t last);
         virtual void     FillBuffer(char *&buffer);
                TFree     *GetBestFree(TList *lfree, Int_t nbytes);
-              Seek_t     GetFirst() {return fFirst;}
-              Seek_t     GetLast() {return fLast;}
+              Seek_t     GetFirst() const {return fFirst;}
+              Seek_t     GetLast() const {return fLast;}
         virtual void     ReadBuffer(char *&buffer);
                 void     SetFirst(Seek_t first) {fFirst=first;}
                 void     SetLast(Seek_t last) {fLast=last;}

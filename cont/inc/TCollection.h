@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.4 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -74,17 +74,17 @@ public:
    Int_t              Capacity() const { return fSize; }
    virtual void       Clear(Option_t *option="") = 0;
    Bool_t             Contains(const char *name) const { return FindObject(name) != 0; }
-   Bool_t             Contains(TObject *obj) const { return FindObject(obj) != 0; }
+   Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
    virtual void       Delete(Option_t *option="") = 0;
    virtual void       Draw(Option_t *option="");
    virtual void       Dump();
    virtual TObject   *FindObject(const char *name) const;
    TObject           *operator()(const char *name) const;
-   virtual TObject   *FindObject(TObject *obj) const;
+   virtual TObject   *FindObject(const TObject *obj) const;
    virtual const char *GetName() const { return fName.Data(); }
    virtual Int_t      GetSize() const { return fSize; }
    virtual Int_t      GrowBy(Int_t delta) const;
-   Bool_t             IsArgNull(const char *where, TObject *obj) const;
+   Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
    Bool_t             IsFolder() const { return kTRUE; }
    virtual void       ls(Option_t *option="");

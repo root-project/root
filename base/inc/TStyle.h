@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -140,106 +140,106 @@ public:
         TStyle(const char *name, const char *title);
         TStyle(const TStyle &style);
         virtual          ~TStyle();
-        Int_t            AxisChoice(Option_t *axis);
+        Int_t            AxisChoice(Option_t *axis) const;
         virtual void     Browse(TBrowser *b);
         static  void     BuildStyles();
         virtual void     Copy(TObject &style);
         virtual void     cd();
 
-        Int_t            GetNdivisions(Option_t *axis="X");
+        Int_t            GetNdivisions(Option_t *axis="X") const;
         TAttText        *GetAttDate() {return &fAttDate;}
-        Color_t          GetAxisColor(Option_t *axis="X");
-        Color_t          GetLabelColor(Option_t *axis="X");
-        Style_t          GetLabelFont(Option_t *axis="X");
-        Float_t          GetLabelOffset(Option_t *axis="X");
-        Float_t          GetLabelSize(Option_t *axis="X");
-        Float_t          GetTitleOffset(Option_t *axis="X"); //return axis title offset
-        Float_t          GetTitleSize(Option_t *axis="X");   //return axis title size
-        Float_t          GetTickLength(Option_t *axis="X");
+        Color_t          GetAxisColor(Option_t *axis="X") const;
+        Color_t          GetLabelColor(Option_t *axis="X") const;
+        Style_t          GetLabelFont(Option_t *axis="X") const;
+        Float_t          GetLabelOffset(Option_t *axis="X") const;
+        Float_t          GetLabelSize(Option_t *axis="X") const;
+        Float_t          GetTitleOffset(Option_t *axis="X") const; //return axis title offset
+        Float_t          GetTitleSize(Option_t *axis="X") const;   //return axis title size
+        Float_t          GetTickLength(Option_t *axis="X") const;
 
-        Float_t          GetBarOffset() {return fBarOffset;}
-        Float_t          GetBarWidth() {return fBarWidth;}
-        Int_t            GetDrawBorder() {return fDrawBorder;}
-        Int_t            GetErrorMarker() {return fErrorMarker;}
-        Float_t          GetErrorMsize() {return fErrorMsize;}
-        Float_t          GetErrorX() {return fErrorX;}
-        Color_t          GetCanvasColor() {return fCanvasColor;}
-        Width_t          GetCanvasBorderSize() {return fCanvasBorderSize;}
-        Int_t            GetCanvasBorderMode() {return fCanvasBorderMode;}
-        Int_t            GetCanvasDefH()      {return fCanvasDefH;}
-        Int_t            GetCanvasDefW()      {return fCanvasDefW;}
-        Int_t            GetCanvasDefX()      {return fCanvasDefX;}
-        Int_t            GetCanvasDefY()      {return fCanvasDefY;}
-        Int_t            GetColorPalette(Int_t i);
-        Float_t          GetDateX()           {return fDateX;}
-        Float_t          GetDateY()           {return fDateY;}
+        Float_t          GetBarOffset() const {return fBarOffset;}
+        Float_t          GetBarWidth() const {return fBarWidth;}
+        Int_t            GetDrawBorder() const {return fDrawBorder;}
+        Int_t            GetErrorMarker() const {return fErrorMarker;}
+        Float_t          GetErrorMsize() const {return fErrorMsize;}
+        Float_t          GetErrorX() const {return fErrorX;}
+        Color_t          GetCanvasColor() const {return fCanvasColor;}
+        Width_t          GetCanvasBorderSize() const {return fCanvasBorderSize;}
+        Int_t            GetCanvasBorderMode() const {return fCanvasBorderMode;}
+        Int_t            GetCanvasDefH() const      {return fCanvasDefH;}
+        Int_t            GetCanvasDefW() const      {return fCanvasDefW;}
+        Int_t            GetCanvasDefX() const      {return fCanvasDefX;}
+        Int_t            GetCanvasDefY() const      {return fCanvasDefY;}
+        Int_t            GetColorPalette(Int_t i) const;
+        Float_t          GetDateX()  const          {return fDateX;}
+        Float_t          GetDateY() const           {return fDateY;}
         const char      *GetFitFormat()       const {return fFitFormat.Data();}
-        Int_t            GetNumberOfColors()  {return fPalette.fN;}
-        Color_t          GetPadColor()        {return fPadColor;}
-        Width_t          GetPadBorderSize()   {return fPadBorderSize;}
-        Int_t            GetPadBorderMode()   {return fPadBorderMode;}
-        Float_t          GetPadBottomMargin() {return fPadBottomMargin;}
-        Float_t          GetPadTopMargin()    {return fPadTopMargin;}
-        Float_t          GetPadLeftMargin()   {return fPadLeftMargin;}
-        Float_t          GetPadRightMargin()  {return fPadRightMargin;}
-        Bool_t           GetPadGridX()        {return fPadGridX;}
-        Bool_t           GetPadGridY()        {return fPadGridY;}
-        Int_t            GetPadTickX()        {return fPadTickX;}
-        Int_t            GetPadTickY()        {return fPadTickY;}
-        Color_t          GetFuncColor()       {return fFuncColor;}
-        Style_t          GetFuncStyle()       {return fFuncStyle;}
-        Width_t          GetFuncWidth()       {return fFuncWidth;}
-        Color_t          GetFrameFillColor() {return fFrameFillColor;}
-        Color_t          GetFrameLineColor() {return fFrameLineColor;}
-        Style_t          GetFrameFillStyle() {return fFrameFillStyle;}
-        Style_t          GetFrameLineStyle() {return fFrameLineStyle;}
-        Width_t          GetFrameLineWidth() {return fFrameLineWidth;}
-        Width_t          GetFrameBorderSize() {return fFrameBorderSize;}
-        Int_t            GetFrameBorderMode() {return fFrameBorderMode;}
-        Color_t          GetHistFillColor() {return fHistFillColor;}
-        Color_t          GetHistLineColor() {return fHistLineColor;}
-        Style_t          GetHistFillStyle() {return fHistFillStyle;}
-        Style_t          GetHistLineStyle() {return fHistLineStyle;}
-        Width_t          GetHistLineWidth() {return fHistLineWidth;}
-        Float_t          GetLegoInnerR() {return fLegoInnerR;}
-        Int_t            GetOptDate() {return fOptDate;}
-        Int_t            GetOptFile() {return fOptFile;}
-        Int_t            GetOptFit() {return fOptFit;}
-        Int_t            GetOptStat() {return fOptStat;}
-        Int_t            GetOptTitle() {return fOptTitle;}
-        Int_t            GetOptLogx() {return fOptLogx;}
-        Int_t            GetOptLogy() {return fOptLogy;}
-        Int_t            GetOptLogz() {return fOptLogz;}
+        Int_t            GetNumberOfColors() const  {return fPalette.fN;}
+        Color_t          GetPadColor() const        {return fPadColor;}
+        Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
+        Int_t            GetPadBorderMode() const   {return fPadBorderMode;}
+        Float_t          GetPadBottomMargin() const {return fPadBottomMargin;}
+        Float_t          GetPadTopMargin() const    {return fPadTopMargin;}
+        Float_t          GetPadLeftMargin() const   {return fPadLeftMargin;}
+        Float_t          GetPadRightMargin() const  {return fPadRightMargin;}
+        Bool_t           GetPadGridX() const        {return fPadGridX;}
+        Bool_t           GetPadGridY() const        {return fPadGridY;}
+        Int_t            GetPadTickX() const        {return fPadTickX;}
+        Int_t            GetPadTickY() const        {return fPadTickY;}
+        Color_t          GetFuncColor() const       {return fFuncColor;}
+        Style_t          GetFuncStyle() const       {return fFuncStyle;}
+        Width_t          GetFuncWidth() const       {return fFuncWidth;}
+        Color_t          GetFrameFillColor() const {return fFrameFillColor;}
+        Color_t          GetFrameLineColor() const {return fFrameLineColor;}
+        Style_t          GetFrameFillStyle() const {return fFrameFillStyle;}
+        Style_t          GetFrameLineStyle() const {return fFrameLineStyle;}
+        Width_t          GetFrameLineWidth() const {return fFrameLineWidth;}
+        Width_t          GetFrameBorderSize() const {return fFrameBorderSize;}
+        Int_t            GetFrameBorderMode() const {return fFrameBorderMode;}
+        Color_t          GetHistFillColor() const {return fHistFillColor;}
+        Color_t          GetHistLineColor() const {return fHistLineColor;}
+        Style_t          GetHistFillStyle() const {return fHistFillStyle;}
+        Style_t          GetHistLineStyle() const {return fHistLineStyle;}
+        Width_t          GetHistLineWidth() const {return fHistLineWidth;}
+        Float_t          GetLegoInnerR() const {return fLegoInnerR;}
+        Int_t            GetOptDate() const {return fOptDate;}
+        Int_t            GetOptFile() const {return fOptFile;}
+        Int_t            GetOptFit() const {return fOptFit;}
+        Int_t            GetOptStat() const {return fOptStat;}
+        Int_t            GetOptTitle() const {return fOptTitle;}
+        Int_t            GetOptLogx() const {return fOptLogx;}
+        Int_t            GetOptLogy() const {return fOptLogy;}
+        Int_t            GetOptLogz() const {return fOptLogz;}
         void             GetPaperSize(Float_t &xsize, Float_t &ysize);
-        Int_t            GetShowEventStatus(){return fShowEventStatus;}
-        Float_t          GetScreenFactor() {return fScreenFactor;}
-        Color_t          GetStatColor() {return fStatColor;}
-        Color_t          GetStatTextColor() {return fStatTextColor;}
-        Width_t          GetStatBorderSize() {return fStatBorderSize;}
-        Style_t          GetStatFont()  {return fStatFont;}
-        Style_t          GetStatStyle()  {return fStatStyle;}
+        Int_t            GetShowEventStatus() const {return fShowEventStatus;}
+        Float_t          GetScreenFactor() const {return fScreenFactor;}
+        Color_t          GetStatColor() const {return fStatColor;}
+        Color_t          GetStatTextColor() const {return fStatTextColor;}
+        Width_t          GetStatBorderSize() const {return fStatBorderSize;}
+        Style_t          GetStatFont() const  {return fStatFont;}
+        Style_t          GetStatStyle() const  {return fStatStyle;}
         const char      *GetStatFormat() const {return fStatFormat.Data();}
-        Float_t          GetStatX()     {return fStatX;}
-        Float_t          GetStatY()     {return fStatY;}
-        Float_t          GetStatW()     {return fStatW;}
-        Float_t          GetStatH()     {return fStatH;}
-        Double_t         GetTimeOffset() {return fTimeOffset;} //return axis time offset
-        Color_t          GetTitleColor() {return fTitleColor;}  //return histogram title fill area color
-        Color_t          GetTitleTextColor() {return fTitleTextColor;}  //return histogram title text color
-        Style_t          GetTitleStyle()  {return fTitleStyle;}
-        Style_t          GetTitleFont()  {return fTitleFont;} //return histogram title font
-        Width_t          GetTitleBorderSize() {return fTitleBorderSize;} //return border size of histogram title TPaveLabel
-        Float_t          GetTitleXOffset() {return GetTitleOffset("X");} //return X axis title offset
-        Float_t          GetTitleXSize()   {return GetTitleSize("X");}   //return X axis title size
-        Float_t          GetTitleYOffset() {return GetTitleOffset("Y");} //return Y axis title offset
-        Float_t          GetTitleYSize()   {return GetTitleSize("Y");}   //return Y axis title size
-        Float_t          GetTitleX()     {return fTitleX;}  //return left X position of histogram title TPavelabel
-        Float_t          GetTitleY()     {return fTitleY;}  //return left bottom position of histogram title TPavelabel
-        Float_t          GetTitleW()     {return fTitleW;}  //return width of histogram title TPaveLabel
-        Float_t          GetTitleH()     {return fTitleH;}  //return height of histogram title TPavelabel
+        Float_t          GetStatX() const     {return fStatX;}
+        Float_t          GetStatY() const     {return fStatY;}
+        Float_t          GetStatW() const     {return fStatW;}
+        Float_t          GetStatH() const     {return fStatH;}
+        Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
+        Color_t          GetTitleColor() const {return fTitleColor;}  //return histogram title fill area color
+        Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
+        Style_t          GetTitleStyle() const  {return fTitleStyle;}
+        Style_t          GetTitleFont() const  {return fTitleFont;} //return histogram title font
+        Width_t          GetTitleBorderSize() const {return fTitleBorderSize;} //return border size of histogram title TPaveLabel
+        Float_t          GetTitleXOffset() const {return GetTitleOffset("X");} //return X axis title offset
+        Float_t          GetTitleXSize() const   {return GetTitleSize("X");}   //return X axis title size
+        Float_t          GetTitleYOffset() const {return GetTitleOffset("Y");} //return Y axis title offset
+        Float_t          GetTitleYSize() const   {return GetTitleSize("Y");}   //return Y axis title size
+        Float_t          GetTitleX() const     {return fTitleX;}  //return left X position of histogram title TPavelabel
+        Float_t          GetTitleY() const     {return fTitleY;}  //return left bottom position of histogram title TPavelabel
+        Float_t          GetTitleW() const     {return fTitleW;}  //return width of histogram title TPaveLabel
+        Float_t          GetTitleH() const     {return fTitleH;}  //return height of histogram title TPavelabel
         const char      *GetHeaderPS() const {return fHeaderPS.Data();}
         const char      *GetLineStyleString(Int_t i=1) const;
-        Float_t          GetLineScalePS() {return fLineScalePS;}
+        Float_t          GetLineScalePS() const {return fLineScalePS;}
         virtual void     Reset(Option_t *option="");
 
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}

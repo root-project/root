@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.17 2000/12/04 16:43:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.18 2000/12/11 10:33:12 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -282,7 +282,7 @@ void TClass::BypassStreamer(Bool_t bypass)
 
  
 //______________________________________________________________________________
-Int_t TClass::Compare(TObject *obj)
+Int_t TClass::Compare(const TObject *obj) const
 {
   // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
@@ -320,7 +320,7 @@ void TClass::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-char *TClass::EscapeChars(char *text)
+char *TClass::EscapeChars(char *text) const
 {
    // Introduce an escape character (@) in front of a special chars.
    // You need to use the result immediately before it is being overwritten.
@@ -349,7 +349,7 @@ TClass *TClass::GetBaseClass(const char *classname)
    // "classname" is not a base class. Takes care of multiple inheritance.
 
    // check if class name itself is equal to classname
-   if (strcmp(GetName(), classname) == 0) return this;
+   if (strcmp(GetName(), classname) == 0) return (TClass*)this;
 
    if (!fClassInfo) return 0;
 
@@ -377,7 +377,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
    // is not a base class. Takes care of multiple inheritance.
 
    // check if class name itself is equal to classname
-   if (cl == this) return this;
+   if (cl == this) return (TClass*)this;
 
    if (!fClassInfo) return 0;
 
@@ -436,7 +436,7 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 
    // Check if data member exists in class itself
    TDataMember *dm = GetDataMember(datamember);
-   if (dm) return this;
+   if (dm) return (TClass*)this;
 
    // if datamember not found in class, search in next base classes
    TBaseClass *inh;

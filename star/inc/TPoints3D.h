@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.6 1999/12/21 18:57:14 fine Exp $
+// $Id: TPoints3D.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -76,9 +76,9 @@ public:
         virtual Float_t  *GetXYZ(Float_t *xyz,Int_t idx,Int_t num=1)  const;
         virtual const Float_t  *GetXYZ(Int_t idx);
         virtual Option_t *GetOption() const ;
-        virtual void      ls(Option_t *option="");
+        virtual void      ls(Option_t *option="") const;
         virtual void      PaintPoints(Int_t, Float_t *,Option_t *){;}
-        virtual void      Print(Option_t *option="");
+        virtual void      Print(Option_t *option="") const;
         virtual Int_t     SetLastPosition(Int_t idx);
         virtual void      SetOption(Option_t *option="");
         virtual Int_t     SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*

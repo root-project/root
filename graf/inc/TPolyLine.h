@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.2 2000/06/13 11:16:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -56,15 +56,15 @@ public:
         virtual void    Draw(Option_t *option="");
         virtual void    DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Int_t           GetN() {return fN;}
-        Double_t       *GetX() {return fX;}
-        Double_t       *GetY() {return fY;}
+        Int_t           GetN() const {return fN;}
+        Double_t       *GetX() const {return fX;}
+        Double_t       *GetY() const {return fY;}
         Option_t        *GetOption() const {return fOption.Data();}
-        virtual void    ls(Option_t *option="");
+        virtual void    ls(Option_t *option="") const;
         virtual void    Paint(Option_t *option="");
         virtual void    PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void    PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-        virtual void    Print(Option_t *option="");
+        virtual void    Print(Option_t *option="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
         virtual void    SetOption(Option_t *option="") {fOption = option;}
         virtual void    SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*

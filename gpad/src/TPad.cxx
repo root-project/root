@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.22 2000/11/21 20:21:54 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.23 2000/12/02 16:36:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1241,7 +1241,7 @@ void TPad::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPad::DrawClassObject(TObject *classobj, Option_t *option)
+void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 {
    // Draw class inheritance tree of the class to which obj belongs.
    // If a class B inherits from a class A, description of B is drawn
@@ -2060,7 +2060,7 @@ TObject *TPad::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TPad::FindObject(TObject *) const
+TObject *TPad::FindObject(const TObject *) const
 {
    //not implemented yet
    return 0;
@@ -2091,7 +2091,7 @@ Int_t TPad::GetEventY() const
 }
 
 //______________________________________________________________________________
-TVirtualPad *TPad::GetVirtCanvas()
+TVirtualPad *TPad::GetVirtCanvas() const
 {
    return (TVirtualPad*) fCanvas;
 }
@@ -2103,7 +2103,7 @@ Color_t TPad::GetHighLightColor() const
 }
 
 //______________________________________________________________________________
-TObject *TPad::GetSelected()
+TObject *TPad::GetSelected() const
 {
    return fCanvas->GetSelected();
 }
@@ -2121,13 +2121,13 @@ TVirtualPad *TPad::GetPadSave() const
 }
 
 //______________________________________________________________________________
-UInt_t TPad::GetWh()
+UInt_t TPad::GetWh() const
 {
    return fCanvas->GetWh();
 }
 
 //______________________________________________________________________________
-UInt_t TPad::GetWw()
+UInt_t TPad::GetWw() const
 {
    return fCanvas->GetWw();
 }
@@ -2144,13 +2144,13 @@ void TPad::HideToolTip(Int_t event)
 }
 
 //______________________________________________________________________________
-Bool_t TPad::IsBatch()
+Bool_t TPad::IsBatch() const 
 {
    return fCanvas->IsBatch();
 }
 
 //______________________________________________________________________________
-Bool_t TPad::IsRetained()
+Bool_t TPad::IsRetained() const
 {
    return fCanvas->IsRetained();
 }
@@ -2225,7 +2225,7 @@ TFrame *TPad::GetFrame()
 }
 
 //______________________________________________________________________________
-TObject *TPad::GetPrimitive(const char *name)
+TObject *TPad::GetPrimitive(const char *name) const
 {
    if (fPrimitives) return fPrimitives->FindObject(name);
    return 0;
@@ -2283,7 +2283,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 }
 
 //______________________________________________________________________________
-void TPad::ls(Option_t *option)
+void TPad::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*List all primitives in pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==========================
@@ -3310,13 +3310,13 @@ void TPad::Pop()
 
 
 //______________________________________________________________________________
-void TPad::Print(const char *filename)
+void TPad::Print(const char *filename) const
 {
 //*-*-*-*-*Old interface. Use SaveAs instead*-*-*-*-*-*
 //*-*      =================================
 //
 
-   SaveAs(filename);
+   ((TPad*)this)->SaveAs(filename);
 
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.3 2000/08/15 08:51:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.4 2000/11/21 20:36:08 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -557,7 +557,7 @@ Int_t TProfile2D::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-Stat_t TProfile2D::GetBinContent(Int_t bin)
+Stat_t TProfile2D::GetBinContent(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin content of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -568,7 +568,7 @@ Stat_t TProfile2D::GetBinContent(Int_t bin)
 }
 
 //______________________________________________________________________________
-Stat_t TProfile2D::GetBinEntries(Int_t bin)
+Stat_t TProfile2D::GetBinEntries(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin entries of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -578,7 +578,7 @@ Stat_t TProfile2D::GetBinEntries(Int_t bin)
 }
 
 //______________________________________________________________________________
-Stat_t TProfile2D::GetBinError(Int_t bin)
+Stat_t TProfile2D::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile2D histogram*-*-*-*-*-*-*-*-*
 //*-*          =========================================

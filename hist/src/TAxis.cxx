@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.11 2000/11/21 20:31:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.12 2000/12/02 16:29:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -365,7 +365,7 @@ Int_t TAxis::FindBin(Axis_t x)
 }
 
 //______________________________________________________________________________
-Int_t TAxis::FindFixBin(Axis_t x)
+Int_t TAxis::FindFixBin(Axis_t x) const
 {
 //*-*-*-*-*-*-*-*-*Find bin number corresponding to abscissa x-*-*-*-*-*-*
 //*-*              ===========================================
@@ -385,7 +385,7 @@ Int_t TAxis::FindFixBin(Axis_t x)
 }
 
 //______________________________________________________________________________
-Int_t TAxis::GetFirst()
+Int_t TAxis::GetFirst() const
 {
 //             return first bin on the axis
 //       - 0 if no range defined
@@ -395,7 +395,7 @@ Int_t TAxis::GetFirst()
 }
 
 //______________________________________________________________________________
-Int_t TAxis::GetLast()
+Int_t TAxis::GetLast() const
 {
 //             return last bin on the axis
 //       - fNbins if no range defined
@@ -405,7 +405,7 @@ Int_t TAxis::GetLast()
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinCenter(Int_t bin)
+Axis_t TAxis::GetBinCenter(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return center of bin*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================
@@ -420,7 +420,7 @@ Axis_t TAxis::GetBinCenter(Int_t bin)
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinLowEdge(Int_t bin)
+Axis_t TAxis::GetBinLowEdge(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return low edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
@@ -431,7 +431,7 @@ Axis_t TAxis::GetBinLowEdge(Int_t bin)
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinUpEdge(Int_t bin)
+Axis_t TAxis::GetBinUpEdge(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return up edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
@@ -447,7 +447,7 @@ Axis_t TAxis::GetBinUpEdge(Int_t bin)
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinWidth(Int_t bin)
+Axis_t TAxis::GetBinWidth(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return bin width-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================
@@ -479,7 +479,7 @@ void TAxis::GetLowEdge(Axis_t *edge)
 //                     LABELs methods
 //--------------------------------------------------------------------
 //______________________________________________________________________________
-char *TAxis::GetBinLabel(Int_t)
+char *TAxis::GetBinLabel(Int_t) const
 {
 //*-*-*-*-*-*-*-*-*-*Return label associated to bin-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==============================

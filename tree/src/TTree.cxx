@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.30 2000/12/05 10:52:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.31 2000/12/10 17:18:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -464,7 +464,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       TDataMember *dm = rd->GetDataMember();
       if (rd->IsObject()) {
 //printf("found IsObject:%s, class:%s\n",dm->GetName(),dm->GetFullTypeName());
-         TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
+         //TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
          //We should build the StreamerInfo in this case.
          //However, there is a problem in case one cannot call class->New !!
          //if (clm) BuildStreamerInfo(clm,obj+rd->GetThisOffset());
@@ -1296,7 +1296,7 @@ TBranch *TTree::GetBranch(const char *name)
          }
       }
    }
-   TObjArray *leaves = GetListOfLeaves();
+   TObjArray *leaves = ((TTree*)this)->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    for (i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
@@ -1308,7 +1308,7 @@ TBranch *TTree::GetBranch(const char *name)
 
 
 //______________________________________________________________________________
-TFile *TTree::GetCurrentFile()
+TFile *TTree::GetCurrentFile() const
 {
 //*-*-*-*-*-*Return pointer to the current file*-*-*-*-*-*-*-*
 //*-*        ==================================
@@ -1341,7 +1341,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 
 
 //______________________________________________________________________________
-Int_t TTree::GetEntryNumber(Int_t entry)
+Int_t TTree::GetEntryNumber(Int_t entry) const
 {
 //*-*-*-*-*-*Return entry number corresponding to entry*-*-*
 //*-*        ==========================================
@@ -1354,7 +1354,7 @@ Int_t TTree::GetEntryNumber(Int_t entry)
 
 
 //______________________________________________________________________________
-Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor)
+Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 {
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
@@ -1394,7 +1394,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 
 
 //______________________________________________________________________________
-TLeaf *TTree::GetLeaf(const char *name)
+TLeaf *TTree::GetLeaf(const char *name) 
 {
 //*-*-*-*-*-*Return pointer to the 1st Leaf named name in any Branch-*-*-*-*-*
 //*-*        =======================================================
@@ -1406,12 +1406,12 @@ TLeaf *TTree::GetLeaf(const char *name)
 
 
 //______________________________________________________________________________
-Double_t TTree::GetMaximum(const char *columname)
+Double_t TTree::GetMaximum(const char *columname) const
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   TLeaf *leaf = GetLeaf(columname);
+   TLeaf *leaf = ((TTree*)this)->GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmax = -FLT_MAX; //in float.h
@@ -1425,12 +1425,12 @@ Double_t TTree::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Double_t TTree::GetMinimum(const char *columname)
+Double_t TTree::GetMinimum(const char *columname) const
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   TLeaf *leaf = GetLeaf(columname);
+   TLeaf *leaf = ((TTree*)this)->GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmin = FLT_MAX; //in float.h
@@ -1444,7 +1444,7 @@ Double_t TTree::GetMinimum(const char *columname)
 
 
 //______________________________________________________________________________
-const char *TTree::GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex)
+const char *TTree::GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const
 {
 //*-*-*-*-*-*-*-*-*Return name corresponding to colindex in varexp*-*-*-*-*-*
 //*-*              ===============================================
@@ -1677,7 +1677,7 @@ TPrincipal *TTree::Principal(const char *varexp, const char *selection, Option_t
 }
 
 //______________________________________________________________________________
-void TTree::Print(Option_t *option)
+void TTree::Print(Option_t *option) const
 {
    // Print a summary of the Tree contents. In case options are "p" or "pa"
    // print information about the TPacketGenerator ("pa" is equivalent to
@@ -1713,7 +1713,7 @@ void TTree::Print(Option_t *option)
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  fBranches.Print(option);
+  ((TTree*)this)->GetListOfBranches()->Print(option);
 }
 
 //______________________________________________________________________________

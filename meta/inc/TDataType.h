@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -59,8 +59,8 @@ public:
    const char    *GetFullTypeName() const;
    const char    *GetName() const;
    const char    *GetTitle() const;
-   Int_t          Compare(TObject *obj);
-   ULong_t        Hash();
+   Int_t          Compare(const TObject *obj) const;
+   ULong_t        Hash() const;
    const char    *AsString(void *buf) const;
    Long_t         Property() const;
 

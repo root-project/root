@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -45,8 +45,8 @@ class TTUBS : public TTUBE {
         virtual ~TTUBS();
 
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-        virtual Float_t GetPhi1() {return fPhi1;}
-        virtual Float_t GetPhi2() {return fPhi2;}
+        virtual Float_t GetPhi1() const {return fPhi1;}
+        virtual Float_t GetPhi2() const {return fPhi2;}
         virtual void    Paint(Option_t *option);
         virtual void    SetPoints(Float_t *buff);
         virtual void    Sizeof3D() const;

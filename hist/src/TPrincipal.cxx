@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.10 2000/08/17 09:44:42 brun Exp $
-// $Date: 2000/08/17 09:44:42 $
+// $Id: TPrincipal.cxx,v 1.11 2000/10/01 20:50:08 brun Exp $
+// $Date: 2000/10/01 20:50:08 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -1922,7 +1922,7 @@ void TPrincipal::P2X(Double_t *p, Double_t *x, Int_t nTest)
 }
 
 //____________________________________________________________________
-void TPrincipal::Print(Option_t *opt)
+void TPrincipal::Print(Option_t *opt) const
 {
   // Print the statistics
   // Options are 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.4 2000/09/06 09:29:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.5 2000/09/06 14:20:10 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
           Int_t  GetBreakout() const {return fBreakout;}
          Bool_t  IsActive() const { return fActive; }
          Bool_t  IsFolder() const { return kTRUE; }
-   virtual void  ls(Option_t *option="*");  // *MENU*
+   virtual void  ls(Option_t *option="*") const;  // *MENU*
            void  SetActive(Bool_t active=kTRUE) {fActive=active;} // *TOGGLE*
            void  SetBreakin(Int_t breakin=1)    {fBreakin = breakin;} // *TOGGLE*
            void  SetBreakout(Int_t breakout=1)  {fBreakout=breakout;} // *TOGGLE*

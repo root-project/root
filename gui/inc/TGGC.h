@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.1 2000/09/29 08:52:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.2 2000/10/02 15:46:49 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -89,7 +89,7 @@ protected:
    public:
       TGGC   *fContext;
       ~TGGCElement() { delete fContext; }
-      Bool_t  IsEqual(TObject *obj) { return fContext == obj; }
+      Bool_t  IsEqual(const TObject *obj) const { return fContext == obj; }
    };
    TList  *fList;   // list of graphics contexts in pool
 

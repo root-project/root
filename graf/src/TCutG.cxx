@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.5 2000/11/28 07:26:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.6 2000/12/09 18:23:51 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -178,7 +178,7 @@ TCutG::~TCutG()
 }
 
 //______________________________________________________________________________
-Int_t TCutG::IsInside(Double_t x, Double_t y)
+Int_t TCutG::IsInside(Double_t x, Double_t y) const
 {
 //*.         Function which returns 1 if point x,y lies inside the
 //*.              polygon defined by the graph points

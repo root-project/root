@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.2 2000/11/21 20:16:13 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -263,7 +263,7 @@ void THelix::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void THelix::Print(Option_t *option)
+void THelix::Print(Option_t *option) const
 {
    // Dump this helix with its attributes.
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.2 2000/11/21 20:14:24 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -61,13 +61,13 @@ class TSPHE : public TShape {
         TSPHE(const char *name, const char *title, const char *material, Float_t rmax);
         virtual ~TSPHE();
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-        virtual Float_t GetRmin() {return fRmin;}
-        virtual Float_t GetRmax() {return fRmax;}
-        virtual Float_t GetThemin() {return fThemin;}
-        virtual Float_t GetThemax() {return fThemax;}
-        virtual Float_t GetPhimin() {return fPhimin;}
-        virtual Float_t GetPhimax() {return fPhimax;}
-        virtual Float_t GetAspectRatio(){ return fAspectRatio;}
+        virtual Float_t GetRmin() const {return fRmin;}
+        virtual Float_t GetRmax() const {return fRmax;}
+        virtual Float_t GetThemin() const {return fThemin;}
+        virtual Float_t GetThemax() const {return fThemax;}
+        virtual Float_t GetPhimin() const {return fPhimin;}
+        virtual Float_t GetPhimax() const {return fPhimax;}
+        virtual Float_t GetAspectRatio() const { return fAspectRatio;}
         virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return 0; /*kDiv;*/}
         virtual void    Paint(Option_t *option);
         virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}

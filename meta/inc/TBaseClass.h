@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.2 2000/09/05 09:21:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.3 2000/11/30 07:46:59 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -40,18 +40,18 @@ private:
    G__BaseClassInfo  *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to class
-   TString           fName;       //name of class
+   TString            fName;      //name of class
 
 public:
    TBaseClass(G__BaseClassInfo *info = 0, TClass *cl = 0);
    virtual     ~TBaseClass();
    virtual void Browse(TBrowser *b);
+   Int_t        Compare(const TObject *obj) const;
    const char  *GetName() const;
    const char  *GetTitle() const;
    TClass      *GetClassPointer();
    Int_t        GetDelta() const;
-   Int_t        Compare(TObject *obj);
-   ULong_t      Hash();
+   ULong_t      Hash() const;
    Bool_t       IsFolder() const {return kTRUE;}
    Long_t       Property() const;
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TPacketGenerator.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   28/03/97
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
 
    void        SetMinPacketSize(Int_t minps);
 
-   void        Print(Option_t *option="");
+   void        Print(Option_t *option="") const;
    void        Reset(Stat_t firstEntry, Stat_t lastEntry, TList *slaves);
 
    ClassDef(TPacketGenerator,0)  //Generate packets of entries for parallel processing

@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name$:$Id$
+// @(#)root/pythia:$Name:  $:$Id: TPythia.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************
@@ -30,10 +30,10 @@ class TPrimary;
 class TPythia : public TGenerator {
 
 private:
-   void                Unsupported(const char *name)
+   void                Unsupported(const char *name) const
                               {printf("TPythia::%s unsupported !\n",name);}
 
-   virtual TPrimary   *GetPrimary(Int_t) {Unsupported("GetPrimary");return 0;};
+   virtual TPrimary   *GetPrimary(Int_t) const {Unsupported("GetPrimary");return 0;};
    virtual void        ShowNeutrons(Bool_t)    {Unsupported("ShowNeutrons");};
 
 public:

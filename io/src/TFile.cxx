@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.15 2000/12/04 16:48:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.16 2000/12/04 17:16:35 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -557,7 +557,7 @@ void TFile::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Int_t TFile::GetBestBuffer()
+Int_t TFile::GetBestBuffer() const
 {
 //*-*-*-*-*-*-*-*Return the best buffer size of objects on this file*-*-*-*-*-*
 //*-*            ===================================================
@@ -665,7 +665,7 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
 }
 
 //______________________________________________________________________________
-void TFile::ls(Option_t *option)
+void TFile::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List File contents*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ==================
@@ -805,7 +805,7 @@ void TFile::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TFile::Print(Option_t *option)
+void TFile::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the file*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================

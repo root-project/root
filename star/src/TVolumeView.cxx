@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2000/07/13 16:00:10 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.3 2000/08/09 08:41:22 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -589,7 +589,7 @@ void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
 }
 
 //______________________________________________________________________________
-Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py)
+Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
 {
    if (!gPad) return "";
    static char info[512];

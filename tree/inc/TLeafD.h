@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafD.h,v 1.2 2000/06/13 09:27:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafD.h,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -41,10 +41,9 @@ public:
     virtual void    Export(TClonesArray *list, Int_t n);
     virtual void    FillBasket(TBuffer &b);
     const char     *GetTypeName() const {return "Double_t";}
-    Double_t        GetValue(Int_t i=0);
-    virtual void   *GetValuePointer() {return fValue;}
+    Double_t        GetValue(Int_t i=0) const;
+    virtual void   *GetValuePointer() const {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
-    virtual void    Print(Option_t *option="");
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
     virtual void    SetAddress(void *add=0);
@@ -52,6 +51,6 @@ public:
     ClassDef(TLeafD,1)  //A TLeaf for a 64 bit floating point data type.
 };
 
-inline Double_t TLeafD::GetValue(Int_t i) { return fValue[i]; }
+inline Double_t TLeafD::GetValue(Int_t i) const { return fValue[i]; }
 
 #endif

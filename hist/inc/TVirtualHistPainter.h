@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
     virtual void    DrawPanel() = 0;
     virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
     virtual void    FitPanel() = 0;
-    virtual char   *GetObjectInfo(Int_t px, Int_t py) = 0;
+    virtual char   *GetObjectInfo(Int_t px, Int_t py) const = 0;
     virtual void    Paint(Option_t *option="") = 0;
     virtual void    PaintStat(Int_t dostat, TF1 *fit) = 0;
     virtual void    SetHistogram(TH1 *h) = 0;

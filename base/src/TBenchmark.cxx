@@ -54,7 +54,7 @@ TBenchmark::~TBenchmark()
 }
 
 //______________________________________________________________________________
-Int_t TBenchmark::GetBench(const char *name)
+Int_t TBenchmark::GetBench(const char *name) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Returns index of Benchmark name*-*-*-*-*-*-*-*
 //*-*                  ===============================
@@ -88,7 +88,7 @@ Float_t TBenchmark::GetRealTime(const char *name)
 }
 
 //______________________________________________________________________________
-void TBenchmark::Print(const char *name)
+void TBenchmark::Print(const char *name) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Prints parameters of Benchmark name*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================

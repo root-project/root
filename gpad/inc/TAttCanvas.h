@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.2 2000/06/13 12:16:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,13 +43,13 @@ public:
         TAttCanvas();
         virtual ~TAttCanvas();
         virtual void     Copy(TAttCanvas &attcanvas);
-        Float_t          GetAdate() { return fAdate;}
-        Float_t          GetTitleFromTop() { return fTitleFromTop;}
-        Float_t          GetXBetween() { return fXBetween;}
-        Float_t          GetXdate() { return fXdate;}
-        Float_t          GetYBetween() { return fYBetween;}
-        Float_t          GetYdate() { return fYdate;}
-        virtual void     Print(Option_t *option="");
+        Float_t          GetAdate() const { return fAdate;}
+        Float_t          GetTitleFromTop() const { return fTitleFromTop;}
+        Float_t          GetXBetween() const { return fXBetween;}
+        Float_t          GetXdate() const { return fXdate;}
+        Float_t          GetYBetween() const { return fYBetween;}
+        Float_t          GetYdate() const { return fYdate;}
+        virtual void     Print(Option_t *option="") const;
         virtual void     ResetAttCanvas(Option_t *option="");
         virtual void     SetAdate(Float_t adate) { fAdate=adate;}
         virtual void     SetTitleFromTop(Float_t titlefromtop)

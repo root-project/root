@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.2 2000/10/10 13:03:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.3 2000/11/21 20:38:12 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -152,7 +152,7 @@ public:
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="");
+   void Print(Option_t *option="") const;
 
    friend TMatrix &operator+=(TMatrix &target, const TMatrix &source);
    friend TMatrix &operator-=(TMatrix &target, const TMatrix &source);

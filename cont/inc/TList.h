@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.3 2000/09/08 16:41:25 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.4 2000/11/21 16:43:22 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ protected:
    Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
 
    TObjLink          *LinkAt(Int_t idx) const;
-   TObjLink          *FindLink(TObject *obj, Int_t &idx) const;
+   TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;
    TObjLink         **DoSort(TObjLink **head, Int_t n);
    Bool_t             LnkCompare(TObjLink *l1, TObjLink *l2);
    virtual TObjLink  *NewLink(TObject *obj, TObjLink *prev = 0);
@@ -61,7 +61,7 @@ public:
    virtual void      Clear(Option_t *option="");
    virtual void      Delete(Option_t *option="");
    virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(TObject *obj) const;
+   virtual TObject  *FindObject(const TObject *obj) const;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const;
 
    virtual void      Add(TObject *obj) { AddLast(obj); }

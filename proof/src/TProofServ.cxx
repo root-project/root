@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.7 2000/11/27 18:37:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.8 2000/12/13 12:08:00 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -714,7 +714,7 @@ Bool_t TProofServ::IsParallel() const
 }
 
 //______________________________________________________________________________
-void TProofServ::Print(Option_t *)
+void TProofServ::Print(Option_t *) const
 {
    // Print status of slave server.
 

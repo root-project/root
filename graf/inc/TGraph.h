@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.6 2000/12/02 16:31:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.7 2000/12/08 16:00:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -70,16 +70,16 @@ public:
         virtual void     Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
         virtual void     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
         virtual void     FitPanel(); // *MENU*
-        virtual Double_t GetErrorX(Int_t bin);
-        virtual Double_t GetErrorY(Int_t bin);
-        TF1             *GetFunction(const char *name);
-        TH1F            *GetHistogram();
-        TList           *GetListOfFunctions() { return fFunctions; }
-        Int_t            GetN() {return fNpoints;}
-        Double_t        *GetX() {return fX;}
-        Double_t        *GetY() {return fY;}
-        TAxis           *GetXaxis();
-        TAxis           *GetYaxis();
+        virtual Double_t GetErrorX(Int_t bin) const;
+        virtual Double_t GetErrorY(Int_t bin) const;
+        TF1             *GetFunction(const char *name) const;
+        TH1F            *GetHistogram() const;
+        TList           *GetListOfFunctions() const { return fFunctions; }
+        Int_t            GetN() const {return fNpoints;}
+        Double_t        *GetX() const {return fX;}
+        Double_t        *GetY() const {return fY;}
+        TAxis           *GetXaxis() const ;
+        TAxis           *GetYaxis() const ;
         virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y);
         virtual void     InitExpo();
         virtual void     InitGaus();
@@ -87,7 +87,7 @@ public:
         virtual void     Paint(Option_t *chopt="");
         virtual void     PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *option="");
-        virtual void     Print(Option_t *chopt="");
+        virtual void     Print(Option_t *chopt="") const;
         static  void     RemoveFunction(TGraph *gr, TObject *obj);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.2 2000/11/21 16:01:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,17 +55,17 @@ public:
         TAttAxis();
         virtual          ~TAttAxis();
                 void     Copy(TAttAxis &attaxis);
-        virtual Int_t    GetNdivisions()  {return fNdivisions;}
-        virtual Color_t  GetAxisColor()   {return fAxisColor;}
-        virtual Color_t  GetLabelColor()  {return fLabelColor;}
-        virtual Style_t  GetLabelFont()   {return fLabelFont;}
-        virtual Float_t  GetLabelOffset() {return fLabelOffset;}
-        virtual Float_t  GetLabelSize()   {return fLabelSize;}
-        virtual Float_t  GetTitleOffset() {return fTitleOffset;}
-        virtual Float_t  GetTitleSize()   {return fTitleSize;}
-        virtual Float_t  GetTickLength()  {return fTickLength;}
-        virtual Color_t  GetTitleColor()  {return fTitleColor;}
-        virtual Style_t  GetTitleFont()   {return fTitleFont;}
+        virtual Int_t    GetNdivisions()  const {return fNdivisions;}
+        virtual Color_t  GetAxisColor()   const {return fAxisColor;}
+        virtual Color_t  GetLabelColor()  const {return fLabelColor;}
+        virtual Style_t  GetLabelFont()   const {return fLabelFont;}
+        virtual Float_t  GetLabelOffset() const {return fLabelOffset;}
+        virtual Float_t  GetLabelSize()   const {return fLabelSize;}
+        virtual Float_t  GetTitleOffset() const {return fTitleOffset;}
+        virtual Float_t  GetTitleSize()   const {return fTitleSize;}
+        virtual Float_t  GetTickLength()  const {return fTickLength;}
+        virtual Color_t  GetTitleColor()  const {return fTitleColor;}
+        virtual Style_t  GetTitleFont()   const {return fTitleFont;}
         virtual void     ResetAttAxis(Option_t *option="");
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
         virtual void     SetNdivisions(Int_t n=510);           // *MENU*

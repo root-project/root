@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.10 2000/11/27 15:36:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.11 2000/12/02 11:11:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -88,7 +88,7 @@ protected:
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
 private:
-    Int_t   AxisChoice(Option_t *axis);
+    Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
     Int_t   FitOptionsMake(Option_t *option);
 
@@ -139,59 +139,59 @@ public:
     virtual void     FitPanel(); // *MENU*
     virtual Double_t *GetIntegral() {return fIntegral;}
 
-    TList           *GetListOfFunctions() { return fFunctions; }
+    TList           *GetListOfFunctions() const { return fFunctions; }
 
-    virtual Int_t    GetNdivisions(Option_t *axis="X");
-    virtual Color_t  GetAxisColor(Option_t *axis="X");
-    virtual Color_t  GetLabelColor(Option_t *axis="X");
-    virtual Style_t  GetLabelFont(Option_t *axis="X");
-    virtual Float_t  GetLabelOffset(Option_t *axis="X");
-    virtual Float_t  GetLabelSize(Option_t *axis="X");
-    virtual Float_t  GetTitleOffset(Option_t *axis="X");
-    virtual Float_t  GetTitleSize(Option_t *axis="X");
-    virtual Float_t  GetTickLength(Option_t *axis="X");
-    virtual Float_t  GetBarOffset() {return Float_t(0.001*Float_t(fBarOffset));}
-    virtual Float_t  GetBarWidth()  {return Float_t(0.001*Float_t(fBarWidth));}
+    virtual Int_t    GetNdivisions(Option_t *axis="X") const;
+    virtual Color_t  GetAxisColor(Option_t *axis="X") const;
+    virtual Color_t  GetLabelColor(Option_t *axis="X") const;
+    virtual Style_t  GetLabelFont(Option_t *axis="X") const;
+    virtual Float_t  GetLabelOffset(Option_t *axis="X") const;
+    virtual Float_t  GetLabelSize(Option_t *axis="X") const;
+    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
+    virtual Float_t  GetTitleSize(Option_t *axis="X") const;
+    virtual Float_t  GetTickLength(Option_t *axis="X") const;
+    virtual Float_t  GetBarOffset() const {return Float_t(0.001*Float_t(fBarOffset));}
+    virtual Float_t  GetBarWidth() const  {return Float_t(0.001*Float_t(fBarWidth));}
     virtual Int_t    GetContour(Double_t *levels=0);
-    virtual Double_t GetContourLevel(Int_t level);
+    virtual Double_t GetContourLevel(Int_t level) const;
 
-    virtual Int_t    GetBin(Int_t binx, Int_t biny=0, Int_t binz=0);
-    virtual Axis_t   GetBinCenter(Int_t bin){return fXaxis.GetBinCenter(bin);}
-    virtual Stat_t   GetBinContent(Int_t bin);
-    virtual Stat_t   GetBinError(Int_t bin);
-    virtual Axis_t   GetBinLowEdge(Int_t bin){return fXaxis.GetBinLowEdge(bin);}
-    virtual Axis_t   GetBinWidth(Int_t bin){return fXaxis.GetBinWidth(bin);}
-    virtual Stat_t   GetCellContent(Int_t binx, Int_t biny);
-    virtual Stat_t   GetCellError(Int_t binx, Int_t biny);
-    virtual void     GetCenter(Axis_t *center){fXaxis.GetCenter(center);}
-    TDirectory      *GetDirectory() {return fDirectory;}
-    virtual Stat_t   GetEntries() {return fEntries;}
-    virtual TF1     *GetFunction(const char *name);
+    virtual Int_t    GetBin(Int_t binx, Int_t biny=0, Int_t binz=0) const;
+    virtual Axis_t   GetBinCenter(Int_t bin) const {return fXaxis.GetBinCenter(bin);}
+    virtual Stat_t   GetBinContent(Int_t bin) const;
+    virtual Stat_t   GetBinError(Int_t bin) const;
+    virtual Axis_t   GetBinLowEdge(Int_t bin) const {return fXaxis.GetBinLowEdge(bin);}
+    virtual Axis_t   GetBinWidth(Int_t bin) const {return fXaxis.GetBinWidth(bin);}
+    virtual Stat_t   GetCellContent(Int_t binx, Int_t biny) const;
+    virtual Stat_t   GetCellError(Int_t binx, Int_t biny) const;
+    virtual void     GetCenter(Axis_t *center) {fXaxis.GetCenter(center);}
+    TDirectory      *GetDirectory() const {return fDirectory;}
+    virtual Stat_t   GetEntries() const {return fEntries;}
+    virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
-    virtual void     GetLowEdge(Axis_t *edge){fXaxis.GetLowEdge(edge);}
-    virtual Double_t GetMaximum();
-    virtual Int_t    GetMaximumBin();
-    virtual Int_t    GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz);
-    virtual Double_t GetMaximumStored() {return fMaximum;}
-    virtual Double_t GetMinimum();
-    virtual Int_t    GetMinimumBin();
-    virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz);
-    virtual Double_t GetMinimumStored() {return fMinimum;}
-    virtual Stat_t   GetMean(Int_t axis=1);
+    virtual void     GetLowEdge(Axis_t *edge) {fXaxis.GetLowEdge(edge);}
+    virtual Double_t GetMaximum() const;
+    virtual Int_t    GetMaximumBin() const;
+    virtual Int_t    GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const;
+    virtual Double_t GetMaximumStored() const {return fMaximum;}
+    virtual Double_t GetMinimum() const;
+    virtual Int_t    GetMinimumBin() const;
+    virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
+    virtual Double_t GetMinimumStored() const {return fMinimum;}
+    virtual Stat_t   GetMean(Int_t axis=1) const;
     virtual Int_t    GetNbinsX() const {return fXaxis.GetNbins();}
     virtual Int_t    GetNbinsY() const {return fYaxis.GetNbins();}
     virtual Int_t    GetNbinsZ() const {return fZaxis.GetNbins();}
-    virtual Double_t GetNormFactor() {return fNormFactor;}
-    virtual char    *GetObjectInfo(Int_t px, Int_t py);
+    virtual Double_t GetNormFactor() const {return fNormFactor;}
+    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
     Option_t        *GetOption() const {return fOption.Data();}
 
-    TVirtualHistPainter *GetPainter() {return fPainter;}
+    TVirtualHistPainter *GetPainter() const {return fPainter;}
 
     virtual Axis_t   GetRandom();
-    virtual void     GetStats(Stat_t *stats);
-    virtual Stat_t   GetSumOfWeights();
-    virtual Int_t    GetSumw2N() {return fSumw2.fN;}
-    virtual Stat_t   GetRMS(Int_t axis=1);
+    virtual void     GetStats(Stat_t *stats) const;
+    virtual Stat_t   GetSumOfWeights() const;
+    virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
+    virtual Stat_t   GetRMS(Int_t axis=1) const;
     virtual TAxis   *GetXaxis() {return &fXaxis;}
     virtual TAxis   *GetYaxis() {return &fYaxis;}
     virtual TAxis   *GetZaxis() {return &fZaxis;}
@@ -204,7 +204,7 @@ public:
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Paint(Option_t *option="");
-    virtual void     Print(Option_t *option="");
+    virtual void     Print(Option_t *option="") const;
     virtual void     PutStats(Stat_t *stats);
     virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="");
     virtual void     RebinAxis(Axis_t x, Option_t *axis="X");
@@ -275,7 +275,7 @@ public:
     virtual void    AddBinContent(Int_t bin, Stat_t w);
     virtual void    Copy(TObject &hnew);
     virtual TH1    *DrawCopy(Option_t *option="");
-    virtual Stat_t  GetBinContent(Int_t bin);
+    virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Char_t (content);}
@@ -307,7 +307,7 @@ public:
     virtual void    AddBinContent(Int_t bin, Stat_t w);
     virtual void    Copy(TObject &hnew);
     virtual TH1    *DrawCopy(Option_t *option="");
-    virtual Stat_t  GetBinContent(Int_t bin);
+    virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Short_t (content);}
@@ -341,7 +341,7 @@ public:
                                  {fArray[bin] += Float_t (w);}
     virtual void    Copy(TObject &hnew);
     virtual TH1    *DrawCopy(Option_t *option="");
-    virtual Stat_t  GetBinContent(Int_t bin);
+    virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Float_t (content);}
@@ -375,7 +375,7 @@ public:
                                  {fArray[bin] += Double_t (w);}
     virtual void    Copy(TObject &hnew);
     virtual TH1    *DrawCopy(Option_t *option="");
-    virtual Stat_t  GetBinContent(Int_t bin);
+    virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Double_t (content);}

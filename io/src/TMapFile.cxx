@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.4 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.5 2000/09/13 07:03:00 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -125,11 +125,11 @@ void *gMmallocDesc = 0;
 
 
 //______________________________________________________________________________
-TMapRec::TMapRec(const char *name, TObject *obj, Int_t size, void *buf)
+TMapRec::TMapRec(const char *name, const TObject *obj, Int_t size, void *buf)
 {
    fName      = StrDup(name);
    fClassName = 0;
-   fObject    = obj;
+   fObject    = (TObject*)obj;
    fBuffer    = buf;
    fBufSize   = size;
    fNext      = 0;
@@ -514,7 +514,7 @@ void TMapFile::InitDirectory()
 }
 
 //______________________________________________________________________________
-void TMapFile::Add(TObject *obj, const char *name)
+void TMapFile::Add(const TObject *obj, const char *name)
 {
    // Add an object to the list of objects to be stored in shared memory.
    // To place the object actually into shared memory call Update().
@@ -924,7 +924,7 @@ TMapFile *TMapFile::FindShadowMapFile()
 }
 
 //______________________________________________________________________________
-void TMapFile::Print(Option_t *)
+void TMapFile::Print(Option_t *) const
 {
    // Print some info about the mapped file.
 
@@ -987,13 +987,13 @@ Bool_t TMapFile::cd(const char *path)
 }
 
 //______________________________________________________________________________
-void TMapFile::ls(Option_t *)
+void TMapFile::ls(Option_t *) const
 {
    // List contents of TMapFile.
 
    if (fMmallocDesc) {
 
-      AcquireSemaphore();
+      ((TMapFile*)this)->AcquireSemaphore();
 
       Printf("%-20s %-20s %-10s", "Object", "Class", "Size");
       if (!fFirst)
@@ -1006,7 +1006,7 @@ void TMapFile::ls(Option_t *)
          mr = mr->GetNext(fOffset);
       }
 
-      ReleaseSemaphore();
+      ((TMapFile*)this)->ReleaseSemaphore();
 
    }
 }

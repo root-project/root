@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.4 2000/09/08 07:41:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.5 2000/09/08 16:05:21 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -223,7 +223,7 @@ void TLegend::EditEntryAttText()
 }
 
 //____________________________________________________________________________
-TLegendEntry *TLegend::GetEntry()
+TLegendEntry *TLegend::GetEntry() const
 {
   // Get entry pointed to by the mouse
   // This method is mostly a tool for other methods inside this class
@@ -245,7 +245,7 @@ TLegendEntry *TLegend::GetEntry()
 }
 
 //____________________________________________________________________________
-const char *TLegend::GetHeader()
+const char *TLegend::GetHeader() const
 {
   // returns the header, which is the title that appears at the top
   //  of the legend
@@ -502,7 +502,7 @@ void TLegend::PaintPrimitives()
 }
 
 //____________________________________________________________________________
-void TLegend::Print( Option_t* option )
+void TLegend::Print( Option_t* option ) const
 {
   // dump this TLegend and its contents
   TPave::Print( option );

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.1 2000/11/24 16:21:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.2 2000/11/24 16:36:01 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -3373,7 +3373,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
 
 //____________________________________________________________________
-void TMultiDimFit::Print(Option_t *option)
+void TMultiDimFit::Print(Option_t *option) const
 {
   // Print statistics etc.
   // Options are 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.9 2000/11/24 10:24:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.10 2000/11/28 07:34:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -708,7 +708,7 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-TH1 *TF1::GetHistogram()
+TH1 *TF1::GetHistogram() const
 {
 // return a pointer to the histogram used to vusualize the function
 
@@ -721,7 +721,7 @@ TH1 *TF1::GetHistogram()
 }
 
 //______________________________________________________________________________
-char *TF1::GetObjectInfo(Int_t px, Int_t /* py */)
+char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const 
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the function info (x, function value
@@ -729,7 +729,7 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */)
 //
    static char info[64];
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   sprintf(info,"(x=%g, f=%g)",x,Eval(x));
+   sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
 }
 
@@ -1424,7 +1424,7 @@ void TF1::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TF1::Print(Option_t *option)
+void TF1::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this function with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================

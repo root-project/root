@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TPacketGenerator.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   28/03/97
 
 /*************************************************************************
@@ -225,7 +225,7 @@ Int_t TPacketGenerator::GetNoPackets() const
 }
 
 //______________________________________________________________________________
-void TPacketGenerator::Print(Option_t *option)
+void TPacketGenerator::Print(Option_t *option) const
 {
    // Prints info about the packet generator. If option is "all", print also
    // info about all packets.

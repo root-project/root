@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.3 2000/09/08 07:36:57 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.4 2000/11/21 20:12:04 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    virtual void      cd(const char *path=0);
    virtual void      Draw(Option_t *option="");
    virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(TObject *obj) const;
+   virtual TObject  *FindObject(const TObject *obj) const;
    Float_t           GetBomb() const {return fBomb;}
    Int_t             GeomLevel() const {return fGeomLevel;}
    THashList        *GetListOfShapes() const  {return fShapes;}
@@ -78,13 +78,13 @@ public:
    THashList        *GetListOfMaterials() const {return fMaterials;}
    THashList        *GetListOfMatrices() const {return fMatrices;}
    TNode            *GetCurrentNode()  const {return fCurrentNode;}
-   TMaterial        *GetMaterial(const char *name);
-   TMaterial        *GetMaterialByNumber(Int_t number);
-   TNode            *GetNode(const char *name);
-   TShape           *GetShape(const char *name);
-   TShape           *GetShapeByNumber(Int_t number);
-   TRotMatrix       *GetRotMatrix(const char *name);
-   TRotMatrix       *GetRotMatrixByNumber(Int_t number);
+   TMaterial        *GetMaterial(const char *name) const;
+   TMaterial        *GetMaterialByNumber(Int_t number) const;
+   TNode            *GetNode(const char *name) const;
+   TShape           *GetShape(const char *name) const;
+   TShape           *GetShapeByNumber(Int_t number) const;
+   TRotMatrix       *GetRotMatrix(const char *name) const;
+   TRotMatrix       *GetRotMatrixByNumber(Int_t number) const;
    TRotMatrix       *GetCurrentMatrix() const;
    TRotMatrix       *GetCurrentPosition(Double_t *x,Double_t *y,Double_t *z) const;
    TRotMatrix       *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
@@ -92,7 +92,7 @@ public:
    Bool_t            IsFolder() const {return kTRUE;}
    virtual void      Local2Master(Double_t *local, Double_t *master);
    virtual void      Local2Master(Float_t *local, Float_t *master);
-   virtual void      ls(Option_t *option="rsn2");
+   virtual void      ls(Option_t *option="rsn2") const;
    virtual void      Master2Local(Double_t *master, Double_t *local);
    virtual void      Master2Local(Float_t *master, Float_t *local);
    virtual void      Node(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.8 2000/11/07 07:19:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.1 2000/11/24 16:21:00 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -192,7 +192,7 @@ public:
   virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU* 
   virtual void     MakeHistograms(Option_t* option="A"); // *MENU* 
   virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU* 
-  virtual void     Print(Option_t *option="ps"); // *MENU* 
+  virtual void     Print(Option_t *option="ps") const; // *MENU* 
 
   void             SetMaxAngle(Double_t angle=0);
   void             SetMaxFunctions(Int_t n) { fMaxFunctions = n; }

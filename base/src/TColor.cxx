@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -156,7 +156,7 @@ Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 }
 
 //______________________________________________________________________________
-void TColor::ls(Option_t *)
+void TColor::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this color with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ===================================
@@ -164,7 +164,7 @@ void TColor::ls(Option_t *)
 }
 
 //______________________________________________________________________________
-void TColor::Print(Option_t *)
+void TColor::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this color with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================

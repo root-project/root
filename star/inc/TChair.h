@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.5 2000/09/29 07:15:30 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.6 2000/12/11 09:52:24 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.5 2000/09/29 07:15:30 brun Exp $
+// $Id: TChair.h,v 1.6 2000/12/11 09:52:24 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -76,7 +76,7 @@ public:
    virtual     Char_t    *MakeExpression(const Char_t *expressions[],Int_t nExpressions)
                          {return GetThisTable()->MakeExpression(expressions,nExpressions);}
    virtual     Char_t    *Print(Char_t *buf,Int_t n) const { return GetThisTable()->Print(buf, n);}
-   virtual     void       Print(Option_t *opt="")          {GetThisTable()->Print(opt);}
+   virtual     void       Print(Option_t *opt="")    const {GetThisTable()->Print(opt);}
    virtual  const Char_t *Print(Int_t row, Int_t rownumber=10,
                                 const Char_t *colfirst="",const Char_t *collast="") const {
                            return GetThisTable()->Print(row,rownumber,colfirst,collast); }
@@ -115,6 +115,9 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.6  2000/12/11 09:52:24  brun
+// Functions ls declared const like in the base class
+//
 // Revision 1.5  2000/09/29 07:15:30  brun
 // Remove unused function ReadGenericArray
 //

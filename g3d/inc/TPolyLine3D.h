@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.2 2000/06/13 12:21:21 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -66,15 +66,15 @@ public:
         static  void      DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax);
         virtual void      DrawPolyLine(Int_t n, Float_t *p, Option_t *option="");
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Int_t             GetLastPoint() {return fLastPoint;}
-        Int_t             GetN() {return fN;}
-        Float_t           *GetP() {return fP;}
+        Int_t             GetLastPoint() const {return fLastPoint;}
+        Int_t             GetN() const {return fN;}
+        Float_t           *GetP() const {return fP;}
         Option_t          *GetOption() const {return fOption.Data();}
-        virtual void      ls(Option_t *option="");
+        virtual void      ls(Option_t *option="") const;
         virtual void      Paint(Option_t *option="");
         virtual void      PaintPolyLine(Int_t n, Float_t *p, Option_t *option="");
         virtual void      PaintPolyLine(Int_t n, Double_t *p, Option_t *option="");
-        virtual void      Print(Option_t *option="");
+        virtual void      Print(Option_t *option="") const;
         virtual void      SavePrimitive(ofstream &out, Option_t *option);
         virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
         virtual void      SetOption(Option_t *option="") {fOption = option;}

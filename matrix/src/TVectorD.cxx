@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.4 2000/12/13 07:28:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.5 2000/12/13 12:03:52 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -726,7 +726,7 @@ TVectorD &ElementDiv(TVectorD &target, const TVectorD &source)
 }
 
 //______________________________________________________________________________
-void TVectorD::Print(Option_t *)
+void TVectorD::Print(Option_t *) const
 {
    // Print the vector as a list of elements.
 

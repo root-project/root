@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.2 2000/06/05 07:28:47 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.3 2000/11/21 20:13:47 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -74,10 +74,10 @@ class TPadOpenGLView : public TPadView3D
    TPadOpenGLView(TVirtualPad *pad);
    virtual ~TPadOpenGLView();
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Int_t        GetGLList() {return fGLList ? fGLList+1 : 0;}
+   Int_t        GetGLList() const {return fGLList ? fGLList+1 : 0;}
    UInt_t       GetNextGLList() {return fGLList ? ++fGLLastList : 0;}
-   Float_t      GetSpeedMove() { return fSpeedMove;}
-   virtual void GetSteps(Float_t *steps) {if (steps) {steps[0] = fStep[0]; steps[1] = fStep[1]; steps[2] = fStep[2];}; }
+   Float_t      GetSpeedMove() const { return fSpeedMove;}
+   virtual void GetSteps(Float_t *steps) const {if (steps) {steps[0] = fStep[0]; steps[1] = fStep[1]; steps[2] = fStep[2];}; }
    virtual void Paint(Option_t *option="");
    virtual void Size(Int_t width, Int_t height);
    UInt_t       ReleaseLastGLList() {return fGLList ? --fGLLastList : 0;}

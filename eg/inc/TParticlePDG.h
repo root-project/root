@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
 
   TObjArray*      DecayList  () { return fDecayList; }
 
-  virtual void    Print(Option_t* opt);
+  virtual void    Print(Option_t* opt) const;
 
   ClassDef(TParticlePDG,1)  //PDG static particle definition
 };

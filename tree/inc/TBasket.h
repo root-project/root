@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.2 2000/07/12 16:32:53 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -55,15 +55,15 @@ public:
 
     virtual void    AdjustSize(Int_t newsize);
     virtual Int_t   DropBuffers();
-    TBranch        *GetBranch() {return fBranch;}
-            Int_t   GetBufferSize() {return fBufferSize;}
-            Int_t  *GetDisplacement() {return fDisplacement;}
-            Int_t  *GetEntryOffset() {return fEntryOffset;}
+    TBranch        *GetBranch() const {return fBranch;}
+            Int_t   GetBufferSize() const {return fBufferSize;}
+            Int_t  *GetDisplacement() const {return fDisplacement;}
+            Int_t  *GetEntryOffset() const {return fEntryOffset;}
     virtual Int_t   GetEntryPointer(Int_t Entry);
-            char   *GetZipBuffer() {return fZipBuffer;}
-            Int_t   GetNevBuf() {return fNevBuf;}
-            Int_t   GetNevBufSize() {return fNevBufSize;}
-            Int_t   GetLast() {return fLast;}
+            char   *GetZipBuffer() const {return fZipBuffer;}
+            Int_t   GetNevBuf() const {return fNevBuf;}
+            Int_t   GetNevBufSize() const {return fNevBufSize;}
+            Int_t   GetLast() const {return fLast;}
     virtual void    ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
     virtual Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
 

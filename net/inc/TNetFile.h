@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.2 2000/11/27 10:47:26 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -45,8 +45,8 @@ private:
 
    TNetFile() : fUrl("dummy") { fSocket = 0; }
    void   Init(Bool_t create);
-   void   Print(Option_t *option);
-   void   PrintError(const char *where, Int_t err);
+   void   Print(Option_t *option) const;
+   void   PrintError(const char *where, Int_t err) const;
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.3 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
    void              Delete(Option_t *option="");
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
-   TObject          *FindObject(TObject *key) const;
+   TObject          *FindObject(const TObject *key) const;
    TObject          *GetValue(TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);

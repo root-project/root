@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.2 2000/11/21 20:50:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TLeaf::FillBasket(TBuffer &)
 }
 
 //______________________________________________________________________________
-TLeaf *TLeaf::GetLeafCounter(Int_t &countval)
+TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
 {
 //*-*-*-*-*-*-*Return Pointer to counter of referenced Leaf*-*-*-*-*-*-*-*
 //*-*          ============================================

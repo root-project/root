@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.7 2000/07/18 16:35:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.8 2000/08/17 09:46:59 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -48,19 +48,19 @@ public:
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                             ,Int_t nentries, Int_t firstentry) = 0;
-    virtual Int_t          GetDimension() = 0;
-    virtual TH1           *GetHistogram() = 0;
+    virtual Int_t          GetDimension() const = 0;
+    virtual TH1           *GetHistogram() const = 0;
     virtual void           GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed) = 0;
-    virtual Int_t          GetSelectedRows() = 0;
-    virtual TTreeFormula  *GetSelect() = 0;
-    virtual TTreeFormula  *GetVar1() = 0;
-    virtual TTreeFormula  *GetVar2() = 0;
-    virtual TTreeFormula  *GetVar3() = 0;
-    virtual TTreeFormula  *GetVar4() = 0;
-    virtual Double_t      *GetV1() = 0;
-    virtual Double_t      *GetV2() = 0;
-    virtual Double_t      *GetV3() = 0;
-    virtual Double_t      *GetW() = 0;
+    virtual Int_t          GetSelectedRows() const = 0;
+    virtual TTreeFormula  *GetSelect() const = 0;
+    virtual TTreeFormula  *GetVar1() const = 0;
+    virtual TTreeFormula  *GetVar2() const = 0;
+    virtual TTreeFormula  *GetVar3() const = 0;
+    virtual TTreeFormula  *GetVar4() const = 0;
+    virtual Double_t      *GetV1() const = 0;
+    virtual Double_t      *GetV2() const = 0;
+    virtual Double_t      *GetV3() const = 0;
+    virtual Double_t      *GetW() const = 0;
     virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;

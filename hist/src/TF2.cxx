@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.2 2000/06/13 10:37:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.3 2000/11/21 20:32:34 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -244,7 +244,7 @@ Int_t TF2::GetContour(Double_t *levels)
 }
 
 //______________________________________________________________________________
-Double_t TF2::GetContourLevel(Int_t level)
+Double_t TF2::GetContourLevel(Int_t level) const
 {
 //*-*-*-*-*-*-*-*Return the number of contour levels*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ===================================
@@ -255,7 +255,7 @@ Double_t TF2::GetContourLevel(Int_t level)
 }
 
 //______________________________________________________________________________
-char *TF2::GetObjectInfo(Int_t px, Int_t py)
+char *TF2::GetObjectInfo(Int_t px, Int_t py) const
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the function value
@@ -278,7 +278,7 @@ char *TF2::GetObjectInfo(Int_t px, Int_t py)
       uymax=gPad->GetUymax();
       y = fYmin +(fYmax-fYmin)*(y-uymin)/(uymax-uymin);
    }
-   sprintf(info,"(x=%g, y=%g, f=%.18g)",x,y,Eval(x,y));
+   sprintf(info,"(x=%g, y=%g, f=%.18g)",x,y,((TF2*)this)->Eval(x,y));
    return info;
 }
 

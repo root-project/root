@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -428,7 +428,7 @@ void TClassTree::Init()
 }
 
 //_____________________________________________________________________________
-void TClassTree::ls(Option_t *)
+void TClassTree::ls(Option_t *) const
 {
 // list classes names and titles
    char line[500];

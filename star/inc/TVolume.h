@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.2 2000/12/11 09:35:06 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -81,17 +81,17 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         virtual void        DrawOnly(Option_t *option="");
         virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
         static  TRotMatrix *GetIdentity();
-        virtual Text_t     *GetObjectInfo(Int_t px, Int_t py);
+        virtual Text_t     *GetObjectInfo(Int_t px, Int_t py) const;
         const   Option_t   *GetOption() const { return fOption.Data();}
                 TShape     *GetShape()  const {return fShape;}
                 TList      *GetListOfShapes()  const {return fListOfShapes;}
         virtual void        GetLocalRange(Float_t *min, Float_t *max);
         virtual ENodeSEEN   GetVisibility() const {return fVisibility;}
         virtual TList      *GetListOfPositions()  { return (TList *)(GetObject());}
-        virtual ULong_t     Hash() { return TObject::Hash();}
+        virtual ULong_t     Hash() const { return TObject::Hash();}
         virtual void        ImportShapeAttributes();
         virtual Bool_t      IsMarked() const;
-        virtual Bool_t      Is3D()  {return kTRUE;}
+        virtual Bool_t      Is3D() const {return kTRUE;}
         virtual TList      *Nodes() const { return GetList(); }
         virtual void        Paint(Option_t *option="");
         virtual void        PaintShape(Option_t *option="");

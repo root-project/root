@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.4 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.5 2000/12/13 12:08:00 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -124,7 +124,7 @@ void TSlave::Close(Option_t *)
 }
 
 //______________________________________________________________________________
-Int_t TSlave::Compare(TObject *obj)
+Int_t TSlave::Compare(const TObject *obj) const
 {
    // Used to sort slaves by performance index.
 
@@ -136,7 +136,7 @@ Int_t TSlave::Compare(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TSlave::Print(Option_t *)
+void TSlave::Print(Option_t *) const
 {
    // Printf info about slave.
 

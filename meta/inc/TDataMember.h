@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.2 2000/09/08 16:07:33 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -61,12 +61,12 @@ public:
    const char    *GetFullTypeName() const;
    const char    *GetArrayIndex() const;
 
-   TList         *GetOptions();
+   TList         *GetOptions() const;
    TMethodCall   *SetterMethod();
    TMethodCall   *GetterMethod();
 
-   Int_t          Compare(TObject *obj);
-   ULong_t        Hash();
+   Int_t          Compare(const TObject *obj) const;
+   ULong_t        Hash() const;
    Bool_t         IsBasic() const;
    Bool_t         IsEnum() const;
    Bool_t         IsaPointer() const;

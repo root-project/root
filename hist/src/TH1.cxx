@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.28 2000/11/21 20:33:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.29 2000/12/02 11:11:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1736,7 +1736,7 @@ void TH1::FitPanel()
 }
 
 //______________________________________________________________________________
-char *TH1::GetObjectInfo(Int_t px, Int_t py)
+char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the histogram info (bin number, contents, integral up to bin
@@ -2174,7 +2174,7 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
 
 
 //______________________________________________________________________________
-Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz)
+Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
 {
 //*-*-*-*-*-*Return Global bin number corresponding to binx,y,z*-*-*-*-*-*-*
 //*-*        ==================================================
@@ -2247,7 +2247,7 @@ Axis_t TH1::GetRandom()
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetBinContent(Int_t)
+Stat_t TH1::GetBinContent(Int_t) const
 {
 //*-*-*-*-*-*-*Return content of global bin number bin*-*-*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================
@@ -2977,7 +2977,7 @@ void TH1::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TH1::Print(Option_t *option)
+void TH1::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*Print some global quantities for this histogram*-*-*-*-*-*-*-*
 //*-*          ===============================================
@@ -3111,7 +3111,7 @@ void TH1::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetMean(Int_t axis)
+Stat_t TH1::GetMean(Int_t axis) const
 {
 //*-*-*-*-*-*-*-*Return mean value of this histogram along the X axis*-*-*-*-*
 //*-*            ====================================================
@@ -3125,7 +3125,7 @@ Stat_t TH1::GetMean(Int_t axis)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetRMS(Int_t axis)
+Stat_t TH1::GetRMS(Int_t axis) const
 {
 //*-*-*-*-*-*-*-*Return the Root Mean Square value of this histogram*-*-*-*-*
 //*-*            ===================================================
@@ -3142,7 +3142,7 @@ Stat_t TH1::GetRMS(Int_t axis)
 }
 
 //______________________________________________________________________________
-void TH1::GetStats(Stat_t *stats)
+void TH1::GetStats(Stat_t *stats) const
 {
    // fill the array stats from the contents of this histogram
    // The array stats must be correctly dimensionned in the calling program.
@@ -3190,7 +3190,7 @@ void TH1::PutStats(Stat_t *stats)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetSumOfWeights()
+Stat_t TH1::GetSumOfWeights() const
 {
 //*-*-*-*-*-*-*-*Return the sum of weights excluding under/overflows*-*-*-*-*
 //*-*            ===================================================
@@ -3430,7 +3430,7 @@ Int_t TH1::GetContour(Double_t *levels)
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetContourLevel(Int_t level)
+Double_t TH1::GetContourLevel(Int_t level) const
 {
 // Return value of contour number level
 // see GetContour to return the array of all contour levels
@@ -3493,7 +3493,7 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetMaximum()
+Double_t TH1::GetMaximum() const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return maximum value of bins in the range*-*-*-*-*-*
 //*-*                  =========================================
@@ -3519,7 +3519,7 @@ Double_t TH1::GetMaximum()
 }
 
 //______________________________________________________________________________
-Int_t TH1::GetMaximumBin()
+Int_t TH1::GetMaximumBin() const
 {
 //*-*-*-*-*-*-*Return location of bin with maximum value in the range*-*
 //*-*          ======================================================
@@ -3528,7 +3528,7 @@ Int_t TH1::GetMaximumBin()
 }
 
 //______________________________________________________________________________
-Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz)
+Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 {
 //*-*-*-*-*-*-*Return location of bin with maximum value in the range*-*
 //*-*          ======================================================
@@ -3561,7 +3561,7 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz)
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetMinimum()
+Double_t TH1::GetMinimum() const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return minimum value of bins in the range-*-*-*-*-*
 //*-*                  =========================================
@@ -3587,7 +3587,7 @@ Double_t TH1::GetMinimum()
 }
 
 //______________________________________________________________________________
-Int_t TH1::GetMinimumBin()
+Int_t TH1::GetMinimumBin() const
 {
 //*-*-*-*-*-*-*Return location of bin with minimum value in the range*-*
 //*-*          ======================================================
@@ -3596,7 +3596,7 @@ Int_t TH1::GetMinimumBin()
 }
 
 //______________________________________________________________________________
-Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz)
+Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
 {
 //*-*-*-*-*-*-*Return location of bin with minimum value in the range*-*
 //*-*          ======================================================
@@ -3824,7 +3824,7 @@ void TH1::Sumw2()
 }
 
 //______________________________________________________________________________
-TF1 *TH1::GetFunction(const char *name)
+TF1 *TH1::GetFunction(const char *name) const
 {
 //*-*-*-*-*Return pointer to function with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      ===================================
@@ -3836,7 +3836,7 @@ TF1 *TH1::GetFunction(const char *name)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetBinError(Int_t bin)
+Stat_t TH1::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return value of error associated to bin number bin*-*-*-*-*
 //*-*          ==================================================
@@ -3855,7 +3855,7 @@ Stat_t TH1::GetBinError(Int_t bin)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetCellContent(Int_t binx, Int_t biny)
+Stat_t TH1::GetCellContent(Int_t binx, Int_t biny) const
 {
   Stat_t binval;
   if (GetDimension() > 1) {
@@ -3866,7 +3866,7 @@ Stat_t TH1::GetCellContent(Int_t binx, Int_t biny)
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetCellError(Int_t binx, Int_t biny)
+Stat_t TH1::GetCellError(Int_t binx, Int_t biny) const
 {
   if (GetDimension() > 1) return GetBinError(biny*(fXaxis.GetNbins()+2) + binx);
   return GetBinError(binx);
@@ -4005,7 +4005,7 @@ TH1 *TH1C::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH1C::GetBinContent(Int_t bin)
+Stat_t TH1C::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4172,7 +4172,7 @@ TH1 *TH1S::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH1S::GetBinContent(Int_t bin)
+Stat_t TH1S::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4330,7 +4330,7 @@ TH1 *TH1F::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH1F::GetBinContent(Int_t bin)
+Stat_t TH1F::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4489,7 +4489,7 @@ TH1 *TH1D::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-Stat_t TH1D::GetBinContent(Int_t bin)
+Stat_t TH1D::GetBinContent(Int_t bin) const
 {
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;

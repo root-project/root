@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 ClassImp(TMessageHandler)
 
 //______________________________________________________________________________
-TMessageHandler::TMessageHandler(TClass *cl, Bool_t derived)
+TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
 {
    // Create a new message handler for class cl and add it to the list
    // of message handlers.
@@ -120,7 +120,7 @@ Int_t TMessageHandler::GetTotalMessageCount() const
 }
 
 //______________________________________________________________________________
-void TMessageHandler::HandleMessage(Int_t id, TObject *obj)
+void TMessageHandler::HandleMessage(Int_t id, const TObject *obj)
 {
    // Store message origin, keep statistics and call Notify().
 
@@ -186,14 +186,14 @@ Bool_t TMessageHandler::Notify()
 }
 
 //______________________________________________________________________________
-void TMessageHandler::Print(Option_t *option)
+void TMessageHandler::Print(Option_t *option) const
 {
    // Print statistics for this message handler.
 
    printf("\n ****** Message Handler: %s has a total of %d messages\n",GetName(),GetTotalMessageCount());
    if (fSize <= 0) return;
    Int_t id, uid;
-   TClass *cl;
+   const TClass *cl;
    TIter next(gROOT->GetListOfClasses());
    for (Int_t i=0;i<fSize;i++) {
       id = fMessIds[i];

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.6 2000/11/28 09:07:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.7 2000/12/02 16:26:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -51,20 +51,20 @@ public:
    TStreamerElement();
    TStreamerElement(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual         ~TStreamerElement();
-   Int_t            GetArrayDim() {return fArrayDim;}
-   Int_t            GetArrayLength() {return fArrayLength;}
+   Int_t            GetArrayDim() const {return fArrayDim;}
+   Int_t            GetArrayLength() const {return fArrayLength;}
    virtual const char *GetInclude() const {return "";}
-   Int_t            GetMaxIndex(Int_t i) {return fMaxIndex[i];}
-   virtual ULong_t  GetMethod() {return ULong_t(fStreamer);}
-   Streamer_t       GetStreamer() {return fStreamer;}
-   Int_t            GetSize() {return fSize;}
-   Int_t            GetNewType() {return fNewType;}
-   Int_t            GetType() {return fType;}
-   Int_t            GetOffset() {return fOffset;}
+   Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}
+   virtual ULong_t  GetMethod() const {return ULong_t(fStreamer);}
+   Streamer_t       GetStreamer() const {return fStreamer;}
+   Int_t            GetSize() const {return fSize;}
+   Int_t            GetNewType() const {return fNewType;}
+   Int_t            GetType() const {return fType;}
+   Int_t            GetOffset() const {return fOffset;}
    const char      *GetTypeName() const {return fTypeName.Data();}
    virtual void     Init(TObject *obj=0);
-   virtual Bool_t   IsaPointer() {return kFALSE;}
-   virtual void     ls(Option_t *option="");
+   virtual Bool_t   IsaPointer() const {return kFALSE;}
+   virtual void     ls(Option_t *option="") const;
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
    virtual void     SetOffset(Int_t offset) {fOffset=offset;}
@@ -85,7 +85,7 @@ public:
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
    const char      *GetInclude() const;
-   ULong_t          GetMethod() {return ULong_t(fMethod);}
+   ULong_t          GetMethod() const {return ULong_t(fMethod);}
    virtual void     Init(TObject *obj=0);
    
    ClassDef(TStreamerBase,1)  //Streamer element of type base class
@@ -105,9 +105,9 @@ public:
    TStreamerBasicPointer();
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype, const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
-   ULong_t        GetMethod();
+   ULong_t        GetMethod() const;
    virtual void   Init(TObject *obj=0);
-   virtual Bool_t IsaPointer() {return kTRUE;}
+   virtual Bool_t IsaPointer() const {return kTRUE;}
    
    ClassDef(TStreamerBasicPointer,1)  //Streamer element for a pointer to a basic type
 };
@@ -127,9 +127,9 @@ public:
    TStreamerTStringPointer(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerTStringPointer();
    const char    *GetInclude() const;
-   ULong_t        GetMethod();
+   ULong_t        GetMethod() const;
    virtual void   Init(TObject *obj=0);
-   virtual Bool_t IsaPointer() {return kTRUE;}
+   virtual Bool_t IsaPointer() const {return kTRUE;}
    
    ClassDef(TStreamerTStringPointer,1)  //Streamer element for a pointer to an array of TString
 };
@@ -145,8 +145,8 @@ public:
    TStreamerBasicType();
    TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual       ~TStreamerBasicType();
-   Int_t          GetCounter() {return fCounter;}
-   ULong_t        GetMethod();
+   Int_t          GetCounter() const {return fCounter;}
+   ULong_t        GetMethod() const;
    
    ClassDef(TStreamerBasicType,1)  //Streamer element for a basic type
 };
@@ -162,7 +162,7 @@ public:
    TStreamerObject();
    TStreamerObject(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObject();
-   TClass        *GetClass() {return fClassObject;}
+   TClass        *GetClass() const {return fClassObject;}
    const char    *GetInclude() const;
    virtual void   Init(TObject *obj=0);
    
@@ -197,10 +197,10 @@ public:
    TStreamerObjectPointer();
    TStreamerObjectPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectPointer();
-   TClass        *GetClass() {return fClassObject;}
+   TClass        *GetClass() const {return fClassObject;}
    const char    *GetInclude() const;
    virtual void   Init(TObject *obj=0);
-   virtual Bool_t IsaPointer() {return kTRUE;}
+   virtual Bool_t IsaPointer() const {return kTRUE;}
    
    ClassDef(TStreamerObjectPointer,1)  //Streamer element of type pointer to a TObject
 };
@@ -229,10 +229,10 @@ public:
    TStreamerSTL();
    TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, Bool_t dmPointer);
    virtual       ~TStreamerSTL();
-   Int_t          GetSTLtype() {return fSTLtype;}
-   Int_t          GetCtype()   {return fCtype;}
+   Int_t          GetSTLtype() const {return fSTLtype;}
+   Int_t          GetCtype()   const {return fCtype;}
    const char    *GetInclude() const;
-   virtual void   ls(Option_t *option="");
+   virtual void   ls(Option_t *option="") const;
      
    ClassDef(TStreamerSTL,1)  //Streamer element of type STL container
 };

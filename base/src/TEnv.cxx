@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.2 2000/06/16 17:08:11 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -357,7 +357,7 @@ void TEnvRec::ChangeValue(const TString &v, const char *, EEnvLevel l)
 }
 
 //______________________________________________________________________________
-Int_t TEnvRec::Compare(TObject *op)
+Int_t TEnvRec::Compare(const TObject *op) const
 {
    // Comparison function for resources.
 
@@ -592,7 +592,7 @@ TEnvRec *TEnv::Lookup(const char *name)
 }
 
 //______________________________________________________________________________
-void TEnv::Print(Option_t *opt)
+void TEnv::Print(Option_t *opt) const
 {
    // Print all resources or the global, user or local resources separately.
 
@@ -610,7 +610,7 @@ void TEnv::Print(Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TEnv::PrintEnv(EEnvLevel level)
+void TEnv::PrintEnv(EEnvLevel level) const
 {
    // Print all resources for a certain level (global, user, local).
 

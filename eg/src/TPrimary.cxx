@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -172,7 +172,7 @@ void TPrimary::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPrimary::Print(Option_t *)
+void TPrimary::Print(Option_t *) const
 {
 //
 //  Print the internals of the primary vertex particle

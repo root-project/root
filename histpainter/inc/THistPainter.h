@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.2 2000/06/13 09:52:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
     virtual void    DrawPanel();
     virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual void    FitPanel();
-    virtual char   *GetObjectInfo(Int_t px, Int_t py);
+    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
     virtual Int_t   MakeChopt(Option_t *option);
     virtual void    Paint(Option_t *option="");
     virtual void    PaintArrows();

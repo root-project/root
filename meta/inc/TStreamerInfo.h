@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.5 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.6 2000/12/11 18:06:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -75,13 +75,13 @@ public:
    void                BuildCheck();
    void                BuildOld();
    Int_t               GenerateHeaderFile(const char *dirname);
-   TClass             *GetClass() {return fClass;}
-   UInt_t              GetCheckSum() {return fCheckSum;}
-   Int_t               GetClassVersion() {return fClassVersion;}
-   Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer);
-   TObjArray          *GetElements() {return fElements;}
-   Int_t               GetNumber() {return fNumber;}
-   void                ls(Option_t *option="");
+   TClass             *GetClass() const {return fClass;}
+   UInt_t              GetCheckSum() const {return fCheckSum;}
+   Int_t               GetClassVersion() const {return fClassVersion;}
+   Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
+   TObjArray          *GetElements() const {return fElements;}
+   Int_t               GetNumber() const {return fNumber;}
+   void                ls(Option_t *option="") const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc);
    Int_t               WriteBuffer(TBuffer &b, char *pointer);

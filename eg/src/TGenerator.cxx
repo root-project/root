@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.2 2000/10/30 08:01:09 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.3 2000/11/21 20:10:18 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -377,7 +377,7 @@ void TGenerator::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-TParticle *TGenerator::GetParticle(Int_t i)
+TParticle *TGenerator::GetParticle(Int_t i) const
 {
 //
 //  Returns pointer to primary number i;

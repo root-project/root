@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.2 2000/12/11 09:52:24 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -49,13 +49,13 @@ public:
   virtual TVolumePosition *GetPosition() const { return (TVolumePosition *)GetObject();}
   virtual TVolume *GetNode() const ;
   virtual Int_t    GetGlobalRange(const TVolumeView *rootNode,Float_t *min, Float_t *max);
-  virtual TList   *GetListOfShapes()      const;
+  virtual TList   *GetListOfShapes() const;
   virtual void     GetLocalRange(Float_t *min, Float_t *max);
-  virtual Text_t  *GetObjectInfo(Int_t px, Int_t py);
+  virtual Text_t  *GetObjectInfo(Int_t px, Int_t py) const;
   virtual TShape  *GetShape()  const;
   virtual Int_t    GetVisibility() const;
   virtual Bool_t   IsMarked() const;
-  virtual Bool_t   Is3D()  {return kTRUE;}
+  virtual Bool_t   Is3D() const {return kTRUE;}
   virtual TVolumePosition  *Local2Master(const TVolumeView *localNode,const TVolumeView *masterNode=0);
   virtual TVolumePosition  *Local2Master(const Char_t *localName, const Char_t *masterName=0);
   virtual Float_t *Local2Master(const Float_t *local, Float_t *master,

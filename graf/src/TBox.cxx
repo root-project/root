@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.4 2000/11/21 20:23:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -514,7 +514,7 @@ void TBox::HideToolTip(Int_t event)
 }
 
 //______________________________________________________________________________
-void TBox::ls(Option_t *)
+void TBox::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this box with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
@@ -543,7 +543,7 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 }
 
 //______________________________________________________________________________
-void TBox::Print(Option_t *)
+void TBox::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this box with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================

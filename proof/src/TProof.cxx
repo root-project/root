@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.6 2000/11/27 18:37:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.7 2000/12/13 12:08:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1030,7 +1030,7 @@ Int_t TProof::Ping(ESlaves list)
 }
 
 //______________________________________________________________________________
-void TProof::Print(Option_t *option)
+void TProof::Print(Option_t *option) const
 {
    // Print status of PROOF cluster.
 
@@ -1042,10 +1042,10 @@ void TProof::Print(Option_t *option)
       Printf("Protocol version:         %d", GetProtocol());
       Printf("Log level:                %d", GetLogLevel());
       if (IsValid())
-         SendPrint();
+         ((TProof*)this)->SendPrint();
 
    } else {
-      AskStatus();
+      ((TProof*)this)->AskStatus();
       if (IsParallel())
          Printf("*** Master server (parallel mode, %d slaves):",
                 GetNumberOfActiveSlaves());

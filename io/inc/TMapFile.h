@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -110,7 +110,7 @@ public:
    void          Close(Option_t *option = "");
    void         *GetBaseAddr() const { return (void *)fBaseAddr; }
    void         *GetBreakval() const;
-   TDirectory   *GetDirectory() {return fDirectory;}
+   TDirectory   *GetDirectory() const {return fDirectory;}
    Int_t         GetFd() const { return fFd; }
    void         *GetMmallocDesc() const { return fMmallocDesc; }
    const char   *GetName() const { return fName; }
@@ -122,11 +122,11 @@ public:
    Bool_t        IsFolder() const;
    Bool_t        IsWritable() const { return fWritable; }
    void         *OrgAddress(void *addr) const { return (void *)((Long_t)addr - fOffset); }
-   void          Print(Option_t *option="");
-   void          ls(Option_t *option="");
+   void          Print(Option_t *option="") const;
+   void          ls(Option_t *option="") const;
    Bool_t        cd(const char *path = 0);
 
-   void          Add(TObject *obj, const char *name = "");
+   void          Add(const TObject *obj, const char *name = "");
    void          Update(TObject *obj = 0);
    TObject      *Remove(TObject *obj) { return Remove(obj, kTRUE); }
    TObject      *Remove(const char *name) { return Remove(name, kTRUE); }
@@ -164,7 +164,7 @@ private:
    TMapRec         *fNext;       // next MapRec in list
 
 public:
-   TMapRec(const char *name, TObject *obj, Int_t size, void *buf);
+   TMapRec(const char *name, const TObject *obj, Int_t size, void *buf);
    ~TMapRec();
    const char   *GetName(Long_t offset = 0) const { return (char *)((Long_t) fName + offset); }
    const char   *GetClassName(Long_t offset = 0) const { return (char *)((Long_t) fClassName + offset); }

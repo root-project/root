@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,7 +43,7 @@ void TAttCanvas::Copy(TAttCanvas &attcanvas)
 }
 
 //______________________________________________________________________________
-void TAttCanvas::Print(Option_t *)
+void TAttCanvas::Print(Option_t *) const
 {
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.3 2000/11/21 16:11:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.4 2000/12/04 16:48:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -82,26 +82,26 @@ public:
    virtual void      Draw(Option_t *option="");
    virtual void      FillBuffer(char *&buffer);
    virtual void      Flush();
-   Int_t             GetBestBuffer();
-   TArrayC          *GetClassIndex() {return fClassIndex;}
-   Int_t             GetCompressionLevel() {return fCompress;}
+   Int_t             GetBestBuffer() const;
+   TArrayC          *GetClassIndex() const {return fClassIndex;}
+   Int_t             GetCompressionLevel() const {return fCompress;}
    Float_t           GetCompressionFactor();
-   virtual Seek_t    GetEND() {return fEND;}
+   virtual Seek_t    GetEND() const {return fEND;}
    Int_t             GetFd() const { return fD; }
-   TList            *GetListOfFree() {return fFree;}
-   virtual Int_t     GetNfree() {return fFree->GetSize();}
+   TList            *GetListOfFree() const {return fFree;}
+   virtual Int_t     GetNfree() const {return fFree->GetSize();}
    Option_t         *GetOption() const { return fOption.Data();}
    Double_t          GetBytesRead() const { return fBytesRead; }
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Bool_t    IsOpen() const;
-   virtual void      ls(Option_t *option="");
+   virtual void      ls(Option_t *option="") const;
    virtual void      MakeFree(Seek_t first, Seek_t last);
    virtual void      MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
    virtual void      Map(); // *MENU*
    virtual void      Paint(Option_t *option="");
-   virtual void      Print(Option_t *option="");
+   virtual void      Print(Option_t *option="") const;
    virtual Bool_t    ReadBuffer(char *buf, int len);
    virtual void      ReadFree();
    virtual void      ReadStreamerInfo();

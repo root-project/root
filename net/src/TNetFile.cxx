@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.7 2000/11/27 10:47:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.8 2000/12/02 15:50:28 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -249,12 +249,12 @@ Bool_t TNetFile::IsOpen() const
 }
 
 //______________________________________________________________________________
-void TNetFile::Print(Option_t *)
+void TNetFile::Print(Option_t *) const
 {
    // Print some info about the net file.
 
    const char *fname = fUrl.GetFile();
-   Printf("URL:           %s", fUrl.GetUrl());
+   Printf("URL:           %s", ((TUrl*)&fUrl)->GetUrl());
    Printf("Remote file:   %s", &fname[1]);
    Printf("Remote user:   %s", fUser.Data());
    Printf("Title:         %s", fTitle.Data());
@@ -264,7 +264,7 @@ void TNetFile::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-void TNetFile::PrintError(const char *where, Int_t err)
+void TNetFile::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 

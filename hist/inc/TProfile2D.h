@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.3 2000/08/15 08:51:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.4 2000/11/21 20:31:29 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -63,12 +63,12 @@ public:
             Int_t   Fill(Axis_t, Stat_t) {return -1; } //MayNotUse
             Int_t   Fill(Axis_t x, Axis_t y, Stat_t z);
     virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-    virtual Stat_t  GetBinContent(Int_t bin);
-    virtual Stat_t  GetBinError(Int_t bin);
-    virtual Stat_t  GetBinEntries(Int_t bin);
+    virtual Stat_t  GetBinContent(Int_t bin) const;
+    virtual Stat_t  GetBinError(Int_t bin) const;
+    virtual Stat_t  GetBinEntries(Int_t bin) const;
     Option_t       *GetErrorOption() const;
-    virtual Double_t GetZmin() {return fZmin;}
-    virtual Double_t GetZmax() {return fZmax;}
+    virtual Double_t GetZmin() const {return fZmin;}
+    virtual Double_t GetZmax() const {return fZmax;}
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

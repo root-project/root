@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.3 2000/11/06 07:19:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.4 2000/11/21 20:29:13 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -86,24 +86,24 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0);
    virtual Double_t EvalPar(Double_t *x, Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-       Double_t     GetChisquare() {return fChisquare;}
-           TH1     *GetHistogram();
-          Int_t     GetNDF() {return fNpfits-fNpar;}
-          Int_t     GetNpx() {return fNpx;}
-    TMethodCall    *GetMethodCall() {return fMethodCall;}
-          Int_t     GetNumberFitPoints() {return fNpfits;}
-   virtual char    *GetObjectInfo(Int_t px, Int_t py);
-        TObject    *GetParent() {return fParent;}
-       Double_t     GetParError(Int_t ipar) {return fParErrors[ipar];}
+       Double_t     GetChisquare() const {return fChisquare;}
+           TH1     *GetHistogram() const;
+          Int_t     GetNDF() const {return fNpfits-fNpar;}
+          Int_t     GetNpx() const {return fNpx;}
+    TMethodCall    *GetMethodCall() const {return fMethodCall;}
+          Int_t     GetNumberFitPoints() const {return fNpfits;}
+   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+        TObject    *GetParent() const {return fParent;}
+       Double_t     GetParError(Int_t ipar) const {return fParErrors[ipar];}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
-   virtual Double_t GetProb() {return TMath::Prob(fChisquare,fNpfits-fNpar);}
+   virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
    virtual Double_t GetRandom();
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
    virtual Double_t GetSave(Double_t *x);
-        Double_t    GetXmin() {return fXmin;}
-        Double_t    GetXmax() {return fXmax;}
+        Double_t    GetXmin() const {return fXmin;}
+        Double_t    GetXmax() const {return fXmax;}
    virtual void     InitArgs(Double_t *x, Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=0.000001);
@@ -111,7 +111,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual Double_t IntegralMultiple(Int_t n, Double_t *a, Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual void     Paint(Option_t *option="");
-   virtual void     Print(Option_t *option="");
+   virtual void     Print(Option_t *option="") const;
    virtual void     Save(Double_t xmin, Double_t xmax);
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.8 2000/08/15 08:56:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.9 2000/11/21 20:47:14 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -55,29 +55,29 @@ public:
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TBranch  *GetBranch(const char *name);
-    virtual Int_t     GetChainEntryNumber(Int_t entry);
-            Int_t     GetNtrees() {return fNtrees;}
+    virtual Int_t     GetChainEntryNumber(Int_t entry) const;
+            Int_t     GetNtrees() const {return fNtrees;}
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
-    TFile            *GetFile() {return fFile;}
+    TFile            *GetFile() const {return fFile;}
     TLeaf            *GetLeaf(const char *name);
     TObjArray        *GetListOfBranches();
-    TObjArray        *GetListOfFiles() {return fFiles;}
+    TObjArray        *GetListOfFiles() const {return fFiles;}
     TObjArray        *GetListOfLeaves();
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
-    TObject          *GetNotify() {return fNotify;}
-    TList            *GetStatus() {return fStatus;}
-    TTree            *GetTree() {return fTree;}
-            Int_t     GetTreeNumber() {return fTreeNumber;}
-            Int_t    *GetTreeOffset() {return fTreeOffset;}
-            Int_t     GetTreeOffsetLen() {return fTreeOffsetLen;}
+    TObject          *GetNotify() const {return fNotify;}
+    TList            *GetStatus() const {return fStatus;}
+    TTree            *GetTree() const {return fTree;}
+            Int_t     GetTreeNumber() const {return fTreeNumber;}
+            Int_t    *GetTreeOffset() const {return fTreeOffset;}
+            Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
             Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual void      ls(Option_t *option="");
+    virtual void      ls(Option_t *option="") const;
     virtual void      Merge(const char *name);
     virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
-    virtual void      Print(Option_t *option="");
+    virtual void      Print(Option_t *option="") const;
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);

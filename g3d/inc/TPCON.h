@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.2 2000/11/21 20:13:28 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -59,13 +59,13 @@ class TPCON : public TShape {
         virtual void     DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual Int_t    GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDiv;}
-        virtual Float_t  GetPhi1()  {return fPhi1;}
-        virtual Float_t  GetDhi1()  {return fDphi1;}
-        virtual Int_t    GetNz()    {return fNz;}
-        virtual Float_t *GetRmin()  {return fRmin;}
-        virtual Float_t *GetRmax()  {return fRmax;}
-        virtual Float_t *GetDz()    {return fDz;}
-        virtual Int_t    GetNdiv()  {return fNdiv;}
+        virtual Float_t  GetPhi1() const  {return fPhi1;}
+        virtual Float_t  GetDhi1() const  {return fDphi1;}
+        virtual Int_t    GetNz() const    {return fNz;}
+        virtual Float_t *GetRmin() const  {return fRmin;}
+        virtual Float_t *GetRmax() const  {return fRmax;}
+        virtual Float_t *GetDz() const    {return fDz;}
+        virtual Int_t    GetNdiv() const  {return fNdiv;}
         virtual void     Paint(Option_t *option);
         virtual void     SetNumberOfDivisions (Int_t p);
         virtual void     SetPoints(Float_t *buff);

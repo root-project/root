@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.15 2000/12/06 07:29:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.16 2000/12/11 18:06:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -663,7 +663,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer)
+Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const
 {
    // Compute data member offset
    // return pointer to the Streamer function if one exists
@@ -713,7 +713,7 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::ls(Option_t *option)
+void TStreamerInfo::ls(Option_t *option) const
 {
 //  List the TStreamerElement list and also the precomputed tables
 

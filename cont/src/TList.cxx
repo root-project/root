@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.5 2000/09/27 10:05:23 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.6 2000/11/21 16:49:40 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -420,7 +420,7 @@ TObject *TList::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TList::FindObject(TObject *obj) const
+TObject *TList::FindObject(const TObject *obj) const
 {
    // Find an object in this list using the object's IsEqual()
    // member function. Requires a sequential scan till the object has
@@ -439,7 +439,7 @@ TObject *TList::FindObject(TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObjLink *TList::FindLink(TObject *obj, Int_t &idx) const
+TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 {
    // Returns the TObjLink object that contains object obj. In idx it returns
    // the position of the object in the list.

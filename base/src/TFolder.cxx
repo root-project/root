@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.7 2000/09/14 19:53:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.8 2000/10/22 19:24:44 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -222,7 +222,7 @@ const char *TFolder::FindFullPathName(const char *name) const
 
 
 //______________________________________________________________________________
-const char *TFolder::FindFullPathName(TObject *obj) const
+const char *TFolder::FindFullPathName(const TObject *obj) const
 {
 // return the full pathname corresponding to subpath name
 // The returned path will be re-used by the next call to GetPath().
@@ -232,7 +232,7 @@ const char *TFolder::FindFullPathName(TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObject *TFolder::FindObject(TObject *) const
+TObject *TFolder::FindObject(const TObject *) const
 {
 // find object in an folder
 
@@ -305,7 +305,7 @@ TObject *TFolder::FindObjectAny(const char *name) const
 }
 
 //______________________________________________________________________________
-void TFolder::ls(Option_t *option)
+void TFolder::ls(Option_t *option) const
 {
 // List folder contents
 //   if option contains "dump",  the Dump function of contained objects is called

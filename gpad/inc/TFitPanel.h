@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
         virtual void  Apply(const char *action="");
         virtual void  BuildStandardButtons();
         virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        TObject       *GetObjectFit() {return fObjectFit;}
+        TObject       *GetObjectFit() const {return fObjectFit;}
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetDefaults();
         virtual void  SetFunction(const char *function);

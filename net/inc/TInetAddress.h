@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -63,7 +63,7 @@ public:
    Int_t       GetFamily() const { return fFamily; }
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fFamily == -1 ? kFALSE : kTRUE; }
-   void        Print(Option_t *option="");
+   void        Print(Option_t *option="") const;
 
    ClassDef(TInetAddress,1)  //Represents an Internet Protocol (IP) address
 };

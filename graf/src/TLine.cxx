@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.4 2000/11/21 20:26:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -258,7 +258,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TLine::ls(Option_t *)
+void TLine::ls(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this line with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
@@ -295,7 +295,7 @@ void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 }
 
 //______________________________________________________________________________
-void TLine::Print(Option_t *)
+void TLine::Print(Option_t *) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Dump this line with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================

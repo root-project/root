@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.2 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.3 2000/10/31 11:19:34 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -285,7 +285,7 @@ TObject *TBtree::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TBtree::FindObject(TObject *obj) const
+TObject *TBtree::FindObject(const TObject *obj) const
 {
    // Find object using the objects Compare() member function.
 

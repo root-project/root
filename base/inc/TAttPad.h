@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.2 2000/06/13 12:35:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.3 2000/11/21 16:02:05 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -54,24 +54,24 @@ public:
         TAttPad();
         virtual ~TAttPad();
         virtual void     Copy(TAttPad &attpad);
-        Float_t          GetBottomMargin() { return fBottomMargin;}
-        Float_t          GetLeftMargin() { return fLeftMargin;}
-        Float_t          GetRightMargin() { return fRightMargin;}
-        Float_t          GetTopMargin() { return fTopMargin;}
-        Float_t          GetAfile() { return fAfile;}
-        Float_t          GetXfile() { return fXfile;}
-        Float_t          GetYfile() { return fYfile;}
-        Float_t          GetAstat() { return fAstat;}
-        Float_t          GetXstat() { return fXstat;}
-        Float_t          GetYstat() { return fYstat;}
-        Color_t          GetFrameFillColor() {return fFrameFillColor;}
-        Color_t          GetFrameLineColor() {return fFrameLineColor;}
-        Style_t          GetFrameFillStyle() {return fFrameFillStyle;}
-        Style_t          GetFrameLineStyle() {return fFrameLineStyle;}
-        Width_t          GetFrameLineWidth() {return fFrameLineWidth;}
-        Width_t          GetFrameBorderSize() {return fFrameBorderSize;}
-        Int_t            GetFrameBorderMode() {return fFrameBorderMode;}
-        virtual void     Print(Option_t *option="");
+        Float_t          GetBottomMargin() const { return fBottomMargin;}
+        Float_t          GetLeftMargin() const { return fLeftMargin;}
+        Float_t          GetRightMargin() const { return fRightMargin;}
+        Float_t          GetTopMargin() const { return fTopMargin;}
+        Float_t          GetAfile() const { return fAfile;}
+        Float_t          GetXfile() const { return fXfile;}
+        Float_t          GetYfile() const { return fYfile;}
+        Float_t          GetAstat() const { return fAstat;}
+        Float_t          GetXstat() const { return fXstat;}
+        Float_t          GetYstat() const { return fYstat;}
+        Color_t          GetFrameFillColor() const {return fFrameFillColor;}
+        Color_t          GetFrameLineColor() const {return fFrameLineColor;}
+        Style_t          GetFrameFillStyle() const {return fFrameFillStyle;}
+        Style_t          GetFrameLineStyle() const {return fFrameLineStyle;}
+        Width_t          GetFrameLineWidth() const {return fFrameLineWidth;}
+        Width_t          GetFrameBorderSize() const {return fFrameBorderSize;}
+        Int_t            GetFrameBorderMode() const {return fFrameBorderMode;}
+        virtual void     Print(Option_t *option="") const;
         virtual void     ResetAttPad(Option_t *option="");
         virtual void     SetBottomMargin(Float_t bottommargin);
         virtual void     SetLeftMargin(Float_t leftmargin);

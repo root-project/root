@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.2 2000/06/13 10:56:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.3 2000/11/21 20:22:50 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -74,21 +74,21 @@ public:
         virtual void    DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                  Double_t gridlength = 0);
-             Float_t    GetGridLength()   {return fGridLength;}
-             TF1       *GetFunction()     {return fFunction;}
-               Int_t    GetLabelColor()   {return fLabelColor;}
-               Int_t    GetLabelFont()    {return fLabelFont;}
-             Float_t    GetLabelOffset()  {return fLabelOffset;}
-             Float_t    GetLabelSize()    {return fLabelSize;}
-             Float_t    GetTitleOffset()  {return fTitleOffset;}
-             Float_t    GetTitleSize()    {return fTitleSize;}
+             Float_t    GetGridLength() const   {return fGridLength;}
+             TF1       *GetFunction() const     {return fFunction;}
+               Int_t    GetLabelColor() const   {return fLabelColor;}
+               Int_t    GetLabelFont() const    {return fLabelFont;}
+             Float_t    GetLabelOffset() const  {return fLabelOffset;}
+             Float_t    GetLabelSize() const    {return fLabelSize;}
+             Float_t    GetTitleOffset() const  {return fTitleOffset;}
+             Float_t    GetTitleSize() const    {return fTitleSize;}
 virtual const char     *GetName() const  {return fName.Data();}
 virtual const char     *GetOption() const {return fChopt.Data();}
 virtual const char     *GetTitle() const {return fTitle.Data();}
-               Int_t    GetNdiv()         {return fNdiv;}
-             Double_t   GetWmin()         {return fWmin;}
-             Double_t   GetWmax()         {return fWmax;}
-             Float_t    GetTickSize()     {return fTickSize;}
+               Int_t    GetNdiv() const         {return fNdiv;}
+             Double_t   GetWmin() const         {return fWmin;}
+             Double_t   GetWmax()  const        {return fWmax;}
+             Float_t    GetTickSize() const     {return fTickSize;}
                 void    LabelsLimits(const char *label, Int_t &first, Int_t &last);
         virtual void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
                        ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID);

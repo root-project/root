@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.9 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.10 2000/12/04 16:43:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -83,9 +83,10 @@ public:
    void           BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t         CanBypassStreamer() { return TestBit(kBypassStreamer);}
    Bool_t         CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
+   Int_t          Compare(const TObject *obj) const;
    void           Draw(Option_t *option="");
    void          *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
-   char          *EscapeChars(char * text);
+   char          *EscapeChars(char * text) const;
    UInt_t         GetCheckSum() const;
    Version_t      GetClassVersion() const { return fClassVersion; }
    TDataMember   *GetDataMember(const char *datamember);
@@ -95,7 +96,7 @@ public:
    TList         *GetListOfDataMembers();
    TList         *GetListOfBases();
    TList         *GetListOfMethods();
-   TList         *GetListOfRealData() { return fRealData; }
+   TList         *GetListOfRealData() const { return fRealData; }
    TList         *GetListOfAllPublicMethods();
    TList         *GetListOfAllPublicDataMembers();
    const char    *GetName() const { return fName.Data(); }
@@ -106,18 +107,17 @@ public:
    TClass        *GetBaseClass(const TClass *base);
    Int_t          GetBaseClassOffset(const TClass *base);
    TClass        *GetBaseDataMember(const char *datamember);
-   UInt_t         GetInstanceCount() { return fInstanceCount; }
-   UInt_t         GetHeapInstanceCount() { return fOnHeap; }
+   UInt_t         GetInstanceCount() const { return fInstanceCount; }
+   UInt_t         GetHeapInstanceCount() const { return fOnHeap; }
    void           GetMenuItems(TList *listitems);
    TMethod       *GetMethod(const char *method, const char *params);
    TMethod       *GetMethodWithPrototype(const char *method, const char *proto);
    TMethod       *GetMethodAny(const char *method);
    Int_t          GetNdata();
    Int_t          GetNmethods();
-   TObjArray     *GetStreamerInfos() {return fStreamerInfo;}
+   TObjArray     *GetStreamerInfos() const {return fStreamerInfo;}
    TStreamerInfo *GetStreamerInfo(Int_t version=0);
-   Int_t          Compare(TObject *obj);
-   ULong_t        Hash() { return fName.Hash(); }
+   ULong_t        Hash() const { return fName.Hash(); }
    void           IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t         InheritsFrom(const char *cl) const;
    Bool_t         InheritsFrom(const TClass *cl) const;

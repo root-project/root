@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name$:$Id$
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -80,7 +80,7 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
 }
 
 //______________________________________________________________________________
-TObject *TFitter::GetObjectFit()
+TObject *TFitter::GetObjectFit() const
 {
    // return a pointer to the current object being fitted
 
@@ -142,7 +142,7 @@ Double_t TFitter::GetSumLog(Int_t n)
 }
 
 //______________________________________________________________________________
-void  TFitter::PrintResults(Int_t level, Double_t amin)
+void  TFitter::PrintResults(Int_t level, Double_t amin) const
 {
    // Print fit results
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.6 2000/10/26 15:32:04 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.7 2000/11/21 20:20:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -117,7 +117,7 @@ public:
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
    virtual void      Draw(Option_t *option="");
-   virtual void      DrawClone(Option_t *option=""); // *MENU*
+   virtual void      DrawClone(Option_t *option="") const; // *MENU*
    virtual void      DrawClonePad(); // *MENU*
    virtual void      EditorBar();
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
@@ -126,40 +126,40 @@ public:
    void              UseCurrentStyle(); // *MENU*
    void              ForceUpdate() { fCanvasImp->ForceUpdate(); }
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
-   TContextMenu     *GetContextMenu(){return fContextMenu;};
-   Int_t             GetDoubleBuffer() {return fDoubleBuffer;}
-   TControlBar      *GetEditorBar() {return fEditorBar;}
+   TContextMenu     *GetContextMenu() const {return fContextMenu;};
+   Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
+   TControlBar      *GetEditorBar() const {return fEditorBar;}
    Int_t             GetEvent() const { return fEvent; }
    Int_t             GetEventX() const { return fEventX; }
    Int_t             GetEventY() const { return fEventY; }
    Color_t           GetHighLightColor() const { return fHighLightColor; }
    virtual void     *GetPadDivision(Int_t xdivision=1, Int_t ydivision=1);
    TVirtualPad      *GetPadSave() const { return fPadSave; }
-   TObject          *GetSelected() {return fSelected;}
+   TObject          *GetSelected() const {return fSelected;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
    TVirtualPad      *GetSelectedPad() const { return fSelectedPad; }
    Bool_t            GetShowEventStatus() { return fShowEventStatus; }
    Bool_t            GetAutoExec() const { return fAutoExec; }
-   Size_t            GetXsizeUser() {return fXsizeUser;}
-   Size_t            GetYsizeUser() {return fYsizeUser;}
-   Size_t            GetXsizeReal() {return fXsizeReal;}
-   Size_t            GetYsizeReal() {return fYsizeReal;}
+   Size_t            GetXsizeUser() const {return fXsizeUser;}
+   Size_t            GetYsizeUser() const {return fYsizeUser;}
+   Size_t            GetXsizeReal() const {return fXsizeReal;}
+   Size_t            GetYsizeReal() const {return fYsizeReal;}
    Int_t             GetCanvasID() const {return fCanvasID;}
-   TCanvasImp       *GetCanvasImp() {return fCanvasImp;}
+   TCanvasImp       *GetCanvasImp() const {return fCanvasImp;}
    Int_t             GetWindowTopX();
    Int_t             GetWindowTopY();
    UInt_t            GetWindowWidth() const { return fWindowWidth; }
    UInt_t            GetWindowHeight() const { return fWindowHeight; }
-   UInt_t            GetWw() { return fCw; }
-   UInt_t            GetWh() { return fCh; }
+   UInt_t            GetWw() const { return fCw; }
+   UInt_t            GetWh() const { return fCh; }
    virtual void      GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &wh)
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);
    Bool_t            HasMenuBar() const { return fMenuBar; }
    void              Iconify() { fCanvasImp->Iconify(); }
-   Bool_t            IsBatch() { return fBatch; }
-   Bool_t            IsRetained() { return fRetained; }
-   virtual void      ls(Option_t *option="");
+   Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsRetained() const { return fRetained; }
+   virtual void      ls(Option_t *option="") const;
    void              MoveOpaque(Int_t set=1);
    Bool_t            OpaqueMoving() const { return fMoveOpaque; }
    Bool_t            OpaqueResizing() const { return fResizeOpaque; }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.2 2000/11/21 20:12:39 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -73,10 +73,10 @@ public:
 
     virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
     virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
-    TObject        *GetRefObject() {return fRefObject;}
-    virtual void    GetDirection(Float_t &theta, Float_t &phi) {theta = fTheta; phi = fPhi;}
-    virtual void    GetPosition(Float_t &x, Float_t &y, Float_t &z) {x=fX; y=fY, z=fZ;}
-    virtual void    GetSize(Float_t &dx, Float_t &dy, Float_t &dz) {dx=fDx; dy=fDy; dz=fDz;}
+    TObject        *GetRefObject() const {return fRefObject;}
+    virtual void    GetDirection(Float_t &theta, Float_t &phi) const {theta = fTheta; phi = fPhi;}
+    virtual void    GetPosition(Float_t &x, Float_t &y, Float_t &z) const {x=fX; y=fY, z=fZ;}
+    virtual void    GetSize(Float_t &dx, Float_t &dy, Float_t &dz) const {dx=fDx; dy=fDy; dz=fDz;}
 
     virtual void    Paint(Option_t *option);
     static  void    PaintH3(TH1 *h, Option_t *option);

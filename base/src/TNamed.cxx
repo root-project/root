@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ TNamed& TNamed::operator=(const TNamed& rhs)
 }
 
 //______________________________________________________________________________
-Int_t TNamed::Compare(TObject *obj)
+Int_t TNamed::Compare(const TObject *obj) const
 {
    // Compare two TNamed objects. Returns 0 when equal, -1 when this is
    // smaller and +1 when bigger (like strcmp).
@@ -86,7 +86,7 @@ void TNamed::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-void TNamed::ls(Option_t *)
+void TNamed::ls(Option_t *) const
 {
    // List TNamed name and title.
 
@@ -96,7 +96,7 @@ void TNamed::ls(Option_t *)
 }
 
 //______________________________________________________________________________
-void TNamed::Print(Option_t *)
+void TNamed::Print(Option_t *) const
 {
    // Print TNamed name and title.
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
     Bool_t          IsFolder() const;
-    virtual void    Print(Option_t *option="");
+    virtual void    Print(Option_t *option="") const;
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *addobj);
     virtual void    SetAutoDelete(Bool_t autodel=kTRUE);

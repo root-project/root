@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.3 2000/07/29 11:04:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.4 2000/12/02 15:51:07 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -262,12 +262,12 @@ const char *TUrl::GetUrl()
 }
 
 //______________________________________________________________________________
-void TUrl::Print(Option_t *)
+void TUrl::Print(Option_t *) const
 {
    // Print URL on stdout.
 
    if (fPort == -1)
       Printf("Illegal URL");
 
-   Printf("%s", GetUrl());
+   Printf("%s", ((TUrl*)this)->GetUrl());
 }

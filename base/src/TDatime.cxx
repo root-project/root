@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -166,7 +166,7 @@ void TDatime::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Int_t TDatime::GetDate()
+Int_t TDatime::GetDate() const
 {
    // Return date in form of 19971224 (i.e. 24/12/1997)
 
@@ -177,7 +177,7 @@ Int_t TDatime::GetDate()
 }
 
 //______________________________________________________________________________
-Int_t TDatime::GetTime()
+Int_t TDatime::GetTime() const
 {
    // Return time in form of 123623 (i.e. 12:36:23)
 
@@ -188,7 +188,7 @@ Int_t TDatime::GetTime()
 }
 
 //______________________________________________________________________________
-void TDatime::Print(Option_t *)
+void TDatime::Print(Option_t *) const
 {
    // Print date and time.
 

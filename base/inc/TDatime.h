@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -47,10 +47,10 @@ public:
    UInt_t       Convert() const;
    void         Copy(TDatime &datime);
    UInt_t       Get() const { return fDatime; }
-   Int_t        GetDate();
-   Int_t        GetTime();
+   Int_t        GetDate() const;
+   Int_t        GetTime() const;
    void         FillBuffer(char *&buffer);
-   void         Print(Option_t *option="");
+   void         Print(Option_t *option="") const;
    void         ReadBuffer(char *&buffer);
    void         Set();
    void         Set(Int_t date, Int_t time);

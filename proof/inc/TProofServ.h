@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.4 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.5 2000/11/27 10:51:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
 
    void        Run(Bool_t retrn = kFALSE);
 
-   void        Print(Option_t *option="");
+   void        Print(Option_t *option="") const;
 
    TObject    *Get(const char *namecycle);
    Stat_t      GetEntriesProcessed() const { return fEntriesProcessed; }

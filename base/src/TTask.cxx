@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.4 2000/09/06 09:29:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.5 2000/09/06 14:20:10 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -281,7 +281,7 @@ void TTask::ExecuteTasks(Option_t *option) {
 }
 
 //______________________________________________________________________________
-void TTask::ls(Option_t *option)
+void TTask::ls(Option_t *option) const
 {
 //  list the tree of tasks
 //  Indentation is used to identify the task tree

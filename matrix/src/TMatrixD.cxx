@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.2 2000/10/10 13:03:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.3 2000/11/21 20:40:52 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -836,7 +836,7 @@ Double_t E2Norm(const TMatrixD &m1, const TMatrixD &m2)
 }
 
 //______________________________________________________________________________
-void TMatrixD::Print(Option_t *)
+void TMatrixD::Print(Option_t *) const
 {
    // Print the matrix as a table of elements (zeros are printed as dots).
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.3 2000/06/13 11:10:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.4 2000/08/20 10:05:09 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -178,14 +178,6 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    if (valign == 1) y = y1 + 0.02*(y2-y1);
    if (valign == 3) y = y2 - 0.02*(y2-y1);
    latex.PaintLatex(x, y, GetTextAngle(),labelsize,GetLabel());
-}
-
-//______________________________________________________________________________
-void TPaveLabel::Print(Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*-*Dump this pavelabel with its attributes*-*-*-*-*-*-*-*
-//*-*                  =======================================
-   TPave::Print(option);
 }
 
 //______________________________________________________________________________

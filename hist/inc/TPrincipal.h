@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.3 2000/08/17 09:44:43 brun Exp $
+// $Id: TPrincipal.h,v 1.4 2000/09/05 09:21:23 brun Exp $
 // $Author: brun $
-// $Date: 2000/08/17 09:44:43 $
+// $Date: 2000/09/05 09:21:23 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
@@ -60,7 +60,7 @@ public:
   const TMatrixD *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
   const TVectorD *GetEigenValues() const      {return &fEigenValues;}
   const TMatrixD *GetEigenVectors() const     {return &fEigenVectors;}
-  TList          *GetHistograms() {return fHistograms;}
+  TList          *GetHistograms() const {return fHistograms;}
   const TVectorD *GetMeanValues() const       {return &fMeanValues;}
   const Double_t *GetRow(Int_t row);
   const TVectorD *GetSigmas() const           {return &fSigmas;}
@@ -71,7 +71,7 @@ public:
   virtual void    MakeMethods(const char *classname = "PCA", Option_t *option=""); // *MENU*
   virtual void    MakePrincipals();            // *MENU*
   virtual void    P2X(Double_t *p, Double_t *x, Int_t nTest);
-  virtual void    Print(Option_t *opt="MSE");         // *MENU*
+  virtual void    Print(Option_t *opt="MSE") const;         // *MENU*
   virtual void    SumOfSquareResiduals(Double_t *x, Double_t *s); 
   void            Test(Option_t *option="");       // *MENU*
   virtual void    X2P(Double_t *x, Double_t *p);

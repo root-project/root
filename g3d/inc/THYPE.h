@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: THYPE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: THYPE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/09/95
 
 #ifndef ROOT_THYPE
@@ -38,7 +38,7 @@ class THYPE : public TTUBE {
                Float_t phi);
         virtual ~THYPE();
 
-        virtual Float_t GetPhi() {return fPhi;}
+        virtual Float_t GetPhi() const {return fPhi;}
 
         ClassDef(THYPE,1)  //HYPE shape
 };

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.2 2000/06/13 10:45:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -59,10 +59,10 @@ public:
    Double_t      GetY1() const { return fY1; }
    Double_t      GetY2() const { return fY2; }
    virtual void  HideToolTip(Int_t event);
-   virtual void  ls(Option_t *option="");
+   virtual void  ls(Option_t *option="") const;
    virtual void  Paint(Option_t *option="");
    virtual void  PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
-   virtual void  Print(Option_t *option="");
+   virtual void  Print(Option_t *option="") const;
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
    virtual void  SetX1(Double_t x1) {fX1=x1;}
    virtual void  SetX2(Double_t x2) {fX2=x2;}

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.3 2000/06/13 13:23:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.4 2000/11/21 20:23:31 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -43,8 +43,8 @@ public:
         virtual void     EditText() {;}
         virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
         virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
-        Int_t            GetOptFit() {return fOptFit;}
-        Int_t            GetOptStat() {return fOptStat;}
+        Int_t            GetOptFit() const {return fOptFit;}
+        Int_t            GetOptStat() const {return fOptStat;}
         virtual void     InsertText(const char *) {;}
         virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
         virtual void     SaveStyle(); // *MENU*

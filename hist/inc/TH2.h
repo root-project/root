@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.6 2000/10/10 13:01:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.7 2000/11/21 20:30:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -60,10 +60,10 @@ public:
    virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual void    FitSlicesX(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual void    FitSlicesY(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
-   virtual Stat_t  GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2);
-   virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2);
+   virtual Stat_t  GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
+   virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
    virtual void    GetRandom2(Axis_t &x, Axis_t &y);
-   virtual void    GetStats(Stat_t *stats);
+   virtual void    GetStats(Stat_t *stats) const;
    virtual Stat_t  Integral();
    virtual Stat_t  Integral(Int_t, Int_t) {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2);
@@ -102,7 +102,7 @@ public:
    virtual void    AddBinContent(Int_t bin, Stat_t w);
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
-   virtual Stat_t  GetBinContent(Int_t bin);
+   virtual Stat_t  GetBinContent(Int_t bin) const;
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Char_t (content);}
@@ -141,7 +141,7 @@ public:
    virtual void    AddBinContent(Int_t bin, Stat_t w);
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
-   virtual Stat_t  GetBinContent(Int_t bin);
+   virtual Stat_t  GetBinContent(Int_t bin) const;
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Short_t (content);}
@@ -182,7 +182,7 @@ public:
                                  {fArray[bin] += Float_t (w);}
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
-   virtual Stat_t  GetBinContent(Int_t bin);
+   virtual Stat_t  GetBinContent(Int_t bin) const;
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Float_t (content);}
@@ -223,7 +223,7 @@ public:
                                  {fArray[bin] += Double_t (w);}
    virtual void    Copy(TObject &hnew);
    virtual TH1    *DrawCopy(Option_t *option="");
-   virtual Stat_t  GetBinContent(Int_t bin);
+   virtual Stat_t  GetBinContent(Int_t bin) const;
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Double_t (content);}

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TAttParticle.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Ola Nordmann   29/09/95
 
 /*************************************************************************
@@ -1512,7 +1512,7 @@ TAttParticle* TAttParticle::GetParticle(const char *name)
 }
 
 //______________________________________________________________________________
-TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
+TAttParticle* TAttParticle::GetParticle(Int_t mcnumber) 
 {
 //
 //  Get a pointer to the particle object according to the MC code number
@@ -1527,7 +1527,7 @@ TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
 }
 
 //______________________________________________________________________________
-void TAttParticle::Print(Option_t *)
+void TAttParticle::Print(Option_t *) const
 {
 //
 //  Print the entire information of this kind of particle
@@ -1548,7 +1548,7 @@ void TAttParticle::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-Double_t TAttParticle::SampleMass()
+Double_t TAttParticle::SampleMass() const
 {
 //
 //  Samples a mass according to the Breit-Wigner resonance distribution
@@ -1563,7 +1563,7 @@ Double_t TAttParticle::SampleMass()
 }
 
 //______________________________________________________________________________
-Double_t TAttParticle::SampleMass(Double_t widthcut)
+Double_t TAttParticle::SampleMass(Double_t widthcut) const
 {
 //
 //  Samples a mass in the interval:

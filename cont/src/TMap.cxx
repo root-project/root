@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.3 2000/10/31 11:19:02 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -172,7 +172,7 @@ TObject *TMap::FindObject(const char *keyname) const
 }
 
 //______________________________________________________________________________
-TObject *TMap::FindObject(TObject *key) const
+TObject *TMap::FindObject(const TObject *key) const
 {
    // Check if a (key,value) pair exists with key as key.
    // Returns a TAssoc* (need to downcast from TObject). Use Key() and
