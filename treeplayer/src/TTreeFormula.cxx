@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.83 2002/02/05 17:04:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.84 2002/03/07 02:03:47 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -145,6 +145,9 @@ public:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
            Error("GetValuePointer","Type (%d) not yet supported\n",type);
+           break;
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
+           thisobj = (char*)(address+offset);
            break;
          case TStreamerInfo::kObject:
          case TStreamerInfo::kTString:
@@ -1162,6 +1165,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
          if (fMultiplicity!=1) {
             if (leafinfo->fCounter) fMultiplicity = 1;
             else if (elem && elem->GetArrayDim()>0) fMultiplicity = 2;
+            else if (leaf->GetLenStatic()>1) fMultiplicity = 2;
          }
       } else {
          if (leaf->GetLenStatic()>1 && fMultiplicity!=1) fMultiplicity = 2;
@@ -1870,13 +1874,20 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kTString:
             case TStreamerInfo::kTNamed:
             case TStreamerInfo::kTObject:
-            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
-            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
             case TStreamerInfo::kAny:
             case TStreamerInfo::kObjectp:
             case TStreamerInfo::kObjectP: {
               element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
               if (element) cl = element->GetClassPointer();
+            }
+            break;
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
+              element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+              if (element){ 
+                 cl = element->GetClassPointer();
+              }
             }
             break;
             case -1: {

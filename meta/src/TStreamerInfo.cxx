@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.121 2002/02/07 08:06:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.122 2002/02/25 11:20:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1816,6 +1816,36 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          }
                          break;
                         }
+        case kOffsetL + kObject:  {
+                         TClass *cl = aElement->GetClassPointer();
+                         if (cl->GetClassInfo()) {
+                            Int_t size = cl->Size();
+                            TObject *obj = (TObject*)(pointer+fOffset[i]);
+                            for (Int_t j=0;j<fLength[i];j++) {
+                               obj->Streamer(b);
+                               obj = (TObject*)((char*)obj+size);
+                            }
+                            break;
+                         } else {
+                            UInt_t start,count;
+                            //We assume that the class was written with a standard streamer
+                            //We attempt to recover if a version count was not written
+                            Int_t size = cl->Size();
+                            TObject *obj = (TObject*)(pointer+fOffset[i]);
+                            for (Int_t j=0;j<fLength[i];j++) {
+                               Version_t v = b.ReadVersion(&start,&count);
+                               if (count) {
+                                  cl->GetStreamerInfo(v)->ReadBuffer(b,(char*)obj,-1);
+                                  b.CheckByteCount(start,count,cl);
+                               } else {
+                                  b.SetBufferOffset(start);
+                                  cl->GetStreamerInfo()->ReadBuffer(b,(char*)obj,-1);
+                               } 
+                               obj = (TObject*)((char*)obj+size);
+                            }
+                         }
+                         break;
+                        }
 
          // Special case for TString, TObject, TNamed
          case kTString: { ((TString*)(pointer+fOffset[i]))->Streamer(b); break;}
@@ -1825,37 +1855,44 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
+         case kOffsetL + kAny:
          case kAny:     {
+                         char *obj = pointer+fOffset[i];
                          Streamer_t pstreamer = aElement->GetStreamer();
+                         TClass *cle = aElement->GetClassPointer();
+                         Int_t size = cle->Size();
                          if (pstreamer == 0) {
-                            //Note that this does not work if the class has a custom Streamer
-                            //with no bytecount
-                            TClass *cle = aElement->GetClassPointer();
-                            if (cle->InheritsFrom(TArray::Class())) {
-                               //special case (frequent) with TArray classes
-                               //The TArray Streamers not compatible with ReadBuffer
-                               // (no byte count)
-                               if (strchr(aElement->GetTypeName(),'*')) {
-                                  if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b >> *ar; break;}
-                                  if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b >> *ar; break;}
-                                  if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b >> *ar; break;}
-                                  if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b >> *ar; break;}
-                                  if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b >> *ar; break;}
-                                  if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b >> *ar; break;}
-                               } else {
-                                  if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                            for(Int_t j=0; j<fLength[i]; j++) {
+                               //Note that this does not work if the class has a custom Streamer
+                               //with no bytecount
+                               TClass *cle = aElement->GetClassPointer();
+                               if (cle->InheritsFrom(TArray::Class())) {
+                                  //special case (frequent) with TArray classes
+                                  //The TArray Streamers not compatible with ReadBuffer
+                                  // (no byte count)
+                                  if (strchr(aElement->GetTypeName(),'*')) {
+                                     if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b >> *ar; break;}
+                                     if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b >> *ar; break;}
+                                     if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b >> *ar; break;}
+                                     if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b >> *ar; break;}
+                                     if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b >> *ar; break;}
+                                     if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b >> *ar; break;}
+                                  } else {
+                                     if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  }
                                }
+                               if (gDebug > 0) printf("WARNING, Streamer is null\n");
+                               cle->ReadBuffer(b,obj);
+                               obj += size;
                             }
-                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
-                            cle->ReadBuffer(b,pointer+fOffset[i]);
-                            break;
+                         } else {
+                            (*pstreamer)(b,obj,0);
                          }
-                         (*pstreamer)(b,pointer+fOffset[i],0);
                          break;
                         }
          // Base Class
@@ -1863,7 +1900,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                           break;
                         }
 
-         case kOffsetL + kObject:
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
@@ -2040,6 +2076,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kConvP + kUShort: ConvBasicPointer(UShort_t)
          case kConvP + kUInt:   ConvBasicPointer(UInt_t)
          case kConvP + kULong:  ConvBasicPointer(ULong_t)
+
+         default: 
+           Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
+           break;
       }
    }
    return 0;
@@ -2255,6 +2295,40 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                }
             }
             break;}
+         case kOffsetL + kObject: {
+            TClass *cl = aElement->GetClassPointer();
+            Int_t size = cl->Size();
+            if (cl->GetClassInfo()) {
+               for (Int_t k=0;k<nc;k++) {
+                  pointer = (char*)clones->UncheckedAt(k);
+                  pointer += offset;
+                  for (Int_t j=0;j<fLength[i];j++) {
+                     ((TObject*)pointer)->Streamer(b);
+                     pointer += size;
+                  }
+               }
+            } else {
+               Version_t v;
+               for (Int_t k=0;k<nc;k++) {
+                  pointer = (char*)clones->UncheckedAt(k);
+                  pointer += fOffset[i];
+                  for (Int_t j=0;j<fLength[i];j++) {
+                     //We assume that the class was written with a standard streamer
+                     //We attempt to recover if a version count was not written
+                     v = b.ReadVersion(&start,&count);
+                     if (count) {
+                        cl->GetStreamerInfo(v)->ReadBuffer(b,pointer,-1);
+                        b.CheckByteCount(start,count,cl);
+                     } else {
+                        b.SetBufferOffset(start);
+                        cl->GetStreamerInfo()->ReadBuffer(b,pointer,-1);
+                     }
+                     pointer += size;
+                  }
+               }
+            }
+            break;}
+           
 
          // Special case for TString, TObject, TNamed
          case kTString: {
@@ -2336,7 +2410,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             //}
             break;}
 
-         case kOffsetL + kObject:
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
@@ -2499,6 +2572,9 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          b.SetBufferOffset(start + count + sizeof(UInt_t));
                          break;
                         }
+         default: 
+           Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
+           break;
       }
    }
    return 0;
@@ -2708,6 +2784,16 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // Class  derived from TObject
          case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
+         case kOffsetL + kObject: {
+                           TClass *cle = aElement->GetClassPointer();
+                           Int_t size = cle->Size();
+                           TObject *obj = (TObject*)(pointer+fOffset[i]);
+                           for (Int_t j=0;j<fLength[i];j++) {
+                              obj->Streamer(b);
+                              obj = (TObject*)((char*)obj+size);
+                           }
+                           break;
+                        }
 
          // Special case for TString, TObject, TNamed
          case kTString: { ((TString*)(pointer+fOffset[i]))->Streamer(b); break;}
@@ -2717,36 +2803,42 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
-         case kAny:     {Streamer_t pstreamer = aElement->GetStreamer();
+         case kOffsetL + kAny:
+         case kAny:     {char *obj = pointer+fOffset[i];
+                         Streamer_t pstreamer = aElement->GetStreamer();
+                         TClass *cle = aElement->GetClassPointer();
+                         Int_t size = cle->Size();
                          if (pstreamer == 0) {
-                            //Note that this does not work if the class has a custom Streamer
-                            //with no bytecount
-                            TClass *cle = aElement->GetClassPointer();
-                            if (cle->InheritsFrom(TArray::Class())) {
-                               //special case (frequent) with TArray classes
-                               //The TArray Streamers not compatible with WriteBuffer
-                               // (no byte count)
-                               if (strchr(aElement->GetTypeName(),'*')) {
-                                  if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b << *ar; break;}
-                                  if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b << *ar; break;}
-                                  if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b << *ar; break;}
-                                  if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b << *ar; break;}
-                                  if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b << *ar; break;}
-                                  if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b << *ar; break;}
-                               } else {
-                                  if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
-                                  if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                            for(Int_t j=0; j<fLength[i]; j++) {
+                               //Note that this does not work if the class has a custom Streamer
+                               //with no bytecount
+                               if (cle->InheritsFrom(TArray::Class())) {
+                                  //special case (frequent) with TArray classes
+                                  //The TArray Streamers not compatible with WriteBuffer
+                                  // (no byte count)
+                                  if (strchr(aElement->GetTypeName(),'*')) {
+                                     if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b << *ar; break;}
+                                     if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b << *ar; break;}
+                                     if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b << *ar; break;}
+                                     if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+fOffset[i]); b << *ar; break;}
+                                     if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+fOffset[i]); b << *ar; break;}
+                                     if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+fOffset[i]); b << *ar; break;}
+                                  } else {
+                                     if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                     if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
+                                  }
                                }
+                               if (gDebug > 0) printf("WARNING, Streamer is null\n");
+                               cle->WriteBuffer(b,obj,"");
+                               obj += size;
                             }
-                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
-                            cle->WriteBuffer(b,pointer+fOffset[i],"");
-                            break;
+                         } else {
+                            (*pstreamer)(b,obj,0);
                          }
-                         (*pstreamer)(b,pointer+fOffset[i],0);
                          break;
                         }
          // Base Class
@@ -2754,7 +2846,6 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                           break;
                         }
 
-         case kOffsetL + kObject:
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
@@ -2783,6 +2874,9 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
+         default: 
+           Error("WriteBuffer","The element type %d is not supported yet\n",fType[i]);
+           break;
       }
    }
    return 0;
@@ -2953,6 +3047,18 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                ((TObject*)(pointer+fOffset[i]))->Streamer(b);
             }
             break;}
+         case kOffsetL + kObject:  {
+            TClass *cl = aElement->GetClassPointer();
+            Int_t size = cl->Size();
+            for (Int_t k=0;k<nc;k++) {
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+               pointer += fOffset[i];
+               for (Int_t j=0;j<fLength[i];j++) {
+                  ((TObject*)pointer)->Streamer(b);
+                  pointer += size;
+               }
+            }
+            break;}
 
          // Special case for TString, TObject, TNamed
          case kTString: {
@@ -2996,7 +3102,6 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                        break;
                      }
 
-         case kOffsetL + kObject:
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
@@ -3032,6 +3137,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
+         default: 
+           Error("WriteBufferClones","The element type %d is not supported yet\n",fType[i]);
+           break;
       }
    }
    return 0;
