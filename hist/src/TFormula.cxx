@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.69 2004/01/13 18:46:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.70 2004/01/16 16:27:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -502,6 +502,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*    28  : strstr requires two arguments
 //*-*    29  : interpreted or compiled function have to return a numerical type
 //*-*    30  : Bad numerical expression
+//*-*    31  : Variable exist but is not accessible
 //*-*    40  : '(' is expected
 //*-*    41  : ')' is expected
 //*-*    42  : '[' is expected
@@ -1061,7 +1062,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 ctemp.ReplaceAll(escapedSlash, slash);
                 Int_t action;
                 k = DefinedVariable(ctemp,action);
-                if ( k >= 0 ) {
+                if (k==-2) {
+                   err = 31;
+                   chaine_error = ctemp;
+                } else if ( k >= 0 ) {
                   fExpr[fNoper] = ctemp;
                   actionCode = action; 
                   actionParam = k;
@@ -1768,6 +1772,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
                       <<chaine_error<<endl; break;
         case 30 : cout<<" Bad numerical expression : \""<<(const char*)chaine_error<<"\""<<endl; break;
+        case 31 : cout<<" The Variable :  \""<<(const char*)chaine_error<<"\" exists but is not accessible"<<endl; break;
         case 40 : cout<<" '(' is expected"<<endl; break;
         case 41 : cout<<" ')' is expected"<<endl; break;
         case 42 : cout<<" '[' is expected"<<endl; break;
@@ -2145,6 +2150,11 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
 //*-*   This is necessary because the normal TFormula constructor call indirectly
 //*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
+//*-*
+//*-*   The expected returns values are
+//*-*     -2 :  the name has been recognized but won't be usable
+//*-*     -1 :  the name has not been recognized
+//*-*    >=0 :  the name has been recognized, return the action parameter.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 

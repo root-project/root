@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.138 2004/02/03 16:45:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.139 2004/02/11 08:20:07 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1724,13 +1724,16 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TBranchElement *branch) {
    TBranchElement * leafcount2 = branch->GetBranchCount2();
    if (leafcount2) {
       // With have a second variable dimensions
-      if (!branch->GetBranchCount()) return 0;
+      TBranchElement *leafcount = dynamic_cast<TBranchElement*>(branch->GetBranchCount());
+
+      Assert(leafcount); // The function should only be called on a functional TBranchElement object
+
       fManager->EnableMultiVarDims();
       TFormLeafInfoMultiVarDim * info = new TFormLeafInfoMultiVarDimDirect();
       fDataMembers.AddAtAndExpand(info, code);
       fHasMultipleVarDim[code] = kTRUE;
 
-      info->fCounter = new TFormLeafInfoDirect(branch->GetBranchCount());
+      info->fCounter = new TFormLeafInfoDirect(leafcount);
       info->fCounter2 = new TFormLeafInfoDirect(leafcount2);
       info->fDim = fNdimensions[code];
       //if (fIndexes[code][info->fDim]<0) {
@@ -1773,6 +1776,14 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
    if (leaf->IsA() == TLeafElement::Class()) {
       TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
       if (branch->GetBranchCount2()) {
+
+         if (!branch->GetBranchCount()) {
+            Warning("DefinedVariable",
+                    "Noticed an incorrect in-memory TBranchElement object (%s).\nIt has a BranchCount2 but no BranchCount!\nThe result might be incorrect!",
+                    branch->GetName());
+            return numberOfVarDim;
+         }
+
          // Switch from old direct style to using a TLeafInfo
          if (fLookupType[code] == kDataMember)
             Warning("DefinedVariable",
@@ -1817,6 +1828,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 //      - Branch_Name[index1].Leaf_Name[index2]
 //      - Leaf_name[index].Action().OtherAction(param)
 //      - Leaf_name[index].Action()[val].OtherAction(param)
+//
+//   The expected returns values are
+//     -2 :  the name has been recognized but won't be usable
+//     -1 :  the name has not been recognized
+//    >=0 :  the name has been recognized, return the internal code for this name.
+//
+
    
    action = kDefinedVariable;
    if (!fTree) return -1;
@@ -2246,7 +2264,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
       if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
          Error("DefinedVariable","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
-         return -1;
+         return -2;
       }
 
       // Save the information
@@ -2318,6 +2336,31 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             current = (char*)strstr( current, "[" );
          }
       }
+
+      // Make a check to prevent problem with some corrupted files (missing TStreamerInfo).
+      if (leaf->IsA()==TLeafElement::Class()) {
+         TBranchElement *br = ((TBranchElement*)leaf->GetBranch());
+
+         if ( br->GetInfo() == 0 ) {
+            Error("DefinedVariable","Missing StreamerInfo for %s.  We will be unable to read!",
+                  name.Data());
+            return -2;
+         }
+         TBranchElement *mom = (TBranchElement*)br->GetMother();
+         if (mom!=br) {
+            if (mom->GetInfo()==0) {
+               Error("DefinedVariable","Missing StreamerInfo for %s.  We will be unable to read!",
+                     mom->GetName());
+               return -2;
+            }
+            if (mom->GetType()<0 && mom->GetAddress()==0) {
+               Error("DefinedVariable","Address not set when the type of the branch is negatif for for %s.  We will be unable to read!",
+                     mom->GetName());
+               return -2;
+            }
+         }
+      }
+
 
       // We need to record the location in the list of leaves because
       // the tree might actually be a chain and in that case the leaf will
@@ -2391,7 +2434,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
               if (!element) {
                  Warning("DefineVariable","Missing TStreamerElement in object in TClonesArray section");
-                 return -1;
+                 return -2;
               }
               TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
 
@@ -2459,7 +2502,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             if ( ! casted->InheritsFrom(cl) ) {
                Error("DefinedVariable","%s does not inherit from %s.  Casting not possible!",
                      casted->GetName(),cl->GetName());
-               return -1;
+               return -2;
             }
             leafinfo = new TFormLeafInfoCast(cl,casted);
             fHasCast = kTRUE;
@@ -2497,7 +2540,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                }
                if (cl->GetClassInfo()==0) {
                   Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
-                  return -1;
+                  return -2;
                }
                if (cl == TClonesArray::Class()) {
                   // We are NEVER interested in the ClonesArray object but only
@@ -2557,7 +2600,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                if (cl->GetClassInfo()==0) {
                   Error("DefinedVariable","Can not call method %s on class without dictionary (%s)!",
                         right,cl->GetName());
-                  return -1;
+                  return -2;
                }
                method = new TMethodCall(cl, work, params);
                if (!method->GetMethod()) {
@@ -2591,7 +2634,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   default:
                   Error("DefineVariable","Method %s from %s has an impossible return type %d",
                         work,cl->GetName(),method->ReturnType());
-                  return -1;
+                  return -2;
                }
                if (maininfo==0) {
                   maininfo = leafinfo;
@@ -2672,7 +2715,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                      if (branch->GetListOfBranches()->GetLast()>=0) {
                         if (branch->IsA() != TBranchElement::Class()) {
                            Error("DefinedVariable","Unimplemented usage of ClonesArray");
-                           return -1;
+                           return -2;
                         }
                         //branch = ((TBranchElement*)branch)->GetMother();
                         clones = (TClonesArray*)((TBranchElement*)branch)->GetObject();
@@ -2691,7 +2734,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                }
 
                if (!cl) { 
-                  Warning("DefinedVariable","Missing class for %s!\n",name.Data());
+                  Warning("DefinedVariable","Missing class for %s!",name.Data());
                } else {
                   element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
                }
@@ -2802,12 +2845,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                      // Unsupported case.
                      Error("DefinedVariable","%s is a datamember of %s BUT is not yet of a supported type (%d)",
                            right,cl->GetName(),type);
-                     return -1;
+                     return -2;
                   } else {
                      // Unknown and Unsupported case.
                      Error("DefinedVariable","%s is a datamember of %s BUT is not of a supported type (%d)",
                            right,cl->GetName(),type);
-                     return -1;
+                     return -2;
                   }
                } else {
                   Error("DefinedVariable","%s is not a datamember of %s",work,cl->GetName());
@@ -3334,7 +3377,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   local_index = (Int_t)fVarIndexes[codeindex][max_dim]->EvalInstance(local_index);
                   if (local_index<0 ||
                          local_index>=fCumulSizes[codeindex][max_dim]) {
-                     Error("EvalInstance","Index %s is out of bound (%d/%d) in formula %s",
+                     Error("EvalInstance","Index %s is of out bound (%d/%d) in formula %s",
                            fVarIndexes[codeindex][max_dim]->GetTitle(),
                            local_index,
                            fCumulSizes[codeindex][max_dim],
@@ -3371,9 +3414,17 @@ TClass* TTreeFormula::EvalClass() const
             TStreamerInfo * info = branch->GetInfo();
             Int_t id = branch->GetID();
             if (id>=0) {
-               if (!info) return 0;
+               if (info==0 || info->GetElems()==0) {
+                  // we probably do not have a way to know the class of the object.
+                  return 0;
+               }
                TStreamerElement* elem = (TStreamerElement*)info->GetElems()[id];
-               return gROOT->GetClass( elem->GetTypeName() );
+               if (elem==0) {
+                  // we probably do not have a way to know the class of the object.
+                  return 0;
+               } else {
+                  return gROOT->GetClass( elem->GetTypeName() );
+               }
             } else return gROOT->GetClass( branch->GetClassName() );
          } else {
             return 0;
@@ -3381,9 +3432,9 @@ TClass* TTreeFormula::EvalClass() const
       }
       case kMethod: return 0; // kMethod is deprecated so let's no waste time implementing this.
       case kDataMember: {
-        TObject *obj = fDataMembers.UncheckedAt(0);
-        if (!obj) return 0;
-        return ((TFormLeafInfo*)obj)->GetClass();
+         TObject *obj = fDataMembers.UncheckedAt(0);
+         if (!obj) return 0;
+         return ((TFormLeafInfo*)obj)->GetClass();
       }
       default: return 0;
    }
@@ -3424,7 +3475,7 @@ void* TTreeFormula::EvalObject(int instance)
    switch(fLookupType[0]) {
       case kDirect: {
         if (real_instance) {
-          Warning("EvalObject","Not yet implement for kDirect and arrays (for %s).\nPlease contact the developers \n",GetName());
+          Warning("EvalObject","Not yet implement for kDirect and arrays (for %s).\nPlease contact the developers",GetName());
         }
         return leaf->GetValuePointer();
       }
@@ -3528,7 +3579,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return result;
          }
          case kMethod:     { TT_EVAL_INIT; return GetValueFromMethod(0,leaf);  }
-         case kDataMember: { TT_EVAL_INIT; TObject *obj=fDataMembers.UncheckedAt(0); if (!obj) return 0; return ((TFormLeafInfo*)obj)->GetValue(leaf,real_instance); }
+         case kDataMember: { TT_EVAL_INIT; return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance); }
          case kIndexOfEntry: return fTree->GetReadEntry();
          case kEntries:      return fTree->GetEntries();
          case kLength:       return fManager->fNdata;
@@ -4085,7 +4136,6 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
       case kMethod:
       case kDataMember:
          info = GetLeafInfo(code);
-         if (!info) return kFALSE;
          return info->IsInteger();
       case kDirect:
          break;
@@ -4150,8 +4200,19 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
             Int_t bid = br->GetID();
             if (bid < 0) return kFALSE;
-            if (!br->GetInfo()) return kFALSE;
+            if (br->GetInfo()==0 || br->GetInfo()->GetElems()==0) {
+               // Case where the file is corrupted is some ways.
+               // We can not get to the actual type of the data
+               // let's assume it is NOT a string.
+               return kFALSE;
+            }
             TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
+            if (!elem) {
+               // Case where the file is corrupted is some ways.
+               // We can not get to the actual type of the data
+               // let's assume it is NOT a string.
+               return kFALSE;
+            }
             if (elem->GetNewType()== TStreamerInfo::kOffsetL +kChar_t) {
                // Check whether a specific element of the string is specified!
                if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
@@ -4172,7 +4233,6 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
          return kFALSE;
       case kDataMember:
          info = GetLeafInfo(code);
-         if (!info) return kFALSE;
          return info->IsString();
       default:
          return kFALSE;
@@ -4331,7 +4391,6 @@ void TTreeFormula::UpdateFormulaLeaves()
             fVarIndexes[j][k]->UpdateFormulaLeaves();
          }
       }
-      if (!GetLeafInfo(j)) continue;
       if (fLookupType[j]==kDataMember) GetLeafInfo(j)->Update();
       if (j<fNval && fCodes[j]<0) {
          TCutG *gcut = (TCutG*)fMethods.At(j);
