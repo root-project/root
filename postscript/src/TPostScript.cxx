@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.38 2003/04/09 08:18:04 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.39 2003/05/02 10:43:18 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -38,6 +38,9 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TSystem.h"
+
+// to scale fonts to the same size as the old TT version
+const Float_t kScale = 0.93376068;
 
 const char   kBackslash = '\\';
 const Int_t  kLatex = BIT(10);
@@ -2213,7 +2216,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    // npiece= max number of pieces of text ( separated by escape characters)
    const Int_t npiece = 50;
    const Int_t kline  = 80;
-   Int_t ifnb[npiece], ifns[npiece], level[npiece], lback[npiece];
+   Int_t ifnb[npiece], level[npiece], lback[npiece];
+   Double_t ifns[npiece];
 
    // maximum length of a (PostScript) string
    Int_t ideb, n1, n2, ipiece, fnb;
@@ -2259,24 +2263,30 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    if (nold == 0) return;
    if (nold > 512) nold = 512;
 
-   // Compute the fonts size. Exit if it is 0
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Float_t tsize;
-   Float_t fontrap = 1.09; //scale down compared to X11
-   if (wh < hh)  tsize = fTextSize*wh/fontrap;
-   else          tsize = fTextSize*hh/fontrap;
-   Float_t ftsize;
+   // Compute the font size. Exit if it is 0
+   // The font size is computed from the TTF size to get exactly the same
+   // size on the screen and in the PostScript file.
+   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Float_t tsize, ftsize;
 
-   Int_t font     = abs(fTextFont)/10;
-   if( font > 42 || font < 1) font = 1;
-   if (wh < hh) ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
-   else         ftsize = fTextSize*fYsize*gPad->GetAbsHNDC();
-
-   Int_t fontsize = 4*CMtoPS(ftsize/fontrap);
+   if (wh < hh) {
+      tsize = fTextSize*wh;
+      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (TTFsize*fXsize*gPad->GetAbsWNDC())/wh;
+   } else {
+      tsize = fTextSize*hh;
+      Int_t TTFsize = (Int_t)(tsize*kScale+0.5); // TTF size
+      ftsize = (TTFsize*fYsize*gPad->GetAbsHNDC())/hh;
+   }
+   Double_t fontsize = 4*(72*(ftsize)/2.54);
    if( fontsize <= 0) return;
+
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
+
+   Int_t font = abs(fTextFont)/10;
+   if( font > 42 || font < 1) font = 1;
 
    // Text colour and vertical alignment
    SetColor(Int_t(fTextColor));
@@ -2585,8 +2595,8 @@ LOOPEND:
             if( zapf)        ifnb[nt]   = 14;
             if( special)     ifnb[nt]   = 25;
             ifns[nt] = fontsize;                    //- set font size (IFNS)
-            if( superscript) ifns[nt]   = Int_t(0.5 + 0.7*fontsize);
-            if( subscript)   ifns[nt]   = Int_t(0.5 + 0.7*fontsize);
+            if( superscript) ifns[nt]   = 0.7*fontsize;
+            if( subscript)   ifns[nt]   = 0.7*fontsize;
             level[nt]   = 0;                        //- set level flag (LEVEL)
             if( superscript) level[nt]  = Int_t(0.5 + fontsize/2);
             if( subscript)   level[nt]  = Int_t(0.5 - fontsize/3);
@@ -2660,8 +2670,8 @@ L120:           // check if CHAR2 will not be cut in the middle of an octal code
 
       if( lback[i] < -1)  {
          if ( i > 0 ) {
-            if( level[i-1] > 0) level[i-1] =  ifns[i-1];       //   superscript
-            if( level[i-1] < 0) level[i-1] = -ifns[i-1];       //   subscript
+            if( level[i-1] > 0) level[i-1] =  (Int_t)ifns[i-1];       //   superscript
+            if( level[i-1] < 0) level[i-1] = -(Int_t)ifns[i-1];       //   subscript
          }
       }
 
@@ -2670,8 +2680,8 @@ L120:           // check if CHAR2 will not be cut in the middle of an octal code
    //    and to - (current font size) for subscript
       if ( i > 0 ) {
          if( lback[i-1] == -1)  {
-            if( level[i] > 0) level[i] = ifns[i];     //   superscript
-            if( level[i] < 0) level[i] =-ifns[i];     //   subscript
+            if( level[i] > 0) level[i] = (Int_t)ifns[i];     //   superscript
+            if( level[i] < 0) level[i] =-(Int_t)ifns[i];     //   subscript
          }
       }
 
@@ -2732,7 +2742,7 @@ L170:
       if( lback[ipiece-1] < -1)  {
          sprintf(lunps, "(%s)", pc);
          PrintStr(lunps);
-         sprintf(lunps, " %d %s%d stwb ", abs(lback[ipiece-1]), psfnb, ifns[ipiece-1]);
+         sprintf(lunps, " %d %s%g stwb ", abs(lback[ipiece-1]), psfnb, ifns[ipiece-1]);
          PrintStr(lunps);
          goto L170;
       }
@@ -2755,7 +2765,7 @@ L170:
             if( level[j] != level[ipiece-1]) break;
             Int_t fnbj    = ifnb[j];
             const char * psfnbj = psfont[fnbj-1];
-            sprintf(lunps, " %s findfont %d sf",  psfnbj, ifns[ipiece-1]);
+            sprintf(lunps, " %s findfont %g sf",  psfnbj, ifns[ipiece-1]);
             PrintStr(lunps);
             sprintf(lunps," (%s) sw pop s1 add /s1 exch def", piece[j]);
             PrintStr(lunps);
@@ -2768,7 +2778,7 @@ L170:
             if( level[j] != level[knew-1]) break;
             Int_t fnbj    = ifnb[j];
             const char * psfnbj = psfont[fnbj-1];
-            sprintf(lunps, " %s findfont %d sf",  psfnbj, ifns[ipiece-1]);
+            sprintf(lunps, " %s findfont %g sf",  psfnbj, ifns[ipiece-1]);
             PrintStr(lunps);
             sprintf(lunps," (%s) sw pop s2 add /s2 exch def", piece[j]);
             PrintStr(lunps);
@@ -2789,7 +2799,7 @@ L240:
          psfnb = psfont[fnb-1];
          sprintf(lunps,"(%s)", pc);
          PrintStr(lunps);
-         sprintf(lunps," %s %d stwn ", psfnb, ifns[ipiece-1]);
+         sprintf(lunps," %s %g stwn ", psfnb, ifns[ipiece-1]);
          PrintStr(lunps);
       }
       goto L170;
@@ -2828,7 +2838,7 @@ L260:                       //-   now output the pieces
    //    and move to that point
    if( lback[ipiece-1] == -1)  {
       SaveRestore(1);
-      sprintf(lunps,"%s findfont %d sf ", psfnb, ifns[ipiece-1]);
+      sprintf(lunps,"%s findfont %g sf ", psfnb, ifns[ipiece-1]);
       PrintStr(lunps);
       sprintf(lunps,"(%s)", pc);
       PrintStr(lunps);
@@ -2840,7 +2850,7 @@ L260:                       //-   now output the pieces
    //   ( normally one character) print and restore preceding graphic state
       Int_t fnb1   = ifnb[ipiece];
       const char *psfnb1 = psfont[fnb1-1];
-      sprintf(lunps," %s findfont %d sf 0 %d rm ",  psfnb1, ifns[ipiece], level[ipiece]);
+      sprintf(lunps," %s findfont %g sf 0 %d rm ",  psfnb1, ifns[ipiece], level[ipiece]);
       PrintStr(lunps);
       sprintf(lunps,"(%s)", piece[ipiece]);
       PrintStr(lunps);
@@ -2865,7 +2875,7 @@ L260:                       //-   now output the pieces
       sprintf(lunps," (%s)", pc);
       PrintStr(lunps);
       PrintStr(" length /tlen exch def nbas tlen gt { /nbas tlen def } if ");
-      sprintf(lunps, " %s findfont %d sf",  psfnb, ifns[ipiece-1]);
+      sprintf(lunps, " %s findfont %g sf",  psfnb, ifns[ipiece-1]);
       PrintStr(lunps);
       sprintf(lunps,"(%s)", pc);
       PrintStr(lunps);
@@ -2897,7 +2907,7 @@ L260:                       //-   now output the pieces
          if( level[j] != level[ipiece-1]) break;
          Int_t fnb1 = ifnb[j];
          const char *psfnb1 = psfont[fnb1-1];
-         sprintf(lunps, " %s findfont %d sf",  psfnb1, ifns[ipiece-1]);
+         sprintf(lunps, " %s findfont %g sf",  psfnb1, ifns[ipiece-1]);
          PrintStr(lunps);
          sprintf(lunps,"(%s)", piece[j]);
          PrintStr(lunps);
@@ -2916,7 +2926,7 @@ L260:                       //-   now output the pieces
          if( level[j] != level[knew-1] ) break;
          Int_t fnb1 = ifnb[j];
          const char *psfnb1 = psfont[fnb1-1];
-         sprintf(lunps, " %s findfont %d sf",  psfnb1, ifns[ipiece-1]);
+         sprintf(lunps, " %s findfont %g sf",  psfnb1, ifns[ipiece-1]);
          PrintStr(lunps);
          sprintf(lunps,"(%s)", piece[j]);
          PrintStr(lunps);
@@ -2938,7 +2948,7 @@ L330:
    if( lback[ipiece-1] == 0 || lback[ipiece-1] == 1)  {
       fnb   = ifnb[ipiece-1];
       psfnb = psfont[fnb-1];
-      sprintf(lunps," %s findfont %d sf 0 %d m ", psfnb, ifns[ipiece-1],level[ipiece-1]);
+      sprintf(lunps," %s findfont %g sf 0 %d m ", psfnb, ifns[ipiece-1],level[ipiece-1]);
       PrintStr(lunps);
       sprintf(lunps,"(%s)", piece[ipiece-1]);
       PrintStr(lunps);

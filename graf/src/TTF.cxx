@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.3 2003/04/03 14:51:47 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.4 2003/05/09 13:47:39 brun Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
 Bool_t      TTF::fgInit       = kFALSE;
 Bool_t      TTF::fgSmoothing  = kTRUE;
 Bool_t      TTF::fgKerning    = kTRUE;
-Bool_t      TTF::fgHinting    = kTRUE;
+Bool_t      TTF::fgHinting    = kFALSE;
 Int_t       TTF::fgTBlankW    = 0;
 Int_t       TTF::fgWidth      = 0;
 Int_t       TTF::fgAscent     = 0;
@@ -237,7 +237,7 @@ void TTF::PrepareString(const char *string)
       p++;
    }
 
-   // compute the trailing blaks width. It is use to compute the text
+   // compute the trailing blanks width. It is use to compute the text
    // width in GetTextExtent
    if (NbTBlank) {
       FT_UInt load_flags = FT_LOAD_DEFAULT;
