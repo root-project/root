@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.11 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.12 2002/04/04 10:11:13 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -138,19 +138,10 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "Riostream.h"
+#include "Rstrstream.h"
 
 //Direct CINT include
 #include "DataMbr.h"
-
-#if defined(R__ANSISTREAM)
-#  include <strstream>
-#else
-#  ifndef R__WIN32
-#    include <strstream.h>
-#  else
-#    include <strstrea.h>
-#  endif
-#endif
 
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)
