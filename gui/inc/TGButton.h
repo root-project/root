@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -81,11 +81,11 @@ protected:
    void          *fUserData;    // pointer to user data structure
    TGToolTip     *fTip;         // tool tip associated with button
 
-   static GContext_t fgDefaultGC;
-   static GContext_t fgHibckgndGC;
+   static TGGC fgDefaultGC;
+   static TGGC fgHibckgndGC;
 
 public:
-   TGButton(const TGWindow *p, Int_t id, GContext_t norm = fgDefaultGC,
+   TGButton(const TGWindow *p, Int_t id, GContext_t norm = fgDefaultGC(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGButton();
 
@@ -97,6 +97,9 @@ public:
    virtual void         SetState(EButtonState state);
    virtual EButtonState GetState() const { return fState; }
    virtual void         AllowStayDown(Bool_t a) { fStayDown = a; }
+
+   static const TGGC   &GetDefaultGC();
+   static const TGGC   &GetHibckgndGC();
 
    ClassDef(TGButton,0)  // Button widget abstract base class
 };
@@ -119,13 +122,13 @@ protected:
 
 public:
    TGTextButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    TGTextButton(const TGWindow *p, const char *s, Int_t id = -1,
-                GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGTextButton();
 
@@ -135,6 +138,8 @@ public:
    const TGHotString *GetText() const { return fLabel; }
    void SetTextJustify(Int_t tmode) { fTMode = tmode; }
    void SetText(TGHotString *new_label);
+
+   static FontStruct_t GetDefaultFontStruct();
 
    ClassDef(TGTextButton,0)  // A text button widget
 };
@@ -149,10 +154,10 @@ protected:
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,
-                   GContext_t norm = fgDefaultGC,
+                   GContext_t norm = fgDefaultGC(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
-                   Int_t id = -1, GContext_t norm = fgDefaultGC,
+                   Int_t id = -1, GContext_t norm = fgDefaultGC(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
    void SetPicture(const TGPicture *new_pic);
@@ -172,7 +177,7 @@ protected:
    EButtonState    fPrevState;     // previous check button state
 
    static FontStruct_t  fgDefaultFontStruct;
-   static GContext_t    fgDefaultGC;
+   static TGGC          fgDefaultGC;
 
    void Init();
    void PSetState(EButtonState state);
@@ -180,13 +185,13 @@ protected:
 
 public:
    TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGCheckButton();
 
@@ -196,6 +201,9 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual void   SetState(EButtonState state) { PSetState(fPrevState = state); }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
@@ -215,7 +223,7 @@ protected:
 
    static Pixmap_t      fgR1, fgR2, fgR3, fgR4, fgR5, fgR6;
    static FontStruct_t  fgDefaultFontStruct;
-   static GContext_t    fgDefaultGC;
+   static TGGC          fgDefaultGC;
 
    void Init();
    void PSetState(EButtonState state);
@@ -223,13 +231,13 @@ protected:
 
 public:
    TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGRadioButton();
 
@@ -239,6 +247,9 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual void SetState(EButtonState state) { PSetState(fPrevState = state); }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGRadioButton,0)  // A radio button widget
 };

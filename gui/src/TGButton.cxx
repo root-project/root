@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -199,6 +199,15 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
 }
 
 //______________________________________________________________________________
+const TGGC &TGButton::GetDefaultGC()
+{ return fgDefaultGC; }
+
+//______________________________________________________________________________
+const TGGC &TGButton::GetHibckgndGC()
+{ return fgHibckgndGC; }
+
+
+//______________________________________________________________________________
 TGTextButton::TGTextButton(const TGWindow *p, TGHotString *s, Int_t id,
                            GContext_t norm, FontStruct_t font,
                            UInt_t options) : TGButton(p, id, norm, options)
@@ -317,13 +326,13 @@ void TGTextButton::DoRedraw()
 
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, fgHibckgndGC, 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC, 2, 2, fWidth-3, 2);
+      gVirtualX->FillRectangle(fId, fgHibckgndGC(), 2, 2, fWidth-4, fHeight-4);
+      gVirtualX->DrawLine(fId, fgHilightGC(), 2, 2, fWidth-3, 2);
    }
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (fState == kButtonDisabled) {
-      fLabel->Draw(fId, fgHilightGC, x+1, y+1 + max_ascent);
-      fLabel->Draw(fId, fgShadowGC, x, y + max_ascent);
+      fLabel->Draw(fId, fgHilightGC(), x+1, y+1 + max_ascent);
+      fLabel->Draw(fId, fgShadowGC(), x, y + max_ascent);
    } else {
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
@@ -362,6 +371,10 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+FontStruct_t TGTextButton::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
 
 
 //______________________________________________________________________________
@@ -445,8 +458,8 @@ void TGPictureButton::DoRedraw()
    TGFrame::DoRedraw();
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, fgHibckgndGC, 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, fgHilightGC, 2, 2, fWidth-3, 2);
+      gVirtualX->FillRectangle(fId, fgHibckgndGC(), 2, 2, fWidth-4, fHeight-4);
+      gVirtualX->DrawLine(fId, fgHilightGC(), 2, 2, fWidth-3, 2);
    }
    fPic->Draw(fId, fNormGC, x, y);
 }
@@ -636,17 +649,17 @@ void TGCheckButton::DoRedraw()
    cw = 13;
    y0 = (fHeight - cw) >> 1;
 
-   gVirtualX->DrawLine(fId, fgShadowGC, 0, y0, cw-2, y0);
-   gVirtualX->DrawLine(fId, fgShadowGC, 0, y0, 0, y0+cw-2);
-   gVirtualX->DrawLine(fId, fgBlackGC, 1, y0+1, cw-3, y0+1);
-   gVirtualX->DrawLine(fId, fgBlackGC, 1, y0+1, 1, y0+cw-3);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 0, y0, cw-2, y0);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 0, y0, 0, y0+cw-2);
+   gVirtualX->DrawLine(fId, fgBlackGC(), 1, y0+1, cw-3, y0+1);
+   gVirtualX->DrawLine(fId, fgBlackGC(), 1, y0+1, 1, y0+cw-3);
 
-   gVirtualX->DrawLine(fId, fgHilightGC, 0, y0+cw-1, cw-1, y0+cw-1);
-   gVirtualX->DrawLine(fId, fgHilightGC, cw-1, y0+cw-1, cw-1, y0);
-   gVirtualX->DrawLine(fId, fgBckgndGC,  2, y0+cw-2, cw-2, y0+cw-2);
-   gVirtualX->DrawLine(fId, fgBckgndGC,  cw-2, y0+2, cw-2, y0+cw-2);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 0, y0+cw-1, cw-1, y0+cw-1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), cw-1, y0+cw-1, cw-1, y0);
+   gVirtualX->DrawLine(fId, fgBckgndGC(),  2, y0+cw-2, cw-2, y0+cw-2);
+   gVirtualX->DrawLine(fId, fgBckgndGC(),  cw-2, y0+2, cw-2, y0+cw-2);
 
-   gVirtualX->FillRectangle(fId, fgWhiteGC, 2, y0+2, cw-4, cw-4);
+   gVirtualX->FillRectangle(fId, fgWhiteGC(), 2, y0+2, cw-4, cw-4);
 
    if (fState == kButtonDown) {
       Segment_t seg[6];
@@ -661,7 +674,7 @@ void TGCheckButton::DoRedraw()
       seg[4].fX1 = 3+l; seg[4].fY1 = 6+t; seg[4].fX2 = 7+l; seg[4].fY2 = 2+t;
       seg[5].fX1 = 3+l; seg[5].fY1 = 7+t; seg[5].fX2 = 7+l; seg[5].fY2 = 3+t;
 
-      gVirtualX->DrawSegments(fId, fgBlackGC, seg, 6);
+      gVirtualX->DrawSegments(fId, fgBlackGC(), seg, 6);
    }
 
    x = 20;
@@ -670,12 +683,20 @@ void TGCheckButton::DoRedraw()
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (fState == kButtonDisabled) {
-     fLabel->Draw(fId, fgHilightGC, x+1, y+1 + max_ascent);
-     fLabel->Draw(fId, fgShadowGC, x, y + max_ascent);
+     fLabel->Draw(fId, fgHilightGC(), x+1, y+1 + max_ascent);
+     fLabel->Draw(fId, fgShadowGC(), x, y + max_ascent);
    } else {
      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
    }
 }
+
+//______________________________________________________________________________
+FontStruct_t TGCheckButton::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGCheckButton::GetDefaultGC()
+{ return fgDefaultGC; }
 
 
 //______________________________________________________________________________
@@ -878,9 +899,17 @@ void TGRadioButton::DoRedraw()
 
    //  fLabel->Draw(fId, fNormGC, tx, ty);
    if (fState == kButtonDisabled) {
-      fLabel->DrawWrapped(fId, fgHilightGC, tx+1, ty+1, fWidth-tx-1, fFontStruct);
-      fLabel->DrawWrapped(fId, fgShadowGC, tx, ty, fWidth-tx-1, fFontStruct);
+      fLabel->DrawWrapped(fId, fgHilightGC(), tx+1, ty+1, fWidth-tx-1, fFontStruct);
+      fLabel->DrawWrapped(fId, fgShadowGC(), tx, ty, fWidth-tx-1, fFontStruct);
    } else {
       fLabel->DrawWrapped(fId, fNormGC, tx, ty, fWidth-tx-1, fFontStruct);
    }
 }
+
+//______________________________________________________________________________
+FontStruct_t TGRadioButton::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGRadioButton::GetDefaultGC()
+{ return fgDefaultGC; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.2 2000/09/11 09:50:20 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -63,15 +63,22 @@ protected:
    TGViewPort      *fVport;        // viewport through which we look at contents
    TGHScrollBar    *fHScrollbar;   // horizontal scrollbar
    TGVScrollBar    *fVScrollbar;   // vertical scrollbar
+   Int_t            fScrolling;    // flag which srolling modes are allowed
 
 public:
+   enum { kCanvasNoScroll         = 0,
+          kCanvasScrollHorizontal = BIT(0),
+          kCanvasScrollVertical   = BIT(1),
+          kCanvasScrollBoth       = (kCanvasScrollHorizontal | kCanvasScrollVertical)
+   };
+
    TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
             UInt_t options = kSunkenFrame | kDoubleBorder,
             ULong_t back = fgDefaultFrameBackground);
    virtual ~TGCanvas();
 
-   TGFrame    *GetContainer() const { return fVport->GetContainer(); }
-   TGViewPort *GetViewPort() const { return fVport; }
+   TGFrame     *GetContainer() const { return fVport->GetContainer(); }
+   TGViewPort  *GetViewPort() const { return fVport; }
    virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
    virtual void MapSubwindows();
@@ -79,6 +86,9 @@ public:
    virtual void Layout();
    virtual void SetHsbPosition(Int_t newPos);
    virtual void SetVsbPosition(Int_t newPos);
+   void         SetScrolling(Int_t scrolling);
+   Int_t        GetScrolling() const { return fScrolling; }
+
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

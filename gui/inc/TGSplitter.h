@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.1 2000/09/07 00:32:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.2 2000/09/07 11:19:01 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -15,16 +15,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGSplitter, TGVSplitter, TGHSplitter, TGHorizontal3DLine and         //
-// TGVertical3DLine                                                     //
+// TGSplitter, TGVSplitter and TGHSplitter                              //
 //                                                                      //
 // A splitter allows the frames left and right or above and below of    //
 // it to be resized. The frame to be resized must have the kFixedWidth  //
 // or kFixedHeight property set.                                        //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
-// A vertical 3D line is a line that can be used to separate groups of  //
-// widgets.                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -106,42 +101,6 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
 
    ClassDef(TGHSplitter,0)  //A horizontal frame splitter
-};
-
-
-class TGHorizontal3DLine : public TGFrame {
-
-public:
-   TGHorizontal3DLine(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
-                      UInt_t options = kChildFrame,
-                      ULong_t back = fgDefaultFrameBackground) :
-      TGFrame(p, w, h, options, back) { }
-
-   virtual void DrawBorder() {
-      gVirtualX->DrawLine(fId, fgShadowGC,  0, 0, fWidth-2, 0);
-      gVirtualX->DrawLine(fId, fgHilightGC, 0, 1, fWidth-1, 1);
-      gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, 0, fWidth-1, 1);
-   }
-
-   ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
-};
-
-
-class TGVertical3DLine : public TGFrame {
-
-public:
-   TGVertical3DLine(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
-                    UInt_t options = kChildFrame,
-                    ULong_t back = fgDefaultFrameBackground) :
-      TGFrame(p, w, h, options, back) { }
-
-   virtual void DrawBorder() {
-      gVirtualX->DrawLine(fId, fgShadowGC,  0, 0, 0, fHeight-2);
-      gVirtualX->DrawLine(fId, fgHilightGC, 1, 0, 1, fHeight-1);
-      gVirtualX->DrawLine(fId, fgHilightGC, 1, fHeight-1, 0, fHeight-1);
-   }
-
-   ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.2 2000/09/11 17:38:35 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -134,7 +134,7 @@ void TGFileIcon::DoRedraw()
    // Draw icon.
 
    TGIcon::DoRedraw();
-   if (fLpic) fLpic->Draw(fId, fgBckgndGC, 0, 0);
+   if (fLpic) fLpic->Draw(fId, fgBckgndGC(), 0, 0);
 }
 
 

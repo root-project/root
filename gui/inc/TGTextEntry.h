@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.2 2000/07/06 16:50:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.3 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -73,9 +73,9 @@ protected:
 
    static TString      *fgClipboardText; // application clipboard text
    static Cursor_t      fgDefaultCursor;
-   static GContext_t    fgDefaultGC;
-   static GContext_t    fgDefaultSelectedGC;
-   static GContext_t    fgDefaultSelectedBackgroundGC;
+   static TGGC          fgDefaultGC;
+   static TGGC          fgDefaultSelectedGC;
+   static TGGC          fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
    static Atom_t        fgClipboard;
 
@@ -111,7 +111,7 @@ protected:
 
 public:
    TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id = -1,
-               GContext_t norm = fgDefaultGC,
+               GContext_t norm = fgDefaultGC(),
                FontStruct_t font = fgDefaultFontStruct,
                UInt_t option = kSunkenFrame | kDoubleBorder,
                ULong_t back = fgWhitePixel);
@@ -162,6 +162,9 @@ public:
 //            Bool_t      HasFocus();
    virtual  void        TextChanged(const char* text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTextEntry,0) // The TGTextEntry widget is a simple line editor for inputting text
 };

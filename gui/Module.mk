@@ -28,16 +28,17 @@ GUIDH        := $(GUIDS:.cxx=.h)
 GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGFrame.h TGLayout.h TGString.h TGWidget.h TGIcon.h TGLabel.h \
                 TGButton.h TGTextBuffer.h TGTextEntry.h TGMsgBox.h TGMenu.h \
-                WidgetMessageTypes.h
+                TGGC.h TGShutter.h TG3DLine.h WidgetMessageTypes.h
 GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
-                TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h
+                TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h \
+                TGFSComboBox.h
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h
-GUIH4        := TGFSComboBox.h GuiTypes.h KeySymbols.h HelpText.h
+GUIH4        := GuiTypes.h KeySymbols.h HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
 GUIH2        := $(patsubst %,$(MODDIRI)/%,$(GUIH2))
 GUIH3        := $(patsubst %,$(MODDIRI)/%,$(GUIH3))

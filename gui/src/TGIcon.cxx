@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -66,5 +66,5 @@ void TGIcon::DoRedraw()
 {
    // Redraw picture.
 
-   if (fPic) fPic->Draw(fId, fgBckgndGC, 0, 0);
+   if (fPic) fPic->Draw(fId, fgBckgndGC(), 0, 0);
 }

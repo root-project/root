@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.2 2000/07/06 16:47:54 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -235,7 +235,8 @@ struct GCValues_t {
    Int_t    fClipYOrigin;
    Pixmap_t fClipMask;           // bitmap clipping; other calls for rects
    Int_t    fDashOffset;         // patterned/dashed line information
-   Char_t   fDashes;             // dash pattern
+   Char_t   fDashes[8];          // dash pattern list (dash length per byte)
+   Int_t    fDashLen;            // number of dashes in fDashes
    Mask_t   fMask;               // bit mask specifying which fields are valid
 };
 

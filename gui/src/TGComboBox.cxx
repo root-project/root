@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -118,7 +118,7 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
                        ULong_t back) :
-   TGCompositeFrame (p, 10, 10, options, back)
+   TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
    // Create a combo box widget.
 
@@ -132,6 +132,8 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
    fDDButton = new TGScrollBarElement(this, fBpic, kDefaultScrollBarWidth,
                                       kDefaultScrollBarWidth, kRaisedFrame);
+
+   fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
    AddFrame(fSelEntry, fLhs = new TGLayoutHints(kLHintsLeft |
                                                 kLHintsExpandY | kLHintsExpandX));
@@ -181,15 +183,15 @@ void TGComboBox::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:

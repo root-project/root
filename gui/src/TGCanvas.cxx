@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.2 2000/09/11 09:50:20 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -46,9 +46,12 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a canvas object.
 
-   fVport      = new TGViewPort(this, w-4, h-4, kChildFrame, fgWhitePixel);
+   fVport      = new TGViewPort(this, w-4, h-4, kChildFrame | kOwnBackground,
+                                fgWhitePixel);
    fHScrollbar = new TGHScrollBar(this, w-4, kDefaultScrollBarWidth);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, h-4);
+
+   fScrolling  = kCanvasScrollBoth;
 
    fHScrollbar->Associate(this);
    fVScrollbar->Associate(this);
@@ -100,15 +103,15 @@ void TGCanvas::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:
@@ -146,29 +149,7 @@ void TGCanvas::Layout()
    if (!fixedh) container->SetHeight(ch);
 
    if (container->GetDefaultWidth() > cw) {
-      need_hsb = kTRUE;
-      ch -= fHScrollbar->GetDefaultHeight();
-      if ((Int_t) ch < 0) {
-         //Warning("Layout", "height would become too small, setting to 10");
-         ch = 10;
-      }
-      if (!fixedh) container->SetHeight(ch);
-   }
-
-   if (container->GetDefaultHeight() > ch) {
-      need_vsb = kTRUE;
-      cw -= fVScrollbar->GetDefaultWidth();
-      if ((Int_t) cw < 0) {
-         //Warning("Layout", "width would become too small, setting to 10");
-         cw = 10;
-      }
-      if (!fixedw) container->SetWidth(cw);
-   }
-
-   // re-check again (putting the vertical scrollbar could have changed things)
-
-   if (container->GetDefaultWidth() > cw) {
-      if (!need_hsb) {
+      if (fScrolling & kCanvasScrollHorizontal) {
          need_hsb = kTRUE;
          ch -= fHScrollbar->GetDefaultHeight();
          if ((Int_t) ch < 0) {
@@ -176,6 +157,34 @@ void TGCanvas::Layout()
             ch = 10;
          }
          if (!fixedh) container->SetHeight(ch);
+      }
+   }
+
+   if (container->GetDefaultHeight() > ch) {
+      if (fScrolling & kCanvasScrollVertical) {
+         need_vsb = kTRUE;
+         cw -= fVScrollbar->GetDefaultWidth();
+         if ((Int_t) cw < 0) {
+            //Warning("Layout", "width would become too small, setting to 10");
+            cw = 10;
+         }
+         if (!fixedw) container->SetWidth(cw);
+      }
+   }
+
+   // re-check again (putting the vertical scrollbar could have changed things)
+
+   if (container->GetDefaultWidth() > cw) {
+      if (!need_hsb) {
+         if (fScrolling & kCanvasScrollHorizontal) {
+            need_hsb = kTRUE;
+            ch -= fHScrollbar->GetDefaultHeight();
+            if ((Int_t) ch < 0) {
+               //Warning("Layout", "height would become too small, setting to 10");
+               ch = 10;
+            }
+            if (!fixedh) container->SetHeight(ch);
+         }
       }
    }
 
@@ -266,6 +275,18 @@ void TGCanvas::SetVsbPosition(Int_t newPos)
       fVScrollbar->SetPosition(newPos);
    else
       fVport->SetVPos(0);
+}
+
+//______________________________________________________________________________
+void TGCanvas::SetScrolling(Int_t scrolling)
+{
+   // Set scrolling policy. Use values defined by the enum: kCanvasNoScroll,
+   // kCanvasScrollHorizontal, kCanvasScrollVertical, kCanvasScrollBoth.
+
+   if (scrolling != fScrolling) {
+      fScrolling = scrolling;
+      Layout();
+   }
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.2 2000/08/31 14:21:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.3 2000/09/11 17:37:20 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -78,7 +78,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    fActive = kFALSE;
 
-   fNormGC     = fgDefaultGC;
+   fNormGC     = fgDefaultGC();
    fFontStruct = fgDefaultFontStruct;
 
    int max_ascent, max_descent;
@@ -419,14 +419,14 @@ Bool_t TGLVContainer::HandleButton(Event_t *event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         gVirtualX->DrawRectangle(fId, fgLineGC, fX0, fY0, fXf-fX0, fYf-fY0);
+         gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
       }
    }
 
    if (event->fType == kButtonRelease) {
       if (fDragging) {
          fDragging = kFALSE;
-         gVirtualX->DrawRectangle(fId, fgLineGC, fX0, fY0, fXf-fX0, fYf-fY0);
+         gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
@@ -461,7 +461,7 @@ Bool_t TGLVContainer::HandleMotion(Event_t *event)
    int xf0, yf0, xff, yff, total, selected;
 
    if (fDragging) {
-      gVirtualX->DrawRectangle(fId, fgLineGC, fX0, fY0, fXf-fX0, fYf-fY0);
+      gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
       fX0 = TMath::Min(fXp, event->fX);
       fXf = TMath::Max(fXp, event->fX);
       fY0 = TMath::Min(fYp, event->fY);
@@ -490,7 +490,7 @@ Bool_t TGLVContainer::HandleMotion(Event_t *event)
          }
       }
 
-      gVirtualX->DrawRectangle(fId, fgLineGC, fX0, fY0, fXf-fX0, fYf-fY0);
+      gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       if (fTotal != total || fSelected != selected) {
          fTotal = total;
@@ -700,7 +700,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
 
    // create blank filler header
    fColHeader[fNColumns-1] = new TGTextButton(this, new TGHotString(""), -1,
-                                              fgDefaultGC, fgDefaultFontStruct);
+                                              fgDefaultGC(), fgDefaultFontStruct);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fJmode[fNColumns-1]   = kTextCenterX;
@@ -720,7 +720,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    }
    delete fColHeader[idx];
    fColHeader[idx] = new TGTextButton(this, new TGHotString(s),
-                                      idx, fgDefaultGC, fgDefaultFontStruct);
+                                      idx, fgDefaultGC(), fgDefaultFontStruct);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
 
    // fJmode and fColumns contain values for columns idx > 0. idx==0 is

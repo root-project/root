@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -79,13 +79,13 @@ void TGTabElement::DrawBorder()
 {
    // Draw little tab element.
 
-   gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, 0, 2);
-   gVirtualX->DrawLine(fId, fgHilightGC, 0, 2, 2, 0);
-   gVirtualX->DrawLine(fId, fgHilightGC, 2, 0, fWidth-3, 0);
-   gVirtualX->DrawLine(fId, fgShadowGC,  fWidth-2, 1, fWidth-2, fHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC, fWidth-2, 1, fWidth-1, 2);
-   gVirtualX->DrawLine(fId, fgBlackGC, fWidth-1, 2, fWidth-1, fHeight-2);
-   gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, 0, 2);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 0, 2, 2, 0);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 2, 0, fWidth-3, 0);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, 1, fWidth-2, fHeight-1);
+   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-2, 1, fWidth-1, 2);
+   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-1, 2, fWidth-1, fHeight-2);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, fHeight-1);
 
    if (fText) {
       int max_ascent, max_descent;
@@ -459,3 +459,10 @@ Int_t TGTab::GetNumberOfTabs() const
    return count;
 }
 
+//______________________________________________________________________________
+FontStruct_t TGTab::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGTab::GetDefaultGC()
+{ return fgDefaultGC; }

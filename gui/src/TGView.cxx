@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.5 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.6 2000/07/12 17:58:05 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -63,7 +63,8 @@ ClassImp(TGViewFrame)
 
 //______________________________________________________________________________
 TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
-                         ULong_t back) : TGCompositeFrame(v, w, h, options, back)
+                         ULong_t back) :
+   TGCompositeFrame(v, w, h, options | kOwnBackground, back)
 {
    // Create a editor frame.
 
@@ -123,7 +124,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
 
    GCValues_t gval;
    fWhiteGC = gVirtualX->CreateGC(fCanvas->GetId(), 0);
-   gVirtualX->CopyGC(fgWhiteGC, fWhiteGC, 0);
+   gVirtualX->CopyGC(fgWhiteGC(), fWhiteGC, 0);
 
    gval.fMask = kGCGraphicsExposures;
    gval.fGraphicsExposures = kTRUE;
@@ -567,15 +568,15 @@ void TGView::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:

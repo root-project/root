@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.2 2000/09/04 17:51:31 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -169,10 +169,10 @@ void TGToolTip::DrawBorder()
 {
    // Draw border of tool tip window.
 
-   gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-   gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-   gVirtualX->DrawLine(fId, fgBlackGC,  0, fHeight-1, fWidth-1, fHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC,  fWidth-1, fHeight-1, fWidth-1, 0);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+   gVirtualX->DrawLine(fId, fgBlackGC(),  0, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, fgBlackGC(),  fWidth-1, fHeight-1, fWidth-1, 0);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.2 2000/09/07 00:44:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.3 2000/09/08 16:11:58 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -101,11 +101,11 @@ void TGVSlider::DoRedraw()
    // cleanup the drawable
    gVirtualX->ClearWindow(fId);
 
-   gVirtualX->DrawLine(fId, fgShadowGC, fWidth/2, 8, fWidth/2-1, 8);
-   gVirtualX->DrawLine(fId, fgShadowGC, fWidth/2-1, 8, fWidth/2-1, fHeight-9);
-   gVirtualX->DrawLine(fId, fgHilightGC, fWidth/2+1, 8, fWidth/2+1, fHeight-8);
-   gVirtualX->DrawLine(fId, fgHilightGC, fWidth/2+1, fHeight-8, fWidth/2, fHeight-8);
-   gVirtualX->DrawLine(fId, fgBlackGC, fWidth/2, 9, fWidth/2, fHeight-9);
+   gVirtualX->DrawLine(fId, fgShadowGC(), fWidth/2, 8, fWidth/2-1, 8);
+   gVirtualX->DrawLine(fId, fgShadowGC(), fWidth/2-1, 8, fWidth/2-1, fHeight-9);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2+1, 8, fWidth/2+1, fHeight-8);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth/2+1, fHeight-8, fWidth/2, fHeight-8);
+   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2, 9, fWidth/2, fHeight-9);
 
    // check scale
    if (fScale == 1) fScale++;
@@ -115,9 +115,9 @@ void TGVSlider::DoRedraw()
       int remain = ((int)fHeight-16) % fScale;
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, fgBlackGC, fWidth/2+8, y+7, fWidth/2+10, y+7);
+         gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2+8, y+7, fWidth/2+10, y+7);
          if ((fType & kSlider2) && (fType & kScaleBoth))
-            gVirtualX->DrawLine(fId, fgBlackGC, fWidth/2-9, y+7, fWidth/2-11, y+7);
+            gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-9, y+7, fWidth/2-11, y+7);
       }
    }
    if (fPos < fVmin) fPos = fVmin;
@@ -125,7 +125,7 @@ void TGVSlider::DoRedraw()
 
    // calc slider-picture position
    fRelPos = (((int)fHeight-16) * (fPos - fVmin)) / (fVmax - fVmin) + 8;
-   if (fSliderPic) fSliderPic->Draw(fId, fgBckgndGC, fWidth/2-7, fRelPos-6);
+   if (fSliderPic) fSliderPic->Draw(fId, fgBckgndGC(), fWidth/2-7, fRelPos-6);
 }
 
 //______________________________________________________________________________
@@ -235,11 +235,11 @@ void TGHSlider::DoRedraw()
    // cleanup drawable
    gVirtualX->ClearWindow(fId);
 
-   gVirtualX->DrawLine(fId, fgShadowGC, 8, fHeight/2, 8, fHeight/2-1);
-   gVirtualX->DrawLine(fId, fgShadowGC, 8, fHeight/2-1, fWidth-9, fHeight/2-1);
-   gVirtualX->DrawLine(fId, fgHilightGC, 8, fHeight/2+1, fWidth-8, fHeight/2+1);
-   gVirtualX->DrawLine(fId, fgHilightGC, fWidth-8, fHeight/2+1, fWidth-8, fHeight/2);
-   gVirtualX->DrawLine(fId, fgBlackGC, 9, fHeight/2, fWidth-9, fHeight/2);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 8, fHeight/2, 8, fHeight/2-1);
+   gVirtualX->DrawLine(fId, fgShadowGC(), 8, fHeight/2-1, fWidth-9, fHeight/2-1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 8, fHeight/2+1, fWidth-8, fHeight/2+1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-8, fHeight/2+1, fWidth-8, fHeight/2);
+   gVirtualX->DrawLine(fId, fgBlackGC(), 9, fHeight/2, fWidth-9, fHeight/2);
 
    if (fScale == 1) fScale++;
    if (fScale * 2 > (int)fWidth) fScale = 0;
@@ -248,9 +248,9 @@ void TGHSlider::DoRedraw()
       int remain = ((int)fWidth-16) % fScale;
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, fgBlackGC, x+7, fHeight/2+8, x+7, fHeight/2+10);
+         gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2+8, x+7, fHeight/2+10);
          if ((fType & kSlider2) && (fType & kScaleBoth))
-            gVirtualX->DrawLine(fId, fgBlackGC, x+7, fHeight/2-9, x+7, fHeight/2-11);
+            gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2-9, x+7, fHeight/2-11);
       }
    }
    if (fPos < fVmin) fPos = fVmin;
@@ -258,7 +258,7 @@ void TGHSlider::DoRedraw()
 
    // calc slider-picture position
    fRelPos = (((int)fWidth-16) * (fPos - fVmin)) / (fVmax - fVmin) + 8;
-   if (fSliderPic) fSliderPic->Draw(fId, fgBckgndGC, fRelPos-6, fHeight/2-7);
+   if (fSliderPic) fSliderPic->Draw(fId, fgBckgndGC(), fRelPos-6, fHeight/2-7);
 }
 
 //______________________________________________________________________________

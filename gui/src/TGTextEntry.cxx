@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.2 2000/07/06 16:50:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.3 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -200,7 +200,8 @@ TString *TGTextEntry::fgClipboardText = 0;   // application clipboard prototype
 //______________________________________________________________________________
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
-                         ULong_t back) : TGFrame(p, 1, 1, options, back)
+                         ULong_t back) :
+   TGFrame(p, 1, 1, options | kOwnBackground, back)
 {
    // Create a text entry widget. It will adopt the TGTextBuffer object
    // (i.e. the text buffer will be deleted by the text entry widget).
@@ -215,14 +216,14 @@ TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
 }
 
 //______________________________________________________________________________
-TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id):
-                  TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder, fgWhitePixel)
+TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id) :
+   TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder | kOwnBackground, fgWhitePixel)
 {
    // Simple text entry constructor.
 
    fWidgetId      = id;
    fMsgWindow     = parent;
-   fNormGC        = fgDefaultGC;
+   fNormGC        = fgDefaultGC();
    fFontStruct    = fgDefaultFontStruct;
    fText          = new TGTextBuffer();
    fText->AddText(0, text);
@@ -232,7 +233,7 @@ TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id):
 
 //______________________________________________________________________________
 TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id) :
-                  TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder, fgWhitePixel)
+   TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder | kOwnBackground, fgWhitePixel)
 {
    // Simple test entry constructor. Notice TString argument comes before the
    // parent argument (to make this ctor different from the first one taking a
@@ -240,7 +241,7 @@ TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t 
 
    fWidgetId      = id;
    fMsgWindow     = parent;
-   fNormGC        = fgDefaultGC;
+   fNormGC        = fgDefaultGC();
    fFontStruct    = fgDefaultFontStruct;
    fText          = new TGTextBuffer();
    fText->AddText(0, contents.Data());
@@ -267,8 +268,8 @@ void TGTextEntry::Init()
    // Do default initialization.
 
    fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
-   fSelGC       = fgDefaultSelectedGC;
-   fSelbackGC   = fgDefaultSelectedBackgroundGC;
+   fSelGC       = fgDefaultSelectedGC();
+   fSelbackGC   = fgDefaultSelectedBackgroundGC();
    fDeleteGC    = kFALSE;
 
    fOffset = 0;
@@ -890,15 +891,15 @@ void TGTextEntry::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:
@@ -935,7 +936,7 @@ void TGTextEntry::DoRedraw()
 
    if ((GetInsertMode() == kInsert) || (fEchoMode == kNoEcho)) {   //  line cursor
       if (fCursorOn) {
-         gVirtualX->DrawLine(fId, fgBlackGC, fCursorX, 3,
+         gVirtualX->DrawLine(fId, fgBlackGC(), fCursorX, 3,
                      fCursorX, max_ascent + max_descent + 3);
       }
       gVirtualX->DrawString(fId, fNormGC, x , y + max_ascent, dt.Data(), len);
@@ -1406,3 +1407,11 @@ void TGTextEntry::RemoveText(Int_t start, Int_t end)
    newText.Remove(pos, len);
    SetText(newText.Data());
 }
+
+//______________________________________________________________________________
+FontStruct_t TGTextEntry::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGTextEntry::GetDefaultGC()
+{ return fgDefaultGC; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.5 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.6 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -51,7 +51,7 @@ protected:
    Bool_t          fMarkedFromY;  // true if text is marker from y
    Bool_t          fDeleteGC;     // delete widget specific contexts
 
-   static GContext_t    fgDefaultGC, fgDefaultSelectedGC,
+   static TGGC          fgDefaultGC, fgDefaultSelectedGC,
                         fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
 

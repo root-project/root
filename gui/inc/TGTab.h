@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.2 2000/08/28 09:06:57 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -96,13 +96,13 @@ protected:
    GContext_t          fNormGC;         // drawing context
 
    static FontStruct_t    fgDefaultFontStruct;
-   static GContext_t      fgDefaultGC;
+   static TGGC            fgDefaultGC;
 
    void ChangeTab(Int_t tabIndex);
 
 public:
    TGTab(const TGWindow *p, UInt_t w, UInt_t h,
-         GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+         GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
          UInt_t options = kChildFrame,
          ULong_t back = fgDefaultFrameBackground);
    virtual ~TGTab();
@@ -122,6 +122,9 @@ public:
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTab,0)  // Tab widget
 };

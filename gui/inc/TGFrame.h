@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.2 2000/08/31 14:20:13 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #endif
 #ifndef ROOT_TGDimension
 #include "TGDimension.h"
+#endif
+#ifndef ROOT_TGGC
+#include "TGGC.h"
 #endif
 #ifndef ROOT_TGLayout
 #include "TGLayout.h"
@@ -60,7 +63,8 @@ enum EFrameType {
    kFixedWidth      = BIT(7),
    kFitHeight       = BIT(8),
    kFixedHeight     = BIT(9),
-   kFixedSize       = (kFixedWidth | kFixedHeight)
+   kFixedSize       = (kFixedWidth | kFixedHeight),
+   kOwnBackground   = BIT(10)
 };
 
 //---- MWM Hints stuff
@@ -118,29 +122,22 @@ protected:
    Int_t    fBorderWidth;   // frame border width
    UInt_t   fOptions;       // frame options
    ULong_t  fBackground;    // frame background color
+   Long_t   fEventMask;     // currenty active event mask
 
    static ULong_t     fgDefaultFrameBackground;
    static ULong_t     fgDefaultSelectedBackground;
    static ULong_t     fgWhitePixel;
    static ULong_t     fgBlackPixel;
-   static GContext_t  fgBlackGC, fgWhiteGC;
-   static GContext_t  fgHilightGC;
-   static GContext_t  fgShadowGC;
-   static GContext_t  fgBckgndGC;
+   static TGGC        fgBlackGC;
+   static TGGC        fgWhiteGC;
+   static TGGC        fgHilightGC;
+   static TGGC        fgShadowGC;
+   static TGGC        fgBckgndGC;
    static Time_t      fgLastClick;
    static UInt_t      fgLastButton;
    static Int_t       fgDbx, fgDby;
    static Window_t    fgDbw;
 
-   static ULong_t     GetDefaultFrameBackground();
-   static ULong_t     GetDefaultSelectedBackground();
-   static ULong_t     GetWhitePixel();
-   static ULong_t     GetBlackPixel();
-   static GContext_t  GetBlackGC();
-   static GContext_t  GetWhiteGC();
-   static GContext_t  GetHilightGC();
-   static GContext_t  GetShadowGC();
-   static GContext_t  GetBckgndGC();
    static Time_t      GetLastClick();
 
    virtual void DoRedraw();
@@ -151,6 +148,10 @@ public:
            UInt_t options = 0, ULong_t back = fgDefaultFrameBackground);
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame() { }
+
+   Long_t GetEventMask() const { return fEventMask; }
+   void   AddInput(Long_t emask);
+   void   RemoveInput(Long_t emask);
 
    virtual Bool_t HandleEvent(Event_t *event);
    virtual Bool_t HandleConfigureNotify(Event_t *event);
@@ -197,6 +198,17 @@ public:
    void SetWidth(UInt_t w) { fWidth = w; }
    void SetHeight(UInt_t h) { fHeight = h; }
    void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
+
+   // Default colors and graphics contexts
+   static ULong_t     GetDefaultFrameBackground();
+   static ULong_t     GetDefaultSelectedBackground();
+   static ULong_t     GetWhitePixel();
+   static ULong_t     GetBlackPixel();
+   static const TGGC &GetBlackGC();
+   static const TGGC &GetWhiteGC();
+   static const TGGC &GetHilightGC();
+   static const TGGC &GetShadowGC();
+   static const TGGC &GetBckgndGC();
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
@@ -376,23 +388,26 @@ protected:
    FontStruct_t   fFontStruct;
    GContext_t     fNormGC;
 
-   static GContext_t    fgDefaultGC;
+   static TGGC          fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
 
 public:
    TGGroupFrame(const TGWindow *p, TGString *title,
                 UInt_t options = kVerticalFrame,
-                GContext_t norm = fgDefaultGC,
+                GContext_t norm = fgDefaultGC(),
                 FontStruct_t font = fgDefaultFontStruct,
                 ULong_t back = fgDefaultFrameBackground);
    TGGroupFrame(const TGWindow *p, const char *title,
                 UInt_t options = kVerticalFrame,
-                GContext_t norm = fgDefaultGC,
+                GContext_t norm = fgDefaultGC(),
                 FontStruct_t font = fgDefaultFontStruct,
                 ULong_t back = fgDefaultFrameBackground);
    virtual ~TGGroupFrame();
 
    virtual void DrawBorder();
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };

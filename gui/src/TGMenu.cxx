@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -300,13 +300,13 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
 //______________________________________________________________________________
 TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
-    : TGFrame(p, w, h, options)
+    : TGFrame(p, w, h, options | kOwnBackground)
 {
    // Create a popup menu.
 
-   fNormGC       = fgDefaultGC;
-   fSelGC        = fgDefaultSelectedGC;
-   fSelbackGC    = fgDefaultSelectedBackgroundGC;
+   fNormGC       = fgDefaultGC();
+   fSelGC        = fgDefaultSelectedGC();
+   fSelbackGC    = fgDefaultSelectedBackgroundGC();
    fFontStruct   = fgDefaultFontStruct;
    fHifontStruct = fgHilightFontStruct;
 
@@ -770,10 +770,10 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->fPic != 0)
                entry->fPic->Draw(fId, fSelGC, 8, entry->fEy+1);
             entry->fLabel->Draw(fId,
-                           (entry->fStatus & kMenuEnableMask) ? fSelGC : fgShadowGC,
+                           (entry->fStatus & kMenuEnableMask) ? fSelGC : fgShadowGC(),
                            tx, ty);
          } else {
-            gVirtualX->FillRectangle(fId, fgBckgndGC, entry->fEx+1, entry->fEy-1,
+            gVirtualX->FillRectangle(fId, fgBckgndGC(), entry->fEx+1, entry->fEy-1,
                                 fWidth-6, max_ascent + max_descent + 3);
             if (entry->fType == kMenuPopup)
                DrawTrianglePattern(fNormGC, fWidth-10, entry->fEy+3, fWidth-6, entry->fEy+11);
@@ -786,15 +786,15 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->fStatus & kMenuEnableMask) {
                entry->fLabel->Draw(fId, fNormGC, tx, ty);
             } else {
-               entry->fLabel->Draw(fId, fgHilightGC, tx+1, ty+1);
-               entry->fLabel->Draw(fId, fgShadowGC, tx, ty);
+               entry->fLabel->Draw(fId, fgHilightGC(), tx+1, ty+1);
+               entry->fLabel->Draw(fId, fgShadowGC(), tx, ty);
             }
          }
          break;
 
       case kMenuSeparator:
-         gVirtualX->DrawLine(fId, fgShadowGC,  2, entry->fEy, fWidth-3, entry->fEy);
-         gVirtualX->DrawLine(fId, fgHilightGC, 2, entry->fEy+1, fWidth-3, entry->fEy+1);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  2, entry->fEy, fWidth-3, entry->fEy);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 2, entry->fEy+1, fWidth-3, entry->fEy+1);
          break;
    }
 
@@ -811,15 +811,15 @@ void TGPopupMenu::DrawBorder()
 {
    // Draw border round popup menu.
 
-   gVirtualX->DrawLine(fId, fgBckgndGC, 0, 0, fWidth-2, 0);
-   gVirtualX->DrawLine(fId, fgBckgndGC, 0, 0, 0, fHeight-2);
-   gVirtualX->DrawLine(fId, fgHilightGC, 1, 1, fWidth-3, 1);
-   gVirtualX->DrawLine(fId, fgHilightGC, 1, 1, 1, fHeight-3);
+   gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, fWidth-2, 0);
+   gVirtualX->DrawLine(fId, fgBckgndGC(), 0, 0, 0, fHeight-2);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, fWidth-3, 1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), 1, 1, 1, fHeight-3);
 
-   gVirtualX->DrawLine(fId, fgShadowGC,  1, fHeight-2, fWidth-2, fHeight-2);
-   gVirtualX->DrawLine(fId, fgShadowGC,  fWidth-2, fHeight-2, fWidth-2, 1);
-   gVirtualX->DrawLine(fId, fgBlackGC, 0, fHeight-1, fWidth-1, fHeight-1);
-   gVirtualX->DrawLine(fId, fgBlackGC, fWidth-1, fHeight-1, fWidth-1, 0);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, fHeight-2, fWidth-2, 1);
+   gVirtualX->DrawLine(fId, fgBlackGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+   gVirtualX->DrawLine(fId, fgBlackGC(), fWidth-1, fHeight-1, fWidth-1, 0);
 }
 
 //______________________________________________________________________________
@@ -1022,7 +1022,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fLabel      = s;
    fMenu       = menu;
    fFontStruct = font;
-   fSelGC      = fgDefaultSelectedGC;
+   fSelGC      = fgDefaultSelectedGC();
    fNormGC     = norm;
    fState      = kFALSE;
    fTitleId    = -1;
@@ -1100,3 +1100,11 @@ void TGMenuTitle::DoSendMessage()
          SendMessage(fMenu->fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), fTitleId,
                      (Long_t)fTitleData);
 }
+
+//______________________________________________________________________________
+FontStruct_t TGMenuTitle::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGMenuTitle::GetDefaultGC()
+{ return fgDefaultGC; }

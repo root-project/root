@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
    Int_t             fYt;         // y drawing position (depending on font)
    Int_t            *fXt;         // x position for each part
 
-   static GContext_t    fgDefaultGC;
+   static TGGC          fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
 
    virtual void DoRedraw();

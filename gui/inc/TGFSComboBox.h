@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -49,13 +49,13 @@ protected:
 
    static ULong_t        fgSelPixel;
    static FontStruct_t   fgDefaultFontStruct;
-   static GContext_t     fgDefaultGC;
+   static TGGC           fgDefaultGC;
 
    virtual void DoRedraw();
 
 public:
    TGTreeLBEntry(const TGWindow *p, TGString *text, const TGPicture *pic,
-                 Int_t id, TGString *path = 0, GContext_t norm = fgDefaultGC,
+                 Int_t id, TGString *path = 0, GContext_t norm = fgDefaultGC(),
                  FontStruct_t font = fgDefaultFontStruct,
                  UInt_t options = kHorizontalFrame, ULong_t back = fgWhitePixel);
    virtual ~TGTreeLBEntry();
@@ -68,6 +68,11 @@ public:
 
    virtual void Activate(Bool_t a);
    virtual void Update(TGLBEntry *e);
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+
+   ClassDef(TGTreeLBEntry,0)  // TGFSComboBox entry
 };
 
 
@@ -79,6 +84,8 @@ public:
                 kDoubleBorder, ULong_t back = fgWhitePixel);
 
    virtual void Update(const char *path);
+
+   ClassDef(TGFSComboBox,0)  // Combo box widget for file system path
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.5 2000/09/07 11:19:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.6 2000/09/11 17:38:10 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TGListTree.h"
 #include "TGToolBar.h"
 #include "TGSplitter.h"
+#include "TG3DLine.h"
 #include "TGFSContainer.h"
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"

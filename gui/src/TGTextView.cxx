@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.9 2000/08/11 14:49:22 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -46,9 +46,9 @@ void TGTextView::Init(ULong_t /*back*/)
 
    // set in TGClient via fgDefaultFontStruct and select font via .rootrc
    fFont      = fgDefaultFontStruct;
-   fNormGC    = fgDefaultGC;
-   fSelGC     = fgDefaultSelectedGC;
-   fSelbackGC = fgDefaultSelectedBackgroundGC;
+   fNormGC    = fgDefaultGC();
+   fSelGC     = fgDefaultSelectedGC();
+   fSelbackGC = fgDefaultSelectedBackgroundGC();
    fDeleteGC  = kFALSE;
 
    fText = new TGText();

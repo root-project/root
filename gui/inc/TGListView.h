@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.2 2000/09/11 17:37:20 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -74,7 +74,7 @@ protected:
    void               *fUserData;    // pointer to user data structure
 
    static FontStruct_t   fgDefaultFontStruct;
-   static GContext_t     fgDefaultGC;
+   static TGGC           fgDefaultGC;
    static ULong_t        fgSelPixel;
 
    virtual void DoRedraw();
@@ -124,7 +124,7 @@ protected:
    Bool_t             fDragging;      // true if in dragging mode
    const TGWindow    *fMsgWindow;     // window handling container messages
 
-   static GContext_t  fgLineGC;
+   static TGGC  fgLineGC;
 
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
@@ -174,7 +174,7 @@ protected:
    TGDimension     fMaxSize;      // maximum item size
    TGTextButton  **fColHeader;    // column headers for in detailed mode
 
-   static GContext_t    fgDefaultGC;
+   static TGGC          fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -291,19 +291,17 @@ TGSelectedPicture::TGSelectedPicture(const TGClient *client, const TGPicture *p)
    fAttributes.fWidth  = w;
    fAttributes.fHeight = h;
 
-   gVirtualX->CopyArea(p->GetPicture(), fPic, fgSelectedGC, 0, 0, w, h, 0, 0);
+   gVirtualX->CopyArea(p->GetPicture(), fPic, fgSelectedGC(), 0, 0, w, h, 0, 0);
 
    gcv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
    gcv.fClipMask = p->GetMask();
    gcv.fClipXOrigin = 0;
    gcv.fClipYOrigin = 0;
-   gVirtualX->ChangeGC(fgSelectedGC, &gcv);
+   fgSelectedGC.SetAttributes(&gcv);
 
-   gVirtualX->FillRectangle(fPic, fgSelectedGC, 0, 0, w, h);
+   gVirtualX->FillRectangle(fPic, fgSelectedGC(), 0, 0, w, h);
 
-   gcv.fMask = kGCClipMask;
-   gcv.fClipMask = kNone;
-   gVirtualX->ChangeGC(fgSelectedGC, &gcv);
+   fgSelectedGC.SetClipMask(kNone);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -120,7 +120,7 @@ protected:
    FontStruct_t       fHifontStruct;  // font to draw highlighted entries
    const TGWindow    *fMsgWindow;     // window which handles menu events
 
-   static GContext_t    fgDefaultGC, fgDefaultSelectedGC,
+   static TGGC          fgDefaultGC, fgDefaultSelectedGC,
                         fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
    static FontStruct_t  fgHilightFontStruct;
@@ -192,14 +192,14 @@ protected:
    FontStruct_t    fFontStruct;       // font
    GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
 
-   static GContext_t    fgDefaultGC, fgDefaultSelectedGC;
+   static TGGC          fgDefaultGC, fgDefaultSelectedGC;
    static FontStruct_t  fgDefaultFontStruct;
 
    virtual void DoRedraw();
 
 public:
    TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
-               GContext_t norm = fgDefaultGC,
+               GContext_t norm = fgDefaultGC(),
                FontStruct_t font = fgDefaultFontStruct,
                UInt_t options = 0);
    ~TGMenuTitle() { if (fLabel) delete fLabel; }
@@ -208,6 +208,9 @@ public:
    virtual void   DoSendMessage();
    virtual Bool_t GetState() const { return fState; }
    virtual Int_t  GetHotKeyCode() const { return fHkeycode; }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };

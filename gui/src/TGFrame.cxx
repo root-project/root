@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.2 2000/08/31 14:20:13 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -104,7 +104,17 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    wattr.fMask = kWABackPixel | kWAEventMask;
    wattr.fBackgroundPixel = back;
    wattr.fEventMask = kExposureMask;
-   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   if (fOptions & kMainFrame) {
+      wattr.fEventMask |= kStructureNotifyMask;
+      gVirtualX->ChangeWindowAttributes(fId, &wattr);
+      //if (fgDefaultBackgroundPicture)
+      //   SetBackgroundPixmap(fgDefaultBackgroundPicture->GetPicture());
+   } else {
+      gVirtualX->ChangeWindowAttributes(fId, &wattr);
+      //if (!(fOptions & kOwnBackground))
+      //   SetBackgroundPixmap(kParentRelative);
+   }
+   fEventMask = wattr.fEventMask;
 }
 
 //______________________________________________________________________________
@@ -123,6 +133,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fWidth       = attributes.fWidth;
    fHeight      = attributes.fHeight;
    fBorderWidth = attributes.fBorderWidth;
+   fEventMask   = attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
 }
@@ -153,47 +164,65 @@ void TGFrame::ChangeOptions(UInt_t options)
 }
 
 //______________________________________________________________________________
+void TGFrame::AddInput(Long_t emask)
+{
+   // Add events specified in the emask to the events the frame should handle.
+
+   fEventMask |= emask;
+   gVirtualX->SelectInput(fId, fEventMask);
+}
+
+//______________________________________________________________________________
+void TGFrame::RemoveInput(Long_t emask)
+{
+   // Remove events specified in emask from the events the frame should handle.
+
+   fEventMask &= ~emask;
+   gVirtualX->SelectInput(fId, fEventMask);
+}
+
+//______________________________________________________________________________
 void TGFrame::DrawBorder()
 {
    // Draw frame border.
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame:
-         gVirtualX->DrawLine(fId, fgShadowGC,  0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC,  0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
          break;
 
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgBlackGC,  0, 0, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBlackGC,  0, 0, 0, fHeight-1);
-         gVirtualX->DrawLine(fId, fgShadowGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgShadowGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgBlackGC(),  0, 0, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBlackGC(),  0, 0, 0, fHeight-1);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 1, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 1);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  2, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 1, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 1);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  2, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 2, fWidth-2, fHeight-2);
          break;
 
       case kRaisedFrame:
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC,  0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgShadowGC,  fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-1, fHeight-1, fWidth-1, 0);
          break;
 
       case kRaisedFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgShadowGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgShadowGC,  fWidth-2, fHeight-2, fWidth-2, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC,   0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgBlackGC,   fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgShadowGC(),  fWidth-2, fHeight-2, fWidth-2, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(),   0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgBlackGC(),   fWidth-1, fHeight-1, fWidth-1, 0);
          break;
 
       default:
@@ -412,19 +441,19 @@ ULong_t TGFrame::GetWhitePixel()
 ULong_t TGFrame::GetBlackPixel()
 { return fgBlackPixel; }
 
-GContext_t TGFrame::GetBlackGC()
+const TGGC &TGFrame::GetBlackGC()
 { return fgBlackGC; }
 
-GContext_t TGFrame::GetWhiteGC()
+const TGGC &TGFrame::GetWhiteGC()
 { return fgWhiteGC; }
 
-GContext_t TGFrame::GetHilightGC()
+const TGGC &TGFrame::GetHilightGC()
 { return fgHilightGC; }
 
-GContext_t TGFrame::GetShadowGC()
+const TGGC &TGFrame::GetShadowGC()
 { return fgShadowGC; }
 
-GContext_t TGFrame::GetBckgndGC()
+const TGGC &TGFrame::GetBckgndGC()
 { return fgBckgndGC; }
 
 Time_t TGFrame::GetLastClick()
@@ -438,9 +467,6 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    // Create a composite frame. A composite frame has in addition to a TGFrame
    // also a layout manager and a list of child frames.
 
-   SetWindowAttributes_t wattr;
-
-   // by default
    fLayoutManager = 0;
    fList          = new TList;
 
@@ -448,13 +474,6 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
       SetLayoutManager(new TGHorizontalLayout(this));
    else
       SetLayoutManager(new TGVerticalLayout(this));
-
-   wattr.fMask = kWABackPixel | kWAEventMask;
-   wattr.fBackgroundPixel = back;
-   wattr.fEventMask = kExposureMask;
-   if (fOptions & kMainFrame)
-      wattr.fEventMask |= kStructureNotifyMask;
-   gVirtualX->ChangeWindowAttributes(fId, &wattr);
 }
 
 //______________________________________________________________________________
@@ -936,22 +955,30 @@ void TGGroupFrame::DrawBorder()
    gl = 5 + sep;
    gr = gl + tw + (sep << 1);
 
-   gVirtualX->DrawLine(fId, fgShadowGC,  l,   t,   gl,  t);
-   gVirtualX->DrawLine(fId, fgHilightGC, l+1, t+1, gl,  t+1);
-   gVirtualX->DrawLine(fId, fgShadowGC,  gr,  t,   r-1, t);
-   gVirtualX->DrawLine(fId, fgHilightGC, gr,  t+1, r-2, t+1);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  l,   t,   gl,  t);
+   gVirtualX->DrawLine(fId, fgHilightGC(), l+1, t+1, gl,  t+1);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  gr,  t,   r-1, t);
+   gVirtualX->DrawLine(fId, fgHilightGC(), gr,  t+1, r-2, t+1);
 
-   gVirtualX->DrawLine(fId, fgShadowGC,  r-1, t,   r-1, b-1);
-   gVirtualX->DrawLine(fId, fgHilightGC, r,   t,   r,   b);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, t,   r-1, b-1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), r,   t,   r,   b);
 
-   gVirtualX->DrawLine(fId, fgShadowGC,  r-1, b-1, l,   b-1);
-   gVirtualX->DrawLine(fId, fgHilightGC, r,   b,   l,   b);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, b-1, l,   b-1);
+   gVirtualX->DrawLine(fId, fgHilightGC(), r,   b,   l,   b);
 
-   gVirtualX->DrawLine(fId, fgShadowGC,  l,   b-1, l,   t);
-   gVirtualX->DrawLine(fId, fgHilightGC, l+1, b-2, l+1, t+1);
+   gVirtualX->DrawLine(fId, fgShadowGC(),  l,   b-1, l,   t);
+   gVirtualX->DrawLine(fId, fgHilightGC(), l+1, b-2, l+1, t+1);
 
    x = gl + sep;
    y = 1;
 
    fText->Draw(fId, fNormGC, x, y + max_ascent);
 }
+
+//______________________________________________________________________________
+FontStruct_t TGGroupFrame::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGGroupFrame::GetDefaultGC()
+{ return fgDefaultGC; }

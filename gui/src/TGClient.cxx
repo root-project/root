@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.4 2000/08/04 13:21:36 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -117,14 +117,14 @@ static unsigned char chk_bits[] = {
 
 Colormap_t TGPicturePool::fgDefaultColormap;
 
-GContext_t TGButton::fgDefaultGC;
-GContext_t TGButton::fgHibckgndGC;
+TGGC TGButton::fgDefaultGC;
+TGGC TGButton::fgHibckgndGC;
 FontStruct_t TGTextButton::fgDefaultFontStruct;
 
-GContext_t TGCheckButton::fgDefaultGC;
+TGGC TGCheckButton::fgDefaultGC;
 FontStruct_t TGCheckButton::fgDefaultFontStruct;
 
-GContext_t TGRadioButton::fgDefaultGC;
+TGGC TGRadioButton::fgDefaultGC;
 FontStruct_t TGRadioButton::fgDefaultFontStruct;
 Pixmap_t TGRadioButton::fgR1;
 Pixmap_t TGRadioButton::fgR2;
@@ -137,22 +137,22 @@ ULong_t TGFrame::fgDefaultFrameBackground;
 ULong_t TGFrame::fgDefaultSelectedBackground;
 ULong_t TGFrame::fgWhitePixel;
 ULong_t TGFrame::fgBlackPixel;
-GContext_t TGFrame::fgBlackGC;
-GContext_t TGFrame::fgWhiteGC;
-GContext_t TGFrame::fgHilightGC;
-GContext_t TGFrame::fgShadowGC;
-GContext_t TGFrame::fgBckgndGC;
+TGGC TGFrame::fgBlackGC;
+TGGC TGFrame::fgWhiteGC;
+TGGC TGFrame::fgHilightGC;
+TGGC TGFrame::fgShadowGC;
+TGGC TGFrame::fgBckgndGC;
 
-GContext_t TGLabel::fgDefaultGC;
+TGGC TGLabel::fgDefaultGC;
 FontStruct_t TGLabel::fgDefaultFontStruct;
 
-GContext_t TGMenuTitle::fgDefaultGC;
-GContext_t TGMenuTitle::fgDefaultSelectedGC;
+TGGC TGMenuTitle::fgDefaultGC;
+TGGC TGMenuTitle::fgDefaultSelectedGC;
 FontStruct_t TGMenuTitle::fgDefaultFontStruct;
 
-GContext_t TGPopupMenu::fgDefaultGC;
-GContext_t TGPopupMenu::fgDefaultSelectedGC;
-GContext_t TGPopupMenu::fgDefaultSelectedBackgroundGC;
+TGGC TGPopupMenu::fgDefaultGC;
+TGGC TGPopupMenu::fgDefaultSelectedGC;
+TGGC TGPopupMenu::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGPopupMenu::fgDefaultFontStruct;
 FontStruct_t TGPopupMenu::fgHilightFontStruct;
 Cursor_t TGPopupMenu::fgDefaultCursor;
@@ -163,47 +163,47 @@ Cursor_t TGMenuBar::fgDefaultCursor;
 Pixmap_t TGScrollBar::fgBckgndPixmap;
 Int_t TGScrollBar::fgScrollBarWidth;
 
-GContext_t TGTab::fgDefaultGC;
+TGGC TGTab::fgDefaultGC;
 FontStruct_t TGTab::fgDefaultFontStruct;
 
-GContext_t TGTextEntry::fgDefaultGC;
-GContext_t TGTextEntry::fgDefaultSelectedGC;
-GContext_t TGTextEntry::fgDefaultSelectedBackgroundGC;
+TGGC TGTextEntry::fgDefaultGC;
+TGGC TGTextEntry::fgDefaultSelectedGC;
+TGGC TGTextEntry::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGTextEntry::fgDefaultFontStruct;
 Cursor_t TGTextEntry::fgDefaultCursor;
 Atom_t TGTextEntry::fgClipboard;
 
 Atom_t TGView::fgClipboard;
-GContext_t TGTextView::fgDefaultGC;
-GContext_t TGTextView::fgDefaultSelectedGC;
-GContext_t TGTextView::fgDefaultSelectedBackgroundGC;
+TGGC TGTextView::fgDefaultGC;
+TGGC TGTextView::fgDefaultSelectedGC;
+TGGC TGTextView::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGTextView::fgDefaultFontStruct;
 
 Cursor_t TGTextEdit::fgDefaultCursor;
 
-GContext_t TGGroupFrame::fgDefaultGC;
+TGGC TGGroupFrame::fgDefaultGC;
 FontStruct_t TGGroupFrame::fgDefaultFontStruct;
 
 ULong_t TGTextLBEntry::fgSelPixel;
-GContext_t TGTextLBEntry::fgDefaultGC;            // this is not shared.
+TGGC TGTextLBEntry::fgDefaultGC;
 FontStruct_t TGTextLBEntry::fgDefaultFontStruct;
 
 Cursor_t TGComboBoxPopup::fgDefaultCursor;
 
-GContext_t TGSelectedPicture::fgSelectedGC;
-GContext_t TGLVContainer::fgLineGC;
-GContext_t TGListView::fgDefaultGC;
+TGGC TGSelectedPicture::fgSelectedGC;
+TGGC TGLVContainer::fgLineGC;
+TGGC TGListView::fgDefaultGC;
 FontStruct_t TGListView::fgDefaultFontStruct;
 
 ULong_t TGLVEntry::fgSelPixel;
-GContext_t TGLVEntry::fgDefaultGC;
+TGGC TGLVEntry::fgDefaultGC;
 FontStruct_t TGLVEntry::fgDefaultFontStruct;
 
 ULong_t TGTreeLBEntry::fgSelPixel;
-GContext_t TGTreeLBEntry::fgDefaultGC;            // this is not shared.
+TGGC TGTreeLBEntry::fgDefaultGC;
 FontStruct_t TGTreeLBEntry::fgDefaultFontStruct;
 
-GContext_t TGStatusBar::fgDefaultGC;
+TGGC TGStatusBar::fgDefaultGC;
 FontStruct_t TGStatusBar::fgDefaultFontStruct;
 
 FontStruct_t TGListTree::fgDefaultFontStruct;
@@ -378,54 +378,56 @@ TGClient::TGClient(const char *dpyName)
    gval.fBackground = fBackColor;
 
    TGFrame::fgBlackPixel = gval.fForeground = fBlack;
-   TGFrame::fgBlackGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGFrame::fgBlackGC.SetAttributes(&gval);
 
    TGFrame::fgWhitePixel = gval.fForeground = fWhite;
-   TGFrame::fgWhiteGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGFrame::fgWhiteGC.SetAttributes(&gval);
 
    gval.fForeground = fHilite;
-   TGFrame::fgHilightGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGFrame::fgHilightGC.SetAttributes(&gval);
 
    gval.fForeground = fShadow;
-   TGFrame::fgShadowGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGFrame::fgShadowGC.SetAttributes(&gval);
 
    gval.fForeground = fBackColor;
-   TGFrame::fgBckgndGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGFrame::fgBckgndGC.SetAttributes(&gval);
 
    gval.fForeground = fForeColor;
+   TGGroupFrame::fgDefaultGC.SetAttributes(&gval);
    TGRadioButton::fgDefaultGC =
    TGCheckButton::fgDefaultGC =
    TGLabel::fgDefaultGC =
    TGTab::fgDefaultGC =
-   TGGroupFrame::fgDefaultGC =
    TGTextEntry::fgDefaultGC =
    TGMenuTitle::fgDefaultGC =
-   TGPopupMenu::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGButton::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGTextLBEntry::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGTreeLBEntry::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGTextView::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGPopupMenu::fgDefaultGC =
+   TGGroupFrame::fgDefaultGC;
+   TGButton::fgDefaultGC.SetAttributes(&gval);
+   TGTextLBEntry::fgDefaultGC.SetAttributes(&gval);
+   TGTreeLBEntry::fgDefaultGC.SetAttributes(&gval);
+   TGTextView::fgDefaultGC.SetAttributes(&gval);
 
    TGFrame::fgDefaultFrameBackground = fBackColor;
    TGFrame::fgDefaultSelectedBackground = gval.fForeground = fSelBackColor;
+   TGPopupMenu::fgDefaultSelectedBackgroundGC.SetAttributes(&gval);
    TGTextEntry::fgDefaultSelectedBackgroundGC =
    TGTextView::fgDefaultSelectedBackgroundGC =
-   TGPopupMenu::fgDefaultSelectedBackgroundGC =
-      gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGPopupMenu::fgDefaultSelectedBackgroundGC;
 
    TGLVEntry::fgSelPixel =
    TGTextLBEntry::fgSelPixel =
    TGTreeLBEntry::fgSelPixel = gval.fForeground = fSelForeColor;
+   TGPopupMenu::fgDefaultSelectedGC.SetAttributes(&gval);
    TGTextEntry::fgDefaultSelectedGC =
    TGMenuTitle::fgDefaultSelectedGC =
-   TGPopupMenu::fgDefaultSelectedGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGTextView::fgDefaultSelectedGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGPopupMenu::fgDefaultSelectedGC;
+   TGTextView::fgDefaultSelectedGC.SetAttributes(&gval);
 
    gval.fFont = gVirtualX->GetFontHandle(TGLVEntry::fgDefaultFontStruct);
    gval.fForeground = fForeColor;
-   TGLVEntry::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGListView::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   TGStatusBar::fgDefaultGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGLVEntry::fgDefaultGC.SetAttributes(&gval);
+   TGListView::fgDefaultGC.SetAttributes(&gval);
+   TGStatusBar::fgDefaultGC.SetAttributes(&gval);
 
    TGComboBoxPopup::fgDefaultCursor =
    TGMenuBar::fgDefaultCursor =
@@ -450,7 +452,7 @@ TGClient::TGClient(const char *dpyName)
    gval.fFillStyle  = kFillTiled;
    gval.fTile       = checkered;
    gval.fGraphicsExposures = kFALSE;
-   TGButton::fgHibckgndGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGButton::fgHibckgndGC.SetAttributes(&gval);
 
    TGRadioButton::fgR1 = gVirtualX->CreateBitmap(fRoot->GetId(),
                              (const char *)r1_bits, r_width, r_height);
@@ -473,9 +475,9 @@ TGClient::TGClient(const char *dpyName)
    gval.fBackground = fBlack;
    gval.fFillStyle = kFillStippled;
    checkered1 = gVirtualX->CreatePixmap(fRoot->GetId(), (const char *)gray_bits,
-                                   gray_width, gray_height, 1, 0, 1);
+                                        gray_width, gray_height, 1, 0, 1);
    gval.fStipple = checkered1;
-   TGSelectedPicture::fgSelectedGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
+   TGSelectedPicture::fgSelectedGC.SetAttributes(&gval);
 
    gval.fMask = kGCForeground | kGCBackground | kGCFunction | kGCFillStyle |
                 kGCLineWidth  | kGCLineStyle  | kGCSubwindowMode |
@@ -488,13 +490,14 @@ TGClient::TGClient(const char *dpyName)
    gval.fFillStyle  = kFillSolid;
    gval.fSubwindowMode = kIncludeInferiors;
    gval.fGraphicsExposures = kFALSE;
-   TGLVContainer::fgLineGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
-   gVirtualX->SetDashes(TGLVContainer::fgLineGC, 0, "\x1\x1", 2);
+   TGLVContainer::fgLineGC.SetAttributes(&gval);
+   TGLVContainer::fgLineGC.SetDashOffset(0);
+   TGLVContainer::fgLineGC.SetDashList("\x1\x1", 2);
 
    gval.fMask = kGCFont;
    gval.fFont = gVirtualX->GetFontHandle(TGTextView::fgDefaultFontStruct);
-   gVirtualX->ChangeGC(TGTextView::fgDefaultGC, &gval);
-   gVirtualX->ChangeGC(TGTextView::fgDefaultSelectedGC, &gval);
+   TGTextView::fgDefaultGC.SetAttributes(&gval);
+   TGTextView::fgDefaultSelectedGC.SetAttributes(&gval);
 
    fWaitForWindow = kNone;
 
@@ -689,29 +692,11 @@ TGClient::~TGClient()
    gVirtualX->DeleteFont(TGLVEntry::fgDefaultFontStruct);
    gVirtualX->DeleteFont(TGTextView::fgDefaultFontStruct);
 
-   gVirtualX->DeleteGC(TGButton::fgDefaultGC);
-   gVirtualX->DeleteGC(TGButton::fgHibckgndGC);
-   gVirtualX->DeleteGC(TGFrame::fgBlackGC);
-   gVirtualX->DeleteGC(TGFrame::fgWhiteGC);
-   gVirtualX->DeleteGC(TGFrame::fgHilightGC);
-   gVirtualX->DeleteGC(TGFrame::fgShadowGC);
-   gVirtualX->DeleteGC(TGFrame::fgBckgndGC);
-   gVirtualX->DeleteGC(TGPopupMenu::fgDefaultGC);
-   gVirtualX->DeleteGC(TGPopupMenu::fgDefaultSelectedGC);
-   gVirtualX->DeleteGC(TGPopupMenu::fgDefaultSelectedBackgroundGC);
-   gVirtualX->DeleteGC(TGTreeLBEntry::fgDefaultGC);
-   gVirtualX->DeleteGC(TGTextLBEntry::fgDefaultGC);
-   gVirtualX->DeleteGC(TGLVEntry::fgDefaultGC);
-   gVirtualX->DeleteGC(TGListView::fgDefaultGC);
-   gVirtualX->DeleteGC(TGStatusBar::fgDefaultGC);
-   gVirtualX->DeleteGC(TGSelectedPicture::fgSelectedGC);
-   gVirtualX->DeleteGC(TGLVContainer::fgLineGC);
-
    gVirtualX->DeletePixmap(checkered);
    gVirtualX->DeletePixmap(checkered1);
 
    gVirtualX->CloseDisplay(); // this should do a cleanup of the remaining
-                         // X allocated objects...
+                              // X allocated objects...
 }
 
 //______________________________________________________________________________

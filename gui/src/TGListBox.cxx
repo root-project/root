@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.2 2000/08/31 14:21:00 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -154,6 +154,14 @@ void TGTextLBEntry::SetText(TGString *new_text)
 
    fClient->NeedRedraw(this);
 }
+
+//______________________________________________________________________________
+FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGTextLBEntry::GetDefaultGC()
+{ return fgDefaultGC; }
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -581,7 +589,7 @@ void TGListBox::InitListBox()
 {
    // initiate the internal classes of a list box
 
-   fVport = new TGViewPort(this, 6, 6, kChildFrame, fgWhitePixel);
+   fVport = new TGViewPort(this, 6, 6, kChildFrame | kOwnBackground, fgWhitePixel);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
    fLbc->Associate(this);
@@ -605,15 +613,15 @@ void TGListBox::DrawBorder()
 
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, fgShadowGC, 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, fgBlackGC, 1, 1, 1, fHeight-3);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, fWidth-2, 0);
+         gVirtualX->DrawLine(fId, fgShadowGC(), 0, 0, 0, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, fWidth-3, 1);
+         gVirtualX->DrawLine(fId, fgBlackGC(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, fgHilightGC, 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, fgHilightGC, fWidth-1, fHeight-1, fWidth-1, 0);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, fgBckgndGC,  fWidth-2, 1, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgHilightGC(), 0, fHeight-1, fWidth-1, fHeight-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), fWidth-1, fHeight-1, fWidth-1, 0);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  1, fHeight-2, fWidth-2, fHeight-2);
+         gVirtualX->DrawLine(fId, fgBckgndGC(),  fWidth-2, 1, fWidth-2, fHeight-2);
          break;
 
       default:

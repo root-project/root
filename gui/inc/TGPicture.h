@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -35,6 +35,9 @@
 #endif
 #ifndef ROOT_TGClient
 #include "TGClient.h"
+#endif
+#ifndef ROOT_TGGC
+#include "TGGC.h"
 #endif
 
 class THashTable;
@@ -89,7 +92,7 @@ friend class TGClient;
 protected:
    const TGClient *fClient;    // client to which selected picture belongs
 
-   static GContext_t fgSelectedGC;
+   static TGGC fgSelectedGC;
 
 public:
    TGSelectedPicture(const TGClient *client, const TGPicture *p);

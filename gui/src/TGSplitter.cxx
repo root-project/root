@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.1 2000/09/07 00:32:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.2 2000/09/07 11:19:01 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -11,24 +11,17 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGSplitter, TGVSplitter, TGHSplitter, TGHorizontal3DLine and         //
-// TGVertical3DLine                                                     //
+// TGSplitter, TGVSplitter and TGHSplitter                              //
 //                                                                      //
 // A splitter allows the frames left and right or above and below of    //
 // it to be resized. The frame to be resized must have the kFixedWidth  //
 // or kFixedHeight property set.                                        //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
-// A vertical 3D line is a line that can be used to separate groups of  //
-// widgets.                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGSplitter.h"
 
 
-ClassImp(TGHorizontal3DLine)
-ClassImp(TGVertical3DLine)
 ClassImp(TGSplitter)
 ClassImp(TGVSplitter)
 ClassImp(TGHSplitter)

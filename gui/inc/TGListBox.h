@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.2 2000/09/11 09:51:36 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -62,7 +62,8 @@ protected:
 
 public:
    TGLBEntry(const TGWindow *p, Int_t id, UInt_t options = kHorizontalFrame,
-             ULong_t back = fgWhitePixel) : TGFrame(p, 10, 10, options, back)
+             ULong_t back = fgWhitePixel) :
+      TGFrame(p, 10, 10, options | kOwnBackground, back)
       { fActive = kFALSE; fEntryId = id; fBkcolor = back; }
 
    virtual void Activate(Bool_t a);
@@ -96,14 +97,14 @@ protected:
    FontStruct_t  fFontStruct;     // font used to draw string
 
    static ULong_t        fgSelPixel;
-   static GContext_t     fgDefaultGC;
+   static TGGC           fgDefaultGC;
    static FontStruct_t   fgDefaultFontStruct;
 
    virtual void DoRedraw();
 
 public:
    TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
-                 GContext_t norm = fgDefaultGC, FontStruct_t font = fgDefaultFontStruct,
+                 GContext_t norm = fgDefaultGC(), FontStruct_t font = fgDefaultFontStruct,
                  UInt_t options = kHorizontalFrame, ULong_t back = fgWhitePixel);
    virtual ~TGTextLBEntry();
 
@@ -112,6 +113,9 @@ public:
    void SetText(TGString *new_text);
    virtual void Update(TGLBEntry *e)
        { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
 };

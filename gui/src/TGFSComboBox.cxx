@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.2 2000/07/01 08:41:58 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -62,6 +62,8 @@ static struct lbc_t gLbc[] = {
 };
 
 
+ClassImp(TGTreeLBEntry)
+ClassImp(TGFSComboBox)
 
 //______________________________________________________________________________
 TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
@@ -175,12 +177,19 @@ void TGTreeLBEntry::Update(TGLBEntry *e)
    fClient->NeedRedraw(this);
 }
 
+//______________________________________________________________________________
+FontStruct_t TGTreeLBEntry::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGTreeLBEntry::GetDefaultGC()
+{ return fgDefaultGC; }
 
 
 //______________________________________________________________________________
 TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                            ULong_t back) :
-   TGComboBox(parent, id, options, back)
+   TGComboBox(parent, id, options | kOwnBackground, back)
 {
    // Create a file system combobox showing system directories.
 

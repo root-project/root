@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.2 2000/09/04 17:53:14 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -138,3 +138,11 @@ void TGLabel::DoRedraw()
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fText->Draw(fId, fNormGC, x, y + max_ascent);
 }
+
+//______________________________________________________________________________
+FontStruct_t TGLabel::GetDefaultFontStruct()
+{ return fgDefaultFontStruct; }
+
+//______________________________________________________________________________
+const TGGC &TGLabel::GetDefaultGC()
+{ return fgDefaultGC; }

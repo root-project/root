@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.2 2000/07/03 18:48:57 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -57,7 +57,8 @@ public:
    TGScrollBarElement(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
               UInt_t options = kRaisedFrame | kDoubleBorder,
               ULong_t back = fgDefaultFrameBackground) :
-      TGFrame(p, w, h, options, back) { fPic = pic; fState = kButtonUp; }
+      TGFrame(p, w, h, options | kOwnBackground, back)
+      { fPic = pic; fState = kButtonUp; }
 
    virtual void SetState(Int_t state);
    virtual void DrawBorder();
@@ -94,7 +95,7 @@ public:
    TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kChildFrame,
                ULong_t back = fgDefaultFrameBackground) :
-      TGFrame(p, w, h, options, back)
+      TGFrame(p, w, h, options | kOwnBackground, back)
             { fMsgWindow = p; fRepeat = 0; SetBackgroundPixmap(fgBckgndPixmap); }
    virtual ~TGScrollBar();
 
