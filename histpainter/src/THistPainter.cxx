@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.104 2002/10/23 11:15:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.105 2002/10/24 16:32:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2698,7 +2698,6 @@ void THistPainter::PaintHist(Option_t *)
       }
       yb = TMath::Max(yb, ymin);
       yb = TMath::Min(yb, ymax);
-
       if (Hoption.Plus) {
 //            compute y1, y2
          y1 = keepy[j-first];
@@ -2983,7 +2982,9 @@ Int_t THistPainter::PaintInit()
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
       ymax = TMath::Max(ymax,c1);
-      ymin = TMath::Min(ymin,c1);
+      if (Hoption.Logy) {
+          if ( c1 > 0) ymin = TMath::Min(ymin,c1);
+       } else          ymin = TMath::Min(ymin,c1);
       if (Hoption.Error) {
          e1 = fH->GetBinError(i);
          ymax = TMath::Max(ymax,c1+e1);
