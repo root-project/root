@@ -49,6 +49,10 @@ public:
 void Spy::DoButton()
 {
    // Ask for histogram...
+
+   if (!fSock->IsValid())
+      return;
+
    TGButton *btn = (TGButton *) gTQSender;
    switch (btn->WidgetId()) {
       case 1:
@@ -62,7 +66,10 @@ void Spy::DoButton()
          break;
    }
    TMessage *mess;
-   fSock->Recv(mess);
+   if (fSock->Recv(mess) <= 0) {
+      Error("Spy::DoButton", "error receiving message");
+      return;
+   }
 
    if (fHist) delete fHist;
    if (mess->GetClass()->InheritsFrom(TH1::Class())) {
