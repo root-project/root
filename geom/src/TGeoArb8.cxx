@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.19 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.20 2003/02/11 08:48:21 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -145,7 +145,7 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 TGeoArb8::~TGeoArb8()
 {
 // destructor
-   if (fTwist) delete fTwist;
+   if (fTwist) delete [] fTwist;
 }
 //-----------------------------------------------------------------------------
 void TGeoArb8::ComputeBBox()
@@ -197,7 +197,7 @@ void TGeoArb8::ComputeTwist()
       twisted = kTRUE;
    }
    if (!twisted) return;
-   if (fTwist) delete fTwist;
+   if (fTwist) delete [] fTwist;
    fTwist = new Double_t[4];
    memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.14 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.15 2003/01/27 18:04:47 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -121,8 +121,8 @@ TGeoNodeCache::~TGeoNodeCache()
 // dtor
    if (fCache) {
       DeleteCaches();
-      delete fBranch;
-      delete fMatrices;
+      delete [] fBranch;
+      delete [] fMatrices;
       delete fGlobalMatrix;
       delete fMatrixPool;
    }
@@ -709,14 +709,14 @@ void TGeoNodeArray::Compact()
    Int_t *old_array = fArray;
    fArray = new Int_t[new_size*fNodeSize];
    memcpy(fArray, old_array, new_size*fNodeSize*sizeof(Int_t));
-   delete old_array;
+   delete [] old_array;
    fSize = new_size;
 }
 
 //_____________________________________________________________________________
 void TGeoNodeArray::DeleteArray()
 {
-   if (fArray) delete fArray;
+   if (fArray) delete [] fArray;
    fArray = 0;
    if (fBitsArray) delete fBitsArray;
    fBitsArray = 0;
@@ -824,7 +824,7 @@ void TGeoNodeArray::IncreaseArray()
    memset(new_array, 0, new_size*fNodeSize*sizeof(Int_t));
    memcpy(new_array, fArray, fSize*fNodeSize*sizeof(Int_t));
 //   printf("array %i fSize=%i newsize=%i\n", fNdaughters, fSize, new_size);
-   delete fArray;
+   delete [] fArray;
    fArray = new_array;
    gGeoManager->GetCache()->IncreasePool(new_size-fSize);
    fSize = new_size;
