@@ -408,7 +408,9 @@ distclean:: clean
 	-@mv -f include/config.h include/config.hh
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	-@mv -f include/config.hh include/config.h
-	@rm -f bin/*.dll bin/*.exp bin/*.lib lib/*.def lib/*.exp lib/*.lib .def
+	@rm -f bin/*.dll bin/*.exp bin/*.lib \
+               lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
+               .def
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
@@ -476,7 +478,15 @@ install:
 	   for lib in $(ALLLIBS) $(CINTLIB); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
-	      $(INSTALL) $$lib*                 $(DESTDIR)$(LIBDIR); \
+	      if [ x"$(ARCH)" = x"win32gcc" ]; then \
+		bindll=`echo $$lib | sed 's,lib,bin,'`; \
+		baselib=`basename $$lib`; \
+		$(INSTALL) $$bindll $(DESTDIR)$(BINDIR); \
+		ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib ; \
+		ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib.$$vers ; \
+	      else \
+	        $(INSTALL) $$lib*                 $(DESTDIR)$(LIBDIR); \
+	      fi; \
 	   done ; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
