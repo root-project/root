@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.11 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -206,7 +206,7 @@ void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
    if (fBorderSize != 3) {
       out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<endl;
    }
-   SaveFillAttributes(out,"pl",0,1001);
+   SaveFillAttributes(out,"pl",19,1001);
    SaveLineAttributes(out,"pl",1,1,1);
    SaveTextAttributes(out,"pl",22,0,1,62,0);
 
