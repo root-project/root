@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.6 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.7 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -289,6 +289,10 @@ void TArrow::SavePrimitive(ofstream &out, Option_t *)
 
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
-
+   
+   if (fAngle !=60) {
+       out << "   arrow->SetAngle(" << GetAngle() << ");" << endl;
+   }
+    
    out<<"   arrow->Draw();"<<endl;
 }
