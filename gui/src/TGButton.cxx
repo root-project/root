@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.4 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -76,7 +76,8 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fMsgWindow   = p;
    fUserData    = 0;
    fTip         = 0;
-
+   fGroup       = 0;
+   
    fNormGC   = norm;
    fState    = kButtonUp;
    fStayDown = kFALSE;
