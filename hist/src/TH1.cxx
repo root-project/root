@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.207 2004/10/13 10:04:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.208 2004/10/22 14:53:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -141,9 +141,14 @@
 //        bin = nbins+1; overflow bin
 //      In case of 2-D or 3-D histograms, a "global bin" number is defined.
 //      For example, assuming a 3-D histogram with binx,biny,binz, the function
-//        Int_t bin = h->GetBin(binx,biny,binz);
-//      returns a global/linearized bin number. This global bin is useful
-//      to access the bin information independently of the dimension.
+//        Int_t gbin = h->GetBin(binx,biny,binz);
+//      returns a global/linearized gbin number. This global gbin is useful
+//      to access the bin content/error information independently of the dimension.
+//      Note that to access the information other than bin content and errors
+//      one should use the TAxis object directly with eg:
+//         Double_t xcenter = h3->GetZaxis()->GetBinCenter(27);
+//       returns the center along z of bin number 27 (not the global bin)
+//       in the 3-d histogram h3.
 //
 //     Alphanumeric Bin Labels
 //     =======================
