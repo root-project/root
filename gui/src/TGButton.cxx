@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.39 2004/09/12 10:43:49 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.40 2004/09/12 10:55:26 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -332,9 +332,8 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, Int_t id,
 {
    // Create a text button widget.
 
-   fLabel = new TGHotString(s);
+   fLabel = new TGHotString(!p && !s ? GetName() : s);
    fFontStruct = font;
-   if (!p && !s) fLabel->SetString(GetName());
 
    Init();
 }
