@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.32 2001/02/21 07:43:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.33 2001/03/05 10:06:43 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -98,89 +98,90 @@ void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, v
 
 //______________________________________________________________________________
 class TAutoInspector : public TMemberInspector {
-//
 
 public:
-TAutoInspector(TBrowser *b){fBrowser=b;fCount=0;};
-virtual ~TAutoInspector(){};
-virtual void Inspect(TClass* cl, const char* parent, const char* name, void* addr);
+   Int_t     fCount;
+   TBrowser *fBrowser;
 
-  Int_t     fCount;
-  TBrowser *fBrowser;
-};      
+   TAutoInspector(TBrowser *b) { fBrowser = b; fCount = 0; }
+   virtual ~TAutoInspector() { }
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
+};
 
 //______________________________________________________________________________
-void TAutoInspector::Inspect(TClass* cl, const char* tit , const char* name, void* addr)
+void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
+                             void *addr)
 {
-  if(tit && strchr(tit,'.'))    return ;
-  if (fCount && !fBrowser) return;
+   // This method is called from ShowMembers() via AutoBrowse().
 
-  TString ts;
+   if(tit && strchr(tit,'.'))    return ;
+   if (fCount && !fBrowser) return;
 
-  if (!cl) return;
-//  if (*(cl->GetName()) == 'T') return;
-  if (*name == '*') name++;
-  int ln = strcspn(name,"[ ");
-  TString iname(name,ln);
-  
-  G__ClassInfo *classInfo = cl->GetClassInfo();         
-  if (!classInfo)               return;
-  //G__ClassInfo &clinfo = *classInfo;
+   TString ts;
 
+   if (!cl) return;
+   //if (*(cl->GetName()) == 'T') return;
+   if (*name == '*') name++;
+   int ln = strcspn(name,"[ ");
+   TString iname(name,ln);
 
-//              Browse data members
-  G__DataMemberInfo m(*classInfo);
-  TString mname;
+   G__ClassInfo *classInfo = cl->GetClassInfo();
+   if (!classInfo)               return;
+   //G__ClassInfo &clinfo = *classInfo;
 
-  int found=0;
-  while (m.Next()) {    // MemberLoop
-     mname = m.Name();
-     mname.ReplaceAll("*","");
-     if ((found = (iname==mname))) break;
-  }     
-  assert(found);
+   //              Browse data members
+   G__DataMemberInfo m(*classInfo);
+   TString mname;
 
-  // we skip: non TObjects
-  //  - the member G__virtualinfo inserted by the CINT RTTI system
+   int found=0;
+   while (m.Next()) {    // MemberLoop
+      mname = m.Name();
+      mname.ReplaceAll("*","");
+      if ((found = (iname==mname))) break;
+   }
+   assert(found);
 
-  long prop = m.Property() | m.Type()->Property();
-  if (prop & G__BIT_ISSTATIC)   return;
-  if (prop & G__BIT_ISFUNDAMENTAL)      return;
-  if (prop & G__BIT_ISENUM)             return;
-  if (strcmp(m.Type()->Fullname(),"TObject") && !m.Type()->IsBase("TObject"))
-                                        return;
-  if (mname == "G__virtualinfo")        return;
+   // we skip: non TObjects
+   //  - the member G__virtualinfo inserted by the CINT RTTI system
 
-  int  size = sizeof(void*);
-  if (!(prop&G__BIT_ISPOINTER)) size = m.Type()->Size(); 
+   long prop = m.Property() | m.Type()->Property();
+   if (prop & G__BIT_ISSTATIC)   return;
+   if (prop & G__BIT_ISFUNDAMENTAL)      return;
+   if (prop & G__BIT_ISENUM)             return;
+   if (strcmp(m.Type()->Fullname(),"TObject") && !m.Type()->IsBase("TObject"))
+                                         return;
+   if (mname == "G__virtualinfo")        return;
 
-  int nmax = 1;
-  if (prop & G__BIT_ISARRAY) {
-    for (int dim = 0; dim < m.ArrayDim(); dim++) nmax *= m.MaxIndex(dim);
-  }
+   int  size = sizeof(void*);
+   if (!(prop&G__BIT_ISPOINTER)) size = m.Type()->Size();
 
-  for(int i=0; i<nmax; i++) {
-    char *ptr = (char*)addr + i*size;
-    TObject *obj = (prop&G__BIT_ISPOINTER) ? *((TObject**)ptr) : (TObject*)ptr;
-    if (!obj)           continue;
-    fCount++;
-    if (!fBrowser)      return;
-    const char *bwname = obj->GetName();
-    if (!bwname[0] || strcmp(bwname,obj->ClassName())==0) {
-      bwname = name;
-      int l = strcspn(bwname,"[ ");
-      if (bwname[l]=='[') {
-         char cbuf[12]; sprintf(cbuf,"[%02d]",i);
-         ts.Replace(0,999,bwname,l);
-         ts += cbuf;
-         bwname = (const char*)ts;
+   int nmax = 1;
+   if (prop & G__BIT_ISARRAY) {
+      for (int dim = 0; dim < m.ArrayDim(); dim++) nmax *= m.MaxIndex(dim);
+   }
+
+   for(int i=0; i<nmax; i++) {
+      char *ptr = (char*)addr + i*size;
+      TObject *obj = (prop&G__BIT_ISPOINTER) ? *((TObject**)ptr) : (TObject*)ptr;
+      if (!obj)           continue;
+      fCount++;
+      if (!fBrowser)      return;
+      const char *bwname = obj->GetName();
+      if (!bwname[0] || strcmp(bwname,obj->ClassName())==0) {
+         bwname = name;
+         int l = strcspn(bwname,"[ ");
+         if (bwname[l]=='[') {
+            char cbuf[12]; sprintf(cbuf,"[%02d]",i);
+            ts.Replace(0,999,bwname,l);
+            ts += cbuf;
+            bwname = (const char*)ts;
+         }
       }
-    }  
-   
-    fBrowser->Add(obj,bwname);
-  }
 
-}    
+      fBrowser->Add(obj,bwname);
+   }
+}
+
 
 ClassImp(TClass)
 
@@ -347,23 +348,22 @@ TClass::~TClass()
 //______________________________________________________________________________
 Int_t TClass::AutoBrowse(TObject *obj, TBrowser *b)
 {
-//  static function
-//  Browse external object inherited from TObject
-//  It passes through inheritance tree and calls TBrowser::Add
-//  in appropriate cases
-      
-  if(!obj)      return 0;
-  char cbuf[1000]; *cbuf=0;
+   // Browse external object inherited from TObject.
+   // It passes through inheritance tree and calls TBrowser::Add
+   // in appropriate cases. Static function.
 
-  TAutoInspector insp(b);
-  ((TObject*)obj)->ShowMembers(insp,cbuf);
-  return insp.fCount;
+   if(!obj)      return 0;
+   char cbuf[1000]; *cbuf=0;
+
+   TAutoInspector insp(b);
+   obj->ShowMembers(insp,cbuf);
+   return insp.fCount;
 }
- 
+
 //______________________________________________________________________________
 void TClass::Browse(TBrowser *b)
 {
-  // This method is called by a browser to get the class information.
+   // This method is called by a browser to get the class information.
 
    if (!fClassInfo) return;
 
