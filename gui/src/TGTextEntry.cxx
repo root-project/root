@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.9 2001/08/15 11:43:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.10 2001/08/21 17:33:18 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1504,13 +1504,13 @@ void TGTextEntry::UpdateOffset()
 
    TString dt = GetDisplayText();
    Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data() , dt.Length());
-   Int_t w = GetWidth();
-   Int_t offset = IsFrameDrawn() ? 6 : 0;
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
+   Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
    if (textWidth > w) {                          // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
-   else if (fAlignment == kTextRight)   fOffset = w - textWidth - offset;
+   else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
    else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
    else if (fAlignment == kTextLeft)    fOffset = 0;
 }
