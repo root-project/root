@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.160 2004/01/30 18:30:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.161 2004/02/07 21:19:40 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4681,7 +4681,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    fLego->TAttFill::Modify();
 
    // Paint the Back Box if needed
-   if (Hoption.BackBox) {
+   if (Hoption.BackBox && !Hoption.Same) {
       fLego->InitMoveScreen(-1.1,1.1);
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
