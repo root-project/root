@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.65 2004/12/10 12:54:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.66 2004/12/15 09:27:48 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1214,7 +1214,10 @@ void TRootCanvas::PrintCanvas()
       if (sprinter == "")
          pname = kFALSE;
 
-      TString fn = gSystem->ConcatFileName(gSystem->TempDirectory(), "rootprintFile01.pdf");
+      TString fn = "rootprint";
+      FILE *f = gSystem->TempFileName(fn, gEnv->GetValue("Print.Directory", gSystem->TempDirectory()));
+      fclose(f);
+      fn += ".pdf";
       fCanvas->Print(fn);
 
       TString cmd = sprintCmd;
