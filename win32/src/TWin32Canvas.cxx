@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.2 2001/03/14 21:43:06 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.3 2001/03/15 07:12:26 brun Exp $
 // Author: Valery Fine   05/01/96
 
 #include "TWin32Canvas.h"
@@ -452,11 +452,8 @@ void TWin32Canvas::SaveAsCB(TWin32Canvas *obj, TVirtualMenuItem *item)
       Int_t lExts = 0;
       for (i=0;i<lFilter;i++) if (!filter[i]) lExts++;
 
-        // NOTE: The next operations do nothing.
-        // This is odd ...
-      lExts >> 1;
       // create extensions
-      extensions = new const Char_t *[lExts];
+      extensions = new const Char_t *[lExts/2];
       lFilter--;
       Int_t s = 1;
       lExts = 0;
