@@ -88,7 +88,8 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
    fYmin = y[0];
    fYmax = y[0];
 
-   for (Int_t N=0; N<fNp; N++) {
+   Int_t N;
+   for (N=0; N<fNp; N++) {
       fX[N+1] = x[N];
       fY[N+1] = y[N];
       fZ[N+1] = z[N];
@@ -113,7 +114,7 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
    fYmax = (fYmax+fYoffset)*fScaleFactor;
    fYmin = (fYmin+fYoffset)*fScaleFactor;
 
-   for (Int_t N=1; N<=fNp; N++) {
+   for (N=1; N<=fNp; N++) {
       fX[N] = (fX[N]+fXoffset)*fScaleFactor;
       fY[N] = (fY[N]+fYoffset)*fScaleFactor;
    }
