@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
 
    void       Adopt(Int_t n, Double_t *array);
    void       AddAt(Double_t c, Int_t i);
-   Double_t   At(Int_t i);
+   Double_t   At(Int_t i) const ;
    void       Copy(TArrayD &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Double_t  *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
@@ -52,7 +52,7 @@ public:
    ClassDef(TArrayD,1)  //Array of doubles
 };
 
-inline Double_t TArrayD::At(Int_t i)
+inline Double_t TArrayD::At(Int_t i) const
 {
    if (!BoundsOk("TArrayD::At", i))
       i = 0;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayS.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
 
    void       Adopt(Int_t n, Short_t *array);
    void       AddAt(Short_t c, Int_t idx);
-   Short_t    At(Int_t i);
+   Short_t    At(Int_t i) const ;
    void       Copy(TArrayS &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Short_t   *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
@@ -52,7 +52,7 @@ public:
    ClassDef(TArrayS,1)  //Array of shorts
 };
 
-inline Short_t TArrayS::At(Int_t i)
+inline Short_t TArrayS::At(Int_t i) const
 {
    if (!BoundsOk("TArrayS::At", i))
       i = 0;
