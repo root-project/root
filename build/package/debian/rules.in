@@ -2,7 +2,7 @@
 # 
 # GNU copyright 1997 by Joey Hess.
 #
-# $Id: rules.in,v 1.5 2003/02/24 11:32:27 rdm Exp $
+# $Id: rules.in,v 1.6 2003/08/19 09:56:56 rdm Exp $
 #
 # Rules file for ROOT packages for Debian GNU/Linux 
 #
@@ -64,8 +64,8 @@ build-stamp:
 		--with-sys-iconpath=/usr/share/pixmaps		\
 		--fontdir=/usr/share/fonts/truetype
 
-	$(MAKE) -j2
-	$(MAKE) -j2 cintddls
+	$(MAKE)
+	$(MAKE) cintdlls
 	#
 	# If you have access to the CVS repository, you may want to 
 	# uncomment the next line to make an upstream changelog
@@ -260,6 +260,10 @@ binary: binary-indep binary-arch
 
 #
 # $Log: rules.in,v $
+# Revision 1.6  2003/08/19 09:56:56  rdm
+# some corrections in package build files and install and readme notes. By
+# Christian Holm and Denis Stepanov.
+#
 # Revision 1.5  2003/02/24 11:32:27  rdm
 # change --with-ttf-fontdir to --fontdir.
 #
