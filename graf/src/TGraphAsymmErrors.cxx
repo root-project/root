@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.9 2001/04/06 07:16:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.10 2001/06/24 17:04:38 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -228,6 +228,10 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    //
    // By default, error bars are drawn. If option "X" is specified,
    // the errors are not drawn (TGraph::Paint equivalent).
+   //
+   // if option "[]" is specified only the end vertical/horizonthal lines
+   // of the error bars are drawn. This option is interesting to superimpose
+   // systematic errors on top of a graph with statistical errors.
 
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize;
@@ -236,14 +240,19 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
    if (strchr(option,'X')) {TGraph::Paint(option); return;}
-   gPad->SetBit(kClipFrame);
-   if (strchr(option,'X')) return;
+   Bool_t brackets = kFALSE;
+   if (strstr(option,"[]")) brackets = kTRUE;
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
    const char *arrowOpt = 0;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
+
+   Bool_t axis = kFALSE;
+   if (strchr(option,'a')) axis = kTRUE;
+   if (strchr(option,'A')) axis = kTRUE;
+   if (axis) TGraph::Paint(option);
 
    TAttLine::Modify();
 
@@ -282,8 +291,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
          if (arrowOpt) {
             arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
          } else {
-            gPad->PaintLine(xl1,y,xl2,y);
-            if (endLines) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+            if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
+            if (endLines)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
          }
       }
       xr1 = x + s2x*cx;
@@ -292,8 +301,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
          if (arrowOpt) {
             arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
-            gPad->PaintLine(xr1,y,xr2,y);
-            if (endLines) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+            if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
+            if (endLines)  gPad->PaintLine(xr2,y-ty,xr2,y+ty);
          }
       }
       yup1 = y + s2y*cy;
@@ -303,8 +312,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
          if (arrowOpt) {
             arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
          } else {
-            gPad->PaintLine(x,yup1,x,yup2);
-            if (endLines) gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+            if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
+            if (endLines)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
          }
       }
       ylow1 = y - s2y*cy;
@@ -314,12 +323,12 @@ void TGraphAsymmErrors::Paint(Option_t *option)
          if (arrowOpt) {
             arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
          } else {
-            gPad->PaintLine(x,ylow1,x,ylow2);
-            if (endLines) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+            if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
+            if (endLines)  gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
          }
       }
    }
-   TGraph::Paint(option);
+   if (!brackets && !axis) TGraph::Paint(option);
    gPad->ResetBit(kClipFrame);
 }
 
