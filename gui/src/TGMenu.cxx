@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.23 2003/12/09 17:33:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.24 2003/12/11 16:26:11 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -436,7 +436,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fHifontStruct  = GetHilightFontStruct();
    fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
 
-   // We need to change the default context to actually use the 
+   // We need to change the default context to actually use the
    // Menu Fonts.  [Are we actually changing the global settings?]
    GCValues_t    gcval;
    gcval.fMask = kGCFont;
@@ -1509,11 +1509,11 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
    out << "   TGPopupMenu *";
    out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
-   
+
    Bool_t hasradio = kFALSE;
    Int_t r_first, r_last, r_active;
    r_active = r_first = r_last = -1;
-   
+
    TGMenuEntry *mentry;
    TIter next(GetListOfEntries());
 
@@ -1538,27 +1538,17 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-#ifdef R__WIN32
-            if (strchr(outext,'\\')) {
-               TString name = TString(outext);
-               name.ReplaceAll('\\','/');
-               text = name.Data();
-               out << "   " << GetName() << "->AddEntry(" << quote
-                   << text << quote << "," << mentry->GetEntryId();
-            } else {
-               out << "   " << GetName() << "->AddEntry(" << quote
-                   << outext << quote << "," << mentry->GetEntryId();
-            }
-#else
+
             out << "   " << GetName() << "->AddEntry(" << quote
-                << outext << quote << "," << mentry->GetEntryId();
-#endif
+                << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
+                << quote << "," << mentry->GetEntryId();
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
             if (mentry->fPic) {
                out << ",gClient->GetPicture(" << quote
-                   << mentry->fPic->GetName() << quote << ")";
+                   << gSystem->ExpandPathName(gSystem->UnixPathName(mentry->fPic->GetName()))
+                   << quote << ")";
             }
             out << ");" << endl;
             delete [] outext;
@@ -1581,22 +1571,10 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
-#ifdef R__WIN32
-            if (strchr(outext,'\\')) {
-               TString name = TString(outext);
-               name.ReplaceAll('\\','/');
-               text = name.Data();
-               out << "   " << GetName() << "->AddPopup(" << quote
-                   << text << quote << "," << mentry->fPopup->GetName();
-            } else {
-               out << "   " << GetName() << "->AddPopup(" << quote
-                   << outext << quote << "," << mentry->fPopup->GetName();
-            }
-#else			
+
             out << "   " << GetName() << "->AddPopup(" << quote
-                << outext << quote << "," << mentry->fPopup->GetName();
-#endif
-            out << ");" << endl;
+                << outext << quote << "," << mentry->fPopup->GetName()
+                << ");" << endl;
             delete [] outext;
             break;
          case kMenuLabel:
@@ -1645,10 +1623,10 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
       } else if (hasradio) {
          out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
              << "," << r_last << ");" << endl;
-         hasradio = kFALSE; 
+         hasradio = kFALSE;
          r_active = r_first = r_last = -1;
-      }	      
-   }  
+      }
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.19 2003/11/10 15:44:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.20 2003/12/10 14:23:50 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TGButtonGroup.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
+#include "TSystem.h"
 
 
 const TGGC *TGButton::fgHibckgndGC = 0;
@@ -358,7 +359,7 @@ TGTextButton::~TGTextButton()
 void TGTextButton::SetText(TGHotString *new_label)
 {
    // Set new button text.
-   
+
    int hotchar;
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
@@ -378,7 +379,7 @@ void TGTextButton::SetText(TGHotString *new_label)
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-   
+
    fClient->NeedRedraw(this);
 }
 
@@ -1264,16 +1265,10 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote = '"';
    const char *picname = fPic->GetName();
-#ifdef R__WIN32
-   if (strchr(picname,'\\')) {
-      TString pname = TString(picname);
-      pname.ReplaceAll('\\','/');
-      picname = pname.Data();
-   }
-#endif
    out <<"   TGPictureButton *";
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote << picname << quote << ")";
+       << ",gClient->GetPicture(" << quote
+       << gSystem->ExpandPathName(gSystem->UnixPathName(picname)) << quote << ")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
@@ -1286,7 +1281,8 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
          out << "," << fWidgetId << "," << ParGC << ");" << endl;
       }
    } else {
-      out << "," << fWidgetId << "," << ParGC << "," << GetOptionString() << ");" << endl;
+      out << "," << fWidgetId << "," << ParGC << "," << GetOptionString()
+          << ");" << endl;
    }
 
    TGButton::SavePrimitive(out,option);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.7 2003/12/09 09:06:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.8 2003/12/10 14:23:50 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -84,35 +84,13 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
       return;
    }
 
-   char name[kMAXPATHLEN];
-   int len = 0;
-   const char *picname, *rootname, *pos;
-
-   rootname = gSystem->Getenv("ROOTSYS");
-#ifdef R__WIN32
-   TString dirname = TString(rootname);
-   dirname.ReplaceAll('\\','/');
-   rootname = dirname.Data();
-#endif
-   len = strlen(rootname);
-   picname = fPic->GetName();
-#ifdef R__WIN32
-   TString pname = TString(picname);
-   pname.ReplaceAll('\\','/');
-   picname = pname.Data();
-#endif
-   pos = strstr(picname, rootname);
+   const char *picname = fPic->GetName();
 
    out <<"   TGIcon *";
    out << GetName() << " = new TGIcon(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote;
-   if (pos) {
-      sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path
-      out << name;
-   } else {
-	  out << picname;                      // if no path
-   }
-   out << quote << ")" << "," << GetWidth() << "," << GetHeight();
+       << ",gClient->GetPicture(" << quote
+	      << gSystem->ExpandPathName(gSystem->UnixPathName(picname))                       // if no path
+       << quote << ")" << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.28 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.29 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1797,6 +1797,7 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+
    out << "   " << GetName() << "->AddItem(0," << quote
        << GetFirstItem()->GetText() << quote << ");" << endl;
 }
