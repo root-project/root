@@ -469,6 +469,7 @@ endif
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
+.PHONY:    Aclock Hello Tetris
 
 all:            $(PROGRAMS)
 
@@ -548,6 +549,7 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
@@ -567,6 +569,7 @@ endif
 endif
 endif
 
+Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
@@ -586,6 +589,7 @@ endif
 endif
 endif
 
+Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
