@@ -91,7 +91,7 @@ void MyDetector::Init()
     fCalorimeter     = new TGeoMedium("CALOR", 5, fNaI);
     fScintillator[3] = new TGeoMedium("SCINT3",6, fPolystyrene);
     
-    TGeoMaterial *fMat = new TGeoMaterial("VOID",0,0,0);
+    TGeoMaterial *fMat = new TGeoMaterial("VOID");
     TGeoMedium *fMed = new TGeoMedium("MED",0,fMat);
     fVolume[0] = gGeoManager->MakeBox("TOP",fMed,40,42,40);
     fVolume[0]->SetVisibility(kFALSE);
