@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.80 2002/01/10 20:19:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.81 2002/01/10 21:09:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3295,6 +3295,14 @@ char *TTreeFormula::PrintValue(Int_t mode) const
       }
    }
    return &value[0];
+}
+
+//______________________________________________________________________________
+void TTreeFormula::SetAxis(TAxis *axis)
+{
+   if (!axis) {fAxis = 0; return;}
+   if (TestBit(kIsCharacter)) fAxis = axis;
+   if (IsInteger()) axis->SetBit(TAxis::kIsInteger);
 }
 
 //______________________________________________________________________________
