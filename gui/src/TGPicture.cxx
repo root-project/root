@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.5 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.6 2004/02/18 16:17:33 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -137,7 +137,12 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return 0;
    }
 
-#ifndef GDK_WIN32
+#ifdef GDK_WIN32
+   Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
+                                                  picnam, pic->fPic, pic->fMask,
+                                                  pic->fAttributes);
+   delete [] picnam;
+#else
    char **data;
    if (!gVirtualX->ReadPictureDataFromFile(picnam, &data)) {
       delete pic;
@@ -202,11 +207,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    }
 
    gVirtualX->DeletePictureData(data);
-#else
-   Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
-                                                  picnam, pic->fPic, pic->fMask,
-                                                  pic->fAttributes);
-   delete [] picnam;
 #endif
 
    if (!retc) {
