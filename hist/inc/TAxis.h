@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -48,7 +48,9 @@ private:
 
 public:
         // TAxis status bits
-        enum { kAxisRange = BIT(11), kCenterTitle = BIT(12) };
+        enum { kAxisRange   = BIT(11), 
+               kCenterTitle = BIT(12),
+               kRotateTitle = BIT(13) };
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -80,6 +82,7 @@ public:
                  Int_t  GetLast();
                 Axis_t  GetXmin() const {return fXmin;}
                 Axis_t  GetXmax() const {return fXmax;}
+        virtual void    RotateTitle(Bool_t rotate=kTRUE); // *MENU*
         virtual void    Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
         virtual void    Set(Int_t nbins, Axis_t *xbins);
         virtual void    SetBinLabel(Int_t bin, char *label);
