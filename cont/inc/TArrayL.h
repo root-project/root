@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
 
    void       Adopt(Int_t n, Long_t *array);
    void       AddAt(Long_t c, Int_t i);
-   Long_t     At(Int_t i);
+   Long_t     At(Int_t i) const;
    void       Copy(TArrayL &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
    Long_t    *GetArray() const { return fArray; }
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
@@ -52,7 +52,7 @@ public:
    ClassDef(TArrayL,1)  //Array of longs
 };
 
-inline Long_t TArrayL::At(Int_t i)
+inline Long_t TArrayL::At(Int_t i) const
 {
    if (!BoundsOk("TArrayL::At", i))
       i = 0;
