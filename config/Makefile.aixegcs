@@ -31,7 +31,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -lld -lg++
-XLIBS         = -lXpm -lX11 -L/share/lib
+XLIBS         = $(XPMLIB) -lX11 -L/share/lib
 CILIBS        = -lm -L../lib -lCint -lbsd -lcurses -lld
 
 # Fortran:
