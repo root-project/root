@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TGClient.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
-
+#include "TStyle.h"
 
 ClassImp(TGedFrame)
 ClassImp(TAxisEditor)
@@ -57,7 +57,8 @@ enum {
    kAXIS_LBLLOG,
    kAXIS_LBLEXP,
    kAXIS_LBLDIR,
-   kAXIS_LBLSORT
+   kAXIS_LBLSORT,
+   kAXIS_LBLDEC
 };
 
 
@@ -204,7 +205,11 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    fLabelFont->Resize(137, 20);
    AddFrame(fLabelFont, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 0));
    fLabelFont->Associate(this);
-   
+
+   fDecimal = new TGCheckButton(this, "Decimal labels' part", kAXIS_LBLDEC);
+   fDecimal->SetToolTipText("Draw the decimal part of labels");
+   AddFrame(fDecimal, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 3, 0));
+
    MapSubwindows();
    Layout();
    MapWindow();
@@ -255,6 +260,7 @@ void TAxisEditor::ConnectSignals2Slots()
    fLabelColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoLabelColor(Pixel_t)");
    fLabelSize->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoLabelSize()");
    fNoExponent->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoNoExponent()");
+   fDecimal->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoDecimal(Bool_t)");
    fLabelOffset->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoLabelOffset()");
    fLabelFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoLabelFont(Int_t)"); 
    fInit = kFALSE;
@@ -357,6 +363,10 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    if (noexp) fNoExponent->SetState(kButtonDown);
    else       fNoExponent->SetState(kButtonUp);
 
+   Bool_t on = fAxis->GetDecimals();
+   if (on) fDecimal->SetState(kButtonDown);
+   else    fDecimal->SetState(kButtonUp);
+   
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -564,3 +574,16 @@ void TAxisEditor::DoNoExponent()
    fAxis->SetNoExponent(exp);
    Update();
 }
+
+//______________________________________________________________________________
+void TAxisEditor::DoDecimal(Bool_t on)
+{
+   // Slot connected to the decimal part setting.
+
+   fAxis->SetDecimals(on);
+   gStyle->SetStripDecimals(!on);
+   Update();
+   gPad->Modified();
+   gPad->Update();
+}
+

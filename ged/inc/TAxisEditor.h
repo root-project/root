@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -67,6 +67,7 @@ protected:
    TGNumberEntry       *fLabelSize;    // label size number entry
    TGNumberEntry       *fLabelOffset;  // label offset number entry
    TGCheckButton       *fNoExponent;   // check box for No exponent choice
+   TGCheckButton       *fDecimal;      // decimal part check box    
 
    virtual void ConnectSignals2Slots();
 
@@ -98,6 +99,7 @@ public:
    virtual void   DoLabelFont(Int_t font);
    virtual void   DoLabelOffset();
    virtual void   DoNoExponent();
+   virtual void   DoDecimal(Bool_t on);
 
    ClassDef(TAxisEditor,0)  // axis editor
 };
