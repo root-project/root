@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.28 2004/10/06 06:40:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.29 2004/11/29 22:13:17 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1162,7 +1162,9 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
       SetBit(kGeoTranslation);
       const Double_t *trans = tr.GetTranslation();
       memcpy(fTranslation, trans, kN3);
-   }
+   } else {
+      for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
+   }   
    if (rot.IsRotation()) {
       SetBit(kGeoRotation);   
       fRotation = new TGeoRotation(rot);
