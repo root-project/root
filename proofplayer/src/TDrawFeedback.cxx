@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.2 2004/07/09 01:34:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.3 2004/11/24 07:41:32 brun Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -98,11 +98,11 @@ void TDrawFeedback::Feedback(TList *objs)
             (gROOT->GetMakeDefCanvas())();
             gPad->SetName(name);
             ((TH1*)o)->DrawCopy();
-            Info("Feedback","Created canvas %s", name.Data());
+            if (gDebug > 0) Info("Feedback","Created canvas %s", name.Data());
          } else {
             p->cd();
             ((TH1*)o)->DrawCopy();
-            Info("Feedback","Used canvas %s", name.Data());
+            if (gDebug > 1) Info("Feedback","Used canvas %s", name.Data());
          }
          gPad->Update();
       }
