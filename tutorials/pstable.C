@@ -42,10 +42,10 @@ void pstable()
    table(0.5,0.5*xrange-0.5,yrange,t,symbol1,0);
    table(0.5*xrange+0.5,xrange-0.5,yrange,t,symbol2,0);
    TText *tlabel = new TText(0,0,"a");
-   tlabel.SetTextFont(72);
-   tlabel.SetTextSize(0.018);
-   tlabel.SetTextAlign(22);
-   tlabel.DrawText(0.5*xrange,1.3,"Input characters are standard keyboard characters");
+   tlabel->SetTextFont(72);
+   tlabel->SetTextSize(0.018);
+   tlabel->SetTextAlign(22);
+   tlabel->DrawText(0.5*xrange,1.3,"Input characters are standard keyboard characters");
    c1->Modified();
    c1->Update();
    c1->Print("pstable1.ps");
@@ -55,7 +55,7 @@ void pstable()
 
    table(0.5,0.5*xrange-0.5,yrange,t,symbol3,1);
    table(0.5*xrange+0.5,xrange-0.5,yrange,t,symbol4,1);
-   tlabel.DrawText(0.5*xrange,1.3,"Input characters using backslash and octal numbers");
+   tlabel->DrawText(0.5*xrange,1.3,"Input characters using backslash and octal numbers");
    c2->Modified();
    c2->Update();
    c2->Print("pstable2.ps");
@@ -92,11 +92,11 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool
    tit->SetTextSize(0.015);
    tit->SetTextFont(72);
    tit->SetTextAlign(22);
-   tit.DrawText(xc0,y2-0.6,"Input");
-   tit.DrawText(xc1,y2-0.6,"Roman");
-   tit.DrawText(xc2,y2-0.6,"Greek");
-   tit.DrawText(xc3,y2-0.6,"Special");
-   tit.DrawText(xc4,y2-0.6,"Zapf");
+   tit->DrawText(xc0,y2-0.6,"Input");
+   tit->DrawText(xc1,y2-0.6,"Roman");
+   tit->DrawText(xc2,y2-0.6,"Greek");
+   tit->DrawText(xc3,y2-0.6,"Special");
+   tit->DrawText(xc4,y2-0.6,"Zapf");
    char text[12];
    for (i=0;i<n;i++) {
       if (octal) {
@@ -105,15 +105,15 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool
       } else {
          strcpy(text,symbol[i]);
       }
-      t.DrawText(xc0,y,text);
+      t->DrawText(xc0,y,text);
       sprintf(text,"%s",symbol[i]);
-      t.DrawText(xc1,y,text);
+      t->DrawText(xc1,y,text);
       sprintf(text,"`%s",symbol[i]);
-      t.DrawText(xc2,y,text);
+      t->DrawText(xc2,y,text);
       sprintf(text,"'%s",symbol[i]);
-      t.DrawText(xc3,y,text);
+      t->DrawText(xc3,y,text);
       sprintf(text,"~%s",symbol[i]);
-      t.DrawText(xc4,y,text);
+      t->DrawText(xc4,y,text);
       y -= dy;
    }
 }

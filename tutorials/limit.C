@@ -66,8 +66,8 @@ void limit() {
   TObjArray* names = new TObjArray();
   TObjString name1("bg uncertainty");
   TObjString name2("sig uncertainty");
-  names.AddLast(&name1);
-  names.AddLast(&name2);
+  names->AddLast(&name1);
+  names->AddLast(&name2);
   errorb->SetBinContent(0,0.05); // error source 1: 5%
   errorb->SetBinContent(1,0);    // error source 2: 0%
   errors->SetBinContent(0,0);    // error source 1: 0%

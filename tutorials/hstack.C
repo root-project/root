@@ -29,7 +29,7 @@ void hstack() {
    c1->Divide(2,2);
    // in top left pad, draw the stack with defaults
    c1->cd(1);
-   hs.Draw();
+   hs->Draw();
    // in top right pad, draw the stack in non-stack mode and errors option
    c1->cd(2);
    gPad->SetGrid();

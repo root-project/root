@@ -10,7 +10,7 @@ void hbars()
    T->SetFillColor(45);
    TCanvas *c1 = new TCanvas("c1","histograms with bars",10,10,800,900);
    c1->SetFillColor(42);
-   c1.Divide(1,2);
+   c1->Divide(1,2);
    
    //horizontal bar chart
    c1->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
