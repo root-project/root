@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.26 2002/10/03 18:01:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.27 2002/11/28 18:38:12 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -41,6 +41,11 @@
 #endif
 
 #include <map>
+
+#ifdef R__GLOBALSTL
+namespace std { using ::map; }
+#endif
+
 
 class TMessage;
 class TSocket;
@@ -111,11 +116,7 @@ private:
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
    };
-#ifdef R__GLOBALSTL
-   typedef map<TString, MD5Mod_t> FileMap_t;
-#else
    typedef std::map<TString, MD5Mod_t> FileMap_t;
-#endif
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 
    enum ESlaves { kAll, kActive, kUnique };
