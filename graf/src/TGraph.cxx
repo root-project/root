@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.95 2003/03/17 13:02:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.96 2003/03/17 19:23:40 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -470,6 +470,26 @@ void TGraph::Browse(TBrowser *)
 {
     Draw("alp");
     gPad->Update();
+}
+
+//______________________________________________________________________________
+Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right) {
+// return kTRUE if fX[left] > fX[right]. Can be used by Sort.
+   return gr->fX[left]>gr->fX[right];
+}
+
+//______________________________________________________________________________
+Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right) {
+// return kTRUE if fY[left] > fY[right]. Can be used by Sort.
+   return gr->fY[left]>gr->fY[right];
+}
+
+//______________________________________________________________________________
+Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right) {
+// return kTRUE if point number "left"'s distance to origin is bigger than 
+// that of point number "right". Can be used by Sort.
+   return gr->fX[left]*gr->fX[left]+gr->fY[left]*gr->fY[left]
+      >gr->fX[right]*gr->fX[right]+gr->fY[right]*gr->fY[right];
 }
 
 //______________________________________________________________________________
@@ -3814,6 +3834,52 @@ L390:
    delete [] qly;
 }
 
+//______________________________________________________________________________
+void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/, 
+		  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) {
+// Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
+// To compare two points the function parameter greater is used (see TGraph::CompareX for an 
+// example of such a method, which is also the default comparison function for Sort). After 
+// the sort, greater(this, i, j) will return kTRUE for all i>j if ascending == kTRUE, and 
+// kFALSE otherwise.
+//
+// The last two parameters are used for the recursive quick sort, stating the range to be sorted
+//
+// Examples:
+//   // sort points along x axis
+//   graph->Sort(); 
+//   // sort points along their distance to origin
+//   graph->Sort(&TGraph::CompareRadius); 
+//   
+//   Bool_t CompareErrors(const TGraph* gr, Int_t i, Int_t j) {
+//     const TGraphErrors* ge=(const TGraphErrors*)gr;
+//     return (ge->GetEY()[i]>ge->GetEY()[j]); }
+//   // sort using the above comparison function, largest errors first
+//   graph->Sort(&CompareErrors, kFALSE);
+
+   if (high == -1111) high = GetN()-1;
+   //  Termination condition
+   if (high <= low) return;
+
+   int left, right;
+   left = low; // low is the pivot element
+   right = high;
+   while (left < right) {
+      // move left while item < pivot 
+      while(left <= high && greater(this, left, low) != ascending) 
+	 left++;
+      // move right while item > pivot
+      while(right > low && greater(this, right, low) == ascending) 
+	 right--;
+      if (left < right && left < high && right > low) 
+	 SwapPoints(left, right);
+   }
+   // right is final position for the pivot
+   if (right > low) 
+      SwapPoints(low, right);
+   Sort( greater, ascending, low, right-1 );
+   Sort( greater, ascending, right+1, high );
+}
 
 //______________________________________________________________________________
 void TGraph::Streamer(TBuffer &b)
@@ -3870,6 +3936,19 @@ void TGraph::Streamer(TBuffer &b)
    } else {
       TGraph::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+void TGraph::SwapPoints(Int_t pos1, Int_t pos2) {
+   SwapValues(fX, pos1, pos2);
+   SwapValues(fY, pos1, pos2);
+}
+
+//______________________________________________________________________________
+void TGraph::SwapValues(Double_t* arr, Int_t pos1, Int_t pos2) {
+   Double_t tmp=arr[pos1];
+   arr[pos1]=arr[pos2];
+   arr[pos2]=tmp;
 }
 
 //______________________________________________________________________________

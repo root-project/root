@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.30 2002/11/22 10:05:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.31 2003/01/02 22:41:49 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -671,4 +671,11 @@ void TGraphErrors::Streamer(TBuffer &b)
    } else {
       TGraphErrors::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+void TGraphErrors::SwapPoints(Int_t pos1, Int_t pos2) {
+   SwapValues(fEX, pos1, pos2);
+   SwapValues(fEY, pos1, pos2);
+   TGraph::SwapPoints(pos1, pos2);
 }

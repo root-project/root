@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.10 2002/11/16 15:17:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.11 2003/04/01 17:44:03 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -32,6 +32,8 @@ protected:
     Double_t    *fEXhigh;       //[fNpoints] array of X high errors
     Double_t    *fEYlow;        //[fNpoints] array of Y low errors
     Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
+
+    virtual void     SwapPoints(Int_t pos1, Int_t pos2);
 
 public:
         TGraphAsymmErrors();

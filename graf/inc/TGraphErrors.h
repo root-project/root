@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.11 2002/06/14 20:30:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.12 2002/11/16 15:17:47 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -30,6 +30,8 @@ class TGraphErrors : public TGraph {
 protected:
     Double_t    *fEX;        //[fNpoints] array of X errors
     Double_t    *fEY;        //[fNpoints] array of Y errors
+
+    virtual void     SwapPoints(Int_t pos1, Int_t pos2);
 
 public:
         TGraphErrors();

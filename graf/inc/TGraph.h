@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.29 2002/09/15 19:45:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.30 2002/11/16 15:17:47 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -44,7 +44,9 @@ protected:
     Double_t    fMinimum;    //Minimum value for plotting along y
     Double_t    fMaximum;    //Maximum value for plotting along y
 
-    
+    static void      SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
+    virtual void     SwapPoints(Int_t pos1, Int_t pos2);
+
 public:
     // TGraph status bits
     enum {
@@ -67,6 +69,9 @@ public:
         virtual ~TGraph();
         virtual void     Apply(TF1 *f);
         virtual void     Browse(TBrowser *b);
+	static Bool_t    CompareX(const TGraph* gr, Int_t left, Int_t right);
+	static Bool_t    CompareY(const TGraph* gr, Int_t left, Int_t right);
+	static Bool_t    CompareRadius(const TGraph* gr, Int_t left, Int_t right);
                 void     ComputeLogs(Int_t npoints, Int_t opt);
         virtual void     ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
@@ -119,6 +124,8 @@ public:
         virtual void     SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void     SetTitle(const char *title="");    // *MENU*
                 void     Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
+        virtual void     Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX, 
+                              Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
         virtual void     UseCurrentStyle();
                 void     Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
                           ,Int_t maxiterations);

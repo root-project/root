@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.26 2003/01/02 22:41:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.27 2003/04/01 17:44:04 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -741,4 +741,13 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
    } else {
       TGraphAsymmErrors::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::SwapPoints(Int_t pos1, Int_t pos2) {
+    SwapValues(fEXlow,  pos1, pos2);
+    SwapValues(fEXhigh, pos1, pos2);
+    SwapValues(fEYlow,  pos1, pos2);
+    SwapValues(fEYhigh, pos1, pos2);
+    TGraph::SwapPoints(pos1, pos2);
 }
