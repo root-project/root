@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.2 2000/07/12 16:32:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.3 2000/12/20 15:45:37 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -159,7 +159,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
       Int_t nout;
       R__unzip(&nin, &buffer[fKeylen], &fObjlen, objbuf, &nout);
       if (nout != fObjlen) {
-         Error("Read", "fObjlen = %d, nout = %d", fObjlen, nout);
+         Error("ReadBasketBuffers", "fObjlen = %d, nout = %d", fObjlen, nout);
          badread = 1;
       }
       delete [] buffer;
@@ -245,7 +245,7 @@ void TBasket::Streamer(TBuffer &b)
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
          if (20<flag && flag<40) {
-           for(int i=0; i<fNevBuf; i++){ 
+           for(int i=0; i<fNevBuf; i++){
               fEntryOffset[i] &= ~kDisplacementMask;
            }
          }
