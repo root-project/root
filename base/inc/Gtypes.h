@@ -38,9 +38,10 @@ enum EColor { kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan };
 enum ELineStyle { kSolid = 1, kDashed, kDotted, kDashDotted };
 enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
                    kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
+                   kOpenTriangleDown = 16, kFullCross= 18,
                    kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                    kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
                    kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
                    kFullStar=29, kOpenStar=30};
-
+                   
 #endif

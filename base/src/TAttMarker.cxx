@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.4 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -40,7 +40,9 @@ ClassImp(TAttMarker)
 //*-*      6 : small scalable dot      kFullDotSmall
 //*-*      7 : medium scalable dot     kFullDotMedium
 //*-*      8 : large scalable dot      kFullDotLarge
-//*-*      9 -->19 : dot
+//*-*      9 -->15 : dot
+//*-*     16 : open triangle down      kOpenTriangleDown
+//*-*     18 : full cross              kFullCross
 //*-*     20 : full circle             kFullCircle
 //*-*     21 : full square             kFullSquare
 //*-*     22 : full triangle up        kFullTriangleUp
