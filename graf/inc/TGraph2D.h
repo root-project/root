@@ -72,12 +72,12 @@ protected:
    Double_t ComputeZ(Double_t x, Double_t y);
    Bool_t   Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const;
    void     FileIt(Int_t tri);
+   void     FindAllTriangles();
    void     FindHull();
    Bool_t   InHull(Int_t E, Int_t X) const;
    void     Initialise(Int_t n);
    Double_t InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const;
-   void     PaintMarkers();
-   void     PaintTriangles();
+   void     PaintTriangles(Option_t *option="");
    Int_t    TriEncode(Int_t T1, Int_t T2, Int_t T3) const;
 
 public:
@@ -86,8 +86,8 @@ public:
            TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option="");
            TGraph2D(Int_t n, Option_t *option="");
            TGraph2D(const char *filename, const char *format="%lg %lg %lg", Option_t *option="");
-
            virtual ~TGraph2D();
+
            Int_t     DistancetoPrimitive(Int_t px, Int_t py);
            void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject *FindObject(const char *name) const;

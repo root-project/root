@@ -52,7 +52,13 @@ ClassImp(TGraph2D)
 // point or add a new one. If the data point index (i) is greater than the 
 // current size of the internal arrays, they are automatically extended.
 //
-// A TGraph2D can be drawn with any options valid to draw a 2D histogram. 
+// Specific drawing options can be used to paint a TGraph2D:
+//   "TRI"  : the Delaunay's triangles are drawn using filled area. 
+//            An hidden surface drawing technique is used
+//   "TRIW" : the Delaunay's triangles are drawn as wire frame
+//   "P"    : draw a marker at each vertex
+//
+// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
 //
 // When a TGraph2D is drawn with one of the 2D histogram drawing option,
 // a intermediate 2D histogram is filled using the Delaunay triangles 
@@ -109,22 +115,22 @@ const Int_t kMaxNTris2Try = 100000;
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D()
-         : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
+         : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(0)
 {
    // Graph2D default constructor
 
-   fNpoints = 0;
    Initialise(100);
 }
 
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
-         : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
+         : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(n)
 {
    // Graph2D constructor with three vectors of doubles as input.
 
-   fNpoints = n;
    Initialise(n);
 
    // Copy the input vectors into local arrays
@@ -140,24 +146,24 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(Int_t n, Option_t *)
-         : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
+         : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(0)
 {
    // Graph2D constructor. The arrays fX, fY and fZ should be filled via
    // calls to SetPoint
 
-   fNpoints = 0;
    Initialise(n);
 }
 
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *)
-         : TNamed("Graph2D",filename), TAttLine(), TAttFill(1,1001), TAttMarker()
+         : TNamed("Graph2D",filename), TAttLine(1,1,1), TAttFill(0,1001),
+           TAttMarker(), fNpoints(0)
 {
    // Graph2D constructor reading input from filename
    // filename is assumed to contain at least three columns of numbers
    
-   fNpoints = 0;
    Initialise(100);
   
    Double_t x,y,z;
@@ -687,6 +693,149 @@ void TGraph2D::FileIt(Int_t tri)
       fNxt = 1;
    }
 }
+
+
+//______________________________________________________________________________
+void TGraph2D::FindAllTriangles()
+{
+   // Attempt to find all the Delaunay triangles of 
+   // the point set. It is not guaranteed that it will fully 
+   // succeed, and no check is made that it has fully succeeded (such 
+   // a check would be possible by referencing the points that make up 
+   // the convex hull). The method is to check if each triangle shares 
+   // all three of its sides with other triangles. If not, a point is 
+   // generated just outside the triangle on the side(s) not shared, 
+   // and a new triangle is found for that point. If you find the 
+   // routine is not working properly (many triangles are not being 
+   // found) it's probably because the new points are too far beyond or
+   // too close to the non-shared sides. You can try fiddling with the 
+   // size of the `alittlebit' parameter.
+
+   Double_t xcntr,ycntr,z,xc,yc,xm,ym,xx,yy;
+   Double_t sx,sy,nx,ny,mx,my,mdotn,nn,A;
+   Int_t T1,T2,Pa,Na,Ma,Pb,Nb,Mb,Sa[3],Sb[3],P1,P2,M,N,P3=0;
+   Bool_t s[3];
+   Double_t alittlebit = 0.0001;
+
+
+   // start with a point that is guaranteed to be inside the hull (the 
+   // centre of the hull)
+   xcntr = 0;
+   ycntr = 0;
+   for (N=1; N<=fNhull; N++) {
+      xcntr = xcntr+fXN[fHullPoints[N-1]];
+      ycntr = ycntr+fYN[fHullPoints[N-1]];
+   }
+   xcntr = xcntr/fNhull;
+   ycntr = ycntr/fNhull;
+   // and calculate it's triangle
+   z = ComputeZ(xcntr,ycntr);
+
+   // loop over all Delaunay triangles (including those constantly being 
+   // produced within the loop) and check to see if their 3 sides also 
+   // correspond to the sides of other Delaunay triangles, i.e. that they 
+   // have all their neighbours.
+   T1 = 1;
+   while (T1 <= fNdt) {
+      if (fTried[T1-1] > 0) {
+         // get the three points that make up this triangle
+         Pa = (Int_t)(fTried[T1-1]/1000000);
+         Na = ((Int_t)(fTried[T1-1]/1000))%1000;
+         Ma = fTried[T1-1]%1000;
+
+         // produce three integers which will represent the three sides
+         Sa[0] = Pa*1000+Na;
+         Sa[1] = Pa*1000+Ma;
+         Sa[2] = Na*1000+Ma;
+         s[0]  = kFALSE;
+         s[1]  = kFALSE;
+         s[2]  = kFALSE;
+         // loop over all other Del' triangles
+         for (T2=1; T2<=fNdt; T2++) {
+            if (fTried[T2-1] > 0 && T2 != T1) {
+               // get the points that make up this triangle
+               Pb = (Int_t)(fTried[T2-1]/1000000.);
+               Nb = ((Int_t)(fTried[T2-1]/1000.))%1000;
+               Mb = fTried[T2-1]%1000;
+               // and generate integers which represent its sides
+               // (note that Mb>Nb>Pb - see routine triencode)
+               Sb[0] = Pb*1000+Nb;
+               Sb[1] = Pb*1000+Mb;
+               Sb[2] = Nb*1000+Mb;
+
+               // do triangles T1 and T2 share a side?
+               if ((Sa[0]==Sb[0]) || (Sa[0]==Sb[1]) || (Sa[0]==Sb[2])) {
+                  // they share side 1
+                  s[0] = kTRUE;
+               } else if ((Sa[1]==Sb[0]) || (Sa[1]==Sb[1]) || (Sa[1]==Sb[2])) {
+                  // they share side 2
+                  s[1] = kTRUE;
+               } else if ((Sa[2]==Sb[0]) || (Sa[2]==Sb[1]) || (Sa[2]==Sb[2])) {
+                  // they share side 3
+                  s[2] = kTRUE;
+               }
+            }
+            // if T1 shares all its sides with other Del' triangles then 
+            // forget about it
+            if (s[0] && s[1] && s[2]) continue;
+         }
+         // Looks like T1 is missing a neighbour on at least one side.
+         // For each side, take a point a little bit beyond it and calculate 
+         // the Del' triangle for that point, this should be the triangle 
+         // which shares the side.
+         xc = (fXN[Pa]+fXN[Na]+fXN[Ma])/3.;
+         yc = (fYN[Pa]+fYN[Na]+fYN[Ma])/3.;
+         for (M=1; M<=3; M++) {
+            if (!s[M-1]) {
+               // get the two points that make up this side
+               P1 = (Int_t)(Sa[M-1]/1000.);
+               P2 = Sa[M-1]%1000;
+               // get the coordinates of the centre of this side
+               xm = (fXN[P1]+fXN[P2])/2.;
+               ym = (fYN[P1]+fYN[P2])/2.;
+               // we want to add a little to these coordinates to get a point just
+               // outside the triangle; (sx,sy) will be the vector that represents 
+               // the side
+               sx = fXN[P1]-fXN[P2];
+               sy = fYN[P1]-fYN[P2];
+               // (nx,ny) will be the normal to the side, but don't know if it's 
+               // pointing in or out yet
+               nx = sy;
+               ny = -sx;
+               nn = TMath::Sqrt(nx*nx+ny*ny);
+               nx = nx/nn;
+               ny = ny/nn;
+               if (M == 1) {
+                  P3 = Ma;
+               } else if (M == 2) {
+                  P3 = Na;
+               } else if (M == 3) {
+                  P3 = Pa;
+               }
+               mx    = fXN[P3]-xm;
+               my    = fYN[P3]-ym;
+               mdotn = mx*nx+my*ny;
+               if (mdotn > 0) {
+                  // (nx,ny) is pointing in, we want it pointing out
+                  nx = -nx;
+                  ny = -ny;
+               }
+               // increase/decrease xm and ym a little to produce a point 
+               // just outside the triangle (ensuring that the amount added will 
+               // be large enough such that it won't be lost in rounding errors)
+               A  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
+               xx = xm+nx*A;
+               yy = ym+ny*A;
+               // try and find a new Delaunay triangle for this point
+               z = ComputeZ(xx,yy);
+               // this side of T1 should now, hopefully, if it's not part of the 
+               // hull, be shared with a new Del' triangle just calculated by ComputeZ
+            }
+         }
+      }
+      T1++;
+   }
+}      
 
 
 //______________________________________________________________________________
@@ -1334,6 +1483,8 @@ TH2D *TGraph2D::GetHistogram() const
    if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
    if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
 
+   fHistogram->SetBit(TH1::kNoStats);
+
    return fHistogram;
 }
 
@@ -1412,15 +1563,10 @@ void TGraph2D::Paint(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   if (opt.Contains("tri")) {
-      GetHistogram();
-      PaintTriangles();
-   } else if (opt.Contains("p")) {
-      GetHistogram();
-      PaintMarkers();
+   if (opt.Contains("tri") || opt.Contains("p")) {
+      PaintTriangles(option);
    } else {
       GetHistogram();
-      fHistogram->SetBit(TH1::kNoStats);
       fHistogram->SetLineColor(GetLineColor());
       fHistogram->SetLineStyle(GetLineStyle());
       fHistogram->SetLineWidth(GetLineWidth());
@@ -1435,100 +1581,171 @@ void TGraph2D::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TGraph2D::PaintMarkers()
+void TGraph2D::PaintTriangles(Option_t *option)
 {
-   // Paints this 2D graph with markers
+   // Paints the 2D graph triangles
 
-   Double_t temp1[3],temp2[3];
+   Double_t x[4], y[4], temp1[3],temp2[3];
+   Int_t N,T0,T[3];
 
-   Double_t *x = new Double_t[fNpoints]; 
-   Double_t *y = new Double_t[fNpoints];
+   GetHistogram();
 
-   TView *view = gPad->GetView();
+   TString opt = option;
+   Bool_t triangles = opt.Contains("tri"); 
+   Bool_t markers   = opt.Contains("p");
+   Bool_t wire      = opt.Contains("w");
+   Bool_t same      = opt.Contains("s");
+   Bool_t backbox   = opt.Contains("bb");
+   Bool_t frontbox  = opt.Contains("fb");
+   Bool_t axis      = opt.Contains("a");
+   Bool_t logx      = gPad->GetLogx();
+   Bool_t logy      = gPad->GetLogy();
+   Bool_t logz      = gPad->GetLogz();
 
-   if (!view) {
-      gPad->Range(-1,-1,1,1);
-      view = new TView(1);
-      view->SetRange(fHistogram->GetXaxis()->GetXmin(),
-                     fHistogram->GetYaxis()->GetXmin(),
-                     fHistogram->GetMinimum(),
-                     fHistogram->GetXaxis()->GetXmax(),
-                     fHistogram->GetYaxis()->GetXmax(),
-                     fHistogram->GetMaximum());
-   }
-
-   for (Int_t N=0; N<fNpoints; N++) {
-      temp1[0] = fX[N];
-      temp1[1] = fY[N];
-      temp1[2] = fZ[N];
-      view->WCtoNDC(temp1, &temp2[0]);
-      x[N] = temp2[0];
-      y[N] = temp2[1];
-   }
-   SetMarkerStyle(20);
-   SetMarkerSize(0.4);
-   SetMarkerColor(0);
-   TAttMarker::Modify();
-   gPad->PaintPolyMarker(fNpoints,x,y);
-   SetMarkerStyle(24);
-   SetMarkerColor(1);
-   TAttMarker::Modify();
-   gPad->PaintPolyMarker(fNpoints,x,y);
-
-   delete [] x;
-   delete [] y;
-}
-
-
-//______________________________________________________________________________
-void TGraph2D::PaintTriangles()
-{
-   // Paints this 2D graph with triangles
-
-   Double_t x[4];
-   Double_t y[4];
-   Double_t temp1[3],temp2[3];
-   Int_t T0,T[3];
-
-   TView *view = gPad->GetView();
-
-   if (!view) {
-      gPad->Range(-1,-1,1,1);
-      view = new TView(1);
-      view->SetRange(fHistogram->GetXaxis()->GetXmin(),
-                     fHistogram->GetYaxis()->GetXmin(),
-                     fHistogram->GetMinimum(),
-                     fHistogram->GetXaxis()->GetXmax(),
-                     fHistogram->GetYaxis()->GetXmax(),
-                     fHistogram->GetMaximum());
-   }
-
-   SetFillColor(GetFillColor());
-   SetFillStyle(1001);
-   TAttFill::Modify();
-   SetLineColor(GetLineColor());
-   TAttLine::Modify();
-
-   for (Int_t N=0; N<fNdt; N++) {
-      T0   = fTried[N];
-      T[0] = T0/1000000;
-      T[1] = (T0%1000000)/1000;
-      T[2] = T0%1000;
-      for (Int_t t=0; t<3; t++) {
-         temp1[0] = fX[T[t]-1];
-         temp1[1] = fY[T[t]-1];
-         temp1[2] = fZ[T[t]-1];
-         view->WCtoNDC(temp1, &temp2[0]);
-         x[t] = temp2[0];
-         y[t] = temp2[1];
+   if (!same) {
+      if (!backbox) {
+         fHistogram->Paint("BB");
+      } else {
+         fHistogram->Paint("bb");
       }
-      x[3] = x[0];
-      y[3] = y[0];
-      gPad->PaintFillArea(3,x,y);
-      gPad->PaintPolyLine(4,x,y);
+      if (!axis) fHistogram->Paint("abb");
    }
-}
 
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTriangles", "no TView in current pad");
+      return;
+   }
+
+   // Compute minimums and maximums
+   TAxis *xaxis = fHistogram->GetXaxis();
+   Int_t first = xaxis->GetFirst();
+   Double_t xmin = xaxis->GetBinLowEdge(first);
+   if (logx && xmin <= 0) xmin = xaxis->GetBinUpEdge(xaxis->FindFixBin(0.01*xaxis->GetBinWidth(first)));
+   TAxis *yaxis = fHistogram->GetYaxis();
+   first = yaxis->GetFirst();
+   Double_t ymin = yaxis->GetBinLowEdge(first);
+   if (logy && ymin <= 0) ymin = yaxis->GetBinUpEdge(yaxis->FindFixBin(0.01*yaxis->GetBinWidth(first)));
+   Double_t zmax = fHistogram->GetMaximum();
+   Double_t zmin = fHistogram->GetMinimum();
+   if (logz && zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*fHistogram->GetMaximum());
+
+
+   // For each triangle, compute the distance between the triangle centre
+   // and the back planes. Then these distances are sorted in order to draw
+   // the triangles from back to front. 
+   if (triangles) {
+      FindAllTriangles();
+      Double_t cp = TMath::Cos(view->GetLongitude()*TMath::Pi()/180.);
+      Double_t sp = TMath::Sin(view->GetLongitude()*TMath::Pi()/180.);
+      if (fOrder) {delete [] fOrder; fOrder = 0;}
+      if (fDist)  {delete [] fDist; fDist = 0;}
+      fOrder = new Int_t[fNdt];
+      fDist  = new Double_t[fNdt];
+      Double_t xd,yd;
+      Int_t i1,i2,i3;
+      Bool_t o = kFALSE;
+      for (N=0; N<fNdt; N++) {
+         i1 = fTried[N]/1000000;
+         i2 = (fTried[N]%1000000)/1000;
+         i3 = fTried[N]%1000;
+         xd = (fXN[i1]+fXN[i2]+fXN[i3])/3;
+         yd = (fYN[i1]+fYN[i2]+fYN[i3])/3;
+         if ((cp >= 0) && (sp >= 0.)) {
+            fDist[N] = -(fXNmax-xd+fYNmax-yd);
+         } else if ((cp <= 0) && (sp >= 0.)) {
+            fDist[N] = -(fXNmax-xd+yd-fYNmin);
+            o = kTRUE;
+         } else if ((cp <= 0) && (sp <= 0.)) {
+            fDist[N] = -(xd-fXNmin+yd-fYNmin);
+         } else {
+            fDist[N] = -(xd-fXNmin+fYNmax-yd);
+            o = kTRUE;
+         }
+      }
+      TMath::Sort(fNdt, fDist, fOrder, o);
+   }
+   
+   // Draw markers only
+   if (markers && !triangles) {
+      Double_t *xm = new Double_t[fNpoints]; 
+      Double_t *ym = new Double_t[fNpoints];
+      for (N=0; N<fNpoints; N++) {
+         temp1[0] = fX[N];
+         temp1[1] = fY[N];
+         temp1[2] = fZ[N];
+         temp1[0] = TMath::Max(temp1[0],xmin);
+         temp1[1] = TMath::Max(temp1[1],ymin);
+         temp1[2] = TMath::Max(temp1[2],zmin);
+         temp1[2] = TMath::Min(temp1[2],zmax);
+         if (logx) temp1[0] = TMath::Log10(temp1[0]);
+         if (logy) temp1[1] = TMath::Log10(temp1[1]);
+         if (logz) temp1[2] = TMath::Log10(temp1[2]);
+         view->WCtoNDC(temp1, &temp2[0]);
+         xm[N] = temp2[0];
+         ym[N] = temp2[1];
+      }
+      SetMarkerStyle(20);
+      SetMarkerSize(0.4);
+      SetMarkerColor(0);
+      TAttMarker::Modify();
+      gPad->PaintPolyMarker(fNpoints,xm,ym);
+      SetMarkerStyle(24);
+      SetMarkerColor(1);
+      TAttMarker::Modify();
+      gPad->PaintPolyMarker(fNpoints,xm,ym);
+      delete [] xm;
+      delete [] ym;
+
+   // Draw the triangles and markers if requested
+   } else if (triangles) {
+      SetFillColor(GetFillColor());
+      SetFillStyle(GetFillStyle());
+      TAttFill::Modify();
+      SetLineColor(GetLineColor());
+      TAttLine::Modify();
+      for (N=0; N<fNdt; N++) {
+         T0   = fTried[fOrder[N]];
+         T[0] = T0/1000000;
+         T[1] = (T0%1000000)/1000;
+         T[2] = T0%1000;
+         for (Int_t t=0; t<3; t++) {
+            temp1[0] = fX[T[t]-1];
+            temp1[1] = fY[T[t]-1];
+            temp1[2] = fZ[T[t]-1];
+            temp1[0] = TMath::Max(temp1[0],xmin);
+            temp1[1] = TMath::Max(temp1[1],ymin);
+            temp1[2] = TMath::Max(temp1[2],zmin);
+            temp1[2] = TMath::Min(temp1[2],zmax);
+            if (logx) temp1[0] = TMath::Log10(temp1[0]);
+            if (logy) temp1[1] = TMath::Log10(temp1[1]);
+            if (logz) temp1[2] = TMath::Log10(temp1[2]);
+            view->WCtoNDC(temp1, &temp2[0]);
+            x[t] = temp2[0];
+            y[t] = temp2[1];
+         }
+         x[3] = x[0];
+         y[3] = y[0];
+         if (!wire) gPad->PaintFillArea(3,x,y);
+         gPad->PaintPolyLine(4,x,y);
+         if (markers) {
+            SetMarkerStyle(20);
+            SetMarkerSize(0.4);
+            SetMarkerColor(0);
+            TAttMarker::Modify();
+            gPad->PaintPolyMarker(3,x,y);
+            SetMarkerStyle(24);
+            SetMarkerColor(1);
+            TAttMarker::Modify();
+            gPad->PaintPolyMarker(3,x,y);
+         }
+      }
+      delete [] fOrder; fOrder = 0;
+      delete [] fDist; fDist = 0;
+   }
+
+   if (!same && !frontbox) fHistogram->Paint("fb");
+}
 
 //______________________________________________________________________________
 TH1 *TGraph2D::Project(Option_t *option) const
