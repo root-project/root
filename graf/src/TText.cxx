@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.8 2001/02/21 11:50:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.9 2001/03/15 21:53:05 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -458,6 +458,7 @@ void TText::SavePrimitive(ofstream &out, Option_t *)
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
    out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
+   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<endl;
 
    SaveTextAttributes(out,"text",11,0,1,62,1);
 

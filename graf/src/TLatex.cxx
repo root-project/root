@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.21 2001/07/04 17:32:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.22 2001/11/05 10:49:38 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1887,8 +1887,9 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
    }
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
-   out<<"tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
+   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
+   
    SaveTextAttributes(out,"tex",11,0,1,62,1);
    SaveLineAttributes(out,"tex",1,1,1);
 
