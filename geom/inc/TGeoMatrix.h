@@ -77,7 +77,7 @@ public :
    virtual void         MasterToLocal(const Double_t *master, Double_t *local);
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local);
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local);
-   void                 Print();
+   void                 Print(Option_t *option="") const;
    
   ClassDef(TGeoMatrix, 0)                 // base geometrical transformation class
 };
@@ -142,7 +142,7 @@ public :
    virtual ~TGeoRotation() {}
    
    Bool_t               IsReflection()  {return TestBit(kGeoReflection);}
-   void                 Clear();
+   void                 Clear(Option_t *option ="");
    Double_t             Determinant();
    void                 FastRotZ(Double_t *sincos);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master);
@@ -243,7 +243,7 @@ public :
                   Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
    virtual ~TGeoGenTrans();
    
-   void                 Clear();
+   void                 Clear(Option_t *option ="");
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(Double_t *scale)
                            {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
@@ -311,7 +311,7 @@ public :
    
    TGeoHMatrix& operator=(const TGeoMatrix *matrix);
 
-   void                       Clear();
+   void                       Clear(Option_t *option ="");
    void                       Multiply(TGeoMatrix *right);
 
    void                       SetTranslation(const Double_t *vect) 

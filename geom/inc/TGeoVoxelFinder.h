@@ -67,7 +67,7 @@ public :
    Int_t              *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
    virtual TGeoNode   *FindNode(Double_t *point);
    void                FindOverlaps(Int_t inode);
-   void                Print();
+   void                Print(Option_t *option="") const;
    void                PrintVoxelLimits(Double_t *point);
    Bool_t              Intersect(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
                              Int_t n3, Int_t *array3, Int_t &nf, Int_t *result); 

@@ -852,6 +852,10 @@ inline Int_t TGeoNodeCache::PushState(Bool_t ovlp, Double_t *point)
                            {if (fStackLevel>=kGeoCacheStackSize) return 0; 
                             ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,ovlp,point);
                             return ++fStackLevel;}
+inline void TGeoNodeCache::Refresh() 
+                           {fCurrentNode=fBranch[fLevel]; fCurrentCache=CacheId(fCurrentNode);
+                            fCurrentIndex=Index(fCurrentNode); fCache[fCurrentCache]->cd(fCurrentIndex);
+                            gGeoMatrixCache->cd(fMatrices[fLevel]);}
 inline Bool_t TGeoNodeCache::PopState(Double_t *point) 
                            {if (!fStackLevel) return 0;
                             ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
@@ -860,10 +864,6 @@ inline Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point)
                            {if (level<=0) return 0;
                             ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,point);
                             Refresh(); return level;}
-inline void TGeoNodeCache::Refresh() 
-                           {fCurrentNode=fBranch[fLevel]; fCurrentCache=CacheId(fCurrentNode);
-                            fCurrentIndex=Index(fCurrentNode); fCache[fCurrentCache]->cd(fCurrentIndex);
-                            gGeoMatrixCache->cd(fMatrices[fLevel]);}
 inline void TGeoCacheDummy::Refresh() 
                            {fNode=fNodeBranch[fLevel]; fMatrix=fMatrixBranch[fLevel];}
 inline void TGeoMatrixCache::LocalToMaster(Double_t *local, Double_t *master)

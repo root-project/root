@@ -83,7 +83,7 @@ void TGeoChecker::Raytrace(Double_t *startpoint, UInt_t npoints)
 //End_Html
 }
 //-----------------------------------------------------------------------------
-void TGeoChecker::ShowPoints(Option_t *option="")
+void TGeoChecker::ShowPoints(Option_t *option)
 {
 // 
 //Begin_Html

@@ -86,12 +86,12 @@ public:
    // methods
    virtual void    cd(Int_t inode);
    void            Browse(TBrowser *b);
-   void            CheckPoint(); //*MENU*
+   void            CheckPoint(); // *MENU*
    void            CheckShapes();
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
-   Int_t           CountNodes(Int_t nlevels=1000); //*MENU*
+   Int_t           CountNodes(Int_t nlevels=1000); // *MENU*
    Bool_t          Contains(Double_t *point) {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
@@ -124,12 +124,12 @@ public:
    virtual TGeoVolume *Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *option="");
 
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void    Draw(Option_t *option=""); //*MENU*
-   virtual void    DrawOnly(Option_t *option=""); //*MENU*
-   void            DrawPoints(Int_t npoints=100000, Option_t *option=""); //*MENU*
+   virtual void    Draw(Option_t *option=""); // *MENU*
+   virtual void    DrawOnly(Option_t *option=""); // *MENU*
+   void            DrawPoints(Int_t npoints=100000, Option_t *option=""); // *MENU*
    virtual void    Paint(Option_t *option="");
    void            PrintNodes();
-   void            PrintVoxels(); //*MENU*
+   void            PrintVoxels(); // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
    
    Bool_t          IsValid() const {return fShape->IsValid();} 
@@ -150,39 +150,39 @@ public:
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
    Int_t           GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck);
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
-   TString         GetOption()                       {return fOption;}
+   Option_t       *GetOption() const { return fOption.Data(); }
    TGeoShape      *GetShape()                        {return fShape;}
    void            Gsord(Int_t iaxis)                {;}
    Bool_t          IsStyleDefault();
-   void            InspectMaterial(); //*MENU*
-   void            InspectShape() {fShape->InspectShape();} //*MENU*
+   void            InspectMaterial(); // *MENU*
+   void            InspectShape() {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(TGeoVolume *other);
-   void            RandomRays(Int_t nrays=10000); //*MENU*
+   void            RandomRays(Int_t nrays=10000); // *MENU*
    void            RenameCopy(Int_t copy_no);
-   void            SetAsTopVolume(); //*MENU*
-   void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);//*MENU*
+   void            SetAsTopVolume(); // *MENU*
+   void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
    void            SetMaterial(TGeoMaterial *material);
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
    void            SetShape(TGeoShape *shape);
    void            SetField(TObject *field)          {fField = field;}
    void            SetOption(const char *option);
-   virtual void    SetVisibility(Bool_t vis=kTRUE) {TGeoAtt::SetVisibility(vis);} //*MENU*
+   virtual void    SetVisibility(Bool_t vis=kTRUE) {TGeoAtt::SetVisibility(vis);} // *MENU*
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
-   void            SetInvisible() {SetVisibility(kFALSE);} //*MENU*
+   void            SetInvisible() {SetVisibility(kFALSE);} // *MENU*
    void            SetVoxelFinder(TGeoVoxelFinder *finder) {fVoxels=finder;}
    void            SetFinder(TGeoPatternFinder *finder) {fFinder=finder;}
    virtual void    Sizeof3D() const;
    void            SortNodes();
    Bool_t          Valid();
-   void            VisibleDaughters(Bool_t vis=kTRUE); //*MENU*
+   void            VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
    void            Voxelize(Option_t *option);
 
   ClassDef(TGeoVolume, 1)              // geometry volume descriptor
 
-//***** Need to add class and globals to LinkDef.h *****
+// ***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************

@@ -76,11 +76,11 @@ public:
 
    void              Browse(TBrowser *b);
    virtual void      cd() {;}
-   void              CheckPoint() {fVolume->CheckPoint();} //*MENU*
+   void              CheckPoint() {fVolume->CheckPoint();} // *MENU*
    void              CheckShapes();
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");
-   void              DrawOverlaps(); //*MENU*
+   void              DrawOverlaps(); // *MENU*
    Int_t             FindNode(TGeoNode *node, Int_t level);
    virtual Int_t     GetByteCount() {return 44;}
    TGeoNode         *GetDaughter(Int_t ind) {return fVolume->GetNode(ind);}
@@ -95,17 +95,17 @@ public:
    Int_t             GetNdaughters() const {return fVolume->GetNdaughters();}
    TObjArray        *GetNodes();
    Int_t            *GetOverlaps(Int_t &novlp) {novlp=fNovlp; return fOverlaps;}
-   void              InspectNode(); //*MENU*
+   void              InspectNode(); // *MENU*
    virtual Bool_t    IsFolder() const {return kTRUE;}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
    Bool_t            IsOnScreen();
    Bool_t            IsOverlapping() const {return (fNovlp>0)?kTRUE:kFALSE;}
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
-   Bool_t            IsVisible() {return fVolume->IsVisible();}
+   Bool_t            IsVisible() const {return fVolume->IsVisible();}
 
    virtual TGeoNode *MakeCopyNode() {return 0;}
    void              SaveAttributes(ofstream &out);
-   void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}//*MENU*
+   void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
@@ -120,8 +120,8 @@ public:
    
    virtual void      ls(Option_t *option = "") const;
    virtual void      Paint(Option_t *option = "");
-   void              PrintCandidates(); //*MENU*
-   void              PrintOverlaps(); //*MENU*
+   void              PrintCandidates(); // *MENU*
+   void              PrintOverlaps(); // *MENU*
    void              VisibleDaughters(Bool_t vis);
 
   ClassDef(TGeoNode, 0)               // base class for all geometry nodes
@@ -175,7 +175,7 @@ public:
    virtual ~TGeoNodeOffset();
 
    virtual void      cd()           {fFinder->cd(fIndex);}
-   const Double_t    GetOffset()    {return fOffset;}
+   Double_t          GetOffset() const {return fOffset;}
    virtual Int_t     GetIndex();
    virtual TGeoPatternFinder *GetFinder() {return fFinder;}
    virtual TGeoMatrix *GetMatrix() const {return fFinder->GetMatrix();}

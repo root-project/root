@@ -166,7 +166,7 @@ void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local)
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoMatrix::Print()
+void TGeoMatrix::Print(Option_t *) const
 {
 // print the matrix in 4x4 format
    const Double_t *rot = GetRotationMatrix();
@@ -352,7 +352,7 @@ TGeoRotation::TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Dou
    gGeoManager->AddTransformation(this);
 }
 //-----------------------------------------------------------------------------
-void TGeoRotation::Clear()
+void TGeoRotation::Clear(Option_t *)
 {
 // reset data members to 0
    memset(&fRotationMatrix[0], 0, 9*sizeof(Double_t));
@@ -637,7 +637,7 @@ TGeoGenTrans::~TGeoGenTrans()
 // destructor
 }
 //-----------------------------------------------------------------------------
-void TGeoGenTrans::Clear()
+void TGeoGenTrans::Clear(Option_t *)
 {
 // clear the fields of this transformation
    memset(&fTranslation[0], 0, 3*sizeof(Double_t));
@@ -744,7 +744,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    return *this;
 }
 //-----------------------------------------------------------------------------
-void TGeoHMatrix::Clear()
+void TGeoHMatrix::Clear(Option_t *)
 {
 // clear the data for this matrix
    if (IsIdentity()) return;

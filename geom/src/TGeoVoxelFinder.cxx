@@ -1337,7 +1337,7 @@ void TGeoVoxelFinder::SortBoxes(Option_t *option)
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::Print()
+void TGeoVoxelFinder::Print(Option_t *) const
 {
    Int_t id;
    printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
