@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -94,7 +94,7 @@ void TContextMenu::Action(TObject *object, TMethod *method)
           char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
                            "(TMethod *)0x%lx,(TObjArray *)0);",
                            (Long_t)this,(Long_t)object,(Long_t)method);
-          Printf("%s", cmd);
+          //Printf("%s", cmd);
           gROOT->ProcessLine(cmd);
           //Execute( object, method, (TObjArray *)NULL );
 #endif
