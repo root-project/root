@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.26 2004/06/14 10:28:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.27 2004/12/15 09:27:48 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -206,10 +206,13 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
       Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
       if (untitled || saveas) {
          static TString dir(".");
+         static Bool_t overwr = kFALSE;
          TGFileInfo fi;
          fi.fFileTypes = gFiletypes;
          fi.fIniDir    = StrDup(dir);
+         fi.fOverwrite = overwr;
          new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+         overwr = fi.fOverwrite;
          if (fi.fFilename && strlen(fi.fFilename)) {
             dir = fi.fIniDir;
             return fText->Save(fi.fFilename);

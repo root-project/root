@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.5 2004/10/20 22:32:45 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.6 2004/12/07 15:34:27 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -411,8 +411,11 @@ void TASPaletteEditor::Save()
 
    TGFileInfo fi;
    fi.fFileTypes = gFileTypes;
+   static Bool_t overwr = kFALSE;
+   fi.fOverwrite = overwr;
 
    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &fi);
+   overwr = fi.fOverwrite;
    if (fi.fFilename == 0)
       return;
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.11 2004/12/09 17:05:41 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.12 2004/12/09 22:55:06 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -861,10 +861,12 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 
    TGFileInfo fi;
    static TString dir(".");
+   static Bool_t overwr = kFALSE;
    const char *fname;
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
+   fi.fOverwrite = overwr;
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    root->SetEditable(kFALSE);
    SetEditable(kFALSE);
@@ -878,6 +880,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
   }
 
    dir = fi.fIniDir;
+   overwr = fi.fOverwrite;
    fname = gSystem->UnixPathName(fi.fFilename);
 
    if (strstr(fname, ".C")) {
@@ -910,12 +913,14 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 
    TGFileInfo fi;
    static TString dir(".");
+   static Bool_t overwr = kFALSE;
    const char *fname;
    root->SetEditable(kFALSE);
    SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
+   fi.fOverwrite = overwr;
 
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
 
@@ -926,6 +931,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
   }
 
    dir = fi.fIniDir;
+   overwr = fi.fOverwrite;
    fname = gSystem->UnixPathName(fi.fFilename);
 
    if (strstr(fname, ".C")) {

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.30 2004/12/09 17:05:41 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.31 2004/12/09 22:55:06 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1355,6 +1355,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    Bool_t ret = kFALSE;
    TGFileInfo fi;
    static TString dir(".");
+   static Bool_t overwr = kFALSE;
    const char *fname;
 
    if (event->fType != kGKeyPress) return kFALSE;
@@ -1368,6 +1369,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
+   fi.fOverwrite = overwr;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
 
@@ -1452,6 +1454,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
 
             if (!fi.fFilename) return kTRUE;
             dir = fi.fIniDir;
+            overwr = fi.fOverwrite;
             fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
 
             if (strstr(fname, ".C")) {
@@ -2063,6 +2066,7 @@ void TGuiBldDragManager::Save(const char *file)
 
    if (!file || !strlen(file)) {
       static TString dir(".");
+      static Bool_t overwr = kFALSE;
       static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
                                                "All files",   "*",
                                                0,             0 };
@@ -2070,11 +2074,12 @@ void TGuiBldDragManager::Save(const char *file)
 
       fi.fFileTypes = gSaveMacroTypes;
       fi.fIniDir    = StrDup(dir);
+      fi.fOverwrite = overwr;
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
 
       if (!fi.fFilename) goto out;
       dir = fi.fIniDir;
-
+      overwr = fi.fOverwrite;
       fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
    }
 

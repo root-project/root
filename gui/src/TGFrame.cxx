@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.106 2005/01/25 16:00:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.107 2005/02/11 18:40:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1368,13 +1368,16 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
 
       if (str[0] == 19) {  // ctrl-s
          static TString dir(".");
+         static Bool_t overwr = kFALSE;
          TGFileInfo fi;
          TGMainFrame *main = (TGMainFrame*)GetMainFrame();
          fi.fFileTypes = gSaveMacroTypes;
          fi.fIniDir    = StrDup(dir);
+         fi.fOverwrite = overwr;
          new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
          if (!fi.fFilename) return kTRUE;
          dir = fi.fIniDir;
+         overwr = fi.fOverwrite;
          const char *fname = gSystem->UnixPathName(fi.fFilename);
          if (strstr(fname, ".C"))
             main->SaveSource(fname, "");
