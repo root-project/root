@@ -38,7 +38,7 @@ if [ "$check_target" != "" ]; then
 fi
 
 
-check_target2=`grep "$1 *:" $2/Makefile`
+check_target2=`grep "^[[:space:]]*$1[[:space:]]*:" $2/Makefile`
 
 if [ "$check_target2" != "" ]; then
 	printALREADY_EXIST $1 $2;
