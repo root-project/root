@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.12 2001/02/12 16:59:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.13 2001/04/19 17:31:01 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -104,7 +104,8 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fTickSize    = 0.030;
    fTitleOffset = 1;
    fTitleSize   = fLabelSize;
-   fName        = " ";
+   fChopt       = "";
+   fName        = " "; 
    fTitle       = " ";
    fTimeFormat  = "";
    fFunctionName= "";
@@ -565,7 +566,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- When integer labelling is required, Optimize is invoked first
 //*-*- and only if the result is not an integer labelling, AdjustBinSize is invoked.
 
-      Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
+      TGaxis::Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth,fChopt.Data());
       if (OptionInt) {
          if (BinLow != Double_t(int(BinLow)) || BinWidth != Double_t(int(BinWidth))) {
             AdjustBinSize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
@@ -603,13 +604,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- Secondary divisions optimization
       NB2 = N2A;
       if (!OptionNoopt && N2A > 1 && BinWidth > 0) {
-         Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2);
+         TGaxis::Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2,fChopt.Data());
       }
 
 //*-*- Tertiary divisions optimization
       NB3 = N3A;
       if (!OptionNoopt && N3A > 1 && BinWidth2 > 0) {
-         Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3);
+         TGaxis::Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3,fChopt.Data());
       }
       N1Aold = N1A;
       NN1old = NN1;
@@ -1512,11 +1513,12 @@ L210:
 }
 
 //______________________________________________________________________________
-void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold
-                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth)
+void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &BinLow, Double_t &BinHigh, 
+                      Int_t &nbins, Double_t &BinWidth, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Reasonable Axis labels optimisation*-*-*-*-*-*-*-*-*
 //*-*                    ===================================
+//*-*    STATIC function
 //*-*  Get reasonable values for tick marks & ensure they are
 //*-*  not plotted beyond allowed limits
 //*-*
@@ -1537,7 +1539,7 @@ void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold
    Int_t roundmode =0;
 
    Int_t OptionTime;
-   if(strchr(fChopt.Data(),'t')) OptionTime = 1;  else OptionTime = 0;
+   if(strchr(option,'t')) OptionTime = 1;  else OptionTime = 0;
 
    Double_t AL = TMath::Min(A1,A2);
    Double_t AH = TMath::Max(A1,A2);
