@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.14 2005/02/10 07:26:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.15 2005/02/16 01:29:56 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1568,7 +1568,7 @@ namespace ROOT {
          updating = kTRUE;
       }
 
-      TString classname = fPrefix;
+      TString classname = gSystem->BaseName(fPrefix);
 
       TString treefile;
       bool ischain = fTree->InheritsFrom(TChain::Class());
