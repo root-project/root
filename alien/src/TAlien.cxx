@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.1 2002/05/13 10:38:10 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.2 2002/05/23 14:04:23 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -128,8 +128,8 @@ Int_t TAlien::AddFile(const char *lfn, const char *pfn, Int_t size)
 {
    // Add physical filename to AliEn catalog with associated logical file name.
    // Returns -1 on error (e.g. when lfn or pfn already exists), 0 otherwise.
-   // Size is a hint to the file catalog. If size is -1 the system will try
-   // to guess size from pfn.
+   // Size, in bytes, is a hint to the file catalog. If size is -1 the system
+   // will try to guess size from pfn.
    // Example lfn: "lfn://[alien.cern.ch]/alice/cern.ch/user/r/rdm/aap.root"
    // Example pfn: "rfio:/castor/cern.ch/user/r/rdm/noot.root"
 
@@ -167,7 +167,7 @@ Int_t TAlien::Mkdir(const char *dir, const char *options)
    if (options)
       opt = options;
 
-   if (AlienMkdir(dir, opt) == -1) {
+   if (AlienMkDir(dir, opt) == -1) {
       Error("Mkdir", "error creating directory %s", dir);
       return -1;
    }
@@ -186,7 +186,7 @@ Int_t TAlien::Rmdir(const char *dir, const char *options)
    if (options)
       opt = options;
 
-   if (AlienRmdir(dir, opt) == -1) {
+   if (AlienRmDir(dir, opt) == -1) {
       Error("Rmdir", "error deleting directory %s", dir);
       return -1;
    }
@@ -246,12 +246,20 @@ Int_t TAlien::AddAttribute(const char *lfn, const char *attrname,
 //______________________________________________________________________________
 Int_t TAlien::DeleteAttribute(const char *lfn, const char *attrname)
 {
-   // Delete specified attribute from logical file name. Returns -1 on error,
-   // 0 otherwise.
+   // Delete specified attribute from logical file name. If attribute
+   // is 0 delete all attributes. Returns -1 on error, 0 otherwise.
 
-   if (AlienDeleteAttribute(lfn, attrname) == -1) {
-      Error("DeleteAttribute", "error deleting attribute %s from lfn %s",
-            attrname, lfn);
+   const char *attr = "";
+   if (attrname)
+      attr = attrname;
+
+   if (AlienDeleteAttribute(lfn, "standard", attr) == -1) {
+      if (strlen(attr) > 0)
+         Error("DeleteAttribute", "error deleting attribute %s from lfn %s",
+               attr, lfn);
+      else
+         Error("DeleteAttribute", "error deleting all attributes from lfn %s",
+               lfn);
       return -1;
    }
 
