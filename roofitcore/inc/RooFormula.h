@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.18 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.19 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -18,8 +18,6 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooPrintable.hh"
-
-class RooArgSet ;
 
 class RooFormula : public TFormula, public RooPrintable {
 public:
@@ -62,11 +60,12 @@ protected:
 
   RooArgSet* _nset ;
   Bool_t    _isOK ;
-  TList     _origList ;   //! Original list of dependents
-  TObjArray _useList ;    //! List of actual dependents 
-  TObjArray _labelList ;  //  List of label names for category objects  
+  TList     _origList ;      //! Original list of dependents
+  TObjArray _useList ;       //! List of actual dependents 
+  mutable RooArgSet _actual; //! Set of actual dependents
+  TObjArray _labelList ;     //  List of label names for category objects  
 
-  ClassDef(RooFormula,1)  // TFormula derived class interfacing with RooAbsArg objects
+  ClassDef(RooFormula,1)     // TFormula derived class interfacing with RooAbsArg objects
 };
 
 #endif

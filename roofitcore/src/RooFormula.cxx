@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.26 2001/09/11 00:30:32 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.27 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -116,14 +116,14 @@ RooArgSet& RooFormula::actualDependents() const
 {
   // Return list of dependents used in formula expression
 
-  // (formula might not use all given input parameters)
-  static RooArgSet set("actualDependents") ;
-  set.removeAll();
+  _actual.removeAll();
+  
   int i ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    set.add((RooAbsArg&)*_useList.At(i),kTRUE) ;
+    _actual.add((RooAbsArg&)*_useList.At(i),kTRUE) ;
   }
-  return set ;
+
+  return _actual ;
 }
 
 
