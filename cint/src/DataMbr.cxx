@@ -347,6 +347,27 @@ static int IsInt(G__DataMemberInfo &member) {
   }
 }
 
+//
+// Recurse through all the bases classes to find a 
+// data member.
+//
+static G__DataMemberInfo GetDataMemberFromAllParents(G__ClassInfo & cl, const char* varname) {
+  G__DataMemberInfo index;
+
+  G__BaseClassInfo b( cl );
+  while (b.Next()) {
+    index = GetDataMemberFromAll(b, varname);
+    if ( index.IsValid() ) {
+      return index;
+    }
+    index = GetDataMemberFromAllParents( b, varname );
+    if ( index.IsValid() ) {
+      return index;
+    }
+  }
+  return G__DataMemberInfo();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 // ValidArrayIndex return a static string (so use it or copy it immediatly, do not
@@ -452,31 +473,27 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
       } else {
 	// There is no variable by this name in this class, let see
 	// the base classes!:
-
-	G__BaseClassInfo b( *belongingclass);
-	while (b.Next() && !found) {
-	  index = GetDataMemberFromAll(b, current);
-	  if ( index.IsValid() ) {
-	    if ( IsInt(index) ) {
-	      found = 1;
-	    } else {
-	      // We found a data member but it is the wrong type
-	      //NOTE: *** Need to print an error;
-	      //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not int \n",
-	      //	member.MemberOf()->Name(), member.Name(), current);
-	      if (errnum) *errnum = NOT_INT;
-	      if (errstr) *errstr = current;
-	      return 0;
-	    }
-	    if ( found && (index.Property() & G__BIT_ISPRIVATE) ) {
-	      //NOTE: *** Need to print an error;
-	      //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
-	      if (errstr) *errstr = current;
-	      if (errnum) *errnum = IS_PRIVATE;
-	      return 0;
-	    }
+	index = GetDataMemberFromAllParents( *belongingclass, current );
+	if ( index.IsValid() ) {
+	  if ( IsInt(index) ) {
+	    found = 1;
+	  } else {
+	    // We found a data member but it is the wrong type
+	    //NOTE: *** Need to print an error;
+	    //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not int \n",
+	    //	member.MemberOf()->Name(), member.Name(), current);
+	    if (errnum) *errnum = NOT_INT;
+	    if (errstr) *errstr = current;
+	    return 0;
 	  }
-	} // end of while (b.Next() && !found)
+	  if ( found && (index.Property() & G__BIT_ISPRIVATE) ) {
+	    //NOTE: *** Need to print an error;
+	    //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
+	    if (errstr) *errstr = current;
+	    if (errnum) *errnum = IS_PRIVATE;
+	    return 0;
+	  }
+	}
 	if (!found) {
 	  //NOTE: *** Need to print an error;
 	  //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not known \n",
