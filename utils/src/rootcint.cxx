@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.133 2003/03/05 23:36:18 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.134 2003/04/02 06:21:34 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3564,6 +3564,10 @@ int main(int argc, char **argv)
 #ifdef __ia64__
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
+#endif
+#ifdef __x86_64__
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
 #endif
 #ifdef R__B64
          argvv[argcc] = (char *)calloc(64, 1);
