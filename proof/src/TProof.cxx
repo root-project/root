@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.3 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -22,12 +22,12 @@
 
 #include <fcntl.h>
 #include <errno.h>
-#ifndef WIN32
-#   include <unistd.h>
-#else
+#ifdef WIN32
 #   include <io.h>
 #   include <sys/stat.h>
 #   include <sys/types.h>
+#else
+#   include <unistd.h>
 #endif
 
 #include "TProof.h"
@@ -72,8 +72,8 @@ Bool_t TProofInputHandler::Notify()
 ClassImp(TProof)
 
 //______________________________________________________________________________
-TProof::TProof(const char *master, Int_t port, const char *version,
-               const char *conffile, const char *confdir, Int_t loglevel)
+TProof::TProof(const char *master, Int_t port, const char *conffile,
+               const char *confdir, Int_t loglevel)
 {
    // Create a PROOF environment. Starting PROOF involves reading a config
    // file describing the cluster and firing slave servers on all of the
@@ -85,7 +85,7 @@ TProof::TProof(const char *master, Int_t port, const char *version,
       gProof->Close();
    }
 
-   if (Init(master, port, version, conffile, confdir, loglevel) == 0) {
+   if (Init(master, port, conffile, confdir, loglevel) == 0) {
       // on Init failure make sure IsValid() returns kFALSE
       SafeDelete(fActiveSlaves);
    }
@@ -111,8 +111,8 @@ TProof::~TProof()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Init(const char *master, Int_t port, const char *version,
-                   const char *conffile, const char *confdir, Int_t loglevel)
+Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
+                   const char *confdir, Int_t loglevel)
 {
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -122,10 +122,9 @@ Int_t TProof::Init(const char *master, Int_t port, const char *version,
 
    fMaster        = master;
    fPort          = port;
-   fVersion       = version;
    fConfDir       = confdir;
    fConfFile      = conffile;
-   fWorkDir       = kPROOF_WorkDir;
+   fWorkDir       = gSystem->WorkingDirectory();
    fLogLevel      = loglevel;
    fProtocol      = kPROOF_Protocol;
    fMasterServ    = fMaster == "" ? kTRUE : kFALSE;
@@ -152,7 +151,7 @@ Int_t TProof::Init(const char *master, Int_t port, const char *version,
       if (gSystem->AccessPathName(fconf, kFileExists)) {
          sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
          if (gSystem->AccessPathName(fconf, kFileExists)) {
-            sprintf(fconf, "%s/etc/%s", confdir, conffile);
+            sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
             if (gSystem->AccessPathName(fconf, kFileExists)) {
                Error("Init", "no PROOF config file found");
                return 0;
@@ -197,6 +196,7 @@ Int_t TProof::Init(const char *master, Int_t port, const char *version,
                   if (!strncmp(word[i], "image=", 6))
                      image = word[i]+6;
                }
+               // create slave server
                TSlave *slave = new TSlave(word[1], port, ord++, perfidx, image, this);
                fSlaves->Add(slave);
                if (slave->IsValid()) {
@@ -215,6 +215,7 @@ Int_t TProof::Init(const char *master, Int_t port, const char *version,
          return 0;
       }
    } else {
+      // create master server
       TSlave *slave = new TSlave(fMaster, port, 0, 100, "master", this);
       fSlaves->Add(slave);
       if (slave->IsValid()) {
@@ -230,10 +231,8 @@ Int_t TProof::Init(const char *master, Int_t port, const char *version,
    // De-activate monitor (will be activated in Collect)
    fAllMonitor->DeActivateAll();
 
-   if (IsMaster())
-      SetParallel();   // by default use all valid slaves
-   else
-      SetParallel(1);  // created only one master server
+   // By default go into parallel mode
+   GoParallel(9999);
 
    if (IsValid())
       gROOT->GetListOfSockets()->Add(this);
@@ -315,7 +314,7 @@ TSlave *TProof::FindSlave(TSocket *s) const
 void TProof::FindUniqueSlaves()
 {
    // Add to the fUniqueSlave list the active slaves that have a unique
-   // (user) files system image. This information is used to transfer files
+   // (user) file system image. This information is used to transfer files
    // only once to nodes that share a file system (an image).
 
    fUniqueSlaves->Clear();
@@ -324,8 +323,15 @@ void TProof::FindUniqueSlaves()
 
    TSlave *sl;
    while ((sl = (TSlave *)next())) {
-      if (fImage == sl->GetImage()) continue;
-      if (!fUniqueSlaves->FindObject(sl->GetImage()))
+      if (fImage == sl->fImage && fWorkDir == sl->fWorkDir) continue;
+      TIter next2(fUniqueSlaves);
+      TSlave *sl2;
+      Int_t   add = fUniqueSlaves->IsEmpty() ? 1 : 0;
+      while ((sl2 = (TSlave *)next2())) {
+         if (sl->fImage == sl2->fImage) continue;
+         add++;
+      }
+      if (add)
          fUniqueSlaves->Add(sl);
    }
 }
@@ -391,7 +397,7 @@ void TProof::GetStatus()
 {
    // Get the status of the slaves.
 
-   if (!IsValid()) return;
+   if (!IsValid() || !IsMaster()) return;
 
    Broadcast(kPROOF_STATUS, kAll);
    Collect(kAll);
@@ -535,6 +541,19 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 }
 
 //______________________________________________________________________________
+Bool_t TProof::IsParallel() const
+{
+   // Returns true if PROOF is in parallel mode.
+
+   if (!IsValid()) return kFALSE;
+
+   if (IsMaster())
+      return GetNumberOfActiveSlaves() > 1 ? kTRUE : kFALSE;
+   else
+      return kTRUE;  // fix: get number of active slaves in client
+}
+
+//______________________________________________________________________________
 Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 {
    // Broadcast a message to all slaves in the specified list (either
@@ -549,9 +568,6 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
    if (list == kUnique) slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
-
-   // make sure group view is up to date
-   SendGroupView();
 
    int   nsent = 0;
    TIter next(slaves);
@@ -608,9 +624,6 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
    if (list == kUnique) slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
-
-   // make sure group view is up to date
-   SendGroupView();
 
    int   nsent = 0;
    TIter next(slaves);
@@ -769,6 +782,9 @@ Int_t TProof::Collect(TMonitor *mon)
       cnt++;
       delete mess;
    }
+
+   // make sure group view is up to date
+   SendGroupView();
 
    ActivateAsyncInput();
 
@@ -950,7 +966,6 @@ void TProof::Print(Option_t *option)
                                           IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Server version:           %s", GetVersion());
       Printf("Protocol version:         %d", GetProtocol());
       Printf("Log level:                %d", GetLogLevel());
       if (IsValid()) {
@@ -963,7 +978,6 @@ void TProof::Print(Option_t *option)
 
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Server version:           %s", GetVersion());
       Printf("Protocol version:         %d", GetProtocol());
       Printf("Image name:               %s", GetImage());
       Printf("Working directory:        %s", gSystem->WorkingDirectory());
@@ -1055,8 +1069,8 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       file = file.Strip(TString::kTrailing, '+');
       char *fn = gSystem->Which(TROOT::GetMacroPath(), file, kReadPermission);
       if (fn) {
-         if (SendFile(fn, kUnique) < 0) {
-            Error("Exec", "file %s could not be transfered to slaves", fn);
+         if (SendFile(fn, kFALSE, kUnique) < 0) {
+            Error("Exec", "file %s could not be transfered to PROOF", fn);
             return 0;
          }
       }
@@ -1114,7 +1128,7 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendFile(const char *file, ESlaves list)
+Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 {
    // Send an ascii file to master or slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
@@ -1149,34 +1163,34 @@ Int_t TProof::SendFile(const char *file, ESlaves list)
       return -1;
    }
 
-   const Int_t kMAXBUF = 1024;
+   const Int_t kMAXBUF = 32768;  //16384  //65536;
    char buf[kMAXBUF];
 
-   sprintf(buf, "%s %ld", gSystem->BaseName(file), size);
+   sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
    if (!Broadcast(buf, kPROOF_SENDFILE, list)) {
       close(fd);
       return -1;
    }
 
    Int_t len, n;
-   while (1) {
+   do {
       while ((len = read(fd, buf, kMAXBUF)) < 0 && TSystem::GetErrno() == EINTR)
          TSystem::ResetErrno();
 
       if (len < 0) {
          SysError("SendFile", "error reading from file %s", file);
-         BroadcastRaw(buf, 0, list);
+         Interrupt(kSoftInterrupt, list);
          close(fd);
          return -1;
       }
 
       if (!(n = BroadcastRaw(buf, len, list))) {
+         SysError("SendFile", "error broadcasting, no more active slaves");
          close(fd);
          return -1;
       }
 
-      if (len == 0) break;
-   }
+   } while (len > 0);
 
    close(fd);
 
@@ -1222,7 +1236,14 @@ void TProof::SetLogLevel(Int_t level)
 //______________________________________________________________________________
 Int_t TProof::SetParallel(Int_t nodes)
 {
-   // Set the number of nodes that should work in parallel. Since the fSlaves
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GoParallel(Int_t nodes)
+{
+   // Go in parallel mode with at most "nodes" slaves. Since the fSlaves
    // list is sorted by slave performace the active list will contain first
    // the most performant nodes.
 
@@ -1242,12 +1263,16 @@ Int_t TProof::SetParallel(Int_t nodes)
       }
    }
 
-   // Find active slaves with unique image
-   FindUniqueSlaves();
-
    // Will be activated in Collect
    fActiveMonitor->DeActivateAll();
 
+   // Get slave status (will set the slaves fWorkDir correctly)
+   GetStatus();
+
+   // Find active slaves with unique image
+   FindUniqueSlaves();
+
+   // Set initial state
    SendInitialState();
    SendGroupView();
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.8 2000/10/02 11:10:51 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.9 2000/11/21 12:27:09 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -329,7 +329,6 @@ int main(int /* argc */, char **argv)
    char  arg0[256];
    char *user_name;
    char *node_name;
-   char  vtag[80];
    char  msg[80];
    int   master;
 
@@ -394,12 +393,8 @@ int main(int /* argc */, char **argv)
    }
    Send("Okay");
 
-   // receive version tag
-   if (Recv(vtag, sizeof(vtag)) < 0)
-      fatal_error("Error receiving version tag");
-
    // start server version
-   sprintf(arg0, "%s/bin/proofserv.%s", argv[1], vtag);
+   sprintf(arg0, "%s/bin/proofserv", argv[1]);
    argvv[0] = arg0;
    argvv[1] = (char *)(master ? "proofserv" : "proofslave");
    argvv[2] = argv[1];
@@ -424,7 +419,7 @@ int main(int /* argc */, char **argv)
 
    // tell client that exec failed
    sprintf(msg,
-   "Cannot start PROOF server version %s --- update your ROOT version!", vtag);
+   "Cannot start PROOF server --- make sure %s exists!", arg0);
    Send(msg);
 
    return 0;

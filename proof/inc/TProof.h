@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.2 2000/06/11 12:25:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.3 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,11 +42,10 @@ class TFile;
 class TTree;
 
 // PROOF magic constants
-const char* const kPROOF_Version  = "970213";     // major protocol number
-const Int_t       kPROOF_Protocol = 1;            // minor protocol number
+const Int_t       kPROOF_Protocol = 1;            // protocol version number
 const Int_t       kPROOF_Port     = 1093;         // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf"; // default config file
-const char* const kPROOF_ConfDir  = "/usr/local/proof";  // default config dir
+const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
 const char* const kPROOF_WorkDir  = "~/proof";    // default working directory
 
 
@@ -56,7 +55,6 @@ friend class TSlave;
 
 private:
    TString   fMaster;        //name of master server (use "" if this is a master)
-   TString   fVersion;       //proof server major version
    TString   fConfDir;       //directory containing cluster config information
    TString   fConfFile;      //file containing config information
    TString   fWorkDir;       //current work directory on remote servers
@@ -64,7 +62,7 @@ private:
    TString   fPasswd;        //user password
    TString   fImage;         //master's image name
    Int_t     fPort;          //port we are connected to (proofd = 1093)
-   Int_t     fProtocol;      //protocol level
+   Int_t     fProtocol;      //protocol version number
    Int_t     fLogLevel;      //server debug logging level
    Bool_t    fMasterServ;    //true if we are a master server
    Bool_t    fSendGroupView; //send new group view
@@ -83,12 +81,13 @@ private:
    static char *fgUser;
    static char *fgPasswd;
 
-   Int_t     Init(const char *master, Int_t port, const char *version,
-                  const char *conffile, const char *confdir, Int_t loglevel);
+   Int_t     Init(const char *master, Int_t port, const char *conffile,
+                  const char *confdir, Int_t loglevel);
    Int_t     Collect(TMonitor *mon);
    void      ConnectFiles();
    void      GetUserInfo();
    void      GetStatus();
+   Int_t     GoParallel(Int_t nodes);
    void      Limits(TSocket *s, TMessage &mess);
    void      MarkBad(TSlave *sl);
    void      MarkBad(TSocket *s);
@@ -105,7 +104,7 @@ public:
    enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
    TProof(const char *master, Int_t port = kPROOF_Port,
-          const char *vers = kPROOF_Version, const char *conffile = kPROOF_ConfFile,
+          const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 1);
    virtual ~TProof();
 
@@ -115,7 +114,6 @@ public:
    const char *GetConfDir() const { return fConfDir.Data(); }
    const char *GetConfFile() const { return fConfFile.Data(); }
    const char *GetUser() const { return fUser.Data(); }
-   const char *GetVersion() const { return fVersion.Data(); }
    const char *GetWorkDir() const { return fWorkDir.Data(); }
    const char *GetImage() const { return fImage.Data(); }
    Int_t       GetPort() const { return fPort; }
@@ -140,7 +138,7 @@ public:
    void     Interrupt(EUrgent type, ESlaves list = kActive);
    Bool_t   IsMaster() const { return fMasterServ; }
    Bool_t   IsValid() const { return GetNumberOfActiveSlaves() ? kTRUE : kFALSE; }
-   Bool_t   IsParallel() const { return GetNumberOfActiveSlaves() > 1 ? kTRUE : kFALSE; }
+   Bool_t   IsParallel() const;
 
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
    Int_t    Broadcast(const char *mess, Int_t kind = kMESS_STRING, ESlaves list = kActive);
@@ -163,7 +161,7 @@ public:
    Int_t    Exec(const char *cmd, ESlaves list = kActive);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Int_t    SendFile(const char *file, ESlaves list = kUnique);
+   Int_t    SendFile(const char *file, Bool_t bin = kTRUE, ESlaves list = kUnique);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
 
    Int_t    SetParallel(Int_t nodes = 9999);

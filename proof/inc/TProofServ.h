@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.2 2000/06/13 09:43:33 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.3 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -44,13 +44,12 @@ private:
    TString     fService;          //service we are running, either "proofserv" or "proofslave"
    TString     fUser;             //user as which we run
    TString     fUserPass;         //encoded user and passwd info for slaves
-   TString     fVersion;          //proof server major version
    TString     fConfDir;          //directory containing cluster config information
    TString     fConfFile;         //file containing config information
    TString     fLogDir;           //directory containing log files
    TSocket    *fSocket;           //socket connection to client
    FILE       *fLogFile;          //log file
-   Int_t       fProtocol;         //protocol level
+   Int_t       fProtocol;         //protocol version number
    Int_t       fOrdinal;          //slave ordinal number, -1 for master
    Int_t       fGroupId;          //slave unique id in the active slave group
    Int_t       fGroupSize;        //size of the active slave group
@@ -74,7 +73,6 @@ public:
    const char *GetConfDir() const { return fConfDir.Data(); }
    const char *GetConfFile() const { return fConfFile.Data(); }
    const char *GetUser() const { return fUser.Data(); }
-   const char *GetVersion() const { return fVersion.Data(); }
    Int_t       GetProtocol() const { return fProtocol; }
    Int_t       GetOrdinal() const { return fOrdinal; }
    Int_t       GetGroupId() const { return fGroupId; }
@@ -101,7 +99,7 @@ public:
    void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
    Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
    void        Reset(const char *dir);
-   void        ReceiveFile(const char *file, Int_t size);
+   Int_t       ReceiveFile(const char *file, Bool_t bin, Long_t size);
    void        SendLogFile();
    void        SendStatus();
 

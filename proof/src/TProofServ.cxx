@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.3 2000/06/13 09:43:33 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.4 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include <io.h>
 typedef long off_t;
 #endif
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "TProofServ.h"
 #include "TProof.h"
@@ -209,7 +211,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    if (IsMaster()) {
       TProof::SetUser(fUser);
       TProof::SetPasswd(fUserPass);
-      new TProof("", kPROOF_Port, fVersion, fConfFile, fConfDir, fLogLevel);
+      new TProof("", kPROOF_Port, fConfFile, fConfDir, fLogLevel);
       SendLogFile();
    }
 }
@@ -321,8 +323,8 @@ void TProofServ::HandleSocketInput()
    char      str[2048];
    Int_t     what;
 
-   if (fSocket->Recv(mess) < 0)
-      return;                    // do something more intelligent here
+   if (fSocket->Recv(mess) <= 0)
+      Terminate(0);               // do something more intelligent here
 
    what = mess->What();
 
@@ -408,10 +410,11 @@ void TProofServ::HandleSocketInput()
       case kPROOF_SENDFILE:
          mess->ReadString(str, sizeof(str));
          {
-            Int_t size;
+            Long_t size;
+            Int_t  bin;
             char  name[512];
-            sscanf(str, "%s %d", name, &size);
-            ReceiveFile(name, size);
+            sscanf(str, "%s %d %ld", name, &bin, &size);
+            ReceiveFile(name, bin ? kTRUE : kFALSE, size);
          }
          break;
 
@@ -542,7 +545,7 @@ void TProofServ::HandleUrgentData()
          if (IsMaster())
             Info("HandleUrgentData", "Master: Shutdown Interrupt");
          else
-            Info("HandleUrgntData", "Slave %d: Shutdown Interrupt", fOrdinal);
+            Info("HandleUrgentData", "Slave %d: Shutdown Interrupt", fOrdinal);
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
@@ -682,9 +685,79 @@ void TProofServ::Reset(const char *dir)
 }
 
 //______________________________________________________________________________
-void TProofServ::ReceiveFile(const char *file, Int_t size)
+Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
 {
+   // Receive a file, either sent by a client or a master server.
+   // If bin is true it is a binary file, other wise it is an ASCII
+   // file and we need to check for Windows \r tokens. Returns -1 in
+   // case of error, 0 otherwise.
 
+   // open file, overwrite already existing file
+   int fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+   if (fd < 0) {
+      SysError("ReceiveFile", "error opening file %s", file);
+      return -1;
+   }
+
+   const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
+   char buf[kMAXBUF], cpy[kMAXBUF];
+
+   Int_t  left, r;
+   Long_t filesize = 0;
+
+   while (filesize < size) {
+      left = Int_t(size - filesize);
+      if (left > kMAXBUF)
+         left = kMAXBUF;
+      r = fSocket->RecvRaw(&buf, left);
+      if (r > 0) {
+         char *p = buf;
+
+         filesize += r;
+         while (r) {
+            Int_t w;
+
+            if (!bin) {
+               Int_t k = 0, i = 0, j = 0;
+               char *q;
+               while (i < r) {
+                  if (p[i] == '\r') {
+                     i++;
+                     k++;
+                  }
+                  cpy[j++] = buf[i++];
+               }
+               q = cpy;
+               r -= k;
+               w = write(fd, q, r);
+            } else {
+               w = write(fd, p, r);
+            }
+
+            if (w < 0) {
+               SysError("ReceiveFile", "error writing to file %s", file);
+               close(fd);
+               return -1;
+            }
+            r -= w;
+            p += w;
+         }
+      } else if (r < 0) {
+         Error("ReceiveFile", "error during receiving file %s", file);
+         close(fd);
+         return -1;
+      }
+   }
+
+   close(fd);
+
+   chmod(file, 0644);
+
+   // Double check. At this point sizes should be equal.
+   if (filesize != size)
+      Warning("ReceiveFile", "file %s does not have the expected length", file);
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -758,29 +831,28 @@ void TProofServ::Setup()
 
    fSocket->Recv(str, sizeof(str));
 
-   char user[16], vers[16];
+   char user[16];
    if (IsMaster()) {
       char userpass[68], user_pass[64], conffile[64];
       Int_t i;
-      sscanf(str, "%s %s %s %s %d", user, vers, userpass, conffile, &fProtocol);
+      sscanf(str, "%s %s %s %d", user, userpass, conffile, &fProtocol);
       for (i = 0; i < (Int_t) strlen(userpass); i++)
          user_pass[i] = ~userpass[i];
       user_pass[i] = '\0';
       fUserPass = user_pass;
       fConfFile = conffile;
    } else {
-      sscanf(str, "%s %s %d %d", user, vers, &fProtocol, &fOrdinal);
+      sscanf(str, "%s %d %d", user, &fProtocol, &fOrdinal);
    }
-   fUser    = user;
-   fVersion = vers;
+   fUser = user;
 
    // deny write access for group and world
    gSystem->Umask(022);
 
    if (IsMaster())
-      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal6);
+      gSystem->Openlog("proofserv", kLogPid | kLogCons, kLogLocal5);
    else
-      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal7);
+      gSystem->Openlog("proofslave", kLogPid | kLogCons, kLogLocal6);
 
    // Set $HOME and $PATH. The HOME directory was already set to the
    // user's home directory by proofd.

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.3 2000/11/21 12:27:59 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -37,6 +37,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fName    = host;
    fPort    = port;
    fImage   = image;
+   fWorkDir = kPROOF_WorkDir;
    fOrdinal = ord;
    fPerfIdx = perf;
    fProof   = proof;
@@ -74,8 +75,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          Printf("%s", buf);
          SafeDelete(fSocket);
       } else {
-         fSocket->Send(fProof->GetVersion());
-
          // get back startup message of proofserv (we are now talking with
          // the real proofserver and not anymore with the proofd front-end)
 
@@ -89,10 +88,10 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          }
 
          if (!fProof->IsMaster())
-            sprintf(buf, "%s %s %s %s %d", fProof->GetUser(), fProof->GetVersion(),
-                    user_pass, fProof->GetConfFile(), fProof->GetProtocol());
+            sprintf(buf, "%s %s %s %d", fProof->GetUser(), user_pass,
+                    fProof->GetConfFile(), fProof->GetProtocol());
          else
-            sprintf(buf, "%s %s %d %d", fProof->GetUser(), fProof->GetVersion(),
+            sprintf(buf, "%s %d %d", fProof->GetUser(),
                     fProof->GetProtocol(), fOrdinal);
          fSocket->Send(buf);
 
