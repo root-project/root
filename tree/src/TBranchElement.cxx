@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.117 2003/07/23 12:25:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.118 2003/08/04 17:33:21 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1323,8 +1323,9 @@ void TBranchElement::ReadLeaves(TBuffer &b)
   }
 
   if (fType == 4) {           // STL vector/list of objects
-     //printf ("STL split mode not yet implemented\n");
+     Error("ReadLeaves","STL split mode not yet implemented (error 1)\n");
   } else if (fType == 41) {    // sub branch of an STL class
+     Error("ReadLeaves","STL split mode not yet implemented (error 2)\n");
     //char **ppointer = (char**)fAddress;
   } else if (fType == 3) {    //top level branch of a TClonesArray
     Int_t n;
@@ -1556,7 +1557,7 @@ void TBranchElement::SetAddress(void *add)
                   //     [X.]Y.Z
                   // and we are looking up 'Y'
                   parentDataName.Remove(pos);
-                  offset = GetDataMemberOffset(clparent,parentDataName);
+                  offset = GetDataMemberOffset(parentBranchClass,parentDataName);
                } else {
                   // We had a branch name of the style:
                   //     [X.]Z
@@ -1564,7 +1565,7 @@ void TBranchElement::SetAddress(void *add)
                   // Because we are missing 'Y' (or more exactly the name of the 
                   // thing that contains Z, we can only get the offset of Z and
                   // then remove the offset Z inside 'Y' (i.e. lOffset)
-                  offset = GetDataMemberOffset(clparent,parentDataName) - lOffset;                  
+                  offset = GetDataMemberOffset(parentBranchClass,parentDataName) - lOffset;                  
                }
                
                fObject += offset;
@@ -1833,14 +1834,15 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
             fBranches.Add(branch);
          }
       } else {
-        if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
-        else              sprintf(branchname,"%s",elem->GetFullName());
-        if (splitlevel > 1 &&
+         if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
+         else              sprintf(branchname,"%s",elem->GetFullName());
+         if (splitlevel > 1 &&
               (elem->IsA() == TStreamerObject::Class()
             || elem->IsA() == TStreamerObjectAny::Class())) {
-               clbase = gROOT->GetClass(elem->GetTypeName());
-               if (clbase->Property() & kIsAbstract) return -1;
-
+           
+            clbase = gROOT->GetClass(elem->GetTypeName());
+            if (clbase->Property() & kIsAbstract) return -1;
+            
             if (gDebug > 0) printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
             fBranchPointer += offset;
             if (elem->CannotSplit())    unroll = -1;
