@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.17 2004/02/19 15:36:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.18 2004/02/23 23:52:00 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -195,12 +195,14 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
 
    GCValues_t gcv;
 
-   gcv.fMask = kGCLineStyle  | kGCLineWidth | kGCFillStyle;
-   gcv.fLineStyle  = kLineSolid;
+   gcv.fMask =  kGCLineStyle | kGCLineWidth | kGCFillStyle | kGCDashList;
    fLineWidth = gcv.fLineWidth  = w;
    gcv.fFillStyle  = kFillSolid;
+   gcv.fDashLen = 2;
+   gcv.fDashOffset = 0;
+   memcpy(gcv.fDashes, "\x5\x5", 3);
+   gcv.fLineStyle = kLineOnOffDash;
    fLineGC = fClient->GetGC(&gcv, kTRUE);
-
    SetLineStyle(style);
 
    int max_ascent, max_descent;
@@ -228,8 +230,7 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
    //
 
    TGTextLBEntry::Update(e);
-   SetLineWidth(((TGLineLBEntry *)e)->GetLineWidth());
-   SetLineStyle(((TGLineLBEntry *)e)->GetLineStyle());
+   fLineGC = ((TGLineLBEntry *)e)->GetLineGC();
 }
 
 //______________________________________________________________________________
@@ -244,7 +245,6 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
    if (linestyle <= 1)  {
       fLineGC->SetLineStyle(kLineSolid);
    } else {
-      fLineGC->SetDashOffset(0);
       switch (linestyle) {
          case 2:
             fLineGC->SetDashList(dashed, 2);

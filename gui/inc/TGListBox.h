@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.15 2004/02/19 00:16:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.16 2004/02/19 15:36:45 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -159,6 +159,7 @@ public:
    virtual void  SetLineWidth(Int_t width);
    Style_t       GetLineStyle() const { return fLineStyle; }
    virtual void  SetLineStyle(Style_t style);
+   TGGC         *GetLineGC() const { return fLineGC; }
    virtual void  Update(TGLBEntry *e);
 
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
