@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TSynapse.h,v 1.1 2003/08/27 15:31:13 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/2003
 
 #ifndef ROOT_TSynapse
@@ -28,14 +28,14 @@ class TSynapse : public TObject {
    virtual ~ TSynapse() {} 
    void SetPre(TNeuron* pre);
    void SetPost(TNeuron* post);
-   inline TNeuron* GetPre()  { return fpre; }
-   inline TNeuron* GetPost() { return fpost; }
+   inline TNeuron* GetPre()  const { return fpre; }
+   inline TNeuron* GetPost() const { return fpost; }
    void SetWeight(Double_t w); 
-   inline Double_t GetWeight() { return fweight; }
-   Double_t GetValue();
-   Double_t GetDeDw();
+   inline Double_t GetWeight() const { return fweight; }
+   Double_t GetValue() const;
+   Double_t GetDeDw() const;
    void SetDEDw(Double_t in); 
-   Double_t GetDEDw() { return fDEDw; }
+   Double_t GetDEDw() const { return fDEDw; }
    
  private:
    TNeuron* fpre;         // the neuron before the synapse

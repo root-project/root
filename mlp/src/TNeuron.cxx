@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.6 2003/09/11 14:38:28 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.7 2003/10/27 16:51:54 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ TNeuron::TNeuron(TNeuron::NeuronType type)
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::Sigmoid(Double_t x)
+Double_t TNeuron::Sigmoid(Double_t x) const
 {
    // The Sigmoid.
    // Fast computation of the values of the sigmoid function. 
@@ -783,7 +783,7 @@ Double_t TNeuron::Sigmoid(Double_t x)
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::DSigmoid(Double_t x)
+Double_t TNeuron::DSigmoid(Double_t x) const 
 {
    // The Derivative of the Sigmoid.
 
@@ -824,17 +824,17 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    if (fFormula) delete fFormula;
    fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
-   gROOT->SetBatch(1);
-   TCanvas tmpCanvas;
-   input->Draw(Form("%s>>tmpb",formula),"","groff");
-   gROOT->SetBatch(0);
+//   gROOT->SetBatch(1);
+//   TCanvas tmpCanvas;
+   input->Draw(Form("%s>>tmpb",formula),"","goff");
+//   gROOT->SetBatch(0);
    fNorm[0] = tmp.GetRMS();
    fNorm[1] = tmp.GetMean();
    return fFormula;
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::GetBranch()
+Double_t TNeuron::GetBranch() const
 {
    // Returns the formula value.
    Double_t branch = fFormula->EvalInstance();
@@ -844,7 +844,7 @@ Double_t TNeuron::GetBranch()
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::GetValue()
+Double_t TNeuron::GetValue() const
 {
    // Computes the output using the appropriate function and all 
    // the weighted inputs, or uses the branch as input.
@@ -852,64 +852,87 @@ Double_t TNeuron::GetValue()
    if (!fNewValue) {
       return fValue;
    }
-   fNewValue = false;
+   ((TNeuron*)this)->fNewValue = false;
    Int_t nentries = fpre.GetEntriesFast();
    if (!nentries) {
       Double_t branch = GetBranch();
-      return (fValue = (branch - fNorm[1]) / fNorm[0]);
+      return (((TNeuron*)this)->fValue = (branch - fNorm[1]) / fNorm[0]);
    } else {
       Double_t input = fWeight;
       for (Int_t i=0;i<nentries;i++) {
          TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
          input += preSynapse->GetValue();
       }
+      Double_t value = 0;
       switch (fType) {
-      case TNeuron::kOff:
-         return (fValue = 0);
-      case TNeuron::kLinear:
-         return (fValue = input);
-      case TNeuron::kSigmoid:
-         return (fValue = Sigmoid(input));
-      case TNeuron::kTanh:
-         return (fValue = TMath::TanH(input));
-      case TNeuron::kGauss:
-         return (fValue = TMath::Exp(-input * input));
+      case TNeuron::kOff: {
+          value = 0;
+          break;
+        }
+      case TNeuron::kLinear: {
+          value = input;
+          break;
+        }
+      case TNeuron::kSigmoid: {
+          value =  Sigmoid(input);
+          break;
+        }
+      case TNeuron::kTanh: {
+          value = TMath::TanH(input);
+          break;
+        }
+      case TNeuron::kGauss: { 
+          value = TMath::Exp(-input * input);
+          break;
+        }
       }
+      return (((TNeuron*)this)->fValue = value);
    }
    return 0;
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::GetDerivative()
+Double_t TNeuron::GetDerivative() const
 {
    // computes the derivative for the appropriate function
    // at the working point
    if (!fNewDeriv)
       return fDerivative;
-   fNewDeriv = false;
+   ((TNeuron*)this)->fNewDeriv = false;
    Int_t nentries = fpre.GetEntriesFast();
    Double_t input = fWeight;
    for (Int_t i=0;i<nentries;i++) {
       TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
       input += preSynapse->GetValue();
    }
+   Double_t derivative = 0;
    switch (fType) {
-   case TNeuron::kOff:
-      return (fDerivative = 0);
-   case TNeuron::kLinear:
-      return (fDerivative = 1);
-   case TNeuron::kSigmoid:
-      return (fDerivative = DSigmoid(input));
-   case TNeuron::kTanh:
-      return (fDerivative = (1 - (TMath::TanH(input) * TMath::TanH(input))));
-   case TNeuron::kGauss:
-      return (fDerivative = (-2) * input * TMath::Exp(-input * input));
+   case TNeuron::kOff: {
+       derivative = 0;
+       break;
+     }
+   case TNeuron::kLinear: {
+       derivative = 1;
+       break;
+     }
+   case TNeuron::kSigmoid: {
+       derivative = DSigmoid(input);
+       break;
+     }
+   case TNeuron::kTanh: {
+       derivative = (1 - (TMath::TanH(input) * TMath::TanH(input)));
+       break;
+     }
+   case TNeuron::kGauss: {
+       derivative = (-2) * input * TMath::Exp(-input * input);
+       break;
+     }
    }
-   return 0;
+   return (((TNeuron*)this)->fDerivative = derivative);
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::GetError()
+Double_t TNeuron::GetError() const
 {
    // Computes the error for output neurons.
    // Returns 0 for other neurons.
@@ -919,20 +942,20 @@ Double_t TNeuron::GetError()
 }
 
 //______________________________________________________________________________
-Double_t TNeuron::GetDeDw()
+Double_t TNeuron::GetDeDw() const
 {
    // Computes the derivative of the error wrt the neuron weight.
    if (!fNewDeDw)
       return fDeDw;
-   fNewDeDw = false;
-   fDeDw = GetError();
+   ((TNeuron*)this)->fNewDeDw = false;
+   ((TNeuron*)this)->fDeDw = GetError();
    Int_t nentries = fpost.GetEntriesFast();
    for (Int_t i=0;i<nentries;i++) {
       TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-      fDeDw +=
+      ((TNeuron*)this)->fDeDw +=
           (postSynapse->GetWeight() * postSynapse->GetPost()->GetDeDw());
    }
-   fDeDw *= GetDerivative();
+   ((TNeuron*)this)->fDeDw *= GetDerivative();
    return fDeDw;
 }
 
@@ -965,13 +988,13 @@ void TNeuron::SetWeight(Double_t w)
 }
 
 //______________________________________________________________________________
-void TNeuron::SetNewEvent() 
+void TNeuron::SetNewEvent() const
 { 
    // Inform the neuron that inputs of the network have changed,
    // so that the buffered values have to be recomputed.
-   fNewValue = true; 
-   fNewDeriv = true; 
-   fNewDeDw = true; 
+   ((TNeuron*)this)->fNewValue = true; 
+   ((TNeuron*)this)->fNewDeriv = true; 
+   ((TNeuron*)this)->fNewDeDw = true; 
 }
 
 //______________________________________________________________________________
