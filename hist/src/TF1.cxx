@@ -2697,8 +2697,6 @@ void TF1::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      if (fMethodCall || fFunction) 
-         Warning("Streamer", "cannot save a Cint interpreted or compiled function.");
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
