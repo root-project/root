@@ -48,6 +48,7 @@
 
 /* Define following macro in order to disable iostream I/O redirection */
 #define G__OLDIMPLEMENTATION1635
+#define G__OLDIMPLEMENTATION1656
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */
