@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.58 2003/09/07 18:25:47 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.59 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -312,7 +312,6 @@ extern "C" {
 
 #ifdef R__KRB5
 extern "C" {
-   #include <com_err.h>
    #include <krb5.h>
 }
 #endif
