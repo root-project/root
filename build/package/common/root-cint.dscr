@@ -1,9 +1,0 @@
-short: The bare C/C++ interactive interpretor CINT - used by ROOT
-long:
-The interpreter allows for fast prototyping of the macros since
-it removes the time consuming compile/link cycle. It also provides a
-good environment to learn C++. If more performance is needed the
-interactively developed macros can be compiled using a C++ compiler.
-
-For more information on CINT, please refer to 
-     http://root.cern.ch/Cint 

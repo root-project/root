@@ -1,5 +1,0 @@
-Package: root-shift
-Architecture: any
-Depends: libroot (= ${Source-Version}), ${shlibs:Depends}
-Description: @short@
-@long@

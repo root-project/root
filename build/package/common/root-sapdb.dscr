@@ -1,5 +1,0 @@
-short: Thin SapDB Client for ROOT 
-long:
-This package provide a thin client (interface) to SapDB
-servers. Using this client, one can obtain information from a SapDB
-database into the ROOT environment. 

@@ -1,7 +1,0 @@
-Package: root-cint
-Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: libroot (= ${Source-Version})
-Suggests: root-bin (= ${Source-Version}), libroot-dev (= ${Source-Version})
-Description: @short@
-@long@

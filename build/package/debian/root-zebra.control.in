@@ -1,5 +1,0 @@
-Package: root-zebra
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: @short@
-@long@

@@ -1,5 +1,0 @@
-Package: root-pythia
-Architecture: any
-Depends: libroot (= ${Source-Version}), libpythia, libpythia-dev, ${shlibs:Depends}
-Description: @short@ 
-@long@ 

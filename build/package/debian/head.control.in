@@ -1,6 +1,0 @@
-Source: root
-Section: science
-Priority: optional
-Maintainer: Christian Holm <cholm@nbi.dk>
-Build-Depends: debhelper (>> 3.0.0), libxpm4-dev@build-depends@ 
-Standards-Version: 3.5.2
