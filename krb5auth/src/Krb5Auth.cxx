@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.14 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.15 2003/11/26 10:33:08 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -148,6 +148,10 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    // get our credentials cache
    krb5_ccache ccdef;
+   if (gDebug > 2) {
+      Info("Krb5Authenticate","Use credential file from $KRB5CCNAME: %s\n",
+           gSystem->Getenv("KRB5CCNAME"));
+   }
    if ((retval = krb5_cc_default(context, &ccdef))) {
       com_err("<Krb5Authenticate>", retval, "while getting default cache");
       return -1;
@@ -202,16 +206,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cleanup.client = client;
 
    // Get a normal string for user
+   Int_t  lenUser=64;
    char   User[64];
-   strcpy(User,client->data->data);
+   if (client->data->length<64) lenUser = client->data->length;
+   strncpy(User,client->data->data,lenUser);
 
    if (gDebug > 3) {
-      char *Realm = new char[client->realm.length+1];
-      strncpy(Realm,client->realm.data,client->realm.length);
-      Realm[client->realm.length]= '\0';
-      Info("Krb5Authenticate", "cc_get_principal: client: %s %s (%d %d)",
-           client->data->data,Realm, client->data->length, client->realm.length);
-      delete [] Realm;
+      Info("Krb5Authenticate", "cc_get_principal: client: %.*s %.*s",
+           client->data->length, client->data->data, 
+           client->realm.length, client->realm.data);
    }
 
    Int_t ReUse= 1, Prompt= 0;
@@ -336,12 +339,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cleanup.server = server;
 
    if (gDebug > 3) {
-      char *Realm = new char[server->realm.length+1];
-      strncpy(Realm,server->realm.data,server->realm.length);
-      Realm[server->realm.length]= '\0';
-      Info("Krb5Authenticate","sname_to_principal: server: %s %s (%d %d)",
-           server->data->data, Realm, server->data->length, server->realm.length);
-      delete [] Realm;
+      Info("Krb5Authenticate","sname_to_principal: server: %.*s %.*s",
+           server->data->length, server->data->data, 
+           server->realm.length, server->realm.data);
    }
 
    // authenticate
