@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.129 2003/02/26 22:27:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.130 2003/02/27 11:42:17 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4238,7 +4238,10 @@ void TH1::Reset(Option_t *option)
    fTsumwx2     = 0;
    fEntries     = 0;
 
+   TObject *stats = fFunctions->FindObject("stats");
+   fFunctions->Remove(stats);
    fFunctions->Delete();
+   if(stats) fFunctions->Add(stats);
    fContour.Set(0);
 }
 
