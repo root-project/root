@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.30 2003/09/04 12:38:22 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.31 2003/11/11 16:01:48 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -191,6 +191,10 @@ void TGeoPainter::DefineColors() const
    
    for (i=1; i<8; i++) {
       color = (TColor*)gROOT->GetListOfColors()->At(i);
+      if (!color) {
+         Warning("DefineColors", "No colors defined");
+         return;
+      }	 
       color->GetHLS(h,l,s);
       for (j=0; j<100; j++) {
          l = 0.25+0.5*j/99.;
