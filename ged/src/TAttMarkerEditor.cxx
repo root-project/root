@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.00 2004/05/11 05:27:57 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TGClient.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "snprintf.h"
 
 
 ClassImp(TGedFrame)
