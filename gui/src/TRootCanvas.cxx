@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.16 2003/10/10 14:24:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.17 2003/10/13 20:21:32 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -166,7 +166,8 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
 //______________________________________________________________________________
 Bool_t TRootContainer::HandleButton(Event_t *event)
 {
-   //
+   // Directly handle scroll mouse buttons (4 and 5), only pass buttons
+   // 1, 2 and 3 on to the TCanvas.
 
    TGViewPort *vp = (TGViewPort*)fParent;
    Int_t y = vp->GetVPos();
@@ -353,7 +354,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    AddFrame(fStatusBar, fStatusBarLayout);
 
    // Misc
-
    SetWindowName(name);
    SetIconName(name);
    SetIconPixmap("macro_s.xpm");

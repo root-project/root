@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.16 2003/02/03 01:02:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.19 2003/04/29 16:14:06 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -829,7 +829,7 @@ void InfoPad::PaintModified()
 ///////////////////////////////////////////////////////////////////
 KeyHandler::KeyHandler() : TGFrame(gClient->GetRoot(),0,0)
 {
-   // Kay handler constructor
+   // Key handler constructor.
 
    // get main frame of Tetris canvas
    TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
