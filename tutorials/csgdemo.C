@@ -346,7 +346,7 @@ void help() {
    hdemo = new TPaveText(.05,.05,.95,.7);
    hdemo->SetTextAlign(12);
    hdemo->SetTextFont(52);
-   hdemo->AddText("- Demo for building TGeo compoite shapes");
+   hdemo->AddText("- Demo for building TGeo composite shapes");
    hdemo->AddText(" ");
    hdemo->SetAllWith("....","color",2);
    hdemo->SetAllWith("....","font",72);
