@@ -36,9 +36,9 @@ CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS -DWINVER=0x0400 \
                 -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
 
 # Compiler version:
-VC_MAJOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $8 }' | \
+VC_MAJOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
                 cut -d'.' -f1)
-VC_MINOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $8 }' | \
+VC_MINOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
                 cut -d'.' -f2)
 
 # Linker:
