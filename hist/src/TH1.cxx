@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.24 2000/09/11 09:59:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.25 2000/09/13 16:49:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "TVirtualFitter.h"
 #include "TProfile.h"
 #include "TStyle.h"
+#include "TVector.h"
+#include "TVectorD.h"
 
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*The H I S T O G R A M   Classes*-*-*-*-*-*-*-*-*-*-*-*
@@ -4282,6 +4284,18 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t *xbins)
 }
 
 //______________________________________________________________________________
+TH1F::TH1F(const TVector &v)
+     : TH1("TVector","",v.GetNrows(),0,v.GetNrows()), TArrayF(v.GetNrows()+2)
+{
+// Create a histogram from a TVector
+// by default the histogram name is "TVector" and title = ""
+   
+   for (Int_t i=0;i<v.GetNrows();i++) {
+      SetBinContent(i+1,v(i));
+   }      
+}
+
+//______________________________________________________________________________
 TH1F::TH1F(const TH1F &h)
 {
    ((TH1F&)h).Copy(*this);
@@ -4426,6 +4440,18 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+}
+
+//______________________________________________________________________________
+TH1D::TH1D(const TVectorD &v)
+     : TH1("TVectorD","",v.GetNrows(),0,v.GetNrows()), TArrayD(v.GetNrows()+2)
+{
+// Create a histogram from a TVector
+// by default the histogram name is "TVector" and title = ""
+   
+   for (Int_t i=0;i<v.GetNrows();i++) {
+      SetBinContent(i+1,v(i));
+   }      
 }
 
 //______________________________________________________________________________
