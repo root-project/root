@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.14 2001/10/12 07:49:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.15 2001/11/07 16:54:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -30,6 +30,8 @@
 
 class TBrowser;
 class TF1;
+class TVector;
+class TVectorD;
 
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -57,6 +59,9 @@ public:
         TGraph(Int_t n, const Int_t *x, const Int_t *y);
         TGraph(Int_t n, const Float_t *x, const Float_t *y);
         TGraph(Int_t n, const Double_t *x, const Double_t *y);
+        TGraph(const TVector  &vx, const TVector  &vy);
+        TGraph(const TVectorD &vx, const TVectorD &vy);
+        
         virtual ~TGraph();
         virtual void     Apply(TF1 *f);
         virtual void     Browse(TBrowser *b);

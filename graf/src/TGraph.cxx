@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.49 2001/10/27 10:39:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.50 2001/11/07 16:54:07 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TVector.h"
+#include "TVectorD.h"
 #include "Foption.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
@@ -197,6 +199,68 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
    for (Int_t i=0;i<n;i++) {
       fX[i] = x[i];
       fY[i] = y[i];
+   }
+}
+
+//______________________________________________________________________________
+TGraph::TGraph(const TVector &vx, const TVector &vy)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor with two vectors of floats in input
+// A graph is build with the X coordinates taken from vx and Y coord from vy
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+      
+   Int_t n  = vx.GetNrows();
+   Int_t ny = vy.GetNrows();
+   if (ny < n) n = ny;
+   if (n <= 0) {
+      Error("TGraph", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fFunctions = new TList;
+   fHistogram = 0;
+   fNpoints   = n;
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   for (Int_t i=0;i<n;i++) {
+      fX[i] = vx(i);
+      fY[i] = vy(i);
+   }
+}
+
+//______________________________________________________________________________
+TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor with two vectors of doubles in input
+// A graph is build with the X coordinates taken from vx and Y coord from vy
+// The number of points in the graph is the minimum of number of points
+// in vx and vy.
+      
+   Int_t n  = vx.GetNrows();
+   Int_t ny = vy.GetNrows();
+   if (ny < n) n = ny;
+   if (n <= 0) {
+      Error("TGraph", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fFunctions = new TList;
+   fHistogram = 0;
+   fNpoints   = n;
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   for (Int_t i=0;i<n;i++) {
+      fX[i] = vx(i);
+      fY[i] = vy(i);
    }
 }
 
