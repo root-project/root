@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.4 2000/11/22 20:57:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.5 2000/12/02 16:26:48 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -45,10 +45,10 @@ public:
    TRealData(const char *name, Int_t offset, TDataMember *datamember);
    virtual     ~TRealData();
    virtual const char *GetName() const {return fName.Data();}
-   TDataMember *GetDataMember() {return fDataMember;}
-   Streamer_t   GetStreamer() {return fStreamer;}
-   Int_t        GetThisOffset() {return fThisOffset;}
-   Bool_t       IsObject() {return fIsObject;}
+   TDataMember *GetDataMember() const {return fDataMember;}
+   Streamer_t   GetStreamer() const {return fStreamer;}
+   Int_t        GetThisOffset() const {return fThisOffset;}
+   Bool_t       IsObject() const {return fIsObject;}
    void         SetIsObject(Bool_t isObject) {fIsObject=isObject;}
    void         SetStreamer(Streamer_t p) {fStreamer = p;}
    void         WriteRealData(void *pointer, char *&buffer);
