@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.3 2003/12/16 14:09:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -22,18 +22,20 @@ ClassImp(TSynapse)
 TSynapse::TSynapse()
 {
    // Default constructor
-   fpre = NULL;
-   fpost = NULL;
+   fpre    = NULL;
+   fpost   = NULL;
    fweight = 1;
+   fDEDw   = 0;
 }
 
 //______________________________________________________________________________
 TSynapse::TSynapse(TNeuron * pre, TNeuron * post, Double_t w)
 {
    // Constructor that connects two neurons
-   fpre = pre;
-   fpost = post;
+   fpre    = pre;
+   fpost   = post;
    fweight = w;
+   fDEDw   = 0;
    pre->AddPost(this);
    post->AddPre(this);
 }

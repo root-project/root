@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.8 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.9 2003/12/30 21:34:49 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -47,6 +47,9 @@ TNeuron::TNeuron(TNeuron::NeuronType type)
    fNewDeriv = true;
    fNewDeDw = true;
    fFormula = NULL;
+   fDeDw  = 0;
+   fDEDw  = 0;
+   fValue = 0;
 }
 
 //______________________________________________________________________________
