@@ -45,6 +45,12 @@ EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 EmbeddedTest: EmbeddedTest.log
 	$(CMDECHO) diff -b EmbeddedTest.log EmbeddedTest.ref
 
+relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) 
+	$(CMDECHO)  root.exe -q -b -l relationsRun.C > relationsTest.log
+
+relationsTest: relationsTest.log
+	$(CMDECHO) diff -b relationsTest.log relationsTest.ref
+
 mytest:
 	$(CMDECHO) echo mytest > /dev/null
 
