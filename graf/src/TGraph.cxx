@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.4 2000/06/05 07:26:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.5 2000/06/06 08:59:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -26,16 +26,16 @@
 
 const Int_t NPMAX = 204;
 
-static Float_t xwork[NPMAX];
-static Float_t ywork[NPMAX];
-static Float_t xworkl[NPMAX];
-static Float_t yworkl[NPMAX];
+static Double_t xwork[NPMAX];
+static Double_t ywork[NPMAX];
+static Double_t xworkl[NPMAX];
+static Double_t yworkl[NPMAX];
 
 TF1 *grF1 = 0;
 Foption_t fitOption;
 
 static Int_t xfirst,xlast;
-static Float_t xmin, xmax, ymin, ymax;
+static Double_t xmin, xmax, ymin, ymax;
 
 TVirtualFitter *grFitter;
 
@@ -61,7 +61,7 @@ ClassImp(TGraph)
 //------------------------------------------------------------------
 //{
 //   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
-//   Float_t x[100], y[100];
+//   Double_t x[100], y[100];
 //   Int_t n = 20;
 //   for (Int_t i=0;i<n;i++) {
 //     x[i] = i*0.1;
@@ -93,6 +93,32 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 }
 
 //______________________________________________________________________________
+TGraph::TGraph(Int_t n)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(), TAttMarker()
+{
+// constructor with only the number of points set
+// the arrsys x and y will be set later
+
+   if (n <= 0) {
+      Error("TGraph", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fFunctions = new TList(this);
+   fHistogram = 0;
+   fNpoints   = n;
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   for (Int_t i=0;i<n;i++) {
+      fX[i] = 0;
+      fY[i] = 0;
+   }
+   SetBit(kClipFrame);
+}
+
+//______________________________________________________________________________
 TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(), TAttMarker()
 {
@@ -107,8 +133,8 @@ TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
    fFunctions = new TList(this);
    fHistogram = 0;
    fNpoints   = n;
-   fX         = new Float_t[n];
-   fY         = new Float_t[n];
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
    fMaximum   = -1111;
    fMinimum   = -1111;
    if (!x || !y) return;
@@ -126,9 +152,6 @@ TGraph::TGraph(Int_t n, Double_t *x, Double_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with doubles-*-*-*-*-*-*-*-*
 //*-*                  ========================
 //
-// Note that the arrays of doubles are copied into arrays of floats.
-// this functions is provided for conveniency in case the original user array
-// are doubles. Internally TGraph is working with floats.
 
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
@@ -138,8 +161,8 @@ TGraph::TGraph(Int_t n, Double_t *x, Double_t *y)
    fFunctions = new TList(this);
    fHistogram = 0;
    fNpoints   = n;
-   fX         = new Float_t[n];
-   fY         = new Float_t[n];
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
    fMaximum   = -1111;
    fMinimum   = -1111;
    SetBit(kClipFrame);
@@ -175,7 +198,7 @@ void TGraph::Browse(TBrowser *)
 
 
 //______________________________________________________________________________
-void TGraph::ComputeRange(Float_t &, Float_t &, Float_t &, Float_t &)
+void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &)
 {
 // this function is dummy in TGraph, but redefined by TGraphErrors
 }
@@ -261,7 +284,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGraph::DrawGraph(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TGraph::DrawGraph(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -298,7 +321,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //     until the button is released.
 //
    Int_t i, d;
-   Float_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
+   Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;
    static Bool_t MIDDLE;
    static Int_t ipoint, pxp, pyp;
@@ -734,7 +757,7 @@ void TGraph::FitPanel()
 }
 
 //______________________________________________________________________________
-Float_t TGraph::GetErrorX(Int_t)
+Double_t TGraph::GetErrorX(Int_t)
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -744,7 +767,7 @@ Float_t TGraph::GetErrorX(Int_t)
 }
 
 //______________________________________________________________________________
-Float_t TGraph::GetErrorY(Int_t)
+Double_t TGraph::GetErrorY(Int_t)
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -784,7 +807,7 @@ TH1F *TGraph::GetHistogram()
 }
 
 //______________________________________________________________________________
-void TGraph::GetPoint(Int_t i, Float_t &x, Float_t &y)
+void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Get x and y values for point number i*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -839,24 +862,24 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
    Double_t dersum[25], grad[25];
    static Double_t eysum[50];
    Double_t x[1], xx[1];
-   Float_t xm,xp,errormax;
+   Double_t xm,xp,errormax;
    Int_t bin, k, npfits, nparts, part;
 
-   TGraph *gr    = (TGraph*)grFitter->GetObjectFit();
-   Int_t n       = gr->GetN();
-   Float_t *gx   = gr->GetX();
-   Float_t *gy   = gr->GetY();
-   npar          = grF1->GetNpar();
-   Float_t cumin = gy[0];
-   Float_t cumax = gy[0];
+   TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
+   Int_t n        = gr->GetN();
+   Double_t *gx   = gr->GetX();
+   Double_t *gy   = gr->GetY();
+   npar           = grF1->GetNpar();
+   Double_t cumin = gy[0];
+   Double_t cumax = gy[0];
    if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
    nparts = n/3;
    if (nparts == 0)  nparts = 1;
    if (nparts > 40)  nparts = 40;
 
-   Float_t fxmin = grF1->GetXmin();
-   Float_t fxmax = grF1->GetXmax();
-   Float_t dfx   = (fxmax - fxmin)/nparts;
+   Double_t fxmin = grF1->GetXmin();
+   Double_t fxmax = grF1->GetXmax();
+   Double_t dfx   = (fxmax - fxmin)/nparts;
    if (gr->TestBit(TGraph::kFitInit)) {
       for (part=0;part<nparts;part++) { eysum[part] = 0;}
    }
@@ -947,7 +970,7 @@ void TGraph::InitGaus()
    if (np == 0 || allcha == 0) return;
    mean = sumx/allcha;
    rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
-   Float_t binwidx = TMath::Abs((fX[xlast] - fX[xfirst])/np);
+   Double_t binwidx = TMath::Abs((fX[xlast] - fX[xfirst])/np);
    if (rms == 0) rms = 1;
    grF1->SetParameter(0,binwidx*allcha/(sqrtpi*rms));
    grF1->SetParameter(1,mean);
@@ -1038,7 +1061,7 @@ void TGraph::LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 	    b[m + l*20 - 21] += power;
 	}
     }
-    b[0]  = Float_t(np);
+    b[0]  = Double_t(np);
     for (i = 3; i <= m; ++i) {
 	for (k = i; k <= m; ++k) {
 	    b[k - 1 + (i-1)*20 - 21] = b[k + (i-2)*20 - 21];
@@ -1067,7 +1090,7 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
     static Double_t xbar, ybar, x2bar;
     static Int_t i;
     static Double_t xybar;
-    static Float_t fn, xk, yk;
+    static Double_t fn, xk, yk;
     static Double_t det;
 
     ifail = -2;
@@ -1087,7 +1110,7 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 	x2bar += xk*xk;
 	xybar += xk*yk;
     }
-    fn    = Float_t(np);
+    fn    = Double_t(np);
     det   = fn*x2bar - xbar*xbar;
     ifail = -1;
     if (det <= 0) {
@@ -1125,7 +1148,7 @@ void TGraph::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
+void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw a graph*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -1164,11 +1187,11 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
    Int_t OptionFill , OptionZ    ,OptionCurveFill;
    Int_t i, npt, nloop;
    Int_t drawtype;
-   Float_t xlow, xhigh, ylow, yhigh;
-   Float_t barxmin, barxmax, barymin, barymax;
-   Float_t uxmin, uxmax;
-   Float_t x1, xn, y1, yn;
-   Float_t dbar, bdelta;
+   Double_t xlow, xhigh, ylow, yhigh;
+   Double_t barxmin, barxmax, barymin, barymax;
+   Double_t uxmin, uxmax;
+   Double_t x1, xn, y1, yn;
+   Double_t dbar, bdelta;
 
 //*-* ______________________________________
 
@@ -1210,7 +1233,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
 
 //*-*-           Draw the Axis with a fixed number of division: 510
 
-  Float_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum;
+  Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum;
 
   if (OptionAxis) {
 
@@ -1227,8 +1250,8 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
 
      if (rwxmin == rwxmax) rwxmax += 1.;
      if (rwymin == rwymax) rwymax += 1.;
-     Float_t dx = 0.1*(rwxmax-rwxmin);
-     Float_t dy = 0.1*(rwymax-rwymin);
+     Double_t dx = 0.1*(rwxmax-rwxmin);
+     Double_t dy = 0.1*(rwymax-rwymin);
      uxmin    = rwxmin - dx;
      uxmax    = rwxmax + dx;
      minimum  = rwymin - dy;
@@ -1479,7 +1502,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
            if (x[i] < barxmin) barxmin = x[i];
            if (x[i] > barxmax) barxmax = x[i];
         }
-        bdelta = (barxmax-barxmin)/float(npoints);
+        bdelta = (barxmax-barxmin)/Double_t(npoints);
      }
      else {
         barymin = y[0];
@@ -1488,7 +1511,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
            if (y[i] < barymin) barymin = y[i];
            if (y[i] > barymax) barymax = y[i];
         }
-        bdelta = (barymax-barymin)/float(npoints);
+        bdelta = (barymax-barymin)/Double_t(npoints);
      }
      dbar  = 0.5*bdelta*gStyle->GetBarWidth();
      if (!OptionR) {
@@ -1498,7 +1521,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
            yhigh = y[i-1];
            if (xlow  < uxmin) continue;
            if (xhigh > uxmax) continue;
-           if (!OptionOne) ylow = TMath::Max((Float_t)0,gPad->GetUymin());
+           if (!OptionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
            else            ylow = gPad->GetUymin();
            xwork[0] = xlow;
            ywork[0] = ylow;
@@ -1518,7 +1541,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
            xhigh = x[i-1];
            ylow  = y[i-1] - dbar;
            yhigh = y[i-1] + dbar;
-           xlow     = TMath::Max((Float_t)0, gPad->GetUxmin());
+           xlow     = TMath::Max((Double_t)0, gPad->GetUxmin());
            xwork[0] = xlow;
            ywork[0] = ylow;
            xwork[1] = xhigh;
@@ -1532,7 +1555,7 @@ void TGraph::PaintGraph(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
 }
 
 //______________________________________________________________________________
-void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chopt)
+void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*Control function to draw a graphistogram*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -1600,12 +1623,12 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
    Int_t OptionHist , OptionBins , OptionMarker;
    Int_t i, j, npt;
    Int_t drawtype, drawborder, drawbordersav;
-   Float_t xlow, xhigh, ylow, yhigh;
-   Float_t wmin, wmax;
-   Float_t dbar, offset, wminstep;
-   Float_t delta = 0;
-   Float_t ylast = 0;
-   Float_t xi, xi1, xj, xj1, yi1, yi, yj, yj1, xwmin, ywmin;
+   Double_t xlow, xhigh, ylow, yhigh;
+   Double_t wmin, wmax;
+   Double_t dbar, offset, wminstep;
+   Double_t delta = 0;
+   Double_t ylast = 0;
+   Double_t xi, xi1, xj, xj1, yi1, yi, yj, yj1, xwmin, ywmin;
    Int_t first, last, nbins;
    Int_t fillarea;
 
@@ -1647,27 +1670,27 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
 
 //*-*-           Draw the Axis with a fixed number of division: 510
 
-  Float_t baroffset = gStyle->GetBarOffset();
-  Float_t barwidth  = gStyle->GetBarWidth();
-  Float_t rwxmin    = gPad->GetUxmin();
-  Float_t rwxmax    = gPad->GetUxmax();
-  Float_t rwymin    = gPad->GetUymin();
-  Float_t rwymax    = gPad->GetUymax();
-  Float_t uxmin     = gPad->PadtoX(rwxmin);
-  Float_t uxmax     = gPad->PadtoX(rwxmax);
-  Float_t rounding  = (uxmax-uxmin)*1.e-5;
-  drawborder        = gStyle->GetDrawBorder();
+  Double_t baroffset = gStyle->GetBarOffset();
+  Double_t barwidth  = gStyle->GetBarWidth();
+  Double_t rwxmin    = gPad->GetUxmin();
+  Double_t rwxmax    = gPad->GetUxmax();
+  Double_t rwymin    = gPad->GetUymin();
+  Double_t rwymax    = gPad->GetUymax();
+  Double_t uxmin     = gPad->PadtoX(rwxmin);
+  Double_t uxmax     = gPad->PadtoX(rwxmax);
+  Double_t rounding  = (uxmax-uxmin)*1.e-5;
+  drawborder         = gStyle->GetDrawBorder();
   if (OptionAxis) {
      Int_t nx1, nx2, ndivx, ndivy, ndiv;
      choptaxis[0]  = 0;
-     Float_t rwmin  = rwxmin;
-     Float_t rwmax  = rwxmax;
+     Double_t rwmin  = rwxmin;
+     Double_t rwmax  = rwxmax;
      ndivx = gStyle->GetNdivisions("X");
      ndivy = gStyle->GetNdivisions("Y");
      if (ndivx > 1000) {
         nx2   = ndivx/100;
         nx1   = TMath::Max(1, ndivx%100);
-        ndivx = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsWNDC());
+        ndivx = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsWNDC());
      }
      ndiv  =TMath::Abs(ndivx);
      if (ndivx < 0) strcat(choptaxis, "N");
@@ -1695,7 +1718,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      if (ndivy < 0) {
        nx2   = ndivy/100;
        nx1   = TMath::Max(1, ndivy%100);
-       ndivy = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsHNDC());
+       ndivy = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsHNDC());
        strcat(choptaxis, "N");
      }
      ndiv  =TMath::Abs(ndivy);
@@ -1729,7 +1752,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
   if (!OptionRot) {wmin = x[0];   wmax = x[1];}
   else            {wmin = y[0];   wmax = y[1];}
 
-  if (!OptionBins) delta = (wmax - wmin)/ float(nbins);
+  if (!OptionBins) delta = (wmax - wmin)/ Double_t(nbins);
 
 //*-*-           Draw the histogram with a fill area
 
@@ -1737,7 +1760,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      fillarea = kTRUE;
      if (!OptionRot) {
         xwork[0] = wmin;
-        if (!OptionOne) ywork[0] = TMath::Max((Float_t)0,gPad->GetUymin());
+        if (!OptionOne) ywork[0] = TMath::Max((Double_t)0,gPad->GetUymin());
         else            ywork[0] = gPad->GetUymin();
         npt = 2;
         for (j=first; j<=last;j++) {
@@ -1787,7 +1810,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      }
      else {
         ywork[0] = wmin;
-        if (!OptionOne) xwork[0] = TMath::Max((Float_t)0,gPad->GetUxmin());
+        if (!OptionOne) xwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
         else            xwork[0] = gPad->GetUxmin();
         npt = 2;
         for (j=first; j<=last;j++) {
@@ -1842,7 +1865,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
   if ((OptionHist) || strlen(chopt) == 0) {
      if (!OptionRot) {
         xwork[0] = wmin;
-//      ywork[0] = TMath::Max((Float_t)0,gPad->GetUymin());
+//      ywork[0] = TMath::Max((Double_t)0,gPad->GetUymin());
         ywork[0] = gPad->GetUymin();
         ywmin    = ywork[0];
         npt      = 2;
@@ -1882,7 +1905,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      }
      else {
         ywork[0] = wmin;
-        xwork[0] = TMath::Max((Float_t)0,gPad->GetUxmin());
+        xwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
         xwmin    = xwork[0];
         npt      = 2;
         for (i=first; i<=last;i++) {
@@ -2151,7 +2174,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      if (!OptionRot) {
         xlow  = wmin+offset;
         xhigh = wmin+offset+dbar;
-        if (!OptionOne) ylow = TMath::Max((Float_t)0,gPad->GetUymin());
+        if (!OptionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
         else            ylow = gPad->GetUymin();
 
         for (i=first; i<=last;i++) {
@@ -2184,7 +2207,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Float_t *x, Float_t *y, Option_t *chop
      else {
         ylow  = wmin + offset;
         yhigh = wmin + offset + dbar;
-        if (!OptionOne) xlow = TMath::Max((Float_t)0,gPad->GetUxmin());
+        if (!OptionOne) xlow = TMath::Max((Double_t)0,gPad->GetUxmin());
         else            xlow = gPad->GetUxmin();
 
         for (i=first; i<=last;i++) {
@@ -2298,21 +2321,21 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGraph::SetMaximum(Float_t maximum)
+void TGraph::SetMaximum(Double_t maximum)
 {
    fMaximum = maximum;
    if (fHistogram)  fHistogram->SetMaximum(maximum);
 }
 
 //______________________________________________________________________________
-void TGraph::SetMinimum(Float_t minimum)
+void TGraph::SetMinimum(Double_t minimum)
 {
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }
 
 //______________________________________________________________________________
-void TGraph::SetPoint(Int_t i, Float_t x, Float_t y)
+void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set x and y values for point number i*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -2320,11 +2343,11 @@ void TGraph::SetPoint(Int_t i, Float_t x, Float_t y)
    if (i < 0) return;
    if (i >= fNpoints) {
    // re-allocate the object
-      Float_t *savex = new Float_t[i+1];
-      Float_t *savey = new Float_t[i+1];
+      Double_t *savex = new Double_t[i+1];
+      Double_t *savey = new Double_t[i+1];
       if (fNpoints > 0) {
-         memcpy(savex,fX,fNpoints*sizeof(Float_t));
-         memcpy(savey,fY,fNpoints*sizeof(Float_t));
+         memcpy(savex,fX,fNpoints*sizeof(Double_t));
+         memcpy(savey,fY,fNpoints*sizeof(Double_t));
       }
       if (fX) delete [] fX;
       if (fY) delete [] fY;
@@ -2344,7 +2367,7 @@ void TGraph::SetTitle(const char* title)
 }
 
 //______________________________________________________________________________
-void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
+void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Smooth a curve given by N points*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -2379,23 +2402,23 @@ void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
    Int_t i, k, kp, km, NpointsMax, banksize, n2, npt;
    Int_t maxiterations, finished;
    Int_t jtype, ktype, closed;
-   Float_t sxmin, sxmax, symin, symax;
-   Float_t delta;
-   Float_t xorg, yorg;
-   Float_t ratio_signs, xratio, yratio;
+   Double_t sxmin, sxmax, symin, symax;
+   Double_t delta;
+   Double_t xorg, yorg;
+   Double_t ratio_signs, xratio, yratio;
    Int_t flgic, flgis;
    Int_t iw, loptx;
-   Float_t P1, P2, P3, P4, P5, P6;
-   Float_t W1, W2, W3;
-   Float_t A, B, C, R, S, T, Z;
-   Float_t CO, SO, CT, ST, CTU, STU, XNT;
-   Float_t DX1, DY1, DX2, DY2, DK1, DK2;
-   Float_t XO, YO, DX, DY, XT, YT;
-   Float_t XA, XB, YA, YB;
-   Float_t U1, U2, U3, TJ;
-   Float_t CC, ERR;
-   Float_t SB, STH;
-   Float_t wsign, tsquare, tcube;
+   Double_t P1, P2, P3, P4, P5, P6;
+   Double_t W1, W2, W3;
+   Double_t A, B, C, R, S, T, Z;
+   Double_t CO, SO, CT, ST, CTU, STU, XNT;
+   Double_t DX1, DY1, DX2, DY2, DK1, DK2;
+   Double_t XO, YO, DX, DY, XT, YT;
+   Double_t XA, XB, YA, YB;
+   Double_t U1, U2, U3, TJ;
+   Double_t CC, ERR;
+   Double_t SB, STH;
+   Double_t wsign, tsquare, tcube;
    C = T = CO = SO = CT = ST = CTU = STU = DX1 = DY1 = DX2 = DY2 = 0;
    XT = YT = XA = XB = YA = YB = U1 = U2 = U3 = TJ = SB = 0;
 //*-* ______________________________________
@@ -2404,8 +2427,8 @@ void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
    n2          = NpointsMax-2;
    banksize    = n2;
 
-   Float_t *qlx = new Float_t[NpointsMax];
-   Float_t *qly = new Float_t[NpointsMax];
+   Double_t *qlx = new Double_t[NpointsMax];
+   Double_t *qly = new Double_t[NpointsMax];
    if (!qlx || !qly) {
       Error("Smooth", "not enough space in memory");
       return;
@@ -2421,14 +2444,14 @@ void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
    if (jtype > 0) { ktype = jtype; loptx = kTRUE; }
    else             ktype = drawtype;
 
-   Float_t ruxmin = gPad->GetUxmin();
-   Float_t ruymin = gPad->GetUymin();
+   Double_t ruxmin = gPad->GetUxmin();
+   Double_t ruymin = gPad->GetUymin();
    if (ktype == 3) {
       xorg = ruxmin;
       yorg = ruymin;
    } else {
-     xorg = TMath::Max((Float_t)0,ruxmin);
-     yorg = TMath::Max((Float_t)0,ruymin);
+     xorg = TMath::Max((Double_t)0,ruxmin);
+     yorg = TMath::Max((Double_t)0,ruymin);
    }
 
    maxiterations = 20;
@@ -2442,8 +2465,8 @@ void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
    sxmax = x[0];
    symin = y[0];
    symax = y[0];
-   Float_t six   = 1;
-   Float_t siy   = 1;
+   Double_t six   = 1;
+   Double_t siy   = 1;
    for (i=1;i<npoints;i++) {
       if (i > 1) {
          if ((x[i]-x[i-1])*(x[i-1]-x[i-2]) < 0) six++;
@@ -2455,8 +2478,8 @@ void TGraph::Smooth(Int_t npoints, Float_t *x, Float_t *y, Int_t drawtype)
       if (y[i] > symax) symax = y[i];
    }
    closed = 0;
-   Float_t dx1n   = TMath::Abs(x[npoints-1]-x[0]);
-   Float_t dy1n   = TMath::Abs(y[npoints-1]-y[0]);
+   Double_t dx1n   = TMath::Abs(x[npoints-1]-x[0]);
+   Double_t dy1n   = TMath::Abs(y[npoints-1]-y[0]);
    if (dx1n < 0.01*(sxmax-sxmin) && dy1n < 0.01*(symax-symin))  closed = 1;
    if (sxmin == sxmax) xratio = 1;
    else {
@@ -2779,14 +2802,14 @@ L300:
    if (npt < banksize)  goto L320;
    if (drawtype >= 1000 || ktype > 1) {
       Int_t newsize = banksize + n2;
-      Float_t *qtemp = new Float_t[banksize];
+      Double_t *qtemp = new Double_t[banksize];
       for (i=0;i<banksize;i++) qtemp[i] = qlx[i];
       delete [] qlx;
-      qlx = new Float_t[newsize];
+      qlx = new Double_t[newsize];
       for (i=0;i<banksize;i++) qlx[i]   = qtemp[i];
       for (i=0;i<banksize;i++) qtemp[i] = qly[i];
       delete [] qly;
-      qly = new Float_t[newsize];
+      qly = new Double_t[newsize];
       for (i=0;i<banksize;i++) qly[i] = qtemp[i];
       delete [] qtemp;
       banksize = newsize;
@@ -2848,21 +2871,42 @@ void TGraph::Streamer(TBuffer &b)
 
    UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       TAttMarker::Streamer(b);
       b >> fNpoints;
-      fX = new Float_t[fNpoints];
-      fY = new Float_t[fNpoints];
-      b.ReadFastArray(fX,fNpoints);
-      b.ReadFastArray(fY,fNpoints);
+      fX = new Double_t[fNpoints];
+      fY = new Double_t[fNpoints];
+      if (R__v < 2) {
+         Float_t *x = new Float_t[fNpoints];
+         Float_t *y = new Float_t[fNpoints];
+         b.ReadFastArray(x,fNpoints);
+         b.ReadFastArray(y,fNpoints);
+         for (Int_t i=0;i<fNpoints;i++) {
+            fX[i] = x[i];
+            fY[i] = y[i];
+         }
+         delete [] y;
+         delete [] x;
+      } else {
+         b.ReadFastArray(fX,fNpoints);
+         b.ReadFastArray(fY,fNpoints);
+      }
       b >> fFunctions;
       b >> fHistogram;
       if (fHistogram) fHistogram->SetDirectory(0);
-      b >> fMinimum;
-      b >> fMaximum;
+      if (R__v < 2) {
+         Float_t mi,ma;
+         b >> mi;
+         b >> ma;
+         fMinimum = mi;
+         fMaximum = ma;
+      } else {
+         b >> fMinimum;
+         b >> fMaximum;
+      }
       b.CheckByteCount(R__s, R__c, TGraph::IsA());
    } else {
       R__c = b.WriteVersion(TGraph::IsA(), kTRUE);
@@ -2882,7 +2926,7 @@ void TGraph::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TGraph::Zero(Int_t &k,Float_t AZ,Float_t BZ,Float_t E2,Float_t &X,Float_t &Y
+void TGraph::Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
                  ,Int_t maxiterations)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Find zero of a continuous function*-*-*-*-*-*-*-*-*-*
@@ -2894,9 +2938,9 @@ void TGraph::Zero(Int_t &k,Float_t AZ,Float_t BZ,Float_t E2,Float_t &X,Float_t &
 // notes for details of the argument list and calling sequence
 //
 //
-   static Float_t A, B, YA, ytest, Y1, X1, H;
+   static Double_t A, B, YA, ytest, Y1, X1, H;
    static Int_t J1, IT, J3, J2;
-   Float_t YB, X2;
+   Double_t YB, X2;
    YB = 0;
 //*-*______________________________________
 
