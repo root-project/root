@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.50 2003/06/29 15:44:30 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.51 2003/07/08 15:42:25 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -83,6 +83,7 @@ Hist.Binning.3D.Profy:      100
 # THtml specific settings (for more see doc of THtml class)
 Unix.*.Root.Html.SourceDir:  .:src:include
 WinNT.*.Root.Html.SourceDir: .;src;include
+Root.Html.Root      :        http://root.cern.ch/root/html
 #Root.Html.OutputDir:        htmldoc/
 #Root.Html.Homepage:
 #Root.Html.Header:
