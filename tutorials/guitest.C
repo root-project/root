@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.42 2004/09/09 00:25:23 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.43 2004/09/13 14:21:43 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -874,9 +874,10 @@ void TestMainFrame::HandleMenu(Int_t id)
          {
             TGFontDialog::FontProp_t prop;
             new TGFontDialog(gClient->GetRoot(), fMain, &prop);
-            printf("Selected font: %s, size %d, italic %s, bold %s, color 0x%lx, align %u\n",
-                   prop.fName.Data(), prop.fSize, prop.fItalic ? "yes" : "no",
-                   prop.fBold ? "yes" : "no", prop.fColor, prop.fAlign);
+            if (prop.fName != "")
+               printf("Selected font: %s, size %d, italic %s, bold %s, color 0x%lx, align %u\n",
+                      prop.fName.Data(), prop.fSize, prop.fItalic ? "yes" : "no",
+                      prop.fBold ? "yes" : "no", prop.fColor, prop.fAlign);
          }
          break;
 
