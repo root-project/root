@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.138 2004/09/10 07:34:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.137 2004/09/06 06:54:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -80,15 +80,8 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph default constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
-   fMaxSize   = 0;
    fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaximum = -1111;
-   fMinimum = -1111;
-   SetBit(kClipFrame);
+   CtorAllocate();
 }
 
 //______________________________________________________________________________
@@ -97,30 +90,9 @@ TGraph::TGraph(Int_t n)
 {
 // constructor with only the number of points set
 // the arrsys x and y will be set later
-
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   for (Int_t i=0;i<n;i++) {
-      fX[i] = 0;
-      fY[i] = 0;
-   }
-   SetBit(kClipFrame);
+   fNpoints = n;
+   if (!CtorAllocate()) return;
+   FillZero(0, fNpoints);
 }
 
 //______________________________________________________________________________
@@ -130,30 +102,16 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with ints-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
+   if (!x || !y) {
+      fNpoints = 0;
+   } else {
+      fNpoints = n;
    }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   if (!x || !y) return;
+   if (!CtorAllocate()) return;
    for (Int_t i=0;i<n;i++) {
       fX[i] = (Double_t)x[i];
       fY[i] = (Double_t)y[i];
    }
-   SetBit(kClipFrame);
 }
 
 //______________________________________________________________________________
@@ -163,30 +121,16 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with floats-*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
+   if (!x || !y) {
+      fNpoints = 0;
+   } else {
+      fNpoints = n;
    }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   if (!x || !y) return;
+   if (!CtorAllocate()) return;
    for (Int_t i=0;i<n;i++) {
       fX[i] = x[i];
       fY[i] = y[i];
    }
-   SetBit(kClipFrame);
 }
 
 //______________________________________________________________________________
@@ -196,31 +140,15 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with doubles-*-*-*-*-*-*-*-*
 //*-*                  ========================
 //
-
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
+   if (!x || !y) {
+      fNpoints = 0;
+   } else {
+      fNpoints = n;
    }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   SetBit(kClipFrame);
-   if (!x || !y) return;
-   for (Int_t i=0;i<n;i++) {
-      fX[i] = x[i];
-      fY[i] = y[i];
-   }
+   if (!CtorAllocate()) return;
+   n = fNpoints*sizeof(Double_t);
+   memcpy(fX, x, n);
+   memcpy(fY, y, n);
 }
 
 //______________________________________________________________________________
@@ -236,15 +164,17 @@ TGraph::TGraph(const TGraph &gr)
    fHistogram = 0;
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
-   fX = 0;
-   fY = 0;
-   if (fNpoints ==0) return;
-   fX = new Double_t[fNpoints];
-   fY = new Double_t[fNpoints];
-   for (Int_t i=0;i<fNpoints;i++) {
-      fX[i] = gr.fX[i];
-      fY[i] = gr.fY[i];
+   if (!fMaxSize) {
+      fX = fY = 0;
+      return;
+   } else {
+      fX = new Double_t[fMaxSize];
+      fY = new Double_t[fMaxSize];
    }
+   
+   Int_t n = gr.GetN()*sizeof(Double_t);
+   memcpy(fX, gr.fX, n);
+   memcpy(fY, gr.fY, n);
 }
 
 //______________________________________________________________________________
@@ -256,29 +186,9 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   Int_t n  = vx.GetNrows();
-   Int_t ny = vy.GetNrows();
-   if (ny < n) n = ny;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   SetBit(kClipFrame);
-   for (Int_t i=0;i<n;i++) {
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i < fNpoints; i++) {
       fX[i] = vx(i);
       fY[i] = vy(i);
    }
@@ -293,29 +203,9 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   Int_t n  = vx.GetNrows();
-   Int_t ny = vy.GetNrows();
-   if (ny < n) n = ny;
-   if (n <= 0) {
-      Error("TGraph", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fFunctions = new TList;
-   fNpoints   = n;
-   fMaxSize   = n;
-   fX         = new Double_t[n];
-   fY         = new Double_t[n];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   SetBit(kClipFrame);
-   for (Int_t i=0;i<n;i++) {
+   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!CtorAllocate()) return;
+   for (Int_t i=0; i<fNpoints; i++) {
       fX[i] = vx(i);
       fY[i] = vy(i);
    }
@@ -327,41 +217,27 @@ TGraph::TGraph(const TH1 *h)
 {
 // Graph constructor importing its parameters from the TH1 object passed as argument
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
    if (!h) {
       Error("TGraph", "Pointer to histogram is null");
-      return;
+      fNpoints = 0;
    }
    if (h->GetDimension() != 1) {
       Error("TGraph", "Histogram must be 1-D; h %s is %d-D",h->GetName(),h->GetDimension());
-      return;
+      fNpoints = 0;
+   } else {
+      fNpoints = ((TH1*)h)->GetXaxis()->GetNbins();
    }
+   
+   if (!CtorAllocate()) return;
+
    TAxis *xaxis = ((TH1*)h)->GetXaxis();
-   fFunctions = new TList;
-   fNpoints   = xaxis->GetNbins();
-   fMaxSize   = fNpoints;
-   fX         = new Double_t[fNpoints];
-   fY         = new Double_t[fNpoints];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   SetBit(kClipFrame);
    for (Int_t i=0;i<fNpoints;i++) {
       fX[i] = xaxis->GetBinCenter(i+1);
       fY[i] = h->GetBinContent(i+1);
    }
-   SetLineColor(h->GetLineColor());;
-   SetLineWidth(h->GetLineWidth());
-   SetLineStyle(h->GetLineStyle());
-   SetFillColor(h->GetFillColor());
-   SetFillStyle(h->GetFillStyle());
-   SetMarkerStyle(h->GetMarkerStyle());
-   SetMarkerColor(h->GetMarkerColor());
-   SetMarkerSize(h->GetMarkerSize());
+   h->TAttLine::Copy(*this);
+   h->TAttFill::Copy(*this);
+   h->TAttMarker::Copy(*this);
 
    SetName(h->GetName());
    SetTitle(h->GetTitle());
@@ -382,30 +258,20 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 // if option =="I", a TGraph is created with points computed with the integral
 //                at the fNpx+1 points of f and the integral is normalized to 1.
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
+   char coption = ' ';
    if (!f) {
       Error("TGraph", "Pointer to function is null");
-      return;
+      fNpoints = 0;
+   } else {
+      fNpoints   = f->GetNpx();
+      if (option) coption = *option;
+      if (coption == 'i' || coption == 'I') fNpoints++;
    }
-   char coption = ' ';
-   if (option) coption = *option;
-   fFunctions = new TList;
-   fNpoints   = f->GetNpx();
-   fMaxSize   = fNpoints;
+   if (!CtorAllocate()) return;
+
    Double_t xmin = f->GetXmin();
    Double_t xmax = f->GetXmax();
    Double_t dx   = (xmax-xmin)/fNpoints;
-   if (coption == 'i' || coption == 'I') fNpoints++;
-   fX         = new Double_t[fNpoints];
-   fY         = new Double_t[fNpoints];
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   SetBit(kClipFrame);
    Double_t integ = 0;
    Int_t i;
    for (i=0;i<fNpoints;i++) {
@@ -426,11 +292,9 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
       for (i=1;i<fNpoints;i++) fY[i] /= integ;
    }
 
-   SetLineColor(f->GetLineColor());;
-   SetLineWidth(f->GetLineWidth());
-   SetLineStyle(f->GetLineStyle());
-   SetFillColor(f->GetFillColor());
-   SetFillStyle(f->GetFillStyle());
+   f->TAttLine::Copy(*this);
+   f->TAttFill::Copy(*this);
+   f->TAttMarker::Copy(*this);
 
    SetName(f->GetName());
    SetTitle(f->GetTitle());
@@ -443,26 +307,16 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 // Graph constructor reading input from filename
 // filename is assumed to contain at least two columns of numbers
 
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaxSize   = 0;
-   fNpoints   = 0;
-   fX         = 0;
-   fY         = 0;
-   fMaximum   = -1111;
-   fMinimum   = -1111;
-   fFunctions = new TList;
-   SetBit(kClipFrame);
-
-
    Double_t x,y;
    FILE *fp = fopen(filename,"r");
    if (!fp) {
       MakeZombie();
       Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
-      return;
+      fNpoints = 0;
+   } else {
+      fNpoints = 100;  //initial number of points
    }
-   Set(100);  //initial number of points
+   if (!CtorAllocate()) return;
    char line[80];
    Int_t np = 0;
    while (fgets(line,80,fp)) {
@@ -499,29 +353,22 @@ TGraph::~TGraph()
       }
       delete fFunctions;
    }
-   fFunctions = 0;
    delete fHistogram;
-   fHistogram = 0;
 }
 
 //______________________________________________________________________________
-Double_t** TGraph::Allocate(Double_t **newarrays, Int_t size)
+Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
 {
-// allocate new arrays of size n.
-// For zero newarrays allocate newarrays[2],
-// assign pointers to newarrays[0] for x and newarrays[1] for y.
-// Return newarrays (argument or allocated one)
-   if (size < 0) { size = 0; }
-   if (!newarrays) {
-      newarrays = new Double_t*[2];
-   }
-   if (!size) {
-      newarrays[0] = newarrays[1] = 0;
+   if (arraySize < 0) { arraySize = 0; }
+   Double_t **newarrays = new Double_t*[Narrays];
+   if (!arraySize) {
+      for (Int_t i = 0; i < Narrays; ++i)
+         newarrays[i] = 0;
    } else {
-      newarrays[0] = new Double_t[size];
-      newarrays[1] = new Double_t[size];
+      for (Int_t i = 0; i < Narrays; ++i)
+         newarrays[i] = new Double_t[arraySize];
    }
-   fMaxSize = size;
+   fMaxSize = arraySize;
    return newarrays;
 }
 
@@ -606,14 +453,41 @@ Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
    if (!arrays && ibegin == obegin) { // No copying is needed
       return kFALSE;
    }
+   Int_t n = (iend - ibegin)*sizeof(Double_t);
    if (arrays) {
-      memmove(&arrays[0][obegin], &fX[ibegin],
-              (iend - ibegin)*sizeof(Double_t));
-      memmove(&arrays[1][obegin], &fY[ibegin], 
-              (iend - ibegin)*sizeof(Double_t));
+      memmove(&arrays[0][obegin], &fX[ibegin], n);
+      memmove(&arrays[1][obegin], &fY[ibegin], n);
    } else {
-      memmove(&fX[obegin], &fX[ibegin], (iend - ibegin)*sizeof(Double_t));
-      memmove(&fY[obegin], &fY[ibegin], (iend - ibegin)*sizeof(Double_t));
+      memmove(&fX[obegin], &fX[ibegin], n);
+      memmove(&fY[obegin], &fY[ibegin], n);
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGraph::CtorAllocate()
+{
+// In constructors set fNpoints than call this method.
+// Return kFALSE if the graph will contain no points.
+   fHistogram = 0;
+   fMaximum = -1111;
+   fMinimum = -1111;
+   SetBit(kClipFrame);
+   if (fNpoints <= 0) {
+      fFunctions = 0;
+      fNpoints = 0;
+      fMaxSize   = 0;
+      fX         = 0;
+      fY         = 0;
+      if (fNpoints < 0) {
+         Error("TGraph", "illegal number of points (%d)", fNpoints);
+      }
+      return kFALSE;
+   } else {
+      fMaxSize   = fNpoints;
+      fFunctions = new TList;
+      fX = new Double_t[fMaxSize];
+      fY = new Double_t[fMaxSize];
    }
    return kTRUE;
 }
@@ -988,8 +862,8 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (MIDDLE) {
          for(i=0;i<fNpoints;i++) {
             if (BADCASE) continue;  //do not update if big zoom and points moved
-            if (x) fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-            if (y) fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+            fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+            fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
       } else {
          fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
@@ -1020,7 +894,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TGraph::Expand(Int_t newsize)
 {
 // if array sizes <= newsize, expand storage to 2*newsize.
-  Double_t **ps = ExpandAndCopy(0, newsize, fNpoints);
+  Double_t **ps = ExpandAndCopy(newsize, fNpoints);
   CopyAndRelease(ps, 0, 0, 0);
 }
 
@@ -1033,22 +907,31 @@ void TGraph::Expand(Int_t newsize, Int_t step)
    if (newsize <= fMaxSize) {
       return;
    }
-   Double_t **ps = Allocate(0, (newsize/step + (newsize%step?1:0))*step);
+   Double_t **ps = Allocate(step*(newsize/step + (newsize%step?1:0)));
    CopyAndRelease(ps, 0, fNpoints, 0);
 } 
 
 //______________________________________________________________________________
-Double_t **TGraph::ExpandAndCopy(Double_t **newarrays, Int_t size, Int_t iend)
+Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 {
 // if size > fMaxSize allocate new arrays of 2*size points
 //  and copy oend first points.
 // Return pointer to new arrays.
-   if (size <= fMaxSize) { return newarrays; }
-   newarrays = Allocate(newarrays, 2*size);
+   if (size <= fMaxSize) { return 0; }
+   Double_t **newarrays = Allocate(2*size);
    CopyPoints(newarrays, 0, iend, 0);
    return newarrays;
 }
    
+//______________________________________________________________________________
+void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
+// Set zero values for point arrays in the range [begin, end)
+// Should be redefined in descendant classes
+{
+   memset(fX + begin, 0, (end - begin)*sizeof(Double_t));
+   memset(fY + begin, 0, (end - begin)*sizeof(Double_t));
+}
+
 //______________________________________________________________________________
 TObject *TGraph::FindObject(const char *name) const
 {
@@ -1771,8 +1654,12 @@ Int_t TGraph::InsertPoint()
       if (dpx*dpx+dpy*dpy < 25) ipoint = 0;
       else                      ipoint = fNpoints;
    }
-   Double_t **ps = ExpandAndCopy(0, fNpoints + 1, ipoint);
+   Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
    CopyAndRelease(ps, ipoint, fNpoints++, ipoint + 1);
+   
+   // To avoid redefenitions in descendant classes
+   FillZero(ipoint, ipoint + 1);
+
    fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
    fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(py));
    gPad->Modified();
@@ -3386,7 +3273,7 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
 
-   Double_t **ps = ShrinkAndCopy(0, fNpoints - 1, ipoint);
+   Double_t **ps = ShrinkAndCopy(fNpoints - 1, ipoint);
    CopyAndRelease(ps, ipoint+1, fNpoints--, ipoint);
    if (gPad) gPad->Modified();
    return ipoint;
@@ -3456,11 +3343,10 @@ void TGraph::Set(Int_t n)
 
    if (n < 0) n = 0;
    if (n == fNpoints) return;
-   Double_t **ps = Allocate(0, n);
+   Double_t **ps = Allocate(n);
    CopyAndRelease(ps, 0, TMath::Min(fNpoints,n), 0);
    if (n > fNpoints) {
-      memset(&fX[fNpoints], 0, (n - fNpoints)*sizeof(Double_t));
-      memset(&fY[fNpoints], 0, (n - fNpoints)*sizeof(Double_t));
+      FillZero(fNpoints, n, kFALSE);
    }
    fNpoints = n;
 }
@@ -3505,13 +3391,14 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 
    if (i < 0) return;
    if (i >= fMaxSize) {
-      Double_t **ps = ExpandAndCopy(0, i+1, fNpoints);
+      Double_t **ps = ExpandAndCopy(i+1, fNpoints);
       CopyAndRelease(ps, 0,0,0);
    }
    if (i >= fNpoints) {
       // points above i can be not initialized
-      memset(&fX[fNpoints],0,(i-fNpoints)*sizeof(Double_t));
-      memset(&fY[fNpoints],0,(i-fNpoints)*sizeof(Double_t));
+      // set zero up to i-th point to avoid redefenition
+      // of this method in descendant classes
+      FillZero(fNpoints, i + 1);
       fNpoints = i+1;
    }
    fX[i] = x;
@@ -3530,8 +3417,7 @@ void TGraph::SetTitle(const char* title)
 }
 
 //______________________________________________________________________________
-Double_t **TGraph::ShrinkAndCopy(Double_t **newarrays, Int_t size,
-                                 Int_t oend)
+Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 {
 // if size*2 <= fMaxSize allocate new arrays of size points,
 // copy points [0,oend).
@@ -3540,7 +3426,7 @@ Double_t **TGraph::ShrinkAndCopy(Double_t **newarrays, Int_t size,
    if (size*2 > fMaxSize || !fMaxSize) {
       return 0;
    }
-   newarrays = Allocate(newarrays, size);
+   Double_t **newarrays = Allocate(size);
    CopyPoints(newarrays, 0, oend, 0);
    return newarrays;
 }

@@ -65,8 +65,7 @@ TGraphErrors::TGraphErrors(): TGraph()
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphErrors default constructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
-   fEX       = 0;
-   fEY       = 0;
+   CtorAllocate();
 }
 
 
@@ -79,18 +78,8 @@ TGraphErrors::TGraphErrors(Int_t n)
 //
 //  the arrays are preset to zero
 
-   if (n <= 0) {
-      Error("TGraphErrors", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fEX       = new Double_t[n];
-   fEY       = new Double_t[n];
-
-   for (Int_t i=0;i<n;i++) {
-      fEX[i] = 0;
-      fEY[i] = 0;
-   }
+   if (!CtorAllocate()) return;
+   FillZero(0, fNpoints);
 }
 
 
@@ -102,14 +91,7 @@ TGraphErrors::TGraphErrors(Int_t n, const Float_t *x, const Float_t *y, const Fl
 //*-*                  ===============================
 //
 //  if ex or ey are null, the corresponding arrays are preset to zero
-
-   if (n <= 0) {
-      Error("TGraphErrors", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fEX       = new Double_t[n];
-   fEY       = new Double_t[n];
+   if (!CtorAllocate()) return;
 
    for (Int_t i=0;i<n;i++) {
       if (ex) fEX[i] = ex[i];
@@ -128,21 +110,13 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
 //*-*                  ===============================
 //
 //  if ex or ey are null, the corresponding arrays are preset to zero
+   if (!CtorAllocate()) return;
 
-   if (n <= 0) {
-      Error("TGraphErrors", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fEX       = new Double_t[n];
-   fEY       = new Double_t[n];
-
-   for (Int_t i=0;i<n;i++) {
-      if (ex) fEX[i] = ex[i];
-      else    fEX[i] = 0;
-      if (ey) fEY[i] = ey[i];
-      else    fEY[i] = 0;
-   }
+   n = sizeof(Double_t)*fNpoints;
+   if (ex) memcpy(fEX, ex, n);
+   else    memset(fEX, 0, n);
+   if (ey) memcpy(fEY, ey, n);
+   else    memset(fEY, 0, n);
 }
 
 //______________________________________________________________________________
@@ -151,14 +125,11 @@ TGraphErrors::TGraphErrors(const TGraphErrors &gr)
 {
 // TGraphErrors copy constructor 
    
-   fEX = fEY = 0;
-   if (fNpoints == 0) return;
-   fEX = new Double_t[fNpoints];
-   fEY = new Double_t[fNpoints];
-   for (Int_t i=0;i<fNpoints;i++) {
-      fEX[i] = gr.fEX[i];
-      fEY[i] = gr.fEY[i];
-   }
+   if (!CtorAllocate()) return;
+
+   Int_t n = sizeof(Double_t)*fNpoints;
+   memcpy(fEX, gr.fEX, n);
+   memcpy(fEY, gr.fEY, n);
 }
 
 //______________________________________________________________________________
@@ -166,11 +137,8 @@ TGraphErrors::TGraphErrors(const TH1 *h)
        : TGraph(h)
 {
 // TGraphErrors constructor importing its parameters from the TH1 object passed as argument
-
-   if (fNpoints <= 0) return;
-   fEX       = new Double_t[fNpoints];
-   fEY       = new Double_t[fNpoints];
-
+   if (!CtorAllocate()) return;
+   
    for (Int_t i=0;i<fNpoints;i++) {
       fEX[i] = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEY[i] = h->GetBinError(i+1);
@@ -188,8 +156,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
 //  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
 //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY
 
-   fEX = new Double_t[fNpoints];
-   fEY = new Double_t[fNpoints];
+   CtorAllocate();
    Double_t x,y,ex,ey;
    FILE *fp = fopen(filename,"r");
    if (!fp) {
@@ -216,7 +183,6 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
          // not a data line
          continue;
       }
-      if (np >= fNpoints) Set(2*fNpoints);
       SetPoint(np,x,y);
       SetPointError(np,ex,ey);
       np++;
@@ -234,28 +200,6 @@ TGraphErrors::~TGraphErrors()
 
    delete [] fEX;
    delete [] fEY;
-}
-
-//______________________________________________________________________________
-Double_t** TGraphErrors::Allocate(Double_t **newarrays, Int_t size)
-{
-// allocate new arrays of size n.
-// For zero newarrays allocate newarrays[4],
-// assign pointers to newarrays[0] for ex and newarrays[1] for ey,
-// newarrays[2] for x and newarrays[3] for y
-// Return newarrays (argument or allocated one)
-   if (size < 0) { size = 0; }
-   if (!newarrays) {
-      newarrays = new Double_t*[4];
-   }
-   if (!size) {
-      newarrays[0] = newarrays[1] = 0;
-   } else {
-      newarrays[0] = new Double_t[size];
-      newarrays[1] = new Double_t[size];
-   }
-   TGraph::Allocate(newarrays + 2, size);
-   return newarrays;
 }
 
 //______________________________________________________________________________
@@ -342,11 +286,6 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
 void TGraphErrors::CopyAndRelease(Double_t **newarrays,
                                   Int_t ibegin, Int_t iend, Int_t obegin)
 {
-// Copy points from fX and fY to arrays[3] and arrays[1],
-// errors from arrays[0] and arrays[1];
-// or to fX and fY if arrays == 0 and ibegin != iend.
-// If newarrays is non null, replace fX, fY with pointers from newarrays[0,1].
-// Delete newarrays, old fX and fY
    CopyPoints(newarrays, ibegin, iend, obegin);
    if (newarrays) {
       delete[] fX;
@@ -368,14 +307,13 @@ Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
 // Copy errors from fEX and fEY to arrays[0] and arrays[1]
 // or to fX and fY. Copy points.
    if (TGraph::CopyPoints(arrays ? arrays+2 : 0, ibegin, iend, obegin)) {
+      Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
-         memmove(&arrays[0][obegin], &fEX[ibegin],
-                 (iend - ibegin)*sizeof(Double_t));
-         memmove(&arrays[1][obegin], &fEY[ibegin], 
-                 (iend - ibegin)*sizeof(Double_t));
+         memmove(&arrays[0][obegin], &fEX[ibegin], n);
+         memmove(&arrays[1][obegin], &fEY[ibegin], n);
       } else {
-         memmove(&fEX[obegin], &fEX[ibegin], (iend - ibegin)*sizeof(Double_t));
-         memmove(&fEY[obegin], &fEY[ibegin], (iend - ibegin)*sizeof(Double_t));
+         memmove(&fEX[obegin], &fEX[ibegin], n);
+         memmove(&fEY[obegin], &fEY[ibegin], n);
       }
       return kTRUE;
    } else {
@@ -383,6 +321,30 @@ Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
    }
 }
 
+//______________________________________________________________________________
+Bool_t TGraphErrors::CtorAllocate()
+{
+   if (!fNpoints) {
+      fEX = fEY = 0;
+      return kFALSE;
+   } else {
+      fEX = new Double_t[fMaxSize];
+      fEY = new Double_t[fMaxSize];
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
+{
+// Set zero values for point arrays in the range [begin, end)
+   if (!from_ctor) {
+      TGraph::FillZero(begin, end, from_ctor);
+   }
+   Int_t n = (end - begin)*sizeof(Double_t);
+   memset(fEX + begin, 0, n);
+   memset(fEY + begin, 0, n);
+}
 
 //______________________________________________________________________________
 Double_t TGraphErrors::GetErrorX(Int_t i) const
@@ -404,19 +366,6 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
    if (i < 0 || i >= fNpoints) return -1;
    if (fEY) return fEY[i];
    return -1;
-}
-
-//______________________________________________________________________________
-Int_t TGraphErrors::InsertPoint()
-{
-// Insert a new point at the mouse position
-
-   Int_t ipoint = TGraph::InsertPoint();
-   if (ipoint >= 0) {
-      fEX[ipoint] = 0;
-      fEY[ipoint] = 0;
-   }
-   return ipoint;
 }
 
 //______________________________________________________________________________
@@ -682,34 +631,6 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   gre->Draw("
       <<quote<<option<<quote<<");"<<endl;
-}
-
-//______________________________________________________________________________
-void TGraphErrors::Set(Int_t n)
-{
-// Set number of points in the graph
-// Existing coordinates are preserved
-// New coordinates and errors above fNpoints are preset to 0.
-
-   Int_t saveNpoints = fNpoints;
-   TGraph::Set(n);
-   if (fNpoints > saveNpoints) {
-      memset(&fEX[saveNpoints], 0, (fNpoints - saveNpoints)*sizeof(Double_t));
-      memset(&fEY[saveNpoints], 0, (fNpoints - saveNpoints)*sizeof(Double_t));
-   }
-}
-
-//______________________________________________________________________________
-void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
-{
-//*-*-*-*-*-*-*-*-*-*-*Set x and y values for point number i*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
-   Int_t saveNpoints = fNpoints;
-   TGraph::SetPoint(i, x, y);
-   if (fNpoints > saveNpoints) {
-      memset(fEX + fNpoints, 0, (fNpoints - saveNpoints + 1)*sizeof(Double_t));
-      memset(fEY + fNpoints, 0, (fNpoints - saveNpoints + 1)*sizeof(Double_t));
-   }
 }
 
 //______________________________________________________________________________

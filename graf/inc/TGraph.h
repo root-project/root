@@ -49,15 +49,17 @@ protected:
     static void      SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
     virtual void     SwapPoints(Int_t pos1, Int_t pos2);
 
-    virtual Double_t **Allocate(Double_t **newarrays, Int_t newsize);
-    virtual Bool_t CopyPoints(Double_t **newarrays, Int_t ibegin, Int_t iend,
-                              Int_t obegin);
-    virtual void CopyAndRelease(Double_t **newarrays,
-                                      Int_t ibegin, Int_t iend, Int_t obegin);
-    virtual Double_t **ExpandAndCopy(Double_t **newarrays,
-                                     Int_t size, Int_t iend);
-    virtual Double_t **ShrinkAndCopy(Double_t **newarrays,
-                                     Int_t size, Int_t iend);
+   virtual Double_t **Allocate(Int_t newsize);
+           Double_t **AllocateArrays(Int_t Narrays, Int_t arraySize);
+   virtual Bool_t     CopyPoints(Double_t **newarrays,
+                                 Int_t ibegin, Int_t iend, Int_t obegin);
+   virtual void       CopyAndRelease(Double_t **newarrays,
+                                     Int_t ibegin, Int_t iend, Int_t obegin);
+   virtual Bool_t     CtorAllocate();
+           Double_t **ExpandAndCopy(Int_t size, Int_t iend);
+   virtual void       FillZero(Int_t begin, Int_t end,
+                               Bool_t from_ctor = kTRUE);
+            Double_t **ShrinkAndCopy(Int_t size, Int_t iend);
 
 public:
     // TGraph status bits
@@ -95,8 +97,8 @@ public:
         virtual void     DrawPanel(); // *MENU*
         virtual Double_t Eval(Double_t x, TSpline *spline=0, Option_t *option="") const;
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual void   Expand(Int_t newsize);
-        virtual void   Expand(Int_t newsize, Int_t step);
+        virtual void     Expand(Int_t newsize);
+        virtual void     Expand(Int_t newsize, Int_t step);
         virtual TObject *FindObject(const char *name) const;
         virtual TObject *FindObject(const TObject *obj) const;
         virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
@@ -150,6 +152,10 @@ public:
 
         ClassDef(TGraph,4)  //Graph graphics class
 };
+
+inline Double_t **TGraph::Allocate(Int_t newsize) {
+   return AllocateArrays(2, newsize);
+}
 
 #endif
 

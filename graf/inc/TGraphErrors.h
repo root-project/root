@@ -31,12 +31,16 @@ protected:
     Double_t    *fEX;        //[fNpoints] array of X errors
     Double_t    *fEY;        //[fNpoints] array of Y errors
 
-    virtual Double_t** Allocate(Double_t **newarrays, Int_t size);
-    virtual void       CopyAndRelease(Double_t **newarrays,
-                                Int_t ibegin, Int_t iend, Int_t obegin);
-    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
-                              Int_t obegin);
-    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
+    virtual void     SwapPoints(Int_t pos1, Int_t pos2);
+
+   virtual Double_t** Allocate(Int_t size);
+   virtual void       CopyAndRelease(Double_t **newarrays,
+                                     Int_t ibegin, Int_t iend, Int_t obegin);
+   virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                                 Int_t obegin);
+   virtual Bool_t     CtorAllocate();
+   virtual void       FillZero(Int_t begin, Int_t end,
+                               Bool_t from_ctor = kTRUE);
 
 public:
         TGraphErrors();
@@ -54,17 +58,18 @@ public:
         Double_t        GetErrorY(Int_t bin) const;
         Double_t       *GetEX() const {return fEX;}
         Double_t       *GetEY() const {return fEY;}
-        virtual Int_t   InsertPoint(); // *MENU*
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual void    Set(Int_t n);
-        virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void    SetPointError(Double_t ex, Double_t ey);  // *MENU
         virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey);
 
         ClassDef(TGraphErrors,3)  //A graph with error bars
 };
+
+inline Double_t **TGraphErrors::Allocate(Int_t size) {
+   return AllocateArrays(4, size);
+}
 
 #endif
 

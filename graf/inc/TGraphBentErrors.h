@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.2 2004/02/13 14:26:59 rdm Exp $
+// @(#)root/graf:$Name: v4-00-08-patches $:$Id: TGraphBentErrors.h,v 1.3 2004/02/22 11:31:17 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -39,6 +39,15 @@ protected:
 
     virtual void     SwapPoints(Int_t pos1, Int_t pos2);
 
+   virtual Double_t** Allocate(Int_t size);
+   virtual void       CopyAndRelease(Double_t **newarrays,
+                                     Int_t ibegin, Int_t iend, Int_t obegin);
+   virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                                 Int_t obegin);
+   virtual Bool_t     CtorAllocate();
+   virtual void       FillZero(Int_t begin, Int_t end,
+                               Bool_t from_ctor = kTRUE);
+
 public:
         TGraphBentErrors();
         TGraphBentErrors(Int_t n);
@@ -65,14 +74,9 @@ public:
         Double_t       *GetEXhigh() const {return fEXhigh;}
         Double_t       *GetEYlow()  const {return fEYlow;}
         Double_t       *GetEYhigh() const {return fEYhigh;}
-        virtual Int_t   InsertPoint(); // *MENU*
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
-        virtual Int_t   RemovePoint(); // *MENU*
-        virtual Int_t   RemovePoint(Int_t ipoint);
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual void    Set(Int_t n);
-        virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void    SetPointError(Double_t exl, Double_t exh,
 				      Double_t eyl, Double_t eyh); // *MENU*
         virtual void    SetPointError(Int_t i,
@@ -81,5 +85,9 @@ public:
 
         ClassDef(TGraphBentErrors,1)  //A graph with bent, asymmetric error bars
 };
+
+inline Double_t **TGraphBentErrors::Allocate(Int_t size) {
+   return AllocateArrays(10, size);
+}
 
 #endif

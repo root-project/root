@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.42 2004/08/23 09:28:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.43 2004/09/02 14:22:20 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -86,18 +86,12 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TGraphAsymmErrors &gr)
 {
 // TGraphAsymmErrors copy constructor 
    
-   fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
-   if (fNpoints == 0) return;
-   fEXlow  = new Double_t[fNpoints];
-   fEYlow  = new Double_t[fNpoints];
-   fEXhigh = new Double_t[fNpoints];
-   fEYhigh = new Double_t[fNpoints];
-   for (Int_t i=0;i<fNpoints;i++) {
-      fEXlow[i]  = gr.fEXlow[i];
-      fEYlow[i]  = gr.fEYlow[i];
-      fEXhigh[i] = gr.fEXhigh[i];
-      fEYhigh[i] = gr.fEYhigh[i];
-   }
+   if (!CtorAllocate()) return;
+   Int_t n = fNpoints*sizeof(Double_t);
+   memcpy(fEXlow, gr.fEXlow, n);
+   memcpy(fEYlow, gr.fEYlow, n);
+   memcpy(fEXhigh, gr.fEXhigh, n);
+   memcpy(fEYhigh, gr.fEYhigh, n);
 }
 
 //______________________________________________________________________________
@@ -109,22 +103,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)
 //
 //  the arrays are preset to zero
 
-   if (n <= 0) {
-      Error("TGraphAsymmErrors", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fEXlow       = new Double_t[n];
-   fEYlow       = new Double_t[n];
-   fEXhigh      = new Double_t[n];
-   fEYhigh      = new Double_t[n];
-
-   for (Int_t i=0;i<n;i++) {
-      fEXlow[i]  = 0;
-      fEXhigh[i] = 0;
-      fEYlow[i]  = 0;
-      fEYhigh[i] = 0;
-   }
+   if (!CtorAllocate()) return;
+   FillZero(0, fNpoints);
 }
 
 
@@ -137,15 +117,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y
 //
 //  if exl,h or eyl,h are null, the corresponding arrays are preset to zero
 
-   if (n <= 0) {
-      Error("TGraphAsymmErrors", "illegal number of points (%d)", n);
-      return;
-   }
-
-   fEXlow       = new Double_t[n];
-   fEYlow       = new Double_t[n];
-   fEXhigh      = new Double_t[n];
-   fEYhigh      = new Double_t[n];
+   if (!CtorAllocate()) return;
 
    for (Int_t i=0;i<n;i++) {
       if (exl) fEXlow[i]  = exl[i];
@@ -168,26 +140,17 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 //
 //  if exl,h or eyl,h are null, the corresponding arrays are preset to zero
 
-   if (n <= 0) {
-      Error("TGraphAsymmErrors", "illegal number of points (%d)", n);
-      return;
-   }
+   if (!CtorAllocate()) return;
 
-   fEXlow       = new Double_t[n];
-   fEYlow       = new Double_t[n];
-   fEXhigh      = new Double_t[n];
-   fEYhigh      = new Double_t[n];
-
-   for (Int_t i=0;i<n;i++) {
-      if (exl) fEXlow[i]  = exl[i];
-      else     fEXlow[i]  = 0;
-      if (exh) fEXhigh[i] = exh[i];
-      else     fEXhigh[i] = 0;
-      if (eyl) fEYlow[i]  = eyl[i];
-      else     fEYlow[i]  = 0;
-      if (eyh) fEYhigh[i] = eyh[i];
-      else     fEYhigh[i] = 0;
-   }
+   n = fNpoints*sizeof(Double_t);
+   if(exl) { memcpy(fEXlow, exl, n);
+   } else { memset(fEXlow, 0, n); }
+   if(exh) { memcpy(fEXhigh, exh, n);
+   } else { memset(fEXhigh, 0, n); }
+   if(eyl) { memcpy(fEYlow, eyl, n);
+   } else { memset(fEYlow, 0, n); }
+   if(eyh) { memcpy(fEYhigh, eyh, n);
+   } else { memset(fEYhigh, 0, n); }
 }
 
 //______________________________________________________________________________
@@ -197,11 +160,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
 // TGraphAsymmErrors constructor importing its parameters from the TH1 object passed as argument
 // the low and high errors are set to the bin error of the histogram.
    
-   if (fNpoints <= 0) return;
-   fEXlow       = new Double_t[fNpoints];
-   fEYlow       = new Double_t[fNpoints];
-   fEXhigh      = new Double_t[fNpoints];
-   fEYhigh      = new Double_t[fNpoints];
+   if (!CtorAllocate()) return;
 
    for (Int_t i=0;i<fNpoints;i++) {
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
@@ -218,6 +177,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t
 // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
 // pass/total. (see TGraphAsymmErrors::BayesDivide)
    
+   CtorAllocate();
    BayesDivide(pass, total, option);
 }
 
@@ -545,6 +505,68 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
 }
 
 //______________________________________________________________________________
+void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
+                                       Int_t ibegin, Int_t iend, Int_t obegin)
+{
+   CopyPoints(newarrays, ibegin, iend, obegin);
+   if (newarrays) {
+      delete[] fEXlow;
+      fEXlow = newarrays[0];
+      delete[] fEXhigh;
+      fEXhigh = newarrays[1];
+      delete[] fEYlow;
+      fEYlow = newarrays[2];
+      delete[] fEYhigh;
+      fEYhigh = newarrays[3];
+      delete[] fX;
+      fX = newarrays[4];
+      delete[] fY;
+      fY = newarrays[5];
+      delete[] newarrays;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
+                                     Int_t ibegin, Int_t iend, Int_t obegin)
+{
+// Copy errors from fE*** to arrays[***]
+// or to f*** Copy points.
+   if (TGraph::CopyPoints(arrays ? arrays+4 : 0, ibegin, iend, obegin)) {
+      Int_t n = (iend - ibegin)*sizeof(Double_t);
+      if (arrays) {
+         memmove(&arrays[0][obegin], &fEXlow[ibegin], n);
+         memmove(&arrays[1][obegin], &fEXhigh[ibegin], n);
+         memmove(&arrays[2][obegin], &fEYlow[ibegin], n);
+         memmove(&arrays[3][obegin], &fEYhigh[ibegin], n);
+      } else {
+         memmove(&fEXlow[obegin], &fEXlow[ibegin], n);
+         memmove(&fEXhigh[obegin], &fEXhigh[ibegin], n);
+         memmove(&fEYlow[obegin], &fEYlow[ibegin], n);
+         memmove(&fEYhigh[obegin], &fEYhigh[ibegin], n);
+      }
+      return kTRUE;
+   } else {
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGraphAsymmErrors::CtorAllocate(void)
+{
+// Should be called from ctors after fNpoints has been set
+   if (!fNpoints) {
+      fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
+      return kFALSE;
+   }
+   fEXlow = new Double_t[fMaxSize];
+   fEYlow = new Double_t[fMaxSize];
+   fEXhigh = new Double_t[fMaxSize];
+   fEYhigh = new Double_t[fMaxSize];
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel, 
 	   double& mode, double& low, double& high) const
 {
@@ -589,6 +611,20 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
    high = high_edge;
 }
 
+//______________________________________________________________________________
+void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
+                                 Bool_t from_ctor)
+{
+// Set zero values for point arrays in the range [begin, end)
+   if (!from_ctor) {
+      TGraph::FillZero(begin, end, from_ctor);
+   }
+   Int_t n = (end - begin)*sizeof(Double_t);
+   memset(fEXlow + begin, 0, n);
+   memset(fEXhigh + begin, 0, n);
+   memset(fEYlow + begin, 0, n);
+   memset(fEYhigh + begin, 0, n);
+}
 
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
@@ -616,45 +652,6 @@ Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
    if (fEYlow)  elow  = fEYlow[i];
    if (fEYhigh) ehigh = fEYhigh[i];
    return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
-}
-
-//______________________________________________________________________________
-Int_t TGraphAsymmErrors::InsertPoint()
-{
-// Insert a new point at the mouse position
-
-   Int_t ipoint = TGraph::InsertPoint();
-
-   Double_t *newEXlow  = new Double_t[fNpoints];
-   Double_t *newEYlow  = new Double_t[fNpoints];
-   Double_t *newEXhigh = new Double_t[fNpoints];
-   Double_t *newEYhigh = new Double_t[fNpoints];
-   Int_t i;
-   for (i=0;i<ipoint;i++) {
-      newEXlow[i]  = fEXlow[i];
-      newEYlow[i]  = fEYlow[i];
-      newEXhigh[i] = fEXhigh[i];
-      newEYhigh[i] = fEYhigh[i];
-  }
-   newEXlow[ipoint]  = 0;
-   newEYlow[ipoint]  = 0;
-   newEXhigh[ipoint] = 0;
-   newEYhigh[ipoint] = 0;
-   for (i=ipoint+1;i<fNpoints;i++) {
-      newEXlow[i]  = fEXlow[i-1];
-      newEYlow[i]  = fEYlow[i-1];
-      newEXhigh[i] = fEXhigh[i-1];
-      newEYhigh[i] = fEYhigh[i-1];
-   }
-   delete [] fEXlow;
-   delete [] fEYlow;
-   delete [] fEXhigh;
-   delete [] fEYhigh;
-   fEXlow  = newEXlow;
-   fEYlow  = newEYlow;
-   fEXhigh = newEXhigh;
-   fEYhigh = newEYhigh;
-   return ipoint;
 }
 
 //______________________________________________________________________________
@@ -874,70 +871,6 @@ void TGraphAsymmErrors::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-Int_t TGraphAsymmErrors::RemovePoint()
-{
-// Delete point close to the mouse position
-
-   Int_t ipoint = TGraph::RemovePoint();
-   if (ipoint < 0) return ipoint;
-
-   Double_t *newEXlow  = new Double_t[fNpoints];
-   Double_t *newEYlow  = new Double_t[fNpoints];
-   Double_t *newEXhigh = new Double_t[fNpoints];
-   Double_t *newEYhigh = new Double_t[fNpoints];
-   Int_t i, j = -1;
-   for (i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newEXlow[j]  = fEXlow[i];
-      newEYlow[j]  = fEYlow[i];
-      newEXhigh[j] = fEXhigh[i];
-      newEYhigh[j] = fEYhigh[i];
-   }
-   delete [] fEXlow;
-   delete [] fEYlow;
-   delete [] fEXhigh;
-   delete [] fEYhigh;
-   fEXlow  = newEXlow;
-   fEYlow  = newEYlow;
-   fEXhigh = newEXhigh;
-   fEYhigh = newEYhigh;
-   return ipoint;
-}
-
-//______________________________________________________________________________
-Int_t TGraphAsymmErrors::RemovePoint(Int_t ipnt)
-{
-// Delete point number ipnt
-
-   Int_t ipoint = TGraph::RemovePoint(ipnt);
-   if (ipoint < 0) return ipoint;
-
-   Double_t *newEXlow  = new Double_t[fNpoints];
-   Double_t *newEYlow  = new Double_t[fNpoints];
-   Double_t *newEXhigh = new Double_t[fNpoints];
-   Double_t *newEYhigh = new Double_t[fNpoints];
-   Int_t i, j = -1;
-   for (i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newEXlow[j]  = fEXlow[i];
-      newEYlow[j]  = fEYlow[i];
-      newEXhigh[j] = fEXhigh[i];
-      newEYhigh[j] = fEYhigh[i];
-   }
-   delete [] fEXlow;
-   delete [] fEYlow;
-   delete [] fEXhigh;
-   delete [] fEYhigh;
-   fEXlow  = newEXlow;
-   fEYlow  = newEYlow;
-   fEXhigh = newEXhigh;
-   fEYhigh = newEYhigh;
-   return ipoint;
-}
-
-//______________________________________________________________________________
 void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -1052,100 +985,6 @@ double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
       else too_low = test;
    }
    return test;
-}
-
-//______________________________________________________________________________
-void TGraphAsymmErrors::Set(Int_t n) 
-{
-// Set number of points in the graph
-// Existing coordinates are preserved
-// New coordinates and errors above fNpoints are preset to 0.
-  if (n < 0) n = 0;
-  if (n == fNpoints) return;
-                
-  TGraph::Set(n);
-        
-  Double_t *exh=0, *exl=0, *eyh=0, *eyl=0;
-  if (n > 0) {
-          exh = new Double_t[n];
-          exl = new Double_t[n];
-          eyh = new Double_t[n];
-          eyl = new Double_t[n];
-  }
-  Int_t i;
-  for (i=0; i<fNpoints && i<n;i++) {
-     if (fEXlow)  exl[i] = fEXlow[i];
-     if (fEXhigh) exh[i] = fEXhigh[i];
-     if (fEYlow)  eyl[i] = fEYlow[i];
-     if (fEYhigh) eyh[i] = fEYhigh[i];
-  }
-  for (i=fNpoints; i<n;i++) {
-     exh[i] = 0;
-     exl[i] = 0;
-     eyh[i] = 0;
-     eyl[i] = 0;
-  }
-  delete [] fEXlow;
-  delete [] fEXhigh;
-  delete [] fEYlow;
-  delete [] fEYhigh;
-        
-  fEXhigh = exh;
-  fEXlow  = exl;
-  fEYhigh = eyh;
-  fEYlow  = eyl;
-}
-
-//______________________________________________________________________________
-void TGraphAsymmErrors::SetPoint(Int_t i, Double_t x, Double_t y)
-{
-//*-*-*-*-*-*-*-*-*-*-*Set x and y values for point number i*-*-*-*-*-*-*-*-*
-//*-*                  =====================================
-
-   if (i < 0) return;
-   if (i >= fMaxSize) {
-   // re-allocate the object
-      fMaxSize = 2*i;
-      Double_t *savex   = new Double_t[fMaxSize];
-      Double_t *savey   = new Double_t[fMaxSize];
-      Double_t *saveexl = new Double_t[fMaxSize];
-      Double_t *saveeyl = new Double_t[fMaxSize];
-      Double_t *saveexh = new Double_t[fMaxSize];
-      Double_t *saveeyh = new Double_t[fMaxSize];
-      if (fNpoints > 0) {
-         memcpy(savex,  fX,     fNpoints*sizeof(Double_t));
-         memcpy(savey,  fY,     fNpoints*sizeof(Double_t));
-         memcpy(saveexl,fEXlow, fNpoints*sizeof(Double_t));
-         memcpy(saveeyl,fEYlow, fNpoints*sizeof(Double_t));
-         memcpy(saveexh,fEXhigh,fNpoints*sizeof(Double_t));
-         memcpy(saveeyh,fEYhigh,fNpoints*sizeof(Double_t));
-      }
-      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveexl[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveeyl[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveexh[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveeyh[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      if (fX)      delete [] fX;
-      if (fY)      delete [] fY;
-      if (fEXlow)  delete [] fEXlow;
-      if (fEYlow)  delete [] fEYlow;
-      if (fEXhigh) delete [] fEXhigh;
-      if (fEYhigh) delete [] fEYhigh;
-      fX  = savex;
-      fY  = savey;
-      fEXlow  = saveexl;
-      fEYlow  = saveeyl;
-      fEXhigh = saveexh;
-      fEYhigh = saveeyh;
-   }
-   if (i >= fNpoints) fNpoints = i+1;
-   fX[i] = x;
-   fY[i] = y;
-   if (fHistogram) {
-      delete fHistogram;
-      fHistogram = 0;
-   }
 }
 
 //______________________________________________________________________________
