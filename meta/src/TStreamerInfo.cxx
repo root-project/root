@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.114 2002/01/19 13:19:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.115 2002/01/21 16:31:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -133,12 +133,9 @@ void TStreamerInfo::Build()
    while((base = (TBaseClass*)nextb())) {
       clm = gROOT->GetClass(base->GetName());
       if (!clm) {
-#ifdef MAYBEINFUTURE
-         // support sor STL collections as base class cannot be implemented
-         // It requires access to the base class offset in the class
-         // try STL container or string
+         // this case appears with STL collections as base class.
          Streamer_t streamer = 0;
-         offset = GetDataMemberOffset(dm,streamer);
+         offset = base->GetDelta();
          if (offset == kMissing) continue;
          if (strcmp(base->GetName(),"string") == 0) {
             TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
@@ -156,7 +153,6 @@ void TStreamerInfo::Build()
             continue;
          }
          Error("Build","%s, unknow type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
-#endif
          continue;
       }
       clm->GetStreamerInfo();
