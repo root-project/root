@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.6 2004/01/14 07:41:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.7 2004/01/27 17:37:22 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -48,8 +48,6 @@ static void debugPrint(const char *fmt, ...)
 
    static Int_t buf_size = 2048;
    static char *buf = 0;
-
-   char *bp;
 
    va_list arg_ptr; 
    va_start(arg_ptr, fmt);
