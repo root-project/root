@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.12 2002/01/04 08:07:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.13 2002/01/04 08:14:30 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -130,8 +130,8 @@
 //       public:                                                        //
 //          ApplyFunction(dfunc_t func):fFunc(func) {}                  //
 //       };                                                             //
-//       m.Apply(ApplyFunction(TMath::Sin));                            //
-//       m1.Apply(ApplyFunction(TMath::Cos));                           //
+//       ApplyFunction x(TMath::Sin);                                   //
+//       m.Apply(x);                                                    //
 //    }                                                                 //
 //                                                                      //
 //    Validation code $ROOTSYS/test/vmatrix.cxx and vvector.cxx contain //
