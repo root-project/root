@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.rdl,v 1.2 2002/02/06 19:45:21 verkerke Exp $
+ *    File: $Id: RooCPMixFit.rdl,v 1.3 2002/02/07 02:20:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -95,9 +95,9 @@ public:
   RooRealVar *sigC_bias,*sigT_bias,*sigC_scfa,*sigT_scfa,*sigC_frac,*sigO_frac,
     *bkgC_bias,*bkgC_scfa,*bkgC_frac,*outl_bias,*outl_scfa,*sig_tauB,
     *bgC_tauB,*bgL_tauB,*bgKl_tauB,*dm,*sig_eta,*bgC_eta,*bgL_eta,*bgP_eta,*bgP_f,
-    *bgC_f,*gold_cpev,*psikl_cpev,*psikstar_cpev,*sin2b,*alambda,*effratio,*sig_deta,
+    *bgC_f,*gold_cpev,*psikl_cpev,*psikstar_cpev,*psix_cpev,*sin2b,*alambda,*effratio,*sig_deta,
     *kbgC_scfa,*kbgC_bias,*kbgC_frac,*kbgT_scfa,*kbgT_bias,*kbgO_frac,
-    *klSig_frac,*klBgCcK_frac,*klKstBg_frac,*klKshBg_frac,*klNPLBg_frac,*klNPPBg_frac ;
+    *klSig_frac,*klBgCcK_frac,*klKstBg_frac,*klKshBg_frac,*klNPLBg_frac,*klNPPBg_frac,*klPsxBg_frac ;
 
   // Sin2beta blinding components
   RooUnblindPrecision *sin2b_ub ;
@@ -109,7 +109,8 @@ public:
   RooAbsPdf  
     *bmixSigModel,*bmixBgCModel,*bmixBgLModel,*bmixBgPModel,*dtSigBMix,*dtBkgBMix,
     *goldSigModel,*goldBgCModel,*goldBgLModel,*goldBgPModel,*dtSigGold,*dtBkgGold,
-    *dtSigKlong,*dtBgKstKlong,*dtBgKshKlong,*dtBgNcpKlong,*dtBgLKlong,*dtBgPKlong ;
+    *dtSigKlong,*dtBgKstKlong,*dtBgKshKlong,*dtBgNcpKlong,*dtBgLKlong,*dtBgPKlong,
+    *dtBgPsxKlong ;
 
   // BMass PDF prototype parameters
   RooRealVar 
@@ -140,7 +141,7 @@ public:
   RooAbsPdf
     *BMixingSig,*BMixingBkg,*BMixing,
     *CPGoldSig,*CPGoldBkg,*CPGold,
-    *KLongSig,*KLongCcKBg,*KLongKstBg,*KLongKshBg,*KLongOthBg,*KLongNPLBg,*KLongNPPBg,*KLong ;
+    *KLongSig,*KLongCcKBg,*KLongKstBg,*KLongKshBg,*KLongOthBg,*KLongNPLBg,*KLongNPPBg,*KLongPsxBg,*KLong ;
 
   RooArgSet _pdfProtoSet ;
 

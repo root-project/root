@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.2 2002/02/06 19:45:21 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.3 2002/02/07 02:20:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -294,6 +294,7 @@ void RooCPMixFit::buildDeltatPdfs()
   gold_cpev     = new RooRealVar("gold_cpev","CP eigenvalue of golden modes",-1.0) ;
   psikl_cpev    = new RooRealVar("psikl_cpev","CP eigenvalue of golden modes", 1.0) ;
   psikstar_cpev = new RooRealVar("psikstar_cpev","CP eigenvalue of golden modes",-0.68) ;
+  psix_cpev     = new RooRealVar("psix_cpev","Net CP eigenvalue of B0 -> Psi X background",0) ;
   effratio      = new RooRealVar("effratio","B0/B0Bar efficiency ratio",1.0) ;
   
   // Sin2beta blinding implementation
@@ -364,7 +365,9 @@ void RooCPMixFit::buildDeltatPdfs()
   dtBgKshKlong = new RooBCPEffDecay("klongBgKshModel","JPsiKLong DeltaT JpsiKs background PDF",    *dtReco,*tagFlav,*sig_tauB,*dm,  
 				       *sig_eta,*gold_cpev    ,*one, *sin2b_ub,*effratio,*sig_deta,*sigResModel,RooBCPEffDecay::DoubleSided) ;
   dtBgNcpKlong = new RooBCPEffDecay("klongBgNcpModel","JPsiKLong DeltaT non-CP background PDF",    *dtReco,*tagFlav,*sig_tauB,*dm,  
-				       *half,   *zero         ,*one, *zero, *effratio,*zero,    *sigResModel,RooBCPEffDecay::DoubleSided) ;
+				       *sig_eta,*zero         ,*one, *sin2b_ub,*effratio,*sig_deta,   *sigResModel,RooBCPEffDecay::DoubleSided) ;
+  dtBgPsxKlong = new RooBCPEffDecay("klongBgPsxModel","JPsiKLong DeltaT psiX   background PDF",    *dtReco,*tagFlav,*sig_tauB,*dm,  
+				       *sig_eta,*psix_cpev    ,*one, *sin2b_ub,*effratio,*sig_deta,   *sigResModel,RooBCPEffDecay::DoubleSided) ;
   dtBgLKlong   = new RooBCPEffDecay("klongBgLModel","JPsiKLong DeltaT non-psi lifetime background PDF",*dtReco,*tagFlav,*bgKl_tauB,*dm,  
 				       *half,   *zero         ,*one, *zero ,*effratio,*zero,    *kbgResModel,RooBCPEffDecay::DoubleSided) ;
   dtBgPKlong   = new RooBCPEffDecay("klongBgPModel","JPsiKLong DeltaT non-psi prompt background PDF",  *dtReco,*tagFlav,*zero,  *zero,  
@@ -414,6 +417,7 @@ void RooCPMixFit::buildSelectionPdfs()
   klBgCcK_frac = new RooRealVar("klBgCcK_frac","KLong ChicKL background fraction",0.015) ;
   klKstBg_frac = new RooRealVar("klKstBg_frac","KLong JpsiK*0 background fraction",0.091) ;
   klKshBg_frac = new RooRealVar("klKshBg_frac","KLong JpsiKS background fraction",0.064) ;
+  klPsxBg_frac = new RooRealVar("klPsxBg_frac","KLong psiX prompt background fraction",0.15) ;
   klNPLBg_frac = new RooRealVar("klNPLBg_frac","KLong nonPsi lifetime background fraction",0.02) ;
   klNPPBg_frac = new RooRealVar("klNPPBg_frac","KLong nonPsi prompt background fraction",0.043) ;
 
@@ -493,12 +497,13 @@ void RooCPMixFit::buildPdfPrototypes()
   KLongCcKBg = new RooProdPdf ("KLongCcKBg","ChicKL Bkg klongDE x klong-Dt",*dtSigKlong,*deIPbgKlong) ;
   KLongKstBg = new RooProdPdf ("KLongKstBg","JpsiK* Bkg klongDE x klong-Dt",*dtBgKstKlong,*deIPbgKlong) ;
   KLongKshBg = new RooProdPdf ("KLongKshBg","JpsiKS Bkg klongDE x klong-Dt",*dtBgKshKlong,*deKSBgKlong) ;
-  KLongOthBg = new RooProdPdf ("KLongOthBg","IncPsi Bkg klongDE x klong-Dt",*dtBgNcpKlong,*deIPbgKlong) ;
+  KLongPsxBg = new RooProdPdf ("KLongPsxBg","PsiX   Bkg klongDE x klong-Dt",*dtBgPsxKlong,*deIPbgKlong) ;
+  KLongOthBg = new RooProdPdf ("KLongOthBg","nonCP  Bkg klongDE x klong-Dt",*dtBgNcpKlong,*deIPbgKlong) ;
   KLongNPLBg = new RooProdPdf ("KLongNPLBg","nonPsi lifetime Bkg klongDE x klong-Dt",*dtBgLKlong,*deSBbgKlong) ;
   KLongNPPBg = new RooProdPdf ("KLongNPPBg","nonPsi prompt Bkg   klongDE x klong-Dt",*dtBgPKlong,*deSBbgKlong) ;
   KLong      = new RooAddPdf  ("KLong","KLong PDF",
-			       RooArgList(*KLongSig  ,*KLongCcKBg  ,*KLongKstBg  ,*KLongKshBg  ,*KLongNPLBg  ,*KLongNPPBg,*KLongOthBg),
-			       RooArgList(*klSig_frac,*klBgCcK_frac,*klKstBg_frac,*klKshBg_frac,*klNPLBg_frac,*klNPPBg_frac)) ;
+			       RooArgList(*KLongSig  ,*KLongCcKBg  ,*KLongKstBg  ,*KLongKshBg  ,*KLongPsxBg,  *KLongNPLBg  ,*KLongNPPBg, *KLongOthBg),
+			       RooArgList(*klSig_frac,*klBgCcK_frac,*klKstBg_frac,*klKshBg_frac,*klPsxBg_frac,*klNPLBg_frac,*klNPPBg_frac)) ;
       
   // Export complete models
   _pdfProtoSet.add(*BMixing) ;
