@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.28 2001/11/28 23:13:55 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.29 2001/12/01 08:12:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -502,7 +502,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
       Double_t nExpected = pdf->expectedEvents() ;
       if (nExpected) {
 	snormVal = normSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	value += pdf->analyticalIntegralWN(subCode[i],normSet)*nExpected/snormVal ;
+	if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*nExpected/snormVal ;
 	totExpected += nExpected ; 
       }
     }	    
@@ -522,7 +522,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 	Double_t coefVal = coef->getVal(normSet) ;
 	if (coefVal) {
 	  snormVal = normSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	  value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal/snormVal ;      
+	  if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal/snormVal ;      
 	  coefSum += coefVal ;
 	}
 	i++ ;
@@ -538,7 +538,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 	Double_t coefVal = coef->getVal(normSet) ;
 	if (coefVal) {
 	  snormVal = normSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-	  value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal/snormVal ;
+	  if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal/snormVal ;
 	  lastCoef -= coefVal ;
 	}
 	i++ ;
@@ -546,7 +546,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
       
       pdf = (RooAbsPdf*) _pdfIter->Next() ;
       snormVal = normSet ? ((RooAbsReal*) _snormIter->Next())->getVal() : 1.0 ;
-      value += pdf->analyticalIntegralWN(subCode[i],normSet)*lastCoef/snormVal ;
+      if (pdf->isSelectedComp()) value += pdf->analyticalIntegralWN(subCode[i],normSet)*lastCoef/snormVal ;
       
       // Warn about coefficient degeneration
       if (lastCoef<0 || lastCoef>1) {
