@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.230 2005/01/25 19:58:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.231 2005/02/03 14:25:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1351,6 +1351,11 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          fBranches.Add(branch);
          return branch;
       }
+   }
+   //ROOT collections (except TClonesArray above) cannot be split
+   if (splitlevel >0 && cl->InheritsFrom(TCollection::Class())) {
+      splitlevel = 0;
+      Warning("Bronch","ROOT collections cannot be split, resetting splitlevel to 0");
    }
    //	Now look vector<> or list<>
    //int stlcont = TClassEdit::IsSTLCont(classname);
