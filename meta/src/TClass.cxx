@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.27 2001/01/24 17:06:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.28 2001/01/26 10:01:28 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -292,8 +292,8 @@ void TClass::BuildRealData(void *pointer)
    // if pointer is NULL, uses the object at pointer
    // otherwise creates a temporary object object of this class
 
-   if (!fClassInfo) return;
    if (fRealData) return;
+   if (!fClassInfo) return;
 
    TObject *realDataObject = (TObject*)pointer;
 
@@ -325,6 +325,15 @@ void TClass::BuildRealData(void *pointer)
          func.SetArg((long)parent);
          address = (void*)((long)realDataObject + offset);
          func.Exec(address);
+      }
+      // take this opportunity to build the real data for base classes
+      // In case one base class is abstract, it would not be possible later
+      // to create the list of real data for this abstract class
+      TBaseClass *base;
+      TIter       next(GetListOfBases());
+      while ((base = (TBaseClass *) next())) {
+         TClass *c = base->GetClassPointer();
+         if (c) c->BuildRealData((char*)realDataObject + base->GetDelta());
       }
    }
 
@@ -847,11 +856,15 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
 
    if (version <= 0) version = fClassVersion;
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
-   if (sinfo) return sinfo;
-   sinfo = new TStreamerInfo(this,"");
-   fStreamerInfo->AddAt(sinfo,fClassVersion);
-   if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
-   sinfo->Build();
+   //if (sinfo) return sinfo;
+   if (!sinfo) {
+      sinfo = new TStreamerInfo(this,"");
+      fStreamerInfo->AddAt(sinfo,fClassVersion);
+      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+      sinfo->Build();
+   } else {
+      if (!sinfo->GetOffsets()) sinfo->BuildOld();
+   }
    return sinfo;
 }
 
