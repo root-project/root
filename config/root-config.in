@@ -1,5 +1,5 @@
 #!/bin/sh
-# -*- sh-indentation: 2 -*-
+# -*- sh-indentation: 3 -*-
 # This script returns the machine dependent compile options needed
 # to compile and link applications using the ROOT libraries.
 #
@@ -34,7 +34,7 @@ hpux)
    ;;
 hpuxacc | hpuxia64acc)
    # HP-UX 10.x with aCC
-   auxcflags="+W823 -DR__ACC"
+   auxcflags="-DR__ACC"
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
