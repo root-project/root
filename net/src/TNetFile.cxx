@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.28 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.29 2002/12/10 12:11:31 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -169,10 +169,10 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
       fOption = "CREATE";
 
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
-          create   = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
    Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
-   if (!create && !update && !read) {
+   if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
    }
