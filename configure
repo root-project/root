@@ -1599,7 +1599,7 @@ if test ! "x$enable_ruby" = "xno" ; then
     rubyincdir=$found_dir
 
     if test "x$arch" != "xwin32gcc"; then
-        check_library_options="libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib"
+        check_library_options="libruby-static"
     else
         check_library_options="libruby"
     fi
