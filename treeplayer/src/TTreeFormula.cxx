@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.125 2003/08/25 22:37:39 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.126 2003/09/05 15:50:50 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2871,6 +2871,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                                            const char* nextchoice,
                                            UInt_t readentry) const {
+
    // Return the leaf (if any) which contains an object containing
    // a data member which has the name provided in the arguments.
 
@@ -2911,10 +2912,25 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
          // We have a unsplit TClonesArray leaves
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
-         clonesinfo = new TFormLeafInfoClones(cl, 0);
          leafcur->GetBranch()->GetEntry(readentry);
-         TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-         cl = clones->GetClass();
+         TClonesArray * clones;
+
+         TBranch *branch = leafcur->GetBranch();
+         if  (   branch->IsA()==TBranchElement::Class()
+                 && ((TBranchElement*)branch)->GetType()==31) {
+
+            // We have an unsplit TClonesArray as part of a split TClonesArray!
+
+            // Let's not dig any further.  If the user really wants a data member
+            // inside the nested TClonesArray, it has to specify it explicitly.
+
+            continue;
+
+         } else {
+            clonesinfo = new TFormLeafInfoClones(cl, 0);
+            clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
+         }
+         if (clones) cl = clones->GetClass();
       }
       if (cl) {
          // Now that we have the class, let's check if the topchoice is of its datamember
@@ -2949,7 +2965,9 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   Int_t clones_offset;
                   cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                  if (leafinfo) leafinfo->fNext = sub_clonesinfo;
+                  if (leafinfo) 
+                     if (leafinfo->fNext) leafinfo->fNext->fNext = sub_clonesinfo;
+                     else leafinfo->fNext = sub_clonesinfo;
                   else leafinfo = sub_clonesinfo;
 
                   branch->GetEntry(readentry);
@@ -3008,18 +3026,27 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
       cl = lobj->GetClass();
 
    } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
-      TBranchElement *BranchEl = (TBranchElement *)branch;
-      Int_t type = BranchEl->GetStreamerType();
+      TBranchElement *branchEl = (TBranchElement *)branch;
+      Int_t type = branchEl->GetStreamerType();
       if (type==-1) {
-         cl =  BranchEl->GetInfo()->GetClass();
+         cl =  branchEl->GetInfo()->GetClass();
       } else if (type>60) {
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         cl =  BranchEl->GetInfo()->GetClass();
+         cl =  branchEl->GetInfo()->GetClass();
          TStreamerElement* element = (TStreamerElement*)
-            cl->GetStreamerInfo()->GetElems()[BranchEl->GetID()];
+            cl->GetStreamerInfo()->GetElems()[branchEl->GetID()];
          cl = element->GetClassPointer();
+         
+         if (cl==TClonesArray::Class() && branchEl->GetType() == 31 ) {
+            // we have a TClonesArray inside a split TClonesArray,
+
+            // Let's not dig any further.  If the user really wants a data member
+            // inside the nested TClonesArray, it has to specify it explicitly.
+
+            cl = 0;
+         }
       }
    }
    if (cl == TClonesArray::Class()) {

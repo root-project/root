@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.54 2003/09/09 16:48:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.55 2003/09/18 14:37:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -907,22 +907,86 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   fNoper++;
                 }
               }
-//*-*- Look for an already defined expression
             } else {
+
               find=0;
-              oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
-              if (oldformula && strcmp(schain,oldformula->GetTitle())) {
-                Int_t nprior = fNpar;
-                Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
-                fNpar = nprior;
-                find=1;
-                if (!err) {
-                  Int_t npold = oldformula->GetNpar();
-                  fNpar += npold;
-                  for (Int_t ipar=0;ipar<npold;ipar++) {
-                     fParams[ipar+fNpar-npold] = oldformula->GetParameter(ipar);
+
+//*-*- Check for a numerical expression
+               {
+                  Bool_t hasDot = kFALSE;
+                  Bool_t isHexa = kFALSE;
+                  Bool_t hasExpo= kFALSE;
+                  if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
+                  for (Int_t j=0; j<chaine.Length() && err==0; j++) {
+                     t=chaine[j];
+                     if (!isHexa) {
+                        if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
+                           if (hasExpo) {
+                              err=26;
+                              chaine_error=chaine;
+                           }
+                           hasExpo = kTRUE;
+                           // The previous implementation allowed a '.' in the exponent.
+                           // That information was ignored (by sscanf), we now make it an error
+                           // hasDot = kFALSE;
+                           hasDot = kTRUE;  // forbid any additional '.'
+                           if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
+                        }
+                        else {
+                           if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
+                           else {
+                              // The previous implementation was allowing ANYTHING after the '.' and thus 
+                              // made legal code like '2.3 and fpx' and was just silently ignoring the 
+                              // 'and fpx'.
+                              if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
+                                 err = 30;
+                                 chaine_error=chaine;
+                              }
+                           }
+                        }
+                     }
+                     else {
+                        if (!strchr("0123456789abcdefABCDEF",t) && (j>1)) {
+                           err = 30;
+                           chaine_error=chaine;
+                        }
+                     }
                   }
-                }
+                  if (fNconst >= MAXCONST) err = 27;
+                  if (!err) {
+                     if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
+                     else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
+                     vafConst = (Double_t) vafConst2;}
+                     fExpr[fNoper] = chaine;
+                     k = -1;
+                     for (Int_t j=0;j<fNconst;j++) {
+                        if (vafConst == fConst[j] ) k= j;
+                     }
+                     if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
+                     fOper[fNoper] = 50000 + k;
+                     fNoper++;
+                  }
+                  if (err==30) err=0;
+                  else find = kTRUE;
+               }
+
+
+//*-*- Look for an already defined expression
+              if (find==0) {
+                 oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
+                 if (oldformula && strcmp(schain,oldformula->GetTitle())) {
+                    Int_t nprior = fNpar;
+                    Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
+                    fNpar = nprior;
+                    find=1;
+                    if (!err) {
+                       Int_t npold = oldformula->GetNpar();
+                       fNpar += npold;
+                       for (Int_t ipar=0;ipar<npold;ipar++) {
+                          fParams[ipar+fNpar-npold] = oldformula->GetParameter(ipar);
+                       }
+                    }
+                 }
               }
               if (find == 0) {
 //*-*- Check if chaine is a defined variable.
@@ -1535,67 +1599,13 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             fExpr[fNoper] = "pi";
             fOper[fNoper] = 40;
             fNoper++;
-//*-*- None of the above. Must be a numerical expression
-//*-*  =================================================
           }
-//*-*- Maybe it is a string
           else {
-            Bool_t hasDot = kFALSE;
-            Bool_t isHexa = kFALSE;
-            Bool_t hasExpo= kFALSE;
-            if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
-            for (j=0; j<chaine.Length() && err==0; j++) {
-               t=chaine[j];
-               if (!isHexa) {
-                  if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
-                     if (hasExpo) {
-                        err=26;
-                        chaine_error=chaine;
-                     }
-                     hasExpo = kTRUE;
-                     // The previous implementation allowed a '.' in the exponent.
-                     // That information was ignored (by sscanf), we now make it an error
-                     // hasDot = kFALSE;
-                     hasDot = kTRUE;  // forbid any additional '.'
-                     if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
-                  }
-                  else {
-                     if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
-                     else {
-                        // The previous implementation was allowing ANYTHING after the '.' and thus 
-                        // made legal code like '2.3 and fpx' and was just silently ignoring the 
-                        // 'and fpx'.
-                        if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
-                           if (j==0) err=26;
-                           else err = 30;
-                           chaine_error=chaine;
-                        }
-                     }
-                  }
-               }
-               else {
-                  if (!strchr("0123456789abcdefABCDEF",t) && (j>1)) {
-                     if (j==0) err=26;
-                     else err = 30;
-                     chaine_error=chaine;
-                  }
-               }
-            }
-            if (fNconst >= MAXCONST) err = 27;
-              if (!err) {
-                 if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
-                 else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
-                 vafConst = (Double_t) vafConst2;}
-                 fExpr[fNoper] = chaine;
-                 k = -1;
-                 for (j=0;j<fNconst;j++) {
-                    if (vafConst == fConst[j] ) k= j;
-                 }
-                 if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
-                 fOper[fNoper] = 50000 + k;
-                 fNoper++;
-              }
+//*-*- None of the above. 
+//*-*  ==================
+             err = 30;
           }
+
               } // because of the indentation skips above this is slightly off
             }
           }
