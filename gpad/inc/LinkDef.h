@@ -1,4 +1,4 @@
-/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.2 2000/11/21 20:19:18 brun Exp $ */
+/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.3 2001/02/13 08:30:33 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,42 +14,10 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-// enum EColor
-#pragma link C++ global kWhite;
-#pragma link C++ global kBlack;
-#pragma link C++ global kRed;
-#pragma link C++ global kGreen;
-#pragma link C++ global kBlue;
-#pragma link C++ global kYellow;
-#pragma link C++ global kMagenta;
-#pragma link C++ global kCyan;
-
-// enum ELineStyle
-#pragma link C++ global kSolid;
-#pragma link C++ global kDashed;
-#pragma link C++ global kDotted;
-#pragma link C++ global kDashDotted;
-
-// enum EMarkerStyle
-#pragma link C++ global kDot;
-#pragma link C++ global kPlus;
-#pragma link C++ global kStar;
-#pragma link C++ global kCircle;
-#pragma link C++ global kMultiply;
-#pragma link C++ global kFullCircle;
-#pragma link C++ global kFullSquare;
-#pragma link C++ global kFullTriangleUp;
-#pragma link C++ global kFullTriangleDown;
-#pragma link C++ global kFullStar;
-#pragma link C++ global kFullDotSmall;
-#pragma link C++ global kFullDotMedium;
-#pragma link C++ global kFullDotLarge;
-#pragma link C++ global kOpenCircle;
-#pragma link C++ global kOpenSquare;
-#pragma link C++ global kOpenTriangleUp;
-#pragma link C++ global kOpenDiamond;
-#pragma link C++ global kOpenCross;
-#pragma link C++ global kOpenStar;
+// Gtypes.h enums
+#pragma link C++ enum EColor;
+#pragma link C++ enum ELineStyle;
+#pragma link C++ enum EMarkerStyle;
 
 #pragma link C++ class TAttCanvas+;
 #pragma link C++ class TButton+;
