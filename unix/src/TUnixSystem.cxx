@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.110 2004/08/26 12:39:00 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.111 2004/10/08 07:27:23 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1633,7 +1633,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
 {
    // Exit the application.
 
-   // Insures that the files and sockets are close before any library is unloaded!
+   // Insures that the files and sockets are closed before any library is unloaded!
    if (gROOT) {
       if (gROOT->GetListOfFiles()) gROOT->GetListOfFiles()->Delete("slow");
       if (gROOT->GetListOfSockets()) gROOT->GetListOfSockets()->Delete();

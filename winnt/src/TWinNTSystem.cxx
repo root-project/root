@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.102 2004/10/05 13:54:50 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.103 2004/10/08 07:27:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2128,7 +2128,7 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
 
       // Need to use Windows delimiters
 	   exsearch.ReplaceAll(":",";");
-      
+
       // Check access
       struct stat finfo;
       if (::SearchPath(exsearch, exinfile, NULL, kMAXPATHLEN, name, &lpFilePart) &&
@@ -2862,7 +2862,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 
    gVirtualX->CloseDisplay();
 
-   // Insures that the files and sockets are close before any library is unloaded!
+   // Insures that the files and sockets are closed before any library is unloaded!
    if (gROOT) {
       if (gROOT->GetListOfFiles()) gROOT->GetListOfFiles()->Delete("slow");
       if (gROOT->GetListOfSockets()) gROOT->GetListOfSockets()->Delete();
