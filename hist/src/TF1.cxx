@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.12 2001/02/20 11:17:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.13 2001/02/28 11:04:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -868,10 +868,11 @@ Double_t TF1::GetSave(const Double_t *xx)
 
    if (fNsave <= 0) return 0;
    if (fSave == 0) return 0;
-   Double_t xmin = Double_t(fSave[fNsave+2]);
-   Double_t xmax = Double_t(fSave[fNsave+3]);
+   Int_t np = fNsave - 3;
+   Double_t xmin = Double_t(fSave[np+1]);
+   Double_t xmax = Double_t(fSave[np+2]);
    Double_t x    = Double_t(xx[0]);
-   Double_t dx   = (xmax-xmin)/fNsave;
+   Double_t dx   = (xmax-xmin)/np;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
 
@@ -1439,25 +1440,25 @@ void TF1::Save(Double_t xmin, Double_t xmax)
     // Save values of function in array fSave
 
    if (fSave != 0) {delete [] fSave; fSave = 0;}
-   fNsave = fNpx;
-   if (fNsave <= 0) return;
-   fSave  = new Double_t[fNsave+10];
+   fNsave = fNpx+3;
+   if (fNsave <= 3) {fNsave=0; return;}
+   fSave  = new Double_t[fNsave+1];
    Int_t i;
-   Double_t dx = (xmax-xmin)/fNsave;
+   Double_t dx = (xmax-xmin)/fNpx;
    if (dx <= 0) {
-      dx = (fXmax-fXmin)/fNsave;
+      dx = (fXmax-fXmin)/fNpx;
       fNsave--;
       xmin = fXmin +0.5*dx;
       xmax = fXmax -0.5*dx;
    }
    Double_t xv[1];
    InitArgs(xv,fParams);
-   for (i=0;i<=fNsave;i++) {
+   for (i=0;i<fNpx;i++) {
       xv[0]    = xmin + dx*i;
       fSave[i] = EvalPar(xv,fParams);
    }
-   fSave[fNsave+2] = xmin;
-   fSave[fNsave+3] = xmax;
+   fSave[fNpx+1] = xmin;
+   fSave[fNpx+2] = xmax;
 }
 
 //______________________________________________________________________________
