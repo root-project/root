@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator2D.rdl,v 1.2 2003/08/09 00:33:36 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.rdl,v 1.3 2004/04/05 22:44:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,22 +18,26 @@
 
 #include "RooFitCore/RooSegmentedIntegrator1D.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
-class RooIntegratorConfig ;
+#include "RooFitCore/RooNumIntConfig.hh"
 
 class RooSegmentedIntegrator2D : public RooSegmentedIntegrator1D {
 public:
 
   // Constructors, assignment etc
-  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, RooIntegrator1D::SummationRule rule=RooIntegrator1D::Trapezoid,
-		  Int_t maxSteps= 0, Double_t eps= 0) ; 
-  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, const RooIntegratorConfig& config) ;
-  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
-		  RooIntegrator1D::SummationRule rule= RooIntegrator1D::Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
-  RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
-		  const RooIntegratorConfig& config) ;
+  RooSegmentedIntegrator2D() ;
+
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
+  RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+		  const RooNumIntConfig& config) ;
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooSegmentedIntegrator2D() ;
 
   virtual Bool_t checkLimits() const;
+
+  virtual Bool_t canIntegrate1D() const { return kFALSE ; }
+  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
+  virtual Bool_t canIntegrateND() const { return kFALSE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
 

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.76 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.76 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,17 +31,12 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooSegmentedIntegrator1D.hh"
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooImproperIntegrator1D.hh"
-#include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooSuperCategory.hh"
-#include "RooFitCore/RooSegmentedIntegrator2D.hh"
-#include "RooFitCore/RooIntegrator2D.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -52,7 +46,7 @@ ClassImp(RooRealIntegral)
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsReal& function, const RooArgSet& depList,
-				 const RooArgSet* funcNormSet, const RooIntegratorConfig* config) :
+				 const RooArgSet* funcNormSet, const RooNumIntConfig* config) :
   RooAbsReal(name,title), 
   _valid(kTRUE), 
   _sumList("sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
@@ -64,7 +58,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _jacListIter(_jacList.createIterator()),
   _function("function","Function to be integrated",this,
 	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
-  _iconfig((RooIntegratorConfig*)config),
+  _iconfig((RooNumIntConfig*)config),
   _funcACleanBranchIter(_funcACleanBranchList.createIterator()),
   _mode(0),
   _operMode(Hybrid), 
@@ -96,7 +90,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 
   // Use objects integrator configuration if none is specified
-  if (!_iconfig) _iconfig = (RooIntegratorConfig*) function.getIntegratorConfig() ;
+  if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
@@ -232,8 +226,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // Dependent or parameter?
     if (!arg->dependsOn(intDepList)) {
 
-      // Add parameter as value server
       addServer(*arg,kTRUE,kFALSE) ;
+
       continue ;
 
     } else {
@@ -246,8 +240,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooAbsArg* leaf ;
       while(leaf=(RooAbsArg*)lIter->Next()) {
 	if (depList.find(leaf->GetName())) {
+// 	  cout << "RRI::ctor(" << GetName() << ") adding dependent component '" << leaf->GetName() 
+// 	       << " of server server '" << arg->GetName() << "' as shape dependent " << endl ;
 	  addServer(*leaf,kFALSE,kTRUE) ;
 	} else {
+// 	  cout << "RRI::ctor(" << GetName() << ") adding dependent component '" << leaf->GetName() 
+// 	       << " of server server '" << arg->GetName() << "' as value dependent " << endl ;
 	  addServer(*leaf,kTRUE,kFALSE) ;
 	}	
       }
@@ -498,50 +496,9 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     return kFALSE;
   }
 
-  // Chose a suitable RooAbsIntegrator implementation
-  if(_numIntegrand->getDimension() == 1) {
+  // Create appropriate numeric integrator using factory
+  _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig) ;
 
-    // --- 1D integration ---
-    if(RooNumber::isInfinite(_numIntegrand->getMinLimit(0)) ||
-       RooNumber::isInfinite(_numIntegrand->getMaxLimit(0))) {
-      _numIntEngine= new RooImproperIntegrator1D(*_numIntegrand,*_iconfig);
-    }
-    else {
-      if (_iconfig->numSegments1D()>1) {
-	_numIntEngine= new RooSegmentedIntegrator1D(*_numIntegrand,_iconfig->numSegments1D(),*_iconfig);
-      } else {
-	_numIntEngine= new RooIntegrator1D(*_numIntegrand,*_iconfig);
-      }
-    }
-
-  } else if (_numIntegrand->getDimension()==2 && _iconfig && _iconfig->useMCFor2D()==kFALSE) {
-
-    cout << "RooRealIntegral::initNumIntegrator(" << GetName() 
-	 << ") WARNING: Evaluation may be slow: integral contains 2D numeric integration over " ;
-    _intList.Print("1") ;
-
-    // --- 2D integration ---
-    if (_iconfig->numSegments1D()>1) {
-      _numIntEngine= new RooSegmentedIntegrator2D(*_numIntegrand,_iconfig->numSegments1D(),*_iconfig);
-    } else {
-      _numIntEngine= new RooIntegrator2D(*_numIntegrand,*_iconfig);
-    }
-
-  } else {
-    // let the constructor check that the domain is finite
-
-    // --- >=2D integration (MC)---
-
-    cout << "RooRealIntegral::initNumIntegrator(" << GetName() 
-	 << ") WARNING: Evaluation may be slow: integral contains " << _intList.getSize() << "D Monte Carlo integration over " ;
-    _intList.Print("1") ;
-    
-    if (_iconfig) {
-      _numIntEngine= new RooMCIntegrator(*_numIntegrand,*_iconfig);
-    } else {
-      _numIntEngine= new RooMCIntegrator(*_numIntegrand);
-    }
-  }
   if(0 == _numIntEngine || !_numIntEngine->isValid()) {
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
     return kFALSE;
@@ -771,7 +728,7 @@ Double_t RooRealIntegral::integrate() const
 //       cout << "RooRealIntegral: Integrating out ";
 //       _intList.printToStream(cout,OneLine);
 //     }
-    return _numIntEngine->integral() ;
+    return _numIntEngine->calculate() ;
   }
 }
 

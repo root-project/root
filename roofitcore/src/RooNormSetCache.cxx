@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.9 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.9 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +22,7 @@ ClassImp(RooNormSetCache)
 ;
 
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
-  _regSize(regSize), _nreg(0), _asArr(0), _htable(0)
+   _htable(0), _regSize(regSize), _nreg(0), _asArr(0)
 {
   _htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
@@ -31,7 +30,7 @@ RooNormSetCache::RooNormSetCache(Int_t regSize) :
 
 
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
-  _regSize(other._regSize), _nreg(0), _asArr(0), _htable(0)
+   _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0)
 {
   _htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
 }

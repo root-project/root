@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.rdl,v 1.7 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooCustomizer.rdl,v 1.7 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ public:
   RooAbsArg* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
   RooAbsArg* build(Bool_t verbose=kFALSE) ;
 
-  const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
+  const RooArgSet& cloneBranchList() const { return *_cloneBranchList ; }
   const RooArgSet& cloneLeafList() const { return *_cloneNodeList ; }
 
   // Printing interface 
@@ -51,6 +51,9 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+
+  // Releases ownership of list of cloned branch nodes
+  void setCloneBranchSet(RooArgSet& cloneBranchSet) ;
 
 protected:
   
@@ -78,8 +81,8 @@ protected:
   RooArgSet  _masterBranchList ;
   RooArgSet  _masterLeafList ;
 
-  // Cloned nodes are owned by the customizer
-  RooArgSet _cloneBranchList ;
+  RooArgSet  _internalCloneBranchList ;
+  RooArgSet* _cloneBranchList ;
 
   // Cloned leafs are owned by the user supplied list in the ctor
   RooArgSet* _cloneNodeList ;

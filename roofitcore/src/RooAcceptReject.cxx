@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.29 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.29 2004/11/29 12:22:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +17,6 @@
 // -- CLASS DESCRIPTION [AUX] --
 // A class description belongs here...
 
-//#include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooAcceptReject.hh"
 #include "RooFitCore/RooAbsReal.hh"

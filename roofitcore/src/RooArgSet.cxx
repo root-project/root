@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.52 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooArgSet.cc,v 1.52 2004/11/29 12:22:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -290,6 +289,139 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
     return kTRUE;
   }
 
+  return kFALSE ;
+}
+
+
+Double_t RooArgSet::getRealValue(const char* name, Double_t defVal, Bool_t verbose) const
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::getRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return defVal ;
+  }
+  RooAbsReal* rar = dynamic_cast<RooAbsReal*>(raa) ;
+  if (!rar) {
+    if (verbose) cout << "RooArgSet::getRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsReal" << endl ;
+    return defVal ;
+  }
+  return rar->getVal() ;
+}
+
+
+Bool_t RooArgSet::setRealValue(const char* name, Double_t newVal, Bool_t verbose) 
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::setRealValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return kTRUE ;
+  }
+  RooAbsRealLValue* rar = dynamic_cast<RooAbsRealLValue*>(raa) ;
+  if (!rar) {
+    if (verbose) cout << "RooArgSet::setRealValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsRealLValue" << endl ;
+    return kTRUE;
+  }
+  rar->setVal(newVal) ;
+  return kFALSE ;
+}
+
+
+
+const char* RooArgSet::getCatLabel(const char* name, const char* defVal, Bool_t verbose) const
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return defVal ;
+  }
+  RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
+  if (!rac) {
+    if (verbose) cout << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+    return defVal ;
+  }
+  return rac->getLabel() ;
+}
+
+
+Bool_t RooArgSet::setCatLabel(const char* name, const char* newVal, Bool_t verbose) 
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return kTRUE ;
+  }
+  RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
+  if (!rac) {
+    if (verbose) cout << "RooArgSet::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+    return kTRUE ;
+  }
+  rac->setLabel(newVal) ;
+  return kFALSE ;
+}
+
+
+Int_t RooArgSet::getCatIndex(const char* name, Int_t defVal, Bool_t verbose) const
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::getCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return defVal ;
+  }
+  RooAbsCategory* rac = dynamic_cast<RooAbsCategory*>(raa) ;
+  if (!rac) {
+    if (verbose) cout << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+    return defVal ;
+  }
+  return rac->getIndex() ;
+}
+
+
+Bool_t RooArgSet::setCatIndex(const char* name, Int_t newVal, Bool_t verbose) 
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::setCatLabel(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return kTRUE ;
+  }
+  RooAbsCategoryLValue* rac = dynamic_cast<RooAbsCategoryLValue*>(raa) ;
+  if (!rac) {
+    if (verbose) cout << "RooArgSet::setCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
+    return kTRUE ;
+  }
+  rac->setIndex(newVal) ;
+  return kFALSE ;
+}
+
+
+const char* RooArgSet::getStringValue(const char* name, const char* defVal, Bool_t verbose) const
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::getStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return defVal ;
+  }
+  RooAbsString* ras = dynamic_cast<RooAbsString*>(raa) ;
+  if (!ras) {
+    if (verbose) cout << "RooArgSet::getStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
+    return defVal ;
+  }
+  return ras->getVal() ;
+}
+
+
+Bool_t RooArgSet::setStringValue(const char* name, const char* newVal, Bool_t verbose) 
+{
+  RooAbsArg* raa = find(name) ;
+  if (!raa) {
+    if (verbose) cout << "RooArgSet::setStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
+    return kTRUE ;
+  }
+  RooStringVar* ras = dynamic_cast<RooStringVar*>(raa) ;
+  if (!ras) {
+    if (verbose) cout << "RooArgSet::setStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
+    return kTRUE ;
+  }
+  ras->setVal(newVal) ;
   return kFALSE ;
 }
 

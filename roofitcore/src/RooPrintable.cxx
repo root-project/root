@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.cc,v 1.12 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooPrintable.cc,v 1.12 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +17,6 @@
 // -- CLASS DESCRIPTION [MISC] --
 // Classes inheriting from this class can be plotted and printed.
 
-// #include "BaBar/BaBar.hh"
 #include "RooFitCore/RooPrintable.hh"
 
 #include <iostream>

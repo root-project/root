@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.7 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.7 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +22,7 @@
 #include "RooFitCore/RooSegmentedIntegrator1D.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
 
 #include <assert.h>
 using std::cout;
@@ -32,61 +31,52 @@ using std::endl;
 ClassImp(RooSegmentedIntegrator1D)
 ;
 
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, 
-						   RooIntegrator1D::SummationRule rule,
-						   Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _nseg(nSegments) 
+// Register this class with RooNumIntConfig
+static Int_t registerSegmentedSimpsonIntegrator1D()
+{
+  RooRealVar numSeg("numSeg","Number of segments",3) ;
+  RooNumIntFactory::instance().storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerSegmentedSimpsonIntegrator1D() ;
+ 
+
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
+{
+}
+
+
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function), _config(config)
 {
   // Use this form of the constructor to integrate over the function's default range.
-  _config.setSummationRule1D(rule) ;
-  _config.setMaxSteps1D(maxSteps) ;
-  _config.setEpsilonRel1D(eps) ;
-  _config.setEpsilonAbs1D(eps) ;
-
-  _useIntegrandLimits= kTRUE;
-  _valid= initialize();
-} 
-
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function), _nseg(nSegments), _config(config)
-{
-  // Use this form of the constructor to integrate over the function's default range.
+  _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kTRUE;
 
   _valid= initialize();
 } 
 
 
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, Double_t xmin, Double_t xmax,
-						   RooIntegrator1D::SummationRule rule, 
-						   Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _nseg(nSegments)
-{
-  // Use this form of the constructor to override the function's default range.
-  _xmin= xmin;
-  _xmax= xmax;
-
-  _config.setSummationRule1D(rule) ;
-  _config.setMaxSteps1D(maxSteps) ;
-  _config.setEpsilonRel1D(eps) ;
-  _config.setEpsilonAbs1D(eps) ;
-
-  _useIntegrandLimits= kFALSE;
-  _valid= initialize();
-} 
-
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, Double_t xmin, Double_t xmax,
-						   const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function), _nseg(nSegments), _config(config) 
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+						   const RooNumIntConfig& config) :
+  RooAbsIntegrator(function), _config(config) 
 {
   // Use this form of the constructor to override the function's default range.
 
+  _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
   _xmax= xmax;
 
   _valid= initialize();
 } 
+
+
+
+RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
+{
+  return new RooSegmentedIntegrator1D(function,config) ;
+}
 
 
 
@@ -106,8 +96,8 @@ Bool_t RooSegmentedIntegrator1D::initialize()
   Double_t segSize = (_xmax - _xmin) / _nseg ;
 
   // Adjust integrator configurations for reduced intervals
-  _config.setEpsilonRel1D(_config.epsilonRel1D()/sqrt(1.*_nseg)) ;
-  _config.setEpsilonAbs1D(_config.epsilonAbs1D()/sqrt(1.*_nseg)) ;
+  _config.setEpsRel(_config.epsRel()/sqrt(1.*_nseg)) ;
+  _config.setEpsAbs(_config.epsAbs()/sqrt(1.*_nseg)) ;
     
   for (i=0 ; i<_nseg ; i++) {
     _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;

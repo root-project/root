@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.11 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.11 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,13 +16,13 @@
 
 // -- CLASS DESCRIPTION [AUX} --
 // RooConvGenContext is an efficient implementation of the generator context
-// specific for RooConvolutedPdf objects. The physics model is generated
+// specific for RooAbsAnaConvPdf objects. The physics model is generated
 // with a truth resolution model and the requested resolution model is generated
 // separately as a PDF. The convolution variable of the physics model is 
 // subsequently explicitly smeared with the resolution model distribution.
 
 #include "RooFitCore/RooConvGenContext.hh"
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -35,7 +34,7 @@ using std::endl;
 ClassImp(RooConvGenContext)
 ;
   
-RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArgSet &vars, 
+RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, 
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
@@ -49,7 +48,7 @@ RooConvGenContext::RooConvGenContext(const RooConvolutedPdf &model, const RooArg
     RooErrorHandler::softAbort() ;
   }
 
-  RooConvolutedPdf* pdfClone = (RooConvolutedPdf*) _pdfCloneSet->find(model.GetName()) ;
+  RooAbsAnaConvPdf* pdfClone = (RooAbsAnaConvPdf*) _pdfCloneSet->find(model.GetName()) ;
   RooTruthModel truthModel("truthModel","Truth resolution model",(RooRealVar&)*pdfClone->convVar()) ;
   pdfClone->changeModel(truthModel) ;
   ((RooRealVar*)pdfClone->convVar())->removeFitRange() ;

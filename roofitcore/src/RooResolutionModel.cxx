@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.31 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.31 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +29,7 @@
 //         _ _                        _                  _
 //   R_k(x,b,c) = Int(dx') basis_k(x',b) * resModel(x-x',c)
 // 
-//  which RooConvolutedPdf uses to construct the pdf for [ Phys (x) R ] :
+//  which RooAbsAnaConvPdf uses to construct the pdf for [ Phys (x) R ] :
 //          _ _ _                 _          _ _
 //    PDF(x,a,b,c) = Sum_k coef_k(a) * R_k(x,b,c)
 //

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.cc,v 1.14 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsIntegrator.cc,v 1.14 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,11 +19,28 @@
 // functions that implement the RooAbsFunc interface.
 
 #include "RooFitCore/RooAbsIntegrator.hh"
+#include "TClass.h"
+using std::cout;
+using std::endl;
 
 ClassImp(RooAbsIntegrator)
 ;
 
-RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function) :
-  _function(&function), _valid(function.isValid())
+RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE) 
 {
+}
+
+RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter) :
+  _function(&function), _valid(function.isValid()), _printEvalCounter(printEvalCounter)
+{
+}
+
+Double_t RooAbsIntegrator::calculate(const Double_t *yvec) 
+{
+  if (_printEvalCounter) integrand()->resetNumCall() ;
+  Double_t ret = integral(yvec) ; 
+  if (_printEvalCounter) {
+    cout << IsA()->GetName() << "::calculate() number of function calls = " << integrand()->numCall() << endl ;
+  }
+  return ret ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.rdl,v 1.5 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooConvCoefVar.rdl,v 1.5 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ class RooConvCoefVar : public RooAbsReal {
 public:
   // Constructors, assignment etc.
   inline RooConvCoefVar() { }
-  RooConvCoefVar(const char *name, const char *title, const RooConvolutedPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
+  RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
   RooConvCoefVar(const RooConvCoefVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooConvCoefVar(*this,newname); }
   virtual ~RooConvCoefVar() {} ;
@@ -47,7 +47,7 @@ protected:
   RooRealProxy _convPdf ; // ConvolutedPDfs implementing our coefficient
   Int_t    _coefIdx  ;    // Index code of the coefficient
 
-  ClassDef(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooConvolutedPdf
+  ClassDef(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooAbsAnaConvPdf
 };
 
 #endif

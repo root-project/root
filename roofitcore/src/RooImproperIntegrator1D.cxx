@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.11 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.11 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,13 +18,13 @@
 // Implementation of the abstract RooAbsIntegrator interface that can handle
 // integration limits of +/-Infinity.
 
-// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooImproperIntegrator1D.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
+#include "RooFitCore/RooArgSet.hh"
 
 #include <iostream>
 #include <math.h>
@@ -35,40 +34,106 @@ using std::endl;
 ClassImp(RooImproperIntegrator1D)
 ;
 
+// Register this class with RooNumIntConfig
+static Int_t registerImproperIntegrator1D()
+{
+  RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
+  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
+  RooNumIntConfig::defaultConfig().method1DOpen().setLabel(proto->IsA()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerImproperIntegrator1D() ;
+
+
+RooImproperIntegrator1D::RooImproperIntegrator1D()
+{
+}
+
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
-  RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)
+  RooAbsIntegrator(function),
+  _useIntegrandLimits(kTRUE),
+  _origFunc((RooAbsFunc*)&function),
+  _function(0),
+  _integrator1(0),
+  _integrator2(0),
+  _integrator3(0)
 {
-  initialize(function) ;
+  initialize(&function) ;
 }
 
 
-RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function),_function(0),_integrator1(0),_integrator2(0),_integrator3(0)
+RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function),
+  _useIntegrandLimits(kTRUE),
+  _origFunc((RooAbsFunc*)&function),
+  _function(0),
+  _config(config),
+  _integrator1(0),
+  _integrator2(0),
+  _integrator3(0)
 {
-  initialize(function) ;
+  initialize(&function) ;
 }
 
 
+RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function),
+  _xmin(xmin),
+  _xmax(xmax),
+  _useIntegrandLimits(kFALSE),
+  _origFunc((RooAbsFunc*)&function),
+  _function(0),
+  _config(config),
+  _integrator1(0),
+  _integrator2(0),
+  _integrator3(0)
+{
+  initialize(&function) ;
+}
 
-void RooImproperIntegrator1D::initialize(const RooAbsFunc& function) 
+
+RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
+{
+  return new RooImproperIntegrator1D(function,config) ;
+}
+
+
+void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 {
   if(!isValid()) {
     cout << "RooImproperIntegrator: cannot integrate invalid function" << endl;
     return;
   }
   // Create a new function object that uses the change of vars: x -> 1/x
-  _function= new RooInvTransform(function);
+  if (function) {
+    _function= new RooInvTransform(*function);
+  } else {
+    function = _origFunc ;
+    if (_integrator1) {
+      delete _integrator1 ; 
+      _integrator1 = 0 ;
+    }
+    if (_integrator2) {
+      delete _integrator2 ; 
+      _integrator2 = 0 ;
+    }
+    if (_integrator3) {
+      delete _integrator3 ; 
+      _integrator3 = 0 ;
+    }
+  }
+
   // partition the integration range into subranges that can each be
   // handled by RooIntegrator1D
   switch(_case= limitsCase()) {
   case ClosedBothEnds:
     // both limits are finite: use the plain trapezoid integrator
-    _integrator1= new RooIntegrator1D(function,_xmin,_xmax,RooIntegrator1D::Trapezoid);
+    _integrator1= new RooIntegrator1D(*function,_xmin,_xmax,_config);
     break;
   case OpenBothEnds:
     // both limits are infinite: integrate over (-1,+1) using
     // the plain trapezoid integrator...
-    _integrator1= new RooIntegrator1D(function,-1,+1,RooIntegrator1D::Trapezoid);
+    _integrator1= new RooIntegrator1D(*function,-1,+1,RooIntegrator1D::Trapezoid);
     // ...and integrate the infinite tails using the midpoint integrator
     _integrator2= new RooIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
     _integrator3= new RooIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
@@ -76,7 +141,7 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc& function)
   case OpenBelowSpansZero:
     // xmax >= 0 so integrate from (-inf,-1) and (-1,xmax)
     _integrator1= new RooIntegrator1D(*_function,-1,0,RooIntegrator1D::Midpoint);
-    _integrator2= new RooIntegrator1D(function,-1,_xmax,RooIntegrator1D::Trapezoid);
+    _integrator2= new RooIntegrator1D(*function,-1,_xmax,RooIntegrator1D::Trapezoid);
     break;
   case OpenBelow:
     // xmax < 0 so integrate from (-inf,xmax)
@@ -85,7 +150,7 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc& function)
   case OpenAboveSpansZero:
     // xmin <= 0 so integrate from (xmin,+1) and (+1,+inf)
     _integrator1= new RooIntegrator1D(*_function,0,+1,RooIntegrator1D::Midpoint);
-    _integrator2= new RooIntegrator1D(function,_xmin,+1,RooIntegrator1D::Trapezoid);
+    _integrator2= new RooIntegrator1D(*function,_xmin,+1,RooIntegrator1D::Trapezoid);
     break;
   case OpenAbove:
     // xmin > 0 so integrate from (xmin,+inf)
@@ -104,15 +169,36 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D() {
   if(0 != _function) delete _function;
 }
 
+Bool_t RooImproperIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+  // Change our integration limits. Return kTRUE if the new limits are
+  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+  // if this object was constructed to always use our integrand's limits.
+
+  if(_useIntegrandLimits) {
+    cout << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    return kFALSE;
+  }
+
+  _xmin= xmin;
+  _xmax= xmax;
+  return checkLimits();
+}
+
 Bool_t RooImproperIntegrator1D::checkLimits() const {
   // Analyze the current limits to see if the same case applies.
 
   // Has either limit changed?
-  if(_xmin == integrand()->getMinLimit(0) &&
-     _xmax == integrand()->getMaxLimit(0)) return kTRUE;
+  if (_useIntegrandLimits) {
+    if(_xmin == integrand()->getMinLimit(0) &&
+       _xmax == integrand()->getMaxLimit(0)) return kTRUE;
+  }
 
   // The limits have changed: can we use the same strategy?
-  if(limitsCase() != _case) return kFALSE;
+  if(limitsCase() != _case) {
+    // Reinitialize embedded integrators, will automatically propagate new limits
+    const_cast<RooImproperIntegrator1D*>(this)->initialize() ;
+    return kTRUE ;
+  }
 
   // Reuse our existing integrators by updating their limits
   switch(_case) {
@@ -146,8 +232,11 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
 
   if(0 == integrand() || !integrand()->isValid()) return Invalid;
 
-  _xmin= integrand()->getMinLimit(0);
-  _xmax= integrand()->getMaxLimit(0);
+  if (_useIntegrandLimits) {
+    _xmin= integrand()->getMinLimit(0);
+    _xmax= integrand()->getMaxLimit(0);
+  }
+
   Bool_t inf1= RooNumber::isInfinite(_xmin);
   Bool_t inf2= RooNumber::isInfinite(_xmax);
   if(!inf1 && !inf2) {
@@ -178,6 +267,7 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
 }
 
 Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) {
+
   Double_t result(0);
   if(0 != _integrator1) result+= _integrator1->integral(yvec);
   if(0 != _integrator2) result+= _integrator2->integral(yvec);

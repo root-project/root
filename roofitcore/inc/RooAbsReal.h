@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.64 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.64 2004/11/29 12:22:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@ class RooAbsFunc;
 class RooAbsCategoryLValue ;
 class RooCategory ;
 class RooLinkedList ;
-class RooIntegratorConfig ;
+class RooNumIntConfig ;
 
 class TH1;
 class TH1F;
@@ -70,9 +70,9 @@ public:
   virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset) const { return createIntegral(iset,&nset) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooIntegratorConfig& cfg) const { return createIntegral(iset,&nset,&cfg) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooIntegratorConfig& cfg) const { return createIntegral(iset,0,&cfg) ; }
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooIntegratorConfig* cfg=0) const ;  
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooNumIntConfig& cfg) const { return createIntegral(iset,&nset,&cfg) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg) const { return createIntegral(iset,0,&cfg) ; }
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0) const ;  
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -88,12 +88,11 @@ public:
 
   virtual Double_t defaultErrorLevel() const { return 1.0 ; }
 
-  const RooIntegratorConfig* getIntegratorConfig() const ;
-  static RooIntegratorConfig* defaultIntegratorConfig()  ;
-  RooIntegratorConfig* specialIntegratorConfig() const ;
-  static void setDefaultIntegratorConfig(const RooIntegratorConfig& config) ;
+  const RooNumIntConfig* getIntegratorConfig() const ;
+  static RooNumIntConfig* defaultIntegratorConfig()  ;
+  RooNumIntConfig* specialIntegratorConfig() const ;
   void setIntegratorConfig() ;
-  void setIntegratorConfig(const RooIntegratorConfig& config) ;
+  void setIntegratorConfig(const RooNumIntConfig& config) ;
 
 
 public:
@@ -196,11 +195,10 @@ protected:
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set
 
   friend class RooAbsPdf ;
-  friend class RooConvolutedPdf ;
+  friend class RooAbsAnaConvPdf ;
   friend class RooRealProxy ;
 
-  RooIntegratorConfig* _specIntegratorConfig ; //!
-  static RooIntegratorConfig* _defaultIntegratorConfig ;
+  RooNumIntConfig* _specIntegratorConfig ; //! Numeric integrator configuration specific for this object
 
   static Bool_t _cacheCheck ;
 

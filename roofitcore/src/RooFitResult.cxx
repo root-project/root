@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.26 2004/09/11 00:32:23 bartoldu Exp $
+ *    File: $Id: RooFitResult.cc,v 1.26 2004/11/29 12:31:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,8 +63,8 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _numBadNLL(other._numBadNLL),
   _minNLL(other._minNLL),
   _edm(other._edm),
-  _Lt(0),
-  _randomPars(0)
+  _randomPars(0),
+  _Lt(0)
 {
   // Copy constructor
   _constPars = (RooArgList*) other._constPars->snapshot() ;

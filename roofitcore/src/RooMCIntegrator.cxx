@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.15 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.15 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,8 +22,10 @@
 
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
 #include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
+#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooCategory.hh"
 
 #include <math.h>
 #include <assert.h>
@@ -34,6 +35,48 @@ using std::endl;
 ClassImp(RooMCIntegrator)
 ;
 
+// Register this class with RooNumIntFactory
+static Int_t registerMCIntegrator()
+{
+  // Construct default configuration
+  RooCategory samplingMode("samplingMode","Sampling Mode") ;
+  samplingMode.defineType("Importance",RooMCIntegrator::Importance) ;
+  samplingMode.defineType("ImportanceOnly",RooMCIntegrator::ImportanceOnly) ;
+  samplingMode.defineType("Stratified",RooMCIntegrator::Stratified) ;
+  samplingMode.setIndex(RooMCIntegrator::Importance) ;
+
+  RooCategory genType("genType","Generator Type") ;
+  genType.defineType("QuasiRandom",RooMCIntegrator::QuasiRandom) ;
+  genType.defineType("PseudoRandom",RooMCIntegrator::PseudoRandom) ;
+  genType.setIndex(RooMCIntegrator::QuasiRandom) ;
+
+  RooCategory verbose("verbose","Verbose flag") ;
+  verbose.defineType("true",1) ;
+  verbose.defineType("false",0) ;
+  verbose.setIndex(0) ;
+
+  RooRealVar alpha("alpha","Grid structure constant",1.5) ;
+  RooRealVar nRefineIter("nRefineIter","Number of refining iterations",5) ;
+  RooRealVar nRefinePerDim("nRefinePerDim","Number of refining samples (per dimension)",1000) ;
+  RooRealVar nIntPerDim("nIntPerDim","Number of integration samples (per dimension)",5000) ;
+  
+  // Create prototype integrator
+  RooMCIntegrator* proto = new RooMCIntegrator() ;
+
+  // Register prototype and default config with factory
+  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
+
+  // Make this method the default for all N>2-dim integrals
+  RooNumIntConfig::defaultConfig().methodND().setLabel(proto->IsA()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerMCIntegrator() ;
+
+
+RooMCIntegrator::RooMCIntegrator()
+{
+  // Dummy default ctor
+}
 
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
@@ -46,20 +89,28 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
   if(_verbose) _grid.Print();
 } 
 
-RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function), _grid(function), 
-  _verbose(config.verboseMC()),
-  _alpha(config.alphaMC()),
-  _mode(config.samplingModeMC()), 
-  _genType(config.generatorTypeMC()), 
-  _nRefineIter(config.nRefineIterMC()),
-  _nRefinePerDim(config.nRefinePerDimMC()),
-  _nIntegratePerDim(config.nIntegratePerDimMC())
-{
+RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function), _grid(function)
+{ 
+  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
+  _verbose = (Bool_t) configSet.getCatIndex("verbose",0) ;
+  _alpha = configSet.getRealValue("alpha",1.5) ;
+  _mode = (SamplingMode) configSet.getCatIndex("samplingMode",Importance) ;
+  _genType = (GeneratorType) configSet.getCatIndex("genType",QuasiRandom) ;
+  _nRefineIter = (Int_t) configSet.getRealValue("nRefineIter",5) ;
+  _nRefinePerDim = (Int_t) configSet.getRealValue("nRefinePerDim",1000) ;
+  _nIntegratePerDim = (Int_t) configSet.getRealValue("nIntPerDim",5000) ;
+
   // check that our grid initialized without errors
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
 } 
+
+RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
+{
+  return new RooMCIntegrator(function,config) ;
+}
+
 
 RooMCIntegrator::~RooMCIntegrator() {
 }

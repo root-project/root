@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.73 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.73 2004/11/29 12:22:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,6 @@ class TH1F;
 class TH2F;
 class TList ;
 class RooLinkedList ;
-class RooIntegratorConfig ;
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -190,7 +189,7 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
 				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-  friend class RooConvolutedPdf ;
+  friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral (owned by _normMgr)
   mutable RooArgSet* _normSet ;      // Normalization set with for above integral

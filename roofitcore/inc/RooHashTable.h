@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.rdl,v 1.8 2004/06/22 05:09:51 wverkerke Exp $
+ *    File: $Id: RooHashTable.rdl,v 1.9 2004/07/02 07:39:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,6 +54,7 @@ protected:
       case Name:      return TMath::Hash(arg->GetName()) ;
       case Intrinsic: return arg->Hash() ;
     }
+    return 0 ;
   }
 
   HashMethod _hashMethod ;

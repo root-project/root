@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGrid.rdl,v 1.6 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooGrid.rdl,v 1.6 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@ class RooAbsFunc;
 
 class RooGrid : public TObject, public RooPrintable {
 public:
+  RooGrid() ;
   RooGrid(const RooAbsFunc &function);
   virtual ~RooGrid();
 

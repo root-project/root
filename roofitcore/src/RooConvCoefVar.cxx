@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.cc,v 1.6 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooConvCoefVar.cc,v 1.6 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,17 +16,17 @@
 
 // -- CLASS DESCRIPTION [REAL] --
 // RooConvCoefVar is an auxilary class that represents the coefficient
-// of a RooConvolutedPdf implementation as a separate RooAbsReal object
+// of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
 // to be able to interface these coefficient terms with RooRealIntegreal
 //
 
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooConvCoefVar.hh"
 
 ClassImp(RooConvCoefVar)
 ;
 
-RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooConvolutedPdf& input, 
+RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, 
 			       Int_t coefIdx, const RooArgSet* varList) :
   RooAbsReal(name,title),
   _varSet("varSet","Set of coefficient variables",this),
@@ -51,12 +50,12 @@ RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
 
 Double_t RooConvCoefVar::evaluate() const 
 {
-  return ((RooConvolutedPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
+  return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
 }
 
 Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
-  Int_t code = ((RooConvolutedPdf&)_convPdf.arg()).getCoefAnalyticalIntegral(allVars,analVars) ;
+  Int_t code = ((RooAbsAnaConvPdf&)_convPdf.arg()).getCoefAnalyticalIntegral(allVars,analVars) ;
 //   cout << "RooConvCoefVar::getAnalyticalIntegral code = " << code << " for " ; analVars.Print("1") ;
   return code ;
 }
@@ -65,6 +64,6 @@ Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 Double_t RooConvCoefVar::analyticalIntegral(Int_t code) const 
 {
 //   cout << "RooConvCoefVar::analyticalIntegral(" << _coefIdx << "," << code << ")" << endl ;
-  return ((RooConvolutedPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code) ;
+  return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code) ;
 }
 

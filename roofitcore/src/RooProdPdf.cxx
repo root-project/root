@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.48 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.48 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -456,7 +455,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       // 2) It has overlapping dependents of any class for which integration is requested
 
       Bool_t normOverlap = pdfNormDeps.overlaps(*termNormDeps)  ;
-      Bool_t intOverlap =  pdfIntSet->overlaps(*termAllDeps) ;
+      // Bool_t intOverlap =  pdfIntSet->overlaps(*termAllDeps) ;
 
       //if (normOverlap || intOverlap) {
       if (normOverlap) {
@@ -564,7 +563,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   RooLinkedList terms, norms, imp, ints, cross ;
   factorizeProduct(nset?(*nset):RooArgSet(),iset?(*iset):RooArgSet(),terms,norms,imp,cross,ints) ;
 
-  RooArgSet *term, *norm, *integ, *xdeps ;
+  RooArgSet *norm, *integ, *xdeps ;
   
   // Group irriducible terms that need to be (partially) integrated together
   RooLinkedList groupedList ; 
@@ -663,7 +662,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 
   // Store the partial integral list and return the assigned code ;
   code = _partListMgr.setNormList(this,nset,iset,partIntList) ;
-  Int_t code2 = _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList) ;
+  _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList) ;
 
   // Store the normalization set list in the cache using the index code of _partListMgr
   _partNormListCache[code].Delete() ;

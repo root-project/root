@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooInvTransform.cc,v 1.6 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooInvTransform.cc,v 1.6 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +17,6 @@
 // -- CLASS DESCRIPTION [AUX] --
 // Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
 
-// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooInvTransform.hh"
 
@@ -37,8 +35,8 @@ RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   // function and its range. The function must be one dimensional and its
   // range cannot include zero.
 
-  if(getDimension() != 1) {
-    cout << "RooInvTransform: can only be applied to a 1-dim function" << endl;
-    _valid= kFALSE;
-  }
+//   if(getDimension() != 1) {
+//     cout << "RooInvTransform: can only be applied to a 1-dim function" << endl;
+//     _valid= kFALSE;
+//   }
 }

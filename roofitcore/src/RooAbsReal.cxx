@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.102 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.102 2004/11/29 12:22:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +40,7 @@
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
 
 #include <iostream>
 
@@ -61,7 +60,6 @@ using std::ostream;
 ClassImp(RooAbsReal)
 ;
 
-RooIntegratorConfig* RooAbsReal::_defaultIntegratorConfig(0) ;
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 
 RooAbsReal::RooAbsReal() : _specIntegratorConfig(0)
@@ -95,7 +93,7 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 
   // Copy constructor
   if (other._specIntegratorConfig) {
-    _specIntegratorConfig = new RooIntegratorConfig(*other._specIntegratorConfig) ;
+    _specIntegratorConfig = new RooNumIntConfig(*other._specIntegratorConfig) ;
   } else {
     _specIntegratorConfig = 0 ;
   }
@@ -342,7 +340,7 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 
 
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooIntegratorConfig* cfg) const 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg) const 
 {
   TString name(GetName()) ;
   TString title(GetTitle()) ;
@@ -1769,44 +1767,32 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
 
 
 
-RooIntegratorConfig* RooAbsReal::defaultIntegratorConfig() 
+RooNumIntConfig* RooAbsReal::defaultIntegratorConfig() 
 {
-  if (!_defaultIntegratorConfig) {
-    _defaultIntegratorConfig = new RooIntegratorConfig ;
-  }
-  return _defaultIntegratorConfig ;
+  return &RooNumIntConfig::defaultConfig() ;
 }
 
 
-RooIntegratorConfig* RooAbsReal::specialIntegratorConfig() const 
+RooNumIntConfig* RooAbsReal::specialIntegratorConfig() const 
 {
   return _specIntegratorConfig ;
 }
 
 
-void RooAbsReal::setDefaultIntegratorConfig(const RooIntegratorConfig& config) 
+const RooNumIntConfig* RooAbsReal::getIntegratorConfig() const 
 {
-  if (_defaultIntegratorConfig) {
-    delete _defaultIntegratorConfig ;
-  }
-  _defaultIntegratorConfig = new RooIntegratorConfig(config) ;
-}
-
-
-const RooIntegratorConfig* RooAbsReal::getIntegratorConfig() const 
-{
-  const RooIntegratorConfig* config = specialIntegratorConfig() ;
+  const RooNumIntConfig* config = specialIntegratorConfig() ;
   if (config) return config ;
   return defaultIntegratorConfig() ;
 }
 
 
-void RooAbsReal::setIntegratorConfig(const RooIntegratorConfig& config) 
+void RooAbsReal::setIntegratorConfig(const RooNumIntConfig& config) 
 {
   if (_specIntegratorConfig) {
     delete _specIntegratorConfig ;
   }
-  _specIntegratorConfig = new RooIntegratorConfig(config) ;  
+  _specIntegratorConfig = new RooNumIntConfig(config) ;  
 }
 
 

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGrid.cc,v 1.9 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooGrid.cc,v 1.9 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +33,10 @@ using std::setw;
 
 ClassImp(RooGrid)
 ;
+
+RooGrid::RooGrid()
+{
+}
 
 RooGrid::RooGrid(const RooAbsFunc &function)
   : _valid(kTRUE), _xl(0),_xu(0),_delx(0),_xi(0)

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.85 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.85 2004/11/29 12:22:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,8 +59,11 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Int_t  RooAbsArg::_nameLength(0) ;
 
-RooAbsArg::RooAbsArg() : TNamed(), _attribList(), 
-  _operMode(Auto), _deleteWatch(kFALSE)
+RooAbsArg::RooAbsArg() : 
+  TNamed(), 
+  _attribList(), 
+  _deleteWatch(kFALSE),
+  _operMode(Auto)
 {
   // Default constructor creates an unnamed object. At present this
   // will trigger an assert(0) because may indicate an attempt to
@@ -76,9 +78,12 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
   RooTrace::create(this) ;
 }
 
-RooAbsArg::RooAbsArg(const char *name, const char *title)
-  : TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE),
-  _operMode(Auto), _deleteWatch(kFALSE)
+RooAbsArg::RooAbsArg(const char *name, const char *title) : 
+  TNamed(name,title), 
+  _deleteWatch(kFALSE),
+  _valueDirty(kTRUE), 
+  _shapeDirty(kTRUE),
+  _operMode(Auto)
 {    
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -90,8 +95,9 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
-  : TNamed(other.GetName(),other.GetTitle()), _operMode(Auto)
-  , _deleteWatch(other._deleteWatch)
+  : TNamed(other.GetName(),other.GetTitle()), 
+    _deleteWatch(other._deleteWatch),
+    _operMode(Auto)
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created 

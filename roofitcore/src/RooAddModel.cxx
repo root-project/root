@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.35 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooAddModel.cc,v 1.35 2004/11/29 12:22:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +21,7 @@
 //
 // The coefficients c_i weight the component models by their full integral
 // (-inf to +inf) over the convolution variable, regardless of the fit limits
-// defined in the convolution variable. (the RooConvolutedPdf using the resolution
+// defined in the convolution variable. (the RooAbsAnaConvPdf using the resolution
 // model will honour those limits in its own normalization).
 // 
 // A RooAddModel only supports basis functions that are supported by all its 

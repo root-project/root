@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.rdl,v 1.7 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.rdl,v 1.8 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,32 +17,45 @@
 #define ROO_IMPROPER_INTEGRATOR_1D
 
 #include "RooFitCore/RooAbsIntegrator.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
 
 class RooInvTransform;
 class RooIntegrator1D;
-class RooIntegratorConfig ;
 
 class RooImproperIntegrator1D : public RooAbsIntegrator {
 public:
 
+  RooImproperIntegrator1D() ;
   RooImproperIntegrator1D(const RooAbsFunc& function);
-  RooImproperIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config);
+  RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
+  RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config);
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooImproperIntegrator1D();
 
   virtual Bool_t checkLimits() const;
+  Bool_t setLimits(Double_t xmin, Double_t xmax);
+  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
   virtual Double_t integral(const Double_t* yvec=0) ;
+
+  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
+  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
+  virtual Bool_t canIntegrateND() const { return kFALSE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kTRUE ; }
 
 protected:
 
-  void initialize(const RooAbsFunc& function) ;
+  void initialize(const RooAbsFunc* function=0) ;
 
   enum LimitsCase { Invalid, ClosedBothEnds, OpenBothEnds, OpenBelowSpansZero, OpenBelow,
 		    OpenAboveSpansZero, OpenAbove };
   LimitsCase limitsCase() const;
   LimitsCase _case;
   mutable Double_t _xmin, _xmax;
+  Bool_t _useIntegrandLimits;
 
+  RooAbsFunc*      _origFunc ;
   RooInvTransform *_function;
+  RooNumIntConfig  _config ;
   mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3;
   
   ClassDef(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine

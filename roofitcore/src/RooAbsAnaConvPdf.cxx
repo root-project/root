@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvolutedPdf.cc,v 1.40 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +16,8 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 // 
-//  RooConvolutedPdf is the base class of for PDFs that represents a
-//  physics model that can be convoluted with a resolution model
+//  RooAbsAnaConvPdf is the base class of for PDFs that represents a
+//  physics model that can be analytically convolved with a resolution model
 //  
 //  To achieve factorization between the physics model and the resolution
 //  model, each physics model must be able to be written in the form
@@ -33,11 +32,11 @@
 //         _ _                        _                  _
 //   R_k(x,b,c) = Int(dx') basis_k(x',b) * resModel(x-x',c)
 // 
-//  which RooConvolutedPdf uses to construct the pdf for [ Phys (x) R ] :
+//  which RooAbsAnaConvPdf uses to construct the pdf for [ Phys (x) R ] :
 //          _ _ _                 _          _ _
 //    PDF(x,a,b,c) = Sum_k coef_k(a) * R_k(x,b,c)
 //
-//  A minimal implementation of a RooConvolutedPdf physics model consists of
+//  A minimal implementation of a RooAbsAnaConvPdf physics model consists of
 //  
 //  - A constructor that declares the required basis functions using the declareBasis() method.
 //    The declareBasis() function assigns a unique identifier code to each declare basis
@@ -57,7 +56,7 @@
 
 
 #include <iostream>
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFormulaVar.hh"
@@ -69,11 +68,11 @@ using std::cout;
 using std::endl;
 using std::ostream;
 
-ClassImp(RooConvolutedPdf) 
+ClassImp(RooAbsAnaConvPdf) 
 ;
 
 
-RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title, 
+RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 
 				   const RooResolutionModel& model, RooRealVar& convVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
@@ -88,7 +87,7 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
 }
 
 
-RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* name) : 
+RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) : 
   RooAbsPdf(other,name), _isCopy(kTRUE),
   _model(other._model), _convVar(0), 
   _convSet("convSet",this,other._convSet),
@@ -110,7 +109,7 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
 
 
 
-RooConvolutedPdf::~RooConvolutedPdf()
+RooAbsAnaConvPdf::~RooAbsAnaConvPdf()
 {
   // Destructor
   if (_convNormSet) {
@@ -132,7 +131,7 @@ RooConvolutedPdf::~RooConvolutedPdf()
 }
 
 
-Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgList& params) 
+Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& params) 
 {
   // Declare a basis function for use in this physics model. The string expression 
   // must be a valid RooFormulVar expression representing the basis function, referring
@@ -147,14 +146,14 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgList& p
 
   // Sanity check
   if (!_model || !_convVar) {
-    cout << "RooConvolutedPdf::declareBasis(" << GetName() << "): ERROR attempt to "
-	 << " declare basis functions in a copied RooConvolutedPdf" << endl ;
+    cout << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): ERROR attempt to "
+	 << " declare basis functions in a copied RooAbsAnaConvPdf" << endl ;
     return -1 ;
   }
 
   // Resolution model must support declared basis
   if (!_model->isBasisSupported(expression)) {
-    cout << "RooConvolutedPdf::declareBasis(" << GetName() << "): resolution model " 
+    cout << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model " 
 	 << _model->GetName() 
 	 << " doesn't support basis function " << expression << endl ;
     return -1 ;
@@ -180,7 +179,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgList& p
   // Instantiate resModel x basisFunc convolution
   RooAbsReal* conv = _model->convolution(basisFunc,this) ;
   if (!conv) {
-    cout << "RooConvolutedPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '" 
+    cout << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '" 
 	 << expression << "'" << endl ;
     return -1 ;
   }
@@ -190,7 +189,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgList& p
 }
 
 
-Bool_t RooConvolutedPdf::changeModel(const RooResolutionModel& newModel) 
+Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel) 
 {
   // Change the resolution model to given model
   TIterator* cIter = _convSet.createIterator() ;
@@ -229,7 +228,7 @@ Bool_t RooConvolutedPdf::changeModel(const RooResolutionModel& newModel)
 
 
 
-RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					       const RooArgSet* auxProto, Bool_t verbose) const 
 {
   RooArgSet* modelDep = _model->getDependents(&vars) ;
@@ -261,7 +260,7 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars, const RooD
 
 
 
-const RooRealVar* RooConvolutedPdf::convVar() const
+const RooRealVar* RooAbsAnaConvPdf::convVar() const
 {
   // Return a pointer to the convolution variable instance used in the resolution model
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
@@ -271,7 +270,7 @@ const RooRealVar* RooConvolutedPdf::convVar() const
 
 
 
-Double_t RooConvolutedPdf::evaluate() const
+Double_t RooAbsAnaConvPdf::evaluate() const
 {
   // Calculate the current unnormalized value of the PDF
   //
@@ -293,7 +292,7 @@ Double_t RooConvolutedPdf::evaluate() const
 }
 
 
-Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
+Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
 	  				        RooArgSet& analVars, const RooArgSet* normSet2) const 
 {
   // Handle trivial no-integration scenario
@@ -396,7 +395,7 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
 
 
-Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
+Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code.
   //
@@ -476,7 +475,7 @@ Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
 
 
-Int_t RooConvolutedPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
   // Default implementation of function advertising integration capabilities: no integrals
   // are advertised.
@@ -486,27 +485,27 @@ Int_t RooConvolutedPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet&
 
 
 
-Double_t RooConvolutedPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const 
+Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code) const 
 {
   // Default implementation of function implementing advertised integrals. Only
   // the pass-through scenario (no integration) is implemented.
 
   if (code==0) return coefficient(coef) ;
-  cout << "RooConvolutedPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
+  cout << "RooAbsAnaConvPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
   assert(0) ;
   return 1 ;
 }
 
 
 
-Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
+Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   // This function forces RooRealIntegral to offer all integration dependents
-  // to RooConvolutedPdf::getAnalyticalIntegralWN() for consideration for
+  // to RooAbsAnaConvPdf::getAnalyticalIntegralWN() for consideration for
   // analytical integration, if RRI considers this to be unsafe (e.g. due
   // to hidden Jacobian terms). 
   //
-  // RooConvolutedPdf will not attempt to actually integrate all these dependents
+  // RooAbsAnaConvPdf will not attempt to actually integrate all these dependents
   // but feed them to the resolution models integration interface, which will
   // make the final determination on how to integrate these dependents.
 
@@ -515,7 +514,7 @@ Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
                
 
 
-Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset) const 
+Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset) const 
 {
   if (nset==0) return coefficient(coefIdx) ;
 
@@ -539,7 +538,7 @@ Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset) con
 
 
 
-void RooConvolutedPdf::makeCoefVarList() const
+void RooAbsAnaConvPdf::makeCoefVarList() const
 {
   // Build complete list of coefficient variables 
   RooArgSet* coefVars = getParameters((RooArgSet*)0) ;
@@ -566,7 +565,7 @@ void RooConvolutedPdf::makeCoefVarList() const
 
 
 
-Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const 
+Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
   // Overload of hook function in RooAbsPdf::syncNormalization(). This functions serves
   // two purposes: 
@@ -611,7 +610,7 @@ Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
 
 
 
-void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const 
+void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
   // Overload of hook function in RooAbsPdf::syncNormalization(). This function propagates
   // the syncNormalization() call to all basis-function/resolution-model convolution component
@@ -650,7 +649,7 @@ void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSe
 }
 
 
-void RooConvolutedPdf::printToStream(ostream& os, PrintOption opt, TString indent) const {
+void RooAbsAnaConvPdf::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info
   // from RooAbsPdf::printToStream() we add:
   //
@@ -658,7 +657,7 @@ void RooConvolutedPdf::printToStream(ostream& os, PrintOption opt, TString inden
 
   RooAbsPdf::printToStream(os,opt,indent);
   if(opt >= Verbose) {
-    os << indent << "--- RooConvolutedPdf ---" << endl;
+    os << indent << "--- RooAbsAnaConvPdf ---" << endl;
     TIterator* iter = _convSet.createIterator() ;
     RooResolutionModel* conv ;
     while (conv=(RooResolutionModel*)iter->Next()) {

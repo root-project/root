@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvolutedPdf.rdl,v 1.22 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,8 +13,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_CONVOLUTED_PDF
-#define ROO_CONVOLUTED_PDF
+#ifndef ROO_ABS_ANA_CONV_PDF
+#define ROO_ABS_ANA_CONV_PDF
 
 
 class TIterator ;
@@ -30,17 +30,17 @@ class RooRealVar ;
 class RooAbsGenContext ;
 class RooConvGenContext ;
 
-class RooConvolutedPdf : public RooAbsPdf {
+class RooAbsAnaConvPdf : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooConvolutedPdf() { }
-  RooConvolutedPdf(const char *name, const char *title, 
+  inline RooAbsAnaConvPdf() { }
+  RooAbsAnaConvPdf(const char *name, const char *title, 
 		   const RooResolutionModel& model, 
 		   RooRealVar& convVar) ;
 
-  RooConvolutedPdf(const RooConvolutedPdf& other, const char* name=0);
-  virtual ~RooConvolutedPdf();
+  RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name=0);
+  virtual ~RooAbsAnaConvPdf();
 
   Int_t declareBasis(const char* expression, const RooArgList& params) ;
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
@@ -94,7 +94,7 @@ protected:
 
   mutable RooAICRegistry _codeReg ; 
 
-  ClassDef(RooConvolutedPdf,1) // Abstract Convoluted Physics Model
+  ClassDef(RooAbsAnaConvPdf,1) // Abstract Composite Convoluted PDF
 };
 
 #endif

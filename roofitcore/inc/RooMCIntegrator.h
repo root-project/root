@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.rdl,v 1.10 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.11 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooGrid.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
 #include "TStopwatch.h"
-class RooIntegratorConfig ;
 
 class RooMCIntegrator : public RooAbsIntegrator {
 public:
@@ -27,9 +27,11 @@ public:
   // Constructors, assignment etc
   enum SamplingMode { Importance, ImportanceOnly, Stratified };
   enum GeneratorType { QuasiRandom, PseudoRandom };
+  RooMCIntegrator() ;
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
 		  GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
-  RooMCIntegrator(const RooAbsFunc& function, const RooIntegratorConfig& config);
+  RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config);
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooMCIntegrator();
 
   virtual Bool_t checkLimits() const;
@@ -45,6 +47,11 @@ public:
   void setGenType(GeneratorType type) { _genType= type; }
 
   const RooGrid &grid() const { return _grid; }
+
+  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
+  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
+  virtual Bool_t canIntegrateND() const { return kTRUE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
 

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealAnalytic.cc,v 1.10 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooRealAnalytic.cc,v 1.10 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +18,6 @@
 // Lightweight interface adaptor that binds an analytic integral of a
 // RooAbsReal object (specified by a code) to a set of dependent variables.
 
-// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooAbsReal.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.rdl,v 1.13 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooAbsIntegrator.rdl,v 1.14 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,23 +17,41 @@
 #define ROO_ABS_INTEGRATOR
 
 #include "RooFitCore/RooAbsFunc.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
 
-class RooAbsIntegrator {
+class RooAbsIntegrator : public TObject {
 public:
-  RooAbsIntegrator(const RooAbsFunc& function);
+  RooAbsIntegrator() ;
+  RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
   inline virtual ~RooAbsIntegrator() { }
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
+  
   inline Bool_t isValid() const { return _valid; }
 
   inline Double_t integrand(const Double_t x[]) const { return (*_function)(x); }
   inline const RooAbsFunc *integrand() const { return _function; }
 
   inline virtual Bool_t checkLimits() const { return kTRUE; }
+
+  Double_t calculate(const Double_t *yvec=0) ;
   virtual Double_t integral(const Double_t *yvec=0)=0 ;
+
+  virtual Bool_t canIntegrate1D() const = 0 ;
+  virtual Bool_t canIntegrate2D() const = 0 ;
+  virtual Bool_t canIntegrateND() const = 0 ;
+  virtual Bool_t canIntegrateOpenEnded() const = 0 ;
+
+  Bool_t printEvalCounter() const { return _printEvalCounter ; }
+  void setPrintEvalCounter(Bool_t value) { _printEvalCounter = value ; }
+
+  virtual Bool_t setLimits(Double_t xmin, Double_t xmax) { return kFALSE ; } 
+  virtual Bool_t setUseIntegrandLimits(Bool_t flag) { return kFALSE ; } 
 
 protected:
 
   const RooAbsFunc *_function;
   Bool_t _valid;
+  Bool_t _printEvalCounter ;
 
   ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };

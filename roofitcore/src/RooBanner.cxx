@@ -1,4 +1,3 @@
-#include "BaBar/BaBar.hh"
 #include "Rtypes.h"
 #include <iostream>
 using std::cout;

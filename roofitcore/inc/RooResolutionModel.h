@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.rdl,v 1.19 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.19 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,7 +61,7 @@ protected:
   Bool_t traceEvalHook(Double_t value) const ;
 
 
-  friend class RooConvolutedPdf ;
+  friend class RooAbsAnaConvPdf ;
 
   Int_t _basisCode ;         // Identifier code for selected basis function
   RooFormulaVar* _basis ;    // Basis function convolved with this resolution model

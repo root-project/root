@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.39 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.39 2004/11/29 12:22:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@ class TH1F ;
 class RooAbsCategory ;
 class RooRealVar ;
 class RooAbsIntegrator ;
-class RooIntegratorConfig ;
+class RooNumIntConfig ;
 
 class RooRealIntegral : public RooAbsReal {
 public:
@@ -35,7 +35,7 @@ public:
   // Constructors, assignment etc
   inline RooRealIntegral() : _valid(kFALSE),_numIntEngine(0),_numIntegrand(0) { }
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
-		  const RooArgSet* funcNormSet=0, const RooIntegratorConfig* config=0) ;
+		  const RooArgSet* funcNormSet=0, const RooNumIntConfig* config=0) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
   virtual ~RooRealIntegral();
@@ -79,7 +79,7 @@ protected:
   RooRealProxy       _function ; // must after set proxies
   RooArgSet*      _funcNormSet ;
 
-  RooIntegratorConfig* _iconfig ;
+  RooNumIntConfig* _iconfig ;
   
   void prepareACleanFunc() const ;
   void restoreACleanFunc() const ;

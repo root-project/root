@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.cc,v 1.6 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooIntegrator2D.cc,v 1.6 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,24 +23,32 @@
 #include "RooFitCore/RooIntegratorBinding.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
 
 #include <assert.h>
 
 ClassImp(RooIntegrator2D)
 ;
 
+// Register this class with RooNumIntConfig
+static Int_t registerSimpsonIntegrator2D()
+{
+  RooIntegrator2D* proto = new RooIntegrator2D() ;
+  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
+  RooNumIntConfig::defaultConfig().method2D().setLabel(proto->IsA()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerSimpsonIntegrator2D() ;
+
+RooIntegrator2D::RooIntegrator2D()
+{
+}
+
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,rule,maxSteps,eps)))),rule,maxSteps,eps)
 {
 } 
-
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,config)))),config)
-{
-} 
-
 
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
@@ -50,12 +57,23 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Doub
 {
 } 
 
+RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,config)))),config)
+{
+} 
+
+
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
-				 const RooIntegratorConfig& config) :
+				 const RooNumIntConfig& config) :
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
 } 
+
+RooAbsIntegrator* RooIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
+{
+  return new RooIntegrator2D(function,config) ;
+}
 
 
 RooIntegrator2D::~RooIntegrator2D() 

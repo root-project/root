@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsFunc.rdl,v 1.5 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAbsFunc.rdl,v 1.6 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ public:
   virtual Double_t getMaxLimit(UInt_t dimension) const = 0;
 
   Int_t numCall() const { return _ncall ; }
-  void resetNumCall() { _ncall = 0 ; }
+  void resetNumCall() const { _ncall = 0 ; }
 
 protected:
   mutable Int_t _ncall ;

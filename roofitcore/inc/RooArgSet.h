@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.rdl,v 1.38 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.38 2004/11/29 12:22:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -92,6 +92,16 @@ public:
   virtual void writeToStream(std::ostream& os, Bool_t compact, const char* section=0) ;  
   void writeToFile(const char* fileName) ;
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0) ;
+
+  // Utilities functions when used as configuration object
+  Double_t getRealValue(const char* name, Double_t defVal=0, Bool_t verbose=kFALSE) const ;
+  const char* getCatLabel(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
+  Int_t getCatIndex(const char* name, Int_t defVal=0, Bool_t verbose=kFALSE) const ;
+  const char* getStringValue(const char* name, const char* defVal="", Bool_t verbose=kFALSE) const ;
+  Bool_t setRealValue(const char* name, Double_t newVal=0, Bool_t verbose=kFALSE) ;
+  Bool_t setCatLabel(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
+  Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
+  Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.rdl,v 1.15 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.16 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,27 +17,37 @@
 #define ROO_INTEGRATOR_1D
 
 #include "RooFitCore/RooAbsIntegrator.hh"
-class RooIntegratorConfig ;
+#include "RooFitCore/RooNumIntConfig.hh"
 
 class RooIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
   enum SummationRule { Trapezoid, Midpoint };
+  RooIntegrator1D() ;
+
   RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
 		  Int_t maxSteps= 0, Double_t eps= 0) ; 
-  RooIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) ;
   RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
+
+  RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, 
-		  const RooIntegratorConfig& config) ;
+		  const RooNumIntConfig& config) ;
+
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooIntegrator1D();
 
   virtual Bool_t checkLimits() const;
   virtual Double_t integral(const Double_t *yvec=0) ;
 
   Bool_t setLimits(Double_t xmin, Double_t xmax);
+  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
 
+  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
+  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
+  virtual Bool_t canIntegrateND() const { return kFALSE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
 
@@ -49,6 +59,7 @@ protected:
   SummationRule _rule;
   Int_t _maxSteps ;
   Int_t _minStepsZero ;
+  Int_t _fixSteps ;
   Double_t _epsAbs ;
   Double_t _epsRel ;
   enum { _nPoints = 5 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.rdl,v 1.5 2004/04/01 00:22:33 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooAbsGenContext.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-class RooConvolutedPdf;
+class RooAbsAnaConvPdf;
 class RooDataSet;
 class RooRealIntegral;
 class RooAcceptReject;
@@ -30,7 +30,7 @@ class RooRealVar ;
 
 class RooConvGenContext : public RooAbsGenContext {
 public:
-  RooConvGenContext(const RooConvolutedPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
 		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooConvGenContext();
 

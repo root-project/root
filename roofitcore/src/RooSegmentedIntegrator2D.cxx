@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.4 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.4 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,7 +23,7 @@
 #include "RooFitCore/RooIntegratorBinding.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
 
 #include <assert.h>
 using std::cout;
@@ -33,31 +32,35 @@ using std::endl;
 ClassImp(RooSegmentedIntegrator2D)
 ;
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, RooIntegrator1D::SummationRule rule,
-				 Int_t maxSteps, Double_t eps) : 
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,rule,maxSteps,eps)))),nseg,rule,maxSteps,eps)
+// Register this class with RooNumIntConfig
+static Int_t registerSegmentedSimpsonIntegrator2D()
+{
+  RooNumIntFactory::instance().storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerSegmentedSimpsonIntegrator2D() ;
+
+
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D()
+{
+}
+
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
 {
 } 
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, const RooIntegratorConfig& config) :
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,config)))),nseg,config)
-{
-} 
-
-
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax,
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
-				 RooIntegrator1D::SummationRule rule, Int_t maxSteps, Double_t eps) : 
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,ymin,ymax,rule,maxSteps,eps)))),nseg,xmin,xmax,rule,maxSteps,eps)
+				 const RooNumIntConfig& config) :
+  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
 } 
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax,
-				 Double_t ymin, Double_t ymax,
-				 const RooIntegratorConfig& config) :
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,nseg,ymin,ymax,config)))),nseg,xmin,xmax,config)
+RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-} 
+  return new RooSegmentedIntegrator2D(function,config) ;
+}
 
 
 RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.22 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.22 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,8 +22,9 @@
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
+#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooFitCore/RooNumIntFactory.hh"
 
 #include <assert.h>
 using std::cout;
@@ -33,33 +33,48 @@ using std::endl;
 ClassImp(RooIntegrator1D)
 ;
 
+// Register this class with RooNumIntConfig
+static Int_t registerSimpsonIntegrator1D()
+{
+  RooCategory sumRule("sumRule","Summation Rule") ;
+  sumRule.defineType("Trapezoid",RooIntegrator1D::Trapezoid) ;
+  sumRule.defineType("Midpoint",RooIntegrator1D::Midpoint) ;
+  sumRule.setLabel("Trapezoid") ;
+  RooRealVar maxSteps("maxSteps","Maximum number of steps",20) ;
+  RooRealVar minSteps("minSteps","Minimum number of steps",999) ;
+  RooRealVar fixSteps("fixSteps","Fixed number of steps",0) ;
+
+  RooIntegrator1D* proto = new RooIntegrator1D() ;
+  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(sumRule,maxSteps,minSteps,fixSteps)) ;
+  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->IsA()->GetName()) ;
+  return 0 ;
+}
+static Int_t dummy = registerSimpsonIntegrator1D() ;
+
+
+RooIntegrator1D::RooIntegrator1D()
+{
+}
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _epsAbs(eps), _epsRel(eps)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps)
 {
   // Use this form of the constructor to integrate over the function's default range.
 
   _useIntegrandLimits= kTRUE;
   _valid= initialize();
 } 
-
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function), 
-  _rule(config.summationRule1D()), 
-  _maxSteps(config.maxSteps1D()), 
-  _minStepsZero(config.minStepsZero1D()),
-  _epsAbs(config.epsilonAbs1D()),
-  _epsRel(config.epsilonRel1D())
-{
-  // Use this form of the constructor to integrate over the function's default range.
-  _useIntegrandLimits= kTRUE;
-  _valid= initialize();
-} 
-
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _minStepsZero(999), _epsAbs(eps), _epsRel(eps)
+  RooAbsIntegrator(function), 
+  _rule(rule), 
+  _maxSteps(maxSteps), 
+  _minStepsZero(999), 
+  _fixSteps(0),
+  _epsAbs(eps), 
+  _epsRel(eps) 
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -68,23 +83,59 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _xmax= xmax;
   _valid= initialize();
 } 
+
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function,config.printEvalCounter()), 
+  _epsAbs(config.epsAbs()),
+  _epsRel(config.epsRel())
+{
+  // Use this form of the constructor to integrate over the function's default range.
+
+  // Extract parameters from config object
+  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
+  _rule = (SummationRule) configSet.getCatIndex("sumRule",Trapezoid) ;
+  _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
+  _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
+  _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;
+
+  if (_fixSteps>_maxSteps) {
+    cout << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
+    _fixSteps = _maxSteps ;
+  }
+
+  _useIntegrandLimits= kTRUE;
+  _valid= initialize();
+} 
+
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-				const RooIntegratorConfig& config) :
-  RooAbsIntegrator(function), 
-  _rule(config.summationRule1D()), 
-  _maxSteps(config.maxSteps1D()), 
-  _minStepsZero(config.minStepsZero1D()),
-  _epsAbs(config.epsilonAbs1D()),
-  _epsRel(config.epsilonRel1D())
+				const RooNumIntConfig& config) :
+  RooAbsIntegrator(function,config.printEvalCounter()), 
+  _epsAbs(config.epsAbs()),
+  _epsRel(config.epsRel())
 {
   // Use this form of the constructor to override the function's default range.
+
+  // Extract parameters from config object
+  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
+  _rule = (SummationRule) configSet.getCatIndex("sumRule",Trapezoid) ;
+  _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
+  _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
+  _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;  
 
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
   _xmax= xmax;
   _valid= initialize();
 } 
+
+
+
+RooAbsIntegrator* RooIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
+{
+  return new RooIntegrator1D(function,config) ;
+}
+
 
 Bool_t RooIntegrator1D::initialize()
 {
@@ -194,18 +245,27 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
       }
     }
     
+    if (_fixSteps>0) {
+      
+      // Fixed step mode, return result after fixed number of steps
+      if (j==_fixSteps) {
+	//cout << "returning result at fixed step " << j << endl ;
+	return _s[j];
+      }
 
-    if(j >= _nPoints) {
+    } else  if(j >= _nPoints) {
+
       // extrapolate the results of recent refinements and check for a stable result
       extrapolate(j);
       if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {
-	//cout << "Roo1DIntegrator(" << this << "): relative convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
+// 	cout << "Roo1DIntegrator(" << this << "): relative convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
 	return _extrapValue;
       }
       if(fabs(_extrapError) <= _epsAbs) {
-	//cout << "Roo1DIntegrator(" << this << "): absolute convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
+// 	cout << "Roo1DIntegrator(" << this << "): absolute convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
 	return _extrapValue ;
       }
+
     }
     // update the step size for the next refinement of the summation
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
@@ -262,6 +322,7 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 
   if (n == 1) {
     // use a single trapezoid to cover the full range
+//     cout << "addTrap[" << n << "] count = 2 " << endl ;
     return (_savedResult= 0.5*_range*(integrand(xvec(_xmin)) + integrand(xvec(_xmax))));
   }
   else {
@@ -271,6 +332,7 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
     tnm= it;
     del= _range/tnm;
     x= _xmin + 0.5*del;
+//     cout << "addTrap[" << n << "] count = " << it << endl ;
     for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(xvec(x));
     return (_savedResult= 0.5*(_savedResult + _range*sum/tnm));
   }

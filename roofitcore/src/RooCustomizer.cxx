@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.cc,v 1.16 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.16 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -127,13 +126,15 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
   _masterCat((RooAbsCategoryLValue*)&masterCat), 
   _masterBranchList("masterBranchList"), 
   _masterLeafList("masterLeafList"), 
-  _cloneBranchList("cloneBranchList"), 
+  _internalCloneBranchList("cloneBranchList"),
   _cloneNodeList(&splitLeafs)
 {
   // Constructor with masterCat state. Customizers created by this constructor offer the full functionality
   _masterBranchList.setHashTableSize(1000) ;
   _masterLeafList.setHashTableSize(1000) ;
-  _cloneBranchList.setHashTableSize(1000) ;
+
+  _cloneBranchList = &_internalCloneBranchList ;
+  _cloneBranchList->setHashTableSize(1000) ;
 
   initialize() ;
 }
@@ -148,14 +149,17 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _masterCat(0), 
   _masterBranchList("masterBranchList"), 
   _masterLeafList("masterLeafList"), 
-  _cloneBranchList("cloneBranchList"), 
+  _internalCloneBranchList("cloneBranchList"),
   _cloneNodeList(0)
 {
   // Sterile Constructor. Customizers created by this constructor offer only the replace() method. The supplied
   // 'name' is used as suffix for any cloned branch nodes
   _masterBranchList.setHashTableSize(1000) ;
   _masterLeafList.setHashTableSize(1000) ;
-  _cloneBranchList.setHashTableSize(1000) ;
+
+  _cloneBranchList = &_internalCloneBranchList ;
+  _cloneBranchList->setHashTableSize(1000) ;
+
   initialize() ;
 }
 
@@ -450,7 +454,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     if (branch==_masterPdf) cloneTopPdf=(RooAbsArg*)clone ;
   }
   delete iter ;
-  _cloneBranchList.addOwned(clonedMasterBranches) ;
+  _cloneBranchList->addOwned(clonedMasterBranches) ;
 
   // Reconnect cloned branches to each other and to cloned nodess
   iter = clonedMasterBranches.createIterator() ;
@@ -488,3 +492,12 @@ void RooCustomizer::printToStream(ostream& os, PrintOption opt, TString indent) 
   
   return ;
 }
+
+
+void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet) 
+{
+  _cloneBranchList = &cloneBranchSet ;
+  _cloneBranchList->setHashTableSize(1000) ;
+}
+
+

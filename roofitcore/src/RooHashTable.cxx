@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.11 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooHashTable.cc,v 1.11 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,8 +42,10 @@ RooHashTable::RooHashTable(Int_t capacity, HashMethod hashMethod) :
 
 
 RooHashTable::RooHashTable(const RooHashTable& other) :
-  _usedSlots(other._usedSlots), _entries(other._entries), _size(other._size),
-  _hashMethod(other._hashMethod)
+  _hashMethod(other._hashMethod),
+  _usedSlots(other._usedSlots), 
+  _entries(other._entries), 
+  _size(other._size)
 {
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));  

@@ -1,5 +1,4 @@
 #ifndef __CINT__
-#include "BaBar/BaBar.hh"
 #include "RooFitCore/RooNumber.hh"
 #endif
 

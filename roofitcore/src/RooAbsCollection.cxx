@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.28 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.28 2004/11/29 12:22:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,14 +42,18 @@ ClassImp(RooAbsCollection)
   ;
 
 RooAbsCollection::RooAbsCollection() :
-  _ownCont(kFALSE), _name(), _list(43)
+  _list(43),
+  _ownCont(kFALSE), 
+  _name()
 {
   // Default constructor
   RooTrace::create(this) ;
 }
 
 RooAbsCollection::RooAbsCollection(const char *name) :
-  _ownCont(kFALSE), _name(name), _list(43)
+  _list(43),
+  _ownCont(kFALSE), 
+  _name(name)
 {
   // Empty collection constructor
   RooTrace::create(this) ;
@@ -58,7 +61,9 @@ RooAbsCollection::RooAbsCollection(const char *name) :
 
 
 RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *name) :
-  _list(other._list.getHashTableSize()),_ownCont(kFALSE), _name(name)
+  _list(other._list.getHashTableSize()) , 
+  _ownCont(kFALSE), 
+  _name(name)
 {
   // Copy constructor. Note that a copy of a collection is always non-owning,
   // even the source collection is owning. To create an owning copy of

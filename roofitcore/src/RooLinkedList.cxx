@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.13 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.13 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +31,7 @@ ClassImp(RooLinkedList)
 ;
 
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _hashThresh(htsize)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
 {
   //setHashTableSize(htsize) ;
 }
@@ -41,7 +40,7 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 
 
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
-  _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _hashThresh(other._hashThresh)
+   _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
 {
   // Copy constructor
 

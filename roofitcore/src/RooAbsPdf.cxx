@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.87 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.87 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -124,7 +123,6 @@
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooIntegratorConfig.hh"
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooMinuit.hh"
 #include "RooFitCore/RooCategory.hh"

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.35 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooPlot.cc,v 1.35 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +26,6 @@
 // and return a pointer to this copy. The caller owns the input object
 // and this class owns the returned object.
 
-// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.2 2003/08/09 00:33:36 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.3 2004/04/05 22:44:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,29 +18,28 @@
 
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooIntegratorConfig.hh" 
+#include "RooFitCore/RooNumIntConfig.hh"
 
 class RooSegmentedIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, 
-			   RooIntegrator1D::SummationRule rule=RooIntegrator1D::Trapezoid,
-			   Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooSegmentedIntegrator1D() ;
+  RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
+  RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) ;
 
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, const RooIntegratorConfig& config) ;
-
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, Double_t xmin, Double_t xmax,
-			   RooIntegrator1D::SummationRule rule= RooIntegrator1D::Trapezoid, 
-			   Int_t maxSteps= 0, Double_t eps= 0) ; 
-
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Int_t nSegments, Double_t xmin, Double_t xmax, 
-			   const RooIntegratorConfig& config) ;
+  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooSegmentedIntegrator1D();
 
   virtual Bool_t checkLimits() const;
   virtual Double_t integral(const Double_t *yvec=0) ;
   Bool_t setLimits(Double_t xmin, Double_t xmax);
+  virtual Bool_t setUseIntegrandLimits(Bool_t flag) { _useIntegrandLimits = flag ; return kTRUE ; } 
+
+  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
+  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
+  virtual Bool_t canIntegrateND() const { return kFALSE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
 
@@ -51,7 +50,7 @@ protected:
   Int_t _nseg ; // Number of segments 
   Bool_t _useIntegrandLimits ;
 
-  RooIntegratorConfig _config ;  
+  RooNumIntConfig _config ;  
   RooIntegrator1D** _array ; // Array of segment integrators
 
   Bool_t initialize();

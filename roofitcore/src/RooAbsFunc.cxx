@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsFunc.cc,v 1.6 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsFunc.cc,v 1.6 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +22,6 @@
 // is assumed to be an n-dimensional box with edge coordinates specified by the
 // the getMinLimit() and getMaxLimit() methods.
 
-// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooAbsFunc.hh"
 
