@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.61 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.62 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -2002,7 +2002,7 @@ void TMatrixD::Streamer(TBuffer &R__b)
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-    if (R__v > 1) {
+    if (R__v > 2) {
       Clear();
       TMatrixD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
       if (fNelems <= kSizeMax) {
@@ -2010,6 +2010,27 @@ void TMatrixD::Streamer(TBuffer &R__b)
         delete [] fElements;
         fElements = fDataStack;
       }
+      return;
+    }
+    //process old version 2
+    if (R__v == 2) {
+      Clear();
+      TObject::Streamer(R__b);
+      R__b >> fNrows;
+      R__b >> fNcols;
+      R__b >> fNelems;
+      R__b >> fRowLwb;
+      R__b >> fColLwb;
+      fElements = new Double_t[fNelems];
+      Char_t isArray;
+      R__b >> isArray;
+      if (isArray) R__b.ReadFastArray(fElements,fNelems);
+      if (fNelems <= kSizeMax) {
+        memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
+        delete [] fElements;
+        fElements = fDataStack;
+      }
+      R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
       return;
     }
     //====process old versions before automatic schema evolution
