@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.4 2004/08/31 07:22:48 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
