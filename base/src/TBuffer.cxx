@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.49 2003/04/11 11:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.50 2003/04/11 21:58:50 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -369,7 +369,7 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
       }
    } else {
       fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, obj?(Long_t)((TObject*)obj)->IsA():0);
+      fClassMap->Add(offset, (obj&&obj!=(TObject*)-1)?(Long_t)((TObject*)obj)->IsA():0);
       fMapCount++;
    }
 }
