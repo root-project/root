@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.2 2001/05/23 16:41:24 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.3 2001/06/29 06:40:29 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -1442,10 +1442,11 @@ TGWin32PixmapObject::TGWin32PixmapObject(TGWin32 *lpTGWin32, UInt_t w, UInt_t h)
 
 //      HGDIOBJ hPal = SelectPalette(fObjectDC,fWin32Mother->fhdCommonPalette,TRUE);
       HGDIOBJ hPal = SelectPalette(fObjectDC,fWin32Mother->fhdCommonPalette,FALSE);
-      if (!hPal) printf("Error SelectPalette for Pixmap - %d \n", GetLastError());
+      Int_t lastError = GetLastError();
+      if (!hPal && lastError!=0) printf("Error SelectPalette for Pixmap - %d \n", lastError);
       else
       {
-          if (hPal != fWin32Mother->fhdCommonPalette) DeleteObject(hPal);
+          if (hPal && hPal != fWin32Mother->fhdCommonPalette) DeleteObject(hPal);
           RealizePalette(fObjectDC);
       }
     }
