@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.21 2002/05/11 14:24:08 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.22 2002/05/13 10:39:08 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -244,7 +244,7 @@ public: \
 #define ClassImp(name) \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
-   static int _R__UNIQUE_(R__dummyint) = \
+   static int _NAME3_(R__,name,Int) = \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
 }
 #endif
@@ -306,7 +306,7 @@ static TNamed *_R__UNIQUE_(R__dummyholder) = \
 #define RootClassVersion(name, VersionNumber) \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
-   static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
+   static Short_t _NAME3_(R__,name,VersionNumber) = \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
 }
 
