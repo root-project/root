@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.58 2003/03/11 07:57:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.59 2003/04/24 19:18:23 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1441,7 +1441,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = GetBuildDir();
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
-   if (! IsAbsoluteFileName(build_loc) ) {
+   if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
       build_loc = ConcatFileName( WorkingDirectory(), build_loc );
    }
 
