@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooGaussModel.rdl,v 1.15 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,6 +56,8 @@ public:
 
   void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
 
+  void advertiseAymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+
 protected:
 
   virtual Double_t evaluate() const ;
@@ -79,7 +81,20 @@ protected:
     return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
   }
 
+  // Calculate Re(exp(-u^2) cwerf(i(u+c)))
+  // added FMV, 08/17/03
+  inline Double_t evalCerfRe(Double_t u, Double_t c) const {
+    return exp(u*2*c+c*c) * erfc(u+c);
+  }
+
+  // Calculate common normalization factors 
+  // added FMV,07/24/03
+  RooComplex evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+  Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+
   Bool_t _flatSFInt ;
+
+  Bool_t _asympInt ;  // added FMV,07/24/03
   
   RooRealProxy mean ;
   RooRealProxy sigma ;

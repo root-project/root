@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooGExpModel.rdl,v 1.9 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,7 @@ public:
 
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3, sinhBasis=4, coshBasis=5 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
-  enum Type { Normal, Flipped };
+  enum Type { Normal, Flipped };  
 
   // Constructors, assignment etc
   inline RooGExpModel() { }
@@ -65,13 +65,21 @@ public:
 
   void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
 
+  void advertiseAymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+
 protected:
 
-  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
+  //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
+  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;  
+	// modified FMV,08/13/03
   RooComplex calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
-  RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega) const ;
-  Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
-  Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
+  Double_t calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const ;
+  RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
+	Double_t sig, Double_t rtau, Double_t fsign) const ; // modified FMV,07/24/03
+  Double_t calcSinConvNorm(Double_t sign, Double_t tau, 
+        Double_t sig, Double_t rtau, Double_t fsign) const ; // added FMV,08/18/03
+  //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
+  //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   virtual Double_t evaluate() const ;
   RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
 
@@ -92,7 +100,17 @@ protected:
     RooComplex z(swt*c,u+c);
     return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
   }
-  
+
+  // Calculate Re(exp(-u^2) cwerf(i(u+c)))
+  // added FMV, 08/17/03
+  inline Double_t evalCerfRe(Double_t u, Double_t c) const {
+    return exp(u*2*c+c*c) * erfc(u+c);
+  }
+
+  // Calculate common normalization factors 
+  // added FMV,07/24/03
+  RooComplex evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+  Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
 
   RooRealProxy sigma ;
   RooRealProxy rlife ;
@@ -101,6 +119,7 @@ protected:
   Bool_t _flip ;
   Bool_t _nlo ;
   Bool_t _flatSFInt ;
+  Bool_t _asympInt ;  // added FMV,07/24/03
 
   ClassDef(RooGExpModel,1) // GExp Resolution Model
 };
