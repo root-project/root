@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.1 2001/05/03 08:56:58 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.2 2001/05/09 13:09:12 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -286,6 +286,7 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    fCanvas->Update();
    fHScaleCanvas->GetCanvas()->Update();
    fVScaleCanvas->GetCanvas()->Update();
+   gClient->ForceRedraw();  //prevent GUI from being starved of redraws
 }
 
 
