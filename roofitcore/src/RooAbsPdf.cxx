@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.32 2001/09/17 18:48:11 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.33 2001/09/20 01:40:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -416,119 +416,126 @@ void RooAbsPdf::generateEvent(Int_t code) {
 
 // get a histogram normalized to the integral of a reference histogram.  
 // The new histogram has the same dimensions as the reference one.
-TH2F * RooAbsPdf::plot(TH2F & hist, RooAbsReal & varX, RooAbsReal & varY, const char * name)
-{
-  return plot(&hist, &varX, &varY, name);
-}
+//  TH2F * RooAbsPdf::plot(TH2F & hist, RooAbsReal & varX, RooAbsReal & varY, const char * name)
+//  {
+//    return plot(&hist, &varX, &varY, name);
+//  }
 
-TH2F * RooAbsPdf::plot(TH2F * hist, RooAbsReal * varX, RooAbsReal * varY, const char * name)
-{
-  TString histName(name);
-  histName.Prepend("_");
-  histName.Prepend(fName);
+//  TH2F * RooAbsPdf::plot(TH2F * hist, RooAbsReal * varX, RooAbsReal * varY, const char * name)
+//  {
+//    TString histName(name);
+//    histName.Prepend("_");
+//    histName.Prepend(fName);
 
-  RooRealVar * var1  = (RooRealVar*)varX;
-  RooRealVar * var2  = (RooRealVar*)varY;
+//    RooRealVar * var1  = (RooRealVar*)varX;
+//    RooRealVar * var2  = (RooRealVar*)varY;
 
-  TH2F * histogram = 0;
-  if(!var1)
-  {
-    cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
-  }
-  if(!var2)
-  {
-    cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
-  }
-  if(var1 && var2)
-  {
-    histogram = var1->createHistogram(histName.Data(), var1->GetName(), var2->GetName(), 
-                                      hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax(), hist->GetNbinsX(),
-                                      hist->GetYaxis()->GetXmin(), hist->GetYaxis()->GetXmax(), hist->GetNbinsY());
+//    TH2F * histogram = 0;
+//    if(!var1)
+//    {
+//      cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
+//    }
+//    if(!var2)
+//    {
+//      cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
+//    }
+//    if(var1 && var2)
+//    {
+//      histogram = var1->createHistogram(histName.Data(), var1->GetName(), var2->GetName(), 
+//                                        hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax(), hist->GetNbinsX(),
+//                                        hist->GetYaxis()->GetXmin(), hist->GetYaxis()->GetXmax(), hist->GetNbinsY());
 
-    Double_t binWidthX = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin())/hist->GetNbinsX();
-    Double_t binWidthY = (hist->GetYaxis()->GetXmax() - hist->GetYaxis()->GetXmin())/hist->GetNbinsY();
-    Double_t prob; 
-    //dump into the histogram
-    for(Int_t ix = 0; ix < var1->getPlotBins()-1; ix++)
-    {
-      for(Int_t iy = 0; iy < var2->getPlotBins()-1; iy++)
-      {
-        var1->setVal( (ix+0.5)*binWidthX + hist->GetXaxis()->GetXmin() );
-        var2->setVal( (iy+0.5)*binWidthY + hist->GetYaxis()->GetXmin() );
-        prob = evaluate();
-        histogram->Fill( var1->getVal() , var2->getVal() , prob );
-      }
-    }
-    if( histogram->Integral() != 0.0 ) histogram->Scale( hist->Integral()/ histogram->Integral());
-  }
-  return histogram;
-}
+//      Double_t binWidthX = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin())/hist->GetNbinsX();
+//      Double_t binWidthY = (hist->GetYaxis()->GetXmax() - hist->GetYaxis()->GetXmin())/hist->GetNbinsY();
+//      Double_t prob; 
+//      //dump into the histogram
+//      for(Int_t ix = 0; ix < var1->getPlotBins()-1; ix++)
+//      {
+//        for(Int_t iy = 0; iy < var2->getPlotBins()-1; iy++)
+//        {
+//          var1->setVal( (ix+0.5)*binWidthX + hist->GetXaxis()->GetXmin() );
+//          var2->setVal( (iy+0.5)*binWidthY + hist->GetYaxis()->GetXmin() );
+//          prob = evaluate();
+//          histogram->Fill( var1->getVal() , var2->getVal() , prob );
+//        }
+//      }
+//      if( histogram->Integral() != 0.0 ) histogram->Scale( hist->Integral()/ histogram->Integral());
+//    }
+//    return histogram;
+//  }
 
-// get a histogram normalized to the newIntegral given an argset or roorealvars
-TH2F * RooAbsPdf::plot(const char * name1, const char * name2, const RooArgSet * nset, const char * name, const Double_t newIntegral)
-{
-  return plot((RooRealVar*)(nset->find(name1)), (RooRealVar*)(nset->find(name2)), name, newIntegral);
-}
+//  // get a histogram normalized to the newIntegral given an argset or roorealvars
+//  TH2F * RooAbsPdf::plot(const char * name1, const char * name2, const RooArgSet * nset, const char * name, const Double_t newIntegral)
+//  {
+//    return plot((RooRealVar*)(nset->find(name1)), (RooRealVar*)(nset->find(name2)), name, newIntegral);
+//  }
 
-TH2F * RooAbsPdf::plot(const char * name1, const char * name2, const RooArgSet& nset, const char * name, const Double_t newIntegral)
-{
-  return plot(name1, name2, &nset, name, newIntegral);
-}
+//  TH2F * RooAbsPdf::plot(const char * name1, const char * name2, const RooArgSet& nset, const char * name, const Double_t newIntegral)
+//  {
+//    return plot(name1, name2, &nset, name, newIntegral);
+//  }
 
-TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const char * name, const Double_t newIntegral)
-{
-  return plot(&varX, &varY, name, newIntegral);
-}
+//  TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const char * name, const Double_t newIntegral)
+//  {
+//    return plot(&varX, &varY, name, newIntegral);
+//  }
 
-TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const Double_t newIntegral, int nX, int nY)
-{
-  Int_t origNx = varX.getPlotBins();
-  Int_t origNy = varY.getPlotBins();
-  varX.setPlotBins(nX);
-  varY.setPlotBins(nY);
-  TH2F * newHist = plot(varX, varY, " ", newIntegral);
-  varX.setPlotBins(origNx);
-  varY.setPlotBins(origNy);
-  return newHist;
-}
+//  TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const Double_t newIntegral, int nX, int nY)
+//  {
+//    Int_t origNx = varX.getPlotBins();
+//    Int_t origNy = varY.getPlotBins();
+//    varX.setPlotBins(nX);
+//    varY.setPlotBins(nY);
+//    TH2F * newHist = plot(varX, varY, " ", newIntegral);
+//    varX.setPlotBins(origNx);
+//    varY.setPlotBins(origNy);
+//    return newHist;
+//  }
 
-TH2F * RooAbsPdf::plot(RooAbsReal * varX, RooAbsReal * varY, const char * name, const Double_t newIntegral)
-{
-  TString histName(name);
-  histName.Prepend("_");
-  histName.Prepend(fName);
+//  TH2F * RooAbsPdf::plot(RooAbsReal * varX, RooAbsReal * varY, const char * name, const Double_t newIntegral)
+//  {
+//    TString histName(name);
+//    histName.Prepend("_");
+//    histName.Prepend(fName);
 
-  RooRealVar * var1 = (RooRealVar*)varX;
-  RooRealVar * var2 = (RooRealVar*)varY;
+//    RooRealVar * var1 = (RooRealVar*)varX;
+//    RooRealVar * var2 = (RooRealVar*)varY;
 
-  TH2F * histogram = 0;
-  if(!var1)
-  {
-    cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
-  }
-  if(!var2)
-  {
-    cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
-  }
-  if(var1 && var2)
-  {
-    histogram = var1->createHistogram(histName.Data(), *var2);
+//    TH2F * histogram = 0;
+//    if(!var1)
+//    {
+//      cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
+//    }
+//    if(!var2)
+//    {
+//      cout << "RooAbsPdf::" << fName << ", unable to make histogram"<<endl;
+//    }
+//    if(var1 && var2)
+//    {
+//      histogram = var1->createHistogram(histName.Data(), *var2);
 
-    Double_t binWidthX = (var1->getPlotMax() - var1->getPlotMin())/var1->getPlotBins();
-    Double_t binWidthY = (var2->getPlotMax() - var2->getPlotMin())/var2->getPlotBins();
-    Double_t prob; 
-    //dump into the histogram
-    for(Int_t ix = 0; ix < var1->getPlotBins()-1; ix++)
-    {
-      for(Int_t iy = 0; iy < var2->getPlotBins()-1; iy++)
-      {
-        var1->setVal( (ix+0.5)*binWidthX + var1->getPlotMin() );
-        var2->setVal( (iy+0.5)*binWidthY + var2->getPlotMin() );
-        prob = evaluate();
-        histogram->Fill( var1->getVal() , var2->getVal() , prob );
-      }
-    }
-    if( histogram->Integral() != 0.0 ) histogram->Scale( newIntegral/ histogram->Integral());
-  }
-  return histogram;
-}
+//      Double_t binWidthX = (var1->getPlotMax() - var1->getPlotMin())/var1->getPlotBins();
+//      Double_t binWidthY = (var2->getPlotMax() - var2->getPlotMin())/var2->getPlotBins();
+//      Double_t prob; 
+//      //dump into the histogram
+//      for(Int_t ix = 0; ix < var1->getPlotBins()-1; ix++)
+//      {
+//        for(Int_t iy = 0; iy < var2->getPlotBins()-1; iy++)
+//        {
+//          var1->setVal( (ix+0.5)*binWidthX + var1->getPlotMin() );
+//          var2->setVal( (iy+0.5)*binWidthY + var2->getPlotMin() );
+//          prob = evaluate();
+//          histogram->Fill( var1->getVal() , var2->getVal() , prob );
+//        }
+//      }
+//      if( histogram->Integral() != 0.0 ) histogram->Scale( newIntegral/ histogram->Integral());
+//    }
+//    return histogram;
+//  }
+
+
+
+
+
+
+

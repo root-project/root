@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.rdl,v 1.4 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.5 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,8 @@
 
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooGrid.hh"
+
+#include "TStopwatch.h"
 
 class RooMCIntegrator : public RooAbsIntegrator {
 public:
@@ -49,6 +51,8 @@ protected:
   Double_t _alpha;
   Int_t _mode;
   GeneratorType _genType;
+
+  TStopwatch _timer;
 
   // scratch variables preserved between calls to vegas1/2/2
   Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.29 2001/09/18 02:03:44 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.30 2001/09/20 01:40:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,12 +18,15 @@
 #include "RooFitCore/RooAbsArg.hh"
 
 class RooArgSet ;
+class RooArgList ;
 class RooDataSet ;
 class RooPlot;
 class RooRealVar;
 class RooRealFunc1D;
 class RooAbsFunc;
 class RooRealFixedBinIter ;
+
+class TH1;
 class TH1F;
 class TH2F;
 
@@ -79,12 +82,18 @@ public:
   RooPlot *frame() const;
   RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
 
-  // Create histograms
-  TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0) const;
-  TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins) const;
-  TH2F *createHistogram(const char *label, const RooAbsReal & var2) const;
-  TH2F *createHistogram(const char *label, const char *axis1, const char *axis2, Double_t lo1,
-                         Double_t hi1, Int_t bins1, Double_t lo2, Double_t hi2, Int_t bins2) const;
+  // Create empty 1D and 2D histograms
+  TH1F *createHistogram(const char *name, const char *yAxisLabel= 0, Int_t bins= 0) const;
+  TH1F *createHistogram(const char *name, const char *yAxisLabel, Double_t lo, Double_t hi, Int_t bins) const;
+  TH2F *createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel= 0,
+			Int_t xbins= 0, Int_t ybins= 0) const;
+  TH2F *createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel,
+			Double_t xlo, Double_t xhi, Int_t xbins,
+			Double_t ylo, Double_t yhi, Int_t ybins) const;
+
+  // Fill an existing histogram
+  TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
+		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0) const;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -94,6 +103,8 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
+  const RooAbsReal *createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
+				     RooArgSet *&cloneSet) const;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analticalIntegral() and generateEvent()

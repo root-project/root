@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.36 2001/09/18 02:03:45 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.37 2001/09/20 01:40:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,7 +41,7 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsReal& function, RooArgSet& depList,
+				 const RooAbsReal& function, const RooArgSet& depList,
 				 const RooArgSet* funcNormSet) :
   RooAbsReal(name,title), _mode(0),
   _function("function","Function to be integrated",this,
@@ -506,6 +506,10 @@ Double_t RooRealIntegral::integrate() const
   }
   else {
     // Partial or complete numerical integration
+    if(_intList.getSize() > 1) {
+      cout << "RooRealIntegral: Integrating out ";
+      _intList.printToStream(cout,OneLine);
+    }
     return _numIntEngine->integral() ;
   }
 }
@@ -529,7 +533,7 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerLis
 void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   // Print the state of this object to the specified output stream.
-  RooAbsReal::printToStream(os,Verbose,indent) ;
+  RooAbsReal::printToStream(os,opt,indent) ;
   if (opt==Verbose) {
     os << indent << "--- RooRealIntegral ---" << endl;
     os << indent << "  Integrates ";

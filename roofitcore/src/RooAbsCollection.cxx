@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.1 2001/09/17 18:48:11 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.2 2001/09/20 01:40:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -391,7 +391,7 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
       }
       os << arg->GetName() ;
     }
-    os << ")" ;
+    os << ")" << endl ;
     delete iter ;
     return ;
   }

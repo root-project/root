@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.40 2001/09/18 02:03:44 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.41 2001/09/20 01:40:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,6 +23,7 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -30,6 +31,7 @@
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooRealBinding.hh"
+#include "RooFitCore/RooRealIntegral.hh"
 
 #include <iostream.h>
 
@@ -256,29 +258,32 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 
 
 
-TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bins) const {
+TH1F *RooAbsReal::createHistogram(const char *name, const char *yAxisLabel, Int_t bins) const {
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // This method uses the default plot range which can be changed using the
   // setPlotMin(),setPlotMax() methods. Uses the default binning (setPlotBins())
   // unless you specify your own binning.
+  // The caller takes ownership of the returned object and is responsible for deleting it.
 
-  return createHistogram(label, axis, _plotMin, _plotMax, bins > 0 ? bins : getPlotBins());
+  return createHistogram(name, yAxisLabel, _plotMin, _plotMax, bins > 0 ? bins : getPlotBins());
 }
 
-TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
+TH1F *RooAbsReal::createHistogram(const char *name, const char *yAxisLabel,
 				  Double_t lo, Double_t hi, Int_t bins) const {
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // Binning must be specified with this method since the default binning is associated
   // with the default plot ranges, but you have asked for a non-default range.
+  // The caller takes ownership of the returned object and is responsible for deleting it.
 
-  TString histName(label);
+  // Use a histogram name of the form <name>_<var>
+  TString histName(name);
   if(!histName.IsNull()) histName.Append("_");
   histName.Append(GetName());
 
   // create the histogram
   TH1F* histogram= new TH1F(histName.Data(), fTitle, bins, lo, hi);
   if(!histogram) {
-    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
+    cout << fName << "::createHistogram: unable to create a new 1D histogram" << endl;
     return 0;
   }
 
@@ -292,9 +297,9 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   histogram->SetXTitle(xTitle.Data());
 
   // Set the y-axis title if given one
-  if(strlen(axis)) {
-    TString yTitle(axis);
-    Double_t delta= (_plotMax-_plotMin)/bins;
+  if(0 != yAxisLabel && strlen(yAxisLabel)) {
+    TString yTitle(yAxisLabel);
+    Double_t delta= (hi - lo)/bins;
     yTitle.Append(Form(" / %g",delta));
     if(strlen(getUnit())) {
       yTitle.Append(" ");
@@ -305,56 +310,293 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   return histogram;
 }
 
-TH2F *RooAbsReal::createHistogram(const char *label, const RooAbsReal & var2) const 
+TH2F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel,
+				  Int_t xbins, Int_t ybins) const 
 {
-  return createHistogram(label, this->GetName(), var2.GetName(),
-                        this->getPlotMin(), this->getPlotMax(), this->getPlotBins(),  
-                        var2.getPlotMin(), var2.getPlotMax(), var2.getPlotBins() );
+  // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
+  // and the specified y variable.
+  // This method uses the default plot ranges for x and y which can be changed using the
+  // setPlotMin(),setPlotMax() methods. Uses the default binning (setPlotBins())
+  // unless you specify your own binning.
+  // The caller takes ownership of the returned object and is responsible for deleting it.
+
+  return createHistogram(name, yvar, zAxisLabel,
+			 this->getPlotMin(), this->getPlotMax(), xbins > 0 ? xbins : this->getPlotBins(),
+			 yvar.getPlotMin(), yvar.getPlotMax(), ybins > 0 ? ybins : yvar.getPlotBins());
 }
 
-TH2F *RooAbsReal::createHistogram(const char *label, const char *axis1, const char *axis2, 
-                                  Double_t lo1, Double_t hi1, Int_t bins1,
-                                  Double_t lo2, Double_t hi2, Int_t bins2 ) const 
+TH2F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel,
+                                  Double_t xlo, Double_t xhi, Int_t xbins,
+                                  Double_t ylo, Double_t yhi, Int_t ybins) const 
 {
   // Create a 2D-histogram with appropriate scale and labels for this variable.
   // Binning must be specified with this method since the default binning is associated
   // with the default plot ranges, but you have asked for a non-default range.
-  TString histName(label);
+  // The caller takes ownership of the returned object and is responsible for deleting it.
+
+  // Use a histogram name of the form <name>_<xvar>_<yvar>
+  TString histName(name);
   if(!histName.IsNull()) histName.Append("_");
   histName.Append(GetName());
+  histName.Append("_");
+  histName.Append(yvar.GetName());
 
   // create the histogram
-  TH2F* histogram= new TH2F(histName.Data(), fTitle, bins1, lo1, hi1, bins2, lo2, hi2);
+  TH2F* histogram= new TH2F(histName.Data(), fTitle, xbins, xlo, xhi, ybins, ylo, yhi);
   if(!histogram) {
-    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
+    cout << fName << "::createHistogram: unable to create a new 2D histogram" << endl;
     return 0;
   }
 
-  // Set the x-axis title if given one
-  if(strlen(axis1)) {
-    TString xTitle(axis1);
-    Double_t delta= (_plotMax-_plotMin)/bins1;
-    xTitle.Append(Form(" / %g",delta));
-    if(strlen(getUnit())) {
-      xTitle.Append(" ");
-      xTitle.Append(getUnit());
-    }
-    histogram->SetXTitle(xTitle.Data());
+  // Set the x-axis title from our own title, adding units if we have them.
+  TString xTitle(fTitle);
+  if(strlen(getUnit())) {
+    xTitle.Append(" (");
+    xTitle.Append(getUnit());
+    xTitle.Append(")");
   }
+  histogram->SetXTitle(xTitle.Data());
 
-  // Set the y-axis title if given one
-  if(strlen(axis2)) {
-    TString yTitle(axis2);
-    Double_t delta= (_plotMax-_plotMin)/bins2;
-    yTitle.Append(Form(" / %g",delta));
+  // Set the y-axis title from the y variable, adding units if it has them.
+  TString yTitle(yvar.GetTitle());
+  if(strlen(yvar.getUnit())) {
+    yTitle.Append(" (");
+    yTitle.Append(yvar.getUnit());
+    yTitle.Append(")");
+  }
+  histogram->SetYTitle(yTitle.Data());
+
+  // Set the z-axis title if given one
+  if(0 != zAxisLabel && strlen(zAxisLabel)) {
+    TString zTitle(zAxisLabel);
+    Double_t delta= (xhi - xlo)/xbins;
+    zTitle.Append(Form(" / ( %g",delta));
     if(strlen(getUnit())) {
-      yTitle.Append(" ");
-      yTitle.Append(getUnit());
+      zTitle.Append(" ");
+      zTitle.Append(getUnit());
     }
-    histogram->SetYTitle(yTitle.Data());
+    delta= (yhi - ylo)/ybins;
+    zTitle.Append(Form(" x %g",delta));
+    if(strlen(yvar.getUnit())) {
+      zTitle.Append(" ");
+      zTitle.Append(yvar.getUnit());
+    }
+    zTitle.Append(" )");
+    histogram->SetZTitle(zTitle.Data());
   }
 
   return histogram;
+}
+
+const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
+					       RooArgSet *&cloneSet) const {
+  // Create a new object G that represents the normalized projection:
+  //
+  //             Integral [ F[x,y,p] , { y } ]
+  //  G[x,p] = ---------------------------------
+  //            Integral [ F[x,y,p] , { x,y } ]
+  //
+  // where F[x,y,p] is the function we represent, "x" are the
+  // specified dependentVars, "y" are the specified projectedVars, and
+  // "p" are our remaining variables ("parameters"). Return a
+  // pointer to the newly created object, or else zero in case of an
+  // error.  The caller is responsible for deleting the contents of
+  // cloneSet (which includes the returned projection object) whatever
+  // the return value. Note that you should normally call getVal()
+  // on the returned object, without providing any set of normalization
+  // variables. Otherwise you are requesting an additional normalization
+  // beyond what is already specified in the equation above.
+
+  // Get the set of our leaf nodes
+  RooArgSet leafNodes;
+  leafNodeServerList(&leafNodes,this);
+
+  // Check that the dependents are all fundamental. Filter out any that we
+  // do not depend on, and make substitutions by name in our leaf list.
+  // Check for overlaps with the projection variables.
+  TIterator *dependentIterator= dependentVars.createIterator();
+  assert(0 != dependentIterator);
+  const RooAbsArg *arg(0);
+  while(arg= (const RooAbsArg*)dependentIterator->Next()) {
+    if(!arg->isFundamental()) {
+      cout << ClassName() << "::" << GetName() << ":createProjection: variable \"" << arg->GetName()
+	   << "\" of wrong type: " << arg->ClassName() << endl;
+      delete dependentIterator;
+      return 0;
+    }
+    RooAbsArg *found= leafNodes.find(arg->GetName());
+    if(!found) {
+      cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
+	   << "\" is not a dependent and will be ignored." << endl;
+      continue;
+    }
+    if(found != arg) leafNodes.replace(*found,*arg);
+    // check if this arg is also in the projection set
+    if(0 != projectedVars && projectedVars->find(arg->GetName())) {
+      cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
+	   << "\" cannot be both a dependent and a projected variable." << endl;
+      delete dependentIterator;
+      return 0;
+    }
+  }
+
+  // Remove the projected variables from the list of leaf nodes, if necessary.
+  if(0 != projectedVars) leafNodes.remove(*projectedVars);
+
+  // Make a deep-clone of ourself so later operations do not disturb our original state
+  cloneSet= (RooArgSet*)RooArgSet(*this).snapshot();
+  RooAbsReal *clone= (RooAbsReal*)cloneSet->find(GetName());
+
+  // The remaining entries in our list of leaf nodes are the the external
+  // dependents (x) and parameters (p) of the projection. Patch them back
+  // into the clone. This orphans the nodes they replace, but the orphans
+  // are still in the cloneList and so will be cleaned up eventually.
+  clone->recursiveRedirectServers(leafNodes);
+
+  // Create the set of normalization variables to use in the projection integrand
+  RooArgSet normSet(dependentVars);
+  if(0 != projectedVars) normSet.add(*projectedVars);
+
+  // Try to create a valid projection integral. If no variables are to be projected,
+  // create a null projection anyway to bind our normalization over the dependents
+  // consistently with the way they would be bound with a non-trivial projection.
+  RooArgSet empty;
+  if(0 == projectedVars) projectedVars= &empty;
+  TString name(GetName()),title(GetTitle());
+  name.Append("Projected");
+  title.Prepend("Projection of ");
+  RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet);
+  if(0 == projected || !projected->isValid()) {
+    cout << ClassName() << "::" << GetName() << ":createProjection: cannot integrate out ";
+    projectedVars->printToStream(cout,OneLine);
+    // cleanup and exit
+    if(0 != projected) delete projected;
+    delete dependentIterator;
+    return 0;
+  }
+  // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
+  cloneSet->addOwned(*projected);
+
+  // cleanup
+  delete dependentIterator;
+
+  // return a const pointer to remind the caller that they do not delete the returned object
+  // directly (it is contained in the cloneSet instead).
+  return projected;
+}
+
+TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
+			       Double_t scaleFactor, const RooArgSet *projectedVars) const {
+  // Loop over the bins of the input histogram and add an amount equal to our value evaluated
+  // at the bin center to each one. Our value is calculated by first integrating out any variables
+  // in projectedVars and then scaling the result by scaleFactor. Returns a pointer to the
+  // input histogram, or zero in case of an error. The input histogram can be any TH1 subclass, and
+  // therefore of arbitrary dimension. Variables are matched with the (x,y,...) dimensions of the input
+  // histogram according to the order in which they appear in the input plotVars list.
+
+  // Do we have a valid histogram to use?
+  if(0 == hist) {
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
+    return 0;
+  }
+
+  // Check that the number of plotVars matches the input histogram's dimension
+  Int_t hdim= hist->GetDimension();
+  if(hdim != plotVars.getSize()) {
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
+    return 0;
+  }
+
+  // Check that the plot variables are all actually RooRealVars and print a warning if we do not
+  // explicitly depend on one of them. Fill a set (not list!) of cloned plot variables.
+  RooArgSet plotClones;
+  for(Int_t index= 0; index < plotVars.getSize(); index++) {
+    const RooAbsArg *var= plotVars.at(index);
+    const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(var);
+    if(0 == realVar) {
+      cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
+	   << "\" of type " << var->ClassName() << endl;
+      return 0;
+    }
+    if(!this->dependsOn(*realVar)) {
+      cout << ClassName() << "::" << GetName()
+	   << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
+    }
+    else {
+      plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
+    }
+  }
+
+  // Create a standalone projection object to use for calculating bin contents
+  RooArgSet *cloneSet(0);
+  const RooAbsReal *projected= createProjection(plotClones,projectedVars,cloneSet);
+
+  // Prepare to loop over the histogram bins
+  Int_t xbins(0),ybins(1),zbins(1);
+  RooRealVar *xvar(0),*yvar(0),*zvar(0);
+  TAxis *xaxis(0),*yaxis(0),*zaxis(0);
+  switch(hdim) {
+  case 3:
+    zbins= hist->GetNbinsZ();
+    zvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(2)->GetName()));
+    zaxis= hist->GetZaxis();
+    assert(0 != zvar && 0 != zaxis);
+    scaleFactor*= (zaxis->GetXmax() - zaxis->GetXmin())/zbins;
+    // fall through to next case...
+  case 2:
+    ybins= hist->GetNbinsY(); 
+    yvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(1)->GetName()));
+    yaxis= hist->GetYaxis();
+    assert(0 != yvar && 0 != yaxis);
+    scaleFactor*= (yaxis->GetXmax() - yaxis->GetXmin())/ybins;
+    // fall through to next case...
+  case 1:
+    xbins= hist->GetNbinsX();
+    xvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(0)->GetName()));
+    xaxis= hist->GetXaxis();
+    assert(0 != xvar && 0 != xaxis);
+    scaleFactor*= (xaxis->GetXmax() - xaxis->GetXmin())/xbins;
+    break;
+  default:
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
+	 << hdim << " dimensions" << endl;
+    break;
+  }
+
+  // Loop over the input histogram's bins and fill each one with our projection's
+  // value, calculated at the center.
+  Int_t xbin(0),ybin(0),zbin(0);
+  Int_t bins= xbins*ybins*zbins;
+  for(Int_t bin= 0; bin < bins; bin++) {
+    switch(hdim) {
+    case 3:
+      if(bin % (xbins*ybins) == 0) {
+	zbin++;
+	zvar->setVal(zaxis->GetBinCenter(zbin+1));
+      }
+      // fall through to next case...
+    case 2:
+      if(bin % xbins == 0) {
+	ybin= (ybin + 1)%ybins;
+	yvar->setVal(yaxis->GetBinCenter(ybin+1));
+      }
+      // fall through to next case...
+    case 1:
+      xbin= (xbin + 1)%xbins;
+      xvar->setVal(xaxis->GetBinCenter(xbin+1));
+      break;
+    default:
+      cout << "RooAbsReal::fillHistogram: Internal Error!" << endl;
+      break;
+    }
+    Double_t result= scaleFactor*projected->getVal();
+    hist->SetBinContent(hist->GetBin(xbin+1,ybin+1,zbin+1),result);
+  }
+
+  // cleanup
+  delete cloneSet;
+
+  return hist;
 }
 
 RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scaleFactor) const {
@@ -377,14 +619,14 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   // check that the plot variable is not derived
   RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
   if(0 == realVar) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
+     cout << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
+	  << var->GetName() << "\" of type " << var->ClassName() << endl;
     return 0;
   }
 
   // check if we actually depend on the plot variable
   if(!this->dependsOn(*realVar)) {
-    cout << GetName() << "::plotOn:WARNING: variable is not an explicit dependent: "
+    cout << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
 	 << realVar->GetName() << endl;
   }
 

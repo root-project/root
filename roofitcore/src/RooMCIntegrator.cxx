@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCIntegrator.cc,v 1.3 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.4 2001/09/15 00:26:03 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,6 +51,7 @@ Double_t RooMCIntegrator::integral() {
   // over 5 iterations of 1k calls each, and the remaining 5k calls for a single
   // high statistics integration.
 
+  _timer.Start(kTRUE);
   vegas(AllStages,1000*_grid.getDimension(),5);
   return vegas(ReuseGrid,5000*_grid.getDimension(),1);
 }
@@ -161,6 +162,16 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
 
       // accumulate the results for this grid box (stratified sampling only)      
       if (_mode == Stratified) _grid.accumulate(bin, f_sq_sum);
+
+      // print occasional progress messages
+      if(_timer.RealTime() > 1) { // wait at least 1 sec since the last message
+	cout << "RooMCIntegrator: still working..." << endl;
+	_timer.Start(kTRUE);
+      }
+      else {
+	_timer.Start(kFALSE);
+      }
+
     } while(_grid.nextBox(box));
 
     // compute final results for this iteration
