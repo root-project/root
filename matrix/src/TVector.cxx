@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.2 2000/10/10 11:13:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.3 2000/11/21 20:41:56 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -146,7 +146,7 @@ void TVector::ResizeTo(Int_t lwb, Int_t upb)
                                               fNmem*sizeof(Real_t));
       memset(fElements+old_nrows, 0, (fNrows-old_nrows)*sizeof(Real_t));
       fNmem = fNrows;
-   } else if (old_nrows - fNrows < (old_nrows>>3)) {
+   } else if (old_nrows - fNrows > (old_nrows>>3)) {
       // Vector is to shrink a lot (more than 7/8 of the original size), reallocate
       fElements = (Real_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Real_t));
       fNmem = fNrows;
