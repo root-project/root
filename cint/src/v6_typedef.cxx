@@ -138,7 +138,6 @@ void G__define_type()
   char temp[G__LONGLINE];
 #endif
   int isnext;
-  int tmptypenum;
   fpos_t next_fpos;
   int /* itag=0,*/ mparen,store_tagnum,store_def_struct_member=0;
   struct G__var_array *store_local;
@@ -577,12 +576,14 @@ void G__define_type()
       && ( strlen(typename)==4
            || (strlen(typename)>=5 && (typename[4]=='&' || typename[4]=='*')) )
      ) {
+     int tmptypenum;
      if (strlen(typename)>=5) {
         // Rewind.
         fseek(G__ifile.fp,-1-(strlen(typename) - strlen("long")) ,SEEK_CUR);
      }
 #else 
   if(strcmp(typename,"long")==0) {
+     int tmptypenum;
 #endif /* G__PHILIPPE34 */
 #ifndef G__OLDIMPLEMENTATION1836
     if('l'==type) {
