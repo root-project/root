@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TGQt.cxx,v 1.62 2004/07/21 21:55:42 fine Exp $
+** $Id: TGQt.cxx,v 1.4 2004/07/25 07:26:01 brun Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -374,9 +374,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
       static TString argvString ("$ROOTSYS/bin/root.exe");
       gSystem->ExpandPathName(argvString);
-      char *argv[] = {(char *)argvString.Data()};
-
-//     static char *argv[] = {"QtRoot"};
+      static  char *argv[] = {(char *)argvString.Data()};
       int nArg = 1;
       app = new TQtApplication("Qt",nArg,argv);
    }
@@ -440,7 +438,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.62 2004/07/21 21:55:42 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.4 2004/07/25 07:26:01 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
