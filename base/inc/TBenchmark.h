@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.2 2000/06/13 12:34:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -34,12 +34,12 @@ class TBenchmark : public TNamed {
 
 protected:
 
-   Int_t      fNbench;          //Number of active benchmarks
-   Int_t      fNmax;            //Maximum number of benchmarks initialized
-   TString    *fNames;          //Names of benchmarks
-   Float_t    *fRealTime;       //Real Time
-   Float_t    *fCpuTime;        //Cpu Time
-   TStopwatch *fTimer;          //Timers
+   Int_t      fNbench;          // Number of active benchmarks
+   Int_t      fNmax;            // Maximum number of benchmarks initialized
+   TString    *fNames;          //[fNbench] Names of benchmarks
+   Float_t    *fRealTime;       //[fNbench] Real Time
+   Float_t    *fCpuTime;        //[fNbench] Cpu Time
+   TStopwatch *fTimer;          // Timers
 
 public:
                        TBenchmark();
