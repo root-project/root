@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGraphDelaunay                                                          //
+// TGraphDelaunay                                                       //
 //                                                                      //
 // This class uses the Delaunay triangles technique to interpolate and  //
 // render the data set.                                                 //
@@ -60,6 +60,7 @@ protected:
    Int_t      *fHullPoints;  //!Hull points of size fNhull
    Int_t      *fOrder;       //!Array used to order mass points by distance
    Bool_t      fAllTri;      //!True if FindAllTriangles() has been performed on fGraph2D
+   Bool_t      fInit;        //!True if CreateTrianglesDataStructure() and FindHull() have been performed
    TGraph2D   *fGraph2D;     //!2D graph containing the user data
    
    void     CreateTrianglesDataStructure();

@@ -68,6 +68,7 @@ TGraphDelaunay::TGraphDelaunay()
    fPTried     = 0;
    fNTried     = 0;
    fMTried     = 0;
+   fInit       = kFALSE;
 
    SetMaxIter();
 }
@@ -96,12 +97,9 @@ TGraphDelaunay::TGraphDelaunay(TGraph2D *g)
    fPTried     = 0;
    fNTried     = 0;
    fMTried     = 0;
+   fInit       = kFALSE;
 
    SetMaxIter();
-
-   CreateTrianglesDataStructure();
-
-   FindHull();
 }
 
 
@@ -613,6 +611,13 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
 
    Bool_t shouldbein;
    Double_t dx1,dx2,dx3,dy1,dy2,dy3,U,V,dxz[3],dyz[3];
+
+   // initialise the Delaunay algorithm
+   if (!fInit) {
+      CreateTrianglesDataStructure();
+      FindHull();
+      fInit = kTRUE;
+   }
 
    // create vectors needed for sorting
    if (!fOrder) {
