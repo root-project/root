@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.67 2003/08/15 14:37:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.68 2003/08/21 14:31:01 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -924,16 +924,21 @@ char *TUnixSystem::ConcatFileName(const char *dir, const char *name)
    if (name == 0 || strlen(name) <= 0 || strcmp(name, ".") == 0)
       return StrDup(dir);
 
-   char buf[kMAXPATHLEN];
+   TString buf; 
    if (dir && (strcmp(dir, "/") != 0)) {
+      buf = dir;
       if (dir[strlen(dir)-1] == '/')
-         sprintf(buf, "%s%s", dir, name);
-      else
-         sprintf(buf, "%s/%s", dir, name);
-   } else
-      sprintf(buf, "/%s", name);
+         buf += name;
+      else {
+         buf += "/";
+         buf += name;
+      };
+   } else {
+      buf = "/";
+      buf +=name; // sprintf(buf, "/%s", name);
+   }
 
-   return StrDup(buf);
+   return StrDup(buf.Data());
 }
 
 //---- Paths & Files -----------------------------------------------------------
@@ -1114,7 +1119,8 @@ Bool_t TUnixSystem::ExpandPathName(TString &patbuf0)
 
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
-   char   cmd[kMAXPATHLEN], stuffedPat[kMAXPATHLEN], name[70];
+   //   char   cmd[kMAXPATHLEN], 
+   char stuffedPat[kMAXPATHLEN], name[70];
    char  *q;
    FILE  *pf;
    int    ch;
@@ -1139,9 +1145,9 @@ needshell:
    EscChar(patbuf, stuffedPat, sizeof(stuffedPat), (char*)shellStuff, shellEscape);
 
 #ifdef R__HPUX
-   strcpy(cmd, "/bin/echo ");
+   TString cmd("/bin/echo "); 
 #else
-   strcpy(cmd, "echo ");
+   TString cmd("echo ");
 #endif
 
    // emulate csh -> popen executes sh
@@ -1153,10 +1159,10 @@ needshell:
          *q = '\0';
          hd = UnixHomedirectory(name);
          if (hd == 0)
-            strcat(cmd, stuffedPat);
+            cmd += stuffedPat; 
          else {
-            strcat(cmd, hd);
-            strcat(cmd, p);
+            cmd += hd;
+            cmd += p; 
          }
       } else {
          hd = UnixHomedirectory(0);
@@ -1164,13 +1170,13 @@ needshell:
             fLastErrorString = GetError();
             return kTRUE;
          }
-         strcat(cmd, hd);
-         strcat(cmd, &stuffedPat[1]);
+         cmd += hd; 
+         cmd += &stuffedPat[1];
       }
    } else
-      strcat(cmd, stuffedPat);
+      cmd += stuffedPat;
 
-   if ((pf = ::popen(&cmd[0], "r")) == 0) {
+   if ((pf = ::popen(cmd.Data(), "r")) == 0) {
       fLastErrorString = GetError();
       return kTRUE;
    }
@@ -1605,7 +1611,7 @@ void TUnixSystem::StackTrace()
    char buffer[2048];
    void *trace[kMAX_BACKTRACE_DEPTH];
    int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
-   for (int n = 0; n < depth; n++) {
+   for (int n = 5; n < depth; n++) {
       unsigned long addr = (unsigned long) trace[n];
       Dl_info info;
 
