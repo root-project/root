@@ -739,6 +739,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    Int_t erret;
    Bool_t endLoop = kFALSE;
    Int_t last_message = 0;
+   HCURSOR cur = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -747,11 +748,15 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
 
+      if (cur && (msg.message==WM_PAINT)) ::SetCursor(cur);
+
       // disable resizing while updating
       if ( (last_message==TGWin32ProxyBase::fgPostMessageId) &&
            (msg.message>=WM_NCMOUSEMOVE) && 
            (msg.message<WM_NCMBUTTONDBLCLK) ) {
+         cur = ::GetCursor();
          ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+         //if (msg.message==WM_NCLBUTTONUP) last_message = msg.message;
          continue;
       }
 
