@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.4 2004/09/08 10:21:40 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -362,6 +362,11 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
 
    TString domain;
    TRegexp reAllow(""), reDeny("");
+
+   // Always allow special host "localhost"
+   if (hostToCheck.BeginsWith("localhost") ||
+       hostToCheck.BeginsWith("127.0.0.1"))
+      return kTRUE;
 
    // Get the domain for the url to check
    domain = GetDomainToMatch(hostToCheck);

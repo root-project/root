@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.132 2004/08/24 10:41:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.133 2004/08/31 14:59:29 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TVirtualPerfStats.h"
 #include "TWebFile.h"
 #include "TArchiveFile.h"
+#include "TEnv.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -2073,33 +2074,36 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       const char *lfname = 0;
       Bool_t localFile = kFALSE;
       TUrl url(name);
-      TInetAddress a(gSystem->GetHostByName(url.GetHost()));
-      TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (!strcmp(a.GetHostName(), b.GetHostName())) {
-         Bool_t read = kFALSE;
-         TString opt = option;
-         opt.ToUpper();
-         if (opt == "" || opt == "READ") read = kTRUE;
-         const char *fname = url.GetFile();
-         if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
-            lfname = &fname[1];
-         else
-            lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
-         if (read) {
-            char *fn;
-            if ((fn = gSystem->ExpandPathName(lfname))) {
-               if (gSystem->AccessPathName(fn, kReadPermission))
-                  read = kFALSE;
-               delete [] fn;
+      Bool_t forceRemote = gEnv->GetValue("TFile.ForceRemote",0);
+      if (!forceRemote) {
+         TInetAddress a(gSystem->GetHostByName(url.GetHost()));
+         TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
+         if (!strcmp(a.GetHostName(), b.GetHostName())) {
+            Bool_t read = kFALSE;
+            TString opt = option;
+            opt.ToUpper();
+            if (opt == "" || opt == "READ") read = kTRUE;
+            const char *fname = url.GetFile();
+            if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
+               lfname = &fname[1];
+            else
+               lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
+            if (read) {
+               char *fn;
+               if ((fn = gSystem->ExpandPathName(lfname))) {
+                  if (gSystem->AccessPathName(fn, kReadPermission))
+                     read = kFALSE;
+                  delete [] fn;
+               }
             }
+            Bool_t sameUser = kFALSE;
+            UserGroup_t *u = gSystem->GetUserInfo();
+            if (u && !strcmp(u->fUser, url.GetUser()))
+               sameUser = kTRUE;
+            delete u;
+            if (read || sameUser)
+               localFile = kTRUE;
          }
-         Bool_t sameUser = kFALSE;
-         UserGroup_t *u = gSystem->GetUserInfo();
-         if (u && !strcmp(u->fUser, url.GetUser()))
-            sameUser = kTRUE;
-         delete u;
-         if (read || sameUser)
-            localFile = kTRUE;
       }
       if (!localFile) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&

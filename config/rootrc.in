@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.78 2004/08/12 11:40:12 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.79 2004/09/13 12:47:36 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -235,6 +235,11 @@ RSA.KeyType:  1
 # be used for the Blowfish key used to encrypt the exchanged information
 # Default 256, minimum 128, maximum 15912.
 # SSL.BFBits:   256
+
+# Force file opening via TNetFile (TXNetFile) if a hostname is specified
+# in the Url.
+# By default, for local files TFile::Open invokes directly TFile 
+# TFile.ForceRemote 1
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or
