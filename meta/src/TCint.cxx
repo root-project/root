@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.87 2004/05/14 17:17:40 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.88 2004/05/17 12:15:17 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1006,15 +1006,17 @@ int TCint::AutoLoadCallback(const char *cls, const char *lib)
    if (strstr(lib, "libCore")) return 1;
 
    // lookup class to find list of dependent libraries
-   TEnv *mapfile = dynamic_cast<TCint*>(gInterpreter)->fMapfile;
-   if (mapfile) {
-      TString c = TString("Library.") + cls;
-      c.ReplaceAll("::", "@@");
-      TString deplibs = mapfile->GetValue(c, "");
+   TString deplibs = gInterpreter->GetClassSharedLibs(cls);
+   if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--)
-         gROOT->LoadClass(cls, ((TObjString*)tokens->At(i))->GetName());
+      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+         const char *deplib = ((TObjString*)tokens->At(i))->GetName();
+         gROOT->LoadClass(cls, deplib);
+         if (gDebug > 0)
+            ::Info("TCint::AutoLoadCallback", "loaded dependent library %s for class %s",
+                   deplib, cls);
+      }
       delete tokens;
    }
 
@@ -1130,6 +1132,27 @@ const char* TCint::GetSharedLibs()
    }
 
    return fSharedLibs;
+}
+
+//______________________________________________________________________________
+const char *TCint::GetClassSharedLibs(const char *cls)
+{
+   // Get the list of shared libraries containing the code for class cls.
+   // The first library in the list is the one containing the class, the
+   // others are the libraries the first one depends on. Returns 0
+   // in case the library is not found.
+
+   if (!cls || !*cls)
+      return 0;
+
+   // lookup class to find list of libraries
+   if (fMapfile) {
+      TString c = TString("Library.") + cls;
+      c.ReplaceAll("::", "@@");
+      const char *libs = fMapfile->GetValue(c, "");
+      return (*libs) ? libs : 0;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
