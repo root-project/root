@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.11 2000/10/29 14:31:14 rdm Exp $
+// @(#)root/gui:$Name: v3-03-05 $:$Id: TGText.cxx,v 1.12 2002/04/22 15:06:19 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -173,6 +173,8 @@ void TGTextLine::DelChar(ULong_t pos)
    strncpy(newstring, fString, (UInt_t)pos-1);
    if (pos < fLength)
       strncpy(newstring+pos-1, fString+pos, UInt_t(fLength-pos+1));
+   else
+      newstring[pos-1] = 0;
    delete fString;
    fString = newstring;
    fLength--;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.13 2001/07/03 16:17:04 rdm Exp $
+// @(#)root/gui:$Name: v3-03-05 $:$Id: TGTextEdit.cxx,v 1.14 2001/08/21 17:34:27 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -552,7 +552,7 @@ void TGTextEdit::DrawCursor(Int_t mode)
        fCurrent.fX <= ToObjXCoord(fVisible.fX+fCanvas->GetWidth(),fCurrent.fY)) {
       if (fCurrent.fY < fText->RowCount())
          count = fText->GetChar(fCurrent);
-      if (count == -1)
+      if (count == -1 || count == '\t')
          cursor =' ';
       else
          cursor = count;
