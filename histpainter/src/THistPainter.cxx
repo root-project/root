@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.198 2004/11/22 15:55:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.199 2004/11/24 09:41:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2405,7 +2405,7 @@ void THistPainter::PaintContour(Option_t *option)
    Int_t nadd,iminus,iplus;
    Double_t *xx, *yy;
    Int_t istart;
-   Int_t first = ncontour-1;
+   Int_t first = ncontour;
    Int_t *polysort = 0;
    Int_t ContListNb;
    if (Hoption.Contour != 1) goto theEND;
@@ -4284,7 +4284,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
          else                                zmin -= dzmin;
       }
    }
-   
+
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("scat=")) {
