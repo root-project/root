@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -116,7 +116,7 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 // diagonal element is zero. The solution is returned in b.
 
   Assert(b.IsValid());
-  Assert(fU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fU.GetNrows() != b.GetNrows() || fU.GetRowLwb() != b.GetLwb())
   {
@@ -164,11 +164,11 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   {
-    Error("Solve(TColumn &","vector and matrix incompatible");
+    Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
     return kFALSE;
   }
 
@@ -185,7 +185,7 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
     const Int_t off_i2 = i*inc;
     if (pA[off_i+i] < fTol)
     {
-      Error("Solve(TVectorD &b)","u[%d,%d]=%.4e < %.4e",i,i,pA[off_i+i],fTol);
+      Error("Solve(TMatrixDColumn &cb)","u[%d,%d]=%.4e < %.4e",i,i,pA[off_i+i],fTol);
       return kFALSE;
     }
     Double_t r = pcb[off_i2];
@@ -248,7 +248,7 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)
   //   b : (m)     vector
   //   x : (n)     vector
 
-  TDecompChol ch(TMatrixD(A,TMatrixDBase::kTransposeMult,A));
+  TDecompChol ch(TMatrixD(TMatrixDBase::kAtA,A));
   TVectorD x = TMatrixD(TMatrixDBase::kTransposed,A)*b;
   ch.Solve(x);
   return x;
@@ -262,7 +262,7 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
   //   B : (m x nb) matrix, nb >= 1
   //   x : (n x nb) matrix
 
-  TDecompChol ch(TMatrixD(A,TMatrixDBase::kTransposeMult,A));
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
   TMatrixD X(A,TMatrixDBase::kTransposeMult,B);
   ch.MultiSolve(X);
   return X;

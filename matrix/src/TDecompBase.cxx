@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.3 2004/01/26 12:15:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -80,8 +80,8 @@
 //                                                                       //
 // Invert(TMatrixDBase &inv)                                             //
 //  This is of course just a call to MultiSolve with as input argument   //
-//  the unit matrix                                                      //
-//                                                                       //
+//  the unit matrix . Note that for a matrix a(m,n) with m > n  a        //
+//  pseudo-inverse is calculated .                                       //
 //                                                                       //
 // Tolerances and Scaling                                                //
 // ----------------------                                                //
@@ -116,12 +116,13 @@
 //                                                                       //
 // Code for this could look as follows:                                  //
 // const TMatrixD ab = Abs(a);                                           //
-// const Int_t imax = TMath::LocMax(ab.GetNoElements(),ab.GetMatrixArray());//
-// const Double_t max_abs = ab.GetMatrixArray()[imax];                      //
+// const Int_t imax = TMath::LocMax(ab.GetNoElements(),                  //
+//                                    ab.GetMatrixArray());              //
+// const Double_t max_abs = ab.GetMatrixArray()[imax];                   //
 // const Double_t scale = TMath::Min(max_abs,1.);                        //
 // a.SetTol(a.GetTol()*scale);                                           //
 //                                                                       //
-// For usage examples see $ROOTSYS/test/stress_linalg.cxx                //
+// For usage examples see $ROOTSYS/test/stressLinear.cxx                 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include "TDecompBase.h"
@@ -284,10 +285,13 @@ Bool_t TDecompBase::MultiSolve(TMatrixDBase &B)
 //______________________________________________________________________________
 void TDecompBase::Invert(TMatrixDBase &inv)
 {
-  const TMatrixDBase &m = GetDecompMatrix();
+  // For a matrix A(m,n) the inverse is so that A * A_inv = A_inv * A = unit
+  // The user should always supply a matrix of size (m x m) !
+  // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
+  // should be used .
 
-  if (!AreCompatible(m,inv)) {
-    Error("Invert(TMatrixDBase &","matrices are incompatible");
+  if (inv.GetNrows() != GetNrows() || inv.GetNcols() != GetNrows()) {
+    Error("Invert(TMatrixDBase &","Input matrix has wrong shape");
     inv.Invalidate();
     return;
   }

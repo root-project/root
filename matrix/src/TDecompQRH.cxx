@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -15,11 +15,14 @@
 //                                                                       //
 // Decompose  a general (m x n) matrix A into A = fQ fR H   where        //
 //                                                                       //
-//  fR : (n x n) - upper triangular matrix                               //
 //  fQ : (m x n) - orthogonal matrix                                     //
+//  fR : (n x n) - upper triangular matrix                               //
 //  H  : HouseHolder matrix which is stored through                      //
-//  fUp: n - vector with Householder up's                                //
-//  fW : n - vector with Householder beta's                              //
+//  fUp: (n) - vector with Householder up's                              //
+//  fW : (n) - vector with Householder beta's                            //
+//                                                                       //
+// Errors arise from formation of reflectors i.e. singularity .          //
+// Note it attempts to handle the cases where the nRow <= nCol .         //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +34,10 @@ ClassImp(TDecompQRH)
 TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
 {
   Assert(a.IsValid());
+  if (a.GetNrows() < a.GetNcols()) {
+    Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
+    return;
+  }
 
   fCondition = a.Norm1();
   fTol = a.GetTol();
@@ -49,13 +56,11 @@ TDecompQRH::TDecompQRH(const TDecompQRH &another) : TDecompBase(another)
 //______________________________________________________________________________
 Int_t TDecompQRH::Decompose(const TMatrixDBase &a)
 {
-// QR decomposition of a by Householder transformations. See Golub & Loan
-// first edition p41 & Sec 6.2.
+// QR decomposition of matrix a by Householder transformations,
+//  see Golub & Loan first edition p41 & Sec 6.2.
 // First fR is returned in upper triang of fQ and diagR. fQ returned in
 // 'u-form' in lower triang of fQ and fW, the latter containing the
 //  "Householder betas".
-// Errors arise from formation of reflectors i.e. singularity .
-// Note it attempts to handle the cases where the nRow <= nCol .
 
   Assert(a.IsValid());
 
@@ -132,10 +137,9 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fR.IsValid() && fQ.IsValid() && fW.IsValid());
+  Assert(fStatus & kDecomposed);
 
-  if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb())
-  { 
+  if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) { 
     Error("Solve(TVectorD &","vector and matrix incompatible");
     b.Invalidate();
     return kFALSE;
@@ -152,7 +156,6 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
   }
 
   const Int_t nRCol = fR.GetNcols();
-  Assert(b.GetNrows() >= nRCol);
 
   const Double_t *pR = fR.GetMatrixArray();
         Double_t *pb = b.GetMatrixArray();
@@ -165,7 +168,7 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
       r -= pR[off_i+j]*pb[j];
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
-      Error("Solve(TVectorD &b)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      Error("Solve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
       return kFALSE;
     }
     pb[i] = r/pR[off_i+i];
@@ -179,13 +182,44 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fR.IsValid() && fQ.IsValid() && fW.IsValid());
+  Assert(fStatus & kDecomposed);
 
-  if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb())
+  if (fQ.GetNrows() != b->GetNrows() || fQ.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE; 
   }     
+
+  const Int_t nQRow = fQ.GetNrows();
+  const Int_t nQCol = fQ.GetNcols();
+
+  // Calculate  Q^T.b
+  const Int_t nQ = (nQRow <= nQCol) ? nQRow-1 : nQCol;
+  for (Int_t k = 0; k < nQ; k++) {
+    const TVectorD qc_k = TMatrixDColumn_const(fQ,k);
+    ApplyHouseHolder(qc_k,fUp(k),fW(k),k,k+1,cb);
+  }
+
+  const Int_t nRCol = fR.GetNcols();
+
+  const Double_t *pR  = fR.GetMatrixArray();
+        Double_t *pcb = cb.GetPtr();
+  const Int_t     inc = cb.GetInc();
+
+  // Backward substitution
+  for (Int_t i = nRCol-1; i >= 0; i--) {
+    const Int_t off_i  = i*nRCol;
+    const Int_t off_i2 = i*inc;
+    Double_t r = pcb[off_i2];
+    for (Int_t j = i+1; j < nRCol; j++)
+      r -= pR[off_i+j]*pcb[j*inc];
+    if (TMath::Abs(pR[off_i+i]) < fTol)
+    {
+      Error("Solve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      return kFALSE;
+    }
+    pcb[off_i2] = r/pR[off_i+i];
+  }
 
   return kTRUE;
 }
@@ -197,20 +231,24 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 // has *not* been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fR.IsValid() && fQ.IsValid() && fW.IsValid());
+  Assert(fStatus & kDecomposed);
 
-  if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb())
-  {   
+  if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
+    Error("TransSolve(TVectorD &","matrix should be square");
+    b.Invalidate();
+    return kFALSE;
+  }
+
+  if (fR.GetNrows() != b.GetNrows() || fR.GetRowLwb() != b.GetLwb()) {   
     Error("TransSolve(TVectorD &","vector and matrix incompatible");
     b.Invalidate();
     return kFALSE;
   } 
 
-  const Int_t nRCol = fR.GetNcols();
-  Assert(b.GetNrows() >= nRCol);
-
   const Double_t *pR = fR.GetMatrixArray();
         Double_t *pb = b.GetMatrixArray();
+
+  const Int_t nRCol = fR.GetNcols();
 
   // Backward substitution
   for (Int_t i = 0; i < nRCol; i++) {
@@ -222,18 +260,15 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
     }
     if (TMath::Abs(pR[off_i+i]) < fTol)
     {
-      Error("TransSolve(TVectorD &b)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      Error("TransSolve(TVectorD &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
       return kFALSE;
     }
     pb[i] = r/pR[off_i+i];
   }
 
   const Int_t nQRow = fQ.GetNrows();
-  const Int_t nQCol = fQ.GetNcols();
 
-  Assert(nQRow == nQCol);
-
-  // Calculate  Q.b
+  // Calculate  Q.b; it was checked nQRow == nQCol
   for (Int_t k = nQRow-1; k >= 0; k--) {
     const TVectorD qc_k = TMatrixDColumn_const(fQ,k);
     ApplyHouseHolder(qc_k,fUp(k),fW(k),k,k+1,b);
@@ -247,13 +282,48 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fR.IsValid() && fQ.IsValid() && fW.IsValid());
+  Assert(fStatus & kDecomposed);
 
-  if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb())
-  {
+  if (fQ.GetNrows() != fQ.GetNcols() || fQ.GetRowLwb() != fQ.GetColLwb()) {
+    Error("TransSolve(TMatrixDColumn &","matrix should be square");
+    return kFALSE;
+  }
+
+  if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {   
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-    return kFALSE; 
-  }   
+    return kFALSE;
+  } 
+
+  const Double_t *pR  = fR.GetMatrixArray();
+        Double_t *pcb = cb.GetPtr();
+  const Int_t     inc = cb.GetInc();
+
+  const Int_t nRCol = fR.GetNcols();
+
+  // Backward substitution
+  for (Int_t i = 0; i < nRCol; i++) {
+    const Int_t off_i  = i*nRCol;
+    const Int_t off_i2 = i*inc;
+    Double_t r = pcb[off_i2];
+    for (Int_t j = 0; j < i; j++) {
+      const Int_t off_j = j*nRCol;
+      r -= pR[off_j+i]*pcb[j*inc];
+    }
+    if (TMath::Abs(pR[off_i+i]) < fTol)
+    {
+      Error("TransSolve(TMatrixDColumn &)","R[%d,%d]=%.4e < %.4e",i,i,pR[off_i+i],fTol);
+      return kFALSE;
+    }
+    pcb[off_i2] = r/pR[off_i+i];
+  }
+
+  const Int_t nQRow = fQ.GetNrows();
+
+  // Calculate  Q.b; it was checked nQRow == nQCol
+  for (Int_t k = nQRow-1; k >= 0; k--) {
+    const TVectorD qc_k = TMatrixDColumn_const(fQ,k);
+    ApplyHouseHolder(qc_k,fUp(k),fW(k),k,k+1,cb);
+  }
 
   return kTRUE;
 }
@@ -261,6 +331,8 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 void TDecompQRH::Det(Double_t &d1,Double_t &d2)
 {
+  // This routine calculates the absolute (!) value of the determinant
+
   if ( !( fStatus & kDetermined ) ) {
     if ( fStatus & kSingular ) {
       fDet1 = 0.0;
@@ -288,4 +360,4 @@ TDecompQRH &TDecompQRH::operator=(const TDecompQRH &source)
     fW  = source.fW;
   }
   return *this;
-}     
+}

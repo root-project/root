@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.2 2004/01/28 07:39:18 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -32,6 +32,8 @@ protected :
   TMatrixD  fLU;        // decomposed matrix so that a = l u where
                         // l is stored lower left and u upper right side
 
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fLU; }
+
 public :
 
   TDecompLU() {fSign = 0; fIndex = 0; fNIndex = 0;}
@@ -39,8 +41,10 @@ public :
   TDecompLU(const TDecompLU &another);
   virtual ~TDecompLU() {if (fIndex) delete [] fIndex; fIndex = 0; }
 
-          const TMatrixD      GetMatrix      () const;
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fLU; }
+          const TMatrixD  GetMatrix () const;
+  virtual       Int_t     GetNrows  () const { return fLU.GetNrows(); }
+  virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
+          const TMatrixD &GetLU     () const { return fLU; }
 
   virtual Int_t    Decompose (const TMatrixDBase &a);
   virtual Bool_t   Solve     (TVectorD &b);

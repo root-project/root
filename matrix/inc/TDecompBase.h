@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -38,6 +38,8 @@ protected :
 
   Int_t Hager(Double_t& est,Int_t iter=5);
 
+  virtual const TMatrixDBase &GetDecompMatrix() const = 0;
+
 public :
   enum EMatrixDecompStat { kInit=0,kDecomposed=1,kDetermined=2,kCondition=4,kSingular=8 };
   enum {kWorkMax = 100}; // size of work array's in several routines
@@ -51,7 +53,8 @@ public :
           inline       Double_t      GetDet1        () const { return fDet1; }
           inline       Double_t      GetDet2        () const { return fDet2; }
           inline       Double_t      GetCondition   () const { return fCondition; }
-  virtual        const TMatrixDBase &GetDecompMatrix() const = 0;
+  virtual              Int_t         GetNrows       () const = 0;
+  virtual              Int_t         GetNcols       () const = 0;
           inline       Double_t      SetTol         (Double_t tol);
 
   virtual Double_t Condition ();

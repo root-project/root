@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.3 2004/01/28 07:39:18 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -130,7 +130,7 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fLU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
     Error("Solve(TVectorD &","vector and matrix incompatible");
@@ -189,7 +189,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fLU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) { 
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
@@ -250,7 +250,7 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 // been transformed.  Solution returned in b.
 
   Assert(b.IsValid());
-  Assert(fLU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fLU.GetNrows() != b.GetNrows() || fLU.GetRowLwb() != b.GetLwb()) {
     Error("TransSolve(TVectorD &","vector and matrix incompatible");
@@ -312,7 +312,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
-  Assert(fLU.IsValid());
+  Assert(fStatus & kDecomposed);
 
   if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) { 
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");

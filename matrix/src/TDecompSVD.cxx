@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.5 2004/01/29 16:08:54 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -22,10 +22,11 @@
 // fSig[0] >= fSig[1] >= ... >= fSig[n-1].                               //
 //                                                                       //
 // The singular value decompostion always exists, so the decomposition   //
-// will (as long as m >=n) never fail.                                   //
+// will (as long as m >=n) never fail. If m < n, the user should add     //
+// sufficient zero rows to A , so that m == n                            //
 //                                                                       //
-// Here fTol is used to set the thresold on the minimum allowed value of //
-// the singular values:                                                  //
+// Here fTol is used to set the threshold on the minimum allowed value   //
+// of the singular values:                                               //
 //  min_singular = fTol*max(fSig[i])                                     //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
@@ -290,7 +291,7 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
           Diag_3(v,u,sDiag,oDiag,k,l);
           niter++;
           if (niter <= niterm) goto loop;
-          Error("Diagonalize","no convergence after %d steps",niter);
+          ::Error("Diagonalize","no convergence after %d steps",niter);
           ok = kFALSE;
         }
      }
@@ -477,8 +478,10 @@ const TMatrixD TDecompSVD::GetMatrix() const
 Bool_t TDecompSVD::Solve(TVectorD &b)
 {
 // Solve Ax=b assuming the SVD form of A is stored . Solution returned in b.
-// Remember that fU.GetNrows() (== fU.GetNcols()) >= fV.GetNrows() (== fV.GetNcols())
-// If it is larger than only the first fV.GetNrows() in the returned b are meaningful .
+// If A is of size (m x n), input vector b should be of size (m), however,
+// the solution, returned in b, will be in the first (n) elements .
+//
+// For m > n , x  is the least-squares solution of min(A . x - b)
 
   Assert(b.IsValid());
   Assert(fStatus & kDecomposed);
@@ -510,8 +513,9 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
   }
 
   if (b.GetNrows() > fV.GetNrows()) {
-    const TVectorD tmp2 = fV*tmp;
-    b.SetSub(tmp2.GetLwb(),tmp2);
+      TVectorD tmp2;
+      tmp2.Adopt(lwb,upb,b.GetMatrixArray());
+      tmp2 = fV*tmp;
   } else
     b = fV*tmp;
 

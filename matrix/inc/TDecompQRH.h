@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -27,12 +27,14 @@ class TDecompQRH : public TDecompBase
 protected :
 
   //  A = fQ fR H (m x n) matrix
-  TMatrixD fR;  // (n x n) - upper triangular matrix
   TMatrixD fQ;  // (m x n) - orthogonal matrix
-  TVectorD     fUp; // n - vector with Householder up's
-  TVectorD     fW;  // n - vector with Householder beta's
+  TMatrixD fR;  // (n x n) - upper triangular matrix
+  TVectorD fUp; // (n) - vector with Householder up's
+  TVectorD fW;  // (n) - vector with Householder beta's
 
   static Bool_t QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol);
+
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fR; }
 
 public :
 
@@ -41,9 +43,12 @@ public :
   TDecompQRH(const TDecompQRH &another);
   virtual ~TDecompQRH() {}
 
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fR; }
-  virtual const TMatrixD     &GetR           () const { return fR; }
-  virtual const TVectorD     &GetW           () const { return fW; }
+  virtual       Int_t     GetNrows () const { return fQ.GetNrows(); }
+  virtual       Int_t     GetNcols () const { return fQ.GetNcols(); }
+  virtual const TMatrixD &GetQ     () const { return fQ; }
+  virtual const TMatrixD &GetR     () const { return fR; }
+  virtual const TVectorD &GetUp    () const { return fUp; }
+  virtual const TVectorD &GetW     () const { return fW; }
 
   virtual Int_t  Decompose (const TMatrixDBase &a);
   virtual Bool_t Solve     (TVectorD &b);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -28,6 +28,8 @@ protected :
 
   TMatrixD fU; // decomposed matrix fU so that a = fU^T fU
 
+  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
+
 public :
 
   TDecompChol() {};
@@ -36,8 +38,10 @@ public :
   TDecompChol(const TDecompChol &another);
   virtual ~TDecompChol() {}
 
-          const TMatrixD      GetMatrix      () const;
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
+          const TMatrixD  GetMatrix () const;
+  virtual       Int_t     GetNrows  () const { return fU.GetNrows(); }
+  virtual       Int_t     GetNcols  () const { return fU.GetNcols(); }
+          const TMatrixD &GetU      () const { return fU; }
 
   virtual Int_t  Decompose (const TMatrixDBase &a);
   virtual Bool_t Solve     (TVectorD &b);
