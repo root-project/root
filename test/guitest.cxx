@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.40 2004/07/08 14:40:28 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.41 2004/07/09 00:36:42 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -46,7 +46,7 @@
 #include <TFile.h>
 #include <TKey.h>
 #include <TGDockableFrame.h>
-
+#include <TGFontDialog.h>
 
 
 enum ETestCommandIdentifiers {
@@ -65,6 +65,7 @@ enum ETestCommandIdentifiers {
    M_TEST_FILELIST,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
+   M_TEST_FONTDIALOG,
    M_TEST_NEWMENU,
 
    M_VIEW_ENBL_DOCK,
@@ -563,6 +564,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&File List...", M_TEST_FILELIST);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
+   fMenuTest->AddEntry("F&ont Dialog...", M_TEST_FONTDIALOG);
    fMenuTest->AddSeparator();
    fMenuTest->AddEntry("Add New Menus", M_TEST_NEWMENU);
    fMenuTest->AddSeparator();
@@ -790,6 +792,16 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_NUMBERENTRY:
                      new EntryTestDlg(fClient->GetRoot(), this);
+                     break;
+
+                  case M_TEST_FONTDIALOG:
+                     {
+                        TGFontDialog::FontProp_t prop;
+                        new TGFontDialog(fClient->GetRoot(), this, &prop);
+                        printf("Selected font: %s, size %d, italic %s, bold %s, color 0x%lx, align %u\n",
+                               prop.fName.Data(), prop.fSize, prop.fItalic ? "yes" : "no",
+                               prop.fBold ? "yes" : "no", prop.fColor, prop.fAlign);
+                     }
                      break;
 
                   case M_TEST_NEWMENU:
