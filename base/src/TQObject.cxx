@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.31 2003/03/08 20:00:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.32 2003/04/03 16:55:12 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -362,7 +362,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    }
 
    if (!slot_proto) slot_proto = (char*)"";     // avoid zero strings
-   if (slot_params = strchr(slot_proto,'=')) *slot_params = ' ';
+   if ((slot_params = strchr(slot_proto,'='))) *slot_params = ' ';
 
    TFunction *slotMethod = 0;
    if (!receiver_class) {
