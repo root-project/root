@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.24 2001/05/20 14:14:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.25 2001/05/24 16:29:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TFile
+#include "TFile.h"
 #endif
 #ifndef ROOT_TClass
 #include "TClass.h"
@@ -55,7 +55,8 @@ private:
 
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
    static  Bool_t    fgOptimize;      //True if optimization on
-
+   static  TFile    *fgFile;          //Pointer to current file
+   
    void              BuildUserInfo(const char *info);
 
 public:
@@ -87,6 +88,7 @@ public:
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    Int_t               GetClassVersion() const {return fClassVersion;}
+   static TFile       *GetCurrentFile() {return fgFile;}
    Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
    TObjArray          *GetElements() const {return fElements;}
    ULong_t            *GetElems()   const {return fElem;}
@@ -109,6 +111,7 @@ public:
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
+   static void         SetCurrentFile(TFile *file) {fgFile = file;}
    void                TagFile();
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);

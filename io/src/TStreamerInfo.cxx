@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.73 2001/05/24 16:29:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.74 2001/05/24 17:46:33 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 #include "TRealData.h"
 #include "TBaseClass.h"
 #include "TBuffer.h"
-#include "TFile.h"
 #include "TArrayC.h"
 #include "TArrayI.h"
 #include "TArrayF.h"
@@ -35,6 +34,7 @@
  
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgOptimize = kTRUE;
+TFile  *TStreamerInfo::fgFile = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
@@ -369,8 +369,8 @@ void TStreamerInfo::BuildFake()
 {
    // Create a Fake TStreamerInfo object.
    char duName[100];
-   Assert(gFile);
-   Int_t fv = gFile->GetVersion()%100000;
+   Assert(fgFile);
+   Int_t fv = fgFile->GetVersion()%100000;
    Assert(fv < 30000);
    fClassVersion = -1;
    fCheckSum = 2001;
@@ -714,10 +714,8 @@ void TStreamerInfo::ForceWriteInfo()
    // TStreamerInfo of all the classes referenced by the class.
 
    // flag this class
-   //if (!gDirectory->GetFile()) return;
-   //TArrayC *cindex = gDirectory->GetFile()->GetClassIndex();
-   if (!gFile) return;
-   TArrayC *cindex = gFile->GetClassIndex();
+   if (!fgFile) return;
+   TArrayC *cindex = fgFile->GetClassIndex();
    if (cindex->fArray[fNumber]) return;
    cindex->fArray[fNumber] = 1;
    cindex->fArray[0] = 1;
@@ -947,6 +945,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
    while((base = (TBaseClass*)nextb())) {
       base_cl = gROOT->GetClass(base->GetName());
       base_element = (TStreamerElement*)fElements->FindObject(base->GetName());
+      if (!base_cl || !base_element) continue;
       base_offset = base_element->GetOffset();
 
       element = base_cl->GetStreamerInfo()->GetStreamerElement(datamember,local_offset);
@@ -2361,16 +2360,14 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 void TStreamerInfo::TagFile()
 {
-   // Mark the classindex of teh current file as using this TStreamerInfo
+   // Mark the classindex of the current file as using this TStreamerInfo
 
-   //TFile *file = gDirectory->GetFile();
-   TFile *file = gFile;
-   if (file) {
-      TArrayC *cindex = file->GetClassIndex();
+   if (fgFile) {
+      TArrayC *cindex = fgFile->GetClassIndex();
       Int_t nindex = cindex->GetSize();
       if (fNumber < 0 || fNumber >= nindex) {
          Error("TagFile","StreamerInfo: %s number: %d out of range[0,%d] in file: %s",
-            GetName(),fNumber,nindex,file->GetName());
+            GetName(),fNumber,nindex,fgFile->GetName());
          return;
       }
       if (cindex->fArray[fNumber] == 0) {
