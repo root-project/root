@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.170 2003/12/16 17:02:48 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.171 2003/12/18 13:21:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -71,6 +71,8 @@
 //            - i : a 32 bit unsigned integer (UInt_t)
 //            - F : a 32 bit floating point (Float_t)
 //            - D : a 64 bit floating point (Double_t)
+//            - L : a 64 bit signed integer (Long64_t)
+//            - l : a 64 bit unsigned integer (ULong64_t)
 //
 //  ==> Case B
 //      ======
@@ -272,6 +274,7 @@
 #include "TLeafF.h"
 #include "TLeafS.h"
 #include "TLeafD.h"
+#include "TLeafL.h"
 #include "TLeafElement.h"
 #include "TBasket.h"
 #include "TMath.h"

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.62 2003/11/12 09:06:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.63 2003/12/08 15:55:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TLeafF.h"
 #include "TLeafS.h"
 #include "TLeafD.h"
+#include "TLeafL.h"
 #include "TMessage.h"
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
@@ -116,6 +117,8 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
 //            - i : a 32 bit unsigned integer (UInt_t)
 //            - F : a 32 bit floating point (Float_t)
 //            - D : a 64 bit floating point (Double_t)
+//            - L : a 64 bit signed integer (Long64_t)
+//            - l : a 64 bit unsigned integer (ULong64_t)
 //
 //         By default, a variable will be copied to the buffer with the number of
 //         bytes specified in the type descriptor character. However, if the type
@@ -205,6 +208,11 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
             leaf->SetUnsigned();
          } else if (*leaftype == 'F') {
             leaf = new TLeafF(leafname,leaftype);
+         } else if (*leaftype == 'L') {
+            leaf = new TLeafL(leafname,leaftype);
+         } else if (*leaftype == 'l') {
+            leaf = new TLeafL(leafname,leaftype);
+            leaf->SetUnsigned();
          } else if (*leaftype == 'D') {
             leaf = new TLeafD(leafname,leaftype);
          }
