@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.212 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.213 2004/10/29 18:03:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3246,9 +3246,6 @@ Int_t TTree::MakeClass(const char *classname, Option_t *option)
 //
 // The following files are produced: classname.h and classname.C
 // If classname is 0, classname will be called "nameoftree.
-//
-// When the option "anal" is specified, the function generates the
-// analysis class described in TTree::makeAnal.
 //
 // The generated code in classname.h includes the following:
 //    - Identification of the original Tree and Input file name

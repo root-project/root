@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.173 2004/10/13 10:06:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.174 2004/11/15 15:17:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1013,9 +1013,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 //
 // The following files are produced: classname.h and classname.C
 // If classname is 0, classname will be called "nameoftree.
-//
-// When the option "anal" is specified, the function generates the
-// analysis class described in TTree::makeAnal.
 //
 // The generated code in classname.h includes the following:
 //    - Identification of the original Tree and Input file name
