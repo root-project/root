@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.7 2000/09/13 10:38:15 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.8 2000/10/02 11:10:51 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -23,6 +23,10 @@
 // server version.                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -225,6 +229,11 @@ char *check_pass()
       sprintf(msg, "Cannot change directory to %s", pw->pw_dir);
       fatal_error(msg);
    }
+
+   char *home = new char[6+strlen(pw->pw_dir)];
+   sprintf(home, "HOME=%s", pw->pw_dir);
+   putenv(home);
+
    return user_name;
 }
 
@@ -254,7 +263,7 @@ char *reroute_user(char *confdir, char *user_name)
                             word[0], word[1], word[2], word[3]);
 
          //
-         // all running nodes must be configured by a line
+         // all available nodes must be configured by a line
          //    node <name>
          //
          if (nword >= 2 && strcmp(word[0], "node") == 0) {
@@ -333,16 +342,23 @@ int main(int /* argc */, char **argv)
    if (fork() != 0) exit(0);   // parent exits
    setsid();
 
+#ifdef R__DEBUG
+   int debug = 1;
+   while (debug)
+      ;
+#endif
+
    // find out if we are supposed to be a master or a slave server
    if (Recv(msg, sizeof(msg)) < 0)
       fatal_error("Cannot receive master/slave status");
-   master = !strcmp("master", msg) ? 1 : 0;
+
+   master = !strcmp(msg, "master") ? 1 : 0;
 
    // user authentication
    user_name = check_pass();
 
    // only reroute in case of master server
-   if (master && (node_name = reroute_user(argv[0], user_name)) != 0) {
+   if (master && (node_name = reroute_user(argv[1], user_name)) != 0) {
       // send a reroute request to the client passing the IP address
 
       char host_name[32];
@@ -383,20 +399,32 @@ int main(int /* argc */, char **argv)
       fatal_error("Error receiving version tag");
 
    // start server version
-   sprintf(arg0, "%s/bin/proofserv.%s", argv[0], vtag);
+   sprintf(arg0, "%s/bin/proofserv.%s", argv[1], vtag);
    argvv[0] = arg0;
    argvv[1] = (char *)(master ? "proofserv" : "proofslave");
-   argvv[2] = argv[0];
+   argvv[2] = argv[1];
    argvv[3] = 0;
-#if defined(__linux)
-   sprintf(msg, "LD_LIBRARY_PATH=%s/lib", argv[0]);
-   putenv(msg);
+#ifndef ROOTPREFIX
+   char *rootsys = new char[9+strlen(argv[1])];
+   sprintf(rootsys, "ROOTSYS=%s", argv[1]);
+   putenv(rootsys);
+#endif
+#ifndef ROOTLIBDIR
+   char *ldpath = new char[21+strlen(argv[1])];
+#   if defined(__hpux) || defined(_HIUX_SOURCE)
+   sprintf(ldpath, "SHLIB_PATH=%s/lib", argv[1]);
+#   elif defined(_AIX)
+   sprintf(ldpath, "LIBPATH=%s/lib", argv[1]);
+#   else
+   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", argv[1]);
+#   endif
+   putenv(ldpath);
 #endif
    execv(arg0, argvv);
 
    // tell client that exec failed
    sprintf(msg,
-   "Cannot start Proof server version %s --- update your ROOT version!", vtag);
+   "Cannot start PROOF server version %s --- update your ROOT version!", vtag);
    Send(msg);
 
    return 0;
