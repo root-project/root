@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.113 2005/01/06 07:03:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.114 2005/01/06 21:27:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1362,10 +1362,18 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (idx != kNPOS) {
       // The libs contains the sub-string 'l', let's make sure it is 
       // not just part of a larger name.
-      if ( (idx==0 || libs[idx-1]=='/' || libs[idx-1]=='\\') &&
-            libs[idx+l.Length()]=='.' ) {
-         return 1;
+      if (idx==0 || libs[idx-1]=='/' || libs[idx-1]=='\\') {
+         Ssiz_t len = libs.Length();
+         idx += l.Length();
+         while(idx<len && libs[idx]!='.') {
+            if (libs[idx]==' ' || idx+1==len) 
+               return 1;
+            ++idx;
+         }
       }
+   }
+   if (l[l.Length()-1]=='.') {
+      l.Remove(l.Length()-1);
    }
    if (l.BeginsWith("lib")) {
       l.Replace(0, 3, "-l");
