@@ -1463,7 +1463,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       UInt_t w, h;
       t.SetTextSize(fTextSize);
       t.SetTextFont(fTextFont);
-      t.GetTextExtent(w, h, (char*)chars);
+      t.GetTextExtent(w, h, chars);
       if(txalh == 2) x = x - gPad->AbsPixeltoX(w/2);
       if(txalh == 3) x = x - gPad->AbsPixeltoX(w);
    }
