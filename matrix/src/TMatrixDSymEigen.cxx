@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -65,13 +65,13 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 
   const Int_t n = v.GetNrows();
 
+  Int_t i,j,k;
   Int_t off_n1 = (n-1)*n;
-  for (Int_t j = 0; j < n; j++)
+  for (j = 0; j < n; j++)
     pD[j] = pV[off_n1+j];
 
   // Householder reduction to tridiagonal form.
 
-  Int_t i,j,k;
   for (i = n-1; i > 0; i--) {
     const Int_t off_i1 = (i-1)*n;
     const Int_t off_i  = i*n;

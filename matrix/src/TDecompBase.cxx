@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -385,12 +385,13 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
         Double_t *       cp = cr.GetPtr();
 
   Double_t s = cp[lp*inc_c]*up;
-  for (Int_t i = l; i < nv; i++)
+  Int_t i;
+  for (i = l; i < nv; i++)
     s += cp[i*inc_c]*vp[i];
 
   s = s*beta;
   cp[lp*inc_c] += s*up;
-  for (Int_t i = l; i < nv; i++)
+  for (i = l; i < nv; i++)
     cp[i*inc_c] += s*vp[i];
 }
 

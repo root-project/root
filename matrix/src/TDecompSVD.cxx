@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.2 2004/01/26 12:08:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -132,7 +132,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
   TArrayD ups(nCol_v);
   TArrayD betas(nCol_v);
 
-  Int_t i;
+  Int_t i,j;
   for (i = 0; i < nCol_v; i++) {
     // Set up Householder Transformation q(i)
 
@@ -144,13 +144,13 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
       DefHouseHolder(vc_i,i,i+1,up,beta);
 
       // Apply q(i) to v
-      for (Int_t j = i; j < nCol_v; j++) {
+      for (j = i; j < nCol_v; j++) {
         TMatrixDColumn vc_j = TMatrixDColumn(v,j);
         ApplyHouseHolder(vc_i,up,beta,i,i+1,vc_j);
       }
 
       // Apply q(i) to u
-      for (Int_t j = 0; j < nCol_u; j++)
+      for (j = 0; j < nCol_u; j++)
       {
         TMatrixDColumn uc_j = TMatrixDColumn(u,j);
         ApplyHouseHolder(vc_i,up,beta,i,i+1,uc_j);
@@ -169,7 +169,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
       betas[i] = beta;
 
       // apply h(i) to v
-      for (Int_t j = i; j < nRow_v; j++) {
+      for (j = i; j < nRow_v; j++) {
         TMatrixDRow vr_j = TMatrixDRow(v,j);
         ApplyHouseHolder(vr_i,up,beta,i+1,i+2,vr_j);
 
