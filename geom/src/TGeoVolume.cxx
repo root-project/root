@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.12 2002/11/20 08:55:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.13 2002/12/03 16:01:40 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -456,6 +456,9 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
 // Generate a lego plot fot the top volume, according to option.
    TVirtualGeoPainter *p = gGeoManager->GetGeomPainter();
    if (!p) return 0;
+   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
+   if (old_vol!=this) gGeoManager->SetTopVolume(this);
+   else old_vol=0;
    TH2F *hist = p->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
    hist->Draw("lego1sph");
    return hist;

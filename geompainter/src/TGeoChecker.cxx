@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.14 2002/12/03 16:10:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.15 2002/12/06 16:45:03 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -310,7 +310,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    Int_t j;  // loop index for theta
    Int_t ntot = ntheta * nphi;
    Int_t n10 = ntot/10;
-   Int_t igen = 0;
+   Int_t igen = 0, iloop=0;
    printf("=== Lego plot sph. => nrays=%i\n", ntot);
    for (i=1; i<=nphi; i++) {
       for (j=1; j<=ntheta; j++) {
@@ -342,12 +342,15 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          is_entering = fGeom->IsEntering();
          while (step<1E10) {
             // now see if we can make an other step
+	          iloop=0;
+            if (!fGeom->IsEntering()) printf("Looping %s\n", fGeom->GetPath());
             while (!fGeom->IsEntering()) {
+	             iloop++;
                fGeom->SetStep(1E-3);
-	       step += 1E-3;
+	             step += 1E-3;
                endnode = fGeom->Step();
             }
-               
+            if (iloop>10) printf("%i steps\n", iloop);   
             if (matprop>0) {
                x += step/matprop;
             }   
@@ -367,7 +370,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
             step = fGeom->GetStep();
             is_entering = fGeom->IsEntering();
          }
-	 printf("%i : x=%f\n", igen, x);
+//	 printf("%i : x=%f\n", igen, x);
          hist->Fill(phi, theta, x); 
       }
    }
