@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.2 2000/11/27 10:48:19 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -81,10 +81,10 @@ private:
    Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
-   TSocket(TInetAddress address, const char *service);
-   TSocket(TInetAddress address, Int_t port);
-   TSocket(const char *host, const char *service);
-   TSocket(const char *host, Int_t port);
+   TSocket(TInetAddress address, const char *service, Int_t recvbuf = -1);
+   TSocket(TInetAddress address, Int_t port, Int_t recvbuf = -1);
+   TSocket(const char *host, const char *service, Int_t recvbuf = -1);
+   TSocket(const char *host, Int_t port, Int_t recvbuf = -1);
    TSocket(Int_t descriptor);
    TSocket(const TSocket &s);
    virtual ~TSocket() { Close(); }

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.3 2000/08/18 06:27:31 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.4 2000/08/18 14:58:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -86,9 +86,9 @@ protected:
    static char        *WinNTSigname(ESignals sig);
    static int          WinNTFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          WinNTTcpConnect(const char *hostname, int port);
+   static int          WinNTTcpConnect(const char *hostname, int port, int recvbuf);
    static int          WinNTWinNTConnect(const char *hostname, int port);
-   static int          WinNTTcpService(int port,  Bool_t reuse, int backlog);
+   static int          WinNTTcpService(int port,  Bool_t reuse, int backlog, int recvbuf);
    static int          WinNTWinNTService(int port, int backlog);
    static int          WinNTSend(int socket, const void *buffer, int length, int flag);
    static int          WinNTRecv(int socket, void *buffer, int length, int flag);
@@ -198,14 +198,14 @@ public:
    Double_t          GetCPUTime();
 
    //---- RPC --------------------------------------------------
-   virtual int             ConnectService(const char *servername, int port);
+   virtual int             ConnectService(const char *servername, int port, int recvbuf);
    virtual TInetAddress    GetHostByName(const char *server);
    virtual TInetAddress    GetPeerName(int sock);
    virtual TInetAddress    GetSockName(int sock);
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port);
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog);
+   virtual int             OpenConnection(const char *server, int port, int recvbuf = -1);
+   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int recvbuf = -1);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
    virtual void            CloseConnection(int sock, Bool_t force = kFALSE);

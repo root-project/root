@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.11 2000/12/10 16:02:49 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.12 2000/12/20 17:37:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1468,23 +1468,27 @@ char *TUnixSystem::GetServiceByPort(int port)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::ConnectService(const char *servername, int port)
+int TUnixSystem::ConnectService(const char *servername, int port, int recvbuf)
 {
    // Connect to service servicename on server servername.
 
    if (!strcmp(servername, "unix"))
       return UnixUnixConnect(port);
-   return UnixTcpConnect(servername, port);
+   return UnixTcpConnect(servername, port, recvbuf);
 }
 
 //______________________________________________________________________________
-int TUnixSystem::OpenConnection(const char *server, int port)
+int TUnixSystem::OpenConnection(const char *server, int port, int recvbuf)
 {
    // Open a connection to a service on a server. Try 3 times with an
    // interval of 1 second.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Is called via the TSocket constructor.
 
    for (int i = 0; i < 3; i++) {
-      int fd = ConnectService(server, port);
+      int fd = ConnectService(server, port, recvbuf);
       if (fd >= 0)
          return fd;
       sleep(1);
@@ -1493,11 +1497,20 @@ int TUnixSystem::OpenConnection(const char *server, int port)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog)
+int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
+                                    int recvbuf)
 {
    // Announce TCP/IP service.
+   // Open a socket, bind to it and start listening for TCP/IP connections
+   // on the port. If reuse is true reuse the address, backlog specifies
+   // how many sockets can be waiting to be accepted.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
+   // or -3 if listen() failed.
 
-   return UnixTcpService(port, reuse, backlog);
+   return UnixTcpService(port, reuse, backlog, recvbuf);
 }
 
 //______________________________________________________________________________
@@ -2163,9 +2176,12 @@ int TUnixSystem::UnixWaitchild()
 //---- RPC -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixTcpConnect(const char *hostname, int port)
+int TUnixSystem::UnixTcpConnect(const char *hostname, int port, int recvbuf)
 {
    // Open a TCP/IP connection to server and connect to a service (i.e. port).
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
    short  sport;
@@ -2192,6 +2208,9 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port)
       ::SysError("TUnixSystem::UnixConnectTcp", "socket");
       return -1;
    }
+
+   if (recvbuf > 0)
+      gSystem->SetSockOpt(sock, kRecvBuffer, recvbuf);
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
       //::SysError("TUnixSystem::UnixConnectTcp", "connect");
@@ -2230,10 +2249,15 @@ int TUnixSystem::UnixUnixConnect(int port)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog)
+int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog, int recvbuf)
 {
    // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. Returns socket fd or -1 if socket() failed, -2 if bind() failed
+   // on the port. If reuse is true reuse the address, backlog specifies
+   // how many sockets can be waiting to be accepted.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
    // or -3 if listen() failed.
 
    short  sport;
@@ -2253,6 +2277,9 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog)
 
    if (reuse)
       gSystem->SetSockOpt(sock, kReuseAddr, 1);
+
+   if (recvbuf > 0)
+      gSystem->SetSockOpt(sock, kRecvBuffer, recvbuf);
 
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));

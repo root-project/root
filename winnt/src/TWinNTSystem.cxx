@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.7 2000/12/27 18:08:40 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.8 2001/01/12 12:07:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1695,12 +1695,14 @@ Bool_t TWinNTSystem::RemoveTimer(TTimer *ti)
    return rc;
 }
 #endif
+
 //______________________________________________________________________________
 void TWinNTSystem::Sleep(UInt_t milliSec)
 {
    // Sleep milliSec milli seconds.
-//*-* The Sleep function suspends the execution of the CURRENT THREAD for
-//*-* a specified interval.
+   // The Sleep function suspends the execution of the CURRENT THREAD for
+   // a specified interval.
+
    ::Sleep(milliSec);
 }
 
@@ -2132,7 +2134,7 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
 }
 
 //______________________________________________________________________________
-int TWinNTSystem::ConnectService(const char *servername, int port)
+int TWinNTSystem::ConnectService(const char *servername, int port, int recvbuf)
 {
    // Connect to service servicename on server servername.
    if (!strcmp(servername, "unix"))
@@ -2141,17 +2143,21 @@ int TWinNTSystem::ConnectService(const char *servername, int port)
        return -1;
        // return UnixUnixConnect(port);
    }
-   return WinNTTcpConnect(servername, port);
+   return WinNTTcpConnect(servername, port, recvbuf);
 }
 
 //______________________________________________________________________________
-int TWinNTSystem::OpenConnection(const char *server, int port)
+int TWinNTSystem::OpenConnection(const char *server, int port, int recvbuf)
 {
    // Open a connection to a service on a server. Try 3 times with an
    // interval of 1 second.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Is called via the TSocket constructor.
 
    for (int i = 0; i < 3; i++) {
-      int fd = ConnectService(server, port);
+      int fd = ConnectService(server, port, recvbuf);
       if (fd >= 0)
          return fd;
       Sleep(1000);
@@ -2160,14 +2166,21 @@ int TWinNTSystem::OpenConnection(const char *server, int port)
 }
 
 //______________________________________________________________________________
-int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog)
+int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
+                                     int recvbuf)
 {
-   // Start TCP/IP service.
+   // Announce TCP/IP service.
+   // Open a socket, bind to it and start listening for TCP/IP connections
+   // on the port. If reuse is true reuse the address, backlog specifies
+   // how many sockets can be waiting to be accepted.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
+   // or -3 if listen() failed.
 
-   return WinNTTcpService(port, reuse, backlog);
-
+   return WinNTTcpService(port, reuse, backlog, recvbuf);
 }
-
 
 //______________________________________________________________________________
 int TWinNTSystem::AcceptConnection(int socket)
@@ -2505,10 +2518,14 @@ int TWinNTSystem::WinNTWaitchild()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 //______________________________________________________________________________
-int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port)
+int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port, int recvbuf)
 {
    // Open a TCP/IP connection to server and connect to a service (i.e. port).
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
+
    short  sport;
    struct servent *sp;
 
@@ -2533,6 +2550,9 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port)
       ::SysError("TWinNTSystem::WinNTConnectTcp", "socket");
       return -1;
    }
+
+   if (recvbuf > 0)
+      gSystem->SetSockOpt((int)sock, kRecvBuffer, recvbuf);
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) == INVALID_SOCKET) {
       //::SysError("TWinNTSystem::UnixConnectTcp", "connect");
@@ -2573,10 +2593,16 @@ int TWinNTSystem::WinNTWinNTConnect(int port)
 #endif
 
 //______________________________________________________________________________
-int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog)
+int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
+                                  int recvbuf)
 {
    // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. Returns socket fd or -1 if socket() failed, -2 if bind() failed
+   // on the port. If reuse is true reuse the address, backlog specifies
+   // how many sockets can be waiting to be accepted.
+   // Use recvbuf to specify the size of the receive buffer, it has to be
+   // specified here to make sure the window scale option is set (for
+   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
    // or -3 if listen() failed.
 
    short  sport;
@@ -2596,6 +2622,9 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog)
 
    if (reuse)
       gSystem->SetSockOpt((int)sock, kReuseAddr, 1);
+
+   if (recvbuf > 0)
+      gSystem->SetSockOpt((int)sock, kRecvBuffer, recvbuf);
 
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));

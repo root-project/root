@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.2 2000/11/27 16:03:58 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.3 2001/01/19 17:11:20 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -40,8 +40,10 @@ private:
 public:
    enum { kDefaultBacklog = 10 };
 
-   TServerSocket(Int_t port, Bool_t reuse = kFALSE, Int_t backlog = kDefaultBacklog);
-   TServerSocket(const char *service, Bool_t reuse = kFALSE, Int_t backlog = kDefaultBacklog);
+   TServerSocket(Int_t port, Bool_t reuse = kFALSE, Int_t backlog = kDefaultBacklog,
+                 Int_t recvbuf = -1);
+   TServerSocket(const char *service, Bool_t reuse = kFALSE,
+                 Int_t backlog = kDefaultBacklog, Int_t recvbuf = -1);
    virtual ~TServerSocket() { Close(); }
 
    virtual TSocket      *Accept();
