@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.17 2005/01/12 20:04:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.18 2005/01/19 18:30:58 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -156,6 +156,8 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kDouble_t;
    } else if (!strcmp(typeid(Double32_t).name(), typeinfo.name())) {
       retType = kDouble32_t;
+   } else if (!strcmp(typeid(char*).name(), typeinfo.name())) {
+      retType = kCharStar;
    }
    return retType;
 }
@@ -203,6 +205,8 @@ const char *TDataType::AsString(void *buf) const
       sprintf(line, "%g", *(float *)buf);
    else if (!strcmp("double", name))
       sprintf(line, "%g", *(double *)buf);
+   else if (!strcmp("char*", name)) 
+      sprintf(line, "%s", *(char**)buf);
 
    return line;
 }
@@ -269,6 +273,10 @@ void TDataType::SetType(const char *name)
    if (!strcmp("Double32_t", fName.Data())) {
       fType = kDouble32_t;
    }
+   if (!strcmp("char*",fName.Data())) {
+      fType = kCharStar;
+   }
+   // kCounter =  6, kBits     = 15
 }
 
 //______________________________________________________________________________

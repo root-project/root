@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.227 2005/01/19 18:30:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.228 2005/01/20 01:10:52 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1659,7 +1659,8 @@ Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *realClass,
             branchEl->GetInfo()->GetElems()[branchEl->GetID()];
          if (element) expectedClass = element->GetClassPointer();
          if (expectedClass==0) {
-            expectedType = (EDataType)gROOT->GetType(element->GetTypeNameBasic())->GetType();
+            TDataType *data = gROOT->GetType(element->GetTypeNameBasic());
+            expectedType = (EDataType)data->GetType();
          }
       }
       if (realClass && branch->GetMother()==branch) {
