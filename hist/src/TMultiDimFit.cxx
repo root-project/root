@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.9 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.10 2003/01/16 18:07:52 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1857,6 +1857,7 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
   fMaxVariables           = 0;
   fMinVariables           = 0;
   fSampleSize             = 0;
+  fTestSampleSize         = 0;
   fMinRelativeError       = 0.01;
   fError                  = 0;
   fTestError              = 0;
@@ -1895,6 +1896,7 @@ TMultiDimFit::~TMultiDimFit()
   delete [] fMaxPowersFinal;
   delete [] fPowerIndex;
   delete [] fFunctionCodes;
+  fHistograms->Clear("nodelete");
   delete fHistograms;
 }
 
@@ -2114,10 +2116,8 @@ void TMultiDimFit::Clear(Option_t *option)
 
   // Functions
   fFunctions.Zero();
-  for (i = 0; i < fMaxTerms; i++) {
-    fFunctionCodes[i]           = 0;
-    fPowerIndex[i]              = 0;
-  }
+  //for (i = 0; i < fMaxTerms; i++)  fPowerIndex[i]    = 0;
+  //for (i = 0; i < fMaxTerms; i++)  fFunctionCodes[i] = 0;
   fMaxFunctions                 = 0;
   fMaxStudy                     = 0;
   fOrthFunctions.Zero();
@@ -2498,7 +2498,7 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
   }
 
   // Clean up
-  delete x;
+  delete [] x;
 
   return fChi2;
 }
@@ -3052,7 +3052,10 @@ void TMultiDimFit::MakeParameterization()
 
   fFunctionCodes = new Int_t[fMaxFunctions];
   fPowerIndex    = new Int_t[fMaxTerms];
-
+  Int_t l;
+  for (l=0;l<fMaxFunctions;l++) fFunctionCodes[l] = 0;
+  for (l=0;l<fMaxTerms;l++)     fPowerIndex[l]    = 0;
+  
   if (fMaxAngle != 0)  maxPass = 100;
   if (fIsUserFunction) maxPass = 1;
 
@@ -3084,7 +3087,6 @@ void TMultiDimFit::MakeParameterization()
       k++;
       continue;
     }
-
     if (studied == 1)
       fFunctionCodes[i] = 0;
     else if (fFunctionCodes[i] >= 2)
@@ -3227,7 +3229,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   // General information on the code
   outFile << "// This file contains the function " << endl
           << "//" << endl
-          << "//    Double_t  " << prefix << "MDF(Double_t *x); " << endl
+          << "//    double  " << prefix << "MDF(double *x); " << endl
           << "//" << endl
           << "// For evaluating the parameterization obtained" << endl
 	  << "// from TMultiDimFit and the point x" << endl
@@ -3235,15 +3237,9 @@ void TMultiDimFit::MakeRealCode(const char *filename,
           << "// See TMultiDimFit class documentation for more "
           << "information " << endl << "// " << endl;
   // Header files
-  outFile << "#ifndef __CINT__" << endl;
   if (isMethod)
     // If these are methods, we need the class header
     outFile << "#include \"" << classname << ".h\"" << endl;
-  else
-    // otherwise, we need the typedefs of Int_t and Double_t
-    outFile << "#include <Rtypes.h> // needed for Double_t etc" << endl;
-  // Finish the preprocessor block
-  outFile << "#endif" << endl << endl;
 
   //
   // Now for the data
@@ -3251,16 +3247,16 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   outFile << "//" << endl
           << "// Static data variables"  << endl
           << "//" << endl;
-  outFile << cv_qual << "Int_t    " << prefix << "gNVariables    = "
+  outFile << cv_qual << "int    " << prefix << "gNVariables    = "
           << fNVariables << ";" << endl;
-  outFile << cv_qual << "Int_t    " << prefix << "gNCoefficients = "
+  outFile << cv_qual << "int    " << prefix << "gNCoefficients = "
           << fNCoefficients << ";" << endl;
-  outFile << cv_qual << "Double_t " << prefix << "gDMean         = "
+  outFile << cv_qual << "double " << prefix << "gDMean         = "
           << fMeanQuantity << ";" << endl;
 
   // Assignment to mean vector.
   outFile << "// Assignment to mean vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix
+  outFile << cv_qual << "double " << prefix
           << "gXMean[] = {" << endl;
   for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMeanVariables(i) << flush;
@@ -3268,7 +3264,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
   // Assignment to minimum vector.
   outFile << "// Assignment to minimum vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix
+  outFile << cv_qual << "double " << prefix
           << "gXMin[] = {" << endl;
   for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMinVariables(i) << flush;
@@ -3276,7 +3272,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
   // Assignment to maximum vector.
   outFile << "// Assignment to maximum vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix
+  outFile << cv_qual << "double " << prefix
           << "gXMax[] = {" << endl;
   for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMaxVariables(i) << flush;
@@ -3284,7 +3280,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
   // Assignment to coefficients vector.
   outFile << "// Assignment to coefficients vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix
+  outFile << cv_qual << "double " << prefix
           << "gCoefficient[] = {" << flush;
   for (i = 0; i < fNCoefficients; i++)
     outFile << (i != 0 ? "," : "") << endl
@@ -3296,7 +3292,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 	  << "// The powers are stored row-wise, that is" << endl
 	  << "//  p_ij = " << prefix
 	  << "gPower[i * NVariables + j];" << endl;
-  outFile << cv_qual << "Int_t    " << prefix
+  outFile << cv_qual << "int    " << prefix
           << "gPower[] = {" << flush;
   for (i = 0; i < fNCoefficients; i++) {
     for (j = 0; j < fNVariables; j++) {
@@ -3316,25 +3312,25 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   outFile << "// " << endl
           << "// The "
           << (isMethod ? "method " : "function ")
-          << "  Double_t " << prefix
-          << "MDF(Double_t *x)"
+          << "  double " << prefix
+          << "MDF(double *x)"
           << endl << "// " << endl;
-  outFile << "Double_t " << prefix
-          << "MDF(Double_t *x) {" << endl
-	  << "  Double_t returnValue = " << prefix << "gDMean;" << endl
-	  << "  Int_t    i = 0, j = 0;" << endl
+  outFile << "double " << prefix
+          << "MDF(double *x) {" << endl
+	  << "  double returnValue = " << prefix << "gDMean;" << endl
+	  << "  int    i = 0, j = 0;" << endl
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
-	  << "    Double_t term = " << prefix << "gCoefficient[i]; <<"
+	  << "    double term = " << prefix << "gCoefficient[i]; <<"
 	  << endl
 	  << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
 	  << endl
 	  << "      // Evaluate the polynomial in the jth variable." << endl
-	  << "      Int_t power = "<< prefix << "gPower["
+	  << "      int power = "<< prefix << "gPower["
 	  << prefix << "gNVariables * i + j]; " << endl
-	  << "      Double_t p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl
-	  << "      Double_t v =  1 + 2. / ("
+	  << "      double p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl
+	  << "      double v =  1 + 2. / ("
 	  << prefix << "gXMax[j] - " << prefix
 	  << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << endl
 	  << "      // what is the power to use!" << endl
