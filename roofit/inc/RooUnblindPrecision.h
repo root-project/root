@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindPrecision.rdl,v 1.1 2001/11/20 04:00:56 verkerke Exp $
+ *    File: $Id: RooUnblindPrecision.rdl,v 1.2 2002/01/16 01:35:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -24,10 +24,10 @@ public:
   // Constructors, assignment etc
   RooUnblindPrecision() ;
   RooUnblindPrecision(const char *name, const char *title, 
-		      const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue);
+		      const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, Bool_t sin2betaMode=kFALSE);
   RooUnblindPrecision(const char *name, const char *title, 
 		      const char *blindString, Double_t centralValue, Double_t scale, 
-		      RooAbsReal& blindValue, RooAbsCategory& blindState);
+		      RooAbsReal& blindValue, RooAbsCategory& blindState, Bool_t sin2betaMode=kFALSE);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooUnblindPrecision(*this,newname); }  
   virtual ~RooUnblindPrecision();

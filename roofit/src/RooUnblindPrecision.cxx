@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindPrecision.cc,v 1.1 2001/11/20 04:00:55 verkerke Exp $
+ *    File: $Id: RooUnblindPrecision.cc,v 1.2 2002/01/16 01:35:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,9 +39,11 @@ RooUnblindPrecision::RooUnblindPrecision() : _blindEngine("")
 
 
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
-					 const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& value)
+					 const char *blindString, Double_t centralValue, 
+					 Double_t scale, RooAbsReal& value,
+					 Bool_t sin2betaMode)
   : RooAbsHiddenReal(name,title), 
-  _blindEngine(blindString,RooBlindTools::full,centralValue,scale), 
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode), 
   _value("value","Precision blinded value",this,value)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
@@ -49,9 +51,11 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 
 
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
-					 const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& value, RooAbsCategory& blindState)
+					 const char *blindString, Double_t centralValue, 
+					 Double_t scale, RooAbsReal& value, RooAbsCategory& blindState,
+					 Bool_t sin2betaMode)
   : RooAbsHiddenReal(name,title,blindState), 
-  _blindEngine(blindString,RooBlindTools::full,centralValue,scale), 
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode), 
   _value("value","Precision blinded value",this,value)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters

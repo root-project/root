@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.cc,v 1.4 2002/01/16 01:35:54 verkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.5 2002/01/16 09:15:19 giraudpf Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 //-----------------------
 #include "RooFitModels/RooBlindTools.hh"
 
+#include "RooFitCore/RooErrorHandler.hh"
 #include <iostream.h>
 #include <fstream.h>
 #include <math.h>  
@@ -307,8 +308,9 @@ Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
     }      
   }
 
-  if (sumSeed<1 || sumSeed>8000 || lengthSeed<5) {
-    cout<< "RooBlindTools::Randomizer: Your String Seed is Bad" <<endl;
+  if (lengthSeed<5 || ((sumSeed<1 || sumSeed>8000)&&!_s2bMode)) {
+    cout<< "RooBlindTools::Randomizer: Your String Seed is Bad: '" << _stSeed << "'" << endl ;
+    RooErrorHandler::softAbort() ;                                                                                                                     
   }
   
   Int_t ia = 8121;
