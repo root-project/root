@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.37 2004/07/15 23:56:46 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.38 2004/07/16 22:29:07 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -127,6 +127,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
    ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
+
+   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+   ProcessLine("#define ROOT_Rtypes 0");
+   ProcessLine("#define ROOT_TError 0");
+   ProcessLine("#define ROOT_TGenericClassInfo 0");
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
