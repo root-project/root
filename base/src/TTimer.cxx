@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.9 2004/05/10 08:15:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.10 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 ClassImp(TTimer)
 
 
-class TSingleShotCleaner: public TTimer {
+class TSingleShotCleaner : public TTimer {
 private:
    TList  *fGarbage;
 public:
@@ -151,6 +151,9 @@ Bool_t TTimer::Notify()
 void TTimer::Reset()
 {
    // Reset the timer.
+
+   // make sure gSystem exists
+   ROOT::GetROOT();
 
    fTimeout = kFALSE;
    fAbsTime = fTime;
