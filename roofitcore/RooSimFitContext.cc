@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.13 2001/11/19 07:24:00 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.14 2001/11/27 23:19:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,19 +50,27 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
     // Retrieve the PDF for this simCat state
     RooRealProxy* proxy = (RooRealProxy*) simpdf->_pdfProxyList.FindObject((const char*) simpdf->_indexCat) ;
     if (proxy) {
-      cout << "RooSimFitContext::RooSimFitContext: creating fit sub-context for state " << type->GetName() ;
       RooAbsPdf* pdf = (RooAbsPdf*)proxy->absArg() ;
 
       //Refine a dataset containing only events for this simCat state
       char cutSpec[1024] ;
       sprintf(cutSpec,"%s==%d",simCatName.Data(),simCat.getIndex()) ;
       RooAbsData* dset = _dataClone->reduce(RooFormulaVar("simCatCut",cutSpec,simCat)) ;
-      cout << " (" << dset->numEntries() << " dataset entries)" << endl ;
-      _dsetArray[n] = dset ;
-      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE,projDeps) ;
-      _dirtyArray[n] = kTRUE ;
-      _nCtxFilled++ ;
-
+      if (dset->numEntries()>0) {
+	cout << "RooSimFitContext::RooSimFitContext: creating fit sub-context for state " << type->GetName() 
+	     << " (" << dset->numEntries() << " dataset entries)" << endl ;
+	_dsetArray[n] = dset ;
+	_ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE,projDeps) ;
+	_dirtyArray[n] = kTRUE ;
+	_nCtxFilled++ ;
+      } else {
+	cout << "RooSimFitContext::RooSimFitContext: state " << type->GetName() 
+	     << " has no data entries, sub-context not created" << endl ;
+	delete dset ;
+	_dsetArray[n] = 0 ;
+	_ctxArray[n] = 0 ;
+	_dirtyArray[n] = kFALSE ;
+      }
     } else {
       _dsetArray[n] = 0 ;
       _ctxArray[n] = 0 ;
@@ -140,7 +148,13 @@ Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy, Int_t nObserved) const
       if (_dirtyArray[i]) {
 	Bool_t extend = (_extendedMode && _ctxArray[i]->_pdfClone->canBeExtended()) ;
 	_nllArray[i] = _ctxArray[i]->nLogLikelihood(extend,_nGlobEvents) + _offArray[i] ;
-	_dirtyArray[i] = kFALSE ;
+	_dirtyArray[i] = kFALSE ;	
+
+	// If any sub-context returns zero (i.e. events with zero or neg. prob) return zero
+	if (_nllArray[i] == 0.) {
+	  return 0 ;
+	}
+
       }
       nllSum += _nllArray[i] ;
     }

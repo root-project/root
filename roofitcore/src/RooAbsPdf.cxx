@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.58 2001/12/01 08:12:46 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.59 2001/12/02 08:13:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -195,10 +195,15 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if ((isValueDirty() || _norm->isValueDirty() || nsetChanged) && operMode()!=AClean) {
 
+    // Evaluate numerator
     Double_t rawVal = evaluate() ;
     Bool_t error = traceEvalPdf(rawVal) ; // Error checking and printing
 
-    _value = error ? 0 : (rawVal / _norm->getVal()) ;
+    // Evaluate denominator
+    Double_t normVal(_norm->getVal()) ;
+    if (normVal==0.) error=kTRUE ;
+
+    _value = error ? 0 : (rawVal / normVal) ;
 
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " 
 			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
@@ -437,15 +442,14 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   if(prob <= 0) {
 
     if (_negCount-- > 0) {
-      cout << "RooAbsPdf:" << fName << ": calculated prob = " << prob
-           << " using" << endl;
-      
-      cout << "nset ptr = " << (void*)nset << endl ;
-      cout << "raw Value = " << getVal(0) << endl ;
+      cout << endl 
+	   << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: PDF evaluates to zero or negative value (" << prob << ")" << endl;
       RooArgSet* params = getParameters(nset) ;
       RooArgSet* depends = getDependents(nset) ;	 
-      params->Print("v") ;
+      cout << "  Current values of PDF dependents:" ;
       depends->Print("v") ;
+      cout << "  Current values of PDF parameters:" ;
+      params->Print("v") ;
       delete params ;
       delete depends ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.48 2002/02/01 19:50:56 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.49 2002/02/12 20:02:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -661,7 +661,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   }
 
   // Reset the *largest* negative log-likelihood value we have seen so far
-  _maxNLL= 0;
+  _maxNLL= -1e30 ;
 
   // Do the fit
   arglist[0]= 250*nFree; // maximum iterations
@@ -769,7 +769,14 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const
     _dataClone->get(index);
 
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
-    //if(term == 0 && _dataClone->weight()) return 0;
+
+    // If any event evaluates with zero probability, abort calculation
+    if(term == 0 && (_dataClone->weight()!=0.)) {
+      cout << "RooFitContext::nLogLikelihood(" << _pdfClone->GetName() 
+	   << "): WARNING: event " << index << " has zero or negative probability" << endl ;
+      return 0 ;
+    }
+
     result-= term;
   }
 
@@ -880,6 +887,8 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   if (f==0) {
     // if any event has a prob <=0 return a flat likelihood 
     // at the max value we have seen so far
+    cout << "RooFitGlue: Events with zero or negative probability encountered. Returning maximum found likelihood" << endl
+	 << "            so far (" << maxNLL << ") to force MIGRAD to back out of this region" << endl ;
     f = maxNLL ;
   } else if (f>maxNLL) {
     maxNLL = f ;
