@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log *.xml
-TEST_TARGETS += skip ClassConv ConvArray typedef
+TEST_TARGETS += boolUpdate skip ClassConv ConvArray typedef
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -55,4 +55,12 @@ skip.log: skipWrite.log skipRead_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log 
 
 skip: skip.log
+	$(TestDiff)
+
+boolUpdate.root: boolUpdate.keeproot
+	$(CMDECHO) cp boolUpdate.keeproot boolUpdate.root
+
+boolUpdate.log: boolUpdate_C.$(DllSuf) boolUpdate.root
+
+boolUpdate: boolUpdate.log
 	$(TestDiff)
