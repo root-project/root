@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.63 2002/05/18 10:45:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.64 2002/05/22 00:48:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 #include "TStreamerInfo.h"
 #include "TArrayC.h"
 #include "TClassTable.h"
-#include "TProcessID.h"
+#include "TProcessUUID.h"
 #include "TPluginManager.h"
 
 
@@ -155,6 +155,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //            29->32 fNbytesName = Number of bytes in TNamed at creation time
 //            33->33 fUnits      = Number of bytes for file pointers
 //            34->37 fCompress   = Zip compression level
+//            38->41 fSeekInfo   = Pointer to TStreamerInfo record
+//            42->45 fNbytesInfo = Number of bytes in TStreamerInfo record
+//            46->62 fUUID       = Universal Unique ID
 //Begin_Html
 /*
 <img src="gif/file_layout.gif">
@@ -416,6 +419,8 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fSeekDir);
       frombuf(buffer, &fSeekParent);
       frombuf(buffer, &fSeekKeys);
+      if (versiondir > 1) fUUID.ReadBuffer(buffer);
+      
 //*-*---------read TKey::FillBuffer info
       Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
                 +2*sizeof(Seek_t);
@@ -460,6 +465,7 @@ void TFile::Init(Bool_t create)
       }
    }
    gROOT->GetListOfFiles()->Add(this);
+   gROOT->GetUUIDs()->AddUUID(fUUID,this);
 
    // Create StreamerInfo index
    {
@@ -1345,6 +1351,7 @@ void TFile::WriteHeader()
    tobuf(buffer, fCompress);
    tobuf(buffer, fSeekInfo);
    tobuf(buffer, fNbytesInfo);
+   fUUID.FillBuffer(buffer);
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
