@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.48 2003/04/12 17:14:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.49 2003/04/12 21:48:10 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1767,6 +1767,23 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
    if (strlen(GetTitle())) {
       out<<"   gaxis->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
    }
+
+   if (fLabelColor != 1) {
+      out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
+   }
+   if (fLineColor != 1) {
+      out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;   
+   }
+   if (fLineStyle != 1) {
+      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;   
+   }
+   if (fLineWidth != 1) {
+      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<endl;   
+   }
+   if (fLabelFont != 62) {
+      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;   
+   }
+   
    out<<"   gaxis->Draw();"<<endl;
 }
 
