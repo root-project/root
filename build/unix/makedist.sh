@@ -8,7 +8,11 @@
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 MACHINE=`uname`
 OSREL=`uname -r`
-TYPE=$MACHINE.$OSREL
+if [ "x$MACHINE" = "xCYGWIN_NT-5.1" ]; then
+   TYPE=$MACHINE
+else
+   TYPE=$MACHINE.$OSREL
+fi
 TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 rm -f ../${TARFILE}.gz
