@@ -58,7 +58,7 @@ $(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO)
 $(LOGFILES_TEST) : %.test : %.log
 	$(CMDECHO) diff -b schemaRun.ref $^
 
-schemaTest: $(LOGFILES_TEST)
+schemaTest: Event.root $(LOGFILES_TEST)
 	$(CMDECHO) diff -b schemaRun.ref schemaRun1.log && \
 	diff -b schemaRun.ref schemaRun2.log && \
 	diff -b schemaRun.ref schemaRun3.log && \
