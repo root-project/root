@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:$:$Id:$
+// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -17,10 +17,17 @@
 #endif
 
 class TRolke : public TObject {
+
 protected:
   Double_t fCL;         // confidence level as a fraction [e.g. 90% = 0.9]
   Double_t fUpperLimit; // the calculated upper limit
   Double_t fLowerLimit; // the calculated lower limit
+  Int_t fSwitch; // 0: for unbounded likelihood
+                  // 1: for bounded likelihood
+
+  // The Calculator
+
+   Double_t Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b,Int_t m);
 
  // LIKELIHOOD ROUTINE
 
@@ -73,6 +80,8 @@ public:
   Double_t CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b,Int_t m);
   Double_t GetUpperLimit(void) const { return fUpperLimit;}
   Double_t GetLowerLimit(void) const { return fLowerLimit;}
+  Int_t    GetSwitch(void) const     { return fSwitch;}
+  void     SetSwitch(Int_t sw) { fSwitch = sw; } 
   Double_t GetCL(void) const         { return fCL;}
   void     SetCL(Double_t CL)  { fCL = CL; }
 

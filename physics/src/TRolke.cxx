@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:$:$Id:$
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.3 2004/02/13 14:27:00 rdm Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -18,7 +18,16 @@
 //  treatment of the uncertainties in the efficiency and background estimate
 //  using the profile likelihood method.
 //
-//   The signal is always assumed to be Poisson.
+//  The signal is always assumed to be Poisson.
+//
+//  The method is very similar to the one used in MINUIT (MINOS).
+//
+//  Two options are offered to deal with cases where the maximum likelihood
+//  estimate (MLE) is not in the physical region. Version "bounded likelihood" 
+//  is the one used by MINOS if bounds for the physical region are chosen. Versi//  on "unbounded likelihood (the default) allows the MLE to be in the 
+//  unphysical region. It has however better coverage. 
+//  For more details consult the reference (see below). 
+//
 //
 //   It allows the following Models:
 //
@@ -60,9 +69,9 @@
 //
 //  For a description of the method and its properties:
 //
-//  W.Rolke, A. Lopez, J. Conrad
-//  "A marvelous and completely perfect method without flaws"
-//  NiM xyz blabla
+//  W.Rolke, A. Lopez, J. Conrad and Fred James
+//  "Limits and Confidence Intervals in presence of nuisance parameters"
+//   http://lanl.arxiv.org/abs/physics/0403059
 //
 // Author: Jan Conrad (CERN)
 //
@@ -71,6 +80,7 @@
 // Copyright CERN 2004                Jan.Conrad@cern.ch
 //
 ///////////////////////////////////////////////////////////////////////////
+
 
 #include "TRolke.h"
 #include "TMath.h"
@@ -84,6 +94,8 @@ TRolke::TRolke(Double_t CL, Option_t * /*option*/)
   fUpperLimit  = 0.0;
   fLowerLimit  = 0.0;
   fCL          = CL;
+  fSwitch      = 0; // 0: unbounded likelihood
+                    // 1: bounded likelihood
 }
 
 //___________________________________________________________________________
@@ -91,8 +103,39 @@ TRolke::~TRolke()
 {
 }
 
-//_____________________________________________________________________
+
+//___________________________________________________________________________
 Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em,Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
+{
+
+  Int_t done = 0;
+  Double_t limit[2];
+
+  limit[1] = Interval(x,y,z,bm,em,e,mid, sde,sdb,tau,b,m);
+
+  if (limit[1] > 0) {
+    done = 1;
+  }
+
+  if (fSwitch == 0) {
+
+    Int_t trial_x = x;
+
+    while (done == 0) {
+      trial_x = trial_x++;
+      limit[1] = Interval(trial_x,y,z,bm,em,e,mid, sde,sdb,tau,b,m);
+      if (limit[1] > 0) done = 1;
+    } 
+  }
+
+  return limit[1];
+}
+
+
+
+
+//_____________________________________________________________________
+Double_t TRolke::Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em,Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
 {
   // Calculates the Confidence Interval
 
@@ -100,30 +143,53 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
 
 
   Double_t tempxy[2],limits[2] = {0,0};
-  Double_t a,slope,fmid,low,flow,high,fhigh,test,ftest,mu0,maximum,target,l,f0;
+  Double_t slope,fmid,low,flow,high,fhigh,test,ftest,mu0,maximum,target,l,f0;
   Double_t med = 0;
   Double_t maxiter=1000, acc = 0.00001;
   Int_t i;
+  Int_t bp = 0;
 
   if ((mid != 3) && (mid != 5)) bm = (Double_t)y;
 
-  if (x == 0 && bm > 0 ){
+  if ((mid == 3) || (mid == 5)) {
+    if (bm == 0) bm = 0.00001;
+  } 
+
+  if ((mid <= 2) || (mid == 4)) bp = 1;
+  
+
+  if (bp == 1 && x == 0 && bm > 0 ){
+
     for(Int_t i = 0; i < 2; i++) {
        x++;
-       a = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
-       tempxy[i] = a;
+       tempxy[i] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+
     }
     slope = tempxy[1] - tempxy[0];
-    limits[1] = tempxy[1] - slope;
-    if (limits[1] < 0) limits[1] = 0;
+    limits[1] = tempxy[0] - slope;
+    limits[0] = 0.0;
+    if (limits[1] < 0) limits[1] = 0.0;
     goto done;
   }
 
+  if (bp != 1 && x == 0){
 
-  if (x > 0 && bm == 0){
+    for(Int_t i = 0; i < 2; i++) {
+       x++;
+       tempxy[i] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+
+    }
+    slope = tempxy[1] - tempxy[0];
+    limits[1] = tempxy[0] - slope;
+    limits[0] = 0.0;
+    if (limits[1] < 0) limits[1] = 0.0;
+    goto done;
+  }
+
+  if (bp != 1  && bm == 0){
     for(Int_t i = 0; i < 2; i++) {
        bm++;
-       limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+       limits[1] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
        tempxy[i] = limits[1];
     }
     slope = tempxy[1] - tempxy[0];
@@ -137,15 +203,15 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
     x++;
     bm++;
 
-    limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+    limits[1] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
     tempxy[0] = limits[1];
     x  = 1;
     bm = 2;
-    limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+    limits[1] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
     tempxy[1] = limits[1];
     x  = 2;
     bm = 1;
-    limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+    limits[1] = Interval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
     limits[1] = 3*tempxy[0] -tempxy[1] - limits[1];
     if (limits[1] < 0) limits[1] = 0;
     goto done;
@@ -158,6 +224,10 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
   test = 0;
 
   f0 = Likelihood(test,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
+
+  if ( fSwitch == 1 ) {  // do this only for the unbounded likelihood case
+    if ( mu0 < 0 ) maximum = f0;
+  }
 
   target = maximum - dchi2;
 
@@ -180,7 +250,12 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
       if (l > 0.8) l = 0.8;
 
       med = l*low + (1-l)*high;
-      fmid = Likelihood(med,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
+      if(med < 0.01){
+	limits[1]=0.0;                           
+	goto done;
+      }
+
+    fmid = Likelihood(med,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
 
       if (fmid > target) {
 	 high  = med;
@@ -243,8 +318,9 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
 
 
   fUpperLimit = limits[1];
-  fLowerLimit = limits[0];
+  fLowerLimit = TMath::Max(limits[0],0.0);
 
+  
   return limits[1];
 }
 
