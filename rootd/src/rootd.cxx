@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.42 2002/03/25 18:18:06 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.43 2002/06/25 23:53:26 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -559,26 +559,50 @@ again:
    int result = 1;
 
    if (siz > 0) {
+      int changed = 0;
       char *fbuf = new char[siz+1];
+      char *flast = fbuf + siz;
 
       while (read(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
          ResetErrno();
       fbuf[siz] = 0;
 
       char *n, *s = fbuf;
-      while ((n = strchr(s, '\n'))) {
+      while ((n = strchr(s, '\n')) && siz > 0) {
+         n++;
          char user[64], gmode[32];
          int  pid;
          unsigned long ino;
          sscanf(s, "%s %lu %s %s %d", msg, &ino, gmode, user, &pid);
-         if (ino == inode) {
+         if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
+            ErrorInfo("Remove Stale Lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+            if (n >= flast) {
+               siz = int(s - fbuf);
+               changed = 1;
+               break;
+            } else {
+               int l = int(flast - n) + 1;
+               memmove(s, n, l);
+               siz -= int(n - s);
+               n = s;
+            }
+            flast = fbuf + siz;
+            changed = 1;
+         } else if (ino == inode) {
             if (mode == 1)
                result = 0;
             else if (!strcmp(gmode, "write"))
                result = 0;
-            break;
          }
-         s = n + 1;
+         s = n;
+      }
+      if (changed) {
+         ftruncate(fid, 0);
+         lseek(fid, 0, SEEK_SET);
+         if (siz > 0) {
+            while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
+               ResetErrno();
+         }
       }
       delete [] fbuf;
    }
@@ -680,14 +704,13 @@ again:
             }
             flast = fbuf + siz;
             changed = 1;
-            if (!force && !stale) break;
          }
          s = n;
       }
       if (changed) {
          ftruncate(fid, 0);
+         lseek(fid, 0, SEEK_SET);
          if (siz > 0) {
-            lseek(fid, 0, SEEK_SET);
             while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
                ResetErrno();
          }
