@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.4 2001/08/08 06:29:23 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -40,7 +40,8 @@ public:
 
     virtual void        Browse(TBrowser *b);
     virtual Int_t       Fill();
-    virtual const char* GetObjClassName() { return fClassName; };
+    virtual const char* GetClassName() const { return fClassName.Data(); };
+    virtual const char* GetObjClassName() { return fClassName.Data(); };
     virtual Int_t       GetEntry(Int_t entry=0, Int_t getall = 0);
     Bool_t              IsFolder() const;
     virtual void        Print(Option_t *option="") const;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.9 2001/04/21 12:04:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.10 2001/04/23 13:53:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
     virtual TLeaf   *FindLeaf(const char *name);
     virtual char    *GetAddress() const {return fAddress;}
     virtual Int_t    GetBasketSize() const {return fBasketSize;}
+    virtual const char* GetClassName() const { return ""; }
     virtual Int_t    GetCompressionLevel() const {return fCompress;}
     virtual Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
     virtual Int_t    GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
