@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.17 2003/09/12 17:36:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.18 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -106,6 +106,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                                                  auth->GetSecurity(),auth->GetDetails());
          proof->fPasswd   = TAuthenticate::GetGlobalPasswd();
          proof->fPwHash   = TAuthenticate::GetGlobalPwHash();
+         proof->fSRPPwd   = TAuthenticate::GetGlobalSRPPwd();
          proof->fSecurity = auth->GetSecurity();
          fUser            = proof->fUser;
          fSecurity        = proof->fSecurity;
@@ -154,6 +155,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                                                  auth->GetSecurity(),auth->GetDetails());
          proof->fPasswd   = auth->GetPasswd();
          proof->fPwHash   = auth->GetPwHash();
+         proof->fSRPPwd   = auth->GetSRPPwd();
          proof->fSecurity = auth->GetSecurity();
          fUser            = proof->fUser;
          fSecurity        = proof->fSecurity;
@@ -208,6 +210,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          TMessage pubkey;
          TString passwd = "";
          Bool_t  pwhash = kFALSE;
+         Bool_t  srppwd = kFALSE;
+
          if (!fProof->IsMaster() &&
             (fSecurity == TAuthenticate::kClear ||
             (fSecurity == TAuthenticate::kSRP && gEnv->GetValue("Proofd.SendSRPPwd",0)))) {
@@ -217,6 +221,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
             passwd = fProof->fPasswd;
             pwhash = fProof->fPwHash;
+            srppwd = fProof->fSRPPwd;
 
             if (RemoteOffSet > -1) {
 
@@ -246,9 +251,9 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          TMessage mess;
          if (!fProof->IsMaster())
-            mess << fProof->fUser << pwhash << fProof->fConfFile;
+	   mess << fProof->fUser << pwhash << srppwd << fProof->fConfFile;
          else
-            mess << fProof->fUser << pwhash << fOrdinal;
+	   mess << fProof->fUser << pwhash << srppwd << fOrdinal;
 
          fSocket->Send(mess);
 

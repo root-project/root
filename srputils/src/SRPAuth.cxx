@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.8 2003/09/12 17:36:35 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.9 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -68,17 +68,11 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    if (version > 1) {
 
      // Check ReUse
-     char PromptReUse[20];
-     if (gSystem->Getenv("AUTHREUSE") != 0 &&
-         !strcmp(gSystem->Getenv("AUTHREUSE"),"0")) ReUse = 0;
-     if (gSystem->Getenv("PROMPTUSER") != 0 &&
-         !strcmp(gSystem->Getenv("PROMPTUSER"),"1")) Prompt = 1;
-     sprintf(PromptReUse,"pt:%d ru:%d",Prompt,ReUse);
-
-
+     ReUse  = TAuthenticate::GetAuthReUse();
+     Prompt = TAuthenticate::GetPromptUser();
 
      // Build auth details
-     Details= Form("%s us:%s",PromptReUse,usr);
+     Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,usr);
 
      // Create Options string
      char *Options= new char[strlen(usr)+20];
@@ -86,7 +80,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      sprintf(Options,"%d %d %s",Opt,strlen(usr),usr);
 
 
-     // Now we are ready to send a request to the rootd/proofd 
+     // Now we are ready to send a request to the rootd/proofd
      // daemons to check if we have already a valid security context
      // and eventually to start a negotiation to get one ...
      kind = kROOTD_SRPUSER;
@@ -162,7 +156,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    if (passwd && passwd[0])
       psswd = StrDup(passwd);
    else {
-      psswd = TAuthenticate::PromptPasswd("SRP password: ");
+      psswd = TAuthenticate::PromptPasswd(Form("%s@%s SRP password: ",user,remote));
       if (!psswd)
          if (gDebug>0) ::Error("SRPAuthenticate", "password not set");
    }
@@ -192,6 +186,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      TAuthenticate::SetGlobalUser(user);
      TAuthenticate::SetGlobalPasswd(psswd);
      TAuthenticate::SetGlobalPwHash(kFALSE);
+     TAuthenticate::SetGlobalSRPPwd(kTRUE);
 
 
      // Receive result of the overall process

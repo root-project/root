@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.2 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.3 2003/10/07 14:03:02 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -117,20 +117,9 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       GlobusCleanup();
       return 1;
    }
-   // Check ReUse
-   Int_t ReUse = 1;
-   if (gSystem->Getenv("AUTHREUSE") != 0 &&
-       !strcmp(gSystem->Getenv("AUTHREUSE"), "0"))
-      ReUse = 0;
-   gPrompt = 0;
-   if (gSystem->Getenv("PROMPTUSER") != 0) {
-      sprintf(gPromptReUse, "pt:%s ru:%d", gSystem->Getenv("PROMPTUSER"),
-              ReUse);
-      if (!strcmp(gSystem->Getenv("PROMPTUSER"), "1"))
-         gPrompt = 1;
-   } else {
-      sprintf(gPromptReUse, "pt:1 ru:%d", ReUse);
-   }
+   Int_t ReUse = TAuthenticate::GetAuthReUse();
+   gPrompt     = TAuthenticate::GetPromptUser();
+   sprintf(gPromptReUse, "pt:%d ru:%d", gPrompt, ReUse);
 
    // The host FQDN ... for debugging
    const char *hostFQDN = sock->GetInetAddress().GetHostName();
@@ -787,11 +776,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                                           CredHandle)) != GSS_S_COMPLETE) {
 
          // Check if interactive session
-#if 0
-         if (gROOT->IsProofServ()) {
-#else
          if (isatty(0) && isatty(1)) {
-#endif
+
             if (gDebug > 3)
                Info("GlobusGetCredHandle",
                     "Failed to acquire credentials: trying to initialize proxies ...");
@@ -864,13 +850,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                goto exit;
             }
          } else {
-#if 0
-            Warning("GlobusGetCredHandle",
-                    "proofserv: cannot prompt for credentials, returning failure");
-#else
             Warning("GlobusGetCredHandle",
                     "not a tty: cannot prompt for credentials, returning failure");
-#endif
             retval = 3;
             goto exit;
          }
@@ -1033,7 +1014,6 @@ void GlobusSetCertificates(int LocalEnv)
    char *globusdef = ".globus";
    char *details = 0;
    Int_t nr, i;
-   TApplication *lApp = gROOT->GetApplication();
 
    if (gDebug > 2)
       Info("GlobusSetCertificates", "Enter: LocalEnv: %d", LocalEnv);
@@ -1047,11 +1027,13 @@ void GlobusSetCertificates(int LocalEnv)
       // Defaults
       char tmpvar[4][kMAXPATHLEN];
       char *ddir = 0, *dcer = 0, *dkey = 0, *dadi = 0;
-      if (getenv("DEFAULTUSER") != 0) {
-         details = getenv("DEFAULTUSER");
+      if (strlen(TAuthenticate::GetDefaultUser()) > 0) {
+
+	 details = StrDup(TAuthenticate::GetDefaultUser());
+
       } else {
          details =
-             "cd:~/.globus cf:usercert.pem kf:userkey.pem ad:/etc/grid-security/certificates";
+         StrDup("cd:~/.globus cf:usercert.pem kf:userkey.pem ad:/etc/grid-security/certificates");
       }
 
       if (gDebug > 3)
@@ -1113,6 +1095,8 @@ void GlobusSetCertificates(int LocalEnv)
       } else {
          det = "";
       }
+
+      if (details) delete[] details;
 
       if (strlen(det) > 0) {
 

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.15 2003/09/27 19:50:10 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.16 2003/10/07 14:03:03 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3371,7 +3371,7 @@ int RpdGenRSAKeys()
    // That's why we make retries to make sure that encryption/decryption works as expected
    bool NotOk = 1;
    rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
-   int l_n, l_e, l_d;
+   int l_n = 0, l_e = 0, l_d = 0;
    char buf[rsa_STRLEN];
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
 

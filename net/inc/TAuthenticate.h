@@ -66,6 +66,7 @@ private:
    TString    fUser;      // user to be authenticated
    TString    fPasswd;    // user's password
    Bool_t     fPwHash;    // kTRUE if fPasswd is a passwd hash
+   Bool_t     fSRPPwd;    // kTRUE if fPasswd is a SRP passwd
    TString    fProtocol;  // remote service (rootd, proofd)
    TString    fRemote;    // remote host to which we want to connect
    TSocket   *fSocket;    // connection to remote daemon
@@ -83,6 +84,10 @@ private:
    static SecureAuth_t   fgSecAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
    static GlobusAuth_t   fgGlobusAuthHook;
+   static TString        fgDefaultUser;  // Default user information
+   static Bool_t         fgAuthReUse;    // kTRUE is ReUse required
+   static Bool_t         fgPromptUser;   // kTRUE if user prompt required
+   static Bool_t         fgUsrPwdCrypt;  // kTRUE if encryption for UsrPwd is required
 
    static TList         *fgAuthInfo;
 
@@ -120,6 +125,7 @@ public:
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }
    Bool_t             GetPwHash() const { return fPwHash; }
+   Bool_t             GetSRPPwd() const { return fSRPPwd; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetSshUser() const;
    void               SetUser(const char *user) { fUser = user; }
@@ -147,9 +153,11 @@ public:
    static const char *GetGlobalUser();
    static const char *GetGlobalPasswd();
    static Bool_t      GetGlobalPwHash();
+   static Bool_t      GetGlobalSRPPwd();
    static void        SetGlobalUser(const char *user);
    static void        SetGlobalPasswd(const char *passwd);
    static void        SetGlobalPwHash(Bool_t pwhash);
+   static void        SetGlobalSRPPwd(Bool_t srppwd);
    static char       *PromptUser(const char *remote);
    static char       *PromptPasswd(const char *prompt = "Password: ");
 
@@ -179,6 +187,13 @@ public:
    static Int_t       GetOffSet(TAuthenticate *auth, Int_t method, TString &details, char **token);
    static char       *GetDefaultDetails(Int_t method, Int_t opt, const char *user);
    static char       *GetRemoteLogin(THostAuth *hostauth, Int_t method, const char *details);
+
+   static const char *GetDefaultUser();
+   static Bool_t      GetAuthReUse();
+   static Bool_t      GetPromptUser();
+   static void        SetDefaultUser(const char *defaultuser);
+   static void        SetAuthReUse(Bool_t authreuse);
+   static void        SetPromptUser(Bool_t promptuser);
 
    static TList      *GetAuthInfo();
 

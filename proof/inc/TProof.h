@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.38 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.39 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -105,6 +105,7 @@ private:
    Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
    Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
    Bool_t    fPwHash;        //true if fPasswd is a passwd hash
+   Bool_t    fSRPPwd;        //true if fPasswd is a SRP passwd
    Bool_t    fMasterServ;    //true if we are a master server
    Bool_t    fSendGroupView; //if true send new group view
    TList    *fSlaves;        //list of all slave servers as in config file

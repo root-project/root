@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.8 2003/09/27 19:06:27 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.9 2003/10/07 14:03:02 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -118,17 +118,16 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    // get our principal from the cache
    krb5_principal client;
-   char *ClientPrincipal = StrDup(gSystem->Getenv("DEFAULTUSER"));
+   char *ClientPrincipal = StrDup(TAuthenticate::GetDefaultUser());
+
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-#if 0
-      if (!gROOT->IsProofServ()) {
-#else
+
       if (isatty(0) && isatty(1)) {
-#endif
+
          if (gDebug > 1)
             Info("Krb5Authenticate",
-                 "valid credentials not found: try initializing (Principal: %s) ",
-                      ClientPrincipal);
+                 "valid credentials not found: try initializing (Principal: %s)",
+                 ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
@@ -136,28 +135,21 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             return -1;
 	 }
       } else {
-#if 0
-         Warning("Krb5Authenticate",
-                 "proofserv: cannot prompt for credentials, returning failure");
-#else
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
-#endif
          gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
    }
 
    if (Krb5CheckCred(context,ccdef,client) != 1) {
-#if 0
-      if (!gROOT->IsProofServ()) {
-#else
+
       if (isatty(0) && isatty(1)) {
-#endif
+
          if (gDebug >2)
             Info("Krb5Authenticate",
-                 "credentials found have expired: try initializing (Principal: %s) ",
-                      ClientPrincipal);
+                 "credentials found have expired: try initializing (Principal: %s)",
+                  ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
@@ -165,13 +157,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             return -1;
 	 }
       } else {
-#if 0
-         Warning("Krb5Authenticate",
-                 "proofserv: cannot prompt for credentials, returning failure");
-#else
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
-#endif
          gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
@@ -183,11 +170,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    strcpy(User,client->data->data);
 
    if (gDebug > 3) {
-      char *Realm = strdup(client->realm.data);
-      int k=0, len= strlen(client->realm.data);
-      for( k=0; k<len; k++ ){ if ((int)Realm[k]==32) Realm[k]='\0'; }
-      Info("Krb5Authenticate","cc_get_principal: client: %s %s (%d %d)",client->data->data,Realm,
-           strlen(client->data->data),strlen(Realm));
+      char *Realm = StrDup(client->realm.data);
+      int k = 0, len = strlen(client->realm.data);
+      for (k = 0; k < len; k++ ) { if ((int)Realm[k] == 32) Realm[k] = '\0'; }
+      Info("Krb5Authenticate", "cc_get_principal: client: %s %s (%d %d)",
+           client->data->data,Realm, strlen(client->data->data), strlen(Realm));
+      delete [] Realm;
    }
 
    Int_t ReUse= 1, Prompt= 0;
@@ -196,15 +184,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    if (version > 1) {
 
       // Check ReUse
-      char PromptReUse[20];
-      if (gSystem->Getenv("AUTHREUSE") != 0 &&
-          !strcmp(gSystem->Getenv("AUTHREUSE"),"0")) ReUse = 0;
-      if (gSystem->Getenv("PROMPTUSER") != 0 &&
-          !strcmp(gSystem->Getenv("PROMPTUSER"),"1")) Prompt = 1;
-      sprintf(PromptReUse,"pt:%d ru:%d",Prompt,ReUse);
+      ReUse  = TAuthenticate::GetAuthReUse();
+      Prompt = TAuthenticate::GetPromptUser();
 
       // Build auth details
-      Details = Form("%s us:%s@%s",PromptReUse,client->data->data,client->realm.data);
+      Details = Form("pt:%d ru:%d us:%s@%s",
+                     Prompt,ReUse,client->data->data,client->realm.data);
 
       // Create Options string
       char *Options= new char[strlen(User)+20];
@@ -277,11 +262,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    }
 
    if (gDebug > 3) {
-      char *Realm = strdup(server->realm.data);
-      int k=0, len= strlen(server->realm.data);
-      for( k=0; k<len; k++ ){ if ((int)Realm[k]==32) Realm[k]='\0'; }
-      Info("Krb5Authenticate","sname_to_principal: server: %s %s (%d %d)",server->data->data,Realm,
-           strlen(server->data->data),strlen(Realm));
+      char *Realm = StrDup(server->realm.data);
+      int k = 0, len = strlen(server->realm.data);
+      for (k = 0; k < len; k++) { if ((int)Realm[k] == 32) Realm[k] = '\0'; }
+      Info("Krb5Authenticate","sname_to_principal: server: %s %s (%d %d)",
+           server->data->data, Realm, strlen(server->data->data), strlen(Realm));
+      delete [] Realm;
    }
 
    // authenticate
@@ -376,13 +362,13 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          if (gDebug > 3)
             Info("Krb5Auth","received from server: token: '%s' ",Token);
       } else {
-        Token = StrDup("");
+         Token = StrDup("");
       }
 
       // Create and save AuthDetails object
       TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,
                                      OffSet,ReUse,Details,lUser,gRSAKey,Token);
-      det  = Details;
+      det = Details;
       if (Token) delete[] Token;
       if (lUser) delete[] lUser;
    } else {

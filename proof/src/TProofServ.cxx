@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.50 2003/09/27 19:08:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.51 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -244,7 +244,6 @@ TProofServ::TProofServ(int *argc, char **argv)
    fGroupId         = -1;
    fGroupSize       = 0;
    fLogLevel        = 0;
-   fLogLevel        = 6;
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
    fProof           = 0;
@@ -1511,9 +1510,9 @@ void TProofServ::Setup()
    fSocket->Recv(mess);
 
    if (IsMaster())
-      (*mess) >> fUser >> fPwHash >> fConfFile;
+      (*mess) >> fUser >> fPwHash >> fSRPPwd >> fConfFile;
    else
-      (*mess) >> fUser >> fPwHash >> fOrdinal;
+      (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal;
 
    delete mess;
 
@@ -1859,6 +1858,7 @@ void TProofServ::CollectAuthInfo()
    TAuthenticate::SetGlobalUser(fUser);
    TAuthenticate::SetGlobalPasswd(fPasswd);
    TAuthenticate::SetGlobalPwHash(fPwHash);
+   TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
 
    // Get pointer to list with authentication info
    authInfo = TAuthenticate::GetAuthInfo();

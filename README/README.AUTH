@@ -1,11 +1,12 @@
 
+
 Authentication to rootd/proofd servers
 ======================================
 
 The rootd/proofd daemon servers accept 6 methods of authentication, listed 
 in Table 1, together with their internal codes and short names.
 Method 5 (rfio) is provided for fast access when security is not an issue.
-Method 0 can be 'secured' by using a session public key, automatically 
+Method 0 is 'secured' by using a session public key, automatically 
 generated, which allows to avoid direct exchange of passwords; since this
 may slow down the process, it can be switched of if not needed. 
 
@@ -13,30 +14,31 @@ may slow down the process, it can be switched of if not needed.
   +-------------------------------------------------------------------------+
   |   Method                |  code  |  short name  |  in .rootrc  | Secure |
   |-------------------------------------------------------------------------|
-  |   (user,password) clear |   0    |  clear       |  Clear       | No/Yes |
+  |   (user,password)       |   0    |  usrpwd      |  UsrPwd      | Yes/No |
   |   (user,password) SRP   |   1    |  srp         |  SRP         |  Yes   |
   |    Kerberos V           |   2    |  krb5        |  Krb5        |  Yes   |
   |   Globus GSSAPI         |   3    |  globus      |  Globus      |  Yes   |
-  |   SSH                   |   4    |  ssh         |  Ssh         |  Yes   |
-  |   (uid,gid)             |   5    |  rfio        |  Rfio        |  No    |
+  |   SSH                   |   4    |  ssh         |  SSH         |  Yes   |
+  |   (uid,gid)             |   5    |  uidgid      |  UidGid      |  No    |
   +-------------------------------------------------------------------------+
 
 A specific method can be requested via the .rootrc family files (in order of
 priority $HOME/.rootrc, /etc/root/system.rootrc and
-$ROOTSYS/etc/system.rootrc), the file $HOME/.authrootrc (superseded by the
-variable AUTHROOTRC, if defined), or during the root session as explained
+$ROOTSYS/etc/system.rootrc), the file $HOME/.rootauthrc (superseded by the
+variable ROOTAUTHRC, if defined), or during the root session as explained
 below.
 
 Controlling access
 ==================
 
 Upon request of access, rootd/proofd build a list of secure methods available
-locally; this is based on the compilation flags for SRP, Kerberos and Globus,
-and on the running of the 'sshd' daemon for SSH. By default the two servers
-accept authentications only via the methods in such a list. However the
-administrator of the servers can grant access via other authentication methods
-by defining a host specific list in etc/rpdauth.allow (see the example for this
-file under etc for more details).
+locally; the list always comprises UsrPwd; SRP, Kerberos and Globus, are added
+if ROOT has been compiled with support for them; SSH is added if the 'sshd'
+daemon is running. By default the two daemons accept authentications only via
+the methods in such a list. The administrator of the daemons can, however, 
+grant access via other authentication methods (or deny any access) by defining
+a host specific list in etc/daemon.access (see the example for this file 
+under etc for more details).
 
 Negotiation
 ===========
@@ -55,21 +57,25 @@ Slave/Data servers authentication during a PROOF session
 During a PROOF session there is the potential problem of Master/Slave or
 Slave/Data_Server authentication. For slaves, the list of methods to be tried
 is specified in the proof.conf file as a list of methods short names. However,
-before build the corresponding entry in THostAuth (see below) TProof checks
-that the method can be applied, i.e. that there valid credentials. The way
-these are transmitted depends on the method and on the Client/Master
-authentication method.
+before build the corresponding entry in THostAuth (see below) TProofServ checks
+that the method can be applied, i.e. that there exist valid credentials. 
+The way the latters are transmitted depends on the method and on the 
+Client/Master authentication method.
 
- * Clear:  to authenticate 'clear' to slaves, the master needs the relevant
+ * UsrPwd: to authenticate 'usrpwd' to slaves, the master needs the relevant
            entry in the .netrc or .rootnetrc files; however, if the
-           client/master authentication was also 'clear', the password is
+           client/master authentication was also 'usrpwd', the password is
            already present on the master process and is used for later clear
            authentications.
 
  * SRP:    to authenticate 'SRP' to slaves, the master needs the relevant entry
            in the .netrc or .rootnetrc files; the syntax is the same as for
            'clear' authentication with the keyword 'secure' at the place of
-           'machine'
+           'machine'. However, if the client/master authentication was also
+           'SRP', the master can receive the password from the client; the 
+           password is sent encrypted with the internal RSA key generated for
+           the session. To use this option, set 'Proofd.SendSRPPwd 1' in your
+           .rootrc (default is 0).
 
  * Krb5    to authenticate 'Kerberos' to slaves, the master needs the Kerberos
            tokens; these must be initialized by hand on the master, since for
@@ -82,17 +88,17 @@ authentication method.
  * SSH     to authenticate 'SSH' to slaves, the master needs the relevant
            private key files in $HOME/.ssh (on the master).
 
- * Rfio    to authenticate 'Rfio' to slaves, the user must have the same
+ * UidGid  to authenticate 'uidgid' to slaves, the user must have the same
            (uid,gid) on master and slaves.
 
-Negotiation is active also between master and slaves, so it is a good habit to
-ask for rfio first to accelerate as possible the authentication process.
+Negotiation is active also between master and slaves, so may be a good habit 
+to ask for 'uidgid' first to accelerate as possible the authentication process.
 
 The method actually used is listed by gProof->Print().
 
 If the slaves need to access data servers which are not part of the proof
-cluster, the login info vis-a-vis of these may be specified with the proofdserv
-card in the .authrootrc files (see below and etc/example.authrootrc for
+cluster, the login info vis-a-vis of these may be specified with the proofserv
+card in the .rootauthrc files (see below and etc/example.rootauthrc for
 details); the collected information is then transmitted to all the active
 slaves upon creation.
 
@@ -115,7 +121,7 @@ directives are the following:
 
 * The <method>.Login directives specify the default login for the method:
 
-  Clear.Login, SRP.Login, Ssh.Login, Rfio.Login:   <username>   (e.g.: qwerty)
+  UsrPwd.Login, SRP.Login, SSH.Login, UidGid.Login:   <username>   (e.g.: qwerty)
   Krb5.Login:    <principal>                       (e.g.: qwerty@THIS.DOM.AIN)
   Globus.Login:   cd:<dir_with_my_certs> cf:<my_cert_file> \
                   kf:<my_key_file> ad:<dir_with_CA_certs>
@@ -125,14 +131,14 @@ directives are the following:
   values are 0 or no for no prompt, 1 or yes to have the prompt; valid
   examples:
 
-  Clear.LoginPrompt:   0
-  Krb5.LoginPrompt:    1
-  Globus.LoginPrompt:  no
-  Ssh.LoginPrompt:     yes
+  UsrPwd.LoginPrompt:   0
+  Krb5.LoginPrompt:     1
+  Globus.LoginPrompt:   no
+  SSH.LoginPrompt:      yes
 
   Default is no prompt.
 
-  For anonymous 'clear' login, setting off the Login.Prompt implies automatic
+  For anonymous 'usrpwd' login, 'UsrPwd.LoginPrompt 0' implies automatic
   generation of the password in the form <user>@<local_host_fqdn>, where <user>
   is obtained from the variable USER or from ' getpwuid(getuid())->pw_name '.
 
@@ -141,25 +147,28 @@ directives are the following:
   When this option is active, the client generates a session RSA key pair and 
   transmits the public key to the server; the server generates a session 'token' 
   which can be used by the client for later access to the server. 
-  This facility is implemented for all methods except Rfio (for which there would 
-  be no advantage); it is switched ON by default for Clear, Globus and Ssh,since 
-  it allows to speed up significantly repeated access to the same server.  
-  For SRP and Krb5 it is implemented but switched OFF by default, since it does 
-  not improve on authentication time (especially for Krb5).
+  This facility is implemented for all methods except UidGid (for which there would 
+  be no advantage); it is switched ON by default for UsrPwd, SRP, Globus and SSH,
+  since it allows to speed up repeated access to the same server.  
+  For Krb5 it is implemented but switched OFF by default, since it does not improve
+  on authentication time.
 
-  Clear.ReUse:   yes
-  SRP.ReUse:     no
+  UsrPwd.ReUse:  yes
+  SRP.ReUse:     1
   Krb5.ReUse:    0
   Globus.ReUse:  yes
-  Ssh.ReUse:     1
+  SSH.ReUse:     1
+
+  NB: unless 'UsrPwd.Crypt 0' (see below), for UsrPwd the password is always sent 
+      encrypted with the session RSA key, even if UsrPwd.ReUse is OFF.
 
 * Other directives
 
-  * Clear
+  * UsrPwd
 
     * To secure password exchange set (this is the default)
 
-      Clear.Crypt   1
+      UsrPwd.Crypt   1
 
       A session key pair is generated and used to encrypt the password hash to
       be communicated to the server.
@@ -176,15 +185,15 @@ directives are the following:
   * ssh
 
     * to change the path with the 'ssh' executable
-      Ssh.ExecDir              <new_path>
+      SSH.ExecDir              <new_path>
       (the executable will then be <new_path>/ssh)
 
 
-.authrootrc
+.rootauthrc
 ===========
 
-The .authrootrc file allow to specify host and user specific instructions; all
-the possibilities are explained in etc/example.authrootrc. The information read
+The .rootauthrc file allow to specify host and user specific instructions; all
+the possibilities are explained in etc/example.rootauthrc. The information read
 is used to instantiate THostAuth objects; these can be modified during the root
 session as explained in the next session.
 
@@ -201,7 +210,7 @@ the information for a specific (host,user):
 
        + remote host FQDN
        + user name
-       + number of available methods n
+       + number of available methods (n)
        + method internal codes (dimension n)
        + login info for each method (dimension n)
        + list of established authentication

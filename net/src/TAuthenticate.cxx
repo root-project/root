@@ -42,6 +42,9 @@
 #if !defined(R__WIN32) && !defined(R__MACOSX)
 #include <crypt.h>
 #endif
+#ifdef WIN32
+#  include <io.h>
+#endif /* WIN32 */
 
 #if defined(R__ALPHA) || defined(R__SGI) || defined(R__MACOSX)
 extern "C" char *crypt(const char *, const char *);
@@ -60,6 +63,10 @@ Bool_t TAuthenticate::fgSRPPwd;
 SecureAuth_t TAuthenticate::fgSecAuthHook;
 Krb5Auth_t TAuthenticate::fgKrb5AuthHook;
 GlobusAuth_t TAuthenticate::fgGlobusAuthHook;
+TString TAuthenticate::fgDefaultUser;
+Bool_t TAuthenticate::fgAuthReUse;
+Bool_t TAuthenticate::fgPromptUser;
+Bool_t TAuthenticate::fgUsrPwdCrypt;
 
 TList *TAuthenticate::fgAuthInfo = 0;
 
@@ -115,14 +122,10 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Check or get user name
    if (user && strlen(user) > 0) {
       fUser = user;
-   } else {
-      UserGroup_t *u = gSystem->GetUserInfo();
-      if (u)
-         fUser = u->fUser;
-      delete u;
    }
    fPasswd = "";
    fPwHash = kFALSE;
+   fSRPPwd = kFALSE;
 
    // RSA key generation (one per session)
    if (!fgRSAInit) {
@@ -251,27 +254,32 @@ Bool_t TAuthenticate::Authenticate()
    if (fSecurity == kClear) {
 
       // Clear Authentication
-      if (!strcmp(gSystem->Getenv("PROMPTUSER"), "0")
-          || !strcmp(gSystem->Getenv("PROMPTUSER"), "no")) {
-         user = gSystem->Getenv("DEFAULTUSER");
-      } else {
-         user = PromptUser(fRemote);
+      user = fgDefaultUser;
+      if (user != "")
+         CheckNetrc(user, passwd, pwhash, (Bool_t &)kFALSE);
+      if (passwd == "") {
+         if (fgPromptUser)
+            user = PromptUser(fRemote);
+         if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kFALSE))
+            return kFALSE;
       }
-      if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kFALSE))
-         return kFALSE;
+
       if (fUser != "root")
          st = ClearAuth(user, passwd, pwhash);
 
    } else if (fSecurity == kSRP) {
 
       // SRP Authentication
-      if (!strcmp(gSystem->Getenv("PROMPTUSER"), "0")) {
-         user = gSystem->Getenv("DEFAULTUSER");
-      } else {
-         user = PromptUser(fRemote);
+      user = fgDefaultUser;
+      if (user != "")
+         CheckNetrc(user, passwd, pwhash, (Bool_t &)kTRUE);
+      if (passwd == "") {
+         if (fgPromptUser)
+            user = PromptUser(fRemote);
+         if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kTRUE))
+            return kFALSE;
       }
-      if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kTRUE))
-         return kFALSE;
+
       if (!fgSecAuthHook) {
          char *p;
          TString lib = RootDir + "/libSRPAuth";
@@ -510,9 +518,12 @@ void TAuthenticate::SetEnvironment()
            fDetails.Data());
 
    // Defaults
-   gSystem->Setenv("PROMPTUSER", "0");
-   gSystem->Setenv("AUTHREUSE", "0");
-   gSystem->Setenv("DEFAULTUSER", "");
+   fgDefaultUser = "";
+   if (fSecurity == kKrb5)
+      fgAuthReUse   = kFALSE;
+   else
+      fgAuthReUse   = kTRUE;
+   fgPromptUser  = kFALSE;
 
    // Decode fDetails, is non empty ...
    if (fDetails != "") {
@@ -521,10 +532,27 @@ void TAuthenticate::SetEnvironment()
       char Pt[5] = { 0 }, Ru[5] = { 0 };
       char *Us = 0, *Cd = 0, *Cf = 0, *Kf = 0, *Ad = 0, *Cp = 0;
       const char *ptr;
-      if ((ptr = strstr(fDetails, "pt:")) != 0)
+
+      TString UsrPromptDef = TString(GetAuthMethod(fSecurity)) + ".LoginPrompt";
+      if ((ptr = strstr(fDetails, "pt:")) != 0) {
          sscanf(ptr + 3, "%s %s", Pt, UsDef);
-      if ((ptr = strstr(fDetails, "ru:")) != 0)
+      } else {
+         if (!strncasecmp(gEnv->GetValue(UsrPromptDef,""),"no",2) ||
+             !strncmp(gEnv->GetValue(UsrPromptDef,""),"0",1))
+            strcpy(Pt,"0");
+         else
+            strcpy(Pt,"1");
+      }
+      TString UsrReUseDef = TString(GetAuthMethod(fSecurity)) + ".ReUse";
+      if ((ptr = strstr(fDetails, "ru:")) != 0) {
          sscanf(ptr + 3, "%s %s", Ru, UsDef);
+      } else {
+         if (!strncasecmp(gEnv->GetValue(UsrReUseDef,""),"no",2) ||
+             !strncmp(gEnv->GetValue(UsrReUseDef,""),"0",1))
+            strcpy(Ru,"0");
+         else
+            strcpy(Ru,"1");
+      }
 
       // Now action depends on method ...
       if (fSecurity == kGlobus) {
@@ -572,34 +600,26 @@ void TAuthenticate::SetEnvironment()
       }
 
       // Set Prompt flag
-      TString UsrPromptDef = TString(GetAuthMethod(fSecurity)) + ".LoginPrompt";
-      gSystem->Setenv("PROMPTUSER", "0");
-      if (!strcasecmp(Pt, "yes") || !strncmp(Pt, "1", 1) ||
-          !strcasecmp(gEnv->GetValue(UsrPromptDef,""),"yes") ||
-          !strcmp(gEnv->GetValue(UsrPromptDef,""),"1"))
-         gSystem->Setenv("PROMPTUSER", "1");
+      fgPromptUser = kFALSE;
+      if (!strncasecmp(Pt, "yes",3) || !strncmp(Pt, "1", 1))
+         fgPromptUser = kTRUE;
 
       // Set ReUse flag
-      TString UsrReUseDef = TString(GetAuthMethod(fSecurity)) + ".ReUse";
       if (fSecurity != kRfio) {
-         gSystem->Setenv("AUTHREUSE", "1");
-         if (!strcasecmp(Ru, "no") || !strcmp(Ru, "0") ||
-             !strcasecmp(gEnv->GetValue(UsrReUseDef,""),"no") ||
-             !strcmp(gEnv->GetValue(UsrReUseDef,""),"0"))
-            gSystem->Setenv("AUTHREUSE", "0");
+         fgAuthReUse = kTRUE;
+         if (!strncasecmp(Ru, "no",2) || !strncmp(Ru, "0",1))
+            fgAuthReUse = kFALSE;
       } else {
-         gSystem->Setenv("AUTHREUSE", "0");
-         if (!strcasecmp(Ru, "yes") || !strcmp(Ru, "1") ||
-             !strcasecmp(gEnv->GetValue(UsrReUseDef,""),"yes") ||
-             !strcmp(gEnv->GetValue(UsrReUseDef,""),"1"))
-            gSystem->Setenv("AUTHREUSE", "1");
+         fgAuthReUse = kFALSE;
+         if (!strncasecmp(Ru, "yes",3) || !strncmp(Ru, "1",1))
+            fgAuthReUse = kTRUE;
       }
 
       // UnSet Crypt flag for UsrPwd, if requested
       if (fSecurity == kClear) {
-         gSystem->Setenv("CLEARCRYPT", "1");
+         fgUsrPwdCrypt = kTRUE;
          if (!strncmp(Cp, "no", 2) || !strncmp(Cp, "0", 1))
-            gSystem->Setenv("CLEARCRYPT", "0");
+            fgUsrPwdCrypt = kFALSE;
       }
       // Build UserDefaults
       if (fSecurity == kGlobus) {
@@ -646,16 +666,22 @@ void TAuthenticate::SetEnvironment()
             }
          }
       }
-      if (strlen(UsDef) > 0)
-         gSystem->Setenv("DEFAULTUSER", (const char *) UsDef);
+      if (strlen(UsDef) > 0) {
+         fgDefaultUser = UsDef;
+      } else {
+         UserGroup_t *u = gSystem->GetUserInfo();
+         if (u)
+            fgDefaultUser = u->fUser;
+         delete u;
+      }
 
       if (gDebug > 2)
-         Info("SetEnvironment", "UsDef:%s", UsDef);
+         Info("SetEnvironment", "UsDef:%s", fgDefaultUser.Data());
    }
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd, 
+Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd,
                                     Bool_t & pwhash, Bool_t & srppwd)
 {
    // Try to get user name and passwd from several sources
@@ -683,6 +709,17 @@ Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd,
       Info("GetUserPasswd", "In memory: User: '%s' Hash:%d",
             user.Data(),(Int_t)pwhash);
 
+   // Check system info for user if still not defined
+   if (user == "") {
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u)
+         user = u->fUser;
+      delete u;
+      if (gDebug > 3)
+         Info("GetUserPasswd", "In memory: User: '%s' Hash:%d",
+            user.Data(),(Int_t)pwhash);
+   }
+
    // Check ~/.rootnetrc and ~/.netrc files if user was not set via
    // the static SetUser() method.
    if (user == "" || passwd == "") {
@@ -706,14 +743,7 @@ Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd,
    fUser = user;
    fPasswd = passwd;
    fPwHash = pwhash;
-
-#if 0
-   // For potential later use in Proof
-   fgUser = fUser;
-   fgPasswd = fPasswd;
-   fgPwHash = fPwHash;
-   fgSRPPwd = srppwd;
-#endif
+   fSRPPwd = srppwd;
 
    return 0;
 }
@@ -734,7 +764,7 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd, 
+Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t &srppwd)
 {
    // Try to get user name and passwd from the ~/.rootnetrc or
@@ -742,11 +772,11 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
    // These files will only be used when their access masks are 0600.
    // Returns kTRUE if user and passwd were found for the machine
    // specified in the URL. If kFALSE, user and passwd are "".
-   // If srppwd == kTRUE then a SRP ('secure') pwd is searched for in 
+   // If srppwd == kTRUE then a SRP ('secure') pwd is searched for in
    // the files.
-   // The boolean pwhash is set to kTRUE if the returned passwd is to 
+   // The boolean pwhash is set to kTRUE if the returned passwd is to
    // be understood as password hash, i.e. if the 'password-hash' keyword
-   // is found in the 'machine' lines; not implemented for 'secure' 
+   // is found in the 'machine' lines; not implemented for 'secure'
    // and the .netrc file.
    // The format of these files are:
    //
@@ -883,6 +913,38 @@ Bool_t TAuthenticate::GetGlobalPwHash()
 }
 
 //______________________________________________________________________________
+Bool_t TAuthenticate::GetGlobalSRPPwd()
+{
+   // Static method returning the global SRP password flag.
+
+   return fgSRPPwd;
+}
+
+//______________________________________________________________________________
+const char *TAuthenticate::GetDefaultUser()
+{
+   // Static method returning the default user information.
+
+   return fgDefaultUser;
+}
+
+//______________________________________________________________________________
+Bool_t TAuthenticate::GetAuthReUse()
+{
+   // Static method returning the authentication reuse settings.
+
+   return fgAuthReUse;
+}
+
+//______________________________________________________________________________
+Bool_t TAuthenticate::GetPromptUser()
+{
+   // Static method returning the prompt user settings.
+
+   return fgDefaultUser;
+}
+
+//______________________________________________________________________________
 const char *TAuthenticate::GetAuthMethod(Int_t idx)
 {
    // Static method returning the method corresponding to idx.
@@ -919,9 +981,8 @@ char *TAuthenticate::PromptUser(const char *remote)
    // If non-interactive run (eg ProofServ) returns default user.
 
    const char *user;
-   if (gSystem->Getenv("DEFAULTUSER") != 0
-       && strlen(gSystem->Getenv("DEFAULTUSER")) > 0)
-      user = gSystem->Getenv("DEFAULTUSER");
+   if (fgDefaultUser != "")
+      user = fgDefaultUser;
    else
       user = gSystem->Getenv("USER");
 #ifdef R__WIN32
@@ -957,7 +1018,7 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
    // If non-interactive run (eg ProofServ) returns -1
 
    if (isatty(0) == 0 || isatty(1) == 0) {
-      ::Warning("TAuthenticate::PromptUser",
+      ::Warning("TAuthenticate::PromptPasswd",
                 "not tty: cannot prompt for passwd, returning -1");
       return StrDup("-1");
    }
@@ -1057,6 +1118,48 @@ void TAuthenticate::SetGlobalPwHash(Bool_t pwhash)
 }
 
 //______________________________________________________________________________
+void TAuthenticate::SetGlobalSRPPwd(Bool_t srppwd)
+{
+   // Set global SRP passwd flag to be used for authentication to rootd or proofd.
+
+   fgSRPPwd = kFALSE;
+   if (srppwd)
+      fgSRPPwd = kTRUE;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetDefaultUser(const char *defaultuser)
+{
+   // Set default user name.
+
+   if (fgDefaultUser != "")
+      fgDefaultUser = "";
+
+   if (defaultuser && defaultuser[0])
+      fgDefaultUser = defaultuser;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetAuthReUse(Bool_t authreuse)
+{
+   // Set global AuthReUse flag
+
+   fgAuthReUse = kFALSE;
+   if (authreuse)
+      fgAuthReUse = kTRUE;
+}
+
+//______________________________________________________________________________
+void TAuthenticate::SetPromptUser(Bool_t promptuser)
+{
+   // Set global PromptUser flag
+
+   fgPromptUser = kFALSE;
+   if (promptuser)
+      fgPromptUser = kTRUE;
+}
+
+//______________________________________________________________________________
 void TAuthenticate::SetSecureAuthHook(SecureAuth_t func)
 {
    // Set secure authorization function. Automatically called when libSRPAuth
@@ -1125,16 +1228,9 @@ Int_t TAuthenticate::SshAuth(TString & User)
    User = GetSshUser();
 
    // Check ReUse
-   Int_t ReUse = 1, Prompt = 0;
-   char PromptReUse[20];
-   if (gSystem->Getenv("AUTHREUSE") != 0 &&
-       !strcmp(gSystem->Getenv("AUTHREUSE"), "0"))
-      ReUse = 0;
-   if (gSystem->Getenv("PROMPTUSER") != 0
-       && !strcmp(gSystem->Getenv("PROMPTUSER"), "1"))
-      Prompt = 1;
-   sprintf(PromptReUse, "pt:%d ru:%d us:", Prompt, ReUse);
-   fDetails = (const char *) PromptReUse + User;
+   Int_t ReUse = (int)fgAuthReUse;
+   fDetails = TString(Form("pt:%d ru:%d us:",(int)fgPromptUser,(int)fgAuthReUse))
+            + User;
 
    int retval, kind;
 
@@ -1333,11 +1429,10 @@ const char *TAuthenticate::GetSshUser() const
 
    static TString user = "";
 
-   if (gSystem->Getenv("PROMPTUSER") != 0
-       && !strcmp(gSystem->Getenv("PROMPTUSER"), "1")) {
+   if (fgPromptUser) {
       user = PromptUser(fRemote);
    } else {
-      user = gSystem->Getenv("DEFAULTUSER");
+      user = fgDefaultUser;
       if (user == "")
          user = PromptUser(fRemote);
    }
@@ -1364,8 +1459,8 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    int i;
 
    if (gDebug > 2)
-      ::Info("GetAuthMeth", "enter: %s %s %s 0x%lx 0x%lx ", Host, Proto,
-             *User[0], (long) (*User), (long) (*User[0]));
+      ::Info("GetAuthMeth", "enter: h:%s p:%s u:%s (0x%lx 0x%lx) ",
+              Host, Proto, *User[0], (long) (*User), (long) (*User[0]));
 
    if (*User[0] == 0)
       *User[0] = StrDup("");
@@ -1470,6 +1565,10 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    } else if (strstr(Proto, "root") != 0) {
       sprintf(auth, "%s", gEnv->GetValue("Rootd.Authentication", "4"));
    }
+   if (gDebug > 3)
+      ::Info("GetAuthMeth",
+             "Found method(s) '%s' from globals in .rootrc (User[0]=%s)",
+              auth,(*User)[0]);
    nh = new int;
    nh[0] = 0;
    am[0] = new int[kMAXSEC];
@@ -1542,17 +1641,19 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
    FILE *ftmp = gSystem->TempFileName(filetmp);
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::CheckRootAuthrc", "got tmp file: %s",
-              filetmp.Data());
+      ::Info("TAuthenticate::CheckRootAuthrc", "got tmp file: %s open at 0x%x",
+              filetmp.Data(),(int)ftmp);
    if (ftmp == 0)
       expand = 0;  // Problems opening temporary file: ignore 'include' directives ...
 
    FILE *fd = 0;
    // If the temporary file is open, copy everything to the new file ...
    if (expand == 1) {
+
       TAuthenticate::FileExpand(net, ftmp);
       fd = ftmp;
       rewind(fd);
+
    } else {
       // Open file
       fd = fopen(net, "r");
@@ -1614,15 +1715,21 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
          ::Info("CheckRootAuthrc",
                 "found %d different entries for host %s", Nuser, Host);
 
-      if ((*user)[0]) delete[] (*user)[0];
-      (*user) = new char *[Nuser];
-      *nh = new int[Nuser];
-      int i;
-      for (i = 0; i < kMAXSEC; i++) {
-         am[i] = new int[Nuser];
-         det[i] = new char *[Nuser];
+      if (Nuser) {
+         if ((*user)[0]) delete[] (*user)[0];
+         (*user) = new char *[Nuser];
+         *nh = new int[Nuser];
+         int i;
+         for (i = 0; i < kMAXSEC; i++) {
+            am[i] = new int[Nuser];
+            det[i] = new char *[Nuser];
+         }
+         UserRq = StrDup("-1");
+      } else {
+         UserRq = StrDup("none");
+         if ((*user)[0]) delete[] (*user)[0];
+         (*user)[0] = StrDup("-1");
       }
-      UserRq = StrDup("-1");
    } else {
       CheckUser = 1;
       UserRq = StrDup((*user)[0]);
@@ -1633,7 +1740,18 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
          det[i] = new char *[1];
       }
    }
-   rewind(fd);
+
+   // If nothing found return ...
+   if (!strncmp(UserRq,"none",4)) {
+      fclose(fd);
+      if (net) delete[] net;
+      if (UserRq) delete[] UserRq;
+      if (expand == 1)
+         gSystem->Unlink(filetmp);
+      return 0;
+   } else
+     // rewind the file and start scanning it ...
+      rewind(fd);
 
    // Scan it ...
    char host[kMAXPATHLEN], info[kMAXPATHLEN];
@@ -1755,8 +1873,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       if (!strcmp(opt, "list")) {
          if (gDebug > 3)
             ::Info("CheckRootAuthrc", "found 'list': rest:%s", rest);
-
-         //       nmeth= sscanf(rest,"%d %d %d %d %d %d",&mth[0],&mth[1],&mth[2],&mth[3],&mth[4],&mth[5]);
          char cmth[kMAXSEC][20];
          int nw =
              sscanf(rest, "%s %s %s %s %s %s", cmth[0], cmth[1], cmth[2],
@@ -2186,25 +2302,21 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
    if (gDebug > 2)
       Info("ClearAuth", "enter: User: %s (passwd hashed?: %d)", User.Data(),(Int_t)PwHash);
 
-   // Check ReUse
-   Int_t ReUse = 1, Prompt = 0, Crypt = 1, NeedSalt = 1;
-   char PromptReUse[40];
-   if (gSystem->Getenv("AUTHREUSE") != 0 &&
-       !strcmp(gSystem->Getenv("AUTHREUSE"), "0"))
-      ReUse = 0;
-   if (gSystem->Getenv("PROMPTUSER") != 0 &&
-       !strcmp(gSystem->Getenv("PROMPTUSER"), "1"))
-      Prompt = 1;
-   if (gSystem->Getenv("CLEARCRYPT") != 0 &&
-       !strcmp(gSystem->Getenv("CLEARCRYPT"), "0"))
-      Crypt = 0;
+   Int_t ReUse    = fgAuthReUse;
+   Int_t Prompt   = fgPromptUser;
+   Int_t Crypt    = fgUsrPwdCrypt;
+   Int_t NeedSalt = 1;
    if (PwHash)
      NeedSalt = 0;
+   fDetails = TString(Form("pt:%d ru:%d cp:%d us:",
+                           fgPromptUser, fgAuthReUse, fgUsrPwdCrypt)) + User;
+   if (gDebug > 2)
+      Info("ClearAuth", "ru:%d pt:%d cp:%d ns:%d",
+           fgAuthReUse,fgPromptUser,fgUsrPwdCrypt,NeedSalt);
 #ifdef R__WIN32
    Crypt = 0;
 #endif
-   sprintf(PromptReUse, "pt:%d ru:%d cp:%d us:", Prompt, ReUse, Crypt);
-   fDetails = (TString) ((const char *) PromptReUse + User);
+
 
    Int_t stat, kind;
 
@@ -2318,7 +2430,8 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          if (Prompt == 1 || PasHash == 0) {
           badpass:
             if (Passwd == "") {
-               Passwd = PromptPasswd();
+               Passwd =
+                 PromptPasswd(Form("%s@%s password: ",User.Data(),fRemote.Data()));
                if (Passwd == "") {
                   Error("ClearAuth", "password not set");
                   if (PasHash) delete[] PasHash;
@@ -2499,7 +2612,8 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
       // Prepare Passwd to send
     badpass1:
       if (Passwd == "") {
-         Passwd = PromptPasswd();
+         Passwd = PromptPasswd(
+                  Form("%s@%s password: ",User.Data(),fRemote.Data()));
          if (Passwd == "")
             Error("ClearAuth", "password not set");
       }
@@ -2716,10 +2830,10 @@ void TAuthenticate::SaveAuthDetails(TAuthenticate * Auth, Int_t Method,
       TAuthDetails *ai;
       while ((ai = (TAuthDetails *) next())) {
          if (ai->GetMethod() == Method) {
-	    if (strstr(ai->GetDetails(), Details) != 0) {
+            if (strstr(ai->GetDetails(), Details) != 0) {
                if (ai->GetOffSet() == -1)
                   return;
-	    }
+            }
          }
       }
    }
@@ -2910,6 +3024,9 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
    char line[kMAXPATHLEN];
    char cinc[20], fileinc[kMAXPATHLEN];
 
+   if (gDebug > 2)
+     ::Info("FileExpand", "enter ... '%s' ... 0x%x", fexp, (int)ftmp);
+
    fin = fopen(fexp, "r");
    if (fin == 0)
       return;
@@ -2920,6 +3037,8 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
          continue;
       if (line[strlen(line) - 1] == '\n')
          line[strlen(line) - 1] = '\0';
+      if (gDebug > 2)
+         ::Info("FileExpand", "read line ... '%s'", line);
       int nw = sscanf(line, "%s %s", cinc, fileinc);
       if (nw < 2)
          continue;              // Not enough info in this line
@@ -2967,16 +3086,16 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
    // UsrPwdClear
    if (sec == TAuthenticate::kClear) {
-      if (strlen(usr) == 0)
+      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("UsrPwd.Login", "");
-      sprintf(temp, "pt:%s ru:%s us:%s cp:%s",
+      sprintf(temp, "pt:%s ru:%s cp:%s us:%s",
               gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
-              gEnv->GetValue("UsrPwd.ReUse", "1"), usr,
-              gEnv->GetValue("UsrPwd.Crypt", "1"));
+              gEnv->GetValue("UsrPwd.ReUse", "1"),
+              gEnv->GetValue("UsrPwd.Crypt", "1"), usr);
 
       // SRP
    } else if (sec == TAuthenticate::kSRP) {
-      if (strlen(usr) == 0)
+      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("SRP.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
@@ -2984,7 +3103,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Kerberos
    } else if (sec == TAuthenticate::kKrb5) {
-      if (strlen(usr) == 0)
+      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("Krb5.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
@@ -2999,7 +3118,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // SSH
    } else if (sec == TAuthenticate::kSSH) {
-      if (strlen(usr) == 0)
+      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("SSH.Login", "");
       sprintf(temp, "pt:%s ru:%s us:%s",
               gEnv->GetValue("SSH.LoginPrompt", copt[opt]),
@@ -3007,7 +3126,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Uid/Gid
    } else if (sec == TAuthenticate::kRfio) {
-      if (strlen(usr) == 0)
+      if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("UidGid.Login", "");
       sprintf(temp, "pt:%s us:%s",
               gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
@@ -3055,7 +3174,11 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
    Int_t *nmeth, *security[kMAXSEC];
    char **details[kMAXSEC];
    char **usr = new char *[1];
-   usr[0] = StrDup(user);
+   if (strlen(user) > 0)
+      usr[0] = StrDup(user);
+   else
+      usr[0] = StrDup("");
+
    int nu =
        GetAuthMeth(fqdn.Data(), "rootd", &usr, &nmeth, security, details);
    if (gDebug > 3)
@@ -3091,6 +3214,8 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
          if (gDebug > 3)
             ai->Print();
 
+         ::Info("ReadAuthRc", "got %d '%s' '%s'",ju,usr[ju], ai->GetUser() );
+
          if (fqdn == ai->GetHost() && !strcmp(usr[ju], ai->GetUser())) {
             hostAuth = ai;
             break;
@@ -3104,17 +3229,24 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
          GetAuthInfo()->Add(hostAuth);
       } else {
          // Modify existing entry ...
+         Bool_t *RemoveMethod = new Bool_t[hostAuth->NumMethods()];
+         for (i = 0; i < hostAuth->NumMethods(); i++)
+            RemoveMethod[i] = kTRUE;
          for (i = 0; i < nmeth[0]; i++) {
             int j, jm = -1;
             for (j = 0; j < hostAuth->NumMethods(); j++) {
                if (am[i] == hostAuth->GetMethods(j)) {
                   hostAuth->SetDetails(am[i], det[i]);
                   jm = j;
+                  RemoveMethod[j] = kFALSE;
                }
             }
             if (jm == -1)
                hostAuth->AddMethod(am[i], det[i]);
          }
+         for (i = 0; i < hostAuth->NumMethods(); i++)
+            if (RemoveMethod[i])
+               hostAuth->RemoveMethod(hostAuth->GetMethods(i));
       }
       if (gDebug > 3)
          hostAuth->Print();
@@ -3158,7 +3290,7 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
                                 TString &Details, const char *Options,
                                 Int_t *Message, Int_t *Rflag)
 {
-   // Check if we have a valid established sec context in memory.
+   // Check if we have a valid established sec context in memory
    // Retrieves relevant info and negotiates with server.
    // Options = "Opt,strlen(User),User.Data()"
    // Message = kROOTD_USER, ...
@@ -3170,10 +3302,13 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
       ::Info("AuthExists", "%d: enter: msg: %d options: '%s'", Sec,
              *Message, Options);
 
+
    // Check we already authenticated
    Int_t OffSet = -1;
    char *Token = 0;
+   //   char   *eTkn = 0;
    Int_t ReUse = *Rflag;
+   //   Int_t  Len   = 0;
    if (ReUse == 1) {
 
       // Get OffSet and token, if any ...
@@ -3199,7 +3334,7 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
          // Send Token encrypted
          if (SecureSend(Socket, 1, Token) == -1) {
             ::Warning("AuthExists",
-                      "problems secure-sending token - may trigger problems in proofing Id");
+                      "problems secure-sending Token - may trigger problems in proofing Id ");
          }
       } else {
          // Send Token inverted
@@ -3320,7 +3455,7 @@ Int_t TAuthenticate::GenRSAKeys()
       // Retry if equal
       Int_t NPrimes = 0;
       while (rsa_fun::fg_rsa_cmp(&p1, &p2) == 0 && NPrimes < kMAXRSATRIES) {
-	 NPrimes++;
+         NPrimes++;
          if (gDebug > 2)
             Info("GenRSAKeys", "equal primes: regenerate (%d times)",NPrimes);
          srand(rand());

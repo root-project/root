@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.16 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.17 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -70,6 +70,7 @@ private:
    Int_t       fLogLevel;         //debug logging level
    Int_t       fNcmd;             //command history number
    Bool_t      fPwHash;           //true if fPasswd is a passwd hash
+   Bool_t      fSRPPwd;           //true if fPasswd is a SRP passwd
    Bool_t      fMasterServ;       //true if we are a master server
    Bool_t      fInterrupt;        //if true macro execution will be stopped
    Float_t     fRealTime;         //real time spent executing commands
