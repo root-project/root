@@ -14,7 +14,7 @@ argtwice:
 tmp.root: AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  /var/tmp/calib_h.$(DllSuf)
 	$(CMDECHO) root.exe -b -l -q write.C > tmp_root.log 2>&1
 
-stlProxies.log: tmp.root AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  /var/tmp/calib_h.$(DllSuf)
+stlProxies.log: tmp.root AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  calib_h.$(DllSuf)
 
 stlProxies: stlProxies.log
 	$(TestDiff)
