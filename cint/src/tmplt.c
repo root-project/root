@@ -345,7 +345,7 @@ struct G__Templatearg *G__read_formal_templatearg()
 #endif
       else {
 	if(G__dispsource) {
-	  G__fprinterr("Limitation: template argument type '%s' may cause problem",type);
+	  G__fprinterr(G__serr,"Limitation: template argument type '%s' may cause problem",type);
 	  G__printlinenum();
 	}
 	p->type = G__TMPLT_INTARG;
@@ -409,7 +409,7 @@ char *new_name;
   deftmpclass = G__defined_templateclass(new_name+os);
   if(!deftmpclass) {
     /* error */
-    G__fprinterr("Error: Template class %s not defined",new_name+os);
+    G__fprinterr(G__serr,"Error: Template class %s not defined",new_name+os);
     G__genericerror((char*)NULL);
   }
   else {
@@ -485,12 +485,12 @@ int isforwarddecl;
 #endif /* ON775 */
 #ifndef G__OLDIMPLEMENTATION1202
 	/* ignore duplicate template class definition */
-	G__fprinterr("Warning: template %s duplicate definition",new_name);
+	G__fprinterr(G__serr,"Warning: template %s duplicate definition",new_name);
 	G__printlinenum();
 	G__fignorestream(";");
 	return(0);
 #else
-	G__fprinterr("Error: template %s duplicate definition",new_name);
+	G__fprinterr(G__serr,"Error: template %s duplicate definition",new_name);
 	G__genericerror(NULL);
 #endif
       }
@@ -790,7 +790,7 @@ void G__declare_template()
 
 #ifndef G__OLDIMPLEMENTATION1412
   if(G__MAXFILE-1==G__ifile.filenum) {
-    G__fprinterr("Limitation: template can not be defined in a command line or a tempfile\n");
+    G__fprinterr(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
     return;
   }
@@ -836,7 +836,7 @@ void G__declare_template()
       isforwarddecl = 1;
 #else
       /* G__nosupport("Forward declaration of template"); */
-      G__fprinterr("Limitation Forward declaration of template ignored");
+      G__fprinterr(G__serr,"Limitation Forward declaration of template ignored");
       G__printlinenum();
       return;
 #endif
@@ -1534,13 +1534,13 @@ char *tagnamein;
 #else
   if(!deftmpclass) {
 #endif
-    G__fprinterr("Error: no such template %s",tagname);
+    G__fprinterr(G__serr,"Error: no such template %s",tagname);
     G__genericerror((char*)NULL);
     return(-1);
   }
 
   if(!deftmpclass->def_fp) {
-    G__fprinterr("Limitation: Can't instantiate precompiled template %s"
+    G__fprinterr(G__serr,"Limitation: Can't instantiate precompiled template %s"
 	    ,tagname);
     G__genericerror(NULL);
     return(-1);
@@ -1790,7 +1790,7 @@ int parent_tagnum;
   }
 
   if(G__dispsource) {
-    G__fprinterr("\n!!!Instantiating template %s\n",tagname);
+    G__fprinterr(G__serr,"\n!!!Instantiating template %s\n",tagname);
   }
 
   /* print out header */
@@ -1798,7 +1798,7 @@ int parent_tagnum;
   fprintf(G__mfp,"// template %s  FILE:%s LINE:%d\n"
 	  ,tagname ,G__ifile.name,G__ifile.line_number);
   if(G__dispsource) {
-    G__fprinterr("// template %s  FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"// template %s  FILE:%s LINE:%d\n"
 	    ,tagname ,G__ifile.name,G__ifile.line_number);
   }
 
@@ -1825,7 +1825,7 @@ int parent_tagnum;
   fprintf(G__mfp,"# %d \"%s\"\n"
 	  ,G__ifile.line_number,G__srcfile[G__ifile.filenum].filename);
   if(G__dispsource) {
-    G__fprinterr("# %d \"%s\"\n"
+    G__fprinterr(G__serr,"# %d \"%s\"\n"
 	    ,G__ifile.line_number,G__srcfile[G__ifile.filenum].filename);
   }
 
@@ -1910,7 +1910,7 @@ int parent_tagnum;
 #else
       fprintf(G__mfp,"%s",symbol);
 #endif
-      if(G__dispsource) G__fprinterr("%s",symbol);
+      if(G__dispsource) G__fprinterr(G__serr,"%s",symbol);
     }
 
     if(1==slash) {
@@ -1929,10 +1929,10 @@ int parent_tagnum;
 	SET_WRITINGFILE; /* ON777 */
 #ifndef G__OLDIMPLEMENTATION1100
 	fprintf(G__mfp,"/%s\n",symbol);
-	if(G__dispsource) G__fprinterr("/%s\n",symbol);
+	if(G__dispsource) G__fprinterr(G__serr,"/%s\n",symbol);
 #else
 	fprintf(G__mfp,"/\n");
-	if(G__dispsource) G__fprinterr("/\n");
+	if(G__dispsource) G__fprinterr(G__serr,"/\n");
 #endif
 	++G__mline;
 	continue;
@@ -1943,7 +1943,7 @@ int parent_tagnum;
       else if('*'==c) {
 #endif
 	fprintf(G__mfp,"/\n");
-	if(G__dispsource) G__fprinterr("/\n");
+	if(G__dispsource) G__fprinterr(G__serr,"/\n");
 	++G__mline;
 	SET_READINGFILE; /* ON777 */
 	G__skip_comment();
@@ -1989,7 +1989,7 @@ int parent_tagnum;
 #ifndef G__OLDIMPLEMENTATION691
   if(2==isclasstemplate) {
     fprintf(G__mfp,";");
-    if(G__dispsource) G__fprinterr(";");
+    if(G__dispsource) G__fprinterr(G__serr,";");
   }
   else if(1==isclasstemplate) {
 #else
@@ -2002,7 +2002,7 @@ int parent_tagnum;
 #endif
     SET_WRITINGFILE; /* ON777 */
     fprintf(G__mfp,"%s ;",symbol);
-    if(G__dispsource) G__fprinterr("%s ;",symbol);
+    if(G__dispsource) G__fprinterr(G__serr,"%s ;",symbol);
   }
   else if(';'==c) {
     fputc(c,G__mfp);
@@ -2029,7 +2029,7 @@ int parent_tagnum;
   * rewind tmpfile and parse template class or function
   ********************************************************************/
   if(G__dispsource) {
-    G__fprinterr("!!! Reading template %s\n",tagname);
+    G__fprinterr(G__serr,"!!! Reading template %s\n",tagname);
   }
 
   fsetpos(G__mfp,&pos);
@@ -2169,7 +2169,7 @@ int parent_tagnum;
 #endif
 
   if(G__dispsource) {
-    G__fprinterr("\n!!!Complete instantiating template %s\n",tagname);
+    G__fprinterr(G__serr,"\n!!!Complete instantiating template %s\n",tagname);
   }
 
   if(store_mfline) fsetpos(G__mfp,&store_mfpos);
@@ -2222,7 +2222,7 @@ int isnew;
 	strcpy(symbol,defpara->default_parameter);
       }
       else {
-	G__fprinterr("Error: template argument for %s missing"
+	G__fprinterr(G__serr,"Error: template argument for %s missing"
 		,defpara->string);
 	G__genericerror((char*)NULL);
       }
@@ -2831,7 +2831,7 @@ int funcmatch;
 			   ,G__EXACT
 #endif
 			   ,G__TRYNORMAL)==0) {
-	G__fprinterr("Internal error: template function call %s failed"
+	G__fprinterr(G__serr,"Internal error: template function call %s failed"
 		,funcname);
 	G__genericerror((char*)NULL);
 	*result = G__null;

@@ -386,12 +386,12 @@ int tagnum;
 	      G__tagnum=var->p_tagtable[i];
 	      if(G__dispsource)
 #ifndef G__FONS31
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "!!!Destroy static member object 0x%lx %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[ialltag]
 		      ,G__struct.name[i]);
 #else
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "!!!Destroy static member object 0x%x %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[ialltag]
 		      ,G__struct.name[i]);
@@ -474,12 +474,12 @@ int tagnum;
 	      G__tagnum=var->p_tagtable[i];
 	      if(G__dispsource)
 #ifndef G__FONS31
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "!!!Destroy static member object 0x%lx %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[G__struct.alltag]
 		      ,G__struct.name[i]);
 #else
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "!!!Destroy static member object 0x%x %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[G__struct.alltag]
 		      ,G__struct.name[i]);
@@ -647,11 +647,11 @@ int ig15;
 	sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
 	if(G__dispsource) {
 #ifndef G__FONS31
-	  G__fprinterr("\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
+	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #else
-	  G__fprinterr("\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
+	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #endif
@@ -676,9 +676,9 @@ int ig15;
 	    G__store_struct_offset = var->p[itemp]+size*i;
 	    if(G__dispsource) {
 #ifndef G__FONS31
-	      G__fprinterr("\n0x%lx.%s",G__store_struct_offset,temp);
+	      G__fprinterr(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
 #else
-	      G__fprinterr("\n0x%x.%s",G__store_struct_offset,temp);
+	      G__fprinterr(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
 #endif
 	    }
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 

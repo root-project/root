@@ -46,19 +46,19 @@ char baseaccess;
      G__CPPLINK==G__struct.iscpplink[from_tagnum] &&
      G__CPPLINK!=G__struct.iscpplink[to_tagnum]) {
 #ifndef G__OLDIMPLEMENTATION1368
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	   "Warning: Interpreted class %s derived from"
 	    ,G__fulltagname(to_tagnum,1));
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	   " precompiled class %s",G__fulltagname(from_tagnum,1));
 #else
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	   "Warning: precompiled class %s ",G__fulltagname(from_tagnum,1));
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	   "inherited from interpreted class %s",G__fulltagname(to_tagnum,1));
 #endif
     G__printlinenum();
-    G__fprinterr("!!!There are some limitations regarding compiled/interpreted class inheritance\n");
+    G__fprinterr(G__serr,"!!!There are some limitations regarding compiled/interpreted class inheritance\n");
   }
 #endif
 
@@ -369,7 +369,7 @@ struct G__baseparam *pbaseparam;
       
       
       if(G__dispsource) {
-	G__fprinterr("\n!!!Calling base class constructor %s",construct);
+	G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct);
       }
       j=0;
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled class */
@@ -442,7 +442,7 @@ struct G__baseparam *pbaseparam;
 #endif
 	      {
 	    if('\0'==pbaseparam->param[j][0]) {
-	      G__fprinterr("Error: No initializer for reference %s "
+	      G__fprinterr(G__serr,"Error: No initializer for reference %s "
 		      ,memname);
 	      G__genericerror((char*)NULL);
 	    }
@@ -462,7 +462,7 @@ struct G__baseparam *pbaseparam;
 	    if(G__NOLINK!=G__globalcomp) 
 #endif
 	      {
-	    G__fprinterr("Error: No initializer for reference %s "
+	    G__fprinterr(G__serr,"Error: No initializer for reference %s "
 		    ,memname);
 	    G__genericerror((char*)NULL);
 	      }
@@ -470,7 +470,7 @@ struct G__baseparam *pbaseparam;
 	  }
 	}
 	if(G__dispsource) {
-	  G__fprinterr("\n!!!Calling class member constructor %s",construct);
+	  G__fprinterr(G__serr,"\n!!!Calling class member constructor %s",construct);
 	}
 	p_inc = mem->varlabel[i][1];
 	size = G__struct.size[G__tagnum];
@@ -503,7 +503,7 @@ struct G__baseparam *pbaseparam;
 #endif
 	      {
 	    if('\0'==pbaseparam->param[j][0]) {
-	      G__fprinterr("Error: No initializer for reference %s "
+	      G__fprinterr(G__serr,"Error: No initializer for reference %s "
 		      ,memname);
 	      G__genericerror((char*)NULL);
 	    }
@@ -677,7 +677,7 @@ int G__basedestructor()
 	  = G__tagnum;
       sprintf(destruct,"~%s()",G__struct.name[G__tagnum]);
       if(G__dispsource) 
-	G__fprinterr("\n!!!Calling base class destructor %s",destruct);
+	G__fprinterr(G__serr,"\n!!!Calling base class destructor %s",destruct);
       j=0;
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
 	G__globalvarpointer = G__store_struct_offset;
@@ -759,7 +759,7 @@ struct G__var_array *mem;
 	  *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
 	    = G__tagnum;
 	if(G__dispsource) {
-	  G__fprinterr("\n!!!Calling class member destructor %s" ,destruct);
+	  G__fprinterr(G__serr,"\n!!!Calling class member destructor %s" ,destruct);
 	}
 	G__getfunction(destruct,&j,G__TRYDESTRUCTOR);
 	G__store_struct_offset -= size;

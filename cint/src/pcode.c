@@ -350,7 +350,7 @@ long localmem;
   * local compile asembler execution start
   ****************************************/
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("LOOP COMPILE EXECUTION START\n");
+  if(G__asm_dbg) G__fprinterr(G__serr,"LOOP COMPILE EXECUTION START\n");
   asm_step = G__asm_step;
 #endif
 
@@ -380,7 +380,7 @@ long localmem;
 /*DEBUG*/
     /*
     if(G__asm_dbg) {
-      G__fprinterr("G__store_struct_offset=%x\n",G__store_struct_offset);
+      G__fprinterr(G__serr,"G__store_struct_offset=%x\n",G__store_struct_offset);
     }
     */
 #endif
@@ -401,7 +401,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var=(struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3x,%d: LDST_VAR_P index=%d ldst=%d %s\n"
+	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_P index=%d ldst=%d %s\n"
 		,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -431,7 +431,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var=(struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3x,%d: LDST_LVAR_P index=%d ldst=%d %s "
+	G__fprinterr(G__serr,"%3x,%d: LDST_LVAR_P index=%d ldst=%d %s "
 		,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -442,7 +442,7 @@ long localmem;
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%d %g\n"
+	G__fprinterr(G__serr,"%d %g\n"
 		,G__asm_stack[sp-1].obj.i,G__asm_stack[sp-1].obj.d);
       }
       break;
@@ -465,7 +465,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var=(struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3x,%d: LDST_MSTR_P index=%d ldst=%d %s stos=%lx\n"
+	G__fprinterr(G__serr,"%3x,%d: LDST_MSTR_P index=%d ldst=%d %s stos=%lx\n"
 		,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]],G__store_struct_offset);
       }
@@ -496,7 +496,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+6];
-	G__fprinterr("%3x,%d: LDST_VAR_INDEX index=%d %s\n"
+	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_INDEX index=%d %s\n"
 		,pc,sp,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+3]]);
       }
@@ -532,7 +532,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+8];
-	G__fprinterr("%3x,%d: LDST_VAR_INDEX_OPR index=%d %s\n"
+	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_INDEX_OPR index=%d %s\n"
 		,pc,sp,G__asm_inst[pc+5]
 		,var->varnamebuf[G__asm_inst[pc+5]]);
       }
@@ -586,14 +586,14 @@ long localmem;
       * sp    G__null
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: OP2_OPTIMIZED" ,pc,sp );
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: OP2_OPTIMIZED" ,pc,sp );
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
       pc+=2;
       --sp;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(" %c %d\n" ,G__asm_stack[sp-1].type
+      if(G__asm_dbg) G__fprinterr(G__serr," %c %d\n" ,G__asm_stack[sp-1].type
 			     ,G__asm_stack[sp-1].obj.i);
 #endif
 #ifdef G__ASM_DBG
@@ -613,7 +613,7 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3x,%d: OP1_OPTIMIZED\n" ,pc,sp );
+	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED\n" ,pc,sp );
       }
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
@@ -637,7 +637,7 @@ long localmem;
       * sp+1             <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD %g from %x %x,%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD %g from %x %x,%x\n"
 			     ,pc,sp
 			     ,G__double(G__asm_stack[G__asm_inst[pc+1]])
 			     ,G__asm_inst[pc+1]
@@ -658,7 +658,7 @@ long localmem;
       *  clear stack pointer
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CL %d\n",pc,sp,G__asm_inst[pc+1]);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %d\n",pc,sp,G__asm_inst[pc+1]);
 #endif
       if(G__breaksignal) {
 	sp=G__ifile.line_number;
@@ -689,14 +689,14 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	if(isprint(G__asm_inst[pc+1]))
-	  G__fprinterr("%3x,%d: OP2 %g '%c'%d %g\n"
+	  G__fprinterr(G__serr,"%3x,%d: OP2 %g '%c'%d %g\n"
 		  ,pc,sp
 		  ,G__double(G__asm_stack[sp-2])
 		  ,G__asm_inst[pc+1]
 		  ,G__asm_inst[pc+1]
 		  ,G__double(G__asm_stack[sp-1]));
 	else
-	  G__fprinterr("%3x,%d: OP2 %g %d %g\n"
+	  G__fprinterr(G__serr,"%3x,%d: OP2 %g %d %g\n"
 		  ,pc,sp
 		  ,G__double(G__asm_stack[sp-2])
 		  ,G__asm_inst[pc+1]
@@ -707,7 +707,7 @@ long localmem;
 		,G__asm_stack[sp-1],&G__asm_stack[sp-2]);
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(" result=%g\n",G__double(G__asm_stack[sp-2]));
+	G__fprinterr(G__serr," result=%g\n",G__double(G__asm_stack[sp-2]));
 #endif
       pc+=2;
       --sp;
@@ -729,13 +729,13 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CMPJMP (0x%lx)%d (0x%lx)%d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CMPJMP (0x%lx)%d (0x%lx)%d to %x\n"
 			     ,pc,sp
 			     ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
 			     ,G__asm_inst[pc+4]);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CMPJMP (0x%x)%d (0x%x)%d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CMPJMP (0x%x)%d (0x%x)%d to %x\n"
 			     ,pc,sp
 			     ,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
@@ -764,7 +764,7 @@ long localmem;
       * 3 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: INCJMP *(int*)0x%x+%d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: INCJMP *(int*)0x%x+%d to %x\n"
 			     ,pc,sp ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -789,7 +789,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CNDJMP %d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CNDJMP %d to %x\n"
 			     ,pc,sp ,G__int(G__asm_stack[sp-1])
 			     ,G__asm_inst[pc+1]);
 #endif
@@ -810,7 +810,7 @@ long localmem;
       * 1 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: JMP %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: JMP %x\n"
 			     ,pc,sp,G__asm_inst[pc+1]);
 #endif
       pc=G__asm_inst[pc+1];
@@ -830,7 +830,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: POP %g -> %g\n" ,pc,sp
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POP %g -> %g\n" ,pc,sp
 			     ,G__double(G__asm_stack[sp-1])
 			     ,G__double(G__asm_stack[sp-2]));
 #endif
@@ -860,10 +860,10 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	if(G__asm_inst[pc+1]<G__MAXSTRUCT)
-	  G__fprinterr("%3x,%d: LD_FUNC %s paran=%d\n" ,pc,sp
+	  G__fprinterr(G__serr,"%3x,%d: LD_FUNC %s paran=%d\n" ,pc,sp
 		  ,"compiled",G__asm_inst[pc+3]);
 	else
-	  G__fprinterr("%3x,%d: LD_FUNC %s paran=%d\n" ,pc,sp
+	  G__fprinterr(G__serr,"%3x,%d: LD_FUNC %s paran=%d\n" ,pc,sp
 		  ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
 #endif
@@ -930,7 +930,7 @@ long localmem;
       * 0 RETURN
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: RETURN\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RETURN\n" ,pc,sp);
 #endif
       pc++;
       /****************************************
@@ -952,7 +952,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CAST to %c\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CAST to %c\n"
 			     ,pc,sp,(char)G__asm_inst[pc+1]);
 #endif
       G__asm_stack[sp-1].typenum = G__asm_inst[pc+2];
@@ -979,12 +979,12 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	if(G__asm_inst[pc+1])
-	  G__fprinterr("%3x,%d: OP1 '%c'%d %g ,%d\n" ,pc,sp
+	  G__fprinterr(G__serr,"%3x,%d: OP1 '%c'%d %g ,%d\n" ,pc,sp
 		  ,G__asm_inst[pc+1]
 		  ,G__asm_inst[pc+1]
 		  ,G__double(G__asm_stack[sp-1]),sp);
 	else
-	  G__fprinterr("%3x,%d: OP1 %d %g ,%d\n" ,pc,sp
+	  G__fprinterr(G__serr,"%3x,%d: OP1 %d %g ,%d\n" ,pc,sp
 		  ,G__asm_inst[pc+1]
 		  ,G__double(G__asm_stack[sp-1]),sp);
       }
@@ -1009,7 +1009,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LETVVAL\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LETVVAL\n" ,pc,sp);
 #endif
       G__letVvalue(&G__asm_stack[sp-1],G__asm_stack[sp-2]);
       ++pc;
@@ -1028,7 +1028,7 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("%3x,%d: ADDSTROS %d\n" ,pc,sp,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3x,%d: ADDSTROS %d\n" ,pc,sp,G__asm_inst[pc+1]);
 #endif
       G__store_struct_offset+=G__asm_inst[pc+1];
       pc+=2;
@@ -1048,7 +1048,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LETPVAL\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LETPVAL\n" ,pc,sp);
 #endif
       G__letvalue(&G__asm_stack[sp-1],G__asm_stack[sp-2]);
       ++pc;
@@ -1070,7 +1070,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: TOPNTR\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: TOPNTR\n" ,pc,sp);
 #endif
       G__val2pointer(&G__asm_stack[sp-1]);
       ++pc;
@@ -1085,7 +1085,7 @@ long localmem;
       * 0 NOT
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: NOT !%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: NOT !%d\n"
 			     ,pc,sp ,G__int(G__asm_stack[sp-1]));
 #endif
       G__letint(&G__asm_stack[sp-1],'i',(long)(!G__int(G__asm_stack[sp-1])));
@@ -1102,7 +1102,7 @@ long localmem;
        * 0 BOOL
        ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: BOOL %d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: BOOL %d\n"
 			     ,pc,sp ,G__int(G__asm_stack[sp-1]));
 #endif
       G__letint(&G__asm_stack[sp-1],'i',G__int(G__asm_stack[sp-1])?1:0);
@@ -1123,7 +1123,7 @@ long localmem;
       * 1 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: !ISDEFAULTPARA JMP %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: !ISDEFAULTPARA JMP %x\n"
 			     ,pc,sp ,G__asm_inst[pc+1]);
 #endif
       if(sp>0) pc=G__asm_inst[pc+1];
@@ -1156,7 +1156,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_VAR index=%d paran=%d point %c"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_VAR index=%d paran=%d point %c"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -1180,7 +1180,7 @@ long localmem;
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(" return=%g\n",G__double(G__asm_stack[sp]));
+	G__fprinterr(G__serr," return=%g\n",G__double(G__asm_stack[sp]));
 #endif
       ++sp;
 #ifdef G__ASM_DBG
@@ -1204,7 +1204,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ST_VAR index=%d paran=%d point %c"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_VAR index=%d paran=%d point %c"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -1223,7 +1223,7 @@ long localmem;
 #endif
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("  value=%g\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
 			     ,G__double(G__asm_stack[sp-1]));
 #endif
       G__letvariable("",G__asm_stack[sp-1]
@@ -1252,11 +1252,11 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_MSTR index=%d paran=%d 0x%lx"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_MSTR index=%d paran=%d 0x%lx"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_MSTR index=%d paran=%d 0x%x"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_MSTR index=%d paran=%d 0x%x"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
 #endif
@@ -1282,11 +1282,11 @@ long localmem;
       pc+=5;
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr(" return=%g , 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr," return=%g , 0x%lx\n"
 			     ,G__double(G__asm_stack[sp])
 			     ,G__int(G__asm_stack[sp]));
 #else
-      if(G__asm_dbg) G__fprinterr(" return=%g , 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr," return=%g , 0x%x\n"
 			     ,G__double(G__asm_stack[sp])
 			     ,G__int(G__asm_stack[sp]));
 #endif
@@ -1314,11 +1314,11 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ST_MSTR index=%d paran=%d 0x%lx"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_MSTR index=%d paran=%d 0x%lx"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ST_MSTR index=%d paran=%d 0x%x"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_MSTR index=%d paran=%d 0x%x"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__store_struct_offset);
 #endif
@@ -1339,7 +1339,7 @@ long localmem;
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("  value=%g\n" ,G__double(G__asm_stack[sp-1]));
+	G__fprinterr(G__serr,"  value=%g\n" ,G__double(G__asm_stack[sp-1]));
 #endif
 
       G__letvariable("",G__asm_stack[sp-1]
@@ -1369,7 +1369,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_LVAR index=%d paran=%d point %c"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_LVAR index=%d paran=%d point %c"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -1396,7 +1396,7 @@ long localmem;
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr(" return=%g\n",G__double(G__asm_stack[sp]));
+	G__fprinterr(G__serr," return=%g\n",G__double(G__asm_stack[sp]));
 #endif
       ++sp;
 #ifdef G__ASM_DBG
@@ -1420,7 +1420,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ST_LVAR index=%d paran=%d point %c"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ST_LVAR index=%d paran=%d point %c"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -1439,7 +1439,7 @@ long localmem;
 #endif
       sp-=fpara.paran;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("  value=%g\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
 			     ,G__double(G__asm_stack[sp-1]));
 #endif
       store_struct_offset_localmem = G__store_struct_offset;
@@ -1468,7 +1468,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CMP2 %g '%c' %g\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CMP2 %g '%c' %g\n"
 			     ,pc,sp ,G__double(G__asm_stack[sp-2])
 			     ,G__asm_inst[pc+1],G__double(G__asm_stack[sp-1]));
 #endif
@@ -1492,10 +1492,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: PUSHSTROS 0x%lx strosp=%ld\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHSTROS 0x%lx strosp=%ld\n"
 			     ,pc,sp,G__store_struct_offset,strosp);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: PUSHSTROS 0x%x strosp=%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHSTROS 0x%x strosp=%d\n"
 			     ,pc,sp,G__store_struct_offset,strosp);
 #endif
 #endif
@@ -1518,10 +1518,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETSTROS 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETSTROS 0x%lx\n"
 			     ,pc,sp,G__int(G__asm_stack[sp-1]));
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETSTROS 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETSTROS 0x%x\n"
 			     ,pc,sp,G__int(G__asm_stack[sp-1]));
 #endif
 #endif
@@ -1543,10 +1543,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: POPSTROS 0x%lx strosp=%ld\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPSTROS 0x%lx strosp=%ld\n"
 			     ,pc,sp,struct_offset_stack[strosp-1],strosp);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: POPSTROS 0x%x strosp=%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPSTROS 0x%x strosp=%d\n"
 			     ,pc,sp,struct_offset_stack[strosp-1],strosp);
 #endif
 #endif
@@ -1565,10 +1565,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETTEMP 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%lx\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETTEMP 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETTEMP 0x%x\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
 #endif
 #endif
@@ -1592,10 +1592,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: FREETEMP 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: FREETEMP 0x%lx\n"
 			     ,pc,sp ,store_p_tempbuf);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: FREETEMP 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: FREETEMP 0x%x\n"
 			     ,pc,sp ,store_p_tempbuf);
 #endif
 #endif
@@ -1627,7 +1627,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: GETRSVD $%s 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: GETRSVD $%s 0x%x\n"
 			     ,pc,sp
 			     ,(char*)G__asm_inst[pc+1]
 			     ,G__int(G__asm_stack[sp-1]));
@@ -1656,7 +1656,7 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("%3x,%d: REWINDSTACK %d\n" ,pc,sp,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3x,%d: REWINDSTACK %d\n" ,pc,sp,G__asm_inst[pc+1]);
 #endif
       sp -= G__asm_inst[pc+1];
       pc+=2;
@@ -1675,7 +1675,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: CND1JMP %d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CND1JMP %d to %x\n"
 			     ,pc,sp ,G__int(G__asm_stack[sp-1])
 			     ,G__asm_inst[pc+1]);
 #endif
@@ -1708,7 +1708,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_IFUNC %s paran=%d\n" ,pc,sp
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_IFUNC %s paran=%d\n" ,pc,sp
 			     ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       G__asm_index = G__asm_inst[pc+7];
@@ -1720,7 +1720,7 @@ long localmem;
 #endif
 	 ) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("call G__exec_bytecode optimized\n");
+	if(G__asm_dbg) G__fprinterr(G__serr,"call G__exec_bytecode optimized\n");
 #endif	
 	G__asm_inst[pc] = G__LD_FUNC;
 	G__asm_inst[pc+1] = (long)(ifunc->pentry[G__asm_index]->bytecode);
@@ -1805,7 +1805,7 @@ long localmem;
       if(0==G__store_struct_offset)
 	G__genericerror("Error: malloc failed for new operator");
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: NEWALLOC size(%d)*%d : 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: NEWALLOC size(%d)*%d : 0x%lx\n"
 			     ,pc,sp,G__asm_inst[pc+1]
 			     ,G__int(G__asm_stack[sp-1])
 			     ,G__store_struct_offset);
@@ -1844,10 +1844,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SET_NEWALLOC 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SET_NEWALLOC 0x%lx\n"
 			     ,pc,sp,G__store_struct_offset);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SET_NEWALLOC 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SET_NEWALLOC 0x%x\n"
 			     ,pc,sp,G__store_struct_offset);
 #endif
 #endif
@@ -1871,7 +1871,7 @@ long localmem;
       * 1 isarray
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: DELETEFREE %lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: DELETEFREE %lx\n"
 			     ,pc,sp,G__store_struct_offset);
 #endif
 #ifdef G__OLDIMPLEMENTATION1437 /* risk */
@@ -1903,7 +1903,7 @@ long localmem;
       * sp       <-   sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SWAP\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SWAP\n",pc,sp);
 #endif
       G__asm_stack[sp] = G__asm_stack[sp-2];
       G__asm_stack[sp-2] = G__asm_stack[sp-1];
@@ -1929,7 +1929,7 @@ long localmem;
       * sp       <-   sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: BASECONV %d %d\n",pc,sp
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: BASECONV %d %d\n",pc,sp
 			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       G__asm_stack[sp-1].typenum = -1;
@@ -1958,10 +1958,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: STORETEMP 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: STORETEMP 0x%lx\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: STORETEMP 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: STORETEMP 0x%x\n"
 			     ,pc,sp ,G__p_tempbuf->obj.obj.i);
 #endif
 #endif
@@ -1982,7 +1982,7 @@ long localmem;
       * sp       <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ALLOCTEMP %s\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ALLOCTEMP %s\n"
 			     ,pc,sp,G__struct.name[G__asm_inst[pc+1]]);
 #endif
       G__alloc_tempobject(G__asm_inst[pc+1],-1);
@@ -2003,10 +2003,10 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: POPTEMP 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx\n"
 			     ,pc,sp ,store_p_tempbuf);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: POPTEMP 0x%x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x\n"
 			     ,pc,sp ,store_p_tempbuf);
 #endif
 #endif
@@ -2037,7 +2037,7 @@ long localmem;
       * sp      <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: REORDER paran=%d ig25=%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: REORDER paran=%d ig25=%d\n"
 			     ,pc,sp ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* x y z w */
@@ -2068,11 +2068,11 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_THIS 0x%lx %s\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_THIS 0x%lx %s\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__struct.name[G__tagnum]);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LD_THIS 0x%x %s\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LD_THIS 0x%x %s\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__struct.name[G__tagnum]);
 #endif
@@ -2097,7 +2097,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: RTN_FUNC %d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RTN_FUNC %d\n"
 			     ,pc,sp ,G__asm_inst[pc+1]);
 #endif
       G__asm_exec = 0;
@@ -2121,12 +2121,12 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETMEMFUNCENV %lx <- %lx %ld\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETMEMFUNCENV %lx <- %lx %ld\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__memberfunc_struct_offset
 			     ,memfuncenv_p);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETMEMFUNCENV %x <- %x %d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETMEMFUNCENV %x <- %x %d\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,G__memberfunc_struct_offset
 			     ,memfuncenv_p);
@@ -2152,12 +2152,12 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr("%3x,%d: RECMEMFUNCENV %lx <- %lx %ld\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RECMEMFUNCENV %lx <- %lx %ld\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,store_memfuncenv_struct_offset
 			     ,memfuncenv_p-1);
 #else
-      if(G__asm_dbg) G__fprinterr("%3x,%d: RECMEMFUNCENV %x <- %x %d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RECMEMFUNCENV %x <- %x %d\n"
 			     ,pc,sp ,G__store_struct_offset
 			     ,store_memfuncenv_struct_offset
 			     ,memfuncenv_p-1);
@@ -2181,7 +2181,7 @@ long localmem;
       * sp   <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ADDALLOCTABLE \n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ADDALLOCTABLE \n" ,pc,sp);
 #endif
       G__add_alloctable((void*)G__asm_stack[sp-1].obj.i
 			,G__asm_stack[sp-1].type
@@ -2200,7 +2200,7 @@ long localmem;
       * sp   <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: DELALLOCTABLE \n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: DELALLOCTABLE \n" ,pc,sp);
 #endif
       G__del_alloctable((void*)G__asm_stack[sp-1].obj.i);
       pc+=1;
@@ -2219,7 +2219,7 @@ long localmem;
       * 2 isarray
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: BASEDESTRUCT tagnum=%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: BASEDESTRUCT tagnum=%d\n"
 			     ,pc,sp,G__asm_inst[pc+1]);
 #endif
       store_tagnum = G__tagnum;
@@ -2266,7 +2266,7 @@ long localmem;
       var = (struct G__var_array*)G__asm_inst[pc+2];
       var->p[G__asm_inst[pc+1]] = G__int(G__asm_stack[sp-1]);
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: REDECL %s 0x%lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: REDECL %s 0x%lx\n"
 			     ,pc,sp,var->varnamebuf[G__asm_inst[pc+1]]
 			     ,var->p[G__asm_inst[pc+1]]);
 #endif
@@ -2287,7 +2287,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: TOVALUE\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: TOVALUE\n",pc,sp);
 #endif
 #ifndef G__OLDIMPLEMENTATION1401
       {
@@ -2321,12 +2321,12 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: INIT_REF index=%d paran=%d point %c"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: INIT_REF index=%d paran=%d point %c"
 			     ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("  value=%g\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"  value=%g\n"
 			     ,G__double(G__asm_stack[sp-1]));
 #endif
       var = (struct G__var_array*)G__asm_inst[pc+4];
@@ -2347,7 +2347,7 @@ long localmem;
       * sp+1            <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: PUSHCPY %g\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PUSHCPY %g\n"
 			     ,pc,sp,G__double(G__asm_stack[sp-1]));
 #endif
       ++pc;
@@ -2371,7 +2371,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: LETNEWVAL\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: LETNEWVAL\n" ,pc,sp);
 #endif
       G__letvalue(&G__asm_stack[sp-2],G__asm_stack[sp-1]);
       ++pc;
@@ -2393,7 +2393,7 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	G__fprinterr("%3x,%d: SETGVP %d\n",pc,sp,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3x,%d: SETGVP %d\n",pc,sp,G__asm_inst[pc+1]);
 #endif
       if(G__asm_inst[pc+1]) {
 	G__globalvarpointer = G__asm_inst[pc+1];
@@ -2416,7 +2416,7 @@ long localmem;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: TOPVALUE",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: TOPVALUE",pc,sp);
 #endif
 #ifndef G__OLDIMPLEMENTATION1400
       G__asm_toXvalue(&G__asm_stack[sp-1]);
@@ -2424,7 +2424,7 @@ long localmem;
       G__asm_stack[sp-1]=G__toXvalue(G__asm_stack[sp-1],'P');
 #endif
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(" %x\n",G__asm_stack[sp-1].obj.i);
+      if(G__asm_dbg) G__fprinterr(G__serr," %x\n",G__asm_stack[sp-1].obj.i);
 #endif
       ++pc;
 #ifdef G__ASM_DBG
@@ -2443,7 +2443,7 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	G__fprinterr("%3x,%d: CTOR_SETGVP\n",pc,sp);
+	G__fprinterr(G__serr,"%3x,%d: CTOR_SETGVP\n",pc,sp);
 #endif
       var=(struct G__var_array*)G__asm_inst[pc+2];
       G__globalvarpointer = localmem+var->p[G__asm_inst[pc+1]];
@@ -2505,7 +2505,7 @@ long localmem;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: SETARYINDEX\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: SETARYINDEX\n",pc,sp);
 #endif
       store_cpp_aryindex[store_cpp_aryindexp++] = G__cpp_aryconstruct;
       G__cpp_aryconstruct = G__int(G__asm_stack[sp-1]);
@@ -2524,7 +2524,7 @@ long localmem;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: RESETARYINDEX\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RESETARYINDEX\n",pc,sp);
 #endif
       if(G__asm_inst[pc+1]) {
 	G__alloc_newarraylist(G__int(G__asm_stack[sp-1]),G__cpp_aryconstruct);
@@ -2544,7 +2544,7 @@ long localmem;
       * 0 GETARYINDEX
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: GETARYINDEX\n",pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: GETARYINDEX\n",pc,sp);
 #endif
       store_cpp_aryindex[store_cpp_aryindexp++] = G__cpp_aryconstruct;
       G__cpp_aryconstruct = G__free_newarraylist(G__store_struct_offset);
@@ -2563,7 +2563,7 @@ long localmem;
       * 0 NOP
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: NOP\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: NOP\n" ,pc,sp);
 #endif
       ++pc;
 #ifdef G__ASM_DBG
@@ -2580,7 +2580,7 @@ long localmem;
       * never happen.
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x,%d: ILLEGAL INST\n" ,pc,sp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ILLEGAL INST\n" ,pc,sp);
 #endif
       G__asm_execerr("Illegal instruction",(int)G__asm_inst[pc]);
       return(0);
@@ -6002,7 +6002,7 @@ G__value *pbuf;
 void G__suspendbytecode() 
 {
   if(G__asm_dbg && G__asm_noverflow) {
-    G__fprinterr("Note: Bytecode compiler suspended(off) and resumed(on)");
+    G__fprinterr(G__serr,"Note: Bytecode compiler suspended(off) and resumed(on)");
     G__printlinenum();
   }
   G__asm_noverflow=0;
@@ -6013,7 +6013,7 @@ void G__suspendbytecode()
 void G__resetbytecode() 
 {
   if(G__asm_dbg && G__asm_noverflow) {
-    G__fprinterr("Note: Bytecode compiler reset (off)");
+    G__fprinterr(G__serr,"Note: Bytecode compiler reset (off)");
     G__printlinenum();
   }
   G__asm_noverflow=0;
@@ -6029,12 +6029,12 @@ void G__abortbytecode()
   if(G__asm_dbg && G__asm_noverflow) {
 #ifndef G__OLDIMPLEMENTATION1164
     if(0==G__xrefflag) 
-      G__fprinterr("Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
+      G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
 	      ,G__asm_noverflow);
     else
-      G__fprinterr("Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
+      G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
 #else
-    G__fprinterr("Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
+    G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
 	    ,G__asm_noverflow);
 #endif
     G__printlinenum();
@@ -6074,7 +6074,7 @@ int cp_inc,dt_dec;
   if(G__asm_cp>G__MAXINST-8) {
 #ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg) {
-      G__fprinterr("Warning: loop compile instruction overflow");
+      G__fprinterr(G__serr,"Warning: loop compile instruction overflow");
       G__printlinenum();
     }
 #endif
@@ -6084,7 +6084,7 @@ int cp_inc,dt_dec;
   if(G__asm_dt<30) {
 #ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg) {
-      G__fprinterr("Warning: loop compile data overflow");
+      G__fprinterr(G__serr,"Warning: loop compile data overflow");
       G__printlinenum();
     }
 #endif
@@ -6127,7 +6127,7 @@ int G__clear_asm()
 int G__asm_clear()
 {
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
+  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
 			 ,G__ifile.name ,G__ifile.line_number);
 #endif
 
@@ -6150,7 +6150,7 @@ int G__asm_putint(i)
 int i;
 {
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("%3x: LD %d from %x\n",G__asm_cp,i,G__asm_dt);
+  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n",G__asm_cp,i,G__asm_dt);
 #endif
   G__asm_inst[G__asm_cp]=G__LD;
   G__asm_inst[G__asm_cp+1]=G__asm_dt;
@@ -6240,7 +6240,7 @@ void **ppdict;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: GETRSVD $%s\n" ,G__asm_cp,item);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: GETRSVD $%s\n" ,G__asm_cp,item);
 #endif
       /* GETRSVD */
       G__asm_inst[G__asm_cp]=G__GETRSVD;
@@ -6389,7 +6389,7 @@ long *inst;
     *inst = (long)G__asm_test_g;
     break;
   default:
-    G__fprinterr("Error: Loop compile optimizer, illegal conditional instruction %d(%c) FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"Error: Loop compile optimizer, illegal conditional instruction %d(%c) FILE:%s LINE:%d\n"
 	    ,op,op,G__ifile.name,G__ifile.line_number);
     break;
   }
@@ -6475,7 +6475,7 @@ int *start;
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: CMPJMP i %c %d optimized\n"
+      G__fprinterr(G__serr,"%3x: CMPJMP i %c %d optimized\n"
 	      ,*start+6,G__asm_inst[*start+8]
 	      ,G__int(G__asm_stack[G__asm_inst[*start+6]]));
 #endif
@@ -6557,7 +6557,7 @@ int *start;
 
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: CMPJMP a %c b optimized\n"
+      G__fprinterr(G__serr,"%3x: CMPJMP a %c b optimized\n"
 	      ,*start+9,G__asm_inst[*start+11]);
 #endif
     G__asm_gettest((int)G__asm_inst[*start+11] ,&G__asm_inst[*start+10]);
@@ -6629,7 +6629,7 @@ int *start;
 #endif
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: INCJMP  i++ optimized\n",G__asm_cp-9);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i++ optimized\n",G__asm_cp-9);
 #endif
 
     G__asm_inst[G__asm_cp-8]=
@@ -6713,7 +6713,7 @@ int *start;
 #endif
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: INCJMP  i+=1 optimized\n",G__asm_cp-11);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i+=1 optimized\n",G__asm_cp-11);
 #endif
 
     G__asm_inst[G__asm_cp-10]=
@@ -6798,7 +6798,7 @@ int *start;
 	  G__asm_inst[G__asm_cp-4]=='p') {
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: INCJMP  i=i+1 optimized\n",G__asm_cp-16);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i=i+1 optimized\n",G__asm_cp-16);
 #endif
     G__asm_inst[G__asm_cp-16]=G__INCJMP;
 
@@ -7223,13 +7223,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P: /* illegal case */
-      G__fprinterr("  G__LD_VAR REF optimized 6 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR REF optimized 6 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR REF optimized 6 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR REF optimized 6 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LVAR REF optimized 6 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LVAR REF optimized 6 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7239,7 +7239,7 @@ long inst;
   if(0==G__get_LD_Rp0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
+      G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
 	      ,var->varnamebuf[ig15]);
     }
 #endif
@@ -7262,13 +7262,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P: /* illegal case */
-      G__fprinterr("  G__ST_VAR REF optimized 6 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR REF optimized 6 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__ST_MSTR REF optimized 6 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__ST_MSTR REF optimized 6 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__ST_LVAR REF optimized 6 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_LVAR REF optimized 6 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7278,7 +7278,7 @@ long inst;
   if(0==G__get_ST_Rp0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
+      G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n"
 	      ,var->varnamebuf[ig15]);
     }
 #endif
@@ -7301,13 +7301,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P: /* illegal case */
-      G__fprinterr("  G__LD_VAR REF optimized 7 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR REF optimized 7 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR REF optimized 7 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR REF optimized 7 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LVAR REF optimized 7 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LVAR REF optimized 7 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7317,7 +7317,7 @@ long inst;
   if(0==G__get_LD_RP0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("Error: LD_VAR,LD_MSTR REF optimize (7) error %s\n"
+      G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR REF optimize (7) error %s\n"
 	      ,var->varnamebuf[ig15]);
     }
 #endif
@@ -7344,13 +7344,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__LD_VAR optimized 6 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR optimized 6 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR optimized 6 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR optimized 6 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LvAR optimized 6 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LvAR optimized 6 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7360,7 +7360,7 @@ long inst;
   if(0==G__get_LD_p0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("Error: LD_VAR,LD_MSTR optimize (6) error %s\n"
+      G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR optimize (6) error %s\n"
 	      ,var->varnamebuf[ig15]);
     }
 #endif
@@ -7384,13 +7384,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__LD_VAR optimized 7 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR optimized 7 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR optimized 7 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR optimized 7 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LVAR optimized 7 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LVAR optimized 7 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7399,7 +7399,7 @@ long inst;
   G__asm_inst[pc+3] = 0;
   if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Error: LD_VAR optimize (8) error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (8) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7423,13 +7423,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__LD_VAR optimized 8 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR optimized 8 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR optimized 8 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR optimized 8 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LVAR optimized 8 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LVAR optimized 8 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7438,7 +7438,7 @@ long inst;
   G__asm_inst[pc+3] = 0;
   if(0==G__get_LD_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Error: LD_VAR optimize (8) error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (8) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7462,13 +7462,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__LD_VAR optimized 9 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_VAR optimized 9 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__LD_MSTR optimized 9 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__LD_MSTR optimized 9 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__LD_LVAR optimized 9 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__LD_LVAR optimized 9 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7478,7 +7478,7 @@ long inst;
   if(0==G__get_LD_P10_p2f(var->type[ig15],&G__asm_inst[pc+2]
 			  ,var->reftype[ig15])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Error: LD_VAR optimize (9) error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Error: LD_VAR optimize (9) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7502,13 +7502,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__ST_VAR optimized 8 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 8 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__ST_MSTR optimized 8 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__ST_MSTR optimized 8 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__ST_VAR optimized 8 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 8 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7517,7 +7517,7 @@ long inst;
   G__asm_inst[pc+3] = 1;
   if(0==G__get_ST_p0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Warning: ST_VAR optimize (8) error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize (8) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7540,13 +7540,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__ST_VAR optimized 9 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 9 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__ST_MSTR optimized 9 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__ST_MSTR optimized 9 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__ST_VAR optimized 9 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 9 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7555,7 +7555,7 @@ long inst;
   G__asm_inst[pc+3] = 1;
   if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Warning: ST_VAR optimize error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7579,13 +7579,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__ST_VAR optimized 10 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 10 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__ST_MSTR optimized 10 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__ST_MSTR optimized 10 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__ST_VAR optimized 10 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 10 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7594,7 +7594,7 @@ long inst;
   G__asm_inst[pc+3] = 1;
   if(0==G__get_ST_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Warning: ST_VAR optimize error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Warning: ST_VAR optimize error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7618,13 +7618,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      G__fprinterr("  G__ST_VAR optimized 7 G__LDST_VAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_VAR optimized 7 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      G__fprinterr("  G__ST_MSTR optimized 7 G__LDST_MSTR_P\n");
+      G__fprinterr(G__serr,"  G__ST_MSTR optimized 7 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      G__fprinterr("  G__ST_LVAR optimized 7 G__LDST_LVAR_P\n");
+      G__fprinterr(G__serr,"  G__ST_LVAR optimized 7 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -7634,7 +7634,7 @@ long inst;
   if(0==G__get_ST_P10_p2f(var->type[ig15],&G__asm_inst[pc+2]
 			  ,var->reftype[ig15])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("Error: ST_VAR optimize (7) error %s\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"Error: ST_VAR optimize (7) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -7692,7 +7692,7 @@ int *pi;
       if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr("Error: LD_VAR,LD_VAR[1] optimize error %s\n"
+	  G__fprinterr(G__serr,"Error: LD_VAR,LD_VAR[1] optimize error %s\n"
 		  ,var->varnamebuf[ig15]);
 #endif
       }
@@ -7706,7 +7706,7 @@ int *pi;
 	G__asm_inst[pc+6] = G__asm_inst[pc+9];
 	*ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX (1) optimized\n");
+	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (1) optimized\n");
 #endif
       }
     }
@@ -7732,7 +7732,7 @@ int *pi;
       if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr("Error: LD_VAR,ST_VAR[1] optimize error %s\n"
+	  G__fprinterr(G__serr,"Error: LD_VAR,ST_VAR[1] optimize error %s\n"
 		  ,var->varnamebuf[ig15]);
 #endif
       }
@@ -7746,7 +7746,7 @@ int *pi;
 	G__asm_inst[pc+6] = G__asm_inst[pc+9];
 	*ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX (2) optimized\n");
+	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (2) optimized\n");
 #endif
       }
     }
@@ -7806,7 +7806,7 @@ int *pi;
       if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 		  "Error: LD_VAR,LD,OP2,LD_VAR[1] optimize error %s\n"
 		  ,var->varnamebuf[ig15]);
 #endif
@@ -7830,7 +7830,7 @@ int *pi;
 	G__asm_inst[pc+8] = G__asm_inst[pc+13];
 	*ppc = pc+9; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX_OPR (3) optimized\n");
+	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (3) optimized\n");
 #endif
       }
     }
@@ -7874,7 +7874,7 @@ int *pi;
       if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+4])) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 		  "Error: LD_VAR,LD,OP2,ST_VAR[1] optimize error %s\n"
 		  ,var->varnamebuf[ig15]);
 #endif
@@ -7898,7 +7898,7 @@ int *pi;
 	G__asm_inst[pc+8] = G__asm_inst[pc+13];
 	*ppc = pc+9; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX_OPR (4) optimized\n");
+	if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX_OPR (4) optimized\n");
 #endif
       }
     }
@@ -7994,7 +7994,7 @@ int *pi;
     if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("Error: LD,LD_VAR[1] optimize error %s\n"
+	G__fprinterr(G__serr,"Error: LD,LD_VAR[1] optimize error %s\n"
 		,var->varnamebuf[ig15]);
 #endif
     }
@@ -8009,7 +8009,7 @@ int *pi;
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX (5) optimized\n");
+      if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (5) optimized\n");
 #endif
     }
   }
@@ -8048,7 +8048,7 @@ int *pi;
     if(0==G__get_ST_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("Error: LD,ST_VAR[1] optimize error %s\n"
+	G__fprinterr(G__serr,"Error: LD,ST_VAR[1] optimize error %s\n"
 		,var->varnamebuf[ig15]);
 #endif
     }
@@ -8063,7 +8063,7 @@ int *pi;
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("LDST_VAR_INDEX (6) optimized\n");
+      if(G__asm_dbg) G__fprinterr(G__serr,"LDST_VAR_INDEX (6) optimized\n");
 #endif
     }
   }
@@ -8273,7 +8273,7 @@ int *start;
 
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
-    G__fprinterr("Optimize 3 start\n");
+    G__fprinterr(G__serr,"Optimize 3 start\n");
   }
 #endif
 
@@ -8297,7 +8297,7 @@ int *start;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3lx: LDST_VAR_P index=%ld %s\n"
+	G__fprinterr(G__serr,"%3lx: LDST_VAR_P index=%ld %s\n"
 		,pc,G__asm_inst[pc+1]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -8319,7 +8319,7 @@ int *start;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3lx: LDST_MSTR_P index=%d %s\n"
+	G__fprinterr(G__serr,"%3lx: LDST_MSTR_P index=%d %s\n"
 		,pc,G__asm_inst[pc+1]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -8343,7 +8343,7 @@ int *start;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+6];
-	G__fprinterr("%3lx: LDST_VAR_INDEX index=%d %s\n"
+	G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX index=%d %s\n"
 		,pc,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+3]]);
       }
@@ -8369,7 +8369,7 @@ int *start;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+8];
-	G__fprinterr("%3lx: LDST_VAR_INDEX_OPR index=%d %s\n"
+	G__fprinterr(G__serr,"%3lx: LDST_VAR_INDEX_OPR index=%d %s\n"
 		,pc,G__asm_inst[pc+5]
 		,var->varnamebuf[G__asm_inst[pc+5]]);
       }
@@ -8388,7 +8388,7 @@ int *start;
       * sp    G__null
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: OP2_OPTIMIZED \n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP2_OPTIMIZED \n",pc);
 #endif
       pc+=2;
       break;
@@ -8403,7 +8403,7 @@ int *start;
       * sp    G__null     <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: OP1_OPTIMIZED \n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1_OPTIMIZED \n",pc);
 #endif
       pc+=2;
       break;
@@ -8428,7 +8428,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: LD_VAR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: LD_VAR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -8471,7 +8471,7 @@ int *start;
       * sp+1             <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LD %g from %x \n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD %g from %x \n"
 			     ,pc
 			     ,G__double(G__asm_stack[G__asm_inst[pc+1]])
 			     ,G__asm_inst[pc+1]);
@@ -8489,7 +8489,7 @@ int *start;
       *  clear stack pointer
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: CL %d\n",pc,G__asm_inst[pc+1]);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %d\n",pc,G__asm_inst[pc+1]);
 #endif
       /* no optimize */
       pc+=2;
@@ -8507,12 +8507,12 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(isprint(G__asm_inst[pc+1])) {
-	if(G__asm_dbg) G__fprinterr("%3lx: OP2 '%c'%d \n" ,pc
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP2 '%c'%d \n" ,pc
 		,G__asm_inst[pc+1],G__asm_inst[pc+1]);
       }
       else {
 	if(G__asm_dbg)
-	  G__fprinterr("%3lx: OP2 %d \n",pc,G__asm_inst[pc+1]);
+	  G__fprinterr(G__serr,"%3lx: OP2 %d \n",pc,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization */
@@ -8540,7 +8540,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: ST_VAR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: ST_VAR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -8587,7 +8587,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: LD_MSTR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: LD_MSTR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -8627,7 +8627,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
+	G__fprinterr(G__serr,"%3lx: CMPJMP (0x%lx)%d (0x%lx)%d to %lx\n"
 		,pc
 		,G__asm_inst[pc+2],*(int *)G__asm_inst[pc+2]
 		,G__asm_inst[pc+3],*(int *)G__asm_inst[pc+3]
@@ -8646,7 +8646,7 @@ int *start;
       * sp           <- sp-paran
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: PUSHSTROS\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: PUSHSTROS\n" ,pc);
 #endif
       /* no optmization */
       ++pc;
@@ -8661,7 +8661,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SETSTROS\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SETSTROS\n",pc);
 #endif
       /* no optmization */
       ++pc;
@@ -8675,7 +8675,7 @@ int *start;
       * sp           <- sp-paran
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: POPSTROS\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: POPSTROS\n" ,pc);
 #endif
       /* no optmization */
       ++pc;
@@ -8701,7 +8701,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: ST_MSTR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: ST_MSTR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -8739,7 +8739,7 @@ int *start;
       * 3 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: INCJMP *(int*)0x%lx+%d to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: INCJMP *(int*)0x%lx+%d to %x\n"
 			     ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -8756,7 +8756,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: CNDJMP to %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CNDJMP to %x\n"
 			     ,pc ,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
@@ -8773,7 +8773,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: CMP2 '%c' \n" ,pc ,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3lx: CMP2 '%c' \n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization, but not high priority */
@@ -8787,7 +8787,7 @@ int *start;
       * 1 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: JMP %x\n" ,pc,G__asm_inst[pc+1]);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: JMP %x\n" ,pc,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
       pc+=2;
@@ -8802,7 +8802,7 @@ int *start;
       * sp+1            <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: PUSHCPY\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: PUSHCPY\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -8817,7 +8817,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: POP\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: POP\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -8839,11 +8839,11 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_inst[pc+1]<G__MAXSTRUCT) {
-	if(G__asm_dbg) G__fprinterr("%3lx: LD_FUNC %s paran=%d\n" ,pc
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
 		,"compiled",G__asm_inst[pc+3]);
       }
       else {
-	if(G__asm_dbg) G__fprinterr("%3lx: LD_FUNC %s paran=%d\n" ,pc
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_FUNC %s paran=%d\n" ,pc
 		,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
 #endif
@@ -8856,7 +8856,7 @@ int *start;
       * 0 RETURN
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: RETURN\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: RETURN\n" ,pc);
 #endif
       /* no optimization */
       pc++;
@@ -8876,7 +8876,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: CAST to %c type%d tag%d\n" ,pc
+	G__fprinterr(G__serr,"%3lx: CAST to %c type%d tag%d\n" ,pc
 		,(char)G__asm_inst[pc+1],G__asm_inst[pc+2],G__asm_inst[pc+3]);
       }
 #endif
@@ -8895,11 +8895,11 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(isprint(G__asm_inst[pc+1])){
-	if(G__asm_dbg) G__fprinterr("%3lx: OP1 '%c'%d\n",pc
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 '%c'%d\n",pc
 		,G__asm_inst[pc+1],G__asm_inst[pc+1] );
       }
       else {
-	if(G__asm_dbg) G__fprinterr("%3lx: OP1 %d\n",pc,G__asm_inst[pc+1]);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 %d\n",pc,G__asm_inst[pc+1]);
       }
 #endif
       /* need optimization */
@@ -9079,7 +9079,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LETVVAL\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LETVVAL\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9093,7 +9093,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: ADDSTROS %d\n" ,pc,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3lx: ADDSTROS %d\n" ,pc,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -9110,7 +9110,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LETPVAL\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LETPVAL\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9121,7 +9121,7 @@ int *start;
       * 0 FREETEMP
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: FREETEMP\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: FREETEMP\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9132,7 +9132,7 @@ int *start;
       * 0 SETTEMP
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SETTEMP\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SETTEMP\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9144,7 +9144,7 @@ int *start;
       * 0 GETRSVD
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: GETRSVD\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: GETRSVD\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9159,7 +9159,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: TOPNTR\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TOPNTR\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9170,7 +9170,7 @@ int *start;
       * 0 NOT
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: NOT\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: NOT\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9182,7 +9182,7 @@ int *start;
       * 0 BOOL
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: BOOL\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: BOOL\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9195,7 +9195,7 @@ int *start;
       * 1 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: !ISDEFAULTPARA JMP %x\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: !ISDEFAULTPARA JMP %x\n"
 			     ,pc,G__asm_inst[pc+1]);
 #endif
       pc+=2;
@@ -9217,7 +9217,7 @@ int *start;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var = (struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr("%3lx: LDST_LVAR_P index=%d %s\n"
+	G__fprinterr(G__serr,"%3lx: LDST_LVAR_P index=%d %s\n"
 		,pc,G__asm_inst[pc+1]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -9245,7 +9245,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: LD_LVAR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: LD_LVAR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -9314,7 +9314,7 @@ int *start;
       var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: ST_LVAR index=%d paran=%d point %c %s\n"
+	G__fprinterr(G__serr,"%3lx: ST_LVAR index=%d paran=%d point %c %s\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
@@ -9369,7 +9369,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: REWINDSTACK %d\n" ,pc,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3lx: REWINDSTACK %d\n" ,pc,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -9386,7 +9386,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: CND1JMP  to %x\n" ,pc ,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3lx: CND1JMP  to %x\n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -9412,7 +9412,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LD_IFUNC %s paran=%d\n" ,pc
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_IFUNC %s paran=%d\n" ,pc
 			     ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       /* need optimization, later */
@@ -9429,7 +9429,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: NEWALLOC size(%d)\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: NEWALLOC size(%d)\n"
 			     ,pc,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
@@ -9446,7 +9446,7 @@ int *start;
       * sp       <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SET_NEWALLOC\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SET_NEWALLOC\n" ,pc);
 #endif
       /* no optimization */
       pc+=3;
@@ -9459,7 +9459,7 @@ int *start;
       * 1 isarray
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: DELETEFREE\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: DELETEFREE\n",pc);
 #endif
       /* no optimization */
       pc+=2;
@@ -9475,7 +9475,7 @@ int *start;
       * sp       <-   sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SWAP\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SWAP\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9495,7 +9495,7 @@ int *start;
       * sp       <-   sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: BASECONV %d %d\n",pc
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: BASECONV %d %d\n",pc
 			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
@@ -9510,7 +9510,7 @@ int *start;
       * sp       <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: STORETEMP\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: STORETEMP\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9526,7 +9526,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: ALLOCTEMP %s\n",pc
+	G__fprinterr(G__serr,"%3lx: ALLOCTEMP %s\n",pc
 		,G__struct.name[G__asm_inst[pc+1]]);
       }
 #endif
@@ -9544,7 +9544,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: POPTEMP %s\n" ,pc
+	G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
 		,G__struct.name[G__asm_inst[pc+1]]);
       }
 #endif
@@ -9564,7 +9564,7 @@ int *start;
       * sp      <-  sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: REORDER paran=%d ig25=%d\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: REORDER paran=%d ig25=%d\n"
 			     ,pc ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
 #endif
       /* no optimization */
@@ -9581,7 +9581,7 @@ int *start;
       * sp+1   <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LD_THIS %s\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD_THIS %s\n"
 			     ,pc ,G__struct.name[G__tagnum]);
 #endif
       /* no optimization */
@@ -9598,7 +9598,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: RTN_FUNC %d\n" ,pc ,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3lx: RTN_FUNC %d\n" ,pc ,G__asm_inst[pc+1]);
       }
 #endif
       /* no optimization */
@@ -9610,7 +9610,7 @@ int *start;
       * 0 SETMEMFUNCENV:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SETMEMFUNCENV\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SETMEMFUNCENV\n",pc);
 #endif
       /* no optimization */
       pc+=1;
@@ -9621,7 +9621,7 @@ int *start;
       * 0 RECMEMFUNCENV:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: RECMEMFUNCENV\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: RECMEMFUNCENV\n" ,pc);
 #endif
       /* no optimization */
       pc+=1;
@@ -9632,7 +9632,7 @@ int *start;
       * 0 ADDALLOCTABLE:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: ADDALLOCTABLE\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: ADDALLOCTABLE\n" ,pc);
 #endif
       /* no optimization */
       pc+=1;
@@ -9643,7 +9643,7 @@ int *start;
       * 0 DELALLOCTABLE:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: DELALLOCTABLE\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: DELALLOCTABLE\n" ,pc);
 #endif
       /* no optimization */
       pc+=1;
@@ -9657,7 +9657,7 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3lx: BASECONSTRUCT tagnum=%d isarray=%d\n"
+	G__fprinterr(G__serr,"%3lx: BASECONSTRUCT tagnum=%d isarray=%d\n"
 		,pc,G__asm_inst[pc+1],G__asm_inst[pc+2]);
       }
 #endif
@@ -9672,7 +9672,7 @@ int *start;
       * 2 var
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: REDECL\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: REDECL\n",pc);
 #endif
       /* no optimization */
       pc+=3;
@@ -9683,7 +9683,7 @@ int *start;
       * 0 TOVALUE:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: TOVALUE\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TOVALUE\n",pc);
 #endif
       /* no optimization */
 #ifndef G__OLDIMPLEMENTATION1401
@@ -9709,7 +9709,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: INIT_REF\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: INIT_REF\n",pc);
 #endif
       pc+=5;
       break;
@@ -9725,7 +9725,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: LETNEWVAL\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LETNEWVAL\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9741,7 +9741,7 @@ int *start;
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SETGVP\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SETGVP\n" ,pc);
 #endif
       /* no optimization */
       pc+=2;
@@ -9756,7 +9756,7 @@ int *start;
       * 2 var_array pointer
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: CTOR_SETGVP\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CTOR_SETGVP\n",pc);
 #endif
       /* no optimization */
       pc+=3;
@@ -9768,7 +9768,7 @@ int *start;
       * 0 TOPVALUE:
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: TOPVALUE\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TOPVALUE\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9785,7 +9785,7 @@ int *start;
       ***************************************/
       pc+=1;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: THROW\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: THROW\n",pc);
 #endif
       /* no optimization */
       break;
@@ -9801,7 +9801,7 @@ int *start;
       ***************************************/
       pc+=5;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: CATCH\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CATCH\n",pc);
 #endif
       /* no optimization */
       break;
@@ -9815,7 +9815,7 @@ int *start;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: SETARYINDEX\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: SETARYINDEX\n",pc);
 #endif
       /* no optimization */
       pc+=2;
@@ -9828,7 +9828,7 @@ int *start;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: RESETARYINDEX\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: RESETARYINDEX\n",pc);
 #endif
       /* no optimization */
       pc+=2;
@@ -9840,7 +9840,7 @@ int *start;
       * 0 GETARYINDEX
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: GETARYINDEX\n",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: GETARYINDEX\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9852,7 +9852,7 @@ int *start;
       * 0 NOP
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3lx: NOP\n" ,pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: NOP\n" ,pc);
 #endif
       /* no optimization */
       ++pc;
@@ -9864,7 +9864,7 @@ int *start;
       * This is a double check and should
       * never happen.
       ***************************************/
-      G__fprinterr("%3x: illegal instruction 0x%lx\t%ld\n"
+      G__fprinterr(G__serr,"%3x: illegal instruction 0x%lx\t%ld\n"
 	      ,pc,G__asm_inst[pc],G__asm_inst[pc]);
       ++pc;
       ++illegal;
@@ -10498,7 +10498,7 @@ int isthrow;
       * 1 next_pc
       ***************************************/
       if(0==isthrow) {
-	G__fprinterr("%3x: !ISDEFAULTPARA JMP %lx\n",pc,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3x: !ISDEFAULTPARA JMP %lx\n",pc,G__asm_inst[pc+1]);
       }
       pc+=2;
       break;
@@ -10893,7 +10893,7 @@ int isthrow;
       * sp
       ***************************************/
       if(0==isthrow) {
-	if(G__asm_dbg) G__fprinterr("%3x: INIT_REF\n",pc);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INIT_REF\n",pc);
       }
       pc+=5;
       break;
@@ -11018,7 +11018,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	G__fprinterr("%3x: SETARYINDEX\n",pc);
+	G__fprinterr(G__serr,"%3x: SETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -11030,7 +11030,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	G__fprinterr("%3x: RESETARYINDEX\n",pc);
+	G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -11041,7 +11041,7 @@ int isthrow;
       * 0 GETARYINDEX
       ***************************************/
       if(isthrow) {
-	G__fprinterr("%3x: GETARYINDEX\n",pc);
+	G__fprinterr(G__serr,"%3x: GETARYINDEX\n",pc);
       }
       ++pc;
       break;

@@ -18,6 +18,8 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
+/* #define G__FIX1 */
+
 #include "common.h"
 
 int G__browsing=1; /* used in disp.c and intrpt.c */
@@ -136,7 +138,7 @@ FILE* fp;
 char* msg;
 {
 #ifndef G__OLDIMPLEMENTATION1485
-  if(fp==G__serr) G__fprinterr(msg);
+  if(fp==G__serr) G__fprinterr(G__serr,msg);
   else fprintf(fp,msg);
     
 #else
@@ -503,7 +505,7 @@ char *fname;
     return(0);
   }
 
-  G__fprinterr("File %s is not loaded\n",fname);
+  G__fprinterr(G__serr,"File %s is not loaded\n",fname);
   return(1);
 }
 #endif
@@ -885,7 +887,7 @@ int startin;
   if(name[i]) {
     start = G__defined_typename(name+i);
     if(-1==start) {
-      G__fprinterr("!!!Type %s is not defined\n",name+i);
+      G__fprinterr(G__serr,"!!!Type %s is not defined\n",name+i);
       return(0);
     }
     stop = start+1;
@@ -1635,7 +1637,7 @@ long offset;
   }
   else {
     if(isdigit(index[0])) {
-      G__fprinterr("variable name must be specified\n");
+      G__fprinterr(G__serr,"variable name must be specified\n");
       return(0);
     }
     else {
@@ -1966,23 +1968,31 @@ void *p;
 }
 
 #ifndef G__TESTMAIN
+#undef G__fprinterr
 /**************************************************************************
 * G__fprinterr()
+*
+* CAUTION:
+*  In case you have problem compling following function, define G__FIX1
+* at the beginning of this file.
 **************************************************************************/
-#if defined(G__ANSI) || defined(G__WIN32)
-int G__fprinterr(char* fmt,...)
+#if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1)
+int G__fprinterr(FILE* fp,char* fmt,...)
 #elif defined(__GNUC__)
-int G__fprinterr(fmt)
+int G__fprinterr(pf,fmt)
+FILE* fp;
 char* fmt;
 ...
 #else
-int G__fprinterr(fmt,arg)
+int G__fprinterr(fp,fmt,arg)
+FILE* fp;
 char* fmt;
 va_list arg;
 #endif
 {
   int result;
   va_list argptr;
+  fp;
   va_start(argptr,fmt);
   if(G__ErrMsgCallback && G__serr==G__stderr) {
     char buf[G__LONGLINE];

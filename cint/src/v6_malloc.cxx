@@ -55,9 +55,9 @@ static long G__getstaticobject()
   } while(var);
 #ifndef G__PHILIPPE21
   if(0==G__const_noerror) 
-    G__fprinterr("Error: No memory for static %s ",temp);
+    G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
 #else
-  G__fprinterr("Error: No memory for static %s ",temp);
+  G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
 #endif
   G__genericerror((char*)NULL);
   return(0);
@@ -140,7 +140,7 @@ char *item;
 	  }
 	  var = var->next;
 	} while(var);
-	G__fprinterr("Error: No memory for static %s ",temp);
+	G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
 	G__genericerror((char*)NULL);
 #endif
       }

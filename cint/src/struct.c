@@ -127,7 +127,7 @@ int G__using_namespace()
 	base->baseaccess[*pbasen]=G__PUBLIC;
 	++(*pbasen);
 #ifdef G__OLDIMPLEMENTATION1060
-	G__fprinterr("Warning: using directive in global scope, not completely supported");
+	G__fprinterr(G__serr,"Warning: using directive in global scope, not completely supported");
 	G__printlinenum();
 #endif
       }
@@ -536,7 +536,7 @@ int noerror;
 #ifndef G__OLDIMPLEMENTATION957
     while((cx=tagname[i2++])) if(G__isoperator(cx)) return(-1);
 #endif
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "Error: class,struct,union or type %s not defined " ,tagname);
     G__genericerror((char*)NULL);
   }
@@ -580,7 +580,7 @@ int type;
     i=G__struct.alltag;
     
     if(i==G__MAXSTRUCT) {
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	      "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n"
 	      ,G__MAXSTRUCT
 	      ,G__ifile.name
@@ -902,7 +902,7 @@ char type;
 #ifdef G__ASM
 #ifdef G__ASM_DBG
   if(G__asm_dbg&&G__asm_noverflow)
-    G__fprinterr("LOOP COMPILE ABORTED FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"LOOP COMPILE ABORTED FILE:%s LINE:%d\n"
 	    ,G__ifile.name
 	    ,G__ifile.line_number);
 #endif
@@ -924,7 +924,7 @@ char type;
 
 #ifndef G__OLDIMPLEMENTATION1038
   if(strlen(tagname)>=G__LONGLINE) {
-    G__fprinterr("Limitation: class name too long. Must be < %d"
+    G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 	    ,G__LONGLINE);
     G__genericerror((char*)NULL);
   }
@@ -1121,7 +1121,7 @@ char type;
 
 #ifndef G__OLDIMPLEMENTATION1038
     if(strlen(basename)>=G__LONGLINE) {
-      G__fprinterr("Limitation: class name too long. Must be < %d"
+      G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 	      ,G__LONGLINE);
       G__genericerror((char*)NULL);
     }
@@ -1139,7 +1139,7 @@ char type;
       isvirtualbase = G__ISVIRTUALBASE;
 #ifndef G__OLDIMPLEMENTATION1038
       if(strlen(basename)>=G__LONGLINE) {
-	G__fprinterr("Limitation: class name too long. Must be < %d"
+	G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 		,G__LONGLINE);
 	G__genericerror((char*)NULL);
       }
@@ -1157,7 +1157,7 @@ char type;
 #endif
 #ifndef G__OLDIMPLEMENTATION1038
       if(strlen(basename)>=G__LONGLINE) {
-	G__fprinterr("Limitation: class name too long. Must be < %d"
+	G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 		,G__LONGLINE);
 	G__genericerror((char*)NULL);
       }
@@ -1172,7 +1172,7 @@ char type;
 #endif
 #ifndef G__OLDIMPLEMENTATION1038
       if(strlen(basename)>=G__LONGLINE) {
-	G__fprinterr("Limitation: class name too long. Must be < %d"
+	G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 		,G__LONGLINE);
 	G__genericerror((char*)NULL);
       }
@@ -1187,7 +1187,7 @@ char type;
 #endif
 #ifndef G__OLDIMPLEMENTATION1038
       if(strlen(basename)>=G__LONGLINE) {
-	G__fprinterr("Limitation: class name too long. Must be < %d"
+	G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 		,G__LONGLINE);
 	G__genericerror((char*)NULL);
       }
@@ -1203,7 +1203,7 @@ char type;
       isvirtualbase = G__ISVIRTUALBASE;
 #ifndef G__OLDIMPLEMENTATION1038
       if(strlen(basename)>=G__LONGLINE) {
-	G__fprinterr("Limitation: class name too long. Must be < %d"
+	G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
 		,G__LONGLINE);
 	G__genericerror((char*)NULL);
       }
@@ -1672,7 +1672,7 @@ char type;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-    G__fprinterr("G__tagnum=%d G__def_tagnum=%d G__def_struct_member=%d\n"
+    G__fprinterr(G__serr,"G__tagnum=%d G__def_tagnum=%d G__def_struct_member=%d\n"
 	    ,G__tagnum,G__def_tagnum,G__def_struct_member);
     G__printlinenum();
   }

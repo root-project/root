@@ -328,7 +328,7 @@ int ifn;
      * LD_FUNC (C++ compiled)
      ****************************************/
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(
+    if(G__asm_dbg) G__fprinterr(G__serr,
 			   "%3x: LD_FUNC C++ compiled %s paran=%d\n"
 			   ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
 #endif
@@ -617,7 +617,7 @@ FILE *fp;
       fprintf(fp,"}\n");
     }
     else {
-      G__fprinterr("Note: operator new() masked %x\n"
+      G__fprinterr(G__serr,"Note: operator new() masked %x\n"
 	      ,G__is_operator_newdelete);
     }
 #ifdef G__N_EXPLICITDESTRUCTOR
@@ -630,7 +630,7 @@ FILE *fp;
       fprintf(fp,"}\n");
     }
     else {
-      G__fprinterr("Note: operator delete() masked %x\n"
+      G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
 	      ,G__is_operator_newdelete);
     }
 #endif /* G__N_EXPLICITDESTRUCTOR */
@@ -710,7 +710,7 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr("Note: operator new() masked %x\n"
+    G__fprinterr(G__serr,"Note: operator new() masked %x\n"
 	    ,G__is_operator_newdelete);
   }
 #ifdef G__N_EXPLICITDESTRUCTOR
@@ -723,7 +723,7 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr("Note: operator delete() masked %x\n"
+    G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
 	    ,G__is_operator_newdelete);
   }
 #endif /* G__N_EXPLICITDESTRUCTOR */
@@ -824,42 +824,42 @@ void G__gen_cpplink()
 #endif
     fprintf(fp,"Global function new/delete are overloaded\n");
     fclose(fp);
-    G__fprinterr("################### CAUTION ##########################\n");
-    G__fprinterr("//Overloaded global operator new and/or delete are\n");
-    G__fprinterr("//found in user's source file.\n");
-    G__fprinterr("//Modify functions as follows. Otherwise, you may find\n");
-    G__fprinterr("//problems later.  (%x)\n",G__is_operator_newdelete);
-    G__fprinterr("\n");
-    G__fprinterr("// Giving memory arena to a base class object for constructor call\n");
-    G__fprinterr("#define G__PVOID (-1)\n");
-    G__fprinterr("extern \"C\" long G__getgvp();\n");
-    G__fprinterr("\n");
+    G__fprinterr(G__serr,"################### CAUTION ##########################\n");
+    G__fprinterr(G__serr,"//Overloaded global operator new and/or delete are\n");
+    G__fprinterr(G__serr,"//found in user's source file.\n");
+    G__fprinterr(G__serr,"//Modify functions as follows. Otherwise, you may find\n");
+    G__fprinterr(G__serr,"//problems later.  (%x)\n",G__is_operator_newdelete);
+    G__fprinterr(G__serr,"\n");
+    G__fprinterr(G__serr,"// Giving memory arena to a base class object for constructor call\n");
+    G__fprinterr(G__serr,"#define G__PVOID (-1)\n");
+    G__fprinterr(G__serr,"extern \"C\" long G__getgvp();\n");
+    G__fprinterr(G__serr,"\n");
     if(G__is_operator_newdelete&(G__IS_OPERATOR_NEW)) {
       if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
-        G__fprinterr("void* operator new(size_t size) {\n");
-        G__fprinterr("  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
+        G__fprinterr(G__serr,"void* operator new(size_t size) {\n");
+        G__fprinterr(G__serr,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
       }
       else {
-        G__fprinterr("void* operator new(size_t size,void* p) {\n");
+        G__fprinterr(G__serr,"void* operator new(size_t size,void* p) {\n");
 #ifndef G__OLDIMPLEMENTATION1321
-        G__fprinterr("  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+        G__fprinterr(G__serr,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #else
-        G__fprinterr("  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+        G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
 #endif
       }
-      G__fprinterr("  // Yourown things...\n");
-      G__fprinterr("}\n");
-      G__fprinterr("\n");
+      G__fprinterr(G__serr,"  // Yourown things...\n");
+      G__fprinterr(G__serr,"}\n");
+      G__fprinterr(G__serr,"\n");
     }
 #ifdef G__N_EXPLICITDESTRUCTOR
     if(G__is_operator_newdelete&(G__IS_OPERATOR_DELETE)) {
-      G__fprinterr("void operator delete(void *p) {\n");
-      G__fprinterr("  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
-      G__fprinterr("  // Yourown things...\n");
-      G__fprinterr("}\n");
+      G__fprinterr(G__serr,"void operator delete(void *p) {\n");
+      G__fprinterr(G__serr,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+      G__fprinterr(G__serr,"  // Yourown things...\n");
+      G__fprinterr(G__serr,"}\n");
     }
 #endif
-    G__fprinterr("######################################################\n");
+    G__fprinterr(G__serr,"######################################################\n");
   }
 
 #ifdef G__OLDIMPLEMENTATION1197
@@ -880,24 +880,24 @@ int G__cleardictfile(flag)
 int flag;
 {
   if(EXIT_SUCCESS!=flag) {
-    G__fprinterr("!!!Removing ");
+    G__fprinterr(G__serr,"!!!Removing ");
     if(G__CPPLINK_C) {
       remove(G__CPPLINK_C);
-      G__fprinterr("%s ",G__CPPLINK_C);
+      G__fprinterr(G__serr,"%s ",G__CPPLINK_C);
     }
     if(G__CPPLINK_H) {
       remove(G__CPPLINK_H);
-      G__fprinterr("%s ",G__CPPLINK_H);
+      G__fprinterr(G__serr,"%s ",G__CPPLINK_H);
     }
     if(G__CLINK_C) {
       remove(G__CLINK_C);
-      G__fprinterr("%s ",G__CLINK_C);
+      G__fprinterr(G__serr,"%s ",G__CLINK_C);
     }
     if(G__CLINK_H) {
       remove(G__CLINK_H);
-      G__fprinterr("%s ",G__CLINK_H);
+      G__fprinterr(G__serr,"%s ",G__CLINK_H);
     }
-    G__fprinterr("!!!\n");
+    G__fprinterr(G__serr,"!!!\n");
   }
 #ifdef G__GENWINDEF
   if(G__WINDEF) free(G__WINDEF);
@@ -1394,7 +1394,7 @@ char *G__mark_linked_tagnum(tagnum)
 int tagnum;
 {
   if(tagnum<0) {
-    G__fprinterr("Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
+    G__fprinterr(G__serr,"Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
   }
 
   if(G__NOLINK == G__struct.globalcomp[tagnum]) {
@@ -1989,7 +1989,7 @@ char *macroin;
 #endif
   strcpy(temp,G__macros);
   if(strlen(temp)+strlen(macro)+3>G__LONGLINE) {
-    G__fprinterr("Warning: can not add any more macros in the list\n");
+    G__fprinterr(G__serr,"Warning: can not add any more macros in the list\n");
     G__printlinenum();
   }
   else {
@@ -4261,11 +4261,11 @@ FILE *hfp;
 
       if(-1==G__struct.line_number[i]) { 
 	if(G__NOLINK==G__struct.iscpplink[i]) {
-	  G__fprinterr("Note: Link requested for undefined class %s "
+	  G__fprinterr(G__serr,"Note: Link requested for undefined class %s "
 		  ,G__fulltagname(i,1));
 	}
 	else {
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 		  "Note: Link requested for already precompiled class %s "
 		  ,G__fulltagname(i,1));
 	}
@@ -4558,7 +4558,7 @@ FILE *fp;
 		fprintf(fp,"       %s *G__Lpbase=(%s*)G__Lderived;\n"
 			,temp,G__fulltagname(basetagnum,1));
 	      else {
-		G__fprinterr(
+		G__fprinterr(G__serr,
 			"Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
 			,temp,G__fulltagname(i,1));
 		fprintf(fp,"       %s *G__Lpbase=(%s*)((long)G__Lderived);\n"
@@ -4702,7 +4702,7 @@ FILE *hfp;
 #endif /* G__FONS_COMMENT */
       if(G__newtype.nindex[i]>G__MAXVARDIM) {
 	/* This is just a work around */
-	G__fprinterr("CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
+	G__fprinterr(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
 		,G__newtype.name[i],G__newtype.nindex[i]
 		,(long)G__newtype.index[i]);
 	G__newtype.nindex[i] = 0;
@@ -4831,7 +4831,7 @@ FILE *fp;
 #endif
 	     ) {
 #ifndef G__OLDIMPLEMENTATION1029
-	    G__fprinterr(
+	    G__fprinterr(G__serr,
 		    "class %s in %s line %d original base of virtual func\n"
 		    ,G__fulltagname(i,1)
 		    ,G__srcfile[G__struct.filenum[i]].filename
@@ -5080,7 +5080,7 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1334
 	      if(G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i]
 		 && !G__precomp_private){
-		G__fprinterr(
+		G__fprinterr(G__serr,
   "Limitation: can not generate dictionary for protected constructor for %s\n"
 			,G__fulltagname(i,1));
 		continue;
@@ -5100,7 +5100,7 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1334
 	      if(G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i]
 		 && !G__precomp_private){
-		G__fprinterr(
+		G__fprinterr(G__serr,
   "Limitation: can not generate dictionary for protected destructor for %s\n"
 			,G__fulltagname(i,1));
 		continue;
@@ -5192,7 +5192,7 @@ FILE *fp;
 		fprintf(fp,"%c ",ifunc->para_type[j][k]);
 	      }
 	      else {
-		G__fprinterr("Internal error: function parameter type\n");
+		G__fprinterr(G__serr,"Internal error: function parameter type\n");
 		fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	      }
 
@@ -5825,7 +5825,7 @@ FILE *fp;
 	    fprintf(fp,"%c ",ifunc->para_type[j][k]);
 	  }
 	  else {
-	    G__fprinterr("Internal error: function parameter type\n");
+	    G__fprinterr(G__serr,"Internal error: function parameter type\n");
 	    fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	  }
 
@@ -5911,7 +5911,7 @@ G__incsetup setup_memfunc;
      && 'n'!=G__struct.type[tagnum]
 #endif
      && G__asm_dbg ) {
-    G__fprinterr("Warning: Try to reload %s from DLL. Ignored\n"
+    G__fprinterr(G__serr,"Warning: Try to reload %s from DLL. Ignored\n"
             ,G__fulltagname(tagnum,1));
     return(0);
   }
@@ -6668,7 +6668,7 @@ int link_stub;
   c = G__fgetname_template(buf,";\n\r");
 
   if(G__MACROLINK==globalcomp&&strncmp(buf,"function",3)!=0) {
-    G__fprinterr("Warning: #pragma link MACRO only valid for global function. Ignored\n");
+    G__fprinterr(G__serr,"Warning: #pragma link MACRO only valid for global function. Ignored\n");
     G__printlinenum();
     c=G__fignorestream(";\n");
     return;
@@ -6695,7 +6695,7 @@ int link_stub;
   case G__CPPSTUB:
   case G__CSTUB:
     if(strncmp(buf,"function",3)!=0) {
-      G__fprinterr("Warning: #pragma stub only valid for global function. Ignored\n");
+      G__fprinterr(G__serr,"Warning: #pragma stub only valid for global function. Ignored\n");
       c=G__fignorestream(";\n");
       return;
     }
@@ -6822,7 +6822,7 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
-	  /*G__fprinterr("#pragma link changed %s\n",G__struct.name[i]);*/
+	  /*G__fprinterr(G__serr,"#pragma link changed %s\n",G__struct.name[i]);*/
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
 	}
       }
@@ -6872,14 +6872,14 @@ int link_stub;
 	if (rf3 == 1) {
 	  G__struct.rootflag[i] = G__USEBYTECOUNT;
 	  if(rf1 || rf2) 
-	    G__fprinterr( "option + mutual exclusive with either - or !\n");
+	    G__fprinterr(G__serr, "option + mutual exclusive with either - or !\n");
 	}
       }
 #endif
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Note: link requested for unknown class %s",buf);
+      G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
       G__printlinenum();
     }
 #endif
@@ -6908,7 +6908,7 @@ int link_stub;
       *cx = 0;
       tagnum = G__defined_tagname(buf,2);
       if(-1==tagnum) {
-	G__fprinterr("Error: %s not found",buf);
+	G__fprinterr(G__serr,"Error: %s not found",buf);
       }
       x_ifunc = G__struct.memfunc[tagnum];
       strcpy(tmpbuf,cx+2);
@@ -7044,7 +7044,7 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
 #endif
-	    /*G__fprinterr("#pragma link changed %s\n",ifunc->funcname[i]);*/
+	    /*G__fprinterr(G__serr,"#pragma link changed %s\n",ifunc->funcname[i]);*/
 	  }
 	}
 	ifunc = ifunc->next;
@@ -7071,7 +7071,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Note: link requested for unknown function %s",buf);
+      G__fprinterr(G__serr,"Note: link requested for unknown function %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7133,7 +7133,7 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
 #endif
-	    /*G__fprinterr("#pragma link changed %s\n",var->varnamebuf[i]);*/
+	    /*G__fprinterr(G__serr,"#pragma link changed %s\n",var->varnamebuf[i]);*/
 	  }
 	}
 	var=var->next;
@@ -7152,7 +7152,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Note: link requested for unknown global variable %s",buf);
+      G__fprinterr(G__serr,"Note: link requested for unknown global variable %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7229,7 +7229,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Note: link requested for unknown typedef %s",buf);
+      G__fprinterr(G__serr,"Note: link requested for unknown typedef %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7333,7 +7333,7 @@ int link_stub;
 #endif
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Warning: link requested for unknown srcfile %s",buf);
+      G__fprinterr(G__serr,"Warning: link requested for unknown srcfile %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7391,7 +7391,7 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr("Note: link requested for unknown srcfile %s",buf);
+      G__fprinterr(G__serr,"Note: link requested for unknown srcfile %s",buf);
       G__printlinenum();
     }
 #endif
@@ -7469,7 +7469,7 @@ int tagnum;
     G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
 #ifdef G__DEBUG
     if(G__var_type!=store_var_type)
-      G__fprinterr("Cint internal error: G__incsetup_memvar %c %c\n"
+      G__fprinterr(G__serr,"Cint internal error: G__incsetup_memvar %c %c\n"
 	      ,G__var_type,store_var_type);
 #endif
     G__var_type = store_var_type;

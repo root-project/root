@@ -111,7 +111,7 @@ int signame;
    * immediate pause in prerun
    *********************************************************/
   if(G__prerun) {
-    G__fprinterr("\n!!! Pause at prerun\n");
+    G__fprinterr(G__serr,"\n!!! Pause at prerun\n");
     G__step--;
     G__setdebugcond();
     G__pause();
@@ -120,15 +120,15 @@ int signame;
    * immediate pause if called twice
    *********************************************************/
   else if(G__step>1) {
-    G__fprinterr("\n!!! Break in the middle of compiled statement\n");
+    G__fprinterr(G__serr,"\n!!! Break in the middle of compiled statement\n");
     G__pause();
     if(G__return>G__RETURN_NORMAL) {
-      G__fprinterr( "!!! Sorry, continue until compiled code finishes\n");
-      G__fprinterr( "!!! Use qqq for immediate termination\n");
+      G__fprinterr(G__serr, "!!! Sorry, continue until compiled code finishes\n");
+      G__fprinterr(G__serr, "!!! Use qqq for immediate termination\n");
     }
   }
   else if(G__asm_exec) {
-    G__fprinterr( "\n!!! Middle of loop compilation run\n");
+    G__fprinterr(G__serr, "\n!!! Middle of loop compilation run\n");
   }
   signal(SIGINT,G__breakkey);
 }
@@ -172,7 +172,7 @@ char *nameoferror;
 
 
 #ifdef SIGALRM
-  G__fprinterr(
+  G__fprinterr(G__serr,
 	  "Press return or process will be terminated in %dsec by timeout\n"
 	  ,G__TIMEOUT);
   signal(SIGALRM,G__timeout);
@@ -183,7 +183,7 @@ char *nameoferror;
 
 #ifdef SIGALRM
   alarm(0);
-  G__fprinterr("Time out cancelled\n");
+  G__fprinterr(G__serr,"Time out cancelled\n");
 #endif
 
   while(G__return<G__RETURN_EXIT1) {
@@ -203,7 +203,7 @@ char *nameoferror;
 void G__timeout(signame)
 int signame;
 {
-  G__fprinterr("\nError time out. Exit program.\n");
+  G__fprinterr(G__serr,"\nError time out. Exit program.\n");
 
   G__close_inputfiles();
   exit(EXIT_FAILURE);

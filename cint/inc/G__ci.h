@@ -21,13 +21,18 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014077
-#define G__CINTVERSIONSTR  "5.14.77, Feb 20 2001"
+#define G__CINTVERSION      5014078
+#define G__CINTVERSIONSTR  "5.14.78, Feb 21 2001"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Disable G__fprinterr */
+#ifndef G__ERRORCALLBACK
+#define G__OLDIMPLEMENTATION1485
+#endif
 
 /* New memory allocation scheme is turned on for ROOT by defining 
  * following macro. */

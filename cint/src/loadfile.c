@@ -94,7 +94,7 @@ int fentry;
     G__tmpnam(prepname);
     fpout = fopen(prepname,"wb");
     if(!fpout) {
-      G__fprinterr("cannot open tmp file %s",prepname);
+      G__fprinterr(G__serr,"cannot open tmp file %s",prepname);
       G__genericerror((char*)NULL);
       prepname[0] = 0;
       return;
@@ -227,7 +227,7 @@ int G__include_file()
       G__kindofheader=G__USERHEADER;
     }
     else {
-      G__fprinterr("Error: cannot expand #include %s",filename);
+      G__fprinterr(G__serr,"Error: cannot expand #include %s",filename);
       G__genericerror(NULL);
 #ifndef G__OLDIMPLEMENTATION1261
       if('#'==c) G__fignoreline();
@@ -312,11 +312,11 @@ char *item;
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
   if(!fp) {
-    G__fprinterr("Error: cannot open %s\n",makeinfo);
-    G__fprinterr(
+    G__fprinterr(G__serr,"Error: cannot open %s\n",makeinfo);
+    G__fprinterr(G__serr,
      "!!! There are examples of MAKEINFO files under %s/platform/ !!!\n"
 	    ,G__cintsysdir);
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "Please refer to these examples and create for your platform\n");
     return(buf);
   }
@@ -334,7 +334,7 @@ char *item;
 	return(buf);
       }
       else {
-	G__fprinterr("MAKEINFO syntax error\n");
+	G__fprinterr(G__serr,"MAKEINFO syntax error\n");
       }
     }
   }
@@ -416,11 +416,11 @@ int G__getcintsysdir()
 #endif
 #endif
 #if defined(G__ROOT)
-      G__fprinterr("Warning: environment variable ROOTSYS is not set. Standard include files ignored\n");
+      G__fprinterr(G__serr,"Warning: environment variable ROOTSYS is not set. Standard include files ignored\n");
 #elif defined(G__WILDC)
-      G__fprinterr("Warning: environment variable WILDCDIR is not set. Standard include files ignored\n");
+      G__fprinterr(G__serr,"Warning: environment variable WILDCDIR is not set. Standard include files ignored\n");
 #else
-      G__fprinterr("Warning: environment variable CINTSYSDIR is not set. Standard include files ignored\n");
+      G__fprinterr(G__serr,"Warning: environment variable CINTSYSDIR is not set. Standard include files ignored\n");
 #endif
       G__cintsysdir[0]='\0';
       return(EXIT_FAILURE);
@@ -448,7 +448,7 @@ int ifn;
   while(ifunc) {
     for(i1=0;i1<ifunc->allifunc;i1++) {
       if( 0!=ifunc->busy[i1] && ifunc->pentry[i1]->filenum>=ifn ) {
-	G__fprinterr("Function %s() busy. loaded after \"%s\"\n"
+	G__fprinterr(G__serr,"Function %s() busy. loaded after \"%s\"\n"
 		,ifunc->funcname[i1],G__srcfile[ifn].filename);
 	flag++;
       }
@@ -467,7 +467,7 @@ int ifn;
     while(ifunc) {
       for(i1=0;i1<ifunc->allifunc;i1++) {
 	if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
-	  G__fprinterr("Function %s() busy. loaded after\"%s\"\n"
+	  G__fprinterr(G__serr,"Function %s() busy. loaded after\"%s\"\n"
 		  ,ifunc->funcname[i1],G__srcfile[ifn].filename);
 	  flag++;
 	}
@@ -678,7 +678,7 @@ char *filename;
   }
 
   if(flag==0) {
-    G__fprinterr("Error: G__unloadfile() File \"%s\" not loaded ",filename);
+    G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" not loaded ",filename);
     G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
@@ -696,7 +696,7 @@ char *filename;
   * if function in unloaded files are busy, cancel unloading
   *********************************************************************/
   if(G__isfilebusy(ifn)) {
-    G__fprinterr(
+    G__fprinterr(G__serr,
   "Error: G__unloadfile() Can not unload \"%s\", file busy " ,filename);
     G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1345
@@ -717,7 +717,7 @@ char *filename;
 #endif
 
   if(G__debug) {
-    G__fprinterr("File=%s unloaded\n",filename);
+    G__fprinterr(G__serr,"File=%s unloaded\n",filename);
   }
 
 #ifndef G__OLDIMPLEMENTATION1345
@@ -791,7 +791,7 @@ char *filename;
 
 
   if(badflag) {
-    G__fprinterr("Error: Bad source file(binary) %s",filename);
+    G__fprinterr(G__serr,"Error: Bad source file(binary) %s",filename);
     G__genericerror((char*)NULL);
     G__return=G__RETURN_EXIT1;
 #ifndef G__OLDIMPLEMENTATION1480
@@ -801,9 +801,9 @@ char *filename;
   }
 #ifndef G__OLDIMPLEMENTATION1217
   else if(unnamedmacro) {
-    G__fprinterr("Error: Bad source file(unnamed macro) %s",filename);
+    G__fprinterr(G__serr,"Error: Bad source file(unnamed macro) %s",filename);
     G__genericerror((char*)NULL);
-    G__fprinterr("  unnamed macro has to be executed by 'x' command\n");
+    G__fprinterr(G__serr,"  unnamed macro has to be executed by 'x' command\n");
     G__return=G__RETURN_EXIT1;
 #ifndef G__OLDIMPLEMENTATION1480
     G__lang = store_lang;
@@ -1025,7 +1025,7 @@ char *filenamein;
   * if so, restore G__ifile reset G__eof and return.
   ******************************************************************/
   if(G__nfile==G__MAXFILE) {
-    G__fprinterr("Limitation: Sorry, can not load any more files\n");
+    G__fprinterr(G__serr,"Limitation: Sorry, can not load any more files\n");
     G__ifile = store_file ;
     G__eof = 0;
     G__step=store_step;
@@ -1063,7 +1063,7 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr("Warning: File \"%s\" already loaded\n",filename);
+	G__fprinterr(G__serr,"Warning: File \"%s\" already loaded\n",filename);
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1505,11 +1505,11 @@ char *filenamein;
     G__globalcomp=G__store_globalcomp;
 #ifndef G__OLDIMPLEMENTATION782
     if(0==G__ispragmainclude) {
-      G__fprinterr("Error: cannot open file \"%s\" ", filename);
+      G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
       G__genericerror((char*)NULL);
     }
 #else
-    G__fprinterr("Error: cannot open file \"%s\" ", filename);
+    G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
     G__genericerror((char*)NULL);
 #endif
     G__iscpp=store_iscpp;
@@ -1601,10 +1601,10 @@ char *filenamein;
   }
 
   if(G__debugtrace) {
-    G__fprinterr("LOADING file=%s:%s:%s\n",filename,G__ifile.name,prepname);
+    G__fprinterr(G__serr,"LOADING file=%s:%s:%s\n",filename,G__ifile.name,prepname);
   }
   if(G__debug) {
-    G__fprinterr("%-5d",G__ifile.line_number);
+    G__fprinterr(G__serr,"%-5d",G__ifile.line_number);
   }
 
   store_prerun=G__prerun;
@@ -2057,7 +2057,7 @@ char *macros,*undeflist,*ppopt,*includepath;
     }
 #endif
     if(G__debugtrace||G__steptrace||G__step||G__asm_dbg)
-      G__fprinterr(" %s\n",temp);
+      G__fprinterr(G__serr," %s\n",temp);
     system(temp);
 
     if(tmplen) remove(tmpfile);
@@ -2135,13 +2135,13 @@ int G__setTMPDIR(badname)
 char *badname;
 {
 #ifndef G__TMPFILE
-  G__fprinterr("CAUTION: tmpfile %s can't open\n",badname);
+  G__fprinterr(G__serr,"CAUTION: tmpfile %s can't open\n",badname);
   return(0);
 #else
   char *p;
-  G__fprinterr("CINT CAUTION: tmpfile %s can't open\n",badname);
-  G__fprinterr("Input another temp directory or '*' to give up\n");
-  G__fprinterr("(Setting CINTTMPDIR environment variable avoids this interrupt)\n");
+  G__fprinterr(G__serr,"CINT CAUTION: tmpfile %s can't open\n",badname);
+  G__fprinterr(G__serr,"Input another temp directory or '*' to give up\n");
+  G__fprinterr(G__serr,"(Setting CINTTMPDIR environment variable avoids this interrupt)\n");
   strcpy(G__tmpdir,G__input("Input TMPDIR > "));
   p = strchr(G__tmpdir,'\r');
   if(p) *p = '\0';

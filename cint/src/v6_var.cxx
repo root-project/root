@@ -838,7 +838,7 @@ char* ttt;
     strcpy(ttt+strlen(ttt),"()");
 #ifdef G__OLDIMPLEMENTATION854
     if(G__dispsource) {
-      G__fprinterr("\n!!!Calling conversion operator 0x%lx.%s"
+      G__fprinterr(G__serr,"\n!!!Calling conversion operator 0x%lx.%s"
 	      ,G__store_struct_offset,ttt);
     }
 #endif
@@ -855,7 +855,7 @@ char* ttt;
     if(conv_done) {
 #ifndef G__OLDIMPLEMENTATION854
       if(G__dispsource) {
-	G__fprinterr("!!!Conversion operator called 0x%lx.%s\n"
+	G__fprinterr(G__serr,"!!!Conversion operator called 0x%lx.%s\n"
 		,G__store_struct_offset,ttt);
       }
 #endif
@@ -918,8 +918,8 @@ char* ttt;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
-      G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
+      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
     }
 #endif
 #endif
@@ -972,7 +972,7 @@ char* ttt;
 #endif
     if(conv_done) {
       if(G__dispsource) {
-	G__fprinterr("!!!Conversion operator called 0x%lx.%s\n"
+	G__fprinterr(G__serr,"!!!Conversion operator called 0x%lx.%s\n"
 		,G__store_struct_offset,ttt);
       }
       *presult = conv_result;
@@ -980,13 +980,13 @@ char* ttt;
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
 #endif
 #endif
     }
     else {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("PUSHSTROS, SETSTROS cancelled\n");
+      if(G__asm_dbg) G__fprinterr(G__serr,"PUSHSTROS, SETSTROS cancelled\n");
 #endif
       G__inc_cp_asm(-2,0);
     }
@@ -1029,7 +1029,7 @@ int var_type;
     if(G__struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("%3x: ADDSTROS %d\n"
+	G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
 		,G__asm_cp,G__struct_offset-store_struct_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -1039,7 +1039,7 @@ int var_type;
 #endif
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: ST_MSTR  %s index=%d paran=%d\n"
+      G__fprinterr(G__serr,"%3x: ST_MSTR  %s index=%d paran=%d\n"
 	      ,G__asm_cp,item,ig15,paran);
 #endif
     G__asm_inst[G__asm_cp]=G__ST_MSTR;
@@ -1052,7 +1052,7 @@ int var_type;
     if(G__struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg)
-	G__fprinterr("%3x: ADDSTROS %d\n"
+	G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
 		,G__asm_cp,-G__struct_offset+store_struct_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -1064,7 +1064,7 @@ int var_type;
   else {
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	      "%3x: ST_VAR  %s index=%d paran=%d\n"
 	      ,G__asm_cp,item,ig15,paran);
 #endif
@@ -1152,7 +1152,7 @@ G__value result;
       letvvalflag=1;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("LETVVAL cancelled");
+      G__fprinterr(G__serr,"LETVVAL cancelled");
       G__printlinenum();
     }
 #endif
@@ -1169,15 +1169,15 @@ G__value result;
       else                          G__asm_inst[G__asm_cp-5] = G__LD_MSTR;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR");
+	G__fprinterr(G__serr,"ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR");
 	G__printlinenum();
       }
 #endif
     }
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
-      G__fprinterr("%3x: SETSTROS\n",G__asm_cp+1);
+      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
     }
 #endif
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
@@ -1228,7 +1228,7 @@ G__value result;
       G__inc_cp_asm(-2,0); 
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("PUSHSTROS,SETSTROS cancelled");
+	G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled");
 	G__printlinenum();
       }
 #endif
@@ -1247,7 +1247,7 @@ G__value result;
       G__asm_inst[G__asm_cp+1]=addstros_value;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	G__fprinterr("ADDSTROS %d recovered\n",addstros_value);
+	G__fprinterr(G__serr,"ADDSTROS %d recovered\n",addstros_value);
 #endif
       G__inc_cp_asm(2,0);
     }
@@ -1257,7 +1257,7 @@ G__value result;
   else {
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0); 
@@ -1275,14 +1275,14 @@ G__value result;
   if(G__asm_noverflow) {
     if(letvvalflag) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("LETVVAL recovered\n");
+      if(G__asm_dbg) G__fprinterr(G__serr,"LETVVAL recovered\n");
 #endif
       G__asm_inst[G__asm_cp]=G__LETVVAL;
       G__inc_cp_asm(1,0);
     }
     else {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("ST_VAR or ST_MSTR recovered no_exec_compile=%d\n",G__no_exec_compile);
+      if(G__asm_dbg) G__fprinterr(G__serr,"ST_VAR or ST_MSTR recovered no_exec_compile=%d\n",G__no_exec_compile);
 #endif
       G__asm_inst[G__asm_cp-5]=store_asm_inst;
       if(addstros_value) {
@@ -1290,7 +1290,7 @@ G__value result;
 	G__asm_inst[G__asm_cp+1]=addstros_value;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) 
-	  G__fprinterr("ADDSTROS %d recovered\n",addstros_value);
+	  G__fprinterr(G__serr,"ADDSTROS %d recovered\n",addstros_value);
 #endif
 	G__inc_cp_asm(2,0);
       }
@@ -1325,7 +1325,7 @@ G__value result;
   }
 #endif
   else {
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "Error: Assignment type incompatible FILE:%s LINE:%d\n"
 	    ,G__ifile.name,G__ifile.line_number);
   }
@@ -1760,7 +1760,7 @@ int ig15;
 
   sprintf(temp,"~%s()",G__struct.name[tagnum]);
   if(G__dispsource){
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "\n!!!Calling destructor 0x%lx.%s for declaration of %s"
 	    ,G__store_struct_offset
 	    ,temp,var->varnamebuf[ig15]);
@@ -1772,7 +1772,7 @@ int ig15;
     /* set newly constructed object */
     var->p[ig15]=store_globalvarpointer;
     if(G__dispsource){
-      G__fprinterr(" 0x%lx is set",store_globalvarpointer);
+      G__fprinterr(G__serr," 0x%lx is set",store_globalvarpointer);
     }
   }
   else {
@@ -1826,7 +1826,7 @@ int ig15;
   G__globalvarpointer=G__PVOID;
 
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("%3x: LD_VAR  %s index=%d paran=%d\n"
+  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
 			 ,G__asm_cp,var->varnamebuf[ig15],ig15,0);
 #endif
   G__asm_inst[G__asm_cp]=G__LD_VAR;
@@ -1841,8 +1841,8 @@ int ig15;
   G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
-    G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
-    G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
+    G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+    G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
   }
 #endif
 
@@ -1852,14 +1852,14 @@ int ig15;
     size = G__struct.size[G__tagnum];
     pinc=var->varlabel[ig15][1]+1;
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: ADDSTROS %d\n",G__asm_cp,-size*pinc);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,-size*pinc);
 #endif
     G__asm_inst[G__asm_cp] = G__ADDSTROS;
     G__asm_inst[G__asm_cp+1] = (long)(size*pinc);
     G__inc_cp_asm(2,0);
     for(i=pinc-1;i>=0;--i) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: ADDSTROS %d\n",G__asm_cp,-size);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,-size);
 #endif
       G__asm_inst[G__asm_cp] = G__ADDSTROS;
       G__asm_inst[G__asm_cp+1] = (long)(-size);
@@ -1901,7 +1901,7 @@ int ig15;
   store_struct_offset=G__store_struct_offset;
 
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("%3x: LD_VAR  %s index=%d paran=%d\n"
+  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
 			 ,G__asm_cp,var->varnamebuf[ig15],ig15,0);
 #endif
   G__asm_inst[G__asm_cp]=G__LD_VAR;
@@ -1916,8 +1916,8 @@ int ig15;
   G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
-    G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
-    G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
+    G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+    G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
   }
 #endif
 
@@ -1928,7 +1928,7 @@ int ig15;
 #ifdef G__OLDIMPLEMENTATION907
   if(known) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: POP\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POP\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POP;
     G__inc_cp_asm(1,0);
@@ -1936,7 +1936,7 @@ int ig15;
 #endif
 
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr("%3x: REDECL\n",G__asm_cp);
+  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
 #endif
   G__asm_inst[G__asm_cp] = G__REDECL;
   G__asm_inst[G__asm_cp+1]=ig15;
@@ -2065,7 +2065,7 @@ struct G__var_array *varglobal,*varlocal;
   case '.':
   case '-':
   case '+':
-    G__fprinterr("Error: assignment to %s",item);
+    G__fprinterr(G__serr,"Error: assignment to %s",item);
     G__genericerror((char*)NULL);
     break;
 #endif
@@ -2282,7 +2282,7 @@ struct G__var_array *varglobal,*varlocal;
     if(G__asm_noverflow&&paran&&
        G__store_struct_offset!=G__memberfunc_struct_offset) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: SETMEMFUNCENV\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
       G__inc_cp_asm(1,0);
@@ -2335,7 +2335,7 @@ struct G__var_array *varglobal,*varlocal;
   if(G__asm_noverflow&&paran&&
      G__store_struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: RECMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -2387,10 +2387,10 @@ struct G__var_array *varglobal,*varlocal;
     if((G__decl||G__cppconstruct) && 'p'!=G__var_type && 
        G__AUTO==var->statictype[ig15] &&
        (var->type[ig15]!=G__var_type||var->p_tagtable[ig15]!=G__tagnum)) {
-      G__fprinterr("Error: %s already declared as different type",item);
+      G__fprinterr(G__serr,"Error: %s already declared as different type",item);
       if(isupper(var->type[ig15])&&isupper(G__var_type)&&
          0==var->varlabel[ig15][1]&&0==(*(long*)var->p[ig15])) {
-        G__fprinterr(". Switch to new type\n");
+        G__fprinterr(G__serr,". Switch to new type\n");
         var->type[ig15]=G__var_type;
         var->p_tagtable[ig15]=G__tagnum;
         var->p_typetable[ig15]=G__typenum;
@@ -2405,7 +2405,7 @@ struct G__var_array *varglobal,*varlocal;
 	  G__store_struct_offset=G__globalvarpointer;
           G__globalvarpointer=G__PVOID;
 	  sprintf(protect_temp,"~%s()",G__struct.name[G__tagnum]);
-          G__fprinterr(". %s called\n",protect_temp);
+          G__fprinterr(G__serr,". %s called\n",protect_temp);
 	  G__getfunction(protect_temp,&done,G__TRYDESTRUCTOR);
 	  G__store_struct_offset=protect_struct_offset;
 	}
@@ -3119,7 +3119,7 @@ struct G__var_array *varglobal,*varlocal;
      **************************************************/
 #ifdef G__DEBUG
     /*
-      G__fprinterr("Check error: G__getvariable(%s) G__var_type=%c, should not happen FILE:%s LINE:%d\n"
+      G__fprinterr(G__serr,"Check error: G__getvariable(%s) G__var_type=%c, should not happen FILE:%s LINE:%d\n"
       ,item,G__var_type,G__ifile.name,G__ifile.line_number);
       */
 #endif
@@ -3435,7 +3435,7 @@ struct G__var_array *varglobal,*varlocal;
   if(G__asm_noverflow&&paran&&
      G__store_struct_offset!=G__memberfunc_struct_offset) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: SETMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -3454,7 +3454,7 @@ struct G__var_array *varglobal,*varlocal;
   if(G__asm_noverflow&&paran&&
      G__store_struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: RECMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -3536,9 +3536,9 @@ struct G__var_array *varglobal,*varlocal;
 	  (G__DYNCONST&var->constvar[ig15]))) {
         G__const_noerror=0;
 	G__genericerror("Error: Non-static-const variable in array dimension");
-	G__fprinterr(" (cint allows this only in interactive command and special form macro which\n");
-	G__fprinterr("  is special extension. It is not allowed in source code. Please ignore\n");
-	G__fprinterr("  subsequent errors.)\n");
+	G__fprinterr(G__serr," (cint allows this only in interactive command and special form macro which\n");
+	G__fprinterr(G__serr,"  is special extension. It is not allowed in source code. Please ignore\n");
+	G__fprinterr(G__serr,"  subsequent errors.)\n");
 	*known2=1;
 	return(G__null);
       }
@@ -3591,7 +3591,7 @@ struct G__var_array *varglobal,*varlocal;
 	  if(G__struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) 
-	      G__fprinterr("%3x: ADDSTROS %d\n"
+	      G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
 		      ,G__asm_cp,G__struct_offset-store_struct_offset);
 #endif
 	    G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -3601,7 +3601,7 @@ struct G__var_array *varglobal,*varlocal;
 #endif
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) 
-	    G__fprinterr(
+	    G__fprinterr(G__serr,
 		    "%3x: LD_MSTR  %s index=%d paran=%d\n"
 		    ,G__asm_cp,item,ig15,paran);
 #endif
@@ -3615,7 +3615,7 @@ struct G__var_array *varglobal,*varlocal;
 	  if(G__struct_offset!=store_struct_offset) {
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) 
-	      G__fprinterr("%3x: ADDSTROS %d\n"
+	      G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
 		      ,G__asm_cp,-G__struct_offset+store_struct_offset);
 #endif
 	    G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -3628,11 +3628,11 @@ struct G__var_array *varglobal,*varlocal;
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
 	    if(G__asm_wholefunction && G__ASM_VARLOCAL==store_struct_offset) 
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "%3x: LD_LVAR  %s index=%d paran=%d\n"
 		      ,G__asm_cp,item,ig15,paran);
 	    else 
-	      G__fprinterr(
+	      G__fprinterr(G__serr,
 		      "%3x: LD_VAR  %s index=%d paran=%d\n"
 		      ,G__asm_cp,item,ig15,paran);
 	  }
@@ -4087,7 +4087,7 @@ struct G__var_array *varglobal,*varlocal;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) G__fprinterr("%3x: LD '%c' from %x\n"
+        if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD '%c' from %x\n"
 			       ,G__asm_cp,G__int(result)
 			       ,G__asm_dt);
 #endif
@@ -4204,7 +4204,7 @@ int objptr;  /* 1 : object , 2 : pointer */
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
 #endif
     G__inc_cp_asm(1,0);
   }
@@ -4330,7 +4330,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__OLDIMPLEMENTATION1103
       if(0==G__const_noerror) {
 #endif
-	G__fprinterr(
+	G__fprinterr(G__serr,
 		"Error: non class,struct,union object %s used with . or ->"
 		,tagname);
 	G__genericerror((char*)NULL);
@@ -4354,7 +4354,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__OLDIMPLEMENTATION1103
     if(0==G__const_noerror) {
 #endif
-      G__fprinterr("Error: non class,struct,union object %s used with . or ->"
+      G__fprinterr(G__serr,"Error: non class,struct,union object %s used with . or ->"
 	      ,tagname);
       G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1103
@@ -4376,16 +4376,16 @@ int objptr;  /* 1 : object , 2 : pointer */
     *known2=1;
 #ifndef G__OLDIMPLEMENTATION1151
     if(0==G__const_noerror) {
-      G__fprinterr("Error: illegal pointer to class object %s 0x%lx %d "
+      G__fprinterr(G__serr,"Error: illegal pointer to class object %s 0x%lx %d "
 	      ,tagname,G__store_struct_offset,G__tagnum);
     }
 #else
-    G__fprinterr("Error: illegal pointer to class object %s 0x%lx %d "
+    G__fprinterr(G__serr,"Error: illegal pointer to class object %s 0x%lx %d "
 	    ,tagname,G__store_struct_offset,G__tagnum);
 #endif
     G__genericerror((char*)NULL);
     if(G__interactive) {
-      G__fprinterr("!!!Input return value by 'retuurn [val]'\n");
+      G__fprinterr(G__serr,"!!!Input return value by 'retuurn [val]'\n");
 #ifndef G__OLDIMPLEMENTATION630
       G__interactive_undefined=1;
       G__pause();
@@ -4420,7 +4420,7 @@ int objptr;  /* 1 : object , 2 : pointer */
      *************************************/
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__SETSTROS;
     G__inc_cp_asm(1,0);
@@ -4445,7 +4445,7 @@ int objptr;  /* 1 : object , 2 : pointer */
         G__asm_inst[G__asm_cp] = G__SETSTROS;
 #ifdef G__ASM_DBG
         if(G__asm_dbg)
-          G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+          G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
         G__inc_cp_asm(1,0);
       }
@@ -4478,7 +4478,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 	G__asm_inst[G__asm_cp] = G__SETSTROS;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
         G__inc_cp_asm(1,0);
       }
@@ -4489,7 +4489,7 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__store_struct_offset = store_struct_offsetB;
 #ifndef G__ROOT
       if(G__MAXFILE-1!=G__ifile.filenum) {
-	G__fprinterr("Warning: wrong member access operator '->'");
+	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	G__printlinenum();
       }
 #endif /* G__ROOT */
@@ -4498,7 +4498,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
     if(G__MAXFILE-1!=G__ifile.filenum) {
-      G__fprinterr("Warning: wrong member access operator '.'");
+      G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
       G__printlinenum();
     }
   }
@@ -4507,7 +4507,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__ROOT
   if(G__MAXFILE-1!=G__ifile.filenum &&
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
-    G__fprinterr("Warning: wrong member access operator '.' or '->'");
+    G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
     G__printlinenum();
   }
 #endif /* G__ROOT */
@@ -4590,7 +4590,7 @@ int objptr;  /* 1 : object , 2 : pointer */
     G__asm_inst[G__asm_cp] = G__POPSTROS;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__inc_cp_asm(1,0);
   }
@@ -4660,7 +4660,7 @@ int objptr;  /* 1 : object , 2 : pointer */
      *************************************/
     G__asm_inst[G__asm_cp] = G__PUSHSTROS;
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
 #endif
     G__inc_cp_asm(1,0);
   }
@@ -4729,11 +4729,11 @@ int objptr;  /* 1 : object , 2 : pointer */
   else if(0==G__store_struct_offset) {
 #ifndef G__OLDIMPLEMENTATION1151
     if(0==G__const_noerror) {
-      G__fprinterr("Error: illegal pointer to class object %s 0x%lx %d "
+      G__fprinterr(G__serr,"Error: illegal pointer to class object %s 0x%lx %d "
 	      ,tagname,G__store_struct_offset,G__tagnum);
     }
 #else
-    G__fprinterr("Error: illegal pointer to class object %s 0x%lx %d "
+    G__fprinterr(G__serr,"Error: illegal pointer to class object %s 0x%lx %d "
 	    ,tagname,G__store_struct_offset,G__tagnum);
 #endif
     G__genericerror((char*)NULL);
@@ -4767,7 +4767,7 @@ int objptr;  /* 1 : object , 2 : pointer */
     G__asm_inst[G__asm_cp] = G__SETSTROS;
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-      G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
     G__inc_cp_asm(1,0);
   }
@@ -4791,7 +4791,7 @@ int objptr;  /* 1 : object , 2 : pointer */
         G__asm_inst[G__asm_cp] = G__SETSTROS;
 #ifdef G__ASM_DBG
         if(G__asm_dbg)
-          G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+          G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
         G__inc_cp_asm(1,0);
       }
@@ -4824,7 +4824,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 	G__asm_inst[G__asm_cp] = G__SETSTROS;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg)
-	  G__fprinterr("%3x: SETSTROS\n",G__asm_cp);
+	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
         G__inc_cp_asm(1,0);
       }
@@ -4835,7 +4835,7 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__store_struct_offset = store_struct_offsetB;
 #ifndef G__ROOT
       if(G__MAXFILE-1!=G__ifile.filenum) {
-	G__fprinterr("Warning: wrong member access operator '->'");
+	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	G__printlinenum();
       }
 #endif
@@ -4844,7 +4844,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
     if(G__MAXFILE-1!=G__ifile.filenum) {
-      G__fprinterr("Warning: wrong member access operator '.'");
+      G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
       G__printlinenum();
     }
   }
@@ -4853,7 +4853,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #ifndef G__ROOT
   if(G__MAXFILE-1!=G__ifile.filenum &&
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
-    G__fprinterr("Warning: wrong member access operator '.' or '->'");
+    G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
     G__printlinenum();
   }
 #endif
@@ -4890,7 +4890,7 @@ int objptr;  /* 1 : object , 2 : pointer */
      *************************************/
     G__asm_inst[G__asm_cp] = G__POPSTROS;
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__inc_cp_asm(1,0);
   }
@@ -5021,7 +5021,7 @@ long G__struct_offset; /* used to be int */
 	G__store_struct_offset=(G__struct_offset+var->p[ig15]+p_inc*G__struct.size[var->p_tagtable[ig15]]);
 	
 	if(G__dispsource) {
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 		  "\n!!!Calling constructor 0x%lx.%s for declaration"
 		  ,G__store_struct_offset ,result7);
 	}
@@ -5081,9 +5081,9 @@ long G__struct_offset; /* used to be int */
 	  G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
-	    G__fprinterr("ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR");
-	    G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
-	    G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
+	    G__fprinterr(G__serr,"ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR");
+	    G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	    G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
 	  }
 #endif
 	}
@@ -5133,7 +5133,7 @@ long G__struct_offset; /* used to be int */
 	    G__inc_cp_asm(-2,0); 
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) {
-	      G__fprinterr("PUSHSTROS,SETSTROS cancelled");
+	      G__fprinterr(G__serr,"PUSHSTROS,SETSTROS cancelled");
 	      G__printlinenum();
 	    }
 #endif
@@ -5162,7 +5162,7 @@ long G__struct_offset; /* used to be int */
 	else {
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp] = G__POPSTROS;
 	    G__inc_cp_asm(1,0); 
@@ -5212,7 +5212,7 @@ long G__struct_offset; /* used to be int */
 #endif
 	   ) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr("ST_VAR or ST_MSTR recovered no_exec_compile=%d\n",G__no_exec_compile);
+	  if(G__asm_dbg) G__fprinterr(G__serr,"ST_VAR or ST_MSTR recovered no_exec_compile=%d\n",G__no_exec_compile);
 #endif
 	  G__asm_inst[G__asm_cp-5]=store_asm_inst;
 	}
@@ -5236,7 +5236,7 @@ long G__struct_offset; /* used to be int */
 	}
 #endif
 	else {
-	  G__fprinterr("Error: Assignment to %s type incompatible " ,item);
+	  G__fprinterr(G__serr,"Error: Assignment to %s type incompatible " ,item);
 	  G__genericerror((char*)NULL);
 	}
       }
@@ -5591,7 +5591,7 @@ int ig15;
 {
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr("%3x: REDECL\n",G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__REDECL;
     G__asm_inst[G__asm_cp+1]=ig15;
@@ -5656,7 +5656,7 @@ int parameter00;
     var=varglobal;
   }
   if(!var) {
-    G__fprinterr("Error: Illegal assignment to %s",item);
+    G__fprinterr(G__serr,"Error: Illegal assignment to %s",item);
     G__genericerror((char*)NULL);
     return(result);
   }
@@ -5677,7 +5677,7 @@ int parameter00;
 	    && -1!=G__def_tagnum && 'n'!=G__struct.type[G__def_tagnum]
 #endif
 	    ) {
-      G__fprinterr("Limitation: Reference member not accessible from the interpreter");
+      G__fprinterr(G__serr,"Limitation: Reference member not accessible from the interpreter");
       G__printlinenum();
       G__access=G__PRIVATE;
     }
@@ -5690,7 +5690,7 @@ int parameter00;
      && -1==G__ispublicbase(result.tagnum,G__tagnum,0)
 #endif
      ) {
-    G__fprinterr("Error: Illegal initialization of pointer, wrong type %s"
+    G__fprinterr(G__serr,"Error: Illegal initialization of pointer, wrong type %s"
 	    ,G__type2string(result.type ,result.tagnum ,result.typenum
 			    ,result.obj.reftype.reftype,0));
     G__genericerror((char*)NULL);
@@ -5713,7 +5713,7 @@ int parameter00;
         /* to follow the example of other places .. Should printlinenum
            be replaced by G__genericerror ? */
 #endif
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	   "Warning: Automatic variable %s allocated in global scope",item);
       G__printlinenum();
 #ifndef G__PHILIPPE21
@@ -5759,7 +5759,7 @@ int parameter00;
     if(isupper(result.type)) {
       /* a = new T(init);  a is a pointer */
 #ifdef G__DEBUG
-      G__fprinterr("Warning: Automatic variable %s* %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
+      G__fprinterr(G__serr,"Warning: Automatic variable %s* %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
 #endif
       G__reftype = G__PARANORMAL;
     }
@@ -5769,7 +5769,7 @@ int parameter00;
 	/* a = T(init); a is an object */
 	G__globalvarpointer = result.obj.i;
 #ifdef G__DEBUG
-	G__fprinterr("Warning: Automatic variable %s %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
+	G__fprinterr(G__serr,"Warning: Automatic variable %s %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
 #endif
 	G__reftype = G__PARANORMAL;
 	G__p_tempbuf->obj.obj.i=0;
@@ -5780,7 +5780,7 @@ int parameter00;
 	 * a = b; a is a reference type */
 	G__reftype = G__PARAREFERENCE;
 	if(G__ASM_FUNC_NOP==G__asm_wholefunction) 
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 		  "Error: Illegal Assignment to an undeclared symbol %s"
 		  ,item);
 	G__genericerror((char*)NULL);
@@ -5935,7 +5935,7 @@ int parameter00;
       }
 #ifndef G__OLDIMPLEMENTATION1091
       else if(G__nfile<G__ifile.filenum) {
-	G__fprinterr("Warning: 'static' ignored in '{ }' style macro");
+	G__fprinterr(G__serr,"Warning: 'static' ignored in '{ }' style macro");
 	G__printlinenum();
 	G__static_alloc=0;
       }
@@ -6195,7 +6195,7 @@ int parameter00;
   if(strlen(varname)>G__MAXNAME-1) {
     strncpy(var->varnamebuf[var->allvar],varname,G__MAXNAME-1);
     var->varnamebuf[var->allvar][G__MAXNAME-1]=0;
-    G__fprinterr("Limitation: Variable name length overflow strlen(%s)>%d"
+    G__fprinterr(G__serr,"Limitation: Variable name length overflow strlen(%s)>%d"
 	    ,varname,G__MAXNAME-1);
     G__genericerror((char*)NULL);
   }
@@ -6279,7 +6279,7 @@ int parameter00;
 	G__return=G__RETURN_NORMAL;
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
-	  G__fprinterr("bytecode compile aborted by automatic class object. Use pointer to class obj + new");
+	  G__fprinterr(G__serr,"bytecode compile aborted by automatic class object. Use pointer to class obj + new");
 	  G__printlinenum();
 	}
 #endif
@@ -6301,7 +6301,7 @@ int parameter00;
       /* function argument */
       if(G__PARAREFERENCE==G__reftype) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("%3x: INIT_REF\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INIT_REF\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__INIT_REF;
 	G__asm_inst[G__asm_cp+1]=ig15;
@@ -6314,7 +6314,7 @@ int parameter00;
 	G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p');
       }
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: POP\n",G__asm_cp);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POP\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__POP;
       G__inc_cp_asm(1,0);
@@ -6333,7 +6333,7 @@ int parameter00;
 	for(ix=4;ix>=0;ix--) 
 	  G__asm_inst[G__asm_cp+ix+3] = G__asm_inst[G__asm_cp+ix];
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("%3x: LD_CTOR_SETGVP %s index=%d paran=%d\n"
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_CTOR_SETGVP %s index=%d paran=%d\n"
 			       ,G__asm_cp,item,ig15,paran);
 #endif
 	G__asm_inst[G__asm_cp]=G__CTOR_SETGVP;
@@ -6344,7 +6344,7 @@ int parameter00;
       }
       else { /* Interpreted class */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("%3x: LD_VAR  %s index=%d paran=%d\n"
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
 			       ,G__asm_cp,item,ig15,paran);
 #endif
 	G__asm_inst[G__asm_cp]=G__LD_LVAR;
@@ -6354,8 +6354,8 @@ int parameter00;
 	G__asm_inst[G__asm_cp+4]=(long)var;
 	G__inc_cp_asm(5,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp);
-	if(G__asm_dbg) G__fprinterr("%3x: SETSTROS\n",G__asm_cp+1);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
 #endif
 	G__asm_inst[G__asm_cp]=G__PUSHSTROS;
 	G__asm_inst[G__asm_cp+1]=G__SETSTROS;
@@ -6437,7 +6437,7 @@ int parameter00;
   case 'u': /* struct, union */
     if(G__struct.isabstract[G__tagnum]&&0==G__ansiheader&&0==G__funcheader
        &&G__PARANORMAL==G__reftype) {
-      G__fprinterr("Error: abstract class object '%s %s' declared",G__struct.name[G__tagnum],item);
+      G__fprinterr(G__serr,"Error: abstract class object '%s %s' declared",G__struct.name[G__tagnum],item);
       G__genericerror((char*)NULL);
       var->hash[ig15]=0;
     }
@@ -6627,7 +6627,7 @@ int parameter00;
     if((G__definemacro==0)&&(G__globalcomp==G__NOLINK)) {
 #ifndef G__OLDIMPLEMENTATION566
       if(-1!=var->tagnum) {
-	G__fprinterr("Warning: Undeclared data member %s",item);
+	G__fprinterr(G__serr,"Warning: Undeclared data member %s",item);
 	G__genericerror((char*)NULL);
 	return(result);
       }
@@ -6638,13 +6638,13 @@ int parameter00;
       if(0==G__const_noerror) {
         /* the next comment seems obsolete. the code is sometimes used! */
 #endif
-      G__fprinterr("Error: Undeclared variable %s",item);
+      G__fprinterr(G__serr,"Error: Undeclared variable %s",item);
       G__genericerror((char*)NULL);
 #ifndef G__PHILIPPE21
       }
 #endif
 #else
-      G__fprinterr("Warning: Undeclared symbol %s. Automatic variable allocated",item);
+      G__fprinterr(G__serr,"Warning: Undeclared symbol %s. Automatic variable allocated",item);
       G__printlinenum();
 #endif
       var->type[ig15]='o';
@@ -6959,7 +6959,7 @@ char *varname,*item;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: LD_THIS %c\n",G__asm_cp,G__var_type);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_THIS %c\n",G__asm_cp,G__var_type);
 #endif
       G__asm_inst[G__asm_cp] = G__LD_THIS;
       G__asm_inst[G__asm_cp+1] = G__var_type;
@@ -7079,6 +7079,12 @@ int tagnum;
 /**************************************************************************
 * G__parse_friend
 *
+*  friend class A;
+*  friend type func(param);
+*  friend type operator<<(param);
+*  friend A<T,U> operator<<(param);
+*  friend const A<T,U> operator<<(param);
+* 
 **************************************************************************/
 int G__parse_friend(piout,pspaceflag,mparen)
 int *piout,*pspaceflag;
@@ -7123,7 +7129,14 @@ int mparen;
       tagtype='s';
     }
     else {
+#ifndef G__OLDIMPLEMENTATION1489
+      if(strcmp(classname,"const")==0 || strcmp(classname,"volatile")==0 ||
+	 strcmp(classname,"register")==0) {
+	c = G__fgetname_template(classname,";");
+      }
+#else
       c=G__fignorestream(";,(");
+#endif
       switch(c) {
       case ';':
       case ',':
@@ -7311,7 +7324,7 @@ char *varname;
 	for(i=var->varlabel[ig15][1];i>=0;--i) {
 	  G__store_struct_offset = var->p[ig15]+size*i;
 	  if(G__dispsource) {
-	    G__fprinterr("\n0x%lx.%s",G__store_struct_offset,temp);
+	    G__fprinterr(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
 	  }
 	  done=0;
 	  G__getfunction(temp,&done,G__TRYDESTRUCTOR); 

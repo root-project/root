@@ -432,7 +432,7 @@ void G__define_type()
 	break;
       case G__PARAREFERENCE:
 	if(G__PARANORMAL!=G__newtype.reftype[itemp]) {
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 	 "Limitation: reference or pointer type not handled properly");
 	  G__printlinenum();
 	}
@@ -442,7 +442,7 @@ void G__define_type()
 	case G__PARANORMAL:
 	  break;
 	case G__PARAREFERENCE:
-	  G__fprinterr(
+	  G__fprinterr(G__serr,
 	  "Limitation: reference or pointer type not handled properly");
 	  G__printlinenum();
 	  break;
@@ -754,7 +754,7 @@ void G__define_type()
   if(-1==typenum) {
 
     if(G__newtype.alltype==G__MAXTYPEDEF) {
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	      "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
 	      ,G__MAXTYPEDEF
 	      ,G__ifile.name
@@ -817,7 +817,7 @@ void G__define_type()
     else if(-1!=G__func_now) {
       env_tagnum = -2;
 #ifndef G__OLDIMPLEMENTATION1145
-      G__fprinterr("Limitation: In function typedef not allowed in cint");
+      G__fprinterr(G__serr,"Limitation: In function typedef not allowed in cint");
       G__printlinenum();
 #endif
     }
@@ -918,7 +918,7 @@ void G__define_type()
 	    break;
 	  default:
 	    /* enum already handled above */
-	    G__fprinterr("Error: Illegal tagtype. struct,union,enum expected\n");
+	    G__fprinterr(G__serr,"Error: Illegal tagtype. struct,union,enum expected\n");
 	    break;
 	  }
 	
@@ -1263,7 +1263,7 @@ int reftype;
   /* allocate new type table entry */
   if(flag==0 && typein) {
     if(G__newtype.alltype==G__MAXTYPEDEF) {
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	      "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
 	      ,G__MAXTYPEDEF ,G__ifile.name ,G__ifile.line_number ,G__nam);
       G__eof=1;

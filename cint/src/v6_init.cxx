@@ -545,7 +545,7 @@ char *optlist;
 	}
 	++p;
       }
-      G__fprinterr("Error: Unknown option %s\n",argv[optind]);
+      G__fprinterr(G__serr,"Error: Unknown option %s\n",argv[optind]);
       ++optind;
       return(0);
     }
@@ -783,7 +783,7 @@ char *argv[] ;
 
     case 'x':
       if(xfileflag) {
-	G__fprinterr("Error: only one -x option is allowed\n");
+	G__fprinterr(G__serr,"Error: only one -x option is allowed\n");
 	G__exit(EXIT_FAILURE);
       }
       else {
@@ -829,14 +829,14 @@ char *argv[] ;
     case 'n': /* customize G__cpplink file name
 	       *   G__cppXXX?.C , G__cXXX.c */
       if(linkflag) {
-        G__fprinterr("Warning: option -n[linkname] must be given prior to -c[linklevel]\n");
+        G__fprinterr(G__serr,"Warning: option -n[linkname] must be given prior to -c[linklevel]\n");
       }
       linkfilename = optarg;
       break;
 
     case 'N': /* customize DLL identification name */
       if(linkflag) {
-        G__fprinterr("Warning: option -N[DLL_Name] must be given prior to -c[linklevel]\n");
+        G__fprinterr(G__serr,"Warning: option -N[DLL_Name] must be given prior to -c[linklevel]\n");
       }
       dllid = optarg;
       break;
@@ -878,7 +878,7 @@ char *argv[] ;
       break;
 #else
     case 'l': /* error message for dynamic link option */
-      G__fprinterr("Error: %s is not compiled with dynamic link capability\n",argv[0]);
+      G__fprinterr(G__serr,"Error: %s is not compiled with dynamic link capability\n",argv[0]);
       break;
 #endif
     case 'p': /* use preprocessor */
@@ -932,11 +932,11 @@ char *argv[] ;
       G__dumpreadline[0]=fopen(optarg,"r");
       if(G__dumpreadline[0]) {
 	G__Xdumpreadline[0]=1;
-	G__fprinterr(" -X : readline dumpfile %s executed\n",
+	G__fprinterr(G__serr," -X : readline dumpfile %s executed\n",
 		optarg);
       }
       else {
-	G__fprinterr(
+	G__fprinterr(G__serr,
 		"Readline dumpfile %s can not open\n"
 		,optarg);
 	return(EXIT_FAILURE);
@@ -944,18 +944,18 @@ char *argv[] ;
       break;
     case 'd': /* dump file */
 #ifdef G__DUMPFILE
-      G__fprinterr(" -d : dump function call history to %s\n",
+      G__fprinterr(G__serr," -d : dump function call history to %s\n",
 	      optarg);
       if(strcmp(optarg+strlen(optarg)-2,".c")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".C")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".h")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".H")==0) {
-	G__fprinterr("-d %s : Improper history dump file name\n"
+	G__fprinterr(G__serr,"-d %s : Improper history dump file name\n"
 		,optarg);
       }
       else sprintf(dumpfile,"%s",optarg);
 #else
-      G__fprinterr(
+      G__fprinterr(G__serr,
 	      " -d : func call dump not supported now\n");
 #endif
       break;
@@ -997,12 +997,12 @@ char *argv[] ;
       G__set_globalcomp(optarg,linkfilename,dllid);
       break;
     case 's': /* step into mode */
-      G__fprinterr(" -s : Step into function/loop mode\n");
+      G__fprinterr(G__serr," -s : Step into function/loop mode\n");
       G__steptrace = 1;
       break;
     case 'S': /* step over mode */
       G__stepover=3;
-      G__fprinterr(" -S : Step over function/loop mode\n");
+      G__fprinterr(G__serr," -S : Step over function/loop mode\n");
       stepfrommain = 1;
       break;
     case 'b': /* break line */
@@ -1014,12 +1014,12 @@ char *argv[] ;
     case 'a': /* assertion */
       strcpy(G__assertion,optarg);
 #ifdef G__OLDIMPLEMENTATION418
-      G__fprinterr(" -a : break at assertion %s\n" ,G__assertion);
+      G__fprinterr(G__serr," -a : break at assertion %s\n" ,G__assertion);
 #endif
       break;
     case 'T': /* trace of input file */
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(" -T : trace from pre-run\n");
+      G__fprinterr(G__serr," -T : trace from pre-run\n");
       G__debugtrace=G__istrace=G__debug = 1;
       G__setdebugcond();
       break;
@@ -1027,12 +1027,12 @@ char *argv[] ;
       G__serr = fopen(optarg,"w");
     case 't': /* trace of input file */
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(" -t : trace execution\n");
+      G__fprinterr(G__serr," -t : trace execution\n");
       G__istrace=G__debugtrace = 1;
       break;
     case 'R': /* displays input file at the break point*/
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(" -d : display at break point mode\n");
+      G__fprinterr(G__serr," -d : display at break point mode\n");
       G__breakdisp = 1;
       break;
     case 'r': /* revision */
@@ -1234,7 +1234,7 @@ char *argv[] ;
 
 #ifndef G__OLDIMPLEMENTATION1162
   if(G__security_error) {
-    G__fprinterr("Warning: Error occured during reading source files\n");
+    G__fprinterr(G__serr,"Warning: Error occured during reading source files\n");
   }
 #endif
 
@@ -1251,7 +1251,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION996
     if(G__security_error) {
 #ifndef G__OLDIMPLEMENTATION1162
-      G__fprinterr("Warning: Error occured during dictionary source generation\n");
+      G__fprinterr(G__serr,"Warning: Error occured during dictionary source generation\n");
 #endif
 #ifndef G__OLDIMPLEMENTATION1197
       G__cleardictfile(-1);
@@ -1273,7 +1273,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION996
     if(G__security_error) {
 #ifndef G__OLDIMPLEMENTATION1162
-      G__fprinterr("Warning: Error occured during dictionary source generation\n");
+      G__fprinterr(G__serr,"Warning: Error occured during dictionary source generation\n");
 #endif
 #ifndef G__OLDIMPLEMENTATION1197
       G__cleardictfile(-1);
@@ -1298,7 +1298,7 @@ char *argv[] ;
 #endif
 
   optind--;
-  if(G__debugtrace!=0) G__fprinterr("PRE-RUN END\n");
+  if(G__debugtrace!=0) G__fprinterr(G__serr,"PRE-RUN END\n");
 
   /*************************************************************
    * set debug conditon after prerun
@@ -1381,7 +1381,7 @@ char *argv[] ;
     /********************************
      * Call main(argc,argv)
      ********************************/
-    if(G__breaksignal) G__fprinterr("\nCALL main()\n");
+    if(G__breaksignal) G__fprinterr(G__serr,"\nCALL main()\n");
     sprintf(temp,"main");
     para.paran=2;
 #ifndef G__OLDIMPLEMENTATION834
@@ -1403,7 +1403,7 @@ char *argv[] ;
     /********************************
      * Call main(argc,argv)
      ********************************/
-    if(G__breaksignal) G__fprinterr("\nCALL main()\n");
+    if(G__breaksignal) G__fprinterr(G__serr,"\nCALL main()\n");
     result=G__calc_internal(temp);
 #endif /* ON575 */
 
@@ -1421,7 +1421,7 @@ char *argv[] ;
 #endif
       G__break=0;
       G__setdebugcond();
-      G__fprinterr("!!! return from main() function\n");
+      G__fprinterr(G__serr,"!!! return from main() function\n");
       G__pause();
     }
     if(G__stepover) {

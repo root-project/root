@@ -372,14 +372,14 @@ void G__rewind_undo_position()
     if('y'==tolower(buf[0])) {
       G__scratch_upto(&undodictpos[undoindex]);
       undodictpos[undoindex].var=(struct G__var_array*)NULL;
-      G__fprinterr("!!! Dictionary position rewinded !!!\n");
+      G__fprinterr(G__serr,"!!! Dictionary position rewinded !!!\n");
     }
     else {
       G__increment_undo_index(&undoindex);
     }
   }
   else {
-    G__fprinterr("!!! No undo rewinding buffer !!!\n");
+    G__fprinterr(G__serr,"!!! No undo rewinding buffer !!!\n");
     G__init_undo();
   }
 }
@@ -576,14 +576,14 @@ int ifn;
   ifunc = &G__ifunc;
   while(ifunc) {
     if(ifunc->allifunc>G__MAXIFUNC) {
-      G__fprinterr("Internal error: G__clearfilebusy() FATAL! Save data and terminate session");
+      G__fprinterr(G__serr,"Internal error: G__clearfilebusy() FATAL! Save data and terminate session");
       G__printlinenum();
       return(0);
     }
     for(i1=0;i1<ifunc->allifunc;i1++) {
       if( 0!=ifunc->busy[i1] && ifunc->pentry[i1]->filenum>=ifn ) {
 	ifunc->busy[i1] = 0;
-	G__fprinterr("Function %s() busy flag cleared\n"
+	G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
 		,ifunc->funcname[i1]);
 	flag++;
       }
@@ -603,7 +603,7 @@ int ifn;
       for(i1=0;i1<ifunc->allifunc;i1++) {
 	if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
 	  ifunc->busy[i1] = 0;
-	  G__fprinterr("Function %s() busy flag cleared\n"
+	  G__fprinterr(G__serr,"Function %s() busy flag cleared\n"
 		  ,ifunc->funcname[i1]);
 	  flag++;
 	}
@@ -645,11 +645,11 @@ void G__rewinddictionary()
       G__clearfilebusy(errordictpos.nfile);
       G__scratch_upto(&errordictpos);
 #ifndef G__ROOT
-      G__fprinterr("!!!Dictionary position rewinded... ");
+      G__fprinterr(G__serr,"!!!Dictionary position rewinded... ");
 #endif
     }
     else {
-      G__fprinterr("!!!Dictionary position not recorvered because G__unloadfile() in macro!!!\n");
+      G__fprinterr(G__serr,"!!!Dictionary position not recorvered because G__unloadfile() in macro!!!\n");
     }
   }
 #ifndef G__OLDIMPLEMENTATION1422
@@ -781,7 +781,7 @@ char *filename;
   int store_cpp=G__cpp;
   int store_prerun=G__prerun;
   if(!filename || 0==filename[0]) {
-    G__fprinterr("Error: no file specified\n");
+    G__fprinterr(G__serr,"Error: no file specified\n");
     return(-1);
   }
 
@@ -921,9 +921,9 @@ FILE *fout;
 #ifndef G__OLDIMPLEMENTATION1485
       if(fout==G__serr) {
 #ifdef G__ROOT
-	G__fprinterr("*** Fatal error in interpreter... restarting interpreter ***\n");
+	G__fprinterr(G__serr,"*** Fatal error in interpreter... restarting interpreter ***\n");
 #else
-	G__fprinterr("!!!Fatal error. Sorry, terminate cint session!!!\n");
+	G__fprinterr(G__serr,"!!!Fatal error. Sorry, terminate cint session!!!\n");
 #endif
       } else 
 #endif
@@ -942,9 +942,9 @@ FILE *fout;
 #ifndef G__OLDIMPLEMENTATION1485
       if(fout==G__serr) {
 #ifdef G__ROOT
-	G__fprinterr("*** Interpreter error recovered ***\n");
+	G__fprinterr(G__serr,"*** Interpreter error recovered ***\n");
 #else
-	G__fprinterr("!!!Error recovered!!!\n");
+	G__fprinterr(G__serr,"!!!Error recovered!!!\n");
 #endif
       } else
 #endif
@@ -1066,7 +1066,7 @@ int G__pause()
      (!G__test(G__assertion))) {
 #ifndef G__OLDIMPLEMENTATION1486
     if(G__security_error) {
-      G__fprinterr("Warning: Assertion failed, delete assert expression %s\n"
+      G__fprinterr(G__serr,"Warning: Assertion failed, delete assert expression %s\n"
 		   ,G__assertion);
       G__assertion[0] = 0;
     }
@@ -1617,12 +1617,12 @@ G__value *rslt;
 
 #ifndef G__OLDIMPLEMENTATION860
   if(0==init_process_cmd_called) 
-    G__fprinterr("Internal error: G__init_process_cmd must be called before G__process_cmd\n");
+    G__fprinterr(G__serr,"Internal error: G__init_process_cmd must be called before G__process_cmd\n");
 #endif
 
 #ifndef G__OLDIMPLEMENTATION685
   if(strlen(line)>G__ONELINE-5) {
-    G__fprinterr("!!! User command too long !!!\n");
+    G__fprinterr(G__serr,"!!! User command too long !!!\n");
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
 #endif
@@ -1908,11 +1908,11 @@ G__value *rslt;
 #if defined(G__WIN32)
 	*plocal++ = 0;
 	if(FALSE==SetEnvironmentVariable(stringb,plocal)) 
-	  G__fprinterr("can not set environment variable %s=%s\n"
+	  G__fprinterr(G__serr,"can not set environment variable %s=%s\n"
 		  ,stringb,plocal);
 #elif defined(G__POSIX)
 	if(0!=putenv(stringb))  /* DOES NOT WORK , WHY ??? */
-	  G__fprinterr("can not set environment variable %s\n",stringb);
+	  G__fprinterr(G__serr,"can not set environment variable %s\n",stringb);
 #endif
       }
       else {
@@ -1922,10 +1922,10 @@ G__value *rslt;
     else if(strncmp("cd",com,2)==0) {
 #if defined(G__WIN32)
       if(FALSE==SetCurrentDirectory(stringb))
-	G__fprinterr("can not change directory to %s\n",stringb);
+	G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
 #elif defined(G__POSIX)
       if(0!=chdir(stringb)) 
-	G__fprinterr("can not change directory to %s\n",stringb);
+	G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
 #endif
     }
 #endif
@@ -2001,7 +2001,7 @@ G__value *rslt;
 
     else if(strncmp("reset",com,4)==0) {
 #ifdef G__ROOT
-      G__fprinterr("!!! Sorry, can not reset interpreter !!!\n");
+      G__fprinterr(G__serr,"!!! Sorry, can not reset interpreter !!!\n");
 #else
       if(!G__isfilebusy(0)) { 
 	int store_othermain=G__othermain;
@@ -2014,7 +2014,7 @@ G__value *rslt;
 #endif
       }
       else {
-	G__fprinterr("!!! Sorry, can not reset interpreter !!!\n");
+	G__fprinterr(G__serr,"!!! Sorry, can not reset interpreter !!!\n");
       }
 #endif
     }
@@ -2127,7 +2127,7 @@ G__value *rslt;
 	return(ignore);
       }
       else {
-	G__fprinterr("!!! Use 'return' command at your own risk !!!\n");
+	G__fprinterr(G__serr,"!!! Use 'return' command at your own risk !!!\n");
 	G__interactivereturnvalue = G__calc_internal(string);
 	G__return=G__RETURN_IMMEDIATE;
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
@@ -2237,7 +2237,7 @@ G__value *rslt;
       while(isspace(string[temp])) temp++;
 #ifndef G__FONS4
       if (string[temp] == '\0') {
-        G__fprinterr("Error: no file specified\n");
+        G__fprinterr(G__serr,"Error: no file specified\n");
 #ifndef G__OLDIMPLEMENTATION464
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -2405,7 +2405,7 @@ G__value *rslt;
       temp=0;
       while(isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
-         G__fprinterr("Error: no file specified\n");
+         G__fprinterr(G__serr,"Error: no file specified\n");
 #ifndef G__OLDIMPLEMENTATION464
 	 G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -2469,7 +2469,7 @@ G__value *rslt;
       temp=0;
       while(isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
-         G__fprinterr("Error: no file specified\n");
+         G__fprinterr(G__serr,"Error: no file specified\n");
 #ifndef G__OLDIMPLEMENTATION464
 	 G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -2716,7 +2716,7 @@ G__value *rslt;
 	remove(tname);
       }
       else {
-	G__fprinterr("Error: Tempfile G__temp can not open\n");
+	G__fprinterr(G__serr,"Error: Tempfile G__temp can not open\n");
       }
     }
 
@@ -2834,7 +2834,7 @@ G__value *rslt;
 	G__setdebugcond();
       }
       else {
-	G__fprinterr("can not determine where to delete break point\n");
+	G__fprinterr(G__serr,"can not determine where to delete break point\n");
       }
     }
 
@@ -2853,10 +2853,10 @@ G__value *rslt;
       }
       else if(0==G__srcfile[filenum].maxline) {
 	if((FILE*)NULL==G__srcfile[filenum].fp) {
-	  G__fprinterr("Can not put break point in included file\n");
+	  G__fprinterr(G__serr,"Can not put break point in included file\n");
 	}
 	else {
-	  G__fprinterr("Setting break point suspended\n");
+	  G__fprinterr(G__serr,"Setting break point suspended\n");
 	  temp=0;
 	  while(isspace(string[temp])) ++temp;
 	  if('\0'==string[temp]) {
@@ -2869,7 +2869,7 @@ G__value *rslt;
 	}
       }
       else {
-	G__fprinterr("Can not determine where to put break point\n");
+	G__fprinterr(G__serr,"Can not determine where to put break point\n");
       }
     }
 
@@ -2912,7 +2912,7 @@ G__value *rslt;
 	return(ignore);
       }
       else {
-	G__fprinterr("can not determine where to stop\n");
+	G__fprinterr(G__serr,"can not determine where to stop\n");
       }
     }
 
@@ -2930,7 +2930,7 @@ G__value *rslt;
 #endif
       }
       if(temp>=G__nfile) {
-	G__fprinterr("filename %s not loaded\n",string);
+	G__fprinterr(G__serr,"filename %s not loaded\n",string);
       }
       else {
 	view.filenum=temp;
@@ -3160,7 +3160,7 @@ G__value *rslt;
     
     else if(strncmp("q",com,1)==0 || strncmp("exit",com,4)==0) {
       if(G__doingconstruction) {
-	G__fprinterr("Use 'qqq' when you quit in the middle of object construction (%d)\n"
+	G__fprinterr(G__serr,"Use 'qqq' when you quit in the middle of object construction (%d)\n"
 		,G__doingconstruction);
 	G__pause_return=1;
 #ifndef G__OLDIMPLEMENTATION464
@@ -3263,7 +3263,7 @@ G__value *rslt;
 #ifndef G__FONS3
       } else {
 	if (command[temp]=='\0') {
-	  G__fprinterr("Error: no file specified\n");
+	  G__fprinterr(G__serr,"Error: no file specified\n");
 #ifndef G__OLDIMPLEMENTATION464
 	  G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -3365,7 +3365,7 @@ G__value *rslt;
       }
 
       if(!ftemp.fp) {
-	G__fprinterr("Error: could not create file %s\n",tname);
+	G__fprinterr(G__serr,"Error: could not create file %s\n",tname);
       }
       else {
 	temp = *more; 
@@ -3755,7 +3755,7 @@ G__value *rslt;
     }
 
     else {
-      G__fprinterr("Unknown interpreter command '%s'\n",com);
+      G__fprinterr(G__serr,"Unknown interpreter command '%s'\n",com);
     }
 
 #ifndef G__OLDIMPLEMENTATION464

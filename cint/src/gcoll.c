@@ -258,7 +258,7 @@ int G__garbagecollection()
   unsigned int count;
 
 #ifndef G__IMMEDIATE_GARBAGECOLLECTION
-  G__fprinterr("!!! Reference Count Control start !!!\n");
+  G__fprinterr(G__serr,"!!! Reference Count Control start !!!\n");
 #endif
 
   alloc = G__alloctable;
@@ -281,7 +281,7 @@ int G__garbagecollection()
     alloc=alloc->next;
   }
 
-  G__fprinterr("!!! %d object(s) deleted by Reference Count Control !!!\n"
+  G__fprinterr(G__serr,"!!! %d object(s) deleted by Reference Count Control !!!\n"
 	  ,G__count_garbagecollection);
   count = G__count_garbagecollection;
   G__count_garbagecollection=0;
@@ -331,10 +331,10 @@ void *allocmem;
   }
   else {
 #ifndef G__FONS31
-    G__fprinterr("Error: Can not free 0x%lx, not allocated."
+    G__fprinterr(G__serr,"Error: Can not free 0x%lx, not allocated."
 	    ,(long)allocmem);
 #else
-    G__fprinterr("Error: Can not free 0x%x, not allocated.",allocmem);
+    G__fprinterr(G__serr,"Error: Can not free 0x%x, not allocated.",allocmem);
 #endif
     G__genericerror((char*)NULL);
     return(1);
@@ -399,10 +399,10 @@ void **storedmem;
     if(!alloc->reflist && flag) {
 #ifdef G__DEBUG
 #ifndef G__OLDIMPLEMENTATION401
-      G__fprinterr("!!! %s object deleted by Reference Count Control !!!\n"
+      G__fprinterr(G__serr,"!!! %s object deleted by Reference Count Control !!!\n"
 	      ,G__type2string(alloc->type,alloc->tagnum,-1,0,0));
 #else
-      G__fprinterr("!!! %s object deleted by Reference Count Control !!!\n"
+      G__fprinterr(G__serr,"!!! %s object deleted by Reference Count Control !!!\n"
 	      ,G__type2string(alloc->type,alloc->tagnum,-1,0));
 #endif
 #endif

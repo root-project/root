@@ -414,7 +414,7 @@ char *file;
     return(buf);
   }
   else {
-    G__fprinterr("Error: can not open file '%s'\n",file);
+    G__fprinterr(G__serr,"Error: can not open file '%s'\n",file);
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
 #endif
@@ -464,7 +464,7 @@ char *text;
     }
   }
   if(nest!=0 || single_quote!=0 || double_quote!=0) {
-    G__fprinterr("!!!Error in given statement!!! \"%s\"\n",text);
+    G__fprinterr(G__serr,"!!!Error in given statement!!! \"%s\"\n",text);
     return(G__null);
   }
   
@@ -549,7 +549,7 @@ void G__EOFfgetc()
 	)&&
        ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
-      G__fprinterr("EOF\n");
+      G__fprinterr(G__serr,"EOF\n");
     }
     if(G__disp_mask>0) G__disp_mask-- ;
   }
@@ -597,7 +597,7 @@ void G__DISPNfgetc()
       )&&
      ((G__prerun)||(G__no_exec==0))&&(G__disp_mask==0)){
     
-    G__fprinterr("\n%-5d",G__ifile.line_number);
+    G__fprinterr(G__serr,"\n%-5d",G__ifile.line_number);
     
   }
   if(G__disp_mask>0) G__disp_mask-- ;
@@ -631,7 +631,7 @@ int c;
 void G__lockedvariable(item)
 char *item;
 {
-  G__fprinterr("Warning: Assignment to %s locked FILE:%s LINE:%d\n"
+  G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
 	  ,item
 	  ,G__ifile.name,G__ifile.line_number);
 }
@@ -647,7 +647,7 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr("Warning: lock variable obsolete feature");
+  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
   G__printlinenum();
 #endif
   
@@ -656,12 +656,12 @@ char *varname;
   
   if(var) {
     var->constvar[ig15] |= G__LOCKVAR;
-    G__fprinterr("Variable %s locked FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"Variable %s locked FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
-    G__fprinterr("Warining: failed locking %s FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"Warining: failed locking %s FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
@@ -677,7 +677,7 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr("Warning: lock variable obsolete feature");
+  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
   G__printlinenum();
 #endif
   
@@ -686,12 +686,12 @@ char *varname;
   
   if(var) {
     var->constvar[ig15] &= ~G__LOCKVAR;
-    G__fprinterr("Variable %s unlocked FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"Variable %s unlocked FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(0);
   }
   else {
-    G__fprinterr("Warining: failed unlocking %s FILE:%s LINE:%d\n"
+    G__fprinterr(G__serr,"Warining: failed unlocking %s FILE:%s LINE:%d\n"
 	    ,varname,G__ifile.name,G__ifile.line_number);
     return(1);
   }
@@ -712,7 +712,7 @@ char *breakline,*breakfile;
     line=atoi(breakline);
     
     if(NULL==breakfile || '\0'==breakfile[0]) {
-      G__fprinterr(" -b : break point on line %d every file\n",line);
+      G__fprinterr(G__serr," -b : break point on line %d every file\n",line);
       for(ii=0;ii<G__nfile;ii++) {
 	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
 	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
@@ -729,13 +729,13 @@ char *breakline,*breakfile;
 	   ) break;
       }
       if(ii<G__nfile) {
-	G__fprinterr(" -b : break point on line %d file %s\n"
+	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
 		,line,breakfile);
 	if(G__srcfile[ii].breakpoint && G__srcfile[ii].maxline>line)
 	  G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr("File %s is not loaded\n",breakfile);
+	G__fprinterr(G__serr,"File %s is not loaded\n",breakfile);
 	return(1);
       }
     }
@@ -744,17 +744,17 @@ char *breakline,*breakfile;
   else {
     if(1<G__findfuncposition(breakline,&line,&ii)) {
       if(G__srcfile[ii].breakpoint) {
-	G__fprinterr(" -b : break point on line %d file %s\n"
+	G__fprinterr(G__serr," -b : break point on line %d file %s\n"
 		,line,G__srcfile[ii].filename);
 	G__srcfile[ii].breakpoint[line] |= G__BREAK;
       }
       else {
-	G__fprinterr("unable to put breakpoint in %s (included file)\n"
+	G__fprinterr(G__serr,"unable to put breakpoint in %s (included file)\n"
 		,breakline);
       }
     }
     else {
-      G__fprinterr("function %s is not loaded\n",breakline);
+      G__fprinterr(G__serr,"function %s is not loaded\n",breakline);
       return(1);
     }
   }

@@ -184,7 +184,7 @@ char *filename;
      ) {
   }
   else {
-    G__fprinterr("Error: G__loadsystemfile can only load DLL");
+    G__fprinterr(G__serr,"Error: G__loadsystemfile can only load DLL");
     G__printlinenum();
     return(G__LOADFILE_FAILURE);
   }
@@ -230,7 +230,7 @@ char *path;
 #if defined(G__OSFDLL)
 
   handle = dlopen(path,G__RTLD_flag);
-  if(!handle) G__fprinterr("dlopen error: %s\n",dlerror());
+  if(!handle) G__fprinterr(G__serr,"dlopen error: %s\n",dlerror());
 
 /****************************************************
 * HP-UX
@@ -298,7 +298,7 @@ TYPE_PROCEDURE);
   handle = dlopen(path,RTLD_GLOBAL | RTLD_LAZY);
 #endif
 #ifndef G__OLDIMPLEMENTATION861
-  if(!handle) G__fprinterr("dlopen error: %s\n",dlerror());
+  if(!handle) G__fprinterr(G__serr,"dlopen error: %s\n",dlerror());
 #endif
 /****************************************************
 * HP-UX
@@ -570,7 +570,7 @@ int allsl;
 {
   if(G__sl_handle[allsl]) {
     if(G__dlclose(G__sl_handle[allsl]) == -1) {
-      G__fprinterr("Error: Dynamic link library unloading error\n");
+      G__fprinterr(G__serr,"Error: Dynamic link library unloading error\n");
     }
     G__sl_handle[allsl]=0;
   }
@@ -592,7 +592,7 @@ int allsl;
    *************************************************************/
   while((--G__allsl)>=allsl) {
     if(G__dlclose(G__sl_handle[G__allsl]) == -1) {
-      G__fprinterr("Error: Dynamic link library unloading error\n");
+      G__fprinterr(G__serr,"Error: Dynamic link library unloading error\n");
     }
     else {
       G__sl_handle[G__allsl]=0;
@@ -660,8 +660,8 @@ void G__show_dllrev(shlfile,sharedlib_func)
 char *shlfile;
 int (*sharedlib_func)();
 {
-  G__fprinterr("%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
-  G__fprinterr("  This cint accepts DLLREV=%d~%d and creates %d\n"
+  G__fprinterr(G__serr,"%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
+  G__fprinterr(G__serr,"  This cint accepts DLLREV=%d~%d and creates %d\n"
 	  ,G__ACCEPTDLLREV_FROM,G__ACCEPTDLLREV_UPTO
 	  ,G__CREATEDLLREV);
 }
@@ -697,7 +697,7 @@ char *shlfile;
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
-      G__fprinterr("Warning: Dynamic Link Library %s can not load",shlfile);
+      G__fprinterr(G__serr,"Warning: Dynamic Link Library %s can not load",shlfile);
       G__printlinenum();
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
@@ -835,7 +835,7 @@ char *shlfile;
     return(EXIT_FAILURE);
   }
   if(G__asm_dbg&&0==cintdll) {
-    G__fprinterr("Warning: No CINT symbol table in %s\n",shlfile);
+    G__fprinterr(G__serr,"Warning: No CINT symbol table in %s\n",shlfile);
   }
 
 
@@ -1055,8 +1055,8 @@ int *known3;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr("%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr("%3x: SETSTROS\n",G__asm_cp-1);
+	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
     }
@@ -1078,7 +1078,7 @@ int *known3;
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0);
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr("%3x: POPSTROS\n",G__asm_cp-1);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
 #endif
     }
 #endif
@@ -1095,7 +1095,7 @@ int *known3;
 #endif
 
   if(result3.obj.i==0) {
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "Error: Can not access pointer to function 0x%lx from interpreter(1) FILE:%s LINE:%d\n"
 	    ,G__int(result3)
 	    ,G__ifile.name,G__ifile.line_number);
@@ -1151,7 +1151,7 @@ int *known3;
 
   /* appropreate function not found */
   if(result7[0]=='\0') {
-    G__fprinterr(
+    G__fprinterr(G__serr,
 	    "Error: Can not access pointer to function 0x%lx from interpreter(2) FILE:%s LINE:%d\n"
 	    ,G__int(result3)
 	    ,G__ifile.name,G__ifile.line_number);
