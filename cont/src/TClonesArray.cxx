@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.22 2001/12/01 09:13:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.23 2001/12/02 22:19:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -99,9 +99,10 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
    }
-   char name[100];
-   sprintf(name,"%ss",classname);
+   char *name = new char[strlen(classname)+2];
+   sprintf(name, "%ss", classname);
    SetName(name);
+   delete [] name;
 
    fKeep = new TObjArray(s);
 
@@ -150,10 +151,10 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
    //     the TClonesArray in T1. The result will be Bar objects with
    //     data member values not in the right sequence.
    // The solution to this problem is to call BypassStreamer(kFALSE)
-   // for the TClonesArray. In this case, the normal Bar::Streamer function 
+   // for the TClonesArray. In this case, the normal Bar::Streamer function
    // will be called. The BAR::Streamer function works OK independently
    // if the Bar StreamerInfo had been generated in optimized mode or not.
-   
+
    if (bypass)
       SetBit(kBypassStreamer);
    else
@@ -222,7 +223,7 @@ void TClonesArray::Delete(Option_t *)
          delete fCont[i];
       }
 
-   // Protect against erroneously setting of owne bit.
+   // Protect against erroneously setting of owner bit.
    SetOwner(kFALSE);
 
    TObjArray::Clear();
@@ -496,7 +497,7 @@ void TClonesArray::Streamer(TBuffer &b)
       sinfo->ForceWriteInfo();
       if (optim) TStreamerInfo::Optimize(kTRUE);
       if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
-      
+
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
