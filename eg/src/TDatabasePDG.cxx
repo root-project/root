@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.2 2000/05/18 17:14:47 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDatabasePDG.h"
@@ -47,9 +47,10 @@ TDatabasePDG::~TDatabasePDG()
 {
    // Cleanup the PDG database.
 
-   if (fParticleList == 0) return;
-   fParticleList->Delete();
-   delete fParticleList;
+   if (fParticleList) {
+      fParticleList->Delete();
+      delete fParticleList;
+   }
    fgInstance = 0;
 }
 
