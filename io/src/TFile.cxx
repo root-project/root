@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.39 2001/06/22 17:45:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.40 2001/10/01 10:34:27 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -437,7 +437,7 @@ void TFile::Init(Bool_t create)
                                 (Long_t)this));
    }
 
-   fProcessIDs = new TObjArray(fProcessCount+1);
+   fProcessIDs = new TObjArray(fProcessCount+2);
    if (fWritable) {
       //read last ProcessID 
       char pidname[32];
@@ -445,9 +445,10 @@ void TFile::Init(Bool_t create)
       TProcessID *pidc = (TProcessID *)gROOT->GetListOfProcessIDs()->First();
       TProcessID *pid  = (TProcessID *)Get(pidname);
       if (!pid) {
+         fProcessCount++;
          fProcessIDs->AddAt(pidc,fProcessCount);
          pidc->IncrementCount();
-         pidc->Write(pidname);
+         pidc->Write(pidc->GetName());
       } else {
          //check that a similar pid is not already registered in gROOT
          if (strcmp(pidc->GetTitle(),pid->GetTitle())) {
@@ -478,7 +479,15 @@ void TFile::Close(Option_t *)
    if (IsWritable()) {
       TStreamerInfo::SetCurrentFile(this);
       WriteStreamerInfo();
+      //delete the TProcessID if no references have been written
+      if (!TestBit(kHasReferences)) {
+         char pidname[20];
+         sprintf(pidname,"%s;1",fProcessIDs->At(fProcessCount)->GetName());
+         Delete(pidname);
+         fProcessCount--;
+      }
    }
+
    delete fClassIndex;
    fClassIndex = 0;
 
@@ -1290,6 +1299,7 @@ void TFile::WriteHeader()
    tobuf(buffer, fCompress);
    tobuf(buffer, fSeekInfo);
    tobuf(buffer, fNbytesInfo);
+   tobuf(buffer, fProcessCount);
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
