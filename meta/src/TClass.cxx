@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.20 2000/12/15 18:10:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.21 2000/12/19 19:24:54 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -118,6 +118,47 @@ TClass::TClass() : TDictionary()
 }
 
 //______________________________________________________________________________
+TClass::TClass(const char *name) : TDictionary()
+{
+   // Create a TClass object. This object contains the full dictionary
+   // of a class. It has list to baseclasses, datamembers and methods.
+   // Use this ctor to create a standalone TClass object. Most useful
+   // to get a TClass interface to an interpreted class. Used by TTabCom.
+   // Normally you would use gROOT->GetClass("class") to get access to a
+   // TClass object for a certain class.
+
+   if (!gROOT)
+      ::Fatal("TClass::TClass", "ROOT system not initialized");
+
+   fName           = name;
+   fClassVersion   = 0;
+   fDeclFileName   = 0;
+   fImplFileName   = 0;
+   fDeclFileLine   = -1;    // -1 for standalone TClass (checked in dtor)
+   fImplFileLine   = 0;
+   fBase           = 0;
+   fData           = 0;
+   fMethod         = 0;
+   fRealData       = 0;
+   fClassInfo      = 0;
+   fAllPubData     = 0;
+   fAllPubMethod   = 0;
+   fCheckSum       = 0;
+   fStreamerInfo   = 0;
+
+   ResetInstanceCount();
+
+   if (!fClassInfo) {
+      if (!gInterpreter)
+         ::Fatal("TClass::TClass", "gInterpreter not initialized");
+
+      gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+      if (!fClassInfo)
+         ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
+   }
+}
+
+//______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
         : TDictionary()
@@ -205,7 +246,8 @@ TClass::~TClass()
       fStreamerInfo->Delete();
    delete fStreamerInfo;
 
-   gROOT->GetListOfClasses()->Remove(this);
+   if (fDeclFileLine >= 0)
+      gROOT->GetListOfClasses()->Remove(this);
 
    delete fClassInfo;
 }

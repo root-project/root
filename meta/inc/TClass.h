@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.10 2000/12/04 16:43:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.11 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@ friend class TCint;
 
 private:
    TString           fName;            //name of class
-   TObjArray        *fStreamerInfo;    //Array of TStreamerInfo 
+   TObjArray        *fStreamerInfo;    //Array of TStreamerInfo
    TList            *fRealData;        //linked list for persistent members including base classes
    TList            *fBase;            //linked list for base classes
    TList            *fData;            //linked list for data members
@@ -73,6 +73,7 @@ public:
           kBypassStreamer = BIT(14)};
 
    TClass();
+   TClass(const char *name);
    TClass(const char *name, Version_t cversion,
           const char *dfil = 0, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0);
@@ -132,7 +133,7 @@ public:
    Long_t         Property() const;
    void           SetStreamer(const char *name, Streamer_t p);
    Int_t          WriteBuffer(TBuffer &b, void *pointer, const char *info="");
-   
+
    static Bool_t  IsCallingNew();
    static TClass *Load(TBuffer &b);
    void           Store(TBuffer &b) const;
