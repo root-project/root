@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.27 2004/05/10 07:33:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.28 2004/06/18 10:20:59 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -649,7 +649,6 @@ void THStack::Paint(Option_t *option)
          else                           fHistogram->SetMinimum(themin);
       }
    }
-printf("themin=%g, themax=%g, hmin=%g, hmax=%g\n",themin,themax,fHistogram->GetMinimum(),fHistogram->GetMaximum());
    fHistogram->Paint(loption);
 
    char *lsame = strstr(loption,"same");
