@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.23 2000/12/28 22:51:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.24 2001/01/15 07:38:04 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -204,9 +204,20 @@ TClass::TClass(const char *name, Version_t cversion,
    //from the old dummy class.
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (oldcl) {
+      if (oldcl->CanIgnoreTObjectStreamer()) {
+         printf("old class: %s has IgnoreTobjectStreamer bit\n",name);
+         IgnoreTObjectStreamer();
+      } 
+      if (oldcl->CanBypassStreamer()) {
+         printf("old class: %s has BypassStreamer bit\n",name);
+         BypassStreamer();
+      } 
+      
       TStreamerInfo *info;
       TIter next(oldcl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)next())) {
+         info->SetClass(this);
+         if (info->CanBypassStreamer()) BypassStreamer();
          fStreamerInfo->Add(info);
       }
       oldcl->GetStreamerInfos()->Clear();
