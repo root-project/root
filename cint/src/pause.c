@@ -386,7 +386,10 @@ void G__init_undo()
 {
   int i;
   undoindex=0;
-  for(i=0;i<G__MAXUNDO;i++) undodictpos[i].var=(struct G__var_array*)NULL;
+  for(i=0;i<G__MAXUNDO;i++) {
+     undodictpos[i].var=(struct G__var_array*)NULL;
+     undodictpos[i].ptype = 0;   
+  }
 }
 
 /******************************************************************

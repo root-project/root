@@ -232,6 +232,15 @@ struct G__dictposition *dictpos;
   G__freetemplatefunc(dictpos->definedtemplatefunc);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2014
+  if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
+    int i;
+    for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) G__struct.type[i] = dictpos->ptype[i];
+    free((void*)dictpos->ptype);
+    dictpos->ptype = (char*)NULL;
+  }
+#endif
+
   /* close source files */
 #ifdef G__MEMTEST
   fprintf(G__memhist,"Closing input files\n");
@@ -240,15 +249,6 @@ struct G__dictposition *dictpos;
 
 #ifndef G__OLDIMPLEMENTATION1045
   G__tagdefining = -1;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION2014
-  if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
-    int i;
-    for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) G__struct.type[i] = dictpos->ptype[i];
-    free((void*)dictpos->ptype);
-    dictpos->ptype = (char*)NULL;
-  }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1035

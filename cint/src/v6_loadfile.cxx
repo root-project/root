@@ -1061,13 +1061,13 @@ int fentry;
   if(dictpos->tagnum == G__struct.alltag) {
     tagflag = 1;
     if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype) {
-      int i;
-      for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) {
-	if(dictpos->ptype[i]!=G__struct.type[i]) {
-	  tagflag=0;
-	  break;
-	}
-      }
+       int i;
+       for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) {
+          if(dictpos->ptype[i]!=G__struct.type[i]) {
+             tagflag=0;
+             break;
+          }
+       }
     }
   }
   else {

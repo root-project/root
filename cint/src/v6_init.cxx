@@ -615,6 +615,7 @@ char *argv[] ;
   char *icom=(char*)NULL;
 #endif
 
+  stubbegin.ptype = 0;
 
   /*****************************************************************
   * Setting STDIOs.  May need to modify here.
