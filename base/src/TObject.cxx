@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.43 2002/08/23 09:12:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.44 2002/09/09 20:13:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -817,6 +817,9 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    //
    //  An object is read from the file into memory via TKey::Read() or
    //  via TObject::Read().
+   //
+   //  The function returns the total number of bytes written to the file.
+   //  It returns 0 if the object cannot be written.
 
    if (!gFile) {
       Error("Write","No file open");
