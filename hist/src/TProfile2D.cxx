@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.33 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.34 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1363,7 +1363,6 @@ Long64_t TProfile2D::Merge(TCollection *list)
    GetStats(totstats);
    Stat_t nentries = GetEntries();
    Int_t binx, biny, ix, iy, nx, ny, bin, ibin;
-   Double_t cu;
    Int_t nbix = fXaxis.GetNbins();
    Bool_t canRebin=TestBit(kCanRebin);
    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
