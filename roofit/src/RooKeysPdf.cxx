@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.1 2001/12/01 00:11:21 croat Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.2 2002/02/06 15:55:31 giraudpf Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -60,15 +60,15 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   _binWidth = (_hi-_lo)/(_nPoints-1);
 
   // copy over data and weights... not necessary, commented out for speed
-  //    _dataPts = new Double_t[_nEvents];
-  //    _weights = new Double_t[_nEvents];  
-  //    for (Int_t i= 0; i<_nEvents; i++) {
-  //      _dataPts[i]= other._dataPts[i];
-  //      _weights[i]= other._weights[i];
-  //    }
+//    _dataPts = new Double_t[_nEvents];
+//    _weights = new Double_t[_nEvents];  
+//    for (Int_t i= 0; i<_nEvents; i++) {
+//      _dataPts[i]= other._dataPts[i];
+//      _weights[i]= other._weights[i];
+//    }
 
   // copy over the lookup table
-  for (Int_t i= 0; i<_nPoints; i++)
+  for (Int_t i= 0; i<_nPoints+1; i++)
     _lookupTable[i]= other._lookupTable[i];
   
 }
@@ -112,7 +112,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     if (_weights[j]<hmin) _weights[j]=hmin;
   }
   
-  for (Int_t i=0;i<_nPoints;++i) 
+  for (Int_t i=0;i<_nPoints+1;++i) 
     _lookupTable[i]=evaluateFull( _lo+Double_t(i)*_binWidth );
 
   
@@ -120,7 +120,6 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
 
 Double_t RooKeysPdf::evaluate() const {
-  
   Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
   if (i<0) {
     cerr << "got point below lower bound:"
@@ -141,7 +140,7 @@ Double_t RooKeysPdf::evaluate() const {
   return (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
 }
 
-Double_t RooKeysPdf::evaluateFull( Double_t x ) {
+Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
   Double_t y=0;
 
   for (Int_t i=0;i<_nEvents;++i) {
