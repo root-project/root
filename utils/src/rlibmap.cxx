@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id:
+// @(#)root/utils:$Name:  $:$Id:$
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -11,11 +11,15 @@
 
 // This program generates a map between class name and shared library.
 // Its output is in TEnv format.
-// Usage: rlibmap [-f] [-o <libmapfile>] <sofile> <sofile> ...
+// Usage: rlibmap [-f] [-o <mapfile>] -l <sofile> -d <depsofiles> \
+//                 -c <linkdeffiles>
 // -f: output full library path name (not needed when ROOT library
 //     search path is used)
 // -o: write output to specified file, otherwise to stdout
 // -r: replace existing entries in the specified file
+// -l: library containing the classes in the specified linkdef files
+// -d: libraries on which the -l library depends
+// -c: linkdef files containing the list of classes defined in the -l library
 
 
 #include <stdio.h>
@@ -23,7 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string>
-#include <map>
+#include <vector>
 #ifndef WIN32
 #   include <unistd.h>
 #else
@@ -64,43 +68,7 @@ static int fcntl_lockf(int fd, int op, off_t off)
 #define lockf fcntl_lockf
 #endif
 
-const char *usage = "Usage: %s [-f] [<-r|-o> <libmapfile>] <sofile> <sofile> ...\n";
-
-#if defined(__linux) || defined(__FreeBSD__)
-#if defined(__INTEL_COMPILER) || (__GNUC__ >= 3)
-const char *kNM = "nm --demangle=gnu-v3";
-#else
-const char *kNM = "nm -C";
-#endif
-const char  kDefined = 'T';
-#elif defined (__sun)
-const char *kNM = "nm -C -p";
-const char  kDefined = 'T';
-#elif defined(__alpha)
-const char *kNM = "nm -B";
-const char  kDefined = 'T';
-#elif defined(__hpux)
-namespace std { }
-const char *kNM = "nm++ -p";
-const char  kDefined = 'T';
-#elif defined(__APPLE__)
-const char *kNM = "nm";
-const char  kDefined = 'T';
-#elif defined(__sgi)
-const char *kNM = "nm -C";
-const char  kDefined = 'T';
-#elif defined(_AIX)
-const char *kNM = "nm -C";
-const char  kDefined = 'T';
-#elif defined (__CYGWIN__) && defined(__GNUC__)
-const char *kNM = "nm --demangle=gnu-v3";
-const char  kDefined = 'T';
-#elif defined(_WIN32)
-const char *kNM = "nm -C";
-const char  kDefined = 'T';
-#else
-#warning Platform specific case missing
-#endif
+const char *usage = "Usage: %s [-f] [<-r|-o> <mapfile>] -l <sofile> -d <depsofiles> -c <linkdeffiles>\n";
 
 using namespace std;
 
@@ -110,6 +78,7 @@ using namespace std;
 
 #define ftruncate(fd, size)  win32_ftruncate(fd, size)
 
+//______________________________________________________________________________
 int win32_ftruncate(int fd, ssize_t size)
 {
    HANDLE hfile;
@@ -139,9 +108,33 @@ int win32_ftruncate(int fd, ssize_t size)
 
 #endif // WIN32
 
-int removelibs(char **libs, bool fullpath, FILE *fp)
+//______________________________________________________________________________
+char *Compress(const char *str)
 {
-   // Remove entries from the map file for the specified libs.
+   // Remove all blanks from the string str. The returned string has to be
+   // deleted by the user.
+
+   if (!str) return 0;
+
+   const char *p = str;
+   // allocate 20 extra characters in case of eg, vector<vector<T>>
+   char *s, *s1 = new char[strlen(str)+20];
+   s = s1;
+
+   while (*p) {
+      if (*p != ' ')
+         *s++ = *p;
+      p++;
+   }
+   *s = '\0';
+
+   return s1;
+}
+
+//______________________________________________________________________________
+int RemoveLib(const string &solib, bool fullpath, FILE *fp)
+{
+   // Remove entries from the map file for the specified solib.
 
    fseek(fp, 0, SEEK_SET);
 
@@ -155,26 +148,25 @@ int removelibs(char **libs, bool fullpath, FILE *fp)
    char *fptr = fbuf;
 
    while (fgets(fptr, siz - size_t(fptr-fbuf), fp)) {
-      int i = 0;
-      while (libs[i]) {
-         const char *libbase = libs[i];
-         if (!fullpath) {
-            if ((libbase = strrchr(libs[i], '/')))
-               libbase++;
-            else
-               libbase = libs[i];
-         }
 
-         if (!strstr(fptr, libbase)) {
-            fptr += strlen(fptr);
-            if (*(fptr-1) != '\n') {
-               *fptr = '\n';
-               fptr++;
-            }
-         }
-
-         i++;
+      const char *libbase = solib.c_str();
+      if (!fullpath) {
+         if ((libbase = strrchr(libbase, '/')))
+            libbase++;
       }
+
+      char *line = new char[strlen(fptr)+1];
+      strcpy(line, fptr);
+      strtok(line, " ");
+      char *lib = strtok(0, " \n");
+      if (strcmp(lib, libbase)) {
+         fptr += strlen(fptr);
+         if (*(fptr-1) != '\n') {
+            *fptr = '\n';
+            fptr++;
+         }
+      }
+      delete [] line;
    }
 
    ftruncate(fileno(fp), 0);
@@ -192,106 +184,91 @@ int removelibs(char **libs, bool fullpath, FILE *fp)
    return 0;
 }
 
-int libmap(const char *lib, bool fullpath, FILE *fp)
+//______________________________________________________________________________
+int LibMap(const string &solib, const vector<string> &solibdeps,
+           const vector<string> &linkdefs, bool fullpath, FILE *fp)
 {
    // Write libmap. Returns -1 in case of error.
 
-   char *nm = new char [strlen(lib)+50];
+   vector<string> classes;
 
-#if defined(__APPLE__)
-   sprintf(nm, "%s %s | c++filt", kNM, lib);
-#else
-   sprintf(nm, "%s %s", kNM, lib);
-#endif
-
-   FILE *pf;
-#ifndef _WIN32
-   if ((pf = popen(nm, "r")) == 0) {
-      fprintf(stderr, "cannot execute: %s\n", nm);
-      return 1;
-   }
-#else
-   // excute nm and write to tmp file, open tmp file on pf
-   pf = 0;
-   if (!pf) return -1;
-#endif
-
-   map<string,bool> unique;
-   char line[4096];
-   while ((fgets(line, 4096, pf)) != 0) {
-      //printf("line: %s", line);
-      unsigned long addr;
-      char type[5], symbol[4096];
-      addr = 0;
-      if (line[0] == '0') {
-          sscanf(line, "%lx %s %s", &addr, type, symbol);
-          //printf("addr = %.8lx, type = %s, symbol = %s\n", addr, type, symbol);
-      } else {
-          sscanf(line, "%s %s", type, symbol);
-          //printf("              type = %s, symbol = %s\n", type, symbol);
-      }
-
-      if (type[0] == kDefined) {
-         char *r;
-         if ((r = strrchr(symbol, ':'))) {
-            r--;
-            if (r && *r == ':') {
-               *r = 0;
-               string cls;
-               // check for nested class or class in namespace or both
-               char *r1;
-               if ((r1 = strrchr(symbol, ':')) && *(r1-1) == ':')
-                  cls = r1+1;
-               else
-                  cls = symbol;
-               r += 2;
-               char *s;
-               if ((s = strchr(r, '[')) || (s = strchr(r, '('))) {
-                  *s = 0;
-                  string meth = r;
-                  if (cls == meth) {
-                     //printf("class %s in library %s\n", cls.c_str(), lib);
-                     unique[cls] = true;
-                  }
+   vector<string>::const_iterator lk;
+   for (lk = linkdefs.begin(); lk != linkdefs.end(); lk++) {
+      const char *linkdef = lk->c_str();
+      FILE *lfp;
+      char pragma[1024];
+      if ((lfp = fopen(linkdef, "r"))) {
+         while (fgets(pragma, 1024, lfp)) {
+            if (!strcmp(strtok(pragma, " "), "#pragma") &&
+                !strcmp(strtok(0,      " "), "link")    &&
+                !strcmp(strtok(0,      " "), "C++")     &&
+                !strcmp(strtok(0,      " "), "class")) {
+               char *cls = strtok(0, "-!+;");
+               // just in case remove trailing space and tab
+               while (*cls == ' ') cls++;
+               int len = strlen(cls) - 1;
+               while (cls[len] == ' ' || cls[len] == '\t')
+                  cls[len--] = '\0';
+               //no space between tmpl arguments allowed
+               cls = Compress(cls);
+               // replace "::" by "@@" since TEnv uses ":" as delimeter
+               char *s = cls;
+               while (*s) {
+                  if (*s == ':') *s = '@';
+                  s++;
                }
+               classes.push_back(cls);
             }
          }
+         fclose(lfp);
+      } else {
+         fprintf(stderr, "cannot open linkdef file %s\n", linkdef);
       }
    }
 
-#ifndef _WIN32
-   pclose(pf);
-#else
-   fclose(pf);
-#endif
-
-   const char *libbase = lib;
+   const char *libbase = solib.c_str();
    if (!fullpath) {
-      if ((libbase = strrchr(lib, '/')))
+      if ((libbase = strrchr(libbase, '/')))
          libbase++;
-      else
-         libbase = lib;
    }
 
-   map<string,bool>::const_iterator it;
-   for (it = unique.begin(); it != unique.end(); it++) {
-      fprintf(fp, "Library.%-35s %s\n", ((*it).first+":").c_str(), libbase);
-   }
+   vector<string>::const_iterator it;
+   for (it = classes.begin(); it != classes.end(); it++) {
+      fprintf(fp, "Library.%-35s %s", ((*it)+":").c_str(), libbase);
 
-   delete [] nm;
+      if (solibdeps.size() > 0) {
+         vector<string>::const_iterator depit;
+         for (depit = solibdeps.begin(); depit != solibdeps.end(); depit++) {
+            const char *deplib = depit->c_str();
+            if (!fullpath) {
+               if ((deplib = strrchr(deplib, '/')))
+                  deplib++;
+            }
+            fprintf(fp, " %s", deplib);
+         }
+      }
+      fprintf(fp, "\n");
+   }
 
    return 0;
 }
 
+//______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   char **libs  = 0;
+   string         solib;
+   vector<string> solibdeps;
+   vector<string> linkdefs;
    bool fullpath = false;
    bool replace  = false;
-   FILE *fp     = stdout;
+   FILE *fp      = stdout;
 
    if (argc > 1) {
       int ic = 1;
+      if (!strcmp(argv[ic], "-?") || !strcmp(argv[ic], "-h")) {
+         fprintf(stderr, usage, argv[0]);
+         return 1;
+      }
       if (!strcmp(argv[ic], "-f")) {
          fullpath = true;
          ic++;
@@ -315,15 +292,24 @@ int main(int argc, char **argv)
          }
          ic++;
       }
-      if (!strcmp(argv[ic], "-?") || !strcmp(argv[ic], "-h")) {
-         fprintf(stderr, usage, argv[0]);
-         return 1;
+      if (!strcmp(argv[ic], "-l")) {
+         ic++;
+         solib = argv[ic];
+         ic++;
       }
-      int args = argc - ic + 2;
-      libs = new char* [args];
-      libs[args-1] = 0;
-      for (int i = ic, j = 0; i < argc; i++, j++) {
-         libs[j] = argv[i];
+      if (!strcmp(argv[ic], "-d")) {
+         ic++;
+         for (int i = ic; i < argc && argv[i][0] != '-'; i++) {
+            solibdeps.push_back(argv[i]);
+            ic++;
+         }
+      }
+      if (!strcmp(argv[ic], "-c")) {
+         ic++;
+         for (int i = ic; i < argc; i++) {
+            linkdefs.push_back(argv[i]);
+            ic++;
+         }
       }
    } else {
       fprintf(stderr, usage, argv[0]);
@@ -340,15 +326,11 @@ int main(int argc, char **argv)
       }
 #endif
 
-      // remove entries for libs to be processed
-      removelibs(libs, fullpath, fp);
+      // remove entries for solib to be processed
+      RemoveLib(solib, fullpath, fp);
    }
 
-   int i = 0;
-   while (libs[i]) {
-      libmap(libs[i], fullpath, fp);
-      i++;
-   }
+   LibMap(solib, solibdeps, linkdefs, fullpath, fp);
 
    if (replace) {
 #if !defined(WIN32) && !defined(__CYGWIN__)
