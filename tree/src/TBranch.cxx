@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.32 2001/12/12 09:48:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.33 2002/01/23 08:38:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -576,6 +576,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
+   basket->SetParent(file);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
@@ -1042,6 +1043,13 @@ void TBranch::SetFile(TFile *file)
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
 
+   //apply to all existing baskets
+   TIter nextb(GetListOfBaskets());
+   TBasket *basket;
+   while ((basket = (TBasket*)nextb())) {
+      basket->SetParent(file);
+   }
+   
    //apply to sub-branches as well
    TIter next(GetListOfBranches());
    TBranch *branch;
@@ -1103,6 +1111,13 @@ void TBranch::Streamer(TBuffer &b)
          }
          fDirectory = gDirectory;
          if (fFileName.Length() != 0) fDirectory = 0;
+         if (fDirectory) {
+            TIter nextb(GetListOfBaskets());
+            TBasket *basket;
+            while ((basket = (TBasket*)nextb())) {
+               basket->SetParent(fDirectory->GetFile());
+            }
+         }
          fNleaves = fLeaves.GetEntriesFast();
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);

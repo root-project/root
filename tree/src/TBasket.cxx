@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.9 2001/11/16 02:44:33 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.10 2002/01/16 18:10:23 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,6 +62,9 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
    fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
+   if (branch->GetDirectory()) {
+      fBufferRef->SetParent(branch->GetFile());
+   }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
    Streamer(*fBufferRef);
@@ -159,6 +162,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    if (gBranch->GetTree()->MemoryFull(fBufferSize)) gBranch->DropBaskets();
 
    fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
@@ -267,6 +271,7 @@ void TBasket::Streamer(TBuffer &b)
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
+         fBufferRef->SetParent(b.GetParent());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.17 2002/01/25 16:39:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.18 2002/01/25 18:24:19 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -136,6 +136,7 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fNbytes    = 0;
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef->SetParent(gFile);
    fCycle = gDirectory->AppendKey(this);
    fObjlen    = 0 ; // RDK: Must initialize before calling Streamer()
    fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
@@ -421,6 +422,7 @@ TObject *TKey::ReadObj()
 //
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef->SetParent(gFile);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -519,7 +521,8 @@ Int_t TKey::Read(TObject *obj)
    if (!obj) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-
+   fBufferRef->SetParent(gFile);
+   
    if (fVersion > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
@@ -604,6 +607,13 @@ void TKey::ReadFile()
   }
 }
 
+//______________________________________________________________________________
+void TKey::SetParent(TObject *parent)
+{
+//  Set parent in key buffer
+   
+   if (fBufferRef) fBufferRef->SetParent(parent);
+}
 
 //______________________________________________________________________________
 Int_t TKey::Sizeof() const
