@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.4 2003/07/01 11:39:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.5 2003/12/30 13:16:50 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -149,7 +149,7 @@ void TSystemDirectory::Browse(TBrowser *b)
       if (IsDirectory(file)) {
          TString sdirpath;
          if (!strcmp(file, "."))
-            sdirpath =  name;
+            sdirpath = name;
          else if (!strcmp(file,".."))
             sdirpath = gSystem->DirName(name);
          else {

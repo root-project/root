@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.31 2004/09/08 10:21:40 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.32 2004/09/24 20:24:50 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -174,7 +174,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          } else {
 
             // Send notification of no offset to be sent ...
-            fSocket->Send(-2,kROOTD_RSAKEY);
+            fSocket->Send(-2, kROOTD_RSAKEY);
 
          }
 

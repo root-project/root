@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.10 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.11 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -49,7 +49,7 @@ private:
    Int_t         fPort;      //slave's port number
    Int_t         fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
-   TSecContext  *fSecContext;//SecContext of the realetd authentication
+   TSecContext  *fSecContext;//security context of the related authentication
    Int_t         fProtocol;  //slave's protocol level
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
