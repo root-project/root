@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.128 2003/12/25 17:48:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.129 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -514,7 +514,6 @@ void TClass::Init(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
       oldcl->GetStreamerInfos()->Clear();
-      delete oldcl;
    }
 
    if (oldcl) {
@@ -543,6 +542,8 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
       if (cursav) cursav->cd();
+      // delay delete the old class until we are really done with it.
+      delete oldcl;
    }
    if (fClassInfo) SetTitle(fClassInfo->Title());
 
