@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.140 2004/08/10 21:55:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.141 2004/08/12 10:47:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1374,7 +1374,9 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
    Double_t dx = 3.5;
    if (ncdraw > 4) {
       dx = dx - 0.42*Double_t(ncdraw-5);
+      if (dx < 1.3) dx = 1.3;
       tsizcm = tsizcm - 0.03*Double_t(ncdraw-5);
+      if (tsizcm < 0.27) tsizcm = 0.27;
    }
    Double_t tsiz = 1.2*tsizcm/ypad;
 
