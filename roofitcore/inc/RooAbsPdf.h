@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.40 2001/10/14 07:11:41 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.41 2001/10/19 22:19:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,7 +79,10 @@ public:
   virtual Bool_t selfNormalized() const { return kFALSE ; }
 
   // Support for extended maximum likelihood, switched off by default
-  virtual Bool_t canBeExtended() const { return kFALSE ; } 
+  enum ExtendMode { CanNotBeExtended, CanBeExtended, MustBeExtended } ;
+  virtual ExtendMode extendMode() const { return CanNotBeExtended ; } 
+  inline Bool_t canBeExtended() const { return (extendMode() != CanNotBeExtended) ; }
+  inline Bool_t mustBeExtended() const { return (extendMode() == MustBeExtended) ; }
   virtual Double_t expectedEvents() const { return 0 ; } 
 
   // Printing interface (human readable)

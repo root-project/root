@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.14 2001/10/08 05:20:22 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.15 2001/10/12 01:48:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -39,7 +39,12 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
-  virtual Bool_t canBeExtended() const { return _allExtendable ; }
+  virtual ExtendMode extendMode() const { 
+    if (!_allCanExtend) return CanNotBeExtended ;
+    if (_anyMustExtend) return MustBeExtended ;
+    return CanBeExtended ; 
+  }
+
   virtual Double_t expectedEvents() const ;
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
@@ -69,7 +74,8 @@ protected:
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
   Double_t _numPdf ;           // Number of registered PDFs
-  Bool_t   _allExtendable ;    // Flag set if all component PDFs are extendable
+  Bool_t   _allCanExtend ;     // Flag set if all component PDFs are extendable
+  Bool_t   _anyMustExtend ;    // Flag set if all component PDFs are extendable
 
   ClassDef(RooSimultaneous,1)  // Description goes here
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.16 2001/10/12 01:48:46 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.17 2001/10/22 02:58:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -193,9 +193,35 @@ Double_t RooProdPdf::evaluate() const
 
 
 
-Bool_t RooProdPdf::canBeExtended() const
+Bool_t RooProdPdf::checkDependents(const RooArgSet* nset) const 
 {
-  return (_extendedIndex>=0) ;
+  // Check that none of the PDFs have overlapping dependents
+  
+  Bool_t ret(kFALSE) ;
+  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf, *pdf2 ;
+  TIterator* iter2 = _pdfList.createIterator() ;
+  while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
+    *iter2 = *_pdfIter ;
+    while(pdf2 = (RooAbsPdf*)iter2->Next()) {
+      if (pdf->dependentOverlaps(nset,*pdf2)) {
+	cout << "RooAddPdf::checkDependents(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
+	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
+	ret = kTRUE ;
+      }    
+    }
+  }
+  delete iter2 ;
+  return ret ;
+}
+
+
+
+
+RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
+{
+  return (_extendedIndex>=0) ? ((RooAbsPdf*)_pdfList.at(_extendedIndex))->extendMode() : CanNotBeExtended ;
 }
 
 

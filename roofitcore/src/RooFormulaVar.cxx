@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.17 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.18 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -118,16 +118,6 @@ Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList,
   return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
 
-
-
-Bool_t RooFormulaVar::checkDependents(const RooArgSet* nset) const 
-{
-  // Check if dependent configuration of given data set is OK
-
-  // We can handle any dependent configuration since RooFormulaVar 
-  // does an explicit normalization of the top-level PDF over the leafNode servers
-  return kFALSE ;
-}
 
 
 void RooFormulaVar::printToStream(ostream& os, PrintOption opt, TString indent) const

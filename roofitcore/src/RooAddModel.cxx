@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.15 2001/10/08 05:20:12 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.16 2001/10/08 21:22:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -402,8 +402,6 @@ Bool_t RooAddModel::checkDependents(const RooArgSet* set) const
   RooRealProxy* model ;
   while(coef=(RooRealProxy*)cIter->Next()) {
     model = (RooRealProxy*)pIter->Next() ;
-    ret |= model->arg().checkDependents(set) ;
-    ret |= coef->arg().checkDependents(set) ;
     if (model->arg().dependentOverlaps(set,coef->arg())) {
       cout << "RooAddModel::checkDependents(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
 	   << " and model " << model->arg().GetName() << " have one or more dependents in common" << endl ;

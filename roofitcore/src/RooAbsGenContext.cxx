@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.cc,v 1.3 2001/10/13 23:02:17 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.4 2001/10/19 21:32:21 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -28,6 +28,13 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 {
   // Constructor
 
+  // Check PDF dependents 
+  if (model.recursiveCheckDependents(&vars)) {
+    cout << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
+    _isValid = kFALSE ;
+    return ;
+  }
+
   // Make a snapshot of the generated variables that we can overwrite.
   _theEvent= (RooArgSet*)vars.snapshot(kFALSE);
 
@@ -47,6 +54,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   }
 
   // Remember the default number of events to generate when no prototype dataset is provided.
+  _extendMode = model.extendMode() ;
   if (model.canBeExtended()) {
     _expectedEvents= (Int_t)(model.expectedEvents() + 0.5);
   } else {
@@ -83,6 +91,11 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
       nEvents= (Int_t)_prototype->numEntries();
     }
     else {
+      if (_extendMode == RooAbsPdf::CanNotBeExtended) {
+	cout << ClassName() << "::" << GetName()
+	     << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
+	return 0;	
+      }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.20 2001/10/12 01:48:44 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.21 2001/10/15 18:36:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,7 +43,7 @@ public:
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
-  virtual Bool_t canBeExtended() const { return _haveLastCoef || _allExtendable ; }
+  virtual ExtendMode extendMode() const { return (_haveLastCoef || _allExtendable) ? MustBeExtended : CanNotBeExtended; }
   virtual Double_t expectedEvents() const ;
 
   const RooArgList& pdfList() const { return _pdfList ; }
@@ -67,7 +67,7 @@ protected:
   TIterator* _coefIter ;   //! Iterator over coefficient list
 
   Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
-  Bool_t _allExtendable ;  //  Flag indicating if all PDF components are extendable
+  Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
 
 private:
 

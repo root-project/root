@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.10 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.11 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -103,16 +103,6 @@ Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList,
   return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
 
-
-
-Bool_t RooGenericPdf::checkDependents(const RooArgSet* nset) const 
-{
-  // Check if this PDF is valid for dependent configuration given by specified data set
-
-  // We can handle any dependent configuration since RooGenericPdf 
-  // does an explicit normalization of the top-level PDF over the leafNode servers
-  return kFALSE ;
-}
 
 
 void RooGenericPdf::printToStream(ostream& os, PrintOption opt, TString indent) const

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.31 2001/10/13 21:53:20 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.32 2001/10/21 22:57:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -420,6 +420,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
   Bool_t estimateSteps = fitOpts.Contains("s") ;
   Bool_t performHesse  = fitOpts.Contains("h") ;
   Bool_t saveLog       = fitOpts.Contains("l") ;
+        _verboseFit    = fitOpts.Contains("v") ;
   Bool_t profileTimer  = fitOpts.Contains("t") ;
          _extendedMode = fitOpts.Contains("e") ;
   Bool_t doStrat0      = fitOpts.Contains("0") ;
@@ -446,10 +447,16 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
     if(verbose) {
       cout << _pdfClone->GetName() << "::fitTo: will use extended maximum likelihood" << endl;
     }
+  } else {
+    if (_pdfClone->mustBeExtended()) {
+      cout << _pdfClone->GetName() << "::fitTo: this PDF can only be used for extended "
+           << "maximum likelihood fits" << endl;
+      return 0;      
+    }
   }
 
   // Check if there are any unprotected multiple occurrences of dependents
-  if (_pdfClone->checkDependents(_dataClone->get())) {
+  if (_pdfClone->recursiveCheckDependents(_dataClone->get())) {
     cout << "RooFitContext::fit: Error in PDF dependents, abort" << endl ;
     return 0 ;
   }
@@ -750,12 +757,13 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   RooFitContext* context = (RooFitContext*) _theFitter->GetObjectFit() ;
   ofstream* logf   = context->logfile() ;
   Double_t& maxNLL = context->maxNLL() ;
+  Bool_t verbose   = context->_verboseFit ;
 
   // Set the parameter values for this iteration
   Int_t nPar= context->getNPar();
   for(Int_t index= 0; index < nPar; index++) {
     if (logf) (*logf) << par[index] << " " ;
-    context->setPdfParamVal(index, par[index],logf?kTRUE:kFALSE);
+    context->setPdfParamVal(index, par[index],verbose);
   }
 
   // Calculate the negative log-likelihood for these parameters
@@ -769,10 +777,8 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   }
 
   // Optional logging
-  if (logf) {
-    (*logf) << setprecision(15) << f << setprecision(4) << endl;
-    cout << "\nprevNLL = " << setprecision(10) << f << setprecision(4) << "  " ;
-  }
+  if (logf) (*logf) << setprecision(15) << f << setprecision(4) << endl;
+  if (verbose) cout << "\nprevNLL = " << setprecision(10) << f << setprecision(4) << "  " ;
 }
 
 

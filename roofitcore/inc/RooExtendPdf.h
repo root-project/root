@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooExtendPdf.rdl,v 1.1 2001/10/09 18:16:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,7 +39,7 @@ public:
   }
   
   virtual Bool_t selfNormalized() const { return kTRUE ; }
-  virtual Bool_t canBeExtended() const { return kTRUE ; }
+  virtual ExtendMode extendedMode() const { return CanBeExtended ; }
   virtual Double_t expectedEvents() const ;
 
 protected:

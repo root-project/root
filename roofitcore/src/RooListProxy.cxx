@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooListProxy.cc,v 1.4 2001/10/17 05:04:00 verkerke Exp $
+ *    File: $Id: RooListProxy.cc,v 1.5 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -129,7 +129,7 @@ RooListProxy& RooListProxy::operator=(const RooArgList& other)
 
 Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
 {
-  if (getSize()==0) return kFALSE ;
+  if (getSize()==0) return kTRUE ;
 
   TIterator* iter = createIterator() ;
   RooAbsArg* arg ;

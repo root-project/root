@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.18 2001/10/12 01:48:47 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.19 2001/10/14 07:11:42 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -45,7 +45,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _codeReg(10),
-  _allExtendable(kTRUE)
+  _allCanExtend(kTRUE),
+  _anyMustExtend(kFALSE)
 {
   // Constructor from index category. PDFs associated with indexCat
   // states can be added after construction with the addPdf() function.
@@ -62,7 +63,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _codeReg(10),
-  _allExtendable(kTRUE)
+  _allCanExtend(kTRUE),
+  _anyMustExtend(kFALSE)
 {
   // Constructor from index category and full list of PDFs. 
   // In this constructor form, a PDF must be supplied for each indexCat state
@@ -85,7 +87,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   while (pdf=(RooAbsPdf*)pIter->Next()) {
     type = (RooCatType*) cIter->Next() ;
     addPdf(*pdf,type->GetName()) ;
-    if (!pdf->canBeExtended()) _allExtendable = kFALSE ;
+    if (!pdf->canBeExtended()) _allCanExtend = kFALSE ;
+    if (pdf->mustBeExtended()) _anyMustExtend = kTRUE ;
   }
 
   delete pIter ;
@@ -98,7 +101,8 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
   _codeReg(other._codeReg),
-  _allExtendable(other._allExtendable)
+  _allCanExtend(other._allCanExtend),
+  _anyMustExtend(other._anyMustExtend)
 {
   // Copy constructor
 
@@ -153,7 +157,8 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   _pdfProxyList.Add(proxy) ;
   _numPdf += 1.0 ;
 
-  if (!pdf.canBeExtended()) _allExtendable = kFALSE ;
+  if (!pdf.canBeExtended()) _allCanExtend = kFALSE ;
+  if (pdf.mustBeExtended()) _anyMustExtend = kTRUE ;
 
   return kFALSE ;
 }

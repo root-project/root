@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.rdl,v 1.8 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.9 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,9 +34,6 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
-
-  // Custom dependent checking
-  virtual Bool_t checkDependents(const RooArgSet* nset) const ;
 
   // Debugging
   void dumpFormula() { _formula.dump() ; }

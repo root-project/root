@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.15 2001/10/03 16:16:30 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.16 2001/10/08 05:20:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -67,7 +67,6 @@ RooArgProxy::~RooArgProxy()
 Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
 {
   // Change proxied object to object of same name in given list
-
   RooAbsArg* newArg= _arg->findNewServer(newServerList, nameChange);
   if (newArg) {
     _arg = newArg ;

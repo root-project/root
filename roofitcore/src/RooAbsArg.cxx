@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.58 2001/10/19 06:56:50 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.59 2001/10/19 22:19:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -445,6 +445,23 @@ Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const
   // consistency checks of the variables. If this function returns
   // true, indicating an error, the fitter or generator will abort.
   return kFALSE ;
+}
+
+
+Bool_t RooAbsArg::recursiveCheckDependents(const RooArgSet* nset) const 
+{
+  RooArgSet nodeList ;
+  treeNodeServerList(&nodeList) ;
+  TIterator* iter = nodeList.createIterator() ;
+
+  RooAbsArg* arg ;
+  Bool_t ret(kFALSE) ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    ret |= arg->checkDependents(nset) ;
+  }
+  delete iter ;
+
+  return ret ;
 }
 
 

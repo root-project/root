@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.10 2001/09/17 18:48:13 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.11 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -87,6 +87,7 @@ public:
   Double_t _maxNLL ;  
   Bool_t _extendedMode ;
   ofstream* _logfile ;
+  Bool_t    _verboseFit ;
 
 protected:
 

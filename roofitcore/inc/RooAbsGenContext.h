@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.rdl,v 1.4 2001/10/17 05:03:57 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.5 2001/10/19 21:32:21 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -16,8 +16,8 @@
 #include "TNamed.h"
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooAbsPdf.hh"
 
-class RooAbsPdf;
 class RooDataSet;
 
 class RooAbsGenContext : public TNamed, public RooPrintable {
@@ -55,6 +55,7 @@ protected:
   UInt_t _expectedEvents;
   RooArgSet _protoVars;
   Int_t _nextProtoIndex;
+  RooAbsPdf::ExtendMode _extendMode ;
 
   ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };
