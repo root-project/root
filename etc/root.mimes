@@ -150,6 +150,16 @@ pattern = TChain
 icon = chain_s.xpm chain_t.xpm
 action = ->Browse()
 
+[root/tbranch]
+pattern = TBranch*
+icon = leaf_s.xpm leaf_t.xpm
+action = ->Browse()
+
+[root/tbranchelement]
+pattern = TBranchElement*
+icon = leaf_s.xpm leaf_t.xpm
+action = ->Browse()
+
 [root/tleaf]
 pattern = TLeaf*
 icon = leaf_s.xpm leaf_t.xpm
