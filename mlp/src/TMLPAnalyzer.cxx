@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.5 2004/09/30 10:13:30 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.6 2004/12/16 21:20:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -401,10 +401,10 @@ THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t o, Option_t *option /*=""*
    THStack *hs=new THStack(sName,
                            Form("Deviation of MLP output %o from truth"));
    TLegend *leg=new TLegend(.7,.7,.95,.95,"MLP output");
-   for (Int_t o=0; o<GetNeurons(GetLayers()); o++) {
-      TProfile* h=DrawTruthDeviation(o, "goff");
-      h->SetLineColor(1+o);
-      hs->Add(h, Form("node %d",o));
+   for (Int_t i=0; i<GetNeurons(GetLayers()); i++) {
+      TProfile* h=DrawTruthDeviation(i, "goff");
+      h->SetLineColor(1+i);
+      hs->Add(h, Form("node %d",i));
    }
    if (!option || !strstr(option,"goff")) {
       hs->Draw();
