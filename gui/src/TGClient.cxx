@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.28 2004/01/20 10:41:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.29 2004/02/19 15:49:43 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -593,7 +593,7 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    // Handle a GUI event.
 
    TGWindow *w;
-   
+
    // Find window where event happened
    if ((w = GetWindowById(event->fWindow)) == 0) {
       if (fUWHandlers && fUWHandlers->GetSize() > 0) {
@@ -628,8 +628,8 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
 
    if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
 
-   // This breaks class member protection, but TGClient is a friend of all
-   // classes and _should_ know what to do and what *not* to do...
+   // This breaks class member protection, but TGClient is a friend of
+   // TGWindow and _should_ know what to do and what *not* to do...
 
    for (ptr = w; ptr->fParent != 0; ptr = (TGWindow *) ptr->fParent) {
       if ((ptr->fId == wid) ||

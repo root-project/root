@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.54 2003/11/24 10:51:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.55 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -155,8 +155,6 @@ void TCanvas::Constructor()
    fSelectedPad = 0;
    fPadSave     = 0;
    fAutoExec    = kTRUE;
-   
-   fEdited      = 0;   
 }
 
 //______________________________________________________________________________
@@ -425,8 +423,6 @@ void TCanvas::Init()
    fEventY          = -1;
    fContextMenu     = 0;
    SetBit(kMustCleanup);
-
-   fEdited          = 0;   
 }
 
 //_____________________________________________________________________________
@@ -600,8 +596,6 @@ void TCanvas::Clear(Option_t *option)
 
    fSelected    = 0;
    fSelectedPad = 0;
-
-   fEdited      = 0;   
 }
 
 //______________________________________________________________________________
@@ -993,9 +987,6 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                     // we will only use its coordinate system
 
       FeedbackMode(kTRUE);   // to draw in rubberband mode
-      
-      if (gROOT->GetEditorMode() == 0) SetEdited(fSelected, fSelectedPad);  
-
       fSelected->ExecuteEvent(event, px, py);
 
       if (fAutoExec) RunAutoExec();
@@ -1190,19 +1181,6 @@ void TCanvas::MoveOpaque(Int_t set)
 }
 
 //______________________________________________________________________________
-void TCanvas::ObjectEdited(TObject *o, TVirtualPad *pad)
-{
-   // Emit ObjectEdited() signal.
-
-   Long_t args[22];
-
-   args[0] = (Long_t) o;
-   args[1] = (Long_t) pad;
-
-   Emit("ObjectEdited(TObject *,TVirtualPad *)", args);
-}
-
-//______________________________________________________________________________
 void TCanvas::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint canvas*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1242,6 +1220,10 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
    if (fSelected != prevSelObj)
       Picked(fSelectedPad, fSelected, fEvent);  // emit signal
 
+   if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || 
+       (fEvent == kButton3Down) || (fEvent == kKeyPress)) {
+      if (fSelected) Selected(fSelectedPad, fSelected, fEvent);  // emit signal
+   }
    return pad;
 }
 
@@ -1257,6 +1239,20 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
    args[2] = event;
 
    Emit("Picked(TPad*,TObject*,Int_t)", args);
+}
+
+//______________________________________________________________________________
+void TCanvas::Selected(TPad *pad, TObject *obj, Int_t event)
+{
+   // Emit Picked() signal.
+
+   Long_t args[3];
+
+   args[0] = (Long_t) pad;
+   args[1] = (Long_t) obj;
+   args[2] = event;
+
+   Emit("Selected(TPad*,TObject*,Int_t)", args);
 }
 
 //______________________________________________________________________________
@@ -1592,16 +1588,6 @@ void TCanvas::SetSelected(TObject *obj)
 {
    fSelected = obj;
    if (obj) obj->SetBit(kMustCleanup);
-}
-
-//______________________________________________________________________________
-void TCanvas::SetEdited(TObject *obj, TVirtualPad *pad)
-{
-   if (fEdited != obj) {
-      fEdited = obj;
-      // emits edited object signal
-      ObjectEdited(obj, pad);
-   }
 }
 
 //______________________________________________________________________________

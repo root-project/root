@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.22 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.23 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,9 +84,8 @@ protected:
    Bool_t        fMenuBar;         //False if no menubar is displayed
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
 
-   TObject      *fEdited;          //!Currently edited object        
-   Bool_t        fShowToolBar;     //!Show toolbar                   
-   Bool_t        fShowEditor;      //!Show side frame or old Editor  
+   Bool_t        fShowToolBar;     //!Show toolbar
+   Bool_t        fShowEditor;      //!Show side frame or old Editor
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
@@ -143,7 +142,9 @@ public:
    TObject          *GetSelected() const {return fSelected;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
    TVirtualPad      *GetSelectedPad() const { return fSelectedPad; }
-   Bool_t            GetShowEventStatus() { return fShowEventStatus; }
+   Bool_t            GetShowEventStatus() const { return fShowEventStatus; }
+   Bool_t            GetShowToolBar() const { return fShowToolBar; }
+   Bool_t            GetShowEditor() const { return fShowEditor; }
    Bool_t            GetAutoExec() const { return fAutoExec; }
    Size_t            GetXsizeUser() const {return fXsizeUser;}
    Size_t            GetYsizeUser() const {return fYsizeUser;}
@@ -174,6 +175,7 @@ public:
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
    virtual void      Picked(TPad *selpad, TObject *selected, Int_t event); // *SIGNAL*
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
+   virtual void      Selected(TPad *pad, TObject *obj, Int_t event);  // *SIGNAL*
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
    void              SaveSource(const char *filename="", Option_t *option="");
@@ -195,17 +197,9 @@ public:
    void              SetTitle(const char *title="");
    virtual void      ToggleEventStatus();
    virtual void      ToggleAutoExec();
+   virtual void      ToggleToolBar();
+   virtual void      ToggleEditor();
    virtual void      Update();
-
-   Bool_t            GetShowToolBar() { return fShowToolBar; }  
-   Bool_t            GetShowEditor()  { return fShowEditor; }   
-   virtual void      ToggleToolBar();                           
-   virtual void      ToggleEditor();                            
-   virtual void      ObjectEdited(TObject *selected, TVirtualPad *selpad); // *SIGNAL*                           //ia
-   TObject          *GetEdited() const { return fEdited; }      
-
-   void              SetEdited(TObject *obj, TVirtualPad *pad); 
-                              // sets edited object and pad and emits a signal
 
    static void       MakeDefCanvas();
 

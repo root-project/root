@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.2 2004/02/19 08:45:00 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -62,7 +62,7 @@ void TGedPropertyFrame::Build()
 
    AddFrame(tab, new TGLayoutHints(kLHintsTop));
    TGCompositeFrame *tab1 = tab->AddTab("Style");
-  
+
    fAttFrame[0] = new TGedAttNameFrame(tab1, 1);
    fAttFrame[1] = new TGedAttFillFrame(tab1, 2);
    fAttFrame[2] = new TGedAttLineFrame(tab1, 3);
@@ -76,15 +76,17 @@ void TGedPropertyFrame::Build()
 //______________________________________________________________________________
 void TGedPropertyFrame::ConnectToCanvas(TCanvas *c)
 {
-   Connect(c, "ObjectEdited(TObject*,TVirtualPad*)",
-              "TGedPropertyFrame", this, "SetModel(TObject*,TVirtualPad*)");
+   TQObject::Connect(c, "Selected(TPad*,TObject*,Int_t)", "TGedPropertyFrame",
+                     this, "SetModel(TPad*,TObject*,Int_t)");
 }
 
 //______________________________________________________________________________
-void TGedPropertyFrame::SetModel(TObject *obj, TVirtualPad* pad)
+void TGedPropertyFrame::SetModel(TPad* pad, TObject* obj, Int_t event)
 {
+   // Slot connected to Selected() signal of TCanvas
+
    for (int i = 0; i < 5; i++)
-      fAttFrame[i]->SetModel(obj, pad);
+      fAttFrame[i]->SetModel(pad, obj, event);
 
    fModel = obj;
    fPad = pad;

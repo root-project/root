@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.120 2004/02/13 17:04:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.121 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -739,7 +739,7 @@ void TPad::CreateNewEllipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       el->Draw();
-      gPad->GetCanvas()->SetEdited(el, gPad);
+      gPad->GetCanvas()->Selected((TPad*)gPad, el, event);
       gROOT->SetEditorMode();
       break;
    }
@@ -797,18 +797,18 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kLine) {
          line = new TLine(x0,y0,x1,y1);
          line->Draw();
-         gPad->GetCanvas()->SetEdited(line, gPad);
+         gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
          arrow = new TArrow(x0,y0,x1,y1,0.03,"|>");
          arrow->SetFillColor(1);
          arrow->Draw();
-         gPad->GetCanvas()->SetEdited(arrow, gPad);
+         gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
       }
       if (mode == kCurlyLine) {
          cline = new TCurlyLine(x0,y0,x1,y1);
          cline->Draw();
-         gPad->GetCanvas()->SetEdited(cline, gPad);
+         gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
       if (mode == kCurlyArc) {
          radius = TMath::Sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
@@ -816,7 +816,7 @@ void TPad::CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          phimax = 360;
          cline = new TCurlyArc(x0,y0,radius,phimin,phimax);
          cline->Draw();
-         gPad->GetCanvas()->SetEdited(cline, gPad);
+         gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
       gROOT->SetEditorMode();
       break;
@@ -889,7 +889,7 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
-      gPad->GetCanvas()->SetEdited(newpad, gPad);
+      gPad->GetCanvas()->Selected((TPad*)gPad, newpad, event);
       padsav->cd();
       break;
    }
@@ -979,7 +979,7 @@ void TPad::CreateNewPave(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       pave->Draw();
-      gPad->GetCanvas()->SetEdited(pave, gPad);
+      gPad->GetCanvas()->Selected((TPad*)gPad, pave, event);
       gROOT->SetEditorMode();
       break;
    }
@@ -1028,7 +1028,7 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             gr = new TGraph(npoints,xline,yline);
             gr->ResetBit(TGraph::kClipFrame);
             gr->Draw("L");
-            gPad->GetCanvas()->SetEdited(gr, gPad);
+            gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
          } else {
             xline[npoints] = xline[0];
             yline[npoints] = yline[0];
@@ -1038,7 +1038,7 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                       gROOT->GetCutClassName(),npoints,(Long_t)xline,(Long_t)yline));
             if (gr) {
                gr->Draw("L");
-               gPad->GetCanvas()->SetEdited(gr, gPad);
+               gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
             }
          }
          npoints = 0;
@@ -1098,7 +1098,7 @@ void TPad::CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kMarker) {
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
          marker->Draw();
-         gPad->GetCanvas()->SetEdited(marker, gPad);
+         gPad->GetCanvas()->Selected((TPad*)gPad, marker, event);
          gROOT->SetEditorMode();
          break;
       }
@@ -1120,7 +1120,7 @@ void TPad::CreateNewText(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (!lentext) break;
       newtext->DrawLatex(x, y, atext);
       gPad->Modified(kTRUE);
-      gPad->GetCanvas()->SetEdited(newtext, gPad);
+      gPad->GetCanvas()->Selected((TPad*)gPad, newtext, event);
       gROOT->SetEditorMode();
       break;
    }
@@ -3915,7 +3915,6 @@ void TPad::RecursiveRemove(TObject *obj)
 //*-*            ====================================================
 
    if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
-   if (obj == fCanvas->GetEdited()) fCanvas->SetEdited(0, 0);
    if (obj == fView) fView = 0;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.3 2004/02/19 15:36:45 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.4 2004/02/20 17:09:33 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -61,15 +61,15 @@ enum {
    kMARKER,
    kMARKER_SIZE
 };
- 
+
 //______________________________________________________________________________
-TGedAttFrame::TGedAttFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttFrame::TGedAttFrame(const TGWindow *p, Int_t id, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGCompositeFrame(p, width, height, options, back), TGWidget(id)
 {
    fPad = 0;
    fModel = 0;
- 
+
    Associate(p);
 }
 
@@ -90,7 +90,7 @@ long TGedAttFrame::ExecuteInt(TObject *obj, const char *method, const char *para
 }
 
 //______________________________________________________________________________
-Float_t TGedAttFrame::ExecuteFloat(TObject *obj, const char *method, 
+Float_t TGedAttFrame::ExecuteFloat(TObject *obj, const char *method,
                                    const char *params)
 {
    R__LOCKGUARD(gCINTMutex);
@@ -111,7 +111,7 @@ TGCompositeFrame* TGedAttFrame::MakeTitle(char *p)
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 128, 40,
                                kHorizontalFrame | kLHintsExpandX | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, p), new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
-   f1->AddFrame(new TGHorizontal3DLine(f1), 
+   f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
    return f1;
@@ -129,18 +129,18 @@ void TGedAttFrame::SetActive(Bool_t active)
 //______________________________________________________________________________
 void TGedAttFrame::Refresh()
 {
-   SetModel(fModel, fPad);
+   SetModel(fPad, fModel, 0);
 }
 
 //______________________________________________________________________________
 void TGedAttFrame::ConnectToCanvas(TCanvas* c)
 {
-   Connect(c, "ObjectEdited(TObject*,TVirtualPad*)",
-           "TGedAttFrame", this, "SetModel(TObject*,TVirtualPad*)");
+   TQObject::Connect(c, "Selected(TPad*,TObject*,Int_t)", "TGedAttFrame",
+                     this, "SetModel(TPad*,TObject*,Int_t)");
 }
 
 //______________________________________________________________________________
-TGedAttNameFrame::TGedAttNameFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttNameFrame::TGedAttNameFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
@@ -149,12 +149,14 @@ TGedAttNameFrame::TGedAttNameFrame(const TGWindow *p, Int_t id, Int_t width,
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fLabel = new TGLabel(f2, "");
    f2->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));   
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
 //______________________________________________________________________________
-void TGedAttNameFrame::SetModel(TObject *obj, TVirtualPad *pad)
+void TGedAttNameFrame::SetModel(TPad* pad, TObject* obj, Int_t)
 {
+   // Slot connected to Selected() signal of TCanvas.
+
    fModel = obj;
    fPad = pad;
 
@@ -162,7 +164,7 @@ void TGedAttNameFrame::SetModel(TObject *obj, TVirtualPad *pad)
       SetActive(kFALSE);
       return;
    }
-   
+
    TString string;
    string.Append(fModel->GetName());
    string.Append("::");
@@ -173,7 +175,7 @@ void TGedAttNameFrame::SetModel(TObject *obj, TVirtualPad *pad)
 }
 
 //______________________________________________________________________________
-TGedAttFillFrame::TGedAttFillFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttFillFrame::TGedAttFillFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
@@ -186,11 +188,11 @@ TGedAttFillFrame::TGedAttFillFrame(const TGWindow *p, Int_t id, Int_t width,
    fPatternSelect = new TGedPatternSelect(f2, 1, kPATTERN);
    f2->AddFrame(fPatternSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fPatternSelect->Associate(this);
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));   
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
 //______________________________________________________________________________
-void TGedAttFillFrame::SetModel(TObject *obj, TVirtualPad *pad)
+void TGedAttFillFrame::SetModel(TPad* pad, TObject* obj, Int_t)
 {
    fModel = 0;
    fPad = 0;
@@ -207,7 +209,7 @@ void TGedAttFillFrame::SetModel(TObject *obj, TVirtualPad *pad)
    Color_t c = ExecuteInt(fModel, "GetFillColor", "");
    Pixel_t p = TColor::Number2Pixel(c);
    Style_t s = (Style_t) ExecuteInt(fModel, "GetFillStyle", "");
-   
+
    fPatternSelect->SetPattern(s);
    fColorSelect->SetColor(p);
    SetActive();
@@ -228,7 +230,7 @@ Bool_t TGedAttFillFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   snprintf(a, 100, "%ld",  parm2);
                   fModel->Execute("SetFillStyle", a, 0);
                   b = true;
-                  SendMessage(fMsgWindow, 
+                  SendMessage(fMsgWindow,
                         MK_MSG(kC_PATTERNSEL, kPAT_SELCHANGED), parm1, parm2);
                }
                break;
@@ -258,7 +260,7 @@ Bool_t TGedAttFillFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //______________________________________________________________________________
-TGedAttLineFrame::TGedAttLineFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttLineFrame::TGedAttLineFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
@@ -283,7 +285,7 @@ TGedAttLineFrame::TGedAttLineFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
-void TGedAttLineFrame::SetModel(TObject *obj, TVirtualPad *pad)
+void TGedAttLineFrame::SetModel(TPad* pad, TObject* obj, Int_t)
 {
    fModel = 0;
    fPad = 0;
@@ -298,15 +300,15 @@ void TGedAttLineFrame::SetModel(TObject *obj, TVirtualPad *pad)
 
    Int_t s = ExecuteInt(fModel, "GetLineStyle", "");
    fStyleCombo->Select(s);
-   
+
    Int_t w = ExecuteInt(fModel, "GetLineWidth", "");
    fWidthCombo->Select(w);
-   
+
    Color_t c = ExecuteInt(fModel, "GetLineColor", "");
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p);
-  
-   SetActive(); 
+
+   SetActive();
 }
 
 //______________________________________________________________________________
@@ -343,7 +345,7 @@ Bool_t TGedAttLineFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //______________________________________________________________________________
-TGedAttTextFrame::TGedAttTextFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttTextFrame::TGedAttTextFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
@@ -357,7 +359,7 @@ TGedAttTextFrame::TGedAttTextFrame(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fSizeCombo, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fSizeCombo->Resize(80, 20);
    fSizeCombo->Associate(this);
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));   
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
    fTypeCombo = new TGFontTypeComboBox(this, kFONT_STYLE);
    fTypeCombo->Resize(126, 20);
    AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
@@ -367,7 +369,7 @@ TGedAttTextFrame::TGedAttTextFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
-void TGedAttTextFrame::SetModel(TObject *obj, TVirtualPad *pad)
+void TGedAttTextFrame::SetModel(TPad* pad, TObject* obj, Int_t)
 {
    fModel = 0;
    fPad = 0;
@@ -384,7 +386,7 @@ void TGedAttTextFrame::SetModel(TObject *obj, TVirtualPad *pad)
 
    Float_t s = ExecuteFloat(fModel, "GetTextSize", "");
    Float_t dy;
-   
+
    if (obj->InheritsFrom("TPaveLabel")) {
       TBox *pl = (TBox*)obj;
       dy = s * (pl->GetY2() - pl->GetY1());
@@ -398,22 +400,22 @@ void TGedAttTextFrame::SetModel(TObject *obj, TVirtualPad *pad)
    fSizeCombo->Select(size);
 
    fAlignCombo->Select(ExecuteInt(fModel, "GetTextAlign", ""));
-   
+
    Color_t c = ExecuteInt(fModel, "GetTextColor", "");
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p);
-  
-   SetActive(); 
+
+   SetActive();
 }
 
 //______________________________________________________________________________
 Bool_t TGedAttTextFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    if(!fModel) return kTRUE;
-   
+
    char a[100];
    bool b = false;
-   
+
    if (GET_MSG(msg) == kC_COLORSEL && GET_SUBMSG(msg) == kCOL_SELCHANGED) {
       snprintf(a, 100, "%d", TColor::GetColor(parm2));
       fModel->Execute("SetTextColor", a, 0);
@@ -427,14 +429,14 @@ Bool_t TGedAttTextFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
          Float_t dy = fPad->AbsPixeltoY(0) - fPad->AbsPixeltoY(parm2);
          Float_t TextSize;
-           
+
          if (fModel->InheritsFrom("TPaveLabel")) {
             TBox *pl = (TBox*) fModel;
             TextSize = dy/(pl->GetY2() - pl->GetY1());
          }
          else
             TextSize = dy/(fPad->GetY2() - fPad->GetY1());
-         
+
          snprintf(a, 100, "%f", TextSize);
          fModel->Execute("SetTextSize", a, 0);
          b = true;
@@ -448,7 +450,7 @@ Bool_t TGedAttTextFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          b = true;
       }
    }
-   
+
    if (b) {
       fPad->Modified();
       fPad->Update();
@@ -461,14 +463,14 @@ TGComboBox* TGedAttTextFrame::BuildFontSizeComboBox(TGFrame* parent, Int_t id)
 {
    char a[100];
    TGComboBox *c = new TGComboBox(parent, id);
-   
+
    c->AddEntry("Default", 0);
    for (int i = 1; i <= 50; i++) {
       snprintf(a, 100, "%d", i);
       c->AddEntry(a, i);
    }
-   
-   return c;   
+
+   return c;
 }
 
 //______________________________________________________________________________
@@ -485,12 +487,12 @@ TGComboBox* TGedAttTextFrame::BuildTextAlignComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("11 Bottom, Left", 11);
    c->AddEntry("21 Bottom, Middle", 21);
    c->AddEntry("31 Bottom, Right", 31);
-   
+
    return c;
 }
 
 //______________________________________________________________________________
-TGedAttMarkerFrame::TGedAttMarkerFrame(const TGWindow *p, Int_t id, Int_t width, 
+TGedAttMarkerFrame::TGedAttMarkerFrame(const TGWindow *p, Int_t id, Int_t width,
                                        Int_t height,UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
@@ -509,11 +511,11 @@ TGedAttMarkerFrame::TGedAttMarkerFrame(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fSizeCombo, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fSizeCombo->Resize(40, 20);
    fSizeCombo->Associate(this);
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));   
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
 //______________________________________________________________________________
-void TGedAttMarkerFrame::SetModel(TObject *obj, TVirtualPad *pad)
+void TGedAttMarkerFrame::SetModel(TPad* pad, TObject* obj, Int_t)
 {
    fModel = 0;
    fPad = 0;
@@ -533,7 +535,7 @@ void TGedAttMarkerFrame::SetModel(TObject *obj, TVirtualPad *pad)
    if (s > 15) s = 15;
 
    if (s < 1)  s = 1;
- 
+
    fSizeCombo->Select((int) s);
 
    fMarkerSelect->SetMarkerStyle((Style_t) ExecuteInt(fModel, "GetMarkerStyle", ""));
@@ -541,7 +543,7 @@ void TGedAttMarkerFrame::SetModel(TObject *obj, TVirtualPad *pad)
    Color_t c = ExecuteInt(fModel, "GetMarkerColor", "");
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p);
-   
+
    SetActive();
 }
 
@@ -549,7 +551,7 @@ void TGedAttMarkerFrame::SetModel(TObject *obj, TVirtualPad *pad)
 Bool_t TGedAttMarkerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    if(!fModel) return kTRUE;
-   
+
    char a[100];
    bool b = false;
 
@@ -585,12 +587,12 @@ TGComboBox* TGedAttMarkerFrame::BuildMarkerSizeComboBox(TGFrame* parent, Int_t i
 {
    char a[100];
    TGComboBox *c = new TGComboBox(parent, id);
-   
+
    for (int i = 1; i <= 15; i++) {
       snprintf(a, 100, "%.1f", 0.2*i);
       c->AddEntry(a, i);
    }
-   
-   return c;   
+
+   return c;
 }
 
