@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.10 2001/01/08 08:45:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.11 2001/02/07 21:01:04 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -76,6 +76,7 @@ public:
     virtual Stat_t  GetBinError(Int_t bin, Int_t, Int_t) const {return GetBinError(bin);}
     virtual Stat_t  GetBinEntries(Int_t bin) const;
     Option_t       *GetErrorOption() const;
+    virtual void    GetStats(Stat_t *stats) const;
     virtual Double_t GetYmin() const {return fYmin;}
     virtual Double_t GetYmax() const {return fYmax;}
     virtual void    Multiply(TF1 *h1, Double_t c1=1);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.9 2000/12/18 14:54:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.10 2001/02/07 21:01:04 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -636,6 +636,38 @@ Option_t *TProfile::GetErrorOption() const
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
+}
+
+//______________________________________________________________________________
+void TProfile::GetStats(Stat_t *stats) const
+{
+   // fill the array stats from the contents of this profile
+   // The array stats must be correctly dimensionned in the calling program.
+   // stats[0] = sumw
+   // stats[1] = sumw2
+   // stats[2] = sumwx
+   // stats[3] = sumwx2
+   // stats[4] = sumwy
+   // stats[5] = sumwy2
+   //
+   // The function recomputes the statistics quantities
+   // from the bin contents in the current axis range.
+
+   // Loop on bins
+   Int_t bin, binx;
+   Stat_t w;
+   Axis_t x;
+   for (bin=0;bin<6;bin++) stats[bin] = 0;
+   for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+      w         = fBinEntries.fArray[binx];
+      x         = fXaxis.GetBinCenter(binx);
+      stats[0] += w;
+      stats[1] += w*w;
+      stats[2] += w*x;
+      stats[3] += w*x*x;
+      stats[4] += fArray[binx];
+      stats[5] += fSumw2.fArray[binx];
+   }
 }
 
 

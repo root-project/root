@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.4 2000/11/21 20:36:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.5 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -619,6 +619,48 @@ Option_t *TProfile2D::GetErrorOption() const
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
+}
+
+//______________________________________________________________________________
+void TProfile2D::GetStats(Stat_t *stats) const
+{
+   // fill the array stats from the contents of this profile
+   // The array stats must be correctly dimensionned in the calling program.
+   // stats[0] = sumw
+   // stats[1] = sumw2
+   // stats[2] = sumwx
+   // stats[3] = sumwx2
+   // stats[4] = sumwy
+   // stats[5] = sumwy2
+   // stats[6] = sumwxy
+   // stats[7] = sumwz
+   // stats[8] = sumwz2
+   //
+   // The function recomputes the statistics quantities
+   // from the bin contents in the current axis range.
+
+   // Loop on bins
+   Int_t bin, binx, biny;
+   Stat_t w;
+   Axis_t x,y;
+   for (bin=0;bin<9;bin++) stats[bin] = 0;
+   for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+      y = fYaxis.GetBinCenter(biny);
+      for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+         bin = GetBin(binx,biny);
+         w         = fBinEntries.fArray[bin];
+         x         = fXaxis.GetBinCenter(binx);
+         stats[0] += w;
+         stats[1] += w*w;
+         stats[2] += w*x;
+         stats[3] += w*x*x;
+         stats[4] += w*y;
+         stats[5] += w*y*y;
+         stats[6] += w*x*y;
+         stats[7] += fArray[bin];
+         stats[8] += fSumw2.fArray[bin];
+      }
+   }
 }
 
 
