@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.143 2003/06/18 15:28:50 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.144 2003/07/11 08:24:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2880,7 +2880,8 @@ void THistPainter::PaintHist(Option_t *)
    graph.SetMarkerStyle(fH->GetMarkerStyle());
    graph.SetMarkerSize(fH->GetMarkerSize());
    graph.SetMarkerColor(fH->GetMarkerColor());
-
+   if (!Hoption.Same) graph.ResetBit(TGraph::kClipFrame);
+   
    graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
 
    delete [] keepx;
