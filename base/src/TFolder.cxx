@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.9 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.10 2001/03/29 10:53:42 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -359,6 +359,7 @@ Int_t TFolder::Occurence(const TObject *object) const
       if (strcmp(obj->GetName(),object->GetName()) == 0) n++;
       if (obj == object) return n;
    }
+   return 0;
 }
 
 //______________________________________________________________________________
