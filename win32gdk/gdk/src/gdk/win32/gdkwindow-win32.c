@@ -685,7 +685,7 @@ void gdk_window_show(GdkWindow * window)
       } else {
          ShowWindow(GDK_DRAWABLE_XID(window), SW_SHOWNORMAL);
          ShowWindow(GDK_DRAWABLE_XID(window), SW_RESTORE);
-         SetForegroundWindow(GDK_DRAWABLE_XID(window));
+//         SetForegroundWindow(GDK_DRAWABLE_XID(window)); //vo
          BringWindowToTop(GDK_DRAWABLE_XID(window));
 #if 0
          ShowOwnedPopups(GDK_DRAWABLE_XID(window), TRUE);

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.74 2004/06/14 08:01:57 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.75 2004/06/14 15:52:58 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2249,8 +2249,10 @@ Int_t TGWin32::InitWindow(ULong_t win)
    }
    attributes.window_type = GDK_WINDOW_CHILD;
    gCws->window = gdk_window_new(wind, &attributes, attr_mask);
-   gdk_window_show((GdkWindow *) gCws->window);
-   ::GdiFlush();
+   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)gCws->window);
+   ::ShowWindow(window, SW_SHOWNORMAL);
+   ::ShowWindow(window, SW_RESTORE);
+   ::BringWindowToTop(window);
 
    // Initialise the window structure
 
@@ -4392,7 +4394,7 @@ void TGWin32::MapSubwindows(Window_t id)
    //
 
    HWND wp;
-   EnumChildWindows((HWND) GDK_DRAWABLE_XID((GdkWindow *) id),
+   EnumChildWindows((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
                     EnumChildProc, (LPARAM) NULL);
 }
 
@@ -4401,8 +4403,21 @@ void TGWin32::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
 
-   gdk_window_show((GdkWindow *)id);
-   gdk_window_raise((GdkWindow *)id);
+   HWND hwnd =  ::GetForegroundWindow();
+   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+   ::ShowWindow(window, SW_SHOWNORMAL);
+   ::ShowWindow(window, SW_RESTORE);
+   ::BringWindowToTop(window);
+   if (hwnd == gConsoleWindow) {
+      RECT r1, r2, r3;
+      ::GetWindowRect(gConsoleWindow, &r1);
+      ::GetWindowRect(window, &r2);
+      if (::IntersectRect(&r3, &r2, &r1)) {
+          ::SetForegroundWindow(window);
+      }
+   } else {
+      ::SetForegroundWindow(window);
+   }
 }
 
 //______________________________________________________________________________
@@ -4434,7 +4449,9 @@ void TGWin32::RaiseWindow(Window_t id)
 {
    // Put window on top of window stack.
 
-   gdk_window_raise((GdkWindow *) id);
+   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+   ::BringWindowToTop(window);
+   ::SetForegroundWindow(window);
 }
 
 //______________________________________________________________________________
@@ -4442,7 +4459,9 @@ void TGWin32::LowerWindow(Window_t id)
 {
    // Lower window so it lays below all its siblings.
 
-   gdk_window_lower((GdkWindow *) id);
+   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+   ::SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0, 
+                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 }
 
 //______________________________________________________________________________
