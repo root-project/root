@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 0.0 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.3 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -12,11 +12,11 @@
 //________________________________________________________________________
 //
 // Class for xml code generation
-// It should be used for generation of xml steramers, which could be used ouside root
+// It should be used for generation of xml steramers, which could be used outside root
 // enviroment. This means, that with help of such streamers user can read and write 
 // objects from/to xml file, which later can be accepted by ROOT. 
 //
-// At the moment supported only classes, which are not inheried from TObject
+// At the moment supported only classes, which are not inherited from TObject
 // and which not contains any TObject members.
 //
 // To generate xml code:
@@ -112,6 +112,9 @@
 #include "TMethodCall.h"
 #include "TFunction.h"
 #include "TVirtualCollectionProxy.h"
+#include "TClassEdit.h"
+#include <string>
+#include <vector>
 
 const char* tab1 = "   ";
 const char* tab2 = "      ";
@@ -124,20 +127,21 @@ ClassImp(TXMLPlayer);
 
 //______________________________________________________________________________
 TXMLPlayer::TXMLPlayer() : TObject() 
-// default constructor
 {
+// default constructor
 }
 
 //______________________________________________________________________________
 TXMLPlayer::~TXMLPlayer() 
-// destructor of TXMLPlayer object
 {
+// destructor of TXMLPlayer object
 }
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetStreamerName(TClass* cl) 
-// returns streamer function name for given class 
 {
+// returns streamer function name for given class 
+
   if (cl==0) return "";
   TString res = cl->GetName();
   res += "_streamer";
@@ -146,13 +150,14 @@ TString TXMLPlayer::GetStreamerName(TClass* cl)
       
 //______________________________________________________________________________
 Bool_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename) 
+{
 // Produce streamers for provide class list
 // TList should include list of classes, for which code should be generated.
 // filename specify name of file (without extension), where streamers should be
 // created. Function produces two files: header file and source file.
 // For instance, if filename is "streamers", files "streamers.h" and "streamers.cxx"
 // will be created.
-{
+
    if ((cllist==0) || (filename==0)) return kFALSE;
    
    ofstream fh(TString(filename)+".h");
@@ -204,8 +209,9 @@ Bool_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename)
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
-// returns name of simple data type for given data member
 {
+// returns name of simple data type for given data member
+
    if (member==0) return "int"; 
     
    if (member->IsBasic())
@@ -236,8 +242,9 @@ TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
-// return simple data types for given TStreamerElement object
 {
+// return simple data types for given TStreamerElement object
+
    if (el->GetType() == TStreamerInfo::kCounter) return "int"; 
 
    switch (el->GetType() % 20) {
@@ -264,8 +271,9 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realname) 
-// return functions name to read simple data type from xml file 
 {
+// return functions name to read simple data type from xml file 
+
    if (type == TStreamerInfo::kCounter) return "ReadInt"; 
     
    switch (type % 20) {
@@ -294,13 +302,14 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
 
 //______________________________________________________________________________
 const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int specials)
+{
 // produce code to access member of given class. 
 // Parameter specials has following meaning:
 //    0 - nothing special
 //    1 - cast to data type
 //    2 - produce pointer on given member 
 //    3 - skip casting when produce pointer by buf.P() function
-{
+
    TClass* membercl = cl ? cl->GetBaseDataMember(membername) : 0;
    TDataMember* member = membercl ? membercl->GetDataMember(membername) : 0;
    TMethodCall* mgetter = member ? member->GetterMethod(0) : 0;
@@ -352,9 +361,10 @@ const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int sp
 
 //______________________________________________________________________________
 const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* endch)
+{
 // Produce code to set value to given data member.
 // endch should be output after value is specified.
-{
+
    strcpy(endch,""); 
    
    TClass* membercl = cl ? cl->GetBaseDataMember(membername) : 0;
@@ -387,8 +397,9 @@ const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* 
 
 //______________________________________________________________________________
 void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist) 
-// Produce source code of streamer function for specified class
 {
+// Produce source code of streamer function for specified class
+
    if (cl==0) return; 
    TStreamerInfo* info = cl->GetStreamerInfo();
    TObjArray* elements = info->GetElements();
@@ -797,9 +808,10 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
                             TClass* argcl, 
                             TString& tname,
                             TString& ifcond) 
-// Produce code to read argument of stl container from xml file
 {
-  switch(argtyp) {
+// Produce code to read argument of stl container from xml file
+
+   switch(argtyp) {
      case TStreamerInfo::kChar:              
      case TStreamerInfo::kShort:
      case TStreamerInfo::kInt:  
@@ -854,8 +866,9 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
 
 //______________________________________________________________________________
 void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool isargptr, TClass* argcl)
-// Produce code to write argument of stl container to xml file
 {
+// Produce code to write argument of stl container to xml file
+
   switch(argtyp) {
      case TStreamerInfo::kChar:
      case TStreamerInfo::kShort:
@@ -898,8 +911,9 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool 
 
 //______________________________________________________________________________
 bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting)
-// Produce code of xml streamet for data member of stl type
 {
+// Produce code of xml streamer for data member of stl type
+
    if ((cl==0) || (el==0)) return false;
    
    TClass* contcl = el->GetClassPointer();  
@@ -912,71 +926,75 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
    
    int stltyp = -1;
    int narg = 0;
-   int argtype[5];
-   bool isargptr[5];
-   TClass* argcl[5];
-   TString argtname[5];
+   int argtype[2];
+   bool isargptr[2];
+   TClass* argcl[2];
+   TString argtname[2];
    
-   if (isstr) stltyp = TStreamerElement::kSTLstring; else {
-     TObjArray* tokens = TString(contcl->GetName()).Tokenize("<,>");  
-     if (tokens==0) return false;
+   if (isstr) stltyp = TStreamerElement::kSTLstring; else 
+     if (TClassEdit::IsSTLCont(contcl->GetName())) {  
+        string shortTypeName = TClassEdit::ShortType(contcl->GetName(), 
+                                                     TClassEdit::kDropStlDefault);
+        int nestedLoc = 0;
+        vector<string> splitName;
+        TClassEdit::GetSplit(shortTypeName.c_str(), splitName, nestedLoc);
+        
+        stltyp = TClassEdit::STLKind(splitName[0].c_str());
+        switch (stltyp) {
+          case TClassEdit::kVector   : narg = 1; break;
+          case TClassEdit::kList     : narg = 1; break;
+          case TClassEdit::kDeque    : narg = 1; break;
+          case TClassEdit::kMap      : narg = 2; break;
+          case TClassEdit::kMultiMap : narg = 2; break;
+          case TClassEdit::kSet      : narg = 1; break;
+          case TClassEdit::kMultiSet : narg = 1; break;
+          default: return false;
+        }
      
-     TObjString* s0 = (TObjString*) tokens->At(0);
-      
-     if (s0->String()=="vector")   { stltyp = TStreamerElement::kSTLvector; narg=1; } else 
-     if (s0->String()=="list")     { stltyp = TStreamerElement::kSTLlist; narg=1; } else
-     if (s0->String()=="deque")    { stltyp = TStreamerElement::kSTLdeque; narg=1; } else
-     if (s0->String()=="map")      { stltyp = TStreamerElement::kSTLmap; narg=2; } else
-     if (s0->String()=="set")      { stltyp = TStreamerElement::kSTLset; narg=1; } else
-     if (s0->String()=="multimap") { stltyp = TStreamerElement::kSTLmultimap; narg=2; } else
-     if (s0->String()=="multiset") { stltyp = TStreamerElement::kSTLmultiset; narg=1; }
-     
-     for(int n=0;n<narg;n++) {
-       argtype[n] = -1;
-       isargptr[n] = false;
-       argcl[n] = 0;
-       argtname[n] = "";
-       
-       TObjString* arg = n<tokens->GetLast() ? (TObjString*) tokens->At(n+1) : 0;
-       
-       if (arg==0) { stltyp = -1; break; }
-       
-       TString buf = arg->String();
-                   
-       while ((buf.Length()>0) && (buf[0]==' ')) buf.Remove(0,1); 
-       argtname[n] = buf;         
+        for(int n=0;n<narg;n++) {
+          argtype[n] = -1;
+          isargptr[n] = false;
+          argcl[n] = 0;
+          argtname[n] = "";
           
-       int pstar = buf.Index("*");
+//          if (splitName.size()<=n) return false;
+       
+          TString buf = splitName[n+1];
           
-       if (pstar>0) {
-         isargptr[n] = true;    
-         buf.Remove(pstar);
-       } else 
-         isargptr[n] = false;
+          argtname[n] = buf;         
+          
+          // nested STL containers not yet supported
+          if (TClassEdit::IsSTLCont(buf.Data())) return false; 
+          
+          int pstar = buf.Index("*");
+          
+          if (pstar>0) {
+             isargptr[n] = true;    
+             pstar--;
+             while ((pstar>0) && (buf[pstar]==' ')) pstar--;
+             buf.Remove(pstar+1);
+             
+          } else 
+            isargptr[n] = false;
             
-       while ((buf.Length()>0) && (buf[buf.Length()-1]==' ')) 
-                buf.Remove(buf.Length()-1,1); 
-         
-       if (buf.Index("const ")==0) {
-         buf.Remove(0,6);
-         while ((buf.Length()>0) && (buf[0]==' ')) buf.Remove(0,1); 
-       }
+          if (buf.Index("const ")==0) {
+             buf.Remove(0,6);
+             while ((buf.Length()>0) && (buf[0]==' ')) buf.Remove(0,1); 
+          }
           
-       TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(buf);
-       if (dt) argtype[n] = dt->GetType(); else 
-       if (buf=="string") argtype[n] = TStreamerInfo::kSTLstring; else {
-          argcl[n] = gROOT->GetClass(buf);
-          if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
-       }
+          TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(buf);
+          if (dt) argtype[n] = dt->GetType(); else 
+          if (buf=="string") argtype[n] = TStreamerInfo::kSTLstring; else {
+             argcl[n] = gROOT->GetClass(buf);
+             if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
+          }
        
-       if (argtype[n]<0) stltyp = -1;
+          if (argtype[n]<0) stltyp = -1;
        
 //       fs << tab2 << "// arg " << n << "  name = /" << argtname[n] << "/  typ = " << argtype[n]
 //                  << "  isptr = " << isargptr[n] << "   class = " << (argcl[n] ? argcl[n]->GetName() : "null") << endl;
      }
      
-     delete tokens;
-
      if (stltyp<0) return false;
    }
 
@@ -1106,8 +1124,8 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
           fs << tabs << tab1;
           if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
           fs << accname;
-          if ((stltyp==TStreamerElement::kSTLset) ||
-              (stltyp==TStreamerElement::kSTLmultiset))
+          if ((stltyp==TClassEdit::kSet) ||
+              (stltyp==TClassEdit::kMultiSet))
             fs << "insert"; else fs << "push_back";  
           fs << "(" << arg1 << ");" << endl;
         }
