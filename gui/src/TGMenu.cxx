@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v4-00-08-patches $:$Id: TGMenu.cxx,v 1.40 2004/07/06 14:46:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.40.2.1 2004/09/13 22:35:21 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -148,7 +148,7 @@ void TGMenuBar::BindKeys(Bool_t on)
       main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), 0);
    } else {
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left), 0);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), 0r);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), 0);
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), 0);
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), 0);
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), 0);
