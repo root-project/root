@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.6 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.7 2001/06/26 16:32:36 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -244,6 +244,9 @@ static void WaitChild(int childpid)
 
       if (WIFEXITED(status))
          exit(WEXITSTATUS(status));
+
+      if (WIFSIGNALED(status))
+         exit(WTERMSIG(status));
 
       if (WIFSTOPPED(status)) {         // child got ctlr-Z
          raise(SIGTSTP);                // stop also parent
