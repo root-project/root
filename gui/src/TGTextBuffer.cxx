@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextBuffer.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/05/98
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 //                                                                      //
 // A text buffer is used in several widgets, like TGTextEntry,          //
 // TGFileDialog, etc. It is a little wrapper around the powerful        //
-// TString class and used for sinlge line texts. For multi line texts   //
+// TString class and used for single line texts. For multi line texts   //
 // use TGText.                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

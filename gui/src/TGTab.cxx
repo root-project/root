@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.4 2000/10/17 12:34:53 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 // tab with a name (like a set of folders with tabs).                   //
 //                                                                      //
 // The TGTab is user callable. The TGTabElement and TGTabLayout are     //
-// is a service classes of the tab widget.                              //
+// service classes of the tab widget.                                   //
 //                                                                      //
 // Clicking on a tab will bring the associated composite frame to the   //
 // front and generate the following event:                              //
