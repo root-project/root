@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.2 2001/04/28 16:30:14 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    TGPicturePool *fPicturePool;      // pixmap cache
    TGMimeTypes   *fMimeTypeList;     // mimetype list
    Bool_t         fGlobalNeedRedraw; // true if at least one window needs to be redrawn
+   Bool_t         fForceRedraw;      // redraw widgets as soon as possible
    THashList     *fWlist;            // list of frames
    TList         *fUWHandlers;       // list of event handlers for unknown windows
    EGEventType    fWaitForEvent;     // event to wait for
@@ -79,6 +80,7 @@ public:
    FontStruct_t GetFontByName(const char *name) const;
    ULong_t GetHilite(ULong_t base_color) const;
    ULong_t GetShadow(ULong_t base_color) const;
+   void    ForceRedraw() { fForceRedraw = kTRUE; }
    void    NeedRedraw(TGWindow *w);
    void    RegisterWindow(TGWindow *w);
    void    UnregisterWindow(TGWindow *w);

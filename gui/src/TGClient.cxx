@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.9 2001/03/08 20:16:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.10 2001/04/28 16:30:14 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -334,6 +334,7 @@ TGClient::TGClient(const char *dpyName)
    // Create an object for the root window, create picture pool, etc...
 
    fGlobalNeedRedraw = kFALSE;
+   fForceRedraw      = kFALSE;
 
    fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
@@ -742,11 +743,15 @@ Bool_t TGClient::ProcessOneEvent()
       gVirtualX->NextEvent(event);
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
+         if (fForceRedraw)
+            DoRedraw();
          return kTRUE;
       } else {
          HandleMaskEvent(&event, fWaitForWindow);
          if ((event.fType == fWaitForEvent) && (event.fWindow == fWaitForWindow))
             fWaitForWindow = kNone;
+         if (fForceRedraw)
+            DoRedraw();
          return kTRUE;
       }
    }
@@ -828,6 +833,8 @@ Bool_t TGClient::DoRedraw()
    }
 
    fGlobalNeedRedraw = kFALSE;
+   fForceRedraw      = kFALSE;
+
    return kTRUE;
 }
 
