@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.11 2000/10/19 17:26:48 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.12 2000/11/10 02:33:09 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -727,6 +727,7 @@ void TGX11::CloseDisplay()
    // Close connection to display server.
 
    XCloseDisplay(fDisplay);
+   fDisplay = 0;
 }
 
 //______________________________________________________________________________
@@ -866,7 +867,10 @@ void TGX11::DeleteGC(GContext_t gc)
 {
    // Explicitely delete a graphics context.
 
-   XFreeGC(fDisplay, (GC) gc);
+   // Protection against deletion of global TGGC objects, which are
+   // destructed after fDisplay has been closed.
+   if (fDisplay)
+      XFreeGC(fDisplay, (GC) gc);
 }
 
 //______________________________________________________________________________
