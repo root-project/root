@@ -66,6 +66,8 @@ MyClassClones_cxx.$(DllSuf): MyClass.h MyClassClones.cxx
 
 MyClassVector_cxx.$(DllSuf): MyClass.h MyClassVector.cxx
 
+MyClassList_cxx.$(DllSuf) : MyClass.h MyClassVector.cxx
+
 clonesfile.root: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) WriteClones.C
 	$(CMDECHO) root.exe -q -b -l WriteClones.C > WriteClones.log
 	

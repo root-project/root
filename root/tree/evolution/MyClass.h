@@ -11,7 +11,7 @@ namespace std {} using namespace std;
 class Track : public TObject {
    double fEnergy;
 public:
-   Track(double energy=-99.99) : fEnergy(energy) {};
+   Track(double energy=-99.99) : fEnergy(energy) {}
    double GetEnergy() { return fEnergy; }
    ClassDef(Track,1);
 };
@@ -22,7 +22,7 @@ class TopLevel {
    TClonesArray *fTracksPtr;
 public:
    TopLevel() : fTracks("Track"),fTracksPtr(0) {};
-   ~TopLevel() { delete fTracksPtr; }
+   virtual ~TopLevel() { delete fTracksPtr; }
    void AddTrack(int seed) { 
       if (fTracksPtr==0) fTracksPtr = new TClonesArray("Track");
       new (fTracks[fTracks.GetEntries()]) Track(seed); 
@@ -40,7 +40,7 @@ class TopLevel {
    vector<Track> *fTracksPtr;
 public:
    TopLevel() : fTracksPtr(0) {};
-   ~TopLevel() { delete fTracksPtr; }
+   virtual ~TopLevel() { delete fTracksPtr; }
    void AddTrack(int seed) {
       if (fTracksPtr==0) fTracksPtr = new vector<Track>;
       Track t(seed); fTracks.push_back(t); 
@@ -58,7 +58,7 @@ class TopLevel {
    list<Track> *fTracksPtr;
 public:
    TopLevel() : fTracksPtr(0) {};
-   ~TopLevel() { delete fTracksPtr; }
+   virtual ~TopLevel() { delete fTracksPtr; }
    void AddTrack(int seed) { 
       if (fTracksPtr==0) fTracksPtr = new list<Track>;
       Track t(seed); fTracks.push_back(t); 
