@@ -70,10 +70,10 @@ elif [ $PLATFORM = "lynxos" ]; then
    echo ar rv $LIB $OBJS $EXTRA
    ar rv $LIB $OBJS $EXTRA
 elif [ $PLATFORM = "fbsd" ]; then
-   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
-   $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
-   # for elf:  echo $PLATFORM: $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS
-   # for elf:  $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB `lorder $OBJS | tsort -q`
+    # for aout: echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+    # for aout: $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
+    echo $PLATFORM: $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR objs: $OBJS extra: $EXTRA exp:$EXPLLNKCORE
+    $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`

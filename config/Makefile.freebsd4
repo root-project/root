@@ -28,7 +28,7 @@ COMPILER      = gnu
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Wl,-x
+SOFLAGS       = -shared -Wl,-x -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
