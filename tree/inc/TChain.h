@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.35 2003/10/20 06:32:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.36 2004/06/05 05:19:36 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -79,6 +79,7 @@ public:
             Int_t     GetNtrees() const {return fNtrees;}
     virtual Double_t  GetEntries() const;
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
+    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
     TFile            *GetFile() const;
     TLeaf            *GetLeaf(const char *name);
     TObjArray        *GetListOfBranches();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.91 2004/06/14 09:38:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.92 2004/06/15 08:19:09 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -590,6 +590,23 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
    return fTree->GetEntry(fReadEntry,getall);
 }
 
+//______________________________________________________________________________
+Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
+{
+// Return entry  corresponding to major and minor number
+// For example:
+//     Int_t run   = 1234;
+//     Int_t event = 345;
+//     Int_t serial= chain.GetEntryNumberWithIndex(run,event);
+//    now the variable serial is in the range [0,nentries] and one can do
+//    chain.GetEntry(serial);
+//
+// WARNING: This function will not work if teh chain has friend chains.
+
+   Int_t serial = GetEntryNumberWithIndex(major, minor);
+   if (serial < 0) return -1;
+   return GetEntry(serial);
+}
 
 //______________________________________________________________________________
 TFile *TChain::GetFile() const
