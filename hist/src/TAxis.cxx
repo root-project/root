@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.16 2001/02/28 07:51:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.17 2001/05/24 21:25:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -285,6 +285,8 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             bin1 = first + Int_t((last-first+1)*ratio1);
             bin2 = first + Int_t((last-first+1)*ratio2);
             SetRange(bin1, bin2);
+            delete view;
+            gPad->SetView(0);
             gPad->Modified(kTRUE);
          }
       } else {
