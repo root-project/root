@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.14 2002/11/25 13:58:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.15 2004/09/13 09:10:56 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -413,11 +413,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() == 1) {
                      f = (TGFileItem *) fFc->GetNextSelected(&p);
-#ifndef WIN32
-                     if (S_ISDIR(f->GetType())) {
-#else
-                     if (f->GetType() & _S_IFDIR) {
-#endif
+                     if (R_ISDIR(f->GetType())) {
                         fFc->ChangeDirectory(f->GetItemName()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;

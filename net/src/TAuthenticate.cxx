@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.62 2004/09/22 16:29:48 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.63 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1058,18 +1058,15 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
    }
 
  again:
-#ifdef WIN32
-   // Since Win32 does not have proper protections use file always
-   FILE * fd1;
-   if ((fd1 = fopen(net, "r"))) {
-      fclose(fd1);
-      if (1) {
-#else
    // Only use file when its access rights are 0600
-   struct stat buf;
-   if (stat(net, &buf) == 0) {
-      if (S_ISREG(buf.st_mode) && !S_ISDIR(buf.st_mode) &&
-          (buf.st_mode & 0777) == (S_IRUSR | S_IWUSR)) {
+   FileStat_t buf;
+   if (gSystem->GetPathInfo(net, buf) == 0) {
+#ifdef WIN32
+      // Since Win32 does not have proper protections use file always
+      if (R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode)) {
+#else
+      if (R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode) &&
+          (buf.fMode & 0777) == (kS_IRUSR | kS_IWUSR)) {
 #endif
          FILE *fd = fopen(net, "r");
          char line[256];
@@ -2260,7 +2257,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                   int ltmp = Slen;
                   while (ltmp && TmpSalt[ltmp-1] != '#') ltmp--;
                   if (ltmp) {
-                     if (TmpSalt[ltmp-1] == '#' && 
+                     if (TmpSalt[ltmp-1] == '#' &&
                          TmpSalt[ltmp-10] == '#') {
                         strncpy(ctag,&TmpSalt[ltmp-10],10);
                         // We drop the random tag
