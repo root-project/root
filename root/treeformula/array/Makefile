@@ -61,5 +61,7 @@ twodimvar.log: twodimvar_C.$(DllSuf)
 twodimvar: twodimvar.log
 	$(TestDiff)
 
+multidim.log: NtpLib_C.$(DllSuf)
+
 multidim: multidim.log
 	$(TestDiff)
