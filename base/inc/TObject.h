@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.7 2000/11/21 16:17:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.8 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -84,9 +84,7 @@ private:
 
 protected:
    void MakeZombie() { fBits |= kZombie; }
-#ifndef __CINT__
    void DoError(int level, const char *location, const char *fmt, va_list va) const;
-#endif
 
 public:
    //----- Private bits, clients can only test but not change them
@@ -160,10 +158,8 @@ public:
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
    void    *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
-#ifndef __CINT__
 #ifdef R__PLACEMENTDELETE
    void     operator delete(void *ptr, void *vp);
-#endif
 #endif
 
    //----- bit manipulation
