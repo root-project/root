@@ -5726,10 +5726,15 @@ int parameter00;
      -1!=result.tagnum) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1372
+#ifndef G__OLDIMPLEMENTATION1470
+    autoobjectflag=1;
+#endif
     if(G__IsInMacro()) {
       /* undeclared variable assignment of class/struct will create 
        * a global object of pointer or reference */
+#ifdef G__OLDIMPLEMENTATION1470
       autoobjectflag=1;
+#endif
       if(G__p_local) {
 	var=varglobal;
 	while(var->next) var=var->next;
@@ -6293,6 +6298,7 @@ int parameter00;
   /* may need refinement */
   if(G__asm_noverflow && G__asm_wholefunction && 1==p_inc) {
     if(G__funcheader) {
+      /* function argument */
       if(G__PARAREFERENCE==G__reftype) {
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) fprintf(G__serr,"%3x: INIT_REF\n",G__asm_cp);
@@ -6314,9 +6320,10 @@ int parameter00;
       G__inc_cp_asm(1,0);
     }
     else if(result.type && !G__static_alloc) {
+      /* normal object */
       G__asm_gen_stvar(0,ig15,paran,var,item,G__ASM_VARLOCAL,'p');
     }
-#ifndef G__OLDIMPLEMENTATION1073
+#ifndef G__OLDIMPLEMENTATION1073 /* 1073 is disabled */
     else if('u'==G__var_type && G__PARAREFERENCE!=G__reftype &&
 	    -1!=G__tagnum&&'e'!=G__struct.type[G__tagnum]) {
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* precompiled class */

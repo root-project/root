@@ -815,6 +815,9 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION834
   fpara.next = (struct G__param*)NULL;
 #endif
+#ifndef G__OLDIMPLEMENTATION1472
+  fpara.para[0].type = 0;
+#endif
   
   /* Get Parenthesis */
   
@@ -2071,6 +2074,54 @@ int memfunc_flag;
   
 }
 
+#ifndef G__OLDIMPLEMENTATION1472
+typedef struct {
+  struct G__param* libp;
+  int    ip;
+} G__va_list;
+/******************************************************************
+ * G__va_start
+ *****************************************************************/
+ void G__va_start(ap)
+G__value ap;
+{
+  struct G__var_array *local;
+  struct G__ifunc_table *ifunc;
+  G__va_list *va;
+
+  local = G__p_local;
+  if(!local) return;
+  ifunc = local->ifunc;
+  if(!ifunc) return;
+  va = (G__va_list*)ap.ref;
+  if(!va) return;
+
+  va->libp = local->libp;
+  va->ip = ifunc->para_nu[local->ifn]-1;
+}
+/******************************************************************
+ * G__va_arg
+ *****************************************************************/
+G__value G__va_arg(ap)
+G__value ap;
+{
+  G__va_list *va;
+  va = (G__va_list*)ap.ref;
+  if(!va || !va->libp) return(G__null);
+  return(va->libp->para[va->ip++]);
+}
+/******************************************************************
+ * G__va_end
+ *****************************************************************/
+void G__va_end(ap)
+G__value ap;
+{
+  G__va_list *va;
+  va = (G__va_list*)ap.ref;
+  if(!va) return;
+  va->libp = (struct G__param*)NULL;
+}
+#endif
 
 
 /******************************************************************
@@ -2192,19 +2243,41 @@ int hash;
   }
 #endif
   
-#ifdef G__NEVER_BUT_KEEP
-  if(hash==868&&strcmp(funcname,"va_start")==0) {
-    if(G__no_exec_compile) return(1);
-    return(1);
-  }
-  
+#ifndef G__OLDIMPLEMENTATION1472
   if(hash==624&&strcmp(funcname,"va_arg")==0) {
+    G__value x;
+    if(!libp->para[0].type) x = G__getexpr(libp->parameter[0]);
+    else                    x = libp->para[0];
+#ifdef G__ASM
+    if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr
+			     ,"%3x: LD_FUNC special %s paran=%d\n"
+			     ,G__asm_cp,funcname,1);
+#endif
+      G__asm_inst[G__asm_cp]=G__LD_FUNC;
+      G__asm_inst[G__asm_cp+1] = (long)(&G__asm_name[G__asm_name_p]);
+      G__asm_inst[G__asm_cp+2]=hash;
+      G__asm_inst[G__asm_cp+3]=1;
+      G__asm_inst[G__asm_cp+4]=(long)G__special_func;
+      if(G__asm_name_p+strlen(funcname)+1<G__ASM_FUNCNAMEBUF) {
+	strcpy(G__asm_name+G__asm_name_p,funcname);
+	G__asm_name_p += strlen(funcname)+1;
+	G__inc_cp_asm(5,0);
+      }
+      else {
+	G__abortbytecode();
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  fprintf(G__serr,"COMPILE ABORT function name buffer overflow");
+	  G__printlinenum();
+	}
+#endif
+      }
+    }
+#endif    
     if(G__no_exec_compile) return(1);
-    return(1);
-  }
-  
-  if(hash==621&&strcmp(funcname,"va_end")==0) {
-    if(G__no_exec_compile) return(1);
+    *result7 = G__va_arg(x);
     return(1);
   }
 #endif
@@ -2874,6 +2947,32 @@ int hash;
 			   ,(char *)G__int(libp->para[2])));
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION1472
+  if(hash==868&&strcmp(funcname,"va_start")==0) {
+    if(G__no_exec_compile) return(1);
+    G__va_start(libp->para[0]);
+    *result7 = G__null;
+    return(1);
+  }
+  
+  if(hash==621&&strcmp(funcname,"va_end")==0) {
+    if(G__no_exec_compile) return(1);
+    G__va_end(libp->para[0]);
+    *result7 = G__null;
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1472
+  if(hash==1835&&strcmp(funcname,"G__va_arg_setalign")==0) {
+    if(G__no_exec_compile) return(1);
+    G__va_arg_setalign((int)G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
+
   
   if(1093==hash&&strcmp(funcname,"G__loadfile")==0) {
     if(G__no_exec_compile) return(1);

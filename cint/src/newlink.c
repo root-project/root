@@ -41,13 +41,13 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 * installation. This macro must be deleted only when you generate following
 * source files. 
 *     src/libstrm.cxx in lib/stream    'make'
-*     src/vcstrm.cxx  in lib/vcstream  'make'
+*     src/vcstrm.cxx  in lib/vcstream  'make' , 'make -f Makefileold'
 *     src/bcstrm.cxx  in lib/bcstream  'make'
 *     src/cbstrm.cpp  in lib/cbstream  'make'
 *     src/sunstrm.cxx in lib/snstream  'make'
 *     src/kccstrm.cxx (lib/kcc_work not included in the package)
 *     src/stdstrct.c  in lib/stdstrct  'make'
-*     src/Apiif.cxx   in src           'make -f Makeapi'
+*     src/Apiif.cxx   in src           'make -f Makeapi' , 'make -f Makeapiold'
 * g++ has a bug of distinguishing 'static operator delete(void* p)' in
 * different file scope. Deleting this macro will avoid this problem.
 **************************************************************************/
@@ -3408,6 +3408,14 @@ struct G__ifunc_table *ifunc;
   G__if_ary_union(fp,ifn,ifunc);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1473
+  if(2==ifunc->ansi[ifn]) {
+    fprintf(fp,"  G__va_arg_buf G__va_arg_bufobj;\n");
+    fprintf(fp,"  G__va_arg_put(&G__va_arg_bufobj,libp,%d);\n"
+	    ,ifunc->para_nu[ifn]-1);
+  }
+#endif
+
   m = ifunc->para_nu[ifn] ;
 
   /*************************************************************
@@ -3732,6 +3740,14 @@ int k;
 
   if(k && 0==k%2) fprintf(fp,"\n");
   if(0!=k) fprintf(fp,",");
+
+#ifndef G__OLDIMPLEMENTATION1473
+  if('u'==ifunc->para_type[ifn][k] &&
+     0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][k]],"va_list")) {
+    fprintf(fp,"G__va_arg_bufobj");
+    return;
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION573
   if(ifunc->para_name[ifn][k]) {

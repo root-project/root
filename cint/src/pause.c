@@ -1653,7 +1653,7 @@ G__value *rslt;
 	G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
 			  ,keyword,pipefile);
 #endif
-	temp = strlen(command);
+	temp = strlen(command)-1;
 	while (isspace(command[temp])) --temp;
 	if (command[temp] == ';')
 	  sprintf(syscom, "{%s}", command);
@@ -3055,8 +3055,11 @@ G__value *rslt;
     else if( strncmp(command,"qqq",3)==0 ||
 	     strncmp(command,"QQQ",3)==0) {
       fprintf(G__sout,"*** Process will be killed ***\n");
-      strcpy(command,G__input("Are you sure(y/n)? "));
-      if(tolower(command[0])=='y') {
+      strcpy(command,G__input("Are you sure(y/Y/n)? "));
+      if(command[0]=='Y') {
+	exit(EXIT_FAILURE); 
+      }
+      else if(command[0]=='y') {
 #ifndef G__OLDIMPLEMENTATION464
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);

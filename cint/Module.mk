@@ -31,6 +31,8 @@ CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
 
 CINTS1       += $(CINTDIRM)/G__setup.c
 

@@ -1142,6 +1142,173 @@ int tagnum;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1473
+/**************************************************************************
+ * Variable argument, byte layout policy
+ **************************************************************************/
+
+#if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
+/**********************************************
+ * Intel architecture
+ *  Everyting aligns in multiple of 4 
+ *  Incrementing order
+ *    |1111|22  |3   |44444444|55555555555555  |
+ **********************************************/
+#define G__VAARG_INC_COPY_N
+static int G__va_arg_align_size=4;
+
+#elif defined(__hpux) || defined(__hppa__)
+/**********************************************
+ * HP-PA, no good way to implement variable argument
+ *  Aligns in 4 or 8
+ *  Decrementing order
+ *   If sizeof(type)>8, stack only has a reference(pointer)
+ *         addr -= sizeof(int); return(*(type*)addr);
+ *           |3333|2222|1111|
+ *   if 8>=sizeof(type)>4, 
+ *         addr = (addr-sizeof(type))&(~0x7);  -- addr is multiple of 8
+ *         return(*(type*)(addr);
+ *           |33333333|  222222|  111111|
+ *   if 4>=sizeof(type),
+ *         addr = (addr-sizeof(type))&(~0x3);  -- addr is multiple of 4
+ *           |3333|   2|  11|
+ **********************************************/
+#ifdef G__NEVER
+#define va_arg(AP,TYPE)						\
+  (*(sizeof(TYPE) > 8 ?						\
+   ((AP = (__gnuc_va_list) ((char *)AP - sizeof (int))),	\
+    (((TYPE *) (void *) (*((int *) (AP))))))			\
+   :((AP =							\
+      (__gnuc_va_list) ((long)((char *)AP - sizeof (TYPE))	\
+			& (sizeof(TYPE) > 4 ? ~0x7 : ~0x3))),	\
+     (((TYPE *) (void *) ((char *)AP + ((8 - sizeof(TYPE)) % 4)))))))
+#endif
+
+#define G__VAARG_HPPA
+#define G__VAARG_NOSUPPORT
+static int G__va_arg_align_size=0;
+
+#elif defined(__sparc) || defined(__hppa__)
+/**********************************************
+ * Sparc, ???
+ *
+ **********************************************/
+#ifdef G__NEVER
+#define va_arg(pvar,TYPE)					\
+__extension__							\
+(*({((__builtin_classify_type (*(TYPE*) 0) >= __record_type_class \
+      || (__builtin_classify_type (*(TYPE*) 0) == __real_type_class \
+	  && sizeof (TYPE) == 16))				\
+    ? ((pvar) = (char *)(pvar) + __va_rounded_size (TYPE *),	\
+       *(TYPE **) (void *) ((char *)(pvar) - __va_rounded_size (TYPE *))) \
+    : __va_rounded_size (TYPE) == 8				\
+    ? ({ union {char __d[sizeof (TYPE)]; int __i[2];} __u;	\
+	 __u.__i[0] = ((int *) (void *) (pvar))[0];		\
+	 __u.__i[1] = ((int *) (void *) (pvar))[1];		\
+	 (pvar) = (char *)(pvar) + 8;				\
+	 (TYPE *) (void *) __u.__d; })				\
+    : ((pvar) = (char *)(pvar) + __va_rounded_size (TYPE),	\
+       ((TYPE *) (void *) ((char *)(pvar) - __va_rounded_size (TYPE)))));}))
+#endif
+
+#define G__VAARG_SPARC
+#define G__VAARG_NOSUPPORT
+static int G__va_arg_align_size=0;
+
+#else
+/**********************************************
+ * Default, set same as intel architecture
+ **********************************************/
+#define G__VAARG_INC_COPY_N
+static int G__va_arg_align_size=4;
+
+#endif
+
+/**************************************************************************
+ * G__va_arg_setalign()
+ **************************************************************************/
+void G__va_arg_setalign(n)
+int n;
+{
+  G__va_arg_align_size = n;
+}
+
+/**************************************************************************
+ * G__va_arg_copyvalue()
+ **************************************************************************/
+void G__va_arg_copyvalue(t,p,pval,objsize)
+int t;
+void* p;
+G__value *pval;
+int objsize;
+{
+  switch(t) {
+  case 'c':
+  case 'b':
+    *(char*)(p) = (char)G__int(*pval);
+    break;
+  case 'r':
+  case 's':
+    *(short*)(p) = (short)G__int(*pval);
+    break;
+  case 'h':
+  case 'i':
+    *(int*)(p) = (int)G__int(*pval);
+    break;
+  case 'k':
+  case 'l':
+    *(long*)(p) = (long)G__int(*pval);
+    break;
+  case 'f':
+    *(float*)(p) = (float)G__double(*pval);
+    break;
+  case 'd':
+    *(double*)(p) = (double)G__double(*pval);
+    break;
+  case 'u':
+    memcpy((void*)(p),pval->obj.i,objsize);
+    break;
+  default:
+    *(long*)(p) = (long)G__int(*pval);
+    break;
+  }
+}
+
+/**************************************************************************
+ * G__va_arg_put()
+ **************************************************************************/
+void G__va_arg_put(pbuf,libp,n)
+G__va_arg_buf* pbuf;
+struct G__param *libp;
+int n;
+{
+  int i;
+  int j=0;
+  int objsize;
+  int type;
+  int mod;
+#ifdef G__VAARG_NOSUPPORT
+  G__genericerror("Limitation: Variable argument is not supported for this platform");
+#endif
+  for(i=n;i<libp->paran;i++) {
+    objsize = G__sizeof(&libp->para[i]);
+    type = libp->para[i].type;
+    
+    G__va_arg_copyvalue(type,(void*)(&pbuf->d[j]),&libp->para[i],objsize);
+
+#if defined(G__VAARG_INC_COPY_N)
+    j += objsize;
+    mod = j%G__va_arg_align_size;
+    if(mod) j = j-mod+G__va_arg_align_size;
+#else
+    j += objsize;
+    mod = j%G__va_arg_align_size;
+    if(mod) j = j-mod+G__va_arg_align_size;
+#endif
+
+  }
+}
+#endif
 
 
 /*

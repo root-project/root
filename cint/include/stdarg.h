@@ -4,11 +4,16 @@
 #ifndef G__STDARG_H
 #define G__STDARG_H
 
-typedef double *va_list;
+struct va_list {
+  void* libp;
+  int    ip;
+} ;
 
-void va_start(va_list listptr,int dummy)
-{
-	fprintf(stderr,"Limitation: va_start(),va_arg(),va_end() not supported\n");
+#ifdef G__OLDIMPLEMENTATION1472
+/* not needed anymore */
+void va_start(va_list listptr,int dummy) {
+  fprintf(stderr,"Limitation: va_start(),va_arg(),va_end() not supported\n");
 }
+#endif
 
 #endif

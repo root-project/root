@@ -22,10 +22,6 @@
 
 #include <stdio.h>
 
-#ifndef G__OLDIMPLEMENTATION463
-extern FILE *G__serr;
-#endif
-
 
 /***********************************************************************
 * getopt();
@@ -68,7 +64,7 @@ char *optlist;
 	}
 	++p;
       }
-      fprintf(G__serr,"Error: Unknown option %s\n",argv[optind]);
+      fprintf(stderr,"Error: Unknown option %s\n",argv[optind]);
       ++optind;
       return(0);
     }

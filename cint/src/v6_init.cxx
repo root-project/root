@@ -1887,6 +1887,10 @@ int G__init_globals()
   G__GetSpecialObject = G__getreserved;
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER<=1100)
+#define G__OLDIMPLEMENTATION1423
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1423
 #if defined(G__ROOT) && !defined(G__EXPERIMENTAL1423)
   G__is_operator_newdelete = G__MASK_OPERATOR_NEW |
@@ -1934,6 +1938,9 @@ void G__platformMacro()
 #ifdef G__CINTVERSION
   sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION); G__add_macro(temp);
 #endif
+  /***********************************************************************
+   * operating system
+   ***********************************************************************/
 #if defined(__linux__)
   sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
 #elif defined(__linux) 
@@ -1944,6 +1951,33 @@ void G__platformMacro()
 #ifdef __FreeBSD__
   sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
 #endif
+#ifdef __hpux
+  sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
+#endif
+#ifdef __sun
+  sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
+#endif
+#ifdef _WIN32
+  sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
+#endif
+#ifdef _WINDOWS_
+  sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
+#endif
+#ifdef __VMS
+  sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
+#endif
+#ifdef _AIX
+  sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
+#endif
+#ifdef __sgi
+  sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
+#endif
+#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)
+  sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
+#endif
+  /***********************************************************************
+   * compiler and library
+   ***********************************************************************/
 #ifdef __GNUC__
   sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
 #endif
@@ -1956,17 +1990,8 @@ void G__platformMacro()
 #ifdef __GLIBC_MINOR__
   sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__add_macro(temp);
 #endif
-#ifdef __hpux
-  sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
-#endif
 #ifdef __HP_aCC
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
-#endif
-#ifdef __sun
-  sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
-#endif
-#ifdef __sparc
-  sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
 #endif
 #ifdef __SUNPRO_CC
   sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
@@ -1974,17 +1999,11 @@ void G__platformMacro()
 #ifdef __SUNPRO_C
   sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__add_macro(temp);
 #endif
-#ifdef _WIN32
-  sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
-#endif
-#ifdef _WINDOWS_
-  sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
-#endif
 #ifdef G__VISUAL
   sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
 #endif
-#ifdef _MSC_VAR
-  sprintf(temp,"G__MSC_VAR=%ld",(long)_MSC_VAR); G__add_macro(temp);
+#ifdef _MSC_VER
+  sprintf(temp,"G__MSC_VER=%ld",(long)_MSC_VER); G__add_macro(temp);
 #endif
 #ifdef __SC__
   sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__add_macro(temp);
@@ -1995,28 +2014,63 @@ void G__platformMacro()
 #ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
-#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)
-  sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
-#endif
-#ifdef __VMS
-  sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
-#endif
-#ifdef _AIX
-  sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
-#endif
-#ifdef __sgi
-  sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
-#endif
 #ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
+  /***********************************************************************
+   * micro processor
+   ***********************************************************************/
+#ifdef __hppa__
+  sprintf(temp,"G__hppa=%ld",(long)__hppa__); G__add_macro(temp);
+#endif
+#ifdef __i386__
+  sprintf(temp,"G__i386=%ld",(long)__i386__); G__add_macro(temp);
+#endif
+#ifdef __i860__
+  sprintf(temp,"G__i860=%ld",(long)__i860__); G__add_macro(temp);
+#endif
+#ifdef __i960__
+  sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
+#endif
+#ifdef __m88k__
+  sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);
+#endif
+#ifdef __m68k__
+  sprintf(temp,"G__m68k=%ld",(long)__m68k__); G__add_macro(temp);
+#endif
+#ifdef __mips__
+  sprintf(temp,"G__mips=%ld",(long)__mips__); G__add_macro(temp);
+#endif
+#ifdef __alpha__
+  sprintf(temp,"G__alpha=%ld",(long)__alpha__); G__add_macro(temp);
+#endif
+#if defined(__sparc)
+  sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
+  sprintf(temp,"G__sparc=%ld",(long)__sparc); G__add_macro(temp);
+#elif  defined(__sparc__)
+  sprintf(temp,"G__SPARC=%ld",(long)__sparc__); G__add_macro(temp);
+  sprintf(temp,"G__sparc=%ld",(long)__sparc__); G__add_macro(temp);
+#endif
+#ifdef __ppc__
+  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
+#endif
+#ifdef __arc__
+  sprintf(temp,"G__arc=%ld",(long)__arc__); G__add_macro(temp);
+#endif
+#ifdef __M32R__
+  sprintf(temp,"G__m32r=%ld",(long)__M32R__); G__add_macro(temp);
+#endif
+#ifdef __sh__
+  sprintf(temp,"G__sh=%ld",(long)__SH__); G__add_macro(temp);
+#endif
+#ifdef __arm__
+  sprintf(temp,"G__arm=%ld",(long)__arm__); G__add_macro(temp);
+#endif
+  /***********************************************************************
+   * application environment
+   ***********************************************************************/
 #ifdef G__ROOT
   sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__add_macro(temp);
-#endif
-#ifdef G__CONSTNESSFLAG
-/*
-  sprintf(temp,"G__CONSTNESSFLAG=1"); G__add_macro(temp);
-*/
 #endif
 }
 #endif
@@ -2140,7 +2194,7 @@ FILE *fp;
 {
   fprintf(fp,"\n");
   fprintf(fp,"cint : C/C++ interpreter\n");
-  fprintf(fp,"   Copyright(c) : 1995~2000 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
+  fprintf(fp,"   Copyright(c) : 1995~2001 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   fprintf(fp,"   revision     : %s by M.Goto\n\n",G__cint_version());
 
 #ifdef G__DEBUG

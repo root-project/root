@@ -1,0 +1,21 @@
+##########################################################################
+# Makefile for ifdef resolver
+#
+#  Author   : Masaharu Goto
+#  Date     : 8 Feb 1994
+#  Date     : 8 Jan 2001
+#
+##########################################################################
+
+ifdef: ifdef.o get.o
+	$(CPP) $(OPTIMIZE) -o ifdef ifdef.o get.o -lm
+
+ifdef.o: ifdef.cxx
+	$(CPP) $(OPTIMIZE) -DG__GET -c -o ifdef.o ifdef.cxx
+
+get.o: get.c
+	$(CC) $(OPTIMIZE) -DG__IFDEF -c -o get.o get.c
+
+
+clean:
+	rm get.o ifdef.o ifdef

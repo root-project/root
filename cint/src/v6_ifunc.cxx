@@ -1781,6 +1781,9 @@ int func_now;
 #ifndef G__OLDIMPLEMENTATION573
   int arydim;
 #endif
+#ifndef G__OLDIMPLEMENTATION1471
+  int vaflag=0;
+#endif
 
   ifunc->ansi[func_now] = 1;
   while(')'!=c) {
@@ -1830,7 +1833,11 @@ int func_now;
 
     /* check const and unsigned keyword */
     if(strcmp(paraname,"...")==0) {
+#ifndef G__OLDIMPLEMENTATION1471
+      strcpy(paraname,"va_list");
+#else
       strcpy(paraname,"int");
+#endif
 #ifndef G__OLDIMPLEMENTATION832
       ifunc->ansi[func_now] = 2;
 #endif
@@ -2051,6 +2058,9 @@ int func_now;
 	break;
 #ifndef G__OLDIMPLEMENTATION832
       case '.':
+#ifndef G__OLDIMPLEMENTATION1471
+	vaflag=1;
+#endif
 	ifunc->ansi[func_now] = 2;
 	c=G__fignorestream(",)");
 	break;
@@ -2175,10 +2185,10 @@ int func_now;
 #ifndef G__OLDIMPLEMENTATION1380
 	tmpx = ifunc->para_default[func_now][iin];
 #ifndef G__OLDIMPLEMENTATION1455
-	if(reftype && (tmpx->type!=type || tmpx->tagnum!=tagnum) &&
-#else
 	if(reftype && (toupper (tmpx->type)!=toupper(type) ||
                        tmpx->tagnum!=tagnum) && 
+#else
+	if(reftype && (tmpx->type!=type || tmpx->tagnum!=tagnum) &&
 #endif
 	   0==pointlevel) {
 	  char tmpy[G__ONELINE];
@@ -2258,6 +2268,26 @@ int func_now;
     }
     ++iin;
   } /* while(')'!=c) */
+
+#ifndef G__OLDIMPLEMENTATION1471
+  if(vaflag) {
+    strcpy(paraname,"va_list");
+    typenum = G__defined_typename(paraname);
+    ifunc->para_p_typetable[func_now][iin]=typenum;
+    if(-1!=ifunc->para_p_typetable[func_now][iin]) {
+      ifunc->para_p_tagtable[func_now][iin]=G__newtype.tagnum[typenum];
+      ifunc->para_type[func_now][iin]=G__newtype.type[typenum];
+    }
+    else {
+      ifunc->para_p_tagtable[func_now][iin]=G__defined_tagname(paraname,1);
+      ifunc->para_type[func_now][iin]='u';
+    }
+    ifunc->para_reftype[func_now][iin] = G__PARANORMAL ;
+    ifunc->para_default[func_now][iin] = (G__value*)NULL;
+    ifunc->para_def[func_now][iin] = (char*)NULL;
+    ++iin;
+  }
+#endif
   ifunc->para_nu[func_now]=iin;
   return(0);
 }
@@ -6424,6 +6454,10 @@ asm_ifunc_start:   /* loop compilation execution label */
 	}
 	else {
 	  /* precompiled class */
+#ifndef G__OLDIMPLEMENTATION1469
+	  long store_globalvarpointer = G__globalvarpointer;
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  G__store_struct_offset=0xffff;
 	  if(G__dispsource) {
 	    fprintf(G__serr
@@ -6432,6 +6466,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 		    ,temp);
 	  }
 	  buf=G__getfunction(temp,&itemp,G__TRYCONSTRUCTOR);
+#ifndef G__OLDIMPLEMENTATION1469
+	  G__globalvarpointer = store_globalvarpointer;
+#endif
 #ifndef G__OLDIMPLEMENtATION1274
 	  if(itemp) G__store_tempobject(buf);
 #else

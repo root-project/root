@@ -768,6 +768,11 @@ int tagnum,typenum;      /* overrides global variables */
      ***********************************************************/
     if(G__ansiheader) {
 
+#ifndef G__OLDIMPLEMENTATION1472
+      char *pxx = strstr(new_name,"...");
+      if(pxx) *pxx=0;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION880
       if(G__asm_wholefunction&&G__asm_noverflow) {
 	char *pwf=strchr(new_name,'[');
@@ -2911,7 +2916,7 @@ int* pindex;
 G__value *pbuf;
 {
   /* increment memvar and index */
-#ifndef G__OLDIMPLEMENTATION1469
+#ifndef G__OLDIMPLEMENTATION1468
   if(*pindex<memvar->allvar-1) {
 #else
   if(*pindex<memvar->allvar) {

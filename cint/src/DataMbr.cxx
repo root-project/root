@@ -155,7 +155,6 @@ long G__DataMemberInfo::Offset()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION1453
 int G__DataMemberInfo::Bitfield() 
 {
   if(IsValid()) {
@@ -167,7 +166,6 @@ int G__DataMemberInfo::Bitfield()
     return(-1);
   }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////
 int G__DataMemberInfo::ArrayDim()
 {
@@ -452,9 +450,9 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
     } else { // current token is not a digit
       // first let's see if it is a data member:
       int found = 0;
-      G__DataMemberInfo idx = GetDataMemberFromAll(*belongingclass, current );
-      if ( idx.IsValid() ) {
-	if ( IsInt(idx) ) {
+      G__DataMemberInfo index1 = GetDataMemberFromAll(*belongingclass, current );
+      if ( index1.IsValid() ) {
+	if ( IsInt(index1) ) {
 	  found = 1;
 	  // Let's see if it has already been wrote down in the
 	  // Streamer.
@@ -487,9 +485,9 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
       } else {
 	// There is no variable by this name in this class, let see
 	// the base classes!:
-	idx = GetDataMemberFromAllParents( *belongingclass, current );
-	if ( idx.IsValid() ) {
-	  if ( IsInt(idx) ) {
+	index1 = GetDataMemberFromAllParents( *belongingclass, current );
+	if ( index1.IsValid() ) {
+	  if ( IsInt(index1) ) {
 	    found = 1;
 	  } else {
 	    // We found a data member but it is the wrong type
@@ -500,7 +498,7 @@ const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
 	    if (errstr) *errstr = current;
 	    return 0;
 	  }
-	  if ( found && (idx.Property() & G__BIT_ISPRIVATE) ) {
+	  if ( found && (index1.Property() & G__BIT_ISPRIVATE) ) {
 	    //NOTE: *** Need to print an error;
 	    //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
 	    if (errstr) *errstr = current;

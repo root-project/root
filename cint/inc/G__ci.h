@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014067
-#define G__CINTVERSIONSTR  "5.14.67, Dec 24 2000"
+#define G__CINTVERSION      5014069
+#define G__CINTVERSIONSTR  "5.14.69, Jan 13 2001"
 
 
 /**********************************************************************
@@ -220,8 +220,10 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 
 #ifdef G__BORLAND
 #define G__DLLEXPORT __declspec(dllexport)
+#define G__DLLIMPORT __declspec(dllimport)
 #else
 #define G__DLLEXPORT
+#define G__DLLIMPORT
 #endif
 
 #if defined(G__BORLAND) && defined(G__CINTBODY)
@@ -1542,6 +1544,18 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
 extern G__EXPORT void G__free_p2fsetup G__P((void));
 extern G__EXPORT int G__printlinenum G__P((void));
+
+#ifndef G__OLDIMPLEMENTATION1473
+#define G__VAARG_SIZE 1024
+
+typedef struct {
+  char d[G__VAARG_SIZE];
+} G__va_arg_buf;
+
+void G__va_arg_setalign G__P((int n));
+void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
+void G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+#endif
 
 #endif /* __CINT__ */
 
