@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ friend class TObjArrayIter;
 friend class TClonesArray;
 
 protected:
-   TObject     **fCont;        //Array contents
+   TObject     **fCont;        //!Array contents
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 
