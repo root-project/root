@@ -1,4 +1,4 @@
-/* @(#)root/rootd:$Name$:$Id$ */
+/* @(#)root/rootd:$Name:  $:$Id: rootdp.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,10 +49,10 @@ void ErrorFatal(ERootdErrors code, const char *va_(fmt), ...);
 int  GetErrno();
 void ResetErrno();
 
-void NetInit(const char *service, int port);
+void NetInit(const char *service, int port, int tcpwindowsize);
 int  NetOpen(int inetdflag);
 void NetClose();
-void NetSetOptions();
+void NetSetOptions(int sock, int tcpwindowsize);
 int  NetSendRaw(const void *buf, int len);
 int  NetSend(const void *buf, int len, EMessageTypes kind);
 int  NetSend(int code, EMessageTypes kind);

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.17 2000/12/19 18:04:37 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.18 2001/01/07 15:21:31 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -40,6 +40,10 @@
 // Rootd arguments:                                                     //
 //   -i                says we were started by inetd                    //
 //   -p port#          specifies a different port to listen on          //
+//   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
+//                     http://www.psc.edu/networking/perf_tune.html)    //
+//                     Default is 65535. Only change default for pipes  //
+//                     with a high bandwidth*delay product.             //
 //   -d level          level of debug info written to syslog            //
 //                     0 = no debug (default)                           //
 //                     1 = minimum                                      //
@@ -1292,6 +1296,7 @@ void RootdLoop()
 int main(int argc, char **argv)
 {
    char *s;
+   int   tcpwindowsize = 65535;
 
    ErrorInit(argv[0]);
 
@@ -1303,19 +1308,35 @@ int main(int argc, char **argv)
                break;
 
             case 'p':
-               if (--argc <= 0)
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-p requires a port number as argument\n");
                   ErrorFatal(kErrFatal, "-p requires a port number as argument");
+               }
                gPort = atoi(*++argv);
                break;
 
             case 'd':
-               if (--argc <= 0)
-                  gDebug = 0;
-               else
-                  gDebug = atoi(*++argv);
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-d requires a debug level as argument\n");
+                  ErrorFatal(kErrFatal, "-d requires a debug level as argument");
+               }
+               gDebug = atoi(*++argv);
+               break;
+
+            case 'b':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
+                  ErrorFatal(kErrFatal, "-b requires a buffersize in bytes as argument");
+               }
+               tcpwindowsize = atoi(*++argv);
                break;
 
             default:
+               if (!gInetdFlag)
+                  fprintf(stderr, "unknown command line option: %c\n", *s);
                ErrorFatal(kErrFatal, "unknown command line option: %c", *s);
          }
 
@@ -1327,7 +1348,7 @@ int main(int argc, char **argv)
 
       DaemonStart(1);
 
-      NetInit(kRootdService, gPort);
+      NetInit(kRootdService, gPort, tcpwindowsize);
    }
 
    if (gDebug > 0)
@@ -1341,7 +1362,6 @@ int main(int argc, char **argv)
 
    while (1) {
       if (NetOpen(gInetdFlag) == 0) {
-         NetSetOptions();  // set optimal socket options
          RootdLoop();      // child processes client's requests
          NetClose();       // then we are done
          exit(0);

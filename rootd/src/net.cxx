@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.8 2000/12/13 17:44:44 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.9 2000/12/19 14:36:09 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -244,7 +244,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
 }
 
 //______________________________________________________________________________
-void NetInit(const char *service, int port)
+void NetInit(const char *service, int port, int tcpwindowsize)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd.
@@ -286,6 +286,9 @@ void NetInit(const char *service, int port)
    if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
                   sizeof(val)) == -1)
       ErrorSys(kErrFatal, "NetInit: can't set SO_REUSEADDR socket option");
+
+   // Set several general performance network options
+   NetSetOptions(tcp_srv_sock, tcpwindowsize);
 
    if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
             sizeof(tcp_srv_addr)) < 0)
@@ -341,6 +344,9 @@ int NetOpen(int inetdflag)
 
          ErrorInfo("NetOpen: connection established via socket %d", gSockFd);
       }
+
+      // Set several general performance network options
+      NetSetOptions(gSockFd, 65535);
 
       return 0;
 
@@ -426,24 +432,42 @@ void NetClose()
 }
 
 //______________________________________________________________________________
-void NetSetOptions()
+void NetSetOptions(int sock, int tcpwindowsize)
 {
    // Set some options for network socket.
 
    int val = 1;
-   if (!setsockopt(gSockFd, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val))) {
+   if (!setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val))) {
        if (gDebug > 0) ErrorInfo("NetSetOptions: set TCP_NODELAY");
    }
-   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_KEEPALIVE, (char *)&val, sizeof(val))) {
+   if (!setsockopt(sock, SOL_SOCKET,  SO_KEEPALIVE, (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
       signal(SIGPIPE, SigPipe);   // handle SO_KEEPALIVE failure
    }
 
-   val = 65536;
-   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_SNDBUF,    (char *)&val, sizeof(val))) {
+   val = tcpwindowsize;
+   if (!setsockopt(sock, SOL_SOCKET,  SO_SNDBUF,    (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
    }
-   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_RCVBUF,    (char *)&val, sizeof(val))) {
+   if (!setsockopt(sock, SOL_SOCKET,  SO_RCVBUF,    (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
+   }
+
+   if (gDebug > 0) {
+#if defined(USE_SIZE_T)
+      size_t optlen = sizeof(val);
+#elif defined(USE_SOCKLEN_T)
+      socklen_t optlen = sizeof(val);
+#else
+      int optlen = sizeof(val);
+#endif
+      getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, &optlen);
+      ErrorInfo("NetSetOptions: get TCP_NODELAY: %d", val);
+      getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, &optlen);
+      ErrorInfo("NetSetOptions: get SO_KEEPALIVE: %d", val);
+      getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, &optlen);
+      ErrorInfo("NetSetOptions: get SO_SNDBUF: %d", val);
+      getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, &optlen);
+      ErrorInfo("NetSetOptions: get SO_RCVBUF: %d", val);
    }
 }
