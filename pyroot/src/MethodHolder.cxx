@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.21 2004/09/17 05:35:13 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.22 2004/10/08 05:21:52 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -151,6 +151,10 @@ namespace {
          return true;
       }
 
+   // don't handle strings here (they're buffers, but not quite)
+      if ( PyString_Check( obj ) )
+         return false;
+      
    // ok, then attempt to retrieve pointer to buffer interface
       PyBufferProcs* bufprocs = obj->ob_type->tp_as_buffer;
       PySequenceMethods* seqmeths = obj->ob_type->tp_as_sequence;
@@ -175,6 +179,10 @@ namespace {
 
    template< class aType >
    bool carray_convert( PyObject* obj, G__CallFunc* func, void*& ) {
+   // don't handle strings here (they're buffers, but not quite)
+      if ( PyString_Check( obj ) )
+         return false;
+
    // attempt to retrieve pointer to buffer interface
       PyBufferProcs* bufprocs = obj->ob_type->tp_as_buffer;
       PySequenceMethods* seqmeths = obj->ob_type->tp_as_sequence;
