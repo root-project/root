@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.113 2002/12/03 09:36:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.114 2003/01/10 14:51:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -281,6 +281,7 @@ TTreePlayer::TTreePlayer()
    fScanFileName   = 0;
    fScanRedirect   = kFALSE;
    fSelectedRows   = 0;
+   fDimension      = 0;
    fHistogram      = 0;
    fSelector       = new TSelectorDraw();
    fInput          = new TList();
@@ -680,6 +681,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //
    if (fTree->GetEntriesFriend() == 0) return 0;
    
+   Int_t oldEstimate  = fTree->GetEstimate();
+   TEventList *elist  = fTree->GetEventList();
    TNamed *cvarexp    = (TNamed*)fInput->FindObject("varexp");
    TNamed *cselection = (TNamed*)fInput->FindObject("selection");
    if (cvarexp) cvarexp->SetTitle(varexp0);
@@ -688,10 +691,71 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    // Do not process more than fMaxEntryLoop entries
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
 
-   // Initialize the selector
+   // invoke the selector
    Int_t nrows = Process(fSelector,option,nentries,firstentry);
 
    fSelectedRows = nrows;
+   fDimension = fSelector->GetDimension();
+   
+   //*-* an Event List
+   if (fDimension <= 0) {
+      fTree->SetEstimate(oldEstimate);
+      if (fSelector->GetCleanElist()) {
+        // We are in the case where the input list was reset!
+        fTree->SetEventList(elist);
+        delete fSelector->GetObject();
+      }
+      return nrows;
+   }
+   
+   // Draw generated histogram
+   Int_t drawflag = fSelector->GetDrawFlag();
+   Int_t action   = fSelector->GetAction();
+   TString opt = option;
+   opt.ToLower();
+   Bool_t draw = kFALSE;
+   if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
+   TH1 *hist = (TH1*)fSelector->GetObject();
+   
+   //*-*- 1-D distribution
+   if (fDimension == 1) {
+      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("X");
+      if (draw) hist->Draw(option);
+
+   //*-*- 2-D distribution
+   } else if (fDimension == 2) {
+      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("Y");
+      if (fSelector->GetVar2()->IsInteger()) hist->LabelsDeflate("X");
+      if (action == 4) {
+         if (draw) hist->Draw(option);
+      } else {
+         Int_t noscat = opt.Length();
+         if (opt.Contains("same")) noscat -= 4;
+         if (noscat) {
+            if (draw) hist->Draw(option);
+         } else {
+            if (fSelector->GetOldHistogram() && draw) hist->Draw(option);
+         }
+      }
+   //*-*- 3-D distribution
+   } else if (fDimension == 3) {
+      if (fSelector->GetVar1()->IsInteger()) hist->LabelsDeflate("Z");
+      if (fSelector->GetVar2()->IsInteger()) hist->LabelsDeflate("Y");
+      if (fSelector->GetVar3()->IsInteger()) hist->LabelsDeflate("X");
+      if (action == 23) {
+         if (draw) hist->Draw(option);
+      } else {
+         Int_t noscat = opt.Length();
+         if (opt.Contains("same")) noscat -= 4;
+         if (noscat) {
+            if (draw) hist->Draw(option);
+         } else {
+            if (fSelector->GetOldHistogram() && draw) hist->Draw(option);
+         }
+      }
+
+   }
+   
    return fSelectedRows;
 }
 

@@ -1119,6 +1119,7 @@ int memfunc_flag;
 	  if(double_quote==0&&single_quote==0) {
 	    result7[ig35]=0;
 	    if(0==strcmp(result7,"operator") ||
+               tmpltnest ||
 	       G__defined_templateclass(result7)) ++tmpltnest;
 	  }
 	  break;
@@ -1879,11 +1880,12 @@ int memfunc_flag;
 	  if(!G__no_exec_compile || G__asm_noverflow) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1185
-	    G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
-			 ,G__struct.name[G__tagnum],item);
+	    if (0==G__const_noerror) 
+              G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+                           ,G__struct.name[G__tagnum],item);
 #else
-	    G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
-			 ,G__struct.name[G__tagnum],funcname);
+              G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
+                           ,G__struct.name[G__tagnum],funcname);
 #endif
 	    G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1505

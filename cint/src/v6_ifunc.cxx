@@ -6200,8 +6200,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1605
 	  *result7 = G__null;
 #endif
-	  G__fprinterr(G__serr,"Error: %s() header declared but not defined"
-		  ,funcname);
+      if (0==G__const_noerror)
+           G__fprinterr(G__serr,"Error: %s() header declared but not defined"
+                        ,funcname);
 	  G__genericerror((char*)NULL);
 	  return(1);
 	}
@@ -6563,6 +6564,7 @@ asm_ifunc_start:   /* loop compilation execution label */
     store_no_exec_compile = G__no_exec_compile;
     G__no_exec_compile = 1;
     localvar = (struct G__var_array*)malloc(sizeof(struct G__var_array));
+    memset(localvar,0,sizeof(struct G__var_array));
 
     localvar->prev_local = G__p_local;
     localvar->ifunc = p_ifunc;

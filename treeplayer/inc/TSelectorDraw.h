@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.21 2003/01/08 21:58:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.1 2003/01/10 14:53:22 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -73,11 +73,15 @@ public:
     virtual ~TSelectorDraw();
 
     virtual void      Begin(TTree *tree);
+    virtual Int_t     GetAction() const {return fAction;}
+    virtual Bool_t    GetCleanElist() const {return fCleanElist;}
     virtual Int_t     GetDimension() const {return fDimension;}
+    virtual Int_t     GetDrawFlag() const {return fDraw;}
     TObject          *GetObject() const {return fObject;}
     Int_t             GetMultiplicity() const   {return fMultiplicity;}
     const char       *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
     virtual Int_t     GetNfill() const {return fNfill;}
+    TH1              *GetOldHistogram() const {return fOldHistogram;}
     TTreeFormula     *GetSelect() const    {return fSelect;}
     virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
     TTreeFormula     *GetVar1() const {return fVar1;}

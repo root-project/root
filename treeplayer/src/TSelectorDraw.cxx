@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.113 2003/01/08 09:36:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.1 2003/01/10 14:53:22 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1157,53 +1157,6 @@ void TSelectorDraw::Terminate()
    if (fSelectedRows == 0) fDraw = 1; // do not draw
    
    SetStatus(fSelectedRows);
-   
-//*-*- 1-D distribution
-   if (fDimension == 1) {
-      if (fVar1->IsInteger()) ((TH1*)fObject)->LabelsDeflate("X");
-      if (!fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-
-//*-*- 2-D distribution
-   } else if (fDimension == 2) {
-      if (fVar1->IsInteger()) ((TH1*)fObject)->LabelsDeflate("Y");
-      if (fVar2->IsInteger()) ((TH1*)fObject)->LabelsDeflate("X");
-      if (fAction == 4) {
-         if (!fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-      } else {
-         Int_t noscat = fOption.Length();
-         if (fOption.Contains("same")) noscat -= 4;
-         if (noscat) {
-            if (!fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-         } else {
-            if (fOldHistogram && !fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-         }
-      }
-//*-*- 3-D distribution
-   } else if (fDimension == 3) {
-      if (fVar1->IsInteger()) ((TH1*)fObject)->LabelsDeflate("Z");
-      if (fVar2->IsInteger()) ((TH1*)fObject)->LabelsDeflate("Y");
-      if (fVar3->IsInteger()) ((TH1*)fObject)->LabelsDeflate("X");
-      if (fAction == 23) {
-         if (!fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-      } else {
-         Int_t noscat = fOption.Length();
-         if (fOption.Contains("same")) noscat -= 4;
-         if (noscat) {
-            if (!fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-         } else {
-            if (fOldHistogram && !fDraw && !fOption.Contains("goff")) fObject->Draw(fOption.Data());
-         }
-      }
-
-//*-* an Event List
-   } else {
-      fTree->SetEstimate(fOldEstimate);
-      if (fCleanElist) {
-        // We are in the case where the input list was reset!
-        fTree->SetEventList((TEventList*)fTreeElist);
-        delete fObject;
-      }
-   }
 }
 
 //______________________________________________________________________________
