@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.22 2004/09/27 12:08:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.23 2004/12/15 10:55:13 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -127,6 +127,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
 //   This function searches for peaks in source spectrum in hin            //
 //   The number of found peaks and their positions are written into        //
 //   the members fNpeaks and fPositionX.                                   //
+//   The search is performed in the current histogram range.               //
 //                                                                         //
 //   Function parameters:                                                  //
 //   hin:       pointer to the histogram of source spectrum                //
@@ -157,11 +158,13 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       threshold = 0.05;
    }
    if (dimension == 1) {
-      Int_t size = hin->GetXaxis()->GetNbins();
+      Int_t first = hin->GetXaxis()->GetFirst();
+      Int_t last  = hin->GetXaxis()->GetLast();
+      Int_t size = last-first+1;
       Int_t i, bin, npeaks;
       Float_t * source = new float[size];
       Float_t * dest   = new float[size];
-      for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + 1);
+      for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + first);
 
       npeaks = Search1HighRes(source, dest, size, sigma, 100*threshold, kTRUE, 3, kTRUE, 3);
 
@@ -169,7 +172,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       //for (i = 0; i < size; i++)
       //   hnew->SetBinContent(i + 1, source[i]);
       for (i = 0; i < npeaks; i++) {
-         bin = 1 + Int_t(fPositionX[i] + 0.5);
+         bin = first + Int_t(fPositionX[i] + 0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
          fPositionY[i] = hin->GetBinContent(bin);
       }
@@ -178,6 +181,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       
       if (strstr(option, "goff"))
          return npeaks;
+      if (!npeaks) return 0;
       TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
       if (pm) {
          hin->GetListOfFunctions()->Remove(pm);
