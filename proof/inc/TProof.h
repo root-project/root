@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.15 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.16 2002/03/14 18:15:21 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -106,11 +106,14 @@ private:
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
    TProofPlayer   *fPlayer;     //current player
    struct MD5Mod_t {
-      TMD5    fMD5;             //file's md5
-      ULong_t fModtime;         //file's modification time
+      TMD5   fMD5;              //file's md5
+      Long_t fModtime;          //file's modification time
    };
-   //typedef std::map<TString, MD5Mod_t> FileMap_t;
+#if !defined(__HP_aCC) || __HP_aCC >= 53000
+   typedef std::map<TString, MD5Mod_t> FileMap_t;
+#else
    typedef map<TString, MD5Mod_t> FileMap_t;
+#endif
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 
    enum ESlaves { kAll, kActive, kUnique };
@@ -142,11 +145,17 @@ private:
    void     Limits(TSocket *s, TMessage &mess);
    void     RecvLogFile(TSocket *s, Int_t size);
 
+   Int_t    Broadcast(const TMessage &mess, TList *slaves);
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
+   Int_t    Broadcast(const char *mess, Int_t kind, TList *slaves);
    Int_t    Broadcast(const char *mess, Int_t kind = kMESS_STRING, ESlaves list = kActive);
+   Int_t    Broadcast(Int_t kind, TList *slaves) { return Broadcast(0, kind, slaves); }
    Int_t    Broadcast(Int_t kind, ESlaves list = kActive) { return Broadcast(0, kind, list); }
+   Int_t    BroadcastObject(const TObject *obj, Int_t kind, TList *slaves);
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
+   Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
+   Int_t    Collect(TList *slaves);
    Int_t    Collect(ESlaves list = kActive);
    Int_t    Collect(const TSlave *sl);
    Int_t    Collect(TMonitor *mon);

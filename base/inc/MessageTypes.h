@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.8 2002/01/15 00:46:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.9 2002/02/12 17:53:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,7 @@ enum EMessageTypes {
    kPROOF_TREEDRAW,                      //tree draw command follows
    kPROOF_GETPACKET,                     //ask for next packet
    kPROOF_LIMITS,                        //ask for histogram limits
+   kPROOF_CHECKFILE,                     //filename and md5 follows
    kPROOF_SENDFILE,                      //filename, length and file follows
    kPROOF_PARALLEL,                      //number of parallel slaves follows
    kPROOF_OPENFILE,                      //type of file, name and option follows

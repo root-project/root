@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.16 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.17 2002/03/13 01:52:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -204,8 +204,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
       }
-      if (gDebug > 1)
-         Printf("Using PROOF config file: %s", fconf);
+      if (fLogLevel > 1)
+         Info("Init", "using PROOF config file: %s", fconf);
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -641,18 +641,12 @@ Int_t TProof::GetParallel() const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
+Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
 {
-   // Broadcast a message to all slaves in the specified list (either
-   // all slaves or only the active slaves). Returns the number of slaves
-   // the message was successfully sent to.
+   // Broadcast a message to all slaves in the specified list. Returns
+   // the number of slaves the message was successfully sent to.
 
    if (!IsValid()) return 0;
-
-   TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -673,6 +667,35 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 }
 
 //______________________________________________________________________________
+Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
+{
+   // Broadcast a message to all slaves in the specified list (either
+   // all slaves or only the active slaves). Returns the number of slaves
+   // the message was successfully sent to.
+
+   if (!IsValid()) return 0;
+
+   TList *slaves = 0;
+   if (list == kAll)    slaves = fSlaves;
+   if (list == kActive) slaves = fActiveSlaves;
+   if (list == kUnique) slaves = fUniqueSlaves;
+
+   return Broadcast(mess, slaves);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Broadcast(const char *str, Int_t kind, TList *slaves)
+{
+   // Broadcast a character string buffer to all slaves in the specified
+   // list. Use kind to set the TMessage what field. Returns the number of
+   // slaves the message was sent to.
+
+   TMessage mess(kind);
+   if (str) mess.WriteString(str);
+   return Broadcast(mess, slaves);
+}
+
+//______________________________________________________________________________
 Int_t TProof::Broadcast(const char *str, Int_t kind, ESlaves list)
 {
    // Broadcast a character string buffer to all slaves in the specified
@@ -683,6 +706,18 @@ Int_t TProof::Broadcast(const char *str, Int_t kind, ESlaves list)
    TMessage mess(kind);
    if (str) mess.WriteString(str);
    return Broadcast(mess, list);
+}
+
+//______________________________________________________________________________
+Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, TList *slaves)
+{
+   // Broadcast an object to all slaves in the specified list. Use kind to
+   // set the TMEssage what field. Returns the number of slaves the message
+   // was sent to.
+
+   TMessage mess(kind);
+   mess.WriteObject(obj);
+   return Broadcast(mess, slaves);
 }
 
 //______________________________________________________________________________
@@ -698,17 +733,12 @@ Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, ESlaves list)
 }
 
 //______________________________________________________________________________
-Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
+Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, TList *slaves)
 {
-   // Broadcast a raw buffer of specified length. Returns the number of slaves
-   // the buffer was sent to.
+   // Broadcast a raw buffer of specified length to all slaves in the
+   // specified list. Returns the number of slaves the buffer was sent to.
 
    if (!IsValid()) return 0;
-
-   TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -729,6 +759,22 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 }
 
 //______________________________________________________________________________
+Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
+{
+   // Broadcast a raw buffer of specified length to all slaves in the
+   // specified list. Returns the number of slaves the buffer was sent to.
+
+   if (!IsValid()) return 0;
+
+   TList *slaves = 0;
+   if (list == kAll)    slaves = fSlaves;
+   if (list == kActive) slaves = fActiveSlaves;
+   if (list == kUnique) slaves = fUniqueSlaves;
+
+   return BroadcastRaw(buffer, length, slaves);
+}
+
+//______________________________________________________________________________
 Int_t TProof::Collect(const TSlave *sl)
 {
    // Collect responses from slave sl. Returns the number of slaves that
@@ -740,6 +786,25 @@ Int_t TProof::Collect(const TSlave *sl)
 
    mon->DeActivateAll();
    mon->Activate(sl->GetSocket());
+
+   return Collect(mon);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Collect(TList *slaves)
+{
+   // Collect responses from the slave servers. Returns the number of slaves
+   // that responded.
+
+   TMonitor *mon = fAllMonitor;
+   mon->DeActivateAll();
+
+   TIter next(slaves);
+   TSlave *sl;
+   while ((sl = (TSlave*) next())) {
+      if (sl->IsValid())
+         mon->Activate(sl->GetSocket());
+   }
 
    return Collect(mon);
 }
@@ -1345,12 +1410,12 @@ Long_t TProof::CheckFile(const char *file, TList *slaves, TList *sendto)
    // Check if a file needs to be send to the slaves. Use the following
    // algorithm:
    //   - check if file appears in file map
+   //     - if yes get file's modtime and check against time in map,
+   //       if modtime not same get md5 and compare against md5 in map,
+   //       if not same return size
    //     - if no get file's md5 and modtime and store in file map, ask
    //       slave if file exists with specific md5, if yes return 0,
    //       if no return file's size
-   //     - if yes get file's modtime and check against time in map,
-   //       if modtime not same return size, if modtime is same
-   //       get md5 and compare against md5 in map, if not same return size
    // Returns size of file in case file needs to be send, returns 0 in case
    // file is already on remote and -1 in case of error.
    // The nodes to which the file needs to be send will be added to the
@@ -1366,13 +1431,54 @@ Long_t TProof::CheckFile(const char *file, TList *slaves, TList *sendto)
       return -1;
    }
 
-   // check if file is in map
-   FileMap_t::const_iterator it;
-   if ((it = fFileMap.find("aap")) != fFileMap.end())
-      ;
-   //fFileMap
+   if (sendto) sendto->Clear();
 
-   return size;
+   // loop over all slaves and check if file appears in the map
+   TIter next(slaves);
+   TSlave *slave;
+   while ((slave = (TSlave*) next())) {
+      // create slave based filename
+      TString sn = slave->GetImage();
+      sn += ":";
+      sn += gSystem->BaseName(file);
+
+      // check if file is in map
+      FileMap_t::const_iterator it;
+      if ((it = fFileMap.find(sn)) != fFileMap.end()) {
+         // file in map
+         MD5Mod_t md = (*it).second;
+         if (md.fModtime != modtime) {
+            TMD5 *md5 = TMD5::FileChecksum(file);
+            if ((*md5) != md.fMD5) {
+               if (sendto) sendto->Add(slave);
+               md.fMD5      = *md5;
+               md.fModtime  = modtime;
+               fFileMap[sn] = md;
+            }
+            delete md5;
+         }
+      } else {
+         // file not in map
+         TMD5 *md5 = TMD5::FileChecksum(file);
+         MD5Mod_t md;
+         md.fMD5      = *md5;
+         md.fModtime  = modtime;
+         fFileMap[sn] = md;
+         delete md5;
+         TMessage mess(kPROOF_CHECKFILE);
+         mess << TString(gSystem->BaseName(file)) << md.fMD5;
+         slave->GetSocket()->Send(mess);
+
+         TMessage *reply;
+         slave->GetSocket()->Recv(reply);
+         if (reply->What() != kPROOF_CHECKFILE)
+            if (sendto) sendto->Add(slave);
+         delete reply;
+      }
+   }
+   if (sendto && sendto->GetSize() > 0)
+      return size;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1395,6 +1501,14 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
    if (size <= 0)
       return size;
 
+   if (fLogLevel > 2) {
+      Info("SendFile", "sending file to:");
+      TIter next(&sendto);
+      TSlave *sl;
+      while ((sl = (TSlave*) next()))
+         Printf("   image = %s\n", sl->GetImage());
+   }
+
 #ifndef R__WIN32
    Int_t fd = open(file, O_RDONLY);
 #else
@@ -1409,7 +1523,7 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
    char buf[kMAXBUF];
 
    sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
-   if (!Broadcast(buf, kPROOF_SENDFILE, list)) {
+   if (!Broadcast(buf, kPROOF_SENDFILE, &sendto)) {
       close(fd);
       return -1;
    }
@@ -1426,7 +1540,7 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
          return -1;
       }
 
-      if (!(n = BroadcastRaw(buf, len, list))) {
+      if (!(n = BroadcastRaw(buf, len, &sendto))) {
          SysError("SendFile", "error broadcasting, no more active slaves");
          close(fd);
          return -1;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.16 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.17 2002/03/13 01:52:21 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -186,7 +186,7 @@ TProofServ::TProofServ(int *argc, char **argv)
       ;
 #endif
 
-   // Make sure all registered dictionaries have been initialized
+   // make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
 
    // abort on kSysError's or higher and set error handler
@@ -454,9 +454,9 @@ void TProofServ::HandleSocketInput()
          } else {
             if (fLogLevel > 1) {
                if (IsMaster())
-                  Info("HandleSocketInput", "Master processing: %s...", str);
+                  Info("HandleSocketInput", "master processing: %s...", str);
                else
-                  Info("HandleSocketInput", "Slave %d processing: %s...", fOrdinal, str);
+                  Info("HandleSocketInput", "slave %d processing: %s...", fOrdinal, str);
             }
             ProcessLine(str);
          }
@@ -528,7 +528,7 @@ void TProofServ::HandleSocketInput()
             TList *input;
             Int_t nentries, first;
 
-            Info("TProofServ::HandleSocketInput", "### kPROOF_PROCESS:");
+Info("TProofServ::HandleSocketInput", "### kPROOF_PROCESS:");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -565,6 +565,25 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
 
             delete dset;
             delete p;
+         }
+         break;
+
+      case kPROOF_CHECKFILE:
+         {
+            TString filenam;
+            TMD5    md5;
+            (*mess) >> filenam >> md5;
+            TMD5 *md5local = TMD5::FileChecksum(filenam);
+            if (md5local && md5 == (*md5local)) {
+               fSocket->Send(kPROOF_CHECKFILE);
+               if (fLogLevel > 1)
+                  Info("HandleSocketInput","file %s already on node %d", filenam.Data(), fOrdinal);
+            } else {
+               fSocket->Send(kPROOF_FATAL);
+               if (fLogLevel > 1)
+                  Info("HandleSocketInput","file %s not yet on node %d", filenam.Data(), fOrdinal);
+            }
+            delete md5local;
          }
          break;
 
@@ -639,7 +658,7 @@ void TProofServ::HandleUrgentData()
    char waste[kBufSize];
 
    if (fLogLevel > 5)
-      printf("HandleUrgentData()...");
+      Info("HandleUrgentData", "handling oob...");
 
    // Receive the OOB byte
    while ((n = fSocket->RecvRaw(&oob_byte, 1, kOob)) < 0) {
@@ -674,7 +693,7 @@ void TProofServ::HandleUrgentData()
    }
 
    if (fLogLevel > 5)
-      printf("got OOB byte: %d\n", oob_byte);
+      Info("HandleUrgentData", "got OOB byte: %d\n", oob_byte);
 
    switch (oob_byte) {
 
