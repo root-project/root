@@ -1046,7 +1046,7 @@ void TRootBrowser::DisplayDirectory()
    fFSComboBox->Update(p);
 }
 
-//______________________________________________________________________________
+//____________________________________________________________________________
 void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
@@ -1429,27 +1429,6 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
    }
 }
 
-//_____
-TGListTreeItem* FindByUserName(TGListTreeItem* item, const char* name)
-{
-  if (!item || !name || name[0] == '\0')
-    return 0;
-  TObject* o = (TObject*)item->GetUserData();
-  if (!strcmp(o->GetTitle(), name))
-    return item;
-
-  TGListTreeItem* ret = 0;
-  if (item->IsOpen() &&  item->GetFirstChild())
-    if ((ret = FindByUserName(item->GetFirstChild(), name)))
-      return ret;
-  while ((item = item->GetNextSibling()))
-    if ((ret = FindByUserName(item, name)))
-      return ret;
-
-  return 0;
-}
-
-
 //______________________________________________________________________________
 void TRootBrowser::IconBoxAction(TObject *obj)
 {
@@ -1461,48 +1440,26 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
-      Bool_t found = kFALSE;
       if (obj->IsA() == TSystemDirectory::Class()) {
-         TString t(obj->GetTitle());
-         TGListTreeItem *wd = FindByUserName(fLt->GetFirstItem(),
-                                             obj->GetTitle());
-         if (wd) {
-            // found somewher on the tree already - just point there
-            found      = kTRUE;
-            fListLevel = wd;
-         } else if (t == gSystem->DirName(gSystem->WorkingDirectory()) ||
-                    (obj->GetName()[0] == '.' && obj->GetName()[1] == '.')) {
-            // Otherwise, we need to reroot the tree
-            wd = fLt->GetFirstItem();
-            while (wd) {
-               TObject *o = (TObject*)wd->GetUserData();
-               if (o->IsA() != TSystemDirectory::Class()) {
-                  wd = wd->GetNextSibling();
-                  continue;
+         TString t(obj->GetName());
+         if (t == ".") goto out;
+         if (t == "..") {
+            if (fListLevel && fListLevel->GetParent()) {
+               fListLevel = fListLevel->GetParent();
+               obj = (TObject*)fListLevel->GetUserData();
+               if (fListLevel->GetParent()) {
+                  fListLevel = fListLevel->GetParent();
+               } else  {
+                  obj = (TObject*)fListLevel->GetUserData();
+                  fListLevel = 0;
                }
-               // Break at the first system directory
-               found = kTRUE;
-               TSystemDirectory *old = (TSystemDirectory*)o;
-               // old->SetName(gSystem->BaseName(old->GetTitle()));
-               wd->Rename(gSystem->BaseName(old->GetTitle()));
-               TGListTreeItem *it =
-                  fLt->AddItem(wd->GetParent(), obj->GetTitle());
-               it->SetUserData((void*)obj);
-               fLt->Reparent(wd, it);
-               fListLevel = it;
-               break;
+            } else { // to be solved
+               goto out;
             }
-            // found = kTRUE;
-         }
-         if (found) {
-            fIconBox->RemoveAll();
-            DisplayDirectory();
-            fLt->ClearHighlighted();
-            fLt->HighlightItem(fListLevel);
-            fClient->NeedRedraw(fLt);
          }
       }
-      if (!found && obj->IsFolder()) {
+
+      if (obj->IsFolder()) {
          fIconBox->RemoveAll();
          TGListTreeItem *itm = 0;
 
@@ -1554,7 +1511,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
       Chdir(fListLevel);
 
-      if (obj->IsFolder()) {
+out:
+      if (obj && obj->IsFolder()) {
          fIconBox->Refresh();
          if (fBrowser)
             fBrowser->SetRefreshFlag(kFALSE);
