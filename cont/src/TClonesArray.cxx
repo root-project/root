@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.2 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.3 2000/09/14 17:12:24 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TStreamerInfo.h"
 #include "TObjectTable.h"
 
 
@@ -360,9 +361,10 @@ void TClonesArray::Streamer(TBuffer &b)
    Int_t   nobjects;
    char    nch;
    TString s;
+   UInt_t R__s, R__c;
 
    if (b.IsReading()) {
-      Version_t v = b.ReadVersion();
+      Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 2)
          TObject::Streamer(b);
       if (v > 1)
@@ -390,20 +392,33 @@ void TClonesArray::Streamer(TBuffer &b)
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
 
-      for (Int_t i = 0; i < nobjects; i++) {
-         b >> nch;
-         if (nch) {
+      if (fClass->CanBypassStreamer()) {
+         TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+         for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
-
             fCont[i] = fKeep->fCont[i];
-            fKeep->fCont[i]->Streamer(b);
             fLast = i;
+         }
+         sinfo->ReadBufferClones(b,this,nobjects);
+
+      } else {
+         for (Int_t i = 0; i < nobjects; i++) {
+            b >> nch;
+            if (nch) {
+               if (!fKeep->fCont[i])
+                  fKeep->fCont[i] = (TObject*)fClass->New();
+
+               fCont[i] = fKeep->fCont[i];
+               fKeep->fCont[i]->Streamer(b);
+               fLast = i;
+            }
          }
       }
       Changed();
+      b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
-      b.WriteVersion(TClonesArray::IsA());
+      R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
       s = fClass->GetName();
@@ -411,16 +426,22 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      for (Int_t i = 0; i < nobjects; i++) {
-         if (!fCont[i]) {
-            nch = 0;
-            b << nch;
-         } else {
-            nch = 1;
-            b << nch;
-            fCont[i]->Streamer(b);
+      if (fClass->CanBypassStreamer()) {
+         TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+         sinfo->WriteBufferClones(b,this,nobjects);
+      } else {
+         for (Int_t i = 0; i < nobjects; i++) {
+            if (!fCont[i]) {
+               nch = 0;
+               b << nch;
+            } else {
+               nch = 1;
+               b << nch;
+               fCont[i]->Streamer(b);
+            }
          }
       }
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
