@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.31 2004/05/10 08:05:33 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.32 2004/05/10 08:14:10 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -390,7 +390,7 @@ Bool_t TRint::HandleTermInput()
             ProcessLine(sline);
          } CATCH(excode) {
             // enable again input handler
-            fInputHandler->Add();
+            fInputHandler->Activate();
             added = kTRUE;
             Throw(excode);
          } ENDTRY;
@@ -399,7 +399,7 @@ Bool_t TRint::HandleTermInput()
       // handle every exception
       catch (...) {
          // enable again intput handler
-         if (!added) fInputHandler->Add();
+         if (!added) fInputHandler->Activate();
          throw;
       }
 #endif
