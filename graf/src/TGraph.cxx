@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.126 2004/04/14 14:17:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.127 2004/04/28 09:29:42 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -987,6 +987,12 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //        graph->Fit("f1","R");
 //
 //
+//   who is calling this function
+//   ============================
+//   Note that this function is called when calling TGraphErrors::Fit
+//   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
+//   see the discussion below on the errors calulation.
+//
 //   Setting initial conditions
 //   ==========================
 //   Parameters must be initialized before invoking the Fit function.
@@ -1021,6 +1027,25 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //  where MyFittingFunction is of type:
 //  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 //
+//  How errors are used in the chisquare function (see TFitter GraphFitChisquare)//   Access to the fit results
+//   ============================================
+// In case of a TGraphErrors object, ex, the error along x,  is projected
+// along the y-direction by calculating the function at the points x-exlow and
+// x+exhigh.
+//
+// The chisquare is computed as the sum of the quantity below at each point:
+//
+//                     (y - f(x))**2
+//         -----------------------------------
+//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
+//
+// where x and y are the point coordinates.
+//
+// In case the function lies below (above) the data point, ey is ey_low (ey_high).
+//
+//  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
+//            University of Washington
+//
 //   Associated functions
 //   ====================
 //  One or more object (typically a TF1*) can be added to the list
@@ -1029,8 +1054,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //  Given a graph gr, one can retrieve an associated function
 //  with:  TF1 *myfunc = gr->GetFunction("myfunc");
 //
-//   Access to the fit results
-//   =========================
 //  If the graph is made persistent, the list of
 //  associated functions is also persistent. Given a pointer (see above)
 //  to an associated function myfunc, one can retrieve the function/fit
@@ -1720,6 +1743,12 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 {
 //*-*-*-*-*-*-*-*-*-*Least square linear fit without weights*-*-*-*-*-*-*-*-*
 //*-*                =======================================
+//
+//  Fit a straight line (a0 + a1*x) to the data in this graph.
+//  ndata:  number of points to fit
+//  first:  first point number to fit
+//  last:   last point to fit O(ndata should be last-first
+//  ifail:  return parameter indicating the status of the fit (ifail=0, fit is OK)
 //
 //   extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
 //
