@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.159 2004/03/12 08:56:06 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.160 2004/03/12 21:45:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2872,8 +2872,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                           m.Name(), prefix, m.Name());
-                  fprintf(fp, "      %s%s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
-                          prefix,m.Name(), m.Name());
+                  fprintf(fp, "      %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
+                          GetNonConstMemberName(m,prefix).c_str(), m.Name());
                   if (clflag && IsStreamable(m) && GetFun(fun))
                      //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
                      fprintf(fp, "      R__cl->SetMemberStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
@@ -3341,7 +3341,7 @@ void WriteShadowClass(G__ClassInfo &cl)
       G__DataMemberInfo d(cl);
       while (d.Next()) {
 
-         //fprintf(stderr,"%s %s %d\n",d.Type()->Name(),d.Name(),d.Property());
+         // fprintf(stderr,"%s %s %ld\n",d.Type()->Name(),d.Name(),d.Property());
 
          if (d.Property() & G__BIT_ISSTATIC) continue;
          if (strcmp("G__virtualinfo",d.Name())==0) continue;
