@@ -88,6 +88,8 @@ To install and use PROOF on a cluster do the following:
 
 4) Edit /usr/local/root/proof/etc/proof.conf to reflect your cluster
    configuration. See the example proof.conf file for more information.
+   Use hostnames consistent with the configuration of the hosts
+   (fully qualified or non-qualified names).
 
 
 5) This is all. To test PROOF try the following:

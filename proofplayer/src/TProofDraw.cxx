@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.1 2004/03/11 18:06:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.2 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -198,7 +198,10 @@ void TProofDraw::Terminate(void)
 Info("Terminate","Enter");
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
+      if (fStatus == 0) {
+         // did not run selector, error messages were already printed
+         return;
+      }
    }
 
    if (!fStatus->IsOk()) {

@@ -37,14 +37,14 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    TList* l = gProof->GetSlaveInfo();
    for(Int_t i=0; i<l->GetSize(); i++) {
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
-      slavemacro << "   if(!strcmp(hn.Data(), \"";
+      slavemacro << "   if (hn == \"";
       slavemacro << si->fHostName;
-      slavemacro << "\")) { nslaves++; if(ord==";
+      slavemacro << "\") { nslaves++; if (ord == ";
       slavemacro << si->fOrdinal;
       slavemacro << ") slave_number=nslaves; }" << endl;
    }
    slavemacro <<                                                                             endl;
-   slavemacro << "   if(slave_number>=0) {"                                               << endl;
+   slavemacro << "   if (slave_number >= 0) {"                                            << endl;
    slavemacro << "      for(Int_t i=slave_number; i<=nfiles; i+=nslaves) {"               << endl;
    slavemacro <<                                                                             endl;
    slavemacro << "         TString seed = hn;"                                            << endl;
@@ -60,6 +60,7 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    slavemacro << "         TFile f(filename, \"RECREATE\");"                              << endl;
    slavemacro << "         savedir->cd();"                                                << endl;
    slavemacro <<                                                                             endl;
+   slavemacro << "         if (f.IsZombie()) break;"                                      << endl;
    slavemacro << "         Event event;"                                                  << endl;
    slavemacro << "         Event *ep = &event;"                                           << endl;
    slavemacro << "         TTree eventtree(\"EventTree\", \"Event Tree\");"               << endl;
@@ -82,8 +83,10 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    slavemacro << "      }"                                                                << endl;
    slavemacro << "   } else {"                                                            << endl;
    slavemacro << "      cout << \"Could not find slave hostname=\";"                      << endl;
-   slavemacro << "      cout << hn.Data() << \", ordinal=\" << ord;"                      << endl;
-   slavemacro << "      cout << \" in file production list\" << endl;"                    << endl;
+   slavemacro << "      cout << hn << \", ordinal=\" << ord;"                             << endl;
+   slavemacro << "      cout << \" in file production list.\" << endl;"                   << endl;
+   slavemacro << "      cout << \"Make sure the proof.conf contains the \";"              << endl;
+   slavemacro << "      cout << \"correct slave hostnames.\" << endl;"                    << endl;
    slavemacro << "   }"                                                                   << endl;
    slavemacro << "}"                                                                      << endl;
 
@@ -97,7 +100,7 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    cmd += files_per_node;
    cmd += ")";
 
-   cout << "Running: '" << cmd << "'" << endl;
+   cout << "Running: '" << cmd << "' (please be patient!)" << endl;
 
    if(gProof->Exec(cmd)<0) return kFALSE;
 

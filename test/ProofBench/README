@@ -1,6 +1,9 @@
 Setup for a benchmark
 ---------------------
 
+See $ROOTSYS/README/README.PROOF for instructions to install
+and configure PROOF
+
 Create a local libEvent.so
 
 % (cd $ROOTSYS/test; make libEvent.so)
