@@ -74,18 +74,17 @@ fi
 
 ##### long.dll #####
 
-LONGDIR=$CINTDIRL/longlong
+#LONGDIR=$CINTDIRL/longlong
 
-$CINT -w1 -zlong -n$LONGDIR/G__cpp_long.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longdbl.h
-#   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longlong.h $LONGDIR/longdbl.h
-$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $LONGDIR/G__cpp_long.o \
-   -c $LONGDIR/G__cpp_long.cxx
-$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
-   $LONGDIR/G__cpp_long.o
-rename $CINTDIRI/long
+#$CINT -w1 -zlong -n$LONGDIR/G__cpp_long.cxx -D__MAKECINT__ \
+#   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longdbl.h
+#$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $LONGDIR/G__cpp_long.o \
+#   -c $LONGDIR/G__cpp_long.cxx
+#$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
+#   $LONGDIR/G__cpp_long.o
+#rename $CINTDIRI/long
 
-rm -f $LONGDIR/G__cpp_long.cxx $LONGDIR/G__cpp_long.h $LONGDIR/G__cpp_long.o
+#rm -f $LONGDIR/G__cpp_long.cxx $LONGDIR/G__cpp_long.h $LONGDIR/G__cpp_long.o
 
 
 ##### stdfunc.dll  & stdcxxfunc.dll #####
