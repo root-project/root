@@ -64,7 +64,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   // loop over all keys in this directory
   TIter nextkey( current_sourcedir->GetListOfKeys() );
   TKey *key;
-  while ( key = (TKey*)nextkey() ) {
+  while ( (key = (TKey*)nextkey()) ) {
 
     // read object from first source file
     first_source->cd( path );
