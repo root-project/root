@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.4 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.5 2003/01/31 08:24:18 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -187,13 +187,19 @@ public:
    // Table index iterator:
    class iterator {
       private:
-	       Long_t        fRowSize;
+         Long_t        fRowSize;
          const TTable *fThisTable;
-		     vector<Long_t>::iterator fCurrentRow;
+         typedef vector<Long_t>::iterator vec_iterator;
+         typedef vector<Long_t>::const_iterator vec_const_iterator; 
+
+         vec_iterator fCurrentRow;
       public:
 	     iterator(): fRowSize(0), fThisTable(0) {;}
-        iterator(const TTable &table,vector<Long_t>::iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
-        iterator(const TTable &table,vector<Long_t>::const_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(*(vector<Long_t>::iterator *)(void *)&rowPtr) {;}
+        iterator(const TTable &table, vec_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
+        iterator(const TTable &table, vec_const_iterator &rowPtr) : 
+           fRowSize(table.GetRowSize()), 
+           fThisTable(&table), 
+           fCurrentRow(*(vector<Long_t>::iterator *)(void *)&rowPtr) {;}
         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
         void operator++()    { ++fCurrentRow;   }
