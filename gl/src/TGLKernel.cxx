@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.2 2000/06/05 07:28:06 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -493,7 +493,7 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
                        ,GLfloat(points->GetY(i))
                        ,GLfloat(points->GetZ(i)));
       glEnd();
-    } while ((mode=GL_POINTS) && pass);
+    } while ((mode==GL_POINTS) && pass);
 }
 
 //______________________________________________________________________________
