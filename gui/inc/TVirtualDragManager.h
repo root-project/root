@@ -1,8 +1,8 @@
-// $Id$
+// $Id: TVirtualDragManager.h,v 1.1 2004/09/08 16:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,7 +23,7 @@
 #include "TGFrame.h"
 #endif
 
-enum EDragType { kDragNone, kDragMove, kDragCopy, 
+enum EDragType { kDragNone, kDragMove, kDragCopy,
                  kDragLink, kDragLasso, kDragResize };
 
 
@@ -38,7 +38,7 @@ protected:
    TGFrame       *fSource;       // frame being dragged
    TGFrame       *fFrameUnder;   // frame under drag
    TGFrame       *fTarget;       // drop target
-   TGFrame       *fPasteFrame;   // 
+   TGFrame       *fPasteFrame;   //
 
 protected:
    virtual void  Init();
@@ -70,10 +70,10 @@ public:
    virtual Bool_t    IgnoreEvent(Event_t *) { return kTRUE; }
    virtual void      SetEditable(Bool_t) {}
 
-   virtual Int_t     GetStrartDragX() const { return 0; }      
-   virtual Int_t     GetStrartDragY() const { return 0; } 
-   virtual Int_t     GetEndDragX() const { return 0; } 
-   virtual Int_t     GetEndDragY() const { return 0; } 
+   virtual Int_t     GetStrartDragX() const { return 0; }
+   virtual Int_t     GetStrartDragY() const { return 0; }
+   virtual Int_t     GetEndDragX() const { return 0; }
+   virtual Int_t     GetEndDragY() const { return 0; }
 
    static  TVirtualDragManager  *Instance();
 

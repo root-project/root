@@ -1,8 +1,8 @@
-// $Id$
+// $Id: TVirtualGuiBld.h,v 1.1 2004/09/08 16:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
