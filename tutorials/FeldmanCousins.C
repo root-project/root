@@ -7,9 +7,10 @@ void FeldmanCousins()
  // get a FeldmanCousins calculation object with the default limits
  // of calculating a 90% CL with the minimum signal value scanned 
  // = 0.0 and the maximum signal value scanned of 50.0
- // before running this tutorial, do
- //  gSystem->Load("libPhysics");
-    TFeldmanCousins f;
+  
+ if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
+ 
+ TFeldmanCousins f;
 
   // calculate either the upper or lower limit for 10 observerd
   // events with an estimated background of 3.  The calculation of
