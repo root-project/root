@@ -1051,7 +1051,11 @@ void WritePointersSTL(G__ClassInfo &cl)
             fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
          } else {
             if (m.Property() & G__BIT_ISPOINTER) {
-               fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               if (pCounter) {
+                  fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               } else {
+                  fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               }
             } else {
                fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
             }
@@ -1073,19 +1077,21 @@ void WritePointersSTL(G__ClassInfo &cl)
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
                   if (pCounter == 2) {
-                     fprintf(fp, "      delete [] %s;\n",m.Name());
+                     fprintf(fp, "      delete [] *%s;\n",m.Name());
                      fprintf(fp, "      if (!n) return;\n");
-                     fprintf(fp, "      %s = new %s*[n];\n",m.Name(),a);
+                     fprintf(fp, "      *%s = new %s*[n];\n",m.Name(),a);
+                     fprintf(fp, "      %s** s = *%s;\n",a,m.Name());
                      fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         %s[l] = new %s();\n",m.Name(),a);
-                     fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "         s[l] = new %s();\n",a);
+                     fprintf(fp, "         s[l]->Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else if(pCounter == 1) {
-                     fprintf(fp, "      delete [] %s;\n",m.Name());
+                     fprintf(fp, "      delete [] *%s;\n",m.Name());
                      fprintf(fp, "      if (!n) return;\n");
-                     fprintf(fp, "      %s = new %s[n];\n",m.Name(),a);
+                     fprintf(fp, "      *%s = new %s[n];\n",m.Name(),a);
+                     fprintf(fp, "      %s* s = *%s;\n",a,m.Name());
                      fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "         s[l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
                      if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
@@ -1113,12 +1119,14 @@ void WritePointersSTL(G__ClassInfo &cl)
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
                   if (pCounter == 2) {
+                     fprintf(fp, "      %s** s = *%s;\n",a,m.Name());
                      fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "         s[l]->Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else if(pCounter == 1) {
+                     fprintf(fp, "      %s* s = *%s;\n",a,m.Name());
                      fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
-                     fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "         s[l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
                      if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
