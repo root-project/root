@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.19 2003/12/15 18:04:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.20 2004/02/18 16:17:33 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1028,7 +1028,7 @@ void TGTextEntry::DoRedraw()
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
-   y = (GetHeight() - (max_ascent + max_descent))/2 ;     // center y
+   y = (GetHeight() - (max_ascent + max_descent)) >> 1 ;     // center y
    x = fOffset + offset;
 
    if (fEchoMode == kNoEcho) {
@@ -1652,19 +1652,19 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC.GetGC())) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC.GetGC());
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.16 2004/04/14 11:31:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.17 2004/04/14 15:02:13 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -297,6 +297,7 @@ void TQSlot::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 class TQSlotPool : public THashTable {
 public:
    TQSlotPool() : THashTable(50) { }
@@ -416,7 +417,7 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
 //______________________________________________________________________________
 TQConnection::TQConnection(const TQConnection &con): TList(), TQObject()
 {
-   // copy constructor. Ignore connections to this TQConnections
+   // Copy constructor. Ignore connections to this TQConnections
 
    fClassName = con.fClassName;
    fSlot = con.fSlot;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.18 2004/02/23 23:52:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.19 2004/03/04 11:47:40 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -188,7 +188,7 @@ const TGGC &TGTextLBEntry::GetDefaultGC()
 //______________________________________________________________________________
 TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
                              UInt_t w, Style_t style, UInt_t options, ULong_t back) :
-   TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(), 
+   TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
    // Create the line style listbox entry
@@ -206,10 +206,10 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
    SetLineStyle(style);
 
    int max_ascent, max_descent;
-   
+
    fTWidth  = gVirtualX->TextWidth(GetDefaultFontStruct(), "8", 1);
    fTWidth += 15;                     // for drawing
-   gVirtualX->GetFontProperties(GetDefaultFontStruct(), 
+   gVirtualX->GetFontProperties(GetDefaultFontStruct(),
                                 max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
@@ -226,7 +226,7 @@ TGLineLBEntry::~TGLineLBEntry()
 
 //______________________________________________________________________________
 void  TGLineLBEntry::Update(TGLBEntry *e)
-{ 
+{
    //
 
    TGTextLBEntry::Update(e);
@@ -276,7 +276,7 @@ void TGLineLBEntry::DoRedraw()
    // Redraw text listbox entry.
 
    TGTextLBEntry::DoRedraw();
-   gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2, 
+   gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2,
                        fWidth - 5, fHeight/2);
 }
 
