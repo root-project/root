@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.13 2001/01/16 17:22:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.14 2001/01/26 16:39:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -62,7 +62,7 @@
 #include "TNetFile.h"
 #include "TAuthenticate.h"
 #include "TROOT.h"
-#include "TSocket.h"
+#include "TPSocket.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TSysEvtHandler.h"
@@ -154,15 +154,30 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
       tcpwindowsize = netopt;
 
    // Open connection to remote rootd server
-   fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
-   if (!fSocket->IsValid()) {
-      Error("TNetFile", "can't open connection to rootd on host %s at port %d",
-            fUrl.GetHost(), fUrl.GetPort());
-      goto zombie;
-   }
+   if (netopt < 0) {
+      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt);
+      if (!fSocket->IsValid()) {
+         Error("TNetFile", "can't open %d parallel connections to rootd on "
+               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
+         goto zombie;
+      }
 
-   // Set some socket options
-   fSocket->SetOption(kNoDelay, 1);
+      // kNoDelay is internally set by TPSocket
+
+   } else {
+      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
+      if (!fSocket->IsValid()) {
+         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
+               fUrl.GetHost(), fUrl.GetPort());
+         goto zombie;
+      }
+
+      // Set some socket options
+      fSocket->SetOption(kNoDelay, 1);
+
+      // Tell rootd we want non parallel connection
+      fSocket->Send((Int_t) 0, (Int_t) 0);
+   }
 
    // Get rootd protocol level
    fSocket->Send(kROOTD_PROTOCOL);
