@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.16 2000/09/11 09:59:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.17 2000/09/29 07:22:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -216,7 +216,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fPadView3D  = 0;
    fCrosshair  = 0;
    fCrosshairPos = 0;
-   
+
 //*-*- Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
@@ -317,7 +317,7 @@ void TPad::AutoExec()
 // Execute the list of Execs when a pad event occurs.
 
    if (fCrosshair) DrawCrosshair();
-   
+
    if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
    TExec *exec;
@@ -1448,9 +1448,10 @@ void TPad::DrawCrosshair()
    // Root > c1.SetCrosshair();
    // When moving the mouse in the canvas, a crosshair is drawn
 
+   if (gPad->GetEvent() == kMouseEnter) return;
+
    TPad *cpad = (TPad*)gPad;
-   TCanvas *can = cpad->GetCanvas();
-   can->FeedbackMode(kTRUE);
+   cpad->GetCanvas()->FeedbackMode(kTRUE);
 
    //erase old position and draw a line at current position
    int pxold = fCrosshairPos%10000;
@@ -3968,7 +3969,7 @@ void TPad::SetCrosshair(Int_t crhair)
 {
    // set crosshair active/inactive
    // if crhair != 0, a crosshair will be drawn in the pad and its subpads
-   
+
    fCrosshair = crhair;
    fCrosshairPos = 0;
 
@@ -3980,7 +3981,7 @@ void TPad::SetCrosshair(Int_t crhair)
          pad->SetCrosshair(crhair);
       }
    }
-}   
+}
 
 //______________________________________________________________________________
 void TPad::SetToolTipText(const char *text, Long_t delayms)
