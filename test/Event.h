@@ -106,7 +106,8 @@ private:
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only
    TRefArray     *fMuons;             //array of Muon tracks only
-   TRef           fLastTrack;         //EXEC:DemoExec reference pointer to last track
+   TRef           fLastTrack;         //reference pointer to last track
+   TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
    TH1F          *fH;                 //->
       
    static TClonesArray *fgTracks;
@@ -139,11 +140,12 @@ public:
    UInt_t        GetFlag() const { return fFlag; }
    Float_t       GetTemperature() const { return fTemperature; }
    EventHeader  *GetHeader() { return &fEvtHdr; }
-   TClonesArray *GetTracks() const { return fTracks; }
+   TClonesArray *GetTracks() const {return fTracks;}
    TRefArray    *GetHighPt() const {return fHighPt;}
    TRefArray    *GetMuons()  const {return fMuons;}
    Track        *GetLastTrack() const {return (Track*)fLastTrack.GetObject();}
-   TH1F         *GetHistogram() const { return fH; }
+   TH1F         *GetHistogram() const {return fH;}
+   TH1          *GetWebHistogram()  const {return (TH1*)fWebHistogram.GetObject();}
    Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
    Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 
