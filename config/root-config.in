@@ -162,7 +162,7 @@ linux|linuxrh42)
    ;;
 linuxegcs)
    # Linux with egcs
-   auxcflags=
+   auxcflags="-D_REENTRANT"
    auxlibs="-lm -ldl -lpthread -rdynamic"
    auxglibs=${auxlibs}
    ;;
