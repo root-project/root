@@ -1,0 +1,83 @@
+
+Processing run.C...
+===========================================================================
+class Name::MyClass
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+(compiled)        0:0    0 public: Name::MyClass MyClass(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Name::MyClass MyClass(const Name::MyClass&);
+(compiled)        0:0    0 public: void ~MyClass(void);
+===========================================================================
+class Name::MyClass
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+(compiled)        0:0    0 public: Name::MyClass MyClass(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Name::MyClass MyClass(const Name::MyClass&);
+(compiled)        0:0    0 public: void ~MyClass(void);
+(compiled)        0:0    0 public: TObject& func(TObject* t);
+===========================================================================
+class Name::MyClass
+ size=0xc
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+run.C             3 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+(compiled)        0:0    0 public: Name::MyClass MyClass(void);
+(compiled)        0:0    0 public: void Print(Option_t*);
+(compiled)        0:0    0 public: static TClass* Class(void);
+(compiled)        0:0    0 public: static const char* Class_Name(void);
+(compiled)        0:0    0 public: static Version_t Class_Version(void);
+(compiled)        0:0    0 public: static void Dictionary(void);
+(compiled)        0:0    0 public: virtual TClass* IsA(void) const;
+(compiled)        0:0    0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+(compiled)        0:0    0 public: virtual void Streamer(TBuffer& b);
+(compiled)        0:0    0 public: void StreamerNVirtual(TBuffer& b);
+(compiled)        0:0    0 public: static const char* DeclFileName(void);
+(compiled)        0:0    0 public: static int ImplFileLine(void);
+(compiled)        0:0    0 public: static const char* ImplFileName(void);
+(compiled)        0:0    0 public: static int DeclFileLine(void);
+(compiled)        0:0    0 public: Name::MyClass MyClass(const Name::MyClass&);
+(compiled)        0:0    0 public: void ~MyClass(void);
+(compiled)        0:0    0 public: TObject& func(TObject* t);
+(compiled)        0:0    0 public: TH1F& func(TH1F* t);
