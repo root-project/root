@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -129,38 +129,12 @@ TApplication::TApplication(const char *appClassName,
 # ifdef TTFFONTDIR
                                           TTFFONTDIR);
 # else
-                                          "$(ROOTSYS)/ttf/fonts");
+                                          "$(HOME)/ttf/fonts");
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
-      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1) &&
-          !TClassTable::GetDict("TGX11TTF")) {
-         char *p;
-# ifdef TTFLIBDIR
-         char *lib = TTFLIBDIR "/libttf";
-# else
-         char *lib = Form("%s/lib/libttf", gRootDir);
-         p = gSystem->DynamicPathName(lib, kTRUE);
-         if (!p)
-            lib = Form("%s/ttf/lib/libttf", gRootDir);
-         else
-            delete [] p;
-# endif
-         if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-            delete [] p;
-            if (!gSystem->Load(lib)) {
-# ifdef ROOTLIBDIR
-               lib = ROOTLIBDIR "/libGX11TTF";
-# else
-               lib = Form("%s/lib/libGX11TTF", gRootDir);
-# endif
-               if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-                  delete [] p;
-                  gSystem->Load(lib);
-               }
-            }
-         }
-      }
+      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1))
+         gROOT->LoadClass("TGX11TTF", "GX11TTF");
    }
 #endif
 
