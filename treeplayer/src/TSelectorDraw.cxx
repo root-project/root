@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.24 2004/02/11 08:51:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.25 2004/03/09 15:57:46 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -174,159 +174,159 @@ void TSelectorDraw::Begin(TTree *tree)
       }
       j = strlen(hname) - 1;   // skip ' '  at the end
       while (j) {
-	if (hname[j] != ' ') break;
-	hname[j] = 0;
-	j--;
+         if (hname[j] != ' ') break;
+         hname[j] = 0;
+         j--;
       }
 
       if (i) {
          strncpy(varexp,varexp0,i); varexp[i]=0;
 
-	 Int_t mustdelete=0;
+         Int_t mustdelete=0;
          SetBit(kCustomHistogram);
          
-	 // parse things that follow the name of the histo between '(' and ')'.
-	 // At this point hname contains the name of the specified histogram.
-	 //   Now the syntax is exended to handle an hname of the following format
-	 //   hname(nBIN [[,[xlow]][,xhigh]],...)
-	 //   so enclosed in brackets is the binning information, xlow, xhigh, and
-	 //   the same for the other dimensions
+         // parse things that follow the name of the histo between '(' and ')'.
+         // At this point hname contains the name of the specified histogram.
+         //   Now the syntax is exended to handle an hname of the following format
+         //   hname(nBIN [[,[xlow]][,xhigh]],...)
+         //   so enclosed in brackets is the binning information, xlow, xhigh, and
+         //   the same for the other dimensions
 
-	 char *pstart;    // pointer to '('
-	 char *pend;      // pointer to ')'
-	 char *cdummy;    // dummy pointer
-	 int ncomma;      // number of commas between '(' and ')', later number of arguments
-	 int ncols;       // number of columns in varexpr
-	 Double_t value;  // parsed value (by sscanf)
+         char *pstart;    // pointer to '('
+         char *pend;      // pointer to ')'
+         char *cdummy;    // dummy pointer
+         int ncomma;      // number of commas between '(' and ')', later number of arguments
+         int ncols;       // number of columns in varexpr
+         Double_t value;  // parsed value (by sscanf)
 
-	 const Int_t maxvalues=9;
+         const Int_t maxvalues=9;
 
-	 pstart= strchr(hname,'(');
-	 pend =  strchr(hname,')');
-	 if (pstart != NULL ){  // found the bracket
+         pstart= strchr(hname,'(');
+         pend =  strchr(hname,')');
+         if (pstart != NULL ){  // found the bracket
 
-	   mustdelete=1;
+            mustdelete=1;
 
-	   // check that there is only one open and close bracket
-	   if (pstart == strrchr(hname,'(')  &&  pend == strrchr(hname,')')) {
+            // check that there is only one open and close bracket
+            if (pstart == strrchr(hname,'(')  &&  pend == strrchr(hname,')')) {
 
-	     // count number of ',' between '(' and ')'
-	     ncomma=0;
-	     cdummy = pstart;
-	     cdummy = strchr(&cdummy[1],',');
-	     while (cdummy != NULL) {
-	       cdummy = strchr(&cdummy[1],',');
-	       ncomma++;
-	     }
+               // count number of ',' between '(' and ')'
+               ncomma=0;
+               cdummy = pstart;
+               cdummy = strchr(&cdummy[1],',');
+               while (cdummy != NULL) {
+                  cdummy = strchr(&cdummy[1],',');
+                  ncomma++;
+               }
 
-	     if (ncomma+1 > maxvalues) {
-	       Error("DrawSelect","ncomma+1>maxvalues, ncomma=%d, maxvalues=%d",ncomma,maxvalues);
-	       ncomma=maxvalues-1;
-	     }
+               if (ncomma+1 > maxvalues) {
+                  Error("DrawSelect","ncomma+1>maxvalues, ncomma=%d, maxvalues=%d",ncomma,maxvalues);
+                  ncomma=maxvalues-1;
+               }
 
-	     ncomma++; 	       // number of arguments
-	     cdummy = pstart;
+               ncomma++; 	       // number of arguments
+               cdummy = pstart;
 
-	     //   number of columns
-	     ncols  = 1;
-	     for (j=0;j<i;j++) {
-           if (varexp[j] == ':'
-               && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
-               ) {
-              ncols++;
-           }
-        }
-	     if (ncols > 3 ) {  // max 3 columns
-	       Error("DrawSelect","ncols > 3, ncols=%d",ncols);
-	       ncols = 0;
-	     }
+               //   number of columns
+               ncols  = 1;
+               for (j=0;j<i;j++) {
+                  if (varexp[j] == ':'
+                      && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
+                      ) {
+                     ncols++;
+                  }
+               }
+               if (ncols > 3 ) {  // max 3 columns
+                  Error("DrawSelect","ncols > 3, ncols=%d",ncols);
+                  ncols = 0;
+               }
 
-	     // check dimensions before and after ">>"
-	     if (ncols*3 < ncomma) {
-	       Error("DrawSelect","ncols*3 < ncomma ncols=%d, ncomma=%d",ncols,ncomma);
-	       ncomma = ncols*3;
-	     }
+               // check dimensions before and after ">>"
+               if (ncols*3 < ncomma) {
+                  Error("DrawSelect","ncols*3 < ncomma ncols=%d, ncomma=%d",ncols,ncomma);
+                  ncomma = ncols*3;
+               }
 
-	     // scan the values one after the other
-	     for (j=0;j<ncomma;j++) {
-	       cdummy++;  // skip '(' or ','
-	       if (sscanf(cdummy," %lf ",&value) == 1) {
-                  cdummy=strchr(&cdummy[1],',');
+               // scan the values one after the other
+               for (j=0;j<ncomma;j++) {
+                  cdummy++;  // skip '(' or ','
+                  if (sscanf(cdummy," %lf ",&value) == 1) {
+                     cdummy=strchr(&cdummy[1],',');
 
-		  switch (j) {  // do certain settings depending on position of argument
-		  case 0:  // binning x-axis
-                     nbinsx = (Int_t)value;
-		     if      (ncols<2) {
-                        gEnv->SetValue("Hist.Binning.1D.x",nbinsx);
-                     } else if (ncols<3) {
-		        gEnv->SetValue("Hist.Binning.2D.x",nbinsx);
-		        gEnv->SetValue("Hist.Binning.2D.Prof",nbinsx);
-		     } else {
-		        gEnv->SetValue("Hist.Binning.3D.x",nbinsx);
-		        gEnv->SetValue("Hist.Binning.3D.Profx",nbinsx);
-		     }
+                     switch (j) {  // do certain settings depending on position of argument
+                        case 0:  // binning x-axis
+                           nbinsx = (Int_t)value;
+                           if      (ncols<2) {
+                              gEnv->SetValue("Hist.Binning.1D.x",nbinsx);
+                           } else if (ncols<3) {
+                              gEnv->SetValue("Hist.Binning.2D.x",nbinsx);
+                              gEnv->SetValue("Hist.Binning.2D.Prof",nbinsx);
+                           } else {
+                              gEnv->SetValue("Hist.Binning.3D.x",nbinsx);
+                              gEnv->SetValue("Hist.Binning.3D.Profx",nbinsx);
+                           }
 
-		     break;
-		  case 1:  // lower limit x-axis
-                     xmin = value;
-		     break;
-		  case 2:  // upper limit x-axis
-                     xmax = value;
-		     break;
-		  case 3:  // binning y-axis
-                     nbinsy = (Int_t)value;
-		     if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",nbinsy);
-		     else {
-		       gEnv->SetValue("Hist.Binning.3D.y",nbinsy);
-		       gEnv->SetValue("Hist.Binning.3D.Profy",nbinsy);
-		     }
-		     break;
-		  case 4:  // lower limit y-axis
-                     ymin = value;
-		     break;
-		  case 5:  // upper limit y-axis
-                     ymax = value;
-		     break;
-		  case 6:  // binning z-axis
-                     nbinsz = (Int_t)value;
-		     gEnv->SetValue("Hist.Binning.3D.z",nbinsz);
-		     break;
-		  case 7:  // lower limit z-axis
-                     zmin = value;
-		     break;
-		  case 8:  // upper limit z-axis
-                     zmax = value;
-		     break;
-		  default:
-		     Error("DrawSelect","j>8");
-		     break;
-		  }
-	       }  // if sscanf == 1
-	     } // for j=0;j<ncomma;j++
-	   } else {
-	     Error("Begin","Two open or close brackets found, hname=%s",hname);
-	   }
+                           break;
+                        case 1:  // lower limit x-axis
+                           xmin = value;
+                           break;
+                        case 2:  // upper limit x-axis
+                           xmax = value;
+                           break;
+                        case 3:  // binning y-axis
+                           nbinsy = (Int_t)value;
+                           if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",nbinsy);
+                           else {
+                              gEnv->SetValue("Hist.Binning.3D.y",nbinsy);
+                              gEnv->SetValue("Hist.Binning.3D.Profy",nbinsy);
+                           }
+                           break;
+                        case 4:  // lower limit y-axis
+                           ymin = value;
+                           break;
+                        case 5:  // upper limit y-axis
+                           ymax = value;
+                           break;
+                        case 6:  // binning z-axis
+                           nbinsz = (Int_t)value;
+                           gEnv->SetValue("Hist.Binning.3D.z",nbinsz);
+                           break;
+                        case 7:  // lower limit z-axis
+                           zmin = value;
+                           break;
+                        case 8:  // upper limit z-axis
+                           zmax = value;
+                           break;
+                        default:
+                           Error("DrawSelect","j>8");
+                           break;
+                     }
+                  }  // if sscanf == 1
+               } // for j=0;j<ncomma;j++
+            } else {
+               Error("Begin","Two open or close brackets found, hname=%s",hname);
+            }
 
-	   // fix up hname
-	   pstart[0]='\0';   // removes things after (and including) '('
-	 } // if '(' is found
+            // fix up hname
+            pstart[0]='\0';   // removes things after (and including) '('
+         } // if '(' is found
 
-	 j = strlen(hname) - 1; // skip ' '  at the end
-	 while (j) {
-	   if (hname[j] != ' ') break; // skip ' '  at the end
-	   hname[j] = 0;
-	   j--;
-	 }
+         j = strlen(hname) - 1; // skip ' '  at the end
+         while (j) {
+            if (hname[j] != ' ') break; // skip ' '  at the end
+            hname[j] = 0;
+            j--;
+         }
 
          fOldHistogram = (TH1*)gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
-	 if (mustdelete) {
-	   if (gDebug) {
-              Warning("Begin","Deleting old histogram, since (possibly new) limits and binnings have been given");
-           }
-           delete fOldHistogram; fOldHistogram=0;
-	 }
+         if (mustdelete) {
+            if (gDebug) {
+               Warning("Begin","Deleting old histogram, since (possibly new) limits and binnings have been given");
+            }
+            delete fOldHistogram; fOldHistogram=0;
+         }
 
       } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
          elist = (TEventList*)gDirectory->Get(hname);
@@ -383,7 +383,7 @@ void TSelectorDraw::Begin(TTree *tree)
          olddim = 3;
       }
       if (opt.Contains("prof") && fDimension>1) {
-        // ignore "prof" for 1D.
+         // ignore "prof" for 1D.
          if (!profile || olddim != fDimension) mustdelete = 1;
       } else {
          if (olddim != fDimension) mustdelete = 1;
@@ -412,21 +412,21 @@ void TSelectorDraw::Begin(TTree *tree)
             TObject *op;
             TH1 *oldhtemp = 0;
             while ((op = np()) && !oldhtemp) {
-              if (op->InheritsFrom("TH1")) oldhtemp = (TH1 *)op;
+               if (op->InheritsFrom("TH1")) oldhtemp = (TH1 *)op;
             }
             if (oldhtemp) {
-                fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
-                fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
-                fVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
-             } else {
-                fVmin[0]  = gPad->GetUxmin();
-                fVmax[0]  = gPad->GetUxmax();
-             }
+               fNbins[0] = oldhtemp->GetXaxis()->GetNbins();
+               fVmin[0]  = oldhtemp->GetXaxis()->GetXmin();
+               fVmax[0]  = oldhtemp->GetXaxis()->GetXmax();
+            } else {
+               fVmin[0]  = gPad->GetUxmin();
+               fVmax[0]  = gPad->GetUxmax();
+            }
          } else {
-             fAction   = -1;
-             fVmin[0] = xmin;
-             fVmax[0] = xmax;
-             if (xmin < xmax) CanRebin = kFALSE;
+            fAction   = -1;
+            fVmin[0] = xmin;
+            fVmax[0] = xmax;
+            if (xmin < xmax) CanRebin = kFALSE;
          }
       }
       if (fOldHistogram) {
@@ -452,7 +452,7 @@ void TSelectorDraw::Begin(TTree *tree)
       fVar1->SetAxis(hist->GetXaxis());
       fObject = hist;
 
-   // 2-D distribution
+      // 2-D distribution
    } else if (fDimension == 2) {
       fAction = 2;
       if (!fOldHistogram || !optSame) {
@@ -460,29 +460,29 @@ void TSelectorDraw::Begin(TTree *tree)
          fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
          if (opt.Contains("prof")) fNbins[1] = gEnv->GetValue("Hist.Binning.2D.Prof",100);
          if (optSame) {
-             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
-             if (oldhtemp) {
-                fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
-                fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
-                fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
-                fNbins[0] = oldhtemp->GetYaxis()->GetNbins();
-                fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
-                fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
-             } else {
-                fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
-                fVmin[1]  = gPad->GetUxmin();
-                fVmax[1]  = gPad->GetUxmax();
-                fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
-                fVmin[0]  = gPad->GetUymin();
-                fVmax[0]  = gPad->GetUymax();
-             }
+            TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
+            if (oldhtemp) {
+               fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
+               fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
+               fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
+               fNbins[0] = oldhtemp->GetYaxis()->GetNbins();
+               fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
+               fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
+            } else {
+               fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
+               fVmin[1]  = gPad->GetUxmin();
+               fVmax[1]  = gPad->GetUxmax();
+               fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
+               fVmin[0]  = gPad->GetUymin();
+               fVmax[0]  = gPad->GetUymax();
+            }
          } else {
-             if (!fOldHistogram) fAction = -2;
-             fVmin[1] = xmin;
-             fVmax[1] = xmax;
-             fVmin[0] = ymin;
-             fVmax[0] = ymax;
-             if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
+            if (!fOldHistogram) fAction = -2;
+            fVmin[1] = xmin;
+            fVmax[1] = xmax;
+            fVmin[0] = ymin;
+            fVmax[0] = ymax;
+            if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -552,7 +552,7 @@ void TSelectorDraw::Begin(TTree *tree)
          }
       }
 
-   // 3-D distribution
+      // 3-D distribution
    } else if (fDimension == 3 || fDimension == 4) {
       fAction = 3;
       if (fDimension == 4) fAction = 40;
@@ -561,40 +561,40 @@ void TSelectorDraw::Begin(TTree *tree)
          fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
          fNbins[2] = gEnv->GetValue("Hist.Binning.3D.x",20);
          if (optSame) {
-             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
-             if (oldhtemp) {
-                fNbins[2] = oldhtemp->GetXaxis()->GetNbins();
-                fVmin[2]  = oldhtemp->GetXaxis()->GetXmin();
-                fVmax[2]  = oldhtemp->GetXaxis()->GetXmax();
-                fNbins[1] = oldhtemp->GetYaxis()->GetNbins();
-                fVmin[1]  = oldhtemp->GetYaxis()->GetXmin();
-                fVmax[1]  = oldhtemp->GetYaxis()->GetXmax();
-                fNbins[0] = oldhtemp->GetZaxis()->GetNbins();
-                fVmin[0]  = oldhtemp->GetZaxis()->GetXmin();
-                fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
-             } else {
-                TView *view = gPad->GetView();
-                Double_t *rmin = view->GetRmin();
-                Double_t *rmax = view->GetRmax();
-                fNbins[2] = gEnv->GetValue("Hist.Binning.3D.z",20);
-                fVmin[2]  = rmin[0];
-                fVmax[2]  = rmax[0];
-                fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
-                fVmin[1]  = rmin[1];
-                fVmax[1]  = rmax[1];
-                fNbins[0] = gEnv->GetValue("Hist.Binning.3D.x",20);
-                fVmin[0]  = rmin[2];
-                fVmax[0]  = rmax[2];
-             }
+            TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
+            if (oldhtemp) {
+               fNbins[2] = oldhtemp->GetXaxis()->GetNbins();
+               fVmin[2]  = oldhtemp->GetXaxis()->GetXmin();
+               fVmax[2]  = oldhtemp->GetXaxis()->GetXmax();
+               fNbins[1] = oldhtemp->GetYaxis()->GetNbins();
+               fVmin[1]  = oldhtemp->GetYaxis()->GetXmin();
+               fVmax[1]  = oldhtemp->GetYaxis()->GetXmax();
+               fNbins[0] = oldhtemp->GetZaxis()->GetNbins();
+               fVmin[0]  = oldhtemp->GetZaxis()->GetXmin();
+               fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
+            } else {
+               TView *view = gPad->GetView();
+               Double_t *rmin = view->GetRmin();
+               Double_t *rmax = view->GetRmax();
+               fNbins[2] = gEnv->GetValue("Hist.Binning.3D.z",20);
+               fVmin[2]  = rmin[0];
+               fVmax[2]  = rmax[0];
+               fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
+               fVmin[1]  = rmin[1];
+               fVmax[1]  = rmax[1];
+               fNbins[0] = gEnv->GetValue("Hist.Binning.3D.x",20);
+               fVmin[0]  = rmin[2];
+               fVmax[0]  = rmax[2];
+            }
          } else {
-             if (!fOldHistogram && fDimension ==3) fAction = -3;
-             fVmin[2] = xmin;
-             fVmax[2] = xmax;
-             fVmin[1] = ymin;
-             fVmax[1] = ymax;
-             fVmin[0] = zmin;
-             fVmax[0] = zmax;
-             if (xmin < xmax && ymin < ymax && zmin < zmax) CanRebin = kFALSE;
+            if (!fOldHistogram && fDimension ==3) fAction = -3;
+            fVmin[2] = xmin;
+            fVmax[2] = xmax;
+            fVmin[1] = ymin;
+            fVmax[1] = ymax;
+            fVmin[0] = zmin;
+            fVmax[0] = zmax;
+            if (xmin < xmax && ymin < ymax && zmin < zmax) CanRebin = kFALSE;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -609,7 +609,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[2] = xmax;
                fVmin[1] = ymin;
                fVmax[1] = ymax;
-             if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
+               if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
             }
             if (opt.Contains("profs"))
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
@@ -663,7 +663,7 @@ void TSelectorDraw::Begin(TTree *tree)
             if (!fOldHistogram && !optSame) fAction = -13;
          }
       }
-   // An Event List
+      // An Event List
    } else {
       fAction = 5;
       fOldEstimate = fTree->GetEstimate();
@@ -1231,7 +1231,7 @@ void TSelectorDraw::TakeEstimate()
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill);
-	  pm->SetEditable(kFALSE);
+      pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
@@ -1252,7 +1252,7 @@ void TSelectorDraw::TakeEstimate()
          pm->SetPoint(i,u,v);
       }
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
-		 if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
+         if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
          else                                             pm->Draw(fOption.Data());
       }
       if (!h2->TestBit(kCanDelete)) {
