@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.9 2004/04/22 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.10 2004/04/22 17:53:02 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -695,7 +695,7 @@ TGedAttAxisFrame::TGedAttAxisFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of axis attributes GUI.
+   // Constructor of axis attribute GUI.
    
    MakeTitle("Axis");
 
@@ -710,58 +710,60 @@ TGedAttAxisFrame::TGedAttAxisFrame(const TGWindow *p, Int_t id, Int_t width,
                                        TGNumberFormat::kNESRealTwo,
                                        TGNumberFormat::kNEAAnyNumber,
                                        TGNumberFormat::kNELLimitMinMax,-1.,1.);
+   fTickLength->GetNumberEntry()->SetToolTipText("Set ticks' length");
    fTickLength->Connect("ValueSet(Long_t)", "TGedAttAxisFrame", this, 
                         "DoTickLength()");
    f2->AddFrame(fTickLength, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fTicksBoth = new TGCheckButton(f4, "\"+-\"", kAXIS_TICKSBOTH);
+   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fTicksBoth = new TGCheckButton(f3, "+-", kAXIS_TICKSBOTH);
    fTicksBoth->Connect("Toggled(Bool_t)","TGedAttAxisFrame",this,
                        "DoTicks()");
-   fTicksBoth->SetToolTipText("Set ticks on both axis sides if selected");
-   f4->AddFrame(fTicksBoth, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 
+   fTicksBoth->SetToolTipText("Draw ticks on both axis sides");
+   f3->AddFrame(fTicksBoth, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 
                                               3, 1, 1, 0));
-   fOptimize = new TGCheckButton(f4, "Optimize", kAXIS_OPTIM);
+   fOptimize = new TGCheckButton(f3, "Optimize", kAXIS_OPTIM);
    fOptimize->SetState(kButtonDown);
    fOptimize->Connect("Toggled(Bool_t)","TGedAttAxisFrame",this,"DoDivisions()");
-   f4->AddFrame(fOptimize, new TGLayoutHints(kLHintsTop, 18, 1, 1, 0));
-   AddFrame(f4, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fLogAxis = new TGCheckButton(f5, "Log", kAXIS_LOG);
+   fOptimize->SetToolTipText("Optimize the number of axis divisions");
+   f3->AddFrame(fOptimize, new TGLayoutHints(kLHintsTop, 28, 1, 1, 0));
+   AddFrame(f3, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   
+   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fLogAxis = new TGCheckButton(f4, "Log", kAXIS_LOG);
    fLogAxis->Connect("Toggled(Bool_t)","TGedAttAxisFrame",this,"DoLogAxis()");
-   f5->AddFrame(fLogAxis, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 0, 0));
-   fLogAxis->SetToolTipText("Set Log scale if selected");
+   f4->AddFrame(fLogAxis, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 0, 0));
+   fLogAxis->SetToolTipText("Draw logarithmic scale");
 
-   fMoreLog = new TGCheckButton(f5, "MoreLog", kAXIS_LBLLOG);
+   fMoreLog = new TGCheckButton(f4, "MoreLog", kAXIS_LBLLOG);
    fMoreLog->Connect("Toggled(Bool_t)","TGedAttAxisFrame",this,"DoMoreLog()");
-   f5->AddFrame(fMoreLog, new TGLayoutHints(kLHintsLeft, 19, 1, 0, 0));
-   fMoreLog->SetToolTipText("Set more Log labels if selected");
+   f4->AddFrame(fMoreLog, new TGLayoutHints(kLHintsLeft, 19, 1, 0, 0));
+   fMoreLog->SetToolTipText("Draw more logarithmic labels");
 
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    // axis divisions as three number entry widgets 
-   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fDiv3 = new TGNumberEntry(f3, 10, 2,kAXIS_DIV1, TGNumberFormat::kNESInteger,
+   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fDiv3 = new TGNumberEntry(f5, 10, 2,kAXIS_DIV1, TGNumberFormat::kNESInteger,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv3->GetNumberEntry()->SetToolTipText("Tertiary axis divisions");
    fDiv3->Connect("ValueSet(Long_t)", "TGedAttAxisFrame", this, "DoDivisions()");
-   f3->AddFrame(fDiv3, new TGLayoutHints(kLHintsLeft, 27, 0, 1, 1));
-   fDiv2 = new TGNumberEntry(f3, 5, 2, kAXIS_DIV2, TGNumberFormat::kNESInteger,
+   f5->AddFrame(fDiv3, new TGLayoutHints(kLHintsLeft, 27, 0, 1, 1));
+   fDiv2 = new TGNumberEntry(f5, 5, 2, kAXIS_DIV2, TGNumberFormat::kNESInteger,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv2->GetNumberEntry()->SetToolTipText("Secondary axis divisions");
    fDiv2->Connect("ValueSet(Long_t)", "TGedAttAxisFrame", this, "DoDivisions()");
-   f3->AddFrame(fDiv2, new TGLayoutHints(kLHintsLeft, 1, 0, 1, 1));
-   fDiv1 = new TGNumberEntry(f3, 0, 2, kAXIS_DIV3, TGNumberFormat::kNESInteger,
+   f5->AddFrame(fDiv2, new TGLayoutHints(kLHintsLeft, 1, 0, 1, 1));
+   fDiv1 = new TGNumberEntry(f5, 0, 2, kAXIS_DIV3, TGNumberFormat::kNESInteger,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv1->GetNumberEntry()->SetToolTipText("Primary axis divisions");
    fDiv1->Connect("ValueSet(Long_t)", "TGedAttAxisFrame", this,"DoDivisions()");
-   f3->AddFrame(fDiv1, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1));
-   AddFrame(f3, new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
+   f5->AddFrame(fDiv1, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1));
+   AddFrame(f5, new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
 
    fTicksFlag = 1;
 }
@@ -935,7 +937,7 @@ TGedAttAxisTitle::TGedAttAxisTitle(const TGWindow *p, Int_t id, Int_t width,
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
 
-   // Constructor of axis title attributes GUI.
+   // Constructor of axis title GUI.
 
    MakeTitle("Title");
 
@@ -950,10 +952,12 @@ TGedAttAxisTitle::TGedAttAxisTitle(const TGWindow *p, Int_t id, Int_t width,
                                       TGNumberFormat::kNESRealTwo,
                                       TGNumberFormat::kNEANonNegative, 
                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
+   fTitleSize->GetNumberEntry()->SetToolTipText("Set title size");
    fTitleSize->Connect("ValueSet(Long_t)", "TGedAttAxisTitle", this, 
                        "DoTitleSize()");
    f2->AddFrame(fTitleSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
    fTitleFont = new TGFontTypeComboBox(this, kFONT_STYLE);
    fTitleFont->Resize(137, 20);
    fTitleFont->Connect("Selected(Int_t)", "TGedAttAxisTitle", this, 
@@ -963,6 +967,7 @@ TGedAttAxisTitle::TGedAttAxisTitle(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fCentered = new TGCheckButton(f3, "Centered", kAXIS_CENTERED);
+   fCentered->SetToolTipText("Center axis title");
    fCentered->Connect("Toggled(Bool_t)","TGedAttAxisTitle",this,
                       "DoTitleCentered()");
    f3->AddFrame(fCentered, new TGLayoutHints(kLHintsTop, 3, 1, 1, 0));
@@ -973,6 +978,7 @@ TGedAttAxisTitle::TGedAttAxisTitle(const TGWindow *p, Int_t id, Int_t width,
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fRotated = new TGCheckButton(f4, "Rotated", kAXIS_ROTATED);
    fRotated->SetState(kButtonDown);
+   fRotated->SetToolTipText("Rotate axis title by 180 degrees");
    fRotated->Connect("Toggled(Bool_t)","TGedAttAxisTitle",this,
                      "DoTitleRotated()");
    f4->AddFrame(fRotated, new TGLayoutHints(kLHintsTop, 3, 1, 6, 0));
@@ -980,6 +986,7 @@ TGedAttAxisTitle::TGedAttAxisTitle(const TGWindow *p, Int_t id, Int_t width,
                                         TGNumberFormat::kNESRealTwo,
                                         TGNumberFormat::kNEAAnyNumber, 
                                         TGNumberFormat::kNELLimitMinMax, 0.1, 10.);
+   fTitleOffset->GetNumberEntry()->SetToolTipText("Set title offset");
    fTitleOffset->Connect("ValueSet(Long_t)", "TGedAttAxisTitle", this, 
                          "DoTitleOffset()");
    f4->AddFrame(fTitleOffset, new TGLayoutHints(kLHintsLeft, 6, 1, 0, 0));
@@ -1111,7 +1118,7 @@ TGedAttAxisLabel::TGedAttAxisLabel(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of axis label attributes GUI.
+   // Constructor of axis label GUI.
 
    MakeTitle("Labels");
 
@@ -1126,6 +1133,7 @@ TGedAttAxisLabel::TGedAttAxisLabel(const TGWindow *p, Int_t id, Int_t width,
                                       TGNumberFormat::kNESRealTwo,
                                       TGNumberFormat::kNEANonNegative, 
                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
+   fLabelSize->GetNumberEntry()->SetToolTipText("Set labels' size");
    fLabelSize->Connect("ValueSet(Long_t)", "TGedAttAxisLabel", this, 
                        "DoLabelSize()");
    f2->AddFrame(fLabelSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
@@ -1134,16 +1142,16 @@ TGedAttAxisLabel::TGedAttAxisLabel(const TGWindow *p, Int_t id, Int_t width,
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fNoExponent = new TGCheckButton(f3, "NoExp", kAXIS_LBLEXP);
    fNoExponent->Connect("Toggled(Bool_t)","TGedAttAxisLabel",this,"DoNoExponent()");
-   fNoExponent->SetToolTipText("Set no exponent labels if selected");
+   fNoExponent->SetToolTipText("Labels drawn without exponent notation");
    f3->AddFrame(fNoExponent, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
                                                3, 1, 8, 0));
    fLabelOffset = new TGNumberEntry(f3, 0.005, 6, kAXIS_LBLOFFSET, 
                                         TGNumberFormat::kNESRealThree,
                                         TGNumberFormat::kNEAAnyNumber, 
                                         TGNumberFormat::kNELLimitMinMax,-1.,1.);
+   fLabelOffset->GetNumberEntry()->SetToolTipText("Set labels' offset");
    fLabelOffset->Connect("ValueSet(Long_t)", "TGedAttAxisLabel", this, 
                          "DoLabelOffset()");
-   fLabelOffset->GetNumberEntry()->SetToolTipText("Labels' offset");
    f3->AddFrame(fLabelOffset, new TGLayoutHints(kLHintsLeft, 11, 1, 3, 0));
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
