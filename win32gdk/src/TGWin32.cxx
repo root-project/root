@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.43 2004/01/28 11:28:28 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.44 2004/01/30 18:23:35 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -751,8 +751,6 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
 
    delete refersh;
 
-   if (TGWin32::Instance()) TGWin32::Instance()->CloseDisplay();
-
    // exit thread
    if (erret == -1) {
       erret = ::GetLastError();
@@ -793,7 +791,11 @@ TGWin32MainThread::~TGWin32MainThread()
    }
    fMessageMutex = 0;
 
-   if(fHandle) ::CloseHandle(fHandle);
+   if(fHandle) {
+      ::PostThreadMessage(fId, WM_QUIT, 0, 0);
+      ::CloseHandle(fHandle);
+   }
+
    fHandle = 0;
 }
 
@@ -922,8 +924,12 @@ void TGWin32::CloseDisplay()
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
 
-   gPtr2VirtualX = &TGWin32VirtualXProxy::RealObject;
-   gPtr2Interpreter = &TGWin32InterpreterProxy::RealObject;
+   gPtr2VirtualX = 0;
+   gPtr2Interpreter = 0;
+   gVirtualX = TGWin32VirtualXProxy::RealObject();
+   gInterpreter = TGWin32InterpreterProxy::RealObject();
+
+   gROOT->SetBatch(kTRUE);
 }
 
 //______________________________________________________________________________
