@@ -1,8 +1,8 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.46 2004/07/08 17:42:04 brun Exp $
-// Author: Fons Rademakers   29/07/95
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.47 2004/07/09 17:22:59 brun Exp $
+// Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -160,8 +160,8 @@ public:
    static Double_t Abs(Double_t d);
 
    // Even/Odd
-   static Bool_t Even(Long_t a);
-   static Bool_t Odd(Long_t a);
+   static Bool_t   Even(Long_t a);
+   static Bool_t   Odd(Long_t a);
 
    // Sign
    static Short_t  Sign(Short_t a, Short_t b);
@@ -171,7 +171,7 @@ public:
    static Float_t  Sign(Float_t a, Float_t b);
    static Double_t Sign(Double_t a, Double_t b);
 
-   // Min
+   // Min, Max of two scalars
    static Short_t   Min(Short_t a, Short_t b);
    static UShort_t  Min(UShort_t a, UShort_t b);
    static Int_t     Min(Int_t a, Int_t b);
@@ -183,7 +183,6 @@ public:
    static Float_t   Min(Float_t a, Float_t b);
    static Double_t  Min(Double_t a, Double_t b);
 
-   // Max
    static Short_t   Max(Short_t a, Short_t b);
    static UShort_t  Max(UShort_t a, UShort_t b);
    static Int_t     Max(Int_t a, Int_t b);
@@ -195,89 +194,108 @@ public:
    static Float_t   Max(Float_t a, Float_t b);
    static Double_t  Max(Double_t a, Double_t b);
 
-   // Locate Min, Max
-   static Int_t  LocMin(Int_t n, const Short_t *a);
-   static Int_t  LocMin(Int_t n, const Int_t *a);
-   static Int_t  LocMin(Int_t n, const Float_t *a);
-   static Int_t  LocMin(Int_t n, const Double_t *a);
-   static Int_t  LocMin(Int_t n, const Long_t *a);
-   static Int_t  LocMin(Int_t n, const Long64_t *a);
-   static Int_t  LocMax(Int_t n, const Short_t *a);
-   static Int_t  LocMax(Int_t n, const Int_t *a);
-   static Int_t  LocMax(Int_t n, const Float_t *a);
-   static Int_t  LocMax(Int_t n, const Double_t *a);
-   static Int_t  LocMax(Int_t n, const Long_t *a);
-   static Int_t  LocMax(Int_t n, const Long64_t *a);
+   // Min, Max of an array
+   static Short_t   MinElement(Long64_t n, const Short_t *a);
+   static Int_t     MinElement(Long64_t n, const Int_t *a);
+   static Float_t   MinElement(Long64_t n, const Float_t *a);
+   static Double_t  MinElement(Long64_t n, const Double_t *a);
+   static Long64_t  MinElement(Long64_t n, const Long64_t *a);
+   static Short_t   MaxElement(Long64_t n, const Short_t *a);
+   static Int_t     MaxElement(Long64_t n, const Int_t *a);
+   static Float_t   MaxElement(Long64_t n, const Float_t *a);
+   static Double_t  MaxElement(Long64_t n, const Double_t *a);
+   static Long64_t  MaxElement(Long64_t n, const Long64_t *a);
+
+   // Locate Min, Max element number in an array
+   static Long64_t  LocMin(Long64_t n, const Short_t *a);
+   static Long64_t  LocMin(Long64_t n, const Int_t *a);
+   static Long64_t  LocMin(Long64_t n, const Float_t *a);
+   static Long64_t  LocMin(Long64_t n, const Double_t *a);
+   static Long64_t  LocMin(Long64_t n, const Long64_t *a);
+   static Long64_t  LocMax(Long64_t n, const Short_t *a);
+   static Long64_t  LocMax(Long64_t n, const Int_t *a);
+   static Long64_t  LocMax(Long64_t n, const Float_t *a);
+   static Long64_t  LocMax(Long64_t n, const Double_t *a);
+   static Long64_t  LocMax(Long64_t n, const Long64_t *a);
 
    //Mean, Geometric Mean, Median, RMS
-   static Double_t  Mean(Int_t n, const Short_t *a,const Double_t *w=0);
-   static Double_t  Mean(Int_t n, const Int_t *a,const Double_t *w=0);
-   static Double_t  Mean(Int_t n, const Float_t *a,const Double_t *w=0);
-   static Double_t  Mean(Int_t n, const Double_t *a,const Double_t *w=0);
-   static Double_t  Mean(Int_t n, const Long_t *a,const Double_t *w=0);
-   static Double_t  Mean(Int_t n, const Long64_t *a,const Double_t *w=0);
-   static Double_t  GeomMean(Int_t n, const Short_t *a);
-   static Double_t  GeomMean(Int_t n, const Int_t *a);
-   static Double_t  GeomMean(Int_t n, const Float_t *a);
-   static Double_t  GeomMean(Int_t n, const Double_t *a);
-   static Double_t  GeomMean(Int_t n, const Long_t *a);
-   static Double_t  GeomMean(Int_t n, const Long64_t *a);
-   static Short_t   Median(Int_t n, const Short_t *a, const Double_t *w=0, Int_t *work=0);
-   static Int_t     Median(Int_t n, const Int_t *a, const Double_t *w=0, Int_t *work=0);
-   static Float_t   Median(Int_t n, const Float_t *a, const Double_t *w=0, Int_t *work=0);
-   static Double_t  Median(Int_t n, const Double_t *a, const Double_t *w=0, Int_t *work=0);
-   static Long_t    Median(Int_t n, const Long_t *a, const Double_t *w=0, Int_t *work=0);
-   static Long64_t  Median(Int_t n, const Long64_t *a, const Double_t *w=0, Int_t *work=0);
-   static Double_t  MedianSorted(Int_t n, Double_t *a);
-   static Double_t  RMS(Int_t n, const Short_t *a);
-   static Double_t  RMS(Int_t n, const Int_t *a);
-   static Double_t  RMS(Int_t n, const Float_t *a);
-   static Double_t  RMS(Int_t n, const Double_t *a);
-   static Double_t  RMS(Int_t n, const Long_t *a);
-   static Double_t  RMS(Int_t n, const Long64_t *a);
+   static Double_t  Mean(Long64_t n, const Short_t *a, const Double_t *w=0);
+   static Double_t  Mean(Long64_t n, const Int_t *a,   const Double_t *w=0);
+   static Double_t  Mean(Long64_t n, const Float_t *a, const Double_t *w=0);
+   static Double_t  Mean(Long64_t n, const Double_t *a,const Double_t *w=0);
+   static Double_t  Mean(Long64_t n, const Long64_t *a,const Double_t *w=0);
+   static Double_t  GeomMean(Long64_t n, const Short_t *a);
+   static Double_t  GeomMean(Long64_t n, const Int_t *a);
+   static Double_t  GeomMean(Long64_t n, const Float_t *a);
+   static Double_t  GeomMean(Long64_t n, const Double_t *a);
+   static Double_t  GeomMean(Long64_t n, const Long64_t *a);
+
+   static Double_t  RMS(Long64_t n, const Short_t *a);
+   static Double_t  RMS(Long64_t n, const Int_t *a);
+   static Double_t  RMS(Long64_t n, const Float_t *a);
+   static Double_t  RMS(Long64_t n, const Double_t *a);
+   static Double_t  RMS(Long64_t n, const Long64_t *a);
+
+   template <class Element, class Index, class Size> static Double_t MedianImp(Size n, const Element *a, const Double_t *w=0, Index *work=0);
+   static Double_t  Median(Long64_t n, const Short_t *a,  const Double_t *w=0, Long64_t *work=0);
+   static Double_t  Median(Long64_t n, const Int_t *a,    const Double_t *w=0, Long64_t *work=0);
+   static Double_t  Median(Long64_t n, const Float_t *a,  const Double_t *w=0, Long64_t *work=0);
+   static Double_t  Median(Long64_t n, const Double_t *a, const Double_t *w=0, Long64_t *work=0);  
+   static Double_t  Median(Long64_t n, const Long64_t *a, const Double_t *w=0, Long64_t *work=0);
+  
+   //k-th order statistic
+   template <class Element, class Index, class Size> static Element KOrdStatImp(Size n, const Element *a, Size k, Index *work = 0);
+
+   static Short_t   KOrdStat(Long64_t n, const Short_t *a,  Long64_t k, Long64_t *work=0);
+   static Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
+   static Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
+   static Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work=0);
+   static Long64_t  KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work=0);
    
    // Range
-   static Short_t  Range(Short_t lb, Short_t ub, Short_t x);
-   static Int_t    Range(Int_t lb, Int_t ub, Int_t x);
-   static Long_t   Range(Long_t lb, Long_t ub, Long_t x);
-   static ULong_t  Range(ULong_t lb, ULong_t ub, ULong_t x);
-   static Double_t Range(Double_t lb, Double_t ub, Double_t x);
+   static Short_t   Range(Short_t lb, Short_t ub, Short_t x);
+   static Int_t     Range(Int_t lb, Int_t ub, Int_t x);
+   static Long_t    Range(Long_t lb, Long_t ub, Long_t x);
+   static ULong_t   Range(ULong_t lb, ULong_t ub, ULong_t x);
+   static Double_t  Range(Double_t lb, Double_t ub, Double_t x);
 
    // Binary search
-   static Int_t BinarySearch(Int_t n, const Short_t *array, Short_t value);
-   static Int_t BinarySearch(Int_t n, const Short_t **array, Short_t value);
-   static Int_t BinarySearch(Int_t n, const Int_t *array, Int_t value);
-   static Int_t BinarySearch(Int_t n, const Int_t **array, Int_t value);
-   static Int_t BinarySearch(Int_t n, const Float_t *array, Float_t value);
-   static Int_t BinarySearch(Int_t n, const Float_t **array, Float_t value);
-   static Int_t BinarySearch(Int_t n, const Double_t *array, Double_t value);
-   static Int_t BinarySearch(Int_t n, const Double_t **array, Double_t value);
-   static Int_t BinarySearch(Int_t n, const Long_t *array, Long_t value);
-   static Int_t BinarySearch(Int_t n, const Long_t **array, Long_t value);
-   static Int_t BinarySearch(Int_t n, const Long64_t *array, Long64_t value);
-   static Int_t BinarySearch(Int_t n, const Long64_t **array, Long64_t value);
+   static Long64_t BinarySearch(Long64_t n, const Short_t *array,   Short_t value);
+   static Long64_t BinarySearch(Long64_t n, const Short_t **array,  Short_t value);
+   static Long64_t BinarySearch(Long64_t n, const Int_t *array,     Int_t value);
+   static Long64_t BinarySearch(Long64_t n, const Int_t **array,    Int_t value);
+   static Long64_t BinarySearch(Long64_t n, const Float_t *array,   Float_t value);
+   static Long64_t BinarySearch(Long64_t n, const Float_t **array,  Float_t value);
+   static Long64_t BinarySearch(Long64_t n, const Double_t *array,  Double_t value);
+   static Long64_t BinarySearch(Long64_t n, const Double_t **array, Double_t value);
+   static Long64_t BinarySearch(Long64_t n, const Long64_t *array,  Long64_t value);
+   static Long64_t BinarySearch(Long64_t n, const Long64_t **array, Long64_t value);
 
    // Hashing
    static ULong_t Hash(const void *txt, Int_t ntxt);
    static ULong_t Hash(const char *str);
 
    // IsInside
-   static Bool_t IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y);
-   static Bool_t IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y);
    static Bool_t IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y);
+   static Bool_t IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y);
+   static Bool_t IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y);
 
    // Sorting
    template <class Element, class Index, class Size> static void SortImp(Size n, const Element*, Index* index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Short_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Int_t *a,    Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Long64_t *a, Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n,    const Short_t *a,  Int_t *index,    Bool_t down=kTRUE);
+   static void Sort(Int_t n,    const Int_t *a,    Int_t *index,    Bool_t down=kTRUE);
+   static void Sort(Int_t n,    const Float_t *a,  Int_t *index,    Bool_t down=kTRUE);
+   static void Sort(Int_t n,    const Double_t *a, Int_t *index,    Bool_t down=kTRUE);
+   static void Sort(Int_t n,    const Long64_t *a, Int_t *index,    Bool_t down=kTRUE);
+   static void Sort(Long64_t n, const Short_t *a,  Long64_t *index, Bool_t down=kTRUE);
+   static void Sort(Long64_t n, const Int_t *a,    Long64_t *index, Bool_t down=kTRUE);
+   static void Sort(Long64_t n, const Float_t *a,  Long64_t *index, Bool_t down=kTRUE);
+   static void Sort(Long64_t n, const Double_t *a, Long64_t *index, Bool_t down=kTRUE);
    static void Sort(Long64_t n, const Long64_t *a, Long64_t *index, Bool_t down=kTRUE);
    static void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    static void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
+   
    // Advanced
    static Float_t  *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
    static Double_t *Cross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Cross Product of two vectors
@@ -602,6 +620,7 @@ inline Int_t TMath::Finite(Double_t x)
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }
+
 
 //-------- Advanced -------------
 
