@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -35,12 +35,15 @@ ClassImp(TAttFill)
 <img src="gif/colors.gif">
 */
 //End_Html
-//*-*
-//*-*  Conventions for fill styles:
-//*-*    0 = hollow
-//*-*    1001 : Solid
-//*-*    2001 : hatch style
-//*-*    3000+pattern_number (see below)
+//
+//  Conventions for fill styles:
+//    0    : hollow
+//    1001 : Solid
+//    2001 : hatch style
+//    3000+pattern_number (see below)
+//    4000 :the window is transparent.
+//    4000 to 4100 the window is 100% transparent to 100% opaque
+//
 //*-*  The following table shows the list of pattern styles.
 //Begin_Html
 /*
