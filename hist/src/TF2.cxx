@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.7 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.8 2001/07/19 17:12:25 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -432,6 +432,16 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    Double_t relerr  = 0;
    Double_t result = IntegralMultiple(2,a,b,epsilon,relerr);
    return result;
+}
+
+//______________________________________________________________________________
+Bool_t TF2::IsInside(const Double_t *x) const
+{
+// Return kTRUE is the point is inside the function range
+   
+   if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
+   if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

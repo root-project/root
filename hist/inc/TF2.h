@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.7 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.8 2001/07/19 17:12:25 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsil=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsil=0.000001)
                             {return TF1::Integral(ax,bx,ay,by,az,bz,epsil);}
+   virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
