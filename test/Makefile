@@ -289,6 +289,7 @@ distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so .def so_locations
 		@rm -rf cxx_repository
+		-@cd RootShower && $(MAKE) distclean
 
 .SUFFIXES: .$(SrcSuf)
 

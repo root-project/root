@@ -434,7 +434,6 @@ distclean:: clean
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@$(MAKECINTDLLS) clean
 	-@cd test && $(MAKE) distclean
-	-@cd test/RootShower && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
