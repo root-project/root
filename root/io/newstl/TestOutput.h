@@ -9,6 +9,7 @@
 #include <list>
 #include <set>
 #include <map>
+#include <string>
 
 namespace TestDebug {
    enum { kValues    = 1<<0, 
