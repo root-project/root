@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.62 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.63 2003/04/11 11:48:11 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -456,11 +456,14 @@ void TCint::UpdateListOfGlobalFunctions()
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
-        // first remove if already in list
+         // first remove if already in list
          TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
-         if (f) {
-            gROOT->fGlobalFunctions->Remove(f);
-            delete f;
+         if (f && f->InterfaceMethod()==t.InterfaceMethod()) {
+            TString mangled = f->GetMangledName();
+            if (mangled==t.GetMangledName()) {
+               gROOT->fGlobalFunctions->Remove(f);
+               delete f;
+            }
          }
          a = new G__MethodInfo(t);
          gROOT->fGlobalFunctions->Add(new TFunction(a));
@@ -655,6 +658,46 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
             m->fMethodArgs->Add(new TMethodArg(a, m));
          }
       }
+   }
+}
+
+//______________________________________________________________________________
+TString TCint::GetMangledName(TClass *cl, const char *method,
+                             const char *params)
+{
+   // Return the CINT mangled name for a method of a class with parameters
+   // params (params is a string of actual arguments, not formal ones). If the
+   // class is 0 the global function list will be searched.
+
+   R__LOCKGUARD(gCINTMutex);
+   G__CallFunc  func;
+   Long_t       offset;
+
+   if (cl)
+      func.SetFunc(cl->GetClassInfo(), method, params, &offset);
+   else {
+      G__ClassInfo gcl;   // default G__ClassInfo is global environment
+      func.SetFunc(&gcl, method, params, &offset);
+   }
+   return func.GetMethodInfo().GetMangledName();
+}
+
+//______________________________________________________________________________
+TString TCint::GetMangledNameWithPrototype(TClass *cl, const char *method,
+                                           const char *proto)
+{
+   // Return the CINT mangled name for a method of a class with a certain
+   // prototype, i.e. "char*,int,float". If the class is 0 the global function
+   // list will be searched.
+
+   R__LOCKGUARD(gCINTMutex);
+   Long_t             offset;
+
+   if (cl)
+      return cl->GetClassInfo()->GetMethod(method, proto, &offset).GetMangledName();
+   else {
+      G__ClassInfo gcl;   // default G__ClassInfo is global environment
+      return gcl.GetMethod(method, proto, &offset).GetMangledName();
    }
 }
 
