@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.45 2004/10/22 08:03:11 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.46 2004/11/09 06:31:17 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -38,8 +38,6 @@
 //*-*     The member function SetFCN can be used to define this pointer.  *
 //*-*   - The ROOT static function Printf is provided to replace all      *
 //*-*     format statements and to print on currently defined output file.*
-//*-*   - The derived class TMinuitOld contains obsolete routines from    *
-//*-*     the Fortran based version.                                      *
 //*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
@@ -6696,7 +6694,7 @@ void TMinuit::mnsave()
 //*-*       The covariance matrix is also output if it exists.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Printf("mnsave is dummy in the base class TMinuit: Use TMinuitOld");
+   Printf("mnsave is dummy in TMinuit");
 
 } /* mnsave_ */
 
