@@ -178,7 +178,7 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 }
 #endif
 
-int G__ateval(const G__longdouble& a) {
+inline int G__ateval(const G__longdouble& a) {
 #ifdef IOS
   cout << "(long double)" << a.dat << endl;
 #else

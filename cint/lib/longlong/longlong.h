@@ -273,7 +273,7 @@ inline istream& operator>>(istream& ist,G__longlong& a) {
 }
 #endif
 
-int G__ateval(const G__longlong& a) {
+inline int G__ateval(const G__longlong& a) {
   fprintf(stdout,"(long long)%lld\n",a.dat);
   return(1);
 }
@@ -464,7 +464,7 @@ inline istream& operator>>(istream& ist,G__ulonglong& a) {
 }
 #endif
 
-int G__ateval(const G__ulonglong& a) {
+inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
 }
