@@ -26,8 +26,8 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 
 # Linker:
 LD            = c++
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load
-SOFLAGS       = -dynamiclib -undefined suppress -nodefaultlibs -install_name
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load -flat_namespace
+SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nodefaultlibs -install_name
 SOEXT         = dylib
 
 # System libraries:

@@ -383,11 +383,11 @@ ifeq ($(ARCH),macosx)
 CXX           = c++
 CXXFLAGS      = -O -pipe -Wall
 LD            = c++
-LDFLAGS       = -O -Xlinker -bind_at_load
+LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -undefined suppress -nostdlib ../lib/macosx-fpsave.o
+SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nostdlib ../lib/macosx-fpsave.o
 endif
 
 ifeq ($(ARCH),hiux)
