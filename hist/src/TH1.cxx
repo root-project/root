@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.84 2002/01/26 10:02:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.85 2002/02/01 06:55:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4486,6 +4486,10 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 //   - contour levels are computed automatically as equidistant contours
      Double_t zmin = GetMinimum();
      Double_t zmax = GetMaximum();
+     if ((zmin == zmax) && (zmin != 0)) {
+        zmax += 0.01*TMath::Abs(zmax);
+        zmin -= 0.01*TMath::Abs(zmin);
+     }
      Double_t dz   = (zmax-zmin)/Double_t(nlevels);
      if (gPad && gPad->GetLogz()) {
         if (zmax <= 0) return;
