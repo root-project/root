@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.34 2002/02/20 19:46:20 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.35 2002/02/20 22:19:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -670,7 +670,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 
 
 
-TList* RooTreeData::split(const RooAbsCategory& splitCat) 
+TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 {
   // Sanity check
   if (!splitCat.dependsOn(*get())) {

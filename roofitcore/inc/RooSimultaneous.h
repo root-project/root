@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.19 2001/11/29 01:12:25 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.20 2001/12/01 08:12:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,8 +40,8 @@ public:
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
   virtual ExtendMode extendMode() const { 
-    if (_anyCanExtend) return CanBeExtended ;
     if (_anyMustExtend) return MustBeExtended ;
+    if (_anyCanExtend) return CanBeExtended ;
     return CanNotBeExtended ; 
   }
 
@@ -54,12 +54,13 @@ public:
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
   
+  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
+
 protected:
 
   friend class RooSimGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
-  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
 
   mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
  

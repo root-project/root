@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.29 2002/02/06 01:31:38 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.30 2002/02/12 22:17:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -303,7 +303,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   // See RooAbsPdf::plotOn() for description. Because a RooSimultaneous PDF cannot project out
   // its index category via integration, plotOn() will abort if this is requested without 
   // providing a projection dataset
-
+  
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   if (projSet) {
@@ -440,17 +440,21 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
     // Generating dependents of a derived index category
 
     // Determine if we none,any or all servers
-    TIterator* sIter = _indexCat.arg().serverIterator() ;
-    RooAbsArg* server ;
     Bool_t anyServer(kFALSE), allServers(kTRUE) ;
-    while(server=(RooAbsArg*)sIter->Next()) {
-      if (prototype->get()->find(server->GetName())) {
-	anyServer=kTRUE ;
-      } else {
-	allServers=kFALSE ;
+    if (prototype) {
+      TIterator* sIter = _indexCat.arg().serverIterator() ;
+      RooAbsArg* server ;
+      while(server=(RooAbsArg*)sIter->Next()) {
+	if (prototype->get()->find(server->GetName())) {
+	  anyServer=kTRUE ;
+	} else {
+	  allServers=kFALSE ;
+	}
       }
+      delete sIter ;
+    } else {
+      allServers=kTRUE ;
     }
-    delete sIter ;
 
     if (allServers) {
       // Use simcontext if we have all servers

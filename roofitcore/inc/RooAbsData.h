@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.13 2001/12/13 22:05:18 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.14 2002/02/20 19:46:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -63,7 +63,7 @@ public:
 			      const char* cut="", Option_t* drawOptions="P") const = 0 ;
 
   // Split a dataset by a category
-  virtual TList* split(const RooAbsCategory& splitCat) = 0 ;
+  virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;
  
   // Fill an existing histogram
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const = 0;

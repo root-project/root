@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.17 2002/02/20 19:46:20 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.18 2002/02/20 22:19:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -87,7 +87,7 @@ public:
   RooRealVar* meanVar(RooRealVar &var) const ;
   RooRealVar* rmsVar(RooRealVar &var) const ;
 
-  virtual TList* split(const RooAbsCategory& splitCat) ;
+  virtual TList* split(const RooAbsCategory& splitCat) const ;
 
   // Forwarded from TTree
   inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
