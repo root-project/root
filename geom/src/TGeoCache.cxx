@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.30 2004/09/29 10:41:46 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.31 2004/10/05 13:27:46 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -185,7 +185,7 @@ void TGeoNodeCache::BuildIdArray()
    Int_t nnodes = gGeoManager->GetNNodes();
    //if (nnodes>3E7) return;
    if (fNodeIdArray) delete [] fNodeIdArray;
-   printf("--- node ID tracking enabled, size=%d Bytes\n", (2*nnodes+1)*sizeof(Int_t));
+   printf("--- node ID tracking enabled, size=%d Bytes\n", (Int_t)((2*nnodes+1)*sizeof(Int_t)));
    fNodeIdArray = new Int_t[2*nnodes+1];
    fNodeIdArray[0] = 0;
    Int_t ifree  = 1;
