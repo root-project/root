@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.5 2000/07/03 10:11:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.6 2000/07/10 06:17:57 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -593,6 +593,15 @@ Int_t TChain::Process(const char *filename, Int_t nentries, Int_t firstentry)
 
    if (LoadTree(firstentry) < 0) return 0;
    return TTree::Process(filename,nentries,firstentry);
+}
+
+//______________________________________________________________________________
+Int_t TChain::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this chain executing the code in selector*-*-*-*-*
+//*-*              ================================================
+
+   return TTree::Process(selector,nentries,firstentry);
 }
 
 //_______________________________________________________________________
