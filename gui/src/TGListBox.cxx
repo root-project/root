@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.35 2004/12/14 17:13:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.36 2004/12/14 17:36:57 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -146,6 +146,7 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
       fText->Draw(id, fNormGC, x+3, y + max_ascent);
+      gVirtualX->SetWindowBackground(id, fBkcolor);
    } else {
       gVirtualX->SetWindowBackground(id, fBkcolor);
       gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
@@ -358,7 +359,7 @@ void TGLBContainer::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
 
    lbe->SetBackgroundColor(fgWhitePixel);
    AddFrame(lbe, lhints);
-   // Layout();
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -379,9 +380,9 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
       if (e->EntryId() == afterID) break;
    }
 
-   if (!el && afterID != -1)
+   if (!el && afterID != -1) {
       AddFrame(lbe, lhints);
-   else {
+   } else {
       nw = new TGFrameElement(lbe, lhints);
       nw->fFrame  = lbe;
       nw->fLayout = lhints;
@@ -391,7 +392,7 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
       else
          fList->AddAfter(el, nw);
    }
-   // Layout();
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -411,16 +412,16 @@ void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
       if (e->EntryId() > lbe->EntryId()) break;
    }
 
-   if (!el)
+   if (!el) {
       AddFrame(lbe, lhints);
-   else {
+   } else {
       nw = new TGFrameElement(lbe, lhints);
       nw->fFrame  = lbe;
       nw->fLayout = lhints;
       nw->fState  = 1;
       fList->AddBefore(el, nw);
    }
-   // Layout();
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -445,7 +446,7 @@ void TGLBContainer::RemoveEntry(Int_t id)
          delete el;          // idem
          delete e;
          delete l;
-         // Layout();
+         fClient->NeedRedraw(this);
          break;
       }
    }
@@ -473,9 +474,9 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
          delete el;          // idem
          delete e;
          delete l;
+         fClient->NeedRedraw(this);
       }
    }
-   // Layout();
 }
 
 //______________________________________________________________________________
@@ -510,6 +511,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
             fLastActive = f;
             fLastActiveEl = el;
          }
+         fClient->NeedRedraw(this);
          return f;
       }
    }
@@ -581,6 +583,7 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    }
    fLastActive = 0;
    fLastActiveEl = 0;
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -732,6 +735,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             if (activate) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
+                  fClient->NeedRedraw(this);
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                               f->EntryId(), 0);
                }
@@ -754,12 +758,13 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          if (activate)  {
             f->Activate(kTRUE);
             fLastActive = f;
+            fClient->NeedRedraw(this);
          } else {
             f->Activate(kFALSE);
          }
       }
    }
-   if (activate) fClient->NeedRedraw(this);
+
    return kTRUE;
 }
 

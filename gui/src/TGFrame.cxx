@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.102 2004/10/26 09:39:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.103 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -698,6 +698,12 @@ void TGFrame::Print(Option_t *option) const
 {
    // Print window id.
 
+   TString opt = option;
+   if (opt.Contains("tree")) {
+      TGWindow::Print(option);
+      return;
+   }
+
    cout <<  option << ClassName() << ":\tid=" << fId << " parent=" << fParent->GetId();
    cout << " x=" << fX << " y=" << fY;
    cout << " w=" << fWidth << " h=" << fHeight << endl;
@@ -1145,6 +1151,12 @@ void TGCompositeFrame::Layout()
 void TGCompositeFrame::Print(Option_t *option) const
 {
    // Print all frames in this composite frame.
+
+   TString opt = option;
+   if (opt.Contains("tree")) {
+      TGWindow::Print(option);
+      return;
+   }
 
    TGFrameElement *el;
    TIter next(fList);

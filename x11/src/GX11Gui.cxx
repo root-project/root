@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.36 2004/08/09 15:35:52 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.37 2004/12/21 19:44:22 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -172,6 +172,7 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
    } else {
       ::Error("RootX11ErrorHandler", "%s (%s XID: %u, XREQ: %u)", msg, w->ClassName(),
                err->resourceid, err->request_code);
+      w->Print("tree");
    }
    if (TROOT::Initialized()) {
       //Getlinem(kInit, "Root > ");

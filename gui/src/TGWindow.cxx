@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.19 2004/09/13 13:05:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.20 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -183,11 +183,25 @@ Bool_t TGWindow::IsMapped()
 }
 
 //______________________________________________________________________________
-void TGWindow::Print(Option_t *) const
+void TGWindow::Print(Option_t *option) const
 {
    // Print window id.
+   // If option is "tree" - print all parent windows tree 
 
-   cout << ClassName() << ":\t" << fId << endl;
+   TString opt = option;
+
+   if (opt.Contains("tree")) {
+
+      const TGWindow *parent = fParent;
+      cout << ClassName() << ":\t" << fId << endl;
+
+      while (parent && (parent != fClient->GetDefaultRoot())) {
+         cout << "\t" << parent->ClassName() << ":\t" << parent->GetId() << endl;
+         parent = parent->GetParent();
+      }
+   } else {
+      cout << ClassName() << ":\t" << fId << endl;
+   }
 }
 
 //______________________________________________________________________________

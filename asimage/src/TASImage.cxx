@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.13 2004/12/07 17:01:39 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.14 2004/12/07 17:32:11 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 #include "TASPaletteEditor.h"
 #include "TArrayL.h"
 #include "TPoint.h"
+#include "TFrame.h"
 
 
 #ifndef WIN32
@@ -704,6 +705,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 #endif
 }
 
+
 //______________________________________________________________________________
 void TASImage::Draw(Option_t *option)
 {
@@ -730,7 +732,7 @@ void TASImage::Draw(Option_t *option)
       if (calcBorder) {
          bw = c->GetWindowWidth() - c->GetWw();
          bh = c->GetWindowHeight() - c->GetWh();
-         c->SetWindowSize(fImage->width+bw, fImage->height+bh);
+         c->SetWindowSize(fImage->width+bw, fImage->height);
          calcBorder = kFALSE;
       }
    }
@@ -744,6 +746,13 @@ void TASImage::Draw(Option_t *option)
                1 + right / (1.0 - left - right),
                1 + top / ( 1.0 - top - bottom));
    gPad->RangeAxis(0,0,1,1);
+
+   TFrame * frame = gPad->GetFrame();
+   frame->SetBorderMode(0);
+   frame->SetFillColor(gPad->GetFillColor());
+   frame->SetLineColor(gPad->GetFillColor());
+   frame->Draw();
+
    TObject::Draw(option);
 }
 
@@ -792,6 +801,7 @@ void TASImage::Paint(Option_t *option)
          Error("Paint", "tile option error");
    } else if (opt.Contains("xxx")) {
       expand = kTRUE;
+      fConstRatio = kFALSE;
    }
 
    ASImage *image = fImage;
@@ -800,15 +810,13 @@ void TASImage::Paint(Option_t *option)
    Int_t to_w = gPad->UtoPixel(1.);
    Int_t to_h = gPad->VtoPixel(0.);
 
-   Int_t mw = 0;
-   Int_t mh = 0;
-
    // remove the size by the margin of the pad
    if (!expand) {
-      mw = int(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5);
-      mh = int(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5);
-      to_h  -= 2*mh;
-      to_w  -= 2*mw;
+      to_h  = (Int_t)(to_h * (1.0 - gPad->GetBottomMargin() - gPad->GetTopMargin() ) + 0.5);
+      to_w  = (Int_t)(to_w * (1.0 - gPad->GetLeftMargin() - gPad->GetRightMargin() ) + 0.5);
+   } else {
+      gPad->SetLeftMargin(0);
+      gPad->SetTopMargin(0);
    }
 
    // upper left corner and size of the palette in pixels
@@ -876,7 +884,10 @@ void TASImage::Paint(Option_t *option)
       if (Int_t(fImage->width) != to_w || Int_t(fImage->height) != to_h ||
           fImage->width != fZoomWidth || fImage->height != fZoomHeight) {
 
-         if (fScaledImage && (fZoomUpdate == kZoom)) {
+         if (fScaledImage && (Int_t(fScaledImage->GetWidth()) != to_w ||
+                Int_t(fScaledImage->GetHeight()) != to_h ||
+                fZoomUpdate)) {
+
             delete fScaledImage;
             fScaledImage = 0;
          }
@@ -912,12 +923,14 @@ void TASImage::Paint(Option_t *option)
       Error("Paint", "image could not be rendered to display");
       return;
    }
+
 #ifndef WIN32
    Pixmap pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                                  image, 0, kTRUE);
    Int_t wid = gVirtualX->AddWindow(pxmap, to_w, to_h);
    gPad->cd();
-   gVirtualX->CopyPixmap(wid, mw, mh);
+   gVirtualX->CopyPixmap(wid,  (int)(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5),  
+                               (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
 
    gVirtualX->RemoveWindow(wid);
    gVirtualX->DeletePixmap(pxmap);
