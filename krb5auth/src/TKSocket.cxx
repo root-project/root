@@ -1,9 +1,10 @@
-// @(#)root/krb5auth:$Name: PROOF_MLM $:$Id: TKSocket.cxx,v 1.1.4.2 2004/11/02 22:02:54 maartenb Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #include "config.h"
 #include <stdlib.h>
 
+#include <sys/types.h>
 #include <netinet/in.h>
 
 #include "TKSocket.h"
