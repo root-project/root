@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource,v 1.34 2002/08/16 21:16:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.1 2002/09/06 19:58:00 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -13,7 +13,6 @@
 #include "TH1.h"
 #include "TObjString.h"
 #include "TRandom3.h"
-#include <iostream>
 
 ClassImp(TLimitDataSource)
 
