@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.8 2003/06/23 22:18:37 rdm Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.9 2004/02/19 20:00:57 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -55,6 +55,7 @@
 #pragma link C++ class TExMapIter;
 #pragma link C++ class TRefArray-;
 #pragma link C++ class TRefArrayIter;
+#pragma link C++ class TRefTable+;
 #pragma link C++ class TVirtualCollectionProxy-;
 
 #endif
