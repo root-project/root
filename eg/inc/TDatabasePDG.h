@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TG3DatabasePDG.hh,v 1.3 2001/02/22 14:16:14 murat Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.3 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -34,9 +34,7 @@ public:
   TDatabasePDG();
   virtual ~TDatabasePDG();
 
-  static TDatabasePDG*  Instance() { 
-    return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
-  }
+  static TDatabasePDG*  Instance();
 
   virtual TParticlePDG*   AddParticle(const char*  Name, 
 					const char*  Title,

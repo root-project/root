@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.10 2001/03/08 20:15:39 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.11 2001/03/15 17:53:02 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -73,6 +73,13 @@ TDatabasePDG::~TDatabasePDG()
    if (fListOfClasses) delete fListOfClasses;
    gROOT->GetListOfSpecials()->Remove(this);
    fgInstance = 0;
+}
+
+//______________________________________________________________________________
+TDatabasePDG*  TDatabasePDG::Instance() 
+{
+   //static function 
+  return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
 }
 
 
