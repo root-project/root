@@ -182,6 +182,10 @@ N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
 
+N: Heiko Scheit
+E: Heiko.Scheit@mpi-hd.mpg.de
+D: Improvements in TTreePlayer::DrawSelect
+
 N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
 D: TGNumberEntry GUI widget
