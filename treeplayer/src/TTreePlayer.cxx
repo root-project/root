@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.89 2002/02/03 17:38:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.90 2002/02/15 22:13:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -457,8 +457,12 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
          fTree->CopyAddresses(tree);
       }
       if (fSelect) {
-         fSelect->GetNdata();
-         if (fSelect->EvalInstance(0) == 0) continue;
+         Int_t ndata = fSelect->GetNdata();
+         Bool_t keep = kFALSE;
+         for(Int_t current = 0; current<ndata && !keep; current++) {
+            keep |= (fSelect->EvalInstance(current) != 0);
+         }
+         if (!keep) continue;
       }
       fTree->GetEntry(entryNumber);
       tree->Fill();
