@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.153 2003/11/02 09:28:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.154 2003/11/13 17:08:24 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -5165,7 +5165,8 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    // This function returns the best format to print the error value (e)
    // knowing the parameter value (v) and the format (f) used to print it. 
 
-   char tf[20], ef[20], tv[64];
+   static char ef[20];
+   char tf[20], tv[64];
 
    // print v with the format f in tv.
    sprintf(tf,"%s%s","%",f);
@@ -5204,6 +5205,5 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
       sprintf(ef,"%s.%df","%",sv.Length()-id-1);
    }
 
-   TString ff = ef;
-   return ff.Data();
+   return ef;
 }
