@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.64 2002/01/27 15:53:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.65 2002/01/27 16:49:43 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1096,7 +1096,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
 
    if (TClassTable::GetDict(classname)) return 0;
 
-   Int_t err;
+   Int_t err = -1;
 
    char *path;
    char *lib = 0;
