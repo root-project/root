@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.43 2004/09/20 09:02:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.44 2004/09/22 11:13:50 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -152,14 +152,14 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGButton::SetDown(Bool_t on)
+void TGButton::SetDown(Bool_t on, Bool_t emit)
 {
 
    // Set button state down according to the parameter 'on'.
 
    if (GetState() == kButtonDisabled) return;
 
-   on ? SetState(kButtonDown, kTRUE) : SetState(kButtonUp, kTRUE);
+   on ? SetState(kButtonDown, emit) : SetState(kButtonUp, emit);
 }
 
 //______________________________________________________________________________
