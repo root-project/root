@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.11 2001/08/13 17:23:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.12 2001/10/15 06:59:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
     virtual void     ResetReadEntry() {fReadEntry = -1;}
     virtual void     SetAddress(void *add);
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
-    virtual void     SetBasketSize(Int_t buffsize) {fBasketSize=buffsize;}
+    virtual void     SetBasketSize(Int_t buffsize);
     virtual void     SetBufferAddress(TBuffer *entryBuffer);
     virtual void     SetCompressionLevel(Int_t level=1);
     virtual void     SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.31 2001/11/16 02:44:33 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.32 2001/12/12 09:48:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -974,6 +974,16 @@ void TBranch::SetAutoDelete(Bool_t autodel)
 
    if (autodel) SetBit(kAutoDelete,1);
    else         SetBit(kAutoDelete,0);
+}
+
+//______________________________________________________________________________
+void TBranch::SetBasketSize(Int_t buffsize)
+{
+// Set the basket size
+// The function makes sure that the basket size is greater than fEntryOffsetlen
+   
+   if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
+   fBasketSize = buffsize;
 }
 
 //______________________________________________________________________________

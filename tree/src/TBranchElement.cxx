@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.77 2002/01/16 18:12:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.78 2002/01/18 09:50:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1170,11 +1170,12 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
 {
 // Reset basket size for all subbranches of this branchelement
 
-   fBasketSize = buffsize;
+   TBranch::SetBasketSize(buffsize);
+
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(buffsize);
+      branch->SetBasketSize(fBasketSize);
    }
 }
 
