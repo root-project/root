@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.4 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.6 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -71,6 +71,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual UInt_t   WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);  // SL
 
       virtual void*    ReadObjectAny(const TClass* clCast);
+      virtual void     SkipObjectAny();
 
       virtual void     IncrementLevel(TStreamerInfo*);
       virtual void     SetStreamerElementNumber(Int_t);

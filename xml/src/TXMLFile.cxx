@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.6 2004/06/09 13:52:28 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.8 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -898,12 +898,15 @@ void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info)
 
    TStreamerElement* elem = (TStreamerElement*) cl->New();
    
+   int elem_type = fXML->GetIntAttr(node,"type");
+   
    elem->SetName(fXML->GetAttr(node,"name"));
    elem->SetTitle(fXML->GetAttr(node,"title"));
-   elem->SetType(fXML->GetIntAttr(node,"type"));
+   elem->SetType(elem_type);
    elem->SetTypeName(fXML->GetAttr(node,"typename"));
    elem->SetSize(fXML->GetIntAttr(node,"size"));
-
+   
+   
    if (cl == TStreamerBase::Class()) {
       int basever = fXML->GetIntAttr(node,"baseversion");
       ((TStreamerBase*) elem)->SetBaseVersion(basever);
@@ -943,6 +946,9 @@ void TXMLFile::ReadStreamerElement(xmlNodePointer node, TStreamerInfo* info)
          elem->SetMaxIndex(ndim, maxi);
      }
    }
+
+   elem->SetType(elem_type);
+   elem->SetNewType(elem_type);
 
    info->GetElements()->Add(elem);
 }

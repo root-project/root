@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.9 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -829,7 +829,9 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
 // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
 // and add/verify next element of xml structure
 // This calls allows separate data, correspondent to one class member, from another
-    
+//   cout << " ======================================= " << endl;
+//   cout << " SetStreamerElementNumber = " << number << endl;
+
    CheckVersionBuf();
 
    fExpectedChain = kFALSE;
@@ -866,7 +868,7 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
       Error("SetStreamerElementNumber", "streamer info returns elem = 0");
       return;
    }
-   
+
    if (gDebug>4)
      cout << "         Next element " << elem->GetName() << endl;
 
@@ -874,10 +876,17 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
 
    Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
 
-   fCanUseCompact = isBasicType && (elem->GetType()==comp_type);
+   fCanUseCompact = isBasicType && ((elem->GetType()==comp_type) || 
+                                    (elem->GetType()==comp_type-TStreamerInfo::kConv) ||
+                                    (elem->GetType()==comp_type-TStreamerInfo::kSkip));
 
    fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-   
+
+//   cout << " elem->GetName() = " << elem->GetName() << endl;
+//   cout << " Conv elem->GetType() = " << elem->GetType() << endl;
+//   cout << "            comp_type = " << comp_type << endl; 
+//   cout << "    Expects chain = " << fExpectedChain << endl; 
+
    if ((elem->GetType()==TStreamerInfo::kBase) ||
        ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName())))
      fExpectedBaseClass = elem->GetClassPointer();
@@ -1208,6 +1217,14 @@ void* TXMLBuffer::ReadObjectAny(const TClass*)
 }
 
 //______________________________________________________________________________
+void TXMLBuffer::SkipObjectAny()
+{
+  // Skip any kind of object from buffer
+     
+   ShiftStack("skipobjectany");                                          \
+}
+
+//______________________________________________________________________________
 void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualClass) 
 {
 // Write object to buffer. Only used from TBuffer
@@ -1226,10 +1243,10 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
 }
 
 // macro to read content of array with compression
-#define TXMLReadArrayContent(vname) \
+#define TXMLReadArrayContent(vname, arrsize) \
 { \
    Int_t indx = 0; \
-   while(indx<n) { \
+   while(indx<arrsize) { \
      Int_t cnt = 1; \
      if (fXML->HasAttr(StackNode(), xmlNames_cnt)) \
         cnt = fXML->GetIntAttr(StackNode(), xmlNames_cnt); \
@@ -1251,7 +1268,7 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
    if (n<=0) return 0; \
    if (!vname) vname = new tname[n]; \
    PushStack(StackNode()); \
-   TXMLReadArrayContent(vname); \
+   TXMLReadArrayContent(vname, n); \
    PopStack(); \
    ShiftStack("readarr"); \
    return n; \
@@ -1379,7 +1396,7 @@ Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d)
    if (n<=0) return 0; \
    if (!vname) return 0; \
    PushStack(StackNode()); \
-   TXMLReadArrayContent(vname); \
+   TXMLReadArrayContent(vname, n); \
    PopStack(); \
    ShiftStack("readstatarr"); \
    return n; \
@@ -1497,32 +1514,48 @@ Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d)
    TXMLBuffer_ReadStaticArray(d);
 }
 
+
+
 // macro to read content of array, which not include size of array
-#define TXMLBuffer_ReadFastArray(vname) \
-{ \
-   BeforeIOoperation(); \
-   if (n<=0) return; \
-   if (fExpectedChain) { \
-      fExpectedChain = kFALSE; \
-      TStreamerInfo* info = Stack(1)->fInfo; \
-      Int_t startnumber = Stack(0)->fElemNumber; \
-      fCanUseCompact = kTRUE; \
-      XmlReadBasic(vname[0]); \
-      for(Int_t indx=1;indx<n; indx++) { \
-          PopStack(); \
-          ShiftStack("chainreader"); \
-          TStreamerElement* elem = info->GetStreamerElementReal(startnumber, indx); \
-          fCanUseCompact = kTRUE; \
-          VerifyElemNode(elem); \
-          XmlReadBasic(vname[indx]); \
-      } \
-   } else { \
-      if (!VerifyItemNode(xmlNames_Array,"ReadFastArray")) return; \
-      PushStack(StackNode()); \
-      TXMLReadArrayContent(vname); \
-      PopStack(); \
-      ShiftStack("readfastarr"); \
-   } \
+// macro also treat situation, when instead of one single array chain of several elements should be produced
+#define TXMLBuffer_ReadFastArray(vname)                                   \
+{                                                                         \
+   BeforeIOoperation();                                                   \
+   if (n<=0) return;                                                      \
+   TStreamerInfo* info = Stack(1)->fInfo;                                 \
+   Int_t startnumber = Stack(0)->fElemNumber;                             \
+   TStreamerElement* elem = info->GetStreamerElementReal(startnumber, 0); \
+   if ((elem->GetType()>TStreamerInfo::kOffsetL) &&                       \
+       (elem->GetType()<TStreamerInfo::kOffsetP) &&                       \
+       (elem->GetArrayLength()!=n)) fExpectedChain = kTRUE;               \
+   if (fExpectedChain) {                                                  \
+      fExpectedChain = kFALSE;                                            \
+      Int_t number = 0;                                                   \
+      Int_t index = 0;                                                    \
+      while (index<n) {                                                   \
+        elem = info->GetStreamerElementReal(startnumber, number++);       \
+        if (elem->GetType()<TStreamerInfo::kOffsetL) {                    \
+           if (index>0) { PopStack(); ShiftStack("chainreader"); VerifyElemNode(elem); }  \
+           fCanUseCompact = kTRUE;                                        \
+           XmlReadBasic(vname[index]);                                    \
+           index++;                                                       \
+        } else {                                                          \
+           if (!VerifyItemNode(xmlNames_Array,"ReadFastArray")) return;   \
+           PushStack(StackNode());                                        \
+           Int_t elemlen = elem->GetArrayLength();                        \
+           TXMLReadArrayContent((vname+index), elemlen);                  \
+           PopStack();                                                    \
+           ShiftStack("readfastarr");                                     \
+           index+=elemlen;                                                \
+        }                                                                 \
+      }                                                                   \
+   } else {                                                               \
+      if (!VerifyItemNode(xmlNames_Array,"ReadFastArray")) return;        \
+      PushStack(StackNode());                                             \
+      TXMLReadArrayContent(vname, n);                                     \
+      PopStack();                                                         \
+      ShiftStack("readfastarr");                                          \
+   }                                                                      \
 }
 
 //______________________________________________________________________________
@@ -1662,31 +1695,31 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
 }
 
 // macro to write content of noncompressed array, not used
-#define TXMLWriteArrayNoncompress(vname) \
+#define TXMLWriteArrayNoncompress(vname, arrsize) \
 { \
-   for(Int_t indx=0;indx<n;indx++) \
+   for(Int_t indx=0;indx<arrsize;indx++) \
      XmlWriteBasic(vname[indx]); \
 }
 
 // macro to write content of compressed array
-#define TXMLWriteArrayCompress(vname) \
+#define TXMLWriteArrayCompress(vname, arrsize) \
 { \
    Int_t indx = 0; \
-   while(indx<n) { \
+   while(indx<arrsize) { \
       xmlNodePointer elemnode = XmlWriteBasic(vname[indx]); \
       Int_t curr = indx; indx++; \
-      while ((indx<n) && (vname[indx]==vname[curr])) indx++; \
+      while ((indx<arrsize) && (vname[indx]==vname[curr])) indx++; \
       if (indx-curr > 1)  \
          fXML->NewIntAttr(elemnode, xmlNames_cnt, indx-curr); \
    } \
 }
 
-#define TXMLWriteArrayContent(vname) \
+#define TXMLWriteArrayContent(vname, arrsize) \
 { \
    if (fCompressLevel>0) { \
-     TXMLWriteArrayCompress(vname) \
+     TXMLWriteArrayCompress(vname, arrsize) \
    } else {\
-     TXMLWriteArrayNoncompress(vname) \
+     TXMLWriteArrayNoncompress(vname, arrsize) \
    } \
 }
 
@@ -1697,7 +1730,7 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
    xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
    fXML->NewIntAttr(arrnode, xmlNames_Size, n); \
    PushStack(arrnode); \
-   TXMLWriteArrayContent(vname); \
+   TXMLWriteArrayContent(vname, n); \
    PopStack(); \
 }
 
@@ -1814,29 +1847,43 @@ void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n)
 }
 
 // write array without size attribute
-#define TXMLBuffer_WriteFastArray(vname) \
-{ \
-   BeforeIOoperation(); \
-   if (n<=0) return; \
-   if (fExpectedChain) { \
-      fExpectedChain = kFALSE; \
-      TStreamerInfo* info = Stack(1)->fInfo; \
-      Int_t startnumber = Stack(0)->fElemNumber; \
-      fCanUseCompact = kTRUE; \
-      XmlWriteBasic(vname[0]); \
-      for(Int_t indx=1;indx<n; indx++) { \
-          PopStack(); \
-          TStreamerElement* elem = info->GetStreamerElementReal(startnumber, indx); \
-          CreateElemNode(elem); \
-          fCanUseCompact = kTRUE; \
-          XmlWriteBasic(vname[indx]); \
-      } \
-   } else {\
-      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array); \
-      PushStack(arrnode); \
-      TXMLWriteArrayContent(vname); \
-      PopStack(); \
-   } \
+// macro also treat situation, when instead of one single array chain of several elements should be produced
+#define TXMLBuffer_WriteFastArray(vname)                                  \
+{                                                                         \
+   BeforeIOoperation();                                                   \
+   if (n<=0) return;                                                      \
+   TStreamerInfo* info = Stack(1)->fInfo;                                 \
+   Int_t startnumber = Stack(0)->fElemNumber;                             \
+   TStreamerElement* elem = info->GetStreamerElementReal(startnumber, 0); \
+   if ((elem->GetType()>TStreamerInfo::kOffsetL) &&                       \
+       (elem->GetType()<TStreamerInfo::kOffsetP) &&                       \
+       (elem->GetArrayLength()!=n)) fExpectedChain = kTRUE;               \
+   if (fExpectedChain) {                                                  \
+      fExpectedChain = kFALSE;                                            \
+      Int_t number = 0;                                                   \
+      Int_t index = 0;                                                    \
+      while (index<n) {                                                   \
+        elem = info->GetStreamerElementReal(startnumber, number++);       \
+        if (elem->GetType()<TStreamerInfo::kOffsetL) {                    \
+          if(index>0) { PopStack(); CreateElemNode(elem); }               \
+          fCanUseCompact = kTRUE;                                         \
+          XmlWriteBasic(vname[index]);                                    \
+          index++;                                                        \
+        } else {                                                          \
+          xmlNodePointer arrnode = CreateItemNode(xmlNames_Array);        \
+          Int_t elemlen = elem->GetArrayLength();                         \
+          PushStack(arrnode);                                             \
+          TXMLWriteArrayContent((vname+index), elemlen);                  \
+          index+=elemlen;                                                 \
+          PopStack();                                                     \
+        }                                                                 \
+      }                                                                   \
+   } else {                                                               \
+      xmlNodePointer arrnode = CreateItemNode(xmlNames_Array);            \
+      PushStack(arrnode);                                                 \
+      TXMLWriteArrayContent(vname, n);                                    \
+      PopStack();                                                         \
+   }                                                                      \
 }
 
 //______________________________________________________________________________
