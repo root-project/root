@@ -16,10 +16,14 @@ GLL          := $(MODDIRI)/LinkDef.h
 GLDS         := $(MODDIRS)/G__GL.cxx
 GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
+
 GLH          := $(wildcard $(MODDIRI)/*.h)
 GLH1         := $(MODDIRI)/TViewerOpenGL.h
-
-GLS          := TGLKernel.cxx TArcBall.cxx
+GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx
+ifneq ($(ARCH),win32)
+GLS          += TX11GL.cxx
+GLH1         += $(MODDIRI)/TX11GL.h
+endif
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
@@ -35,9 +39,7 @@ ifeq ($(ARCH),win32)
 GLLIBS       += opengl32.lib glu32.lib
 endif
 
-GLS          += TViewerOpenGL.cxx
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
-
 GLO          := $(GLS:.cxx=.o)
 
 GLDEP        := $(GLO:.o=.d)

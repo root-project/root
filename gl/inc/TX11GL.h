@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.22 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.1 2004/08/09 15:46:53 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 // TX11GL                                                               //
 //                                                                      //
-// The TX11GL is X11 implementation of TVirtualGLimp class              //
+// The TX11GL is X11 implementation of TVirtualGLImp class.             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -25,20 +25,28 @@
 #include "TVirtualGL.h"
 #endif
 
+#if !defined(__CINT__)
+#include <GL/glx.h>
+#else
+struct Display;
+struct XVisualInfo;
+#endif
 
-class TX11GL : public TVirtualGLimp {
+
+class TX11GL : public TVirtualGLImp {
+
+private:
+   Display     *fDpy;
+   XVisualInfo *fVisInfo;
 
 public:
    TX11GL();
 
    Window_t CreateGLWindow(Window_t wind);
-   ULong_t CreateContext(Window_t wind);
-   void DeleteContext(ULong_t ctx);
-   void MakeCurrent(Window_t wind, ULong_t ctx);
-   void SwapLayerBuffers(Window_t wind);
-
-   Display * fDpy;
-   XVisualInfo * fVisInfo;
+   ULong_t  CreateContext(Window_t wind);
+   void     DeleteContext(ULong_t ctx);
+   void     MakeCurrent(Window_t wind, ULong_t ctx);
+   void     SwapLayerBuffers(Window_t wind);
 
    ClassDef(TX11GL, 0);
 };

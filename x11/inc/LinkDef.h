@@ -1,4 +1,4 @@
-/* @(#)root/x11:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $ */
+/* @(#)root/x11:$Name:  $:$Id: LinkDef.h,v 1.2 2004/08/09 15:35:52 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,5 @@
 #pragma link off all functions;
 
 #pragma link C++ class TGX11;
-#pragma link C++ class TX11GL;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.8 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.1 2004/08/09 15:46:53 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -13,12 +13,11 @@
 //                                                                      //
 // TX11GL                                                               //
 //                                                                      //
-// The TX11GL is X11 implementation of TVirtualGLimp class              //
+// The TX11GL is X11 implementation of TVirtualGLImp class.             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#include <iostream>
 
-#include <GL/glx.h>
+#include <iostream>
 
 #include "TVirtualX.h"
 #include "TX11GL.h"
@@ -27,7 +26,7 @@
 ClassImp(TX11GL)
 
 //______________________________________________________________________________
-TX11GL::TX11GL():fDpy(0), fVisInfo(0)
+TX11GL::TX11GL() : fDpy(0), fVisInfo(0)
 {
 }
 
@@ -43,12 +42,12 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
     			  GLX_STEREO,
 #endif
 			  GLX_RGBA, GLX_DEPTH_SIZE, 16,
-    			  GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, 
+    			  GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1,
 			  GLX_BLUE_SIZE, 1,None
 			 };
    static int * snglBuf = dblBuf + 1;
 
-   if(!fVisInfo){      
+   if(!fVisInfo){
       fVisInfo = glXChooseVisual(fDpy, DefaultScreen(fDpy), dblBuf);
 
       if(!fVisInfo)
@@ -56,10 +55,10 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
 
       if(!fVisInfo){
          ::Error("TX11GL::CreateGLWindow", "No good visual\n");
-         return 0;	
+         return 0;
       }
    }
-    
+
    Int_t  xval = 0, yval = 0;
    UInt_t wval = 0, hval = 0, border = 0, d = 0;
    Window root = {0};
