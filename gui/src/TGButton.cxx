@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.10 2003/07/15 14:25:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.11 2003/07/16 09:19:26 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -457,6 +457,38 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
    return fgDefaultFont->GetFontStruct();
 }
 
+//______________________________________________________________________________
+void TGTextButton::SetFont(FontStruct_t font)
+{
+   // Changes text font
+
+   if (font != fFontStruct) {
+      FontH_t v = gVirtualX->GetFontHandle(font);
+      if (!v) return;
+
+      fFontStruct = font;
+      int max_ascent, max_descent;
+      fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
+      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+      fTHeight = max_ascent + max_descent;
+      TGGC normgc = *gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+      TGGC *gc = new TGGC(normgc); // copy
+      gc->SetFont(v);
+      fNormGC = gc->GetGC();
+      Resize(fTWidth + 8, fTHeight + 7);
+   }
+}
+
+//______________________________________________________________________________
+void TGTextButton::SetFont(const char *fontName)
+{
+   // Changes text font specified by name
+
+   TGFont *font = fClient->GetFont(fontName);
+   if (font) {
+      SetFont(font->GetFontStruct());
+   }
+}
 
 //______________________________________________________________________________
 TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,

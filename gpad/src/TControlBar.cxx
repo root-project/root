@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.2 2002/03/21 08:50:30 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -175,31 +175,49 @@ void TControlBar::AddSeparator()
 //_______________________________________________________________________
 void TControlBar::Create()
 {
-    if( fControlBarImp )
-        fControlBarImp->Create();
+   //
+  
+   if( fControlBarImp ) {
+      fControlBarImp->Create();
+   }
 }
 
 
 //_______________________________________________________________________
 void TControlBar::Hide()
 {
-    if( fControlBarImp )
-        fControlBarImp->Hide();
+   //
+
+   if( fControlBarImp ) {
+      fControlBarImp->Hide();
+   }
 }
 
 
 //_______________________________________________________________________
 void TControlBar::Initialize(Int_t x, Int_t y)
 {
-   if (x == -999)
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
-   else
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName(), x, y );
+   //
 
-    fButtons       = new TList();
-    fNoroc         = 1;
+   if (x == -999) {
+      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
+   } else {
+      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName(), x, y );
+   }
+  
+   fButtons       = new TList();
+   fNoroc         = 1;
 }
 
+//_______________________________________________________________________
+void TControlBar::SetFont(const char *fontName)
+{
+   // Sets new font for control bar buttons, e.g.:
+   // root > .x tutorials/demos.C
+   // root > bar->SetFont("-adobe-helvetica-bold-r-*-*-24-*-*-*-*-*-iso8859-1")
+
+   fControlBarImp->SetFont(fontName);
+}
 
 //_______________________________________________________________________
 void TControlBar::SetOrientation(const char *o)

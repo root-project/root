@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.2 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.3 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -150,4 +150,21 @@ void TRootControlBar::CloseWindow()
    // Called when closed via window manager action.
 
    DeleteWindow();        // but do it slightly delayed here
+}
+
+//______________________________________________________________________________
+void TRootControlBar::SetFont(const char *fontName)
+{
+   // sets new font for control bar buttons
+
+   TIter next(fWidgets);
+
+   TObject *obj;
+   
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TGTextButton::Class())) continue;
+
+      ((TGTextButton *)obj)->SetFont(fontName);
+   }
+   Resize(GetDefaultSize());
 }

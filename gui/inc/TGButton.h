@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.13 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.14 2003/07/15 14:25:21 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -50,7 +50,6 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
-
 
 //--- Button states
 
@@ -162,8 +161,10 @@ public:
    const TGHotString *GetText() const { return fLabel; }
    TString            GetString() const { return TString(fLabel->GetString()); }
    void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
-   void               SetText(TGHotString *new_label);
-   void               SetText(const TString &new_label);
+   virtual void       SetText(TGHotString *new_label);
+   virtual void       SetText(const TString &new_label);
+   virtual void       SetFont(FontStruct_t font);
+   virtual void       SetFont(const char *fontName);
 
    ClassDef(TGTextButton,0)  // A text button widget
 };

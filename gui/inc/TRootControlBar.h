@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.2 2001/03/05 15:26:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.3 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    void   CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void   ReallyDelete();
+   void   SetFont(const char *fontName);
 
    ClassDef(TRootControlBar,0)  //ROOT native GUI implementation of TControlBar
 };
