@@ -36,45 +36,47 @@ class TGraph2D : public TNamed, public TAttLine, public TAttFill, public TAttMar
 
 protected:
 
-   Int_t     fNp;          // Number of points to in the data set
-   Int_t     fNpx;         // number of bins along X in fHistogram
-   Int_t     fNpy;         // number of bins along Y in fHistogram
+   Int_t     fNp;          // Number of points in the data set
+   Int_t     fNpx;         // Number of bins along X in fHistogram
+   Int_t     fNpy;         // Number of bins along Y in fHistogram
    Int_t     fNdt;         //!Number of Delaunay triangles found
    Int_t     fNxt;         //!Number of non-Delaunay triangles found
    Int_t     fNhull;       //!Number of points in the hull
-   Double_t *fX;           //[fNp] Data set to be plotted. It is 
-   Double_t *fY;           //[fNp] stored in a normalized form.
+   Int_t     fSize;        // Real size of fX, fY and fZ
+   Double_t *fX;           //[fNp]
+   Double_t *fY;           //[fNp] Data set to be plotted
    Double_t *fZ;           //[fNp]
-   Double_t  fXmin;        //!Minimum value of fX
-   Double_t  fXmax;        //!Maximum value of fX
-   Double_t  fYmin;        //!Minimum value of fY
-   Double_t  fYmax;        //!Maximum value of fY
-   Double_t  fMargin;      // extra space (in %) around interpolated area for 2D histo
+   Double_t *fXN;          //!Normalized version of fX
+   Double_t *fYN;          //!Normalized version of fY
+   Double_t  fXNmin;       //!Minimum value of fXN
+   Double_t  fXNmax;       //!Maximum value of fXN
+   Double_t  fYNmin;       //!Minimum value of fYN
+   Double_t  fYNmax;       //!Maximum value of fYN
+   Double_t  fMargin;      // Extra space (in %) around interpolated area for 2D histo
    Double_t  fZout;        // Histogram bin height for points lying outside the convex hull
-   Double_t  fXoffset;     //!Offset fX
-   Double_t  fYoffset;     //!Offset fY
-   Double_t  fScaleFactor; //!Scale so the average of the fX and fY ranges is one
    Double_t *fDist;        //!Array used to order mass points by distance
    Int_t    *fTried;       //!Encoded triangles (see FileIt)
    Int_t    *fHullPoints;  //!Hull points
    Int_t    *fOrder;       //!Array used to order mass points by distance
-   TH2D *fHistogram;       //!2D histogram of z values linearly interpolated
+   TH2D     *fHistogram;   //!2D histogram of z values linearly interpolated
    
-           Double_t ComputeZ(Double_t x, Double_t y);
-	   void     CreateHistogram();
-           Bool_t   Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const;
-           void     FileIt(Int_t tri);
-           void     FillHistogram();
-           void     FindHull();
-           Bool_t   InHull(Int_t E, Int_t X) const;
-           Double_t Interpolate(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const;
-           void     PaintMarkers();
-           void     PaintTriangles();
-           Int_t    TriEncode(Int_t T1, Int_t T2, Int_t T3) const;
+   Double_t ComputeZ(Double_t x, Double_t y);
+   void     CreateHistogram();
+   Bool_t   Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const;
+   void     FileIt(Int_t tri);
+   void     FindHull();
+   Bool_t   InHull(Int_t E, Int_t X) const;
+   void     Initialise(Int_t n);
+   Double_t Interpolate(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const;
+   void     PaintMarkers();
+   void     PaintTriangles();
+   Int_t    TriEncode(Int_t T1, Int_t T2, Int_t T3) const;
+
 public:
 
            TGraph2D();
            TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option="");
+           TGraph2D(Int_t n, Option_t *option="");
            virtual ~TGraph2D();
            Int_t    DistancetoPrimitive(Int_t px, Int_t py);
            void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -82,11 +84,20 @@ public:
            Int_t    GetNpx() const {return fNpx;}
            Int_t    GetNpy() const {return fNpy;}
            Double_t GetMarginBinsContent() const {return fZout;}
+           TH2D    *GetHistogram() const;
+           Double_t GetXmax() const;
+           Double_t GetXmin() const;
+           Double_t GetYmax() const;
+           Double_t GetYmin() const;
+           Double_t GetZmax() const;
+           Double_t GetZmin() const;
            void     Paint(Option_t *option="");
-	   TH1     *Project(Option_t *option="x") const; // *MENU*
+           TH1     *Project(Option_t *option="x") const; // *MENU*
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
            void     SetMargin(Double_t m=0.1); // *MENU*
            void     SetNpx(Int_t npx=40); // *MENU*
            void     SetNpy(Int_t npx=40); // *MENU*
+           void     SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void     SetTitle(const char *title=""); // *MENU*
            void     SetMarginBinsContent(Double_t z=0.); // *MENU*
            void     Update();
