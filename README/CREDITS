@@ -105,6 +105,10 @@ N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
+N: Akiya Miyamoto
+E: akiya.miyamoto@kek.jp
+D: port to IBM AIX with xlC v5.x
+
 N: Dave Morrison
 E: dave@bnl.gov
 D: library load path fixes, some Makefile updates
