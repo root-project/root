@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.12 2004/02/18 08:50:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.13 2004/02/18 17:10:51 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -39,13 +39,15 @@ TDataType::TDataType(G__TypedefInfo *info) : TDictionary()
       SetName(info->Name());
       SetTitle(info->Title());
       SetType(fInfo->TrueName());
+      fProperty = fInfo->Property();
+      fSize = fInfo->Size();
    } else {
       SetTitle("Builtin basic type");
    }
 }
 
 //______________________________________________________________________________
-TDataType::TDataType(const char *typenam)
+TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental)
 {
    // Constructor for basic data types, like "char", "unsigned char", etc.
 
@@ -70,10 +72,12 @@ const char *TDataType::GetTypeName() const
    // Get basic type of typedef, e,g.: "class TDirectory*" -> "TDirectory".
    // Result needs to be used or copied immediately.
 
-   if (fInfo)
-      return gInterpreter->TypeName(fInfo->TrueName());
-  else
+   if (fInfo) {
+      (const_cast<TDataType*>(this))->CheckInfo();
+      return gInterpreter->TypeName(fTrueName.Data());
+   } else {
       return fName.Data();
+   }
 }
 
 //______________________________________________________________________________
@@ -81,10 +85,12 @@ const char *TDataType::GetFullTypeName() const
 {
    // Get full type description of typedef, e,g.: "class TDirectory*".
 
-   if (fInfo)
-      return fInfo->TrueName();
-   else
+   if (fInfo) {
+      (const_cast<TDataType*>(this))->CheckInfo();
+      return fTrueName;
+   } else {
       return fName.Data();
+   }
 }
 
 //______________________________________________________________________________
@@ -135,10 +141,12 @@ const char *TDataType::AsString(void *buf) const
    static char line[81];
    const char *name;
 
-   if (fInfo)
-      name = fInfo->TrueName();
-   else
+   if (fInfo) {
+      (const_cast<TDataType*>(this))->CheckInfo();
+      name = fTrueName;
+   } else {
       name = fName.Data();
+   }
 
    line[0] = 0;
    if (!strcmp("unsigned int", name))
@@ -176,10 +184,8 @@ Long_t TDataType::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   if (fInfo)
-      return fInfo->Property();
-   else
-      return (Long_t) kIsFundamental;
+   if (fInfo) (const_cast<TDataType*>(this))->CheckInfo();
+   return fProperty;
 }
 
 //______________________________________________________________________________
@@ -187,6 +193,7 @@ void TDataType::SetType(const char *name)
 {
    // Set type id depending on name.
 
+   fTrueName = name;
    fType = kOther_t;
    fSize = 0;
 
@@ -241,8 +248,38 @@ Int_t TDataType::Size() const
 {
    // Get size of basic typedef'ed type.
 
-   if (fInfo)
-      return fInfo->Size();
-   else
-      return fSize;
+   if (fInfo) (const_cast<TDataType*>(this))->CheckInfo();
+   return fSize;
+}
+
+//______________________________________________________________________________
+void TDataType::CheckInfo()
+{
+   // Refresh the underlying information.
+
+   // This can be needed if the library defining this typedef was loaded after
+   // another library and that this other library is unloaded (in which case
+   // things can get renumbered inside CINT).
+
+   if (!fInfo) return;
+
+   // This intentionally cast the constness away so that
+   // we can call CheckInfo from const data members.
+
+   if (!fInfo->IsValid() ||
+       strcmp(fInfo->Name(),fName.Data())!=0) {
+
+      // The fInfo is invalid or does not
+      // point to this typedef anymore, let's
+      // refresh it
+
+      fInfo->Init(fName.Data());
+
+      if (!fInfo->IsValid()) return;
+
+      SetTitle(fInfo->Title());
+      SetType(fInfo->TrueName());
+      fProperty = fInfo->Property();
+      fSize = fInfo->Size();
+   }
 }
