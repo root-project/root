@@ -2508,7 +2508,7 @@ struct G__ifunc_table *ifunc;
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
-  char buf[G__MAXNAME]; /* 1481 */
+  char buf[G__LONGLINE]; /* 1481 */
 
   G__ASSERT( tagnum != -1 );
 
