@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.8 2001/05/09 13:27:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.9 2001/06/05 11:29:42 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,9 +51,9 @@ TStyle::TStyle() :TNamed()
 //______________________________________________________________________________
 TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 {
-   gStyle = 0;  //gStyle is used by TAttAxis::ResetAttAxis called by Reset
+   
    Reset();
-   gStyle = this;
+   
    gROOT->GetListOfStyles()->Add(this);
 
    //may be a standard style to be initialyzed

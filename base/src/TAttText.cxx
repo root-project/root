@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.6 2001/02/16 16:05:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.7 2001/03/01 13:34:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -115,7 +115,10 @@ TAttText::TAttText()
 //*-*                      ===========================
 //*-*  Default text attributes are taking from the current style
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   if (!gStyle) return;
+   if (!gStyle) {
+      ResetAttText();
+      return;
+   }
    fTextAlign = gStyle->GetTextAlign();
    fTextAngle = gStyle->GetTextAngle();
    fTextColor = gStyle->GetTextColor();

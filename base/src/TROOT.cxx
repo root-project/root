@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.48 2001/10/01 10:38:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.49 2001/10/01 14:12:12 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -339,8 +339,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    new TMessageHandler((TClass*)0);
 
    // Create some styles
+   gStyle = 0;
    TStyle::BuildStyles();
-
+   SetStyle("Default");
+   
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
    gGuiFactory      = gBatchGuiFactory;
