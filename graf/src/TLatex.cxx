@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.9 2000/08/09 11:20:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.10 2000/08/10 10:29:23 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -17,7 +17,11 @@
 #include "TVirtualPS.h"
 #include "TArc.h"
 
+#ifdef R__SUNCCBUG
+const Double_t kPI = 3.14159265358979323846;
+#else
 const Double_t kPI = TMath::Pi();
+#endif
 const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
@@ -200,22 +204,22 @@ ClassImp(TLatex)
 //  latex.DrawLatex(.2,.9,"K_{S}");
 //  latex.DrawLatex(.3,.9,"K^{*0}");
 //  latex.DrawLatex(.2,.8,longstring);
-//  
+//
 //  latex.SetTextAlign(12);  //centered
 //  latex.DrawLatex(.2,.6,"K_{S}");
 //  latex.DrawLatex(.3,.6,"K^{*0}");
 //  latex.DrawLatex(.2,.5,longstring);
-//  
+//
 //  latex.SetTextAlign(11);  //default bottom alignment
 //  latex.DrawLatex(.2,.4,"K_{S}");
 //  latex.DrawLatex(.3,.4,"K^{*0}");
 //  latex.DrawLatex(.2,.3,longstring);
-//  
+//
 //  latex.SetTextAlign(10);  //special bottom alignment
 //  latex.DrawLatex(.2,.2,"K_{S}");
 //  latex.DrawLatex(.3,.2,"K^{*0}");
 //  latex.DrawLatex(.2,.1,longstring);
-//  
+//
 //  latex.SetTextAlign(12);
 //  latex->SetTextFont(72);
 //  latex->DrawLatex(.1,.80,"13");
@@ -337,7 +341,7 @@ const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "Downarrow","diamond","LT","void1","copyright","void3","sum",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
                  "ltbar","void04","void05","void06","GT","int" };
-                 
+
 const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
 
       if (fError != 0) return FormSize(0,0,0);
@@ -1352,12 +1356,12 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
    Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
    Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
    Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
-   
+
    const Int_t np = 40;
    Double_t dphi = 2*kPI/np;
    Double_t x[np+3], y[np+3];
    Double_t angle,dx,dy;
-   
+
    SetLineColor(spec.color);
    TAttLine::Modify();  //Change line attributes only if necessary
 
@@ -1384,7 +1388,7 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
    Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
    Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
-   
+
    const Int_t np = 40;
    Double_t dphi = (phimax-phimin)*kPI/(180*np);
    Double_t x[np+3], y[np+3];
@@ -1426,7 +1430,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 {
 // Main drawing function
 
-      
+
       TAttText::Modify();  //Change text attributes only if necessary
 
        // do not use Latex if font is low precision
@@ -1502,7 +1506,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       SetLineWidth(lineW);
       SetLineColor(lineC);
       delete[] fTabSize;
-      
+
       if (gVirtualPS) gVirtualPS->ResetBit(kLatex);
 }
 

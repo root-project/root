@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.2 2000/06/13 09:52:04 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -37,7 +37,11 @@
 #include "TMath.h"
 #include "TStyle.h"
 
+#ifdef R__SUNCCBUG
+const Double_t kRad = 1.74532925199432955e-02;
+#else
 const Double_t kRad = TMath::ATan(1)*Double_t(4)/Double_t(180);
+#endif
 
   R__EXTERN TH1  *gCurrentHist;
   R__EXTERN Hoption_t Hoption;
