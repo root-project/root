@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.2 2000/12/10 17:43:45 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.3 2000/12/11 00:01:22 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
   virtual Double_t  Eval(Double_t x) const=0;
            void     SetNpx(Int_t n) {fNpx=n;}
 
-  ClassDef (TSpline,1)
+  ClassDef (TSpline,2)
 };
 
 
@@ -134,7 +134,7 @@ public:
 //________________________________________________________________________
 class TSpline3 : public TSpline {
 private:
-  TSplinePoly3  *fPoly;       // Array of polynomial terms
+  TSplinePoly3  *fPoly;       //[fNp] Array of polynomial terms
   Double_t       fValBeg;     // Initial value of first or second derivative
   Double_t       fValEnd;     // End value of first or second derivative
   Int_t          fBegCond;    // 0=no beg cond, 1=first derivative, 2=second derivative
@@ -172,14 +172,14 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline3,1)
+  ClassDef (TSpline3,2)
 };
 
 
 //________________________________________________________________________
 class TSpline5 : public TSpline {
 private:
-  TSplinePoly5  *fPoly;     // Array of polynomial terms
+  TSplinePoly5  *fPoly;     //[fNp] Array of polynomial terms
 
   void BuildCoeff();
   void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
@@ -224,7 +224,7 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline5,1)
+  ClassDef (TSpline5,2)
 };
 
 #endif

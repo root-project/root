@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name$:$Id$ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,7 +19,7 @@
 #pragma link C++ class TLegendEntry+;
 #pragma link C++ class TLink+;
 #pragma link C++ class TPoints+;
-#pragma link C++ class TSpline+;
+#pragma link C++ class TSpline-;
 #pragma link C++ class TSpline5-;
 #pragma link C++ class TSpline3-;
 #pragma link C++ class TSplinePoly+;
