@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.25 2001/05/11 06:29:59 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.26 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,8 @@
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 
 #include <string.h>
 
@@ -239,37 +241,47 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 
 
 
-void RooAbsArg::leafNodeServerList(RooArgSet* list, const RooAbsArg* arg) const
+void RooAbsArg::leafNodeServerList(RooArgSet* list, Bool_t truncAtLValue, const RooAbsArg* arg) const
 {
-  treeNodeServerList(list,arg,kFALSE,kTRUE) ;
+  treeNodeServerList(list,arg,kFALSE,kTRUE,truncAtLValue) ;
 }
 
 
 
 void RooAbsArg::branchNodeServerList(RooArgSet* list, const RooAbsArg* arg) const 
 {
-  treeNodeServerList(list,arg,kTRUE,kFALSE) ;
+  treeNodeServerList(list,arg,kTRUE,kFALSE,kFALSE) ;
 }
 
 
-void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
+void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t lValueIsLeaf) const
   // Do recursive deep copy of all 'ultimate' servers 
 {
   if (!arg) arg=this ;
 
+  // Optionally treat (derived) LValues as leaf nodes
+  Bool_t isDerived = arg->isDerived() ;
+  if (lValueIsLeaf) {
+    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) isDerived = kFALSE ;
+    if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) isDerived = kFALSE ;
+  }
+
+  // Decide if to add current node
   if ((doBranch&&doLeaf) ||
-      (doBranch&&arg->isDerived()) ||
-      (doLeaf&&!arg->isDerived())) {
+      (doBranch&&isDerived) ||
+      (doLeaf&&!isDerived)) {
     list->add(*arg) ;  
   }
 
-  RooAbsArg* server ;
-  TIterator* sIter = arg->serverIterator() ;
-  while (server=(RooAbsArg*)sIter->Next()) {
-    treeNodeServerList(list,server,doBranch,doLeaf) ;
-    }
-  
-  delete sIter ;
+  // Recurse if current node is derived
+  if (isDerived) {
+    RooAbsArg* server ;
+    TIterator* sIter = arg->serverIterator() ;
+    while (server=(RooAbsArg*)sIter->Next()) {
+      treeNodeServerList(list,server,doBranch,doLeaf,lValueIsLeaf) ;
+    }  
+    delete sIter ;
+  }
 }
 
 
@@ -288,7 +300,8 @@ RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const
   TIterator* sIter = leafList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
-    if (!dataList->FindObject(arg->GetName())) {
+
+    if (!arg->dependsOn(*dataList)) {
       parList->add(*arg) ;
     }
   }
@@ -299,20 +312,22 @@ RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const
 
 
 
-RooArgSet* RooAbsArg::getDependents(const RooDataSet* set) const 
+RooArgSet* RooAbsArg::getDependents(const RooDataSet* set, Bool_t truncAtLValue) const 
 {
   RooArgSet* depList = new RooArgSet("dependents") ;
   const RooArgSet* dataList = set->get() ;
 
   // Create and fill deep server list
   RooArgSet leafList("leafNodeServerList") ;
-  leafNodeServerList(&leafList) ;
+  leafNodeServerList(&leafList,truncAtLValue) ;
 
   // Copy dependent servers to dependent list
   TIterator* sIter = leafList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
-    if (dataList->FindObject(arg->GetName())) {
+    // If arg is derived LValue it is not in dataList, 
+    // but the following check handles this properly
+    if (arg->dependsOn(*dataList)) {
       depList->add(*arg) ;
     }
   }
@@ -382,7 +397,10 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg) const
   // Note that RooAbsArg objects are considered equivalent if they have
   // the same name.
 
-  // First test direct dependence
+  // First check if testArg is self 
+  if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
+
+  // Next test direct dependence
   if (_serverList.FindObject(testArg.GetName())) return kTRUE ;
 
   // If not, recurse

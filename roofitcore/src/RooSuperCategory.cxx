@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.2 2001/05/10 21:26:09 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.3 2001/05/11 06:30:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -60,6 +60,7 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
   _catListProxy = new RooSetProxy("catList","catList",this,*catList,kTRUE,kTRUE) ;
 
   updateIndexList() ;
+  setIndex(other.getIndex()) ;
 }
 
 
@@ -144,6 +145,8 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
 
 Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
 {
+  // WVE: adapt parser to understand composite super categories
+
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 

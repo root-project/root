@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.1 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.2 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -103,6 +103,15 @@ Double_t RooAbsRealLValue::operator=(Double_t newValue)
   setValueDirty(kTRUE) ;
   return _value;
 }
+
+
+
+void RooAbsRealLValue::copyCache(const RooAbsArg* source) 
+{
+  RooAbsReal::copyCache(source) ;
+  setVal(_value) ; // force back-propagation
+}
+
 
 
 void RooAbsRealLValue::printToStream(ostream& os, PrintOption opt, TString indent) const {

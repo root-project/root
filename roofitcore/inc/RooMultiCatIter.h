@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.rdl,v 1.1 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.2 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,7 +19,7 @@
 class RooCategory ;
 
 typedef TIterator* pTIterator ;
-typedef RooCategory* pRooCategory ;
+typedef RooAbsCategoryLValue* pRooCategory ;
 
 class RooMultiCatIter : public TIterator {
 public:

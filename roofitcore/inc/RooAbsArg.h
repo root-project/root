@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.21 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.22 2001/05/11 06:29:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,14 +45,15 @@ public:
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
-  void leafNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
+  void leafNodeServerList(RooArgSet* list, Bool_t truncAtLValue=kFALSE, const RooAbsArg* arg=0) const ;
   void branchNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
   void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE) const ;
+			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
+			  Bool_t lValueIsLeaf=kFALSE) const ;
   
   // Parameter & dependents interpretation of servers
   RooArgSet* getParameters(const RooDataSet* set) const ;
-  RooArgSet* getDependents(const RooDataSet* set) const ;
+  RooArgSet* getDependents(const RooDataSet* set, Bool_t truncAtLValue=kFALSE) const ;
   Bool_t dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooDataSet* set) const ;
 

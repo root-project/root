@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.5 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.6 2001/05/10 18:58:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,10 +58,14 @@ public:
   virtual Bool_t canBeExtended() const { return kFALSE ; } 
   virtual Double_t expectedEvents() const { return 0 ; } 
 
+  static void verboseEval(Bool_t stat) { _verboseEval = stat ; }
+
 private:
 
   // This forces definition copy ctor in derived classes 
   RooAbsPdf(const RooAbsPdf& other);
+
+  static Bool_t _verboseEval ;
 
 protected:
 

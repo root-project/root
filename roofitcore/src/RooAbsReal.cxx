@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.17 2001/05/11 00:45:49 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.18 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -372,14 +372,14 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
   // First determine if branch is taken
   if (t.GetBranch(GetName())) {
     t.SetBranchAddress(GetName(),&_value) ;
-    cout << "RooAbsReal::attachToTree(" << GetName() << "): branch already exists in tree " 
-	 << (void*)&t << ", changing address" << endl ;
+//     cout << "RooAbsReal::attachToTree(" << GetName() << "): branch already exists in tree " 
+// 	 << (void*)&t << ", changing address" << endl ;
   } else {
     TString format(GetName());
     format.Append("/D");
     t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
-    cout << "RooAbsReal::attachToTree(" << GetName() << "): creating new branch in tree" 
-	 << (void*)&t << endl ;
+//     cout << "RooAbsReal::attachToTree(" << GetName() << "): creating new branch in tree" 
+// 	 << (void*)&t << endl ;
   }
 }
 

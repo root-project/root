@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.2 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.3 2001/05/10 00:16:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-#include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
 
 ClassImp(RooMultiCatIter)
@@ -36,9 +36,9 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   TIterator* catIter = catList.MakeIterator() ;
   TObject* obj ;
   while (obj = catIter->Next()) {
-    if (obj->IsA()!=RooCategory::Class()) {
+    if (!obj->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       cout << "RooMultiCatIter:: list element " << obj->GetName() 
-	   << " is not a RooCategory, ignored" << endl ;
+	   << " is not a RooAbsCategoryLValue, ignored" << endl ;
       continue ;
     }
     _catList.Add(obj) ;
@@ -53,8 +53,8 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   // Construct component iterators
   _curIter = 0 ;
   TIterator* cIter = _catList.MakeIterator() ;
-  RooCategory* cat ;
-  while(cat=(RooCategory*)cIter->Next()) {
+  RooAbsCategoryLValue* cat ;
+  while(cat=(RooAbsCategoryLValue*)cIter->Next()) {
     _catPtrList[_curIter] = cat ;
     _iterList[_curIter++] = cat->typeIterator() ;
   }

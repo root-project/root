@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.8 2001/05/10 21:26:09 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.9 2001/05/11 06:30:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -123,14 +123,18 @@ RooRealIntegral::~RooRealIntegral()
 Double_t RooRealIntegral::evaluate() const 
 {
   // Save current integrand values 
-  RooArgSet saveInt(_intList), saveSum(_sumList) ;
+  RooArgSet *saveInt = _intList.snapshot() ;
+  RooArgSet *saveSum = _sumList.snapshot() ;
 
   // Evaluate integral
   Double_t retVal = sum() ;
 
   // Restore integrand values
-  _intList=saveInt ;
-  _sumList=saveSum ;
+  _intList=*saveInt ;
+  _sumList=*saveSum ;
+
+  delete saveInt ;
+  delete saveSum ;
 
   return retVal ;
 }

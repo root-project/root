@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.3 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.4 2001/05/10 18:58:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,6 +23,9 @@
 
 ClassImp(RooAbsPdf) 
 ;
+
+
+Bool_t RooAbsPdf::_verboseEval(kFALSE) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, const char *unit) : 
@@ -73,7 +76,7 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 
   // Process change in last data set used
   if (dset != _lastDataSet) {
-    cout << "RooAbsPdf:getVal(" << GetName() << ") data set changed" << endl ;
+    if (_verboseEval) cout << "RooAbsPdf:getVal(" << GetName() << ") recalculating normalization" << endl ;
     _lastDataSet = (RooDataSet*) dset ;
  
     // Update dataset pointers of proxies
@@ -81,8 +84,12 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
       getProxy(i).changeDataSet(dset) ;
     }
  
+
+    // NB: Special getDependents call that considers LValues 
+    //     with 'dependent' servers as dependents
+    RooArgSet* depList = getDependents(dset,kTRUE) ;
+
     // Destroy old normalization & create new
-    RooArgSet* depList = getDependents(dset) ;
     if (_norm) delete _norm ;
     _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
                                 TString(GetTitle()).Append(" Integral"),*this,*depList) ;
@@ -91,7 +98,7 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || _norm->isValueDirty() || dset != _lastDataSet) {
-//     cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
+    if (_verboseEval) cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
     _value = traceEval() / _norm->getVal() ;
   }
 

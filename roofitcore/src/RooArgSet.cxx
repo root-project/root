@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.19 2001/05/11 06:29:59 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.20 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,9 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooFormula.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooFitCore/RooStringVar.hh"
 
 ClassImp(RooArgSet)
 
@@ -189,7 +192,10 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
     elem= (RooAbsArg*)At(index);
     theirs= other.find(elem->GetName());
     if(!theirs) continue;
+
+    theirs->syncCache() ;
     elem->copyCache(theirs) ;
+
   }
   return *this;
 }

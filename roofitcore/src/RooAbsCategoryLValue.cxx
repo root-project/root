@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.1 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.2 2001/05/10 18:58:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,6 +53,13 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index) {
 RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) {
   setLabel(label) ;
   return *this ;
+}
+
+
+void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
+{
+  RooAbsCategory::copyCache(source) ;
+  setIndex(_value.getVal()) ; // force back-propagation
 }
 
 
