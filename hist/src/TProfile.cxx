@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.12 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.13 2001/04/19 09:39:36 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -64,6 +64,8 @@ TProfile::TProfile() : TH1D()
 {
 //*-*-*-*-*-*Default constructor for Profile histograms*-*-*-*-*-*-*-*-*
 //*-*        ==========================================
+
+   fScaling = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -201,6 +203,7 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 
    fYmin = ymin;
    fYmax = ymax;
+   fScaling = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -257,8 +260,8 @@ void TProfile::Add(TH1 *h1, Double_t c1)
    Double_t *en1 = p1->GetB();
    for (bin=0;bin<=nbinsx+1;bin++) {
       fArray[bin]             +=  c1*cu1[bin];
-      fSumw2.fArray[bin]      += ac1*er1[bin];
-      fBinEntries.fArray[bin] += ac1*en1[bin];
+      fSumw2.fArray[bin]      += ac1*ac1*er1[bin];
+      if (!fScaling) fBinEntries.fArray[bin] += ac1*en1[bin];
    }
 }
 
@@ -312,8 +315,12 @@ void TProfile::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
    Double_t *en2 = p2->GetB();
    for (bin=0;bin<=nbinsx+1;bin++) {
       fArray[bin]             =  c1*cu1[bin] +  c2*cu2[bin];
-      fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
-      fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
+      fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
+      if (fScaling) {
+         fBinEntries.fArray[bin] = en1[bin];
+      } else {
+         fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
+      }
    }
 }
 
@@ -917,7 +924,9 @@ void TProfile::Scale(Double_t c1)
 //
 
    Double_t ent = fEntries;
+   fScaling = kTRUE;
    Add(this,this,c1,0);
+   fScaling = kFALSE;
    fEntries = ent;
 }
 

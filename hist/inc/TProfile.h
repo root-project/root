@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.12 2001/02/21 14:57:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.13 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -36,7 +36,8 @@ protected:
     EErrorType  fErrorMode;       //Option to compute errors
     Double_t    fYmin;            //Lower limit in Y (if set)
     Double_t    fYmax;            //Upper limit in Y (if set)
-
+    Bool_t      fScaling;         //!True when TProfile::Scale is called
+    
 private:
    Int_t Fill(Axis_t) { MayNotUse("Fill(Axis_t)"); return -1;}
    void FillN(Int_t, const Axis_t *, const Double_t *, Int_t) { MayNotUse("FillN(Int_t, Axis_t*, Double_t*, Int_t)"); }
