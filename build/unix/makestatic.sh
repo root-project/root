@@ -18,7 +18,7 @@ ROOTAEXE=bin/roota
 
 rm -f $ROOTALIB $ROOTAEXE
 
-excl="main proofd rootd rootx pythia pythia6 mysql pgsql rfio sapdb \
+excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
       utils srputils x11ttf"
 
 objs=""
