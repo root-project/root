@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.36 2002/11/16 18:23:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.37 2002/12/10 14:00:48 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1159,6 +1159,9 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    TVector diag(fNrows);
    if (symmetric) {
      diag = TMatrixDiag(*this);
+     for (Int_t idx = 0; idx < diag.fNrows; idx++) {
+       if (diag.fElements[idx] == 0.0) diag.fElements[idx] = 1.0;
+     }
      this->NormByDiag(diag);
    }
 
