@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.5 2000/07/15 05:16:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.6 2000/10/10 13:01:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
 
-   ClassDef(TH2,2)  //2-Dim histogram base class
+   ClassDef(TH2,3)  //2-Dim histogram base class
 };
 
 
@@ -115,7 +115,7 @@ public:
    friend  TH2C    operator*(TH2C &h1, TH2C &h2);
    friend  TH2C    operator/(TH2C &h1, TH2C &h2);
 
-   ClassDef(TH2C,2)  //2-Dim histograms (one char per channel)
+   ClassDef(TH2C,3)  //2-Dim histograms (one char per channel)
 };
 
 
@@ -154,7 +154,7 @@ public:
    friend  TH2S    operator*(TH2S &h1, TH2S &h2);
    friend  TH2S    operator/(TH2S &h1, TH2S &h2);
 
-   ClassDef(TH2S,2)  //2-Dim histograms (one short per channel)
+   ClassDef(TH2S,3)  //2-Dim histograms (one short per channel)
 };
 
 
@@ -195,7 +195,7 @@ public:
    friend  TH2F    operator*(TH2F &h1, TH2F &h2);
    friend  TH2F    operator/(TH2F &h1, TH2F &h2);
 
-   ClassDef(TH2F,2)  //2-Dim histograms (one float per channel)
+   ClassDef(TH2F,3)  //2-Dim histograms (one float per channel)
 };
 
 
@@ -236,7 +236,7 @@ public:
    friend  TH2D    operator*(TH2D &h1, TH2D &h2);
    friend  TH2D    operator/(TH2D &h1, TH2D &h2);
 
-   ClassDef(TH2D,2)  //2-Dim histograms (one double per channel)
+   ClassDef(TH2D,3)  //2-Dim histograms (one double per channel)
 };
 
 #endif
