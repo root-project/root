@@ -1476,7 +1476,8 @@ void TH2Editor::DoBinMoved()
 void TH2Editor::DoBinLabel()
 {
    // Slot connected to the Bin Number Entry for the Rebin
-   
+
+   Int_t i; 
    Int_t numx = (Int_t)(fBinXNumberEntry->GetNumber());
    Int_t numy = (Int_t)(fBinYNumberEntry->GetNumber());
    Int_t nx = 0;
@@ -1490,14 +1491,14 @@ void TH2Editor::DoBinLabel()
    Int_t *divy = Dividers(ny);   
    Int_t diff = TMath::Abs(numx - divx[1]);
    Int_t c = 1; Int_t d = 1;
-   for (Int_t i = 2; i <= divx[0]; i++) {
+   for (i = 2; i <= divx[0]; i++) {
       if ((TMath::Abs(numx - divx[i])) < diff) {
          c = i; 
 	 diff = TMath::Abs(numx - divx[i]);
       }
    }
    diff = TMath::Abs(numy - divy[1]);
-   for (Int_t i = 2; i <= divy[0]; i++) {
+   for (i = 2; i <= divy[0]; i++) {
       if ((TMath::Abs(numy - divy[i])) < diff) {
          d = i; 
 	 diff = TMath::Abs(numy - divy[i]);
