@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.19 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.20 2002/02/21 12:14:14 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3136,7 +3136,8 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 //______________________________________________________________________________
 Int_t TGX11::WriteGIF(char *name)
 {
-   // Writes the current window into GIF file.
+   // Writes the current window into GIF file. Returns 1 in case of success,
+   // 0 otherwise.
 
    Byte_t    scline[2000], r[256], b[256], g[256];
    Int_t    *R, *G, *B;
@@ -3156,6 +3157,10 @@ Int_t TGX11::WriteGIF(char *name)
    if (ncol > 256) {
       //GIFquantize(...);
       Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
+      delete [] R;
+      delete [] G;
+      delete [] B;
+      return 0;
    }
 
    maxcol = 0;
