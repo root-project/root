@@ -193,10 +193,11 @@ MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
-##### compiler directives #####
+##### compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
 MAKEINFO      = cint/MAKEINFO
+ROOTRC        = etc/system.rootrc
 
 ##### libCore #####
 
@@ -292,6 +293,10 @@ config config/Makefile.:
 	   exit 1; \
 	fi)
 
+$(ROOTRC): config/rootrc.in
+	@(echo ""; echo "Please, run ./configure again to bring $@ up to date"; \
+	  echo ""; exit 1)
+
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
@@ -301,7 +306,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
 
-build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
