@@ -20,8 +20,9 @@ else
 WIN32LIBDEP         = $(GPADLIB) $(GRAFLIB)
 WIN32LIBEXTRA       = lib/libGpad.lib lib/libGraf.lib
 endif
-GEDLIBDEP           = $(GPADLIB) $(GRAFLIB) $(GUILIB) $(HISTLIB)
-GEDLIBEXTRA         = lib/libGpad.lib lib/libGraf.lib lib/libGui.lib lib/libHist.lib
+GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB)
+GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
+                      lib/libGui.lib
 GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
 GEDOLDLIBEXTRA      = lib/libGpad.lib lib/libGraf.lib
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
@@ -96,6 +97,10 @@ GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = -Llib -lGraf -lHist
 G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
 G3DLIBEXTRA         = -Llib -lGraf -lHist
+GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB)
+GEDLIBEXTRA         = -Llib -lHist -lGpad -lGraf -lGui
+GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
+GEDOLDLIBEXTRA      = -Llib -lGpad -lGraf
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA        := -Llib -lGpad -lGraf $(GUILIBEXTRA)
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
