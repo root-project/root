@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.98 2004/05/10 17:31:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.99 2004/05/17 12:13:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2098,8 +2098,15 @@ const char *TUnixSystem::GetLinkedLibraries()
    if (once)
       return 0;
 
+   const char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
+                                    kExecutePermission);
+   if (!exe) {
+      once = kTRUE;
+      return 0;
+   }
+
 #if defined(R__MACOSX)
-   FILE *p = OpenPipe(Form("otool -L %s", gApplication->Argv(0)), "r");
+   FILE *p = OpenPipe(Form("otool -L %s", exe), "r");
    TString otool;
    while (otool.Gets(p)) {
       TString delim(" \t");
@@ -2114,7 +2121,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    }
    ClosePipe(p);
 #elif defined(R__LINUX) || defined(R__SOLARIS)
-   FILE *p = OpenPipe(Form("ldd %s", gApplication->Argv(0)), "r");
+   FILE *p = OpenPipe(Form("ldd %s", exe), "r");
    TString ldd;
    while (ldd.Gets(p)) {
       TString delim(" \t");
@@ -2129,6 +2136,8 @@ const char *TUnixSystem::GetLinkedLibraries()
    }
    ClosePipe(p);
 #endif
+
+   delete [] exe;
 
    once = kTRUE;
 
