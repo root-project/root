@@ -315,14 +315,16 @@ srpdirs="$SRP /usr/srp /usr/local/srp"
 
 if [ -z "$srpdir" ]; then
    srpdir=NO
-   for i in $srpdirs; do
-      for j in lib/libsrp.a; do
-         if [ -r "$i/$j" ]; then
-            srpdir=$i
-            break 2
-         fi
+   if [ "$SRP" != "NO" ]; then
+      for i in $srpdirs; do
+         for j in lib/libsrp.a; do
+            if [ -r "$i/$j" ]; then
+               srpdir=$i
+               break 2
+            fi
+         done
       done
-   done
+   fi
 fi
 echo $srpdir
 
@@ -332,14 +334,16 @@ afsdirs="$AFS /usr/afsws /usr/local/afsws"
 
 if [ -z "$afsdir" ]; then
    afsdir=NO
-   for i in $afsdirs; do
-      for j in lib/libdes.a; do
-         if [ -r "$i/$j" ]; then
-            afsdir=$i
-            break 2
-         fi
+   if [ "$AFS" != "NO" ]; then
+      for i in $afsdirs; do
+         for j in lib/libdes.a; do
+            if [ -r "$i/$j" ]; then
+               afsdir=$i
+               break 2
+            fi
+         done
       done
-   done
+   fi
 fi
 echo $afsdir
 
