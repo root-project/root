@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.133 2003/04/11 13:05:48 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.134 2003/04/14 16:54:31 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -773,7 +773,6 @@ void THistPainter::Paint(Option_t *option)
 //  The following options are supported on all types:
 //  =================================================
 //    "AXIS"   : Draw only axis
-//    "HIST"   : Draw only histo contour. (if histo has errors, errors are not drawn)
 //    "HIST"   : When an histogram has errors it is visualized by default with 
 //               error bars. To visualize it without errors use the option HIST
 //               together with the required option (eg "hist same c")
