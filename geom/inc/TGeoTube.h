@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.8 2003/01/31 16:38:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.9 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 48;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}
    virtual Double_t      GetDz() const   {return fDz;}
@@ -128,7 +128,7 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
@@ -187,7 +187,7 @@ public:
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual Int_t         GetByteCount() const {return 98;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    const Double_t       *GetNlow() const {return &fNlow[0];}
    const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.16 2003/02/17 13:23:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.17 2003/02/17 13:40:22 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -580,37 +580,37 @@ const char *TGeoCacheDummy::GetPath()
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoCacheDummy::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMaster(local, master);
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::LocalToMasterVect(Double_t *local, Double_t *master) const
+void TGeoCacheDummy::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMasterVect(local, master);
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoCacheDummy::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    fMatrix->LocalToMasterBomb(local, master);
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoCacheDummy::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocal(master, local);
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::MasterToLocalVect(Double_t *master, Double_t *local) const
+void TGeoCacheDummy::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocalVect(master, local);
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoCacheDummy::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    fMatrix->MasterToLocalBomb(master, local);
 }
@@ -1490,21 +1490,21 @@ void TGeoMatHandlerX::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerX::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerX::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerX::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerX::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerX::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerX::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1515,7 +1515,7 @@ void TGeoMatHandlerX::LocalToMasterBomb(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerX::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerX::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1544,21 +1544,21 @@ void TGeoMatHandlerY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerY::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerY::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerY::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerY::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerY::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerY::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1569,7 +1569,7 @@ void TGeoMatHandlerY::LocalToMasterBomb(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerY::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerY::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1598,21 +1598,21 @@ void TGeoMatHandlerZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerZ::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[2] += fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerZ::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[2] -= fLocation[0];
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1623,7 +1623,7 @@ void TGeoMatHandlerZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1654,7 +1654,7 @@ void TGeoMatHandlerXY::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXY::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXY::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
@@ -1662,7 +1662,7 @@ void TGeoMatHandlerXY::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXY::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXY::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
@@ -1670,7 +1670,7 @@ void TGeoMatHandlerXY::MasterToLocal(Double_t *master, Double_t *local) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXY::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXY::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1683,7 +1683,7 @@ void TGeoMatHandlerXY::LocalToMasterBomb(Double_t *local, Double_t *master) cons
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXY::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXY::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1716,7 +1716,7 @@ void TGeoMatHandlerXZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXZ::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
@@ -1724,7 +1724,7 @@ void TGeoMatHandlerXZ::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXZ::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
@@ -1732,7 +1732,7 @@ void TGeoMatHandlerXZ::MasterToLocal(Double_t *master, Double_t *local) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1745,7 +1745,7 @@ void TGeoMatHandlerXZ::LocalToMasterBomb(Double_t *local, Double_t *master) cons
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1778,7 +1778,7 @@ void TGeoMatHandlerYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerYZ::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerYZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[1] += fLocation[0];
@@ -1787,7 +1787,7 @@ void TGeoMatHandlerYZ::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerYZ::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerYZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[1] -= fLocation[0];
@@ -1795,7 +1795,7 @@ void TGeoMatHandlerYZ::MasterToLocal(Double_t *master, Double_t *local) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerYZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerYZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1808,7 +1808,7 @@ void TGeoMatHandlerYZ::LocalToMasterBomb(Double_t *local, Double_t *master) cons
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerYZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerYZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1838,7 +1838,7 @@ void TGeoMatHandlerXYZ::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXYZ::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXYZ::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    memcpy(master, local, 3*sizeof(Double_t));
    master[0] += fLocation[0];
@@ -1847,7 +1847,7 @@ void TGeoMatHandlerXYZ::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXYZ::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXYZ::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    memcpy(local, master, 3*sizeof(Double_t));
    local[0] -= fLocation[0];
@@ -1856,7 +1856,7 @@ void TGeoMatHandlerXYZ::MasterToLocal(Double_t *master, Double_t *local) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXYZ::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerXYZ::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1871,7 +1871,7 @@ void TGeoMatHandlerXYZ::LocalToMasterBomb(Double_t *local, Double_t *master) con
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerXYZ::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerXYZ::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t tr[3], bombtr[3];
    memset(&tr[0], 0, 3*sizeof(Double_t));
@@ -1903,7 +1903,7 @@ void TGeoMatHandlerRot::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRot::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerRot::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
@@ -1911,7 +1911,7 @@ void TGeoMatHandlerRot::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRot::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerRot::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
@@ -1939,7 +1939,7 @@ void TGeoMatHandlerRotTr::AddMatrix(Double_t *to, TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::LocalToMaster(Double_t *local, Double_t *master) const
+void TGeoMatHandlerRotTr::LocalToMaster(const Double_t *local, Double_t *master) const
 {
    master[0] = fLocation[9] +
                local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
@@ -1950,7 +1950,7 @@ void TGeoMatHandlerRotTr::LocalToMaster(Double_t *local, Double_t *master) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::LocalToMasterVect(Double_t *local, Double_t *master) const
+void TGeoMatHandlerRotTr::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
    master[0] = local[0]*fLocation[0]+local[1]*fLocation[1]+local[2]*fLocation[2];
    master[1] = local[0]*fLocation[3]+local[1]*fLocation[4]+local[2]*fLocation[5];
@@ -1958,7 +1958,7 @@ void TGeoMatHandlerRotTr::LocalToMasterVect(Double_t *local, Double_t *master) c
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::MasterToLocal(Double_t *master, Double_t *local) const
+void TGeoMatHandlerRotTr::MasterToLocal(const Double_t *master, Double_t *local) const
 {
    local[0] = (master[0]-fLocation[9]) *fLocation[0]+
               (master[1]-fLocation[10])*fLocation[3]+
@@ -1972,7 +1972,7 @@ void TGeoMatHandlerRotTr::MasterToLocal(Double_t *master, Double_t *local) const
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::MasterToLocalVect(Double_t *master, Double_t *local) const
+void TGeoMatHandlerRotTr::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
@@ -1980,7 +1980,7 @@ void TGeoMatHandlerRotTr::MasterToLocalVect(Double_t *master, Double_t *local) c
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::LocalToMasterBomb(Double_t *local, Double_t *master) const
+void TGeoMatHandlerRotTr::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
    Double_t bombtr[3];
    gGeoManager->BombTranslation(&fLocation[9], &bombtr[0]);
@@ -1993,7 +1993,7 @@ void TGeoMatHandlerRotTr::LocalToMasterBomb(Double_t *local, Double_t *master) c
 }
 
 //_____________________________________________________________________________
-void TGeoMatHandlerRotTr::MasterToLocalBomb(Double_t *master, Double_t *local) const
+void TGeoMatHandlerRotTr::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
    Double_t bombtr[3];
    gGeoManager->UnbombTranslation(&fLocation[9], &bombtr[0]);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.4 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.5 2003/01/23 14:25:36 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
    virtual Double_t      GetA() const    {return fRmin;}
    virtual Double_t      GetB() const    {return fRmax;}
    virtual void          GetBoundingCylinder(Double_t *param) const;
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;

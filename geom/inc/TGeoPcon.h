@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.6 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.7 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    Double_t             *GetRmin() const {return fRmin;}
    Double_t             *GetRmax() const {return fRmax;}
    Double_t             *GetZ() const    {return fZ;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;

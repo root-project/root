@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.7 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.8 2003/01/24 08:38:50 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -263,12 +263,12 @@ void TGeoEltu::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                // Phi2 
 }   
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoEltu)) {
+   if (!mother->TestBit(kGeoEltu)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.29 2003/02/17 11:57:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.30 2003/03/11 09:58:37 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -332,17 +332,17 @@ public:
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    
    //--- point/vector reference frame conversion   
-   void                   LocalToMaster(Double_t *local, Double_t *master) const
+   void                   LocalToMaster(const Double_t *local, Double_t *master) const
                             {fCache->LocalToMaster(local, master);}
-   void                   LocalToMasterVect(Double_t *local, Double_t *master) const
+   void                   LocalToMasterVect(const Double_t *local, Double_t *master) const
                             {fCache->LocalToMasterVect(local, master);}
-   void                   LocalToMasterBomb(Double_t *local, Double_t *master) const
+   void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const
                             {fCache->LocalToMasterBomb(local, master);}
-   void                   MasterToLocal(Double_t *master, Double_t *local) const
+   void                   MasterToLocal(const Double_t *master, Double_t *local) const
                             {fCache->MasterToLocal(master, local);}
-   void                   MasterToLocalVect(Double_t *master, Double_t *local) const
+   void                   MasterToLocalVect(const Double_t *master, Double_t *local) const
                             {fCache->MasterToLocalVect(master, local);}
-   void                   MasterToLocalBomb(Double_t *master, Double_t *local) const
+   void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const
                             {fCache->MasterToLocalBomb(master, local);}
 
    //--- general use getters/setters

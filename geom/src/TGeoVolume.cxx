@@ -244,6 +244,11 @@ void TGeoVolume::CheckShapes()
 // check for negative parameters in shapes.
 // THIS METHOD LEAVES SOME GARBAGE NODES -> memory leak, to be fixed
 //   printf("---Checking daughters of volume %s\n", GetName());
+   if (fShape->IsRunTimeShape()) {
+      Error("CheckShapes", "volume %s has run-time shape", GetName());
+      InspectShape();
+      return;
+   }   
    if (!fNodes) return;
    Int_t nd=fNodes->GetEntriesFast();
    TGeoNode *node = 0;
@@ -263,7 +268,7 @@ void TGeoVolume::CheckShapes()
 //         old_vol->InspectShape();
          // make a copy of the node
          new_node = node->MakeCopyNode();
-         TGeoShape *new_shape = shape->GetMakeRuntimeShape(fShape);
+         TGeoShape *new_shape = shape->GetMakeRuntimeShape(fShape, node->GetMatrix());
          if (!new_shape) {
             Error("CheckShapes","cannot resolve runtime shape for volume %s/%s\n",
                    GetName(),old_vol->GetName());

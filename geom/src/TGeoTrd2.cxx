@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.13 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.14 2003/02/07 13:46:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -413,12 +413,67 @@ void TGeoTrd2::GetBoundingCylinder(Double_t *param) const
    TGeoBBox::GetBoundingCylinder(param);
 }   
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother) const
+Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
+{
+// Fills real parameters of a positioned box inside this. Returns 0 if successfull.
+   dx=dy=dz=0;
+   if (mat->IsRotation()) {
+      Error("GetFittingBox", "cannot handle parametrized rotated volumes");
+      return 1; // ### rotation not accepted ###
+   }
+   //--> translate the origin of the parametrized box to the frame of this box.
+   Double_t origin[3];
+   mat->LocalToMaster(parambox->GetOrigin(), origin);
+   if (!Contains(origin)) {
+      Error("GetFittingBox", "wrong matrix - parametrized box is outside this");
+      return 1; // ### wrong matrix ###
+   }
+   //--> now we have to get the valid range for all parametrized axis
+   Double_t dd[3];
+   dd[0] = parambox->GetDX();
+   dd[1] = parambox->GetDY();
+   dd[2] = parambox->GetDZ();
+   //-> check if Z range is fixed
+   if (dd[2]<0) {
+      dd[2] = TMath::Min(origin[2]+fDz, fDz-origin[2]); 
+      if (dd[2]<0) {
+         Error("GetFittingBox", "wrong matrix");
+         return 1;
+      }
+   }
+   if (dd[0]>=0 && dd[1]>=0) {
+      dx = dd[0];
+      dy = dd[1];
+      dz = dd[2];
+      return 0;
+   }
+   //-> check now range at Z = origin[2] +/- dd[2]
+   Double_t fx = 0.5*(fDx1-fDx2)/fDz;
+   Double_t fy = 0.5*(fDy1-fDy2)/fDz;
+   Double_t dx0 = 0.5*(fDx1+fDx2);
+   Double_t dy0 = 0.5*(fDy1+fDy2);
+   Double_t z=origin[2]-dd[2];
+   dd[0] = dx0-fx*z-origin[0]; 
+   dd[1] = dy0-fy*z-origin[1]; 
+   z=origin[2]+dd[2];
+   dd[0] = TMath::Min(dd[0], dx0-fx*z-origin[0]);
+   dd[1] = TMath::Min(dd[1], dy0-fy*z-origin[1]);
+   if (dd[0]<0 || dd[1]<0) {
+      Error("GetFittingBox", "wrong matrix");
+      return 1;
+   }   
+   dx = dd[0];
+   dy = dd[1];
+   dz = dd[2];
+   return 0;
+}   
+//-----------------------------------------------------------------------------
+TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTrd2)) {
+   if (!mother->TestBit(kGeoTrd2)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

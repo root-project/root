@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.8 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.9 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -28,6 +28,7 @@ public:
 };
 
 class TGeoBoolCombinator;
+class TGeoBBox;
 class TGeoMatrix;
 class TGeoHMatrix;
 class TGeoVolume;
@@ -105,8 +106,9 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
    virtual Int_t         GetByteCount() const                          = 0;
+   virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const = 0;
    Int_t                 GetId() const  {return fShapeId;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const  = 0;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
    virtual const char   *GetName() const;
    static Int_t          GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz);
    virtual Bool_t        IsCylType() const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.12 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.13 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -359,12 +359,84 @@ void TGeoPara::GetBoundingCylinder(Double_t *param) const
    TGeoBBox::GetBoundingCylinder(param);
 }   
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother) const
+Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
+{
+// Fills real parameters of a positioned box inside this. Returns 0 if successfull.
+   dx=dy=dz=0;
+   if (mat->IsRotation()) {
+      Error("GetFittingBox", "cannot handle parametrized rotated volumes");
+      return 1; // ### rotation not accepted ###
+   }
+   //--> translate the origin of the parametrized box to the frame of this box.
+   Double_t origin[3];
+   mat->LocalToMaster(parambox->GetOrigin(), origin);
+   if (!Contains(origin)) {
+      Error("GetFittingBox", "wrong matrix - parametrized box is outside this");
+      return 1; // ### wrong matrix ###
+   }
+   //--> now we have to get the valid range for all parametrized axis
+   Double_t dd[3];
+   dd[0] = parambox->GetDX();
+   dd[1] = parambox->GetDY();
+   dd[2] = parambox->GetDZ();
+   //-> check if Z range is fixed
+   if (dd[2]<0) {
+      dd[2] = TMath::Min(origin[2]+fZ, fZ-origin[2]); 
+      if (dd[2]<0) {
+         Error("GetFittingBox", "wrong matrix");
+         return 1;
+      }
+   }
+   if (dd[0]>=0 && dd[1]>=0) {
+      dx = dd[0];
+      dy = dd[1];
+      dz = dd[2];
+      return 0;
+   }
+   //-> check now range at Z = origin[2] +/- dd[2]
+   Double_t upper[8];
+   Double_t lower[8];
+   Double_t z=origin[2]-dd[2];
+   lower[0]=z*fTxz-fTxy*fY-fX; 
+   lower[1]=-fY+z*fTyz;
+   lower[2]=z*fTxz+fTxy*fY-fX; 
+   lower[3]=fY+z*fTyz;
+   lower[4]=z*fTxz+fTxy*fY+fX; 
+   lower[5]=fY+z*fTyz;
+   lower[6]=z*fTxz-fTxy*fY+fX; 
+   lower[7]=-fY+z*fTyz;
+   z=origin[2]+dd[2];
+   upper[0]=z*fTxz-fTxy*fY-fX; 
+   upper[1]=-fY+z*fTyz;
+   upper[2]=z*fTxz+fTxy*fY-fX; 
+   upper[3]=fY+z*fTyz;
+   upper[4]=z*fTxz+fTxy*fY+fX; 
+   upper[5]=fY+z*fTyz;
+   upper[6]=z*fTxz-fTxy*fY+fX; 
+   upper[7]=-fY+z*fTyz;
+   
+   Double_t ddmin=TGeoShape::kBig;
+   for (Int_t iaxis=0; iaxis<2; iaxis++) {
+      if (dd[iaxis]>=0) continue;
+      ddmin=TGeoShape::kBig;
+      for (Int_t ivert=0; ivert<4; ivert++) {
+         ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
+         ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
+      }
+      dd[iaxis] = ddmin;
+   }
+   dx = dd[0];
+   dy = dd[1];
+   dz = dd[2];
+   return 0;
+}   
+//-----------------------------------------------------------------------------
+TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoPara)) {
+   if (!mother->TestBit(kGeoPara)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

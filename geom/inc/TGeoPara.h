@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.4 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.5 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -63,7 +63,8 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 48;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    Double_t              GetX() const  {return fX;}
    Double_t              GetY() const  {return fY;}
    Double_t              GetZ() const  {return fZ;}

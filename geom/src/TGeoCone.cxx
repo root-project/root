@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.17 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.18 2003/02/11 12:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -447,12 +447,12 @@ void TGeoCone::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                       // Phi1
 }
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoCone)) {
+   if (!mother->TestBit(kGeoCone)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -1229,12 +1229,12 @@ void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const
    while (param[3]<param[2]) param[3]+=360.;
 }
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoConeSeg)) {
+   if (!mother->TestBit(kGeoConeSeg)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

@@ -427,15 +427,11 @@ void TGeoTube::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;  // Phi1
 }
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape()) {
-      Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
-   }
    Double_t rmin, rmax, dz;
    Double_t xmin,xmax;
    rmin = fRmin;
@@ -1116,12 +1112,12 @@ void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
    param[3] = fPhi2;
 }
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTube)) {
+   if (!mother->TestBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
@@ -1805,12 +1801,12 @@ TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, 
 }   
 
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTube)) {
+   if (!mother->TestBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.20 2003/02/11 08:48:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.21 2003/02/17 13:23:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -449,6 +449,61 @@ void TGeoArb8::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                // Phi2 
 }   
 //-----------------------------------------------------------------------------
+Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
+{
+// Fills real parameters of a positioned box inside this arb8. Returns 0 if successfull.
+   dx=dy=dz=0;
+   if (mat->IsRotation()) {
+      Error("GetFittingBox", "cannot handle parametrized rotated volumes");
+      return 1; // ### rotation not accepted ###
+   }
+   //--> translate the origin of the parametrized box to the frame of this box.
+   Double_t origin[3];
+   mat->LocalToMaster(parambox->GetOrigin(), origin);
+   if (!Contains(origin)) {
+      Error("GetFittingBox", "wrong matrix - parametrized box is outside this");
+      return 1; // ### wrong matrix ###
+   }
+   //--> now we have to get the valid range for all parametrized axis
+   Double_t dd[3];
+   dd[0] = parambox->GetDX();
+   dd[1] = parambox->GetDY();
+   dd[2] = parambox->GetDZ();
+   //-> check if Z range is fixed
+   if (dd[2]<0) {
+      dd[2] = TMath::Min(origin[2]+fDz, fDz-origin[2]); 
+      if (dd[2]<0) {
+         Error("GetFittingBox", "wrong matrix");
+         return 1;
+      }
+   }
+   if (dd[0]>=0 && dd[1]>=0) {
+      dx = dd[0];
+      dy = dd[1];
+      dz = dd[2];
+      return 0;
+   }
+   //-> check now vertices at Z = origin[2] +/- dd[2]
+   Double_t upper[8];
+   Double_t lower[8];
+   SetPlaneVertices(origin[2]-dd[2], lower);
+   SetPlaneVertices(origin[2]+dd[2], upper);
+   Double_t ddmin=TGeoShape::kBig;
+   for (Int_t iaxis=0; iaxis<2; iaxis++) {
+      if (dd[iaxis]>=0) continue;
+      ddmin=TGeoShape::kBig;
+      for (Int_t ivert=0; ivert<4; ivert++) {
+         ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
+         ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));
+      }
+      dd[iaxis] = ddmin;
+   }
+   dx = dd[0];
+   dy = dd[1];
+   dz = dd[2];
+   return 0;
+}   
+//-----------------------------------------------------------------------------
 void TGeoArb8::InspectShape() const
 {
 // print shape parameters
@@ -475,7 +530,7 @@ Double_t TGeoArb8::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 {
  // compute intersection points between plane at zpl and non-horizontal edges
-   Double_t cf = (fDz-zpl)/(2*fDz);
+   Double_t cf = 0.5*(fDz-zpl)/fDz;
    for (Int_t i=0; i<4; i++) {
       vertices[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
       vertices[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
@@ -720,7 +775,7 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return vmulti;
 }   
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
@@ -944,7 +999,7 @@ TGeoGtra::~TGeoGtra()
 // destructor
 }
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother) const
+TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother

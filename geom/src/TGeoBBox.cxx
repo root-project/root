@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.17 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.18 2003/02/18 15:37:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -290,19 +290,19 @@ Double_t TGeoBBox::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    Double_t dx = 0;
    switch (iaxis) {
       case 1:
-         xlo = -fDX;
-         xhi = fDX;
-         dx = xhi-xlo;
+         xlo = fOrigin[0]-fDX;
+         xhi = fOrigin[0]+fDX;
+         dx = 2*fDX;
          return dx;
       case 2:
-         xlo = -fDY;
-         xhi = fDY;
-         dx = xhi-xlo;
+         xlo = fOrigin[1]-fDY;
+         xhi = fOrigin[1]+fDY;
+         dx = 2*fDY;
          return dx;
       case 3:
-         xlo = -fDZ;
-         xhi = fDZ;
-         dx = xhi-xlo;
+         xlo = fOrigin[2]-fDZ;
+         xhi = fOrigin[2]+fDZ;
+         dx = 2*fDZ;
          return dx;
    }
    return dx;
@@ -318,23 +318,57 @@ void TGeoBBox::GetBoundingCylinder(Double_t *param) const
    param[2] = 0.;                  // Phi1
    param[3] = 360.;                // Phi2
 }
+
 //-----------------------------------------------------------------------------
-TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother) const
+Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
+{
+// Fills real parameters of a positioned box inside this one. Returns 0 if successfull.
+   dx=dy=dz=0;
+   if (mat->IsRotation()) {
+      Error("GetFittingBox", "cannot handle parametrized rotated volumes");
+      return 1; // ### rotation not accepted ###
+   }
+   //--> translate the origin of the parametrized box to the frame of this box.
+   Double_t origin[3];
+   mat->LocalToMaster(parambox->GetOrigin(), origin);
+   if (!Contains(origin)) {
+      Error("GetFittingBox", "wrong matrix - parametrized box is outside this");
+      return 1; // ### wrong matrix ###
+   }
+   //--> now we have to get the valid range for all parametrized axis
+   Double_t xlo=0, xhi=0;
+   Double_t dd[3];
+   dd[0] = parambox->GetDX();
+   dd[1] = parambox->GetDY();
+   dd[2] = parambox->GetDZ();
+   for (Int_t iaxis=0; iaxis<3; iaxis++) {
+      if (dd[iaxis]>=0) continue;
+      TGeoBBox::GetAxisRange(iaxis+1, xlo, xhi);
+      //-> compute best fitting parameter
+      dd[iaxis] = TMath::Min(origin[iaxis]-xlo, xhi-origin[iaxis]); 
+      if (dd[iaxis]<0) {
+         Error("GetFittingBox", "wrong matrix");
+         return 1;
+      }   
+   }
+   dx = dd[0];
+   dy = dd[1];
+   dz = dd[2];
+   return 0;
+}
+
+//-----------------------------------------------------------------------------
+TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const
 {
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoBox)) {
-      Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
-   }
    Double_t dx, dy, dz;
-   if (fDX<0) dx=((TGeoBBox*)mother)->GetDX();
-   else dx=fDX;
-   if (fDY<0) dy=((TGeoBBox*)mother)->GetDY();
-   else dy=fDY;
-   if (fDZ<0) dz=((TGeoBBox*)mother)->GetDZ();
-   else dz=fDZ;
+   Int_t ierr = mother->GetFittingBox(this, mat, dx, dy, dz);
+   if (ierr) {
+      Error("GetMakeRuntimeShape", "cannot fit this to mother");
+      return 0;
+   }   
    return (new TGeoBBox(dx, dy, dz));
 }
 //-----------------------------------------------------------------------------

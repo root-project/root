@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.5 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -61,7 +61,8 @@ public:
    Double_t              GetDy1() const {return fDy1;}
    Double_t              GetDy2() const {return fDy2;}
    Double_t              GetDz() const  {return fDz;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    void                  GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const;
    void                  GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;
    virtual void          InspectShape() const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.6 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.7 2003/02/10 09:54:11 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -59,11 +59,12 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 36;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Double_t      GetDX() const  {return fDX;}
    virtual Double_t      GetDY() const  {return fDY;}
    virtual Double_t      GetDZ() const  {return fDZ;}
-   virtual Double_t     *GetOrigin()    {return &fOrigin[0];}
+   virtual const Double_t *GetOrigin() const {return fOrigin;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}

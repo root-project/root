@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.7 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.8 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -76,7 +76,8 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 100;}
    Double_t              GetDz() const {return fDz;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
+   virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    Double_t             *GetVertices() {return &fXY[0][0];}
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          InspectShape() const;
@@ -151,7 +152,7 @@ public:
    Double_t              GetBl2() const   {return fBl2;}
    Double_t              GetTl2() const   {return fTl2;}
    Double_t              GetAlpha2() const   {return fAlpha2;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
 
   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
@@ -192,7 +193,7 @@ public:
                                    Double_t step=0, Double_t *safe=0) const {return TGeoArb8::DistToOut(point,dir,iact,step,safe);}
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const {return TGeoArb8::DistToIn(point,dir,iact,step,safe);}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    Double_t              GetTwistAngle() const {return fTwistAngle;}
   ClassDef(TGeoGtra, 1)         // G3 GTRA shape
 };

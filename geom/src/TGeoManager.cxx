@@ -2379,7 +2379,7 @@ Bool_t TGeoManager::IsInPhiRange() const
 {
 // True if current node is in phi range
    if (!fPhiCut) return kTRUE;
-   Double_t *origin;
+   const Double_t *origin;
    if (!fCurrentNode) return kFALSE;
    origin = ((TGeoBBox*)fCurrentNode->GetVolume()->GetShape())->GetOrigin();
    Double_t point[3];
