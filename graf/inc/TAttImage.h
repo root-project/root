@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.2 2002/08/09 16:43:30 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.3 2004/12/07 15:34:27 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
    UShort_t   *fColorRed;    // [fNumPoints] red color at each anchor point
    UShort_t   *fColorGreen;  // [fNumPoints] green color at each anchor point
    UShort_t   *fColorBlue;   // [fNumPoints] blue color at each anchor point
-   UShort_t   *fColorAlpha;  // [fNumPoints] alpah at each anchor point
+   UShort_t   *fColorAlpha;  // [fNumPoints] alpha at each anchor point
 
    TImagePalette();
    TImagePalette(const TImagePalette &palette);
