@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.103 2002/08/01 21:33:48 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.104 2002/09/12 07:03:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3138,7 +3138,7 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
       if (h->LoadPlugin() == -1)
          return;
-      h->ExecPlugin(1,fTree->GetName());
+      h->ExecPlugin(1,fTree);
    }
 #else
    //hoping to replace these two lines soon by the general case
