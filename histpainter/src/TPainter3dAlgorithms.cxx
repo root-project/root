@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.13 2004/07/01 16:27:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.14 2004/07/28 09:41:13 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -253,7 +253,7 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
 //*-*-          S E T   L E V E L S
 
     fNlevel = nl;
-    for (i = 0; i < fNlevel; ++i) fFunLevel[i]   = fl[i];
+    for (i = 0; i < fNlevel; ++i) fFunLevel[i]   = Hparam.factor*fl[i];
     for (i = 0; i < fNlevel+1; ++i) fColorLevel[i] = icl[i];
 }
 
