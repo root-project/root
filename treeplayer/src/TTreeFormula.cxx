@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.15 2000/08/11 20:10:12 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.16 2000/08/11 20:39:28 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -781,12 +781,12 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 
    EReturnType r = m->ReturnType();
 
-   if (r == kLong) {
+   if (r == kLongRet) {
       Long_t l;
       m->Execute(thisobj, l);
       return (Double_t) l;
    }
-   if (r == kDouble) {
+   if (r == kDoubleRet) {
       Double_t d;
       m->Execute(thisobj, d);
       return (Double_t) d;
