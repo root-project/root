@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.36 2004/01/26 11:15:44 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.37 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2196,7 +2196,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
    Int_t SrvTyp = -1;
    TString Host = host;
    if (Host.Contains(":")) {
-      char *ps = strstr(host,":");
+      char *ps = (char*)strstr(host,":");
       if (ps)
          SrvTyp = atoi(ps+1);
       Host.Remove(Host.Index(":"));
@@ -2273,7 +2273,7 @@ THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
    Int_t SrvTyp = -1;
    TString hostFQDN = host;
    if (hostFQDN.Contains(":")) {
-      char *ps = strstr(host,":");
+      char *ps = (char*)strstr(host,":");
       if (ps)
          SrvTyp = atoi(ps+1);
       hostFQDN.Remove(hostFQDN.Index(":"));
@@ -3731,9 +3731,9 @@ void TAuthenticate::ReadProofConf(const char *conffile)
                   ha = new THostAuth(SlaveHost,TSocket::kPROOFD,fgUser);
 
                // Add UidGid if not already there
-               Int_t kRfio = TAuthenticate::kRfio;
-               if (!ha->HasMethod(kRfio))
-                  ha->AddMethod(kRfio,AuthDet[kRfio]);
+               Int_t kLocalRfio = TAuthenticate::kRfio;
+               if (!ha->HasMethod(kLocalRfio))
+                  ha->AddMethod(kLocalRfio,AuthDet[kLocalRfio]);
 
                // Add this ThostAuth to lists
                AuthInfo->Add(ha);
