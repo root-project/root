@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.3 2000/05/29 06:19:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.4 2000/05/30 16:45:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1819,7 +1819,9 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
    
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
   Int_t n = gTree->GetSelectedRows();
-  Float_t  *data   = gTree->GetV1();
+  Float_t  *data1   = gTree->GetV1();
+  Float_t  *data2   = gTree->GetV2();
+  Float_t  *data3   = gTree->GetV3();
   Double_t *weight = gTree->GetW();
   Double_t logEpsilon = -230;   // protect against negative probabilities
   Double_t logL = 0.0, prob;
@@ -1827,7 +1829,9 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
   
   Double_t x[3];
   for(Int_t i = 0; i < n; i++) {
-    x[0] = data[i];
+    x[0] = data1[i];
+    if (data2) x[1] = data2[i];
+    if (data3) x[2] = data3[i];
     prob = fitfunc->EvalPar(x,par) * weight[i]/sum;
     if(prob > 0) logL += TMath::Log(prob);
     else         logL += logEpsilon;
@@ -1884,6 +1888,7 @@ void TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *se
 //     data->UnbinnedFit("f1", "jpsimass", "jpsipt>3.0");
 //   //
 //
+//   1, 2 and 3 Dimensional fits are supported.
 //   See also TTree::Fit
 
   Int_t i, npar,nvpar,nparx;
@@ -1986,6 +1991,7 @@ void TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *se
      tFitter->ExecuteCommand("HESSE",arglist,0);
      tFitter->ExecuteCommand("MINOS",arglist,0);
   }
+  fitfunc->SetChisquare(0); //to not confuse user with the stored sum of w**2
 
    // Get return status into function
    char parName[50];
