@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.104 2005/01/05 09:27:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.105 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -810,13 +810,6 @@ TGCompositeFrame::~TGCompositeFrame()
       TIter next(fList);
 
       while ((el = (TGFrameElement *) next())) {
-         if (el->fFrame) {
-            el->fFrame->SetFrameElement(0);
-         }
-
-         if (el->fLayout) {
-            el->fLayout->fFE = 0;
-         }
          fList->Remove(el);
          delete el;
       }

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.14 2004/12/07 17:32:11 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.15 2005/01/05 09:27:15 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -321,8 +321,8 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    fEditable   = kFALSE;
    fZoomOffX   = 0;
    fZoomOffY   = 0;
-   fZoomWidth  = fImage->width;
-   fZoomHeight = fImage->height;
+   fZoomWidth  = fImage ? fImage->width : 0;
+   fZoomHeight = fImage ? fImage->height : 0;
 
    SetName(file);
 }
@@ -1583,10 +1583,15 @@ Pixmap_t TASImage::GetMask()
 
    if (!InitVisual()) {
       Warning("GetMask", "Visual not initiated");
-      return 0;
+      return pxmap;
    }
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   if (!img) {
+      Warning("GetMask", "No image");
+      return pxmap;
+   }
 
 #ifndef WIN32
    pxmap = (Pixmap_t)asimage2mask(fgVisual, gVirtualX->GetDefaultRootWindow(), 
