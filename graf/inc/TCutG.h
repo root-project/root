@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -34,13 +34,15 @@ protected:
 
 public:
    TCutG();
-   TCutG(const char *name, Int_t n, Float_t *x=0, Float_t *y=0);
+   TCutG(const char *name, Int_t n);
+   TCutG(const char *name, Int_t n, Float_t *x, Float_t *y);
+   TCutG(const char *name, Int_t n, Double_t *x, Double_t *y);
    virtual ~TCutG();
    TObject       *GetObjectX() {return fObjectX;}
    TObject       *GetObjectY() {return fObjectY;}
    const char    *GetVarX() const {return fVarX.Data();}
    const char    *GetVarY() const {return fVarY.Data();}
-   virtual Int_t  IsInside(Float_t x, Float_t y);
+   virtual Int_t  IsInside(Double_t x, Double_t y);
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
    virtual void   SetObjectX(TObject *obj) {fObjectX = obj;}
    virtual void   SetObjectY(TObject *obj) {fObjectY = obj;}
