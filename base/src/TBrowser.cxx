@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.6 2001/11/28 15:58:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.7 2002/01/08 21:15:06 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -55,7 +55,8 @@ ClassImp(TBrowser)
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title)
-   : TNamed(name, title)
+      : TNamed(name, title)
+      , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title. Width and height are by
    // default set to 640x400 and (optionally) adjusted by the screen factor
@@ -73,6 +74,7 @@ TBrowser::TBrowser(const char *name, const char *title)
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title, UInt_t width, UInt_t height)
    : TNamed(name, title)
+   , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height.
 
@@ -83,6 +85,7 @@ TBrowser::TBrowser(const char *name, const char *title, UInt_t width, UInt_t hei
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TNamed(name, title)
+   , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, position, width and height.
 
@@ -93,6 +96,7 @@ TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
    : TNamed(name, title)
+   , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
@@ -107,6 +111,7 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height)
    : TNamed(name, title)
+   , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
@@ -117,6 +122,7 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title, UInt_t wid
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TNamed(name, title)
+   , fLastSelectedObject(0), fTimer(0),fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
