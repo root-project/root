@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.162 2004/02/09 14:21:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.163 2004/02/16 08:47:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2163,6 +2163,7 @@ void THistPainter::PaintContour(Option_t *option)
          zc[1] = fH->GetBinContent(i+1, j);
          zc[2] = fH->GetBinContent(i+1, j+1);
          zc[3] = fH->GetBinContent(i,   j+1);
+         if (!IsInside(fXaxis->GetBinCenter(i),fYaxis->GetBinCenter(j))) continue;
          if (Hoption.Logz) {
             if (zc[0] > 0)   zc[0] = TMath::Log10(zc[0]);
             else             zc[0] = Hparam.zmin;
