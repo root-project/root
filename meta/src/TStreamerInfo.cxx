@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.62 2001/04/20 21:21:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.63 2001/04/23 13:53:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -791,8 +791,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       }
       strcat(name,";");
       ld = strlen(name);
-      lt = strlen(element->GetTypeName());
-      strncpy(line+3,element->GetTypeName(),lt);
+      lt = strlen(element->GetTypeNameBasic());
+      strncpy(line+3,element->GetTypeNameBasic(),lt);
       strncpy(line+3+ltype,name,ld);
       if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
       sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
