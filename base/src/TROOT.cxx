@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.86 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.87 2002/12/10 19:51:47 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -308,8 +308,14 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // before anything is deleted
    fMappedFiles = 0;
 
+   // create already here, but only initialize it after gEnv has been created
+   fPluginManager = new TPluginManager;
+
    // Initialize Operating System interface
    InitSystem();
+
+   // initialize plugin manager early
+   fPluginManager->LoadHandlersFromEnv(gEnv);
 
    // Initialize interface to CINT C++ interpreter
    fVersionInt  = 0;  // check in TROOT dtor in case TCint fails
@@ -355,9 +361,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fIdMap       = new IdMap_t;
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
-
-   fPluginManager = new TPluginManager;
-   fPluginManager->LoadHandlersFromEnv(gEnv);
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
