@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.7 2004/04/05 22:38:34 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.9 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +18,7 @@
 // -- CLASS DESCRIPTION [PDF] --
 
 //#include "BaBar/BaBar.hh"
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooCBShape.hh"
@@ -27,7 +28,7 @@
 ClassImp(RooCBShape)
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.7 2004/04/05 22:38:34 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.9 2004/08/07 06:45:41 bartoldu Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,

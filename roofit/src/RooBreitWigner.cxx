@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.cc,v 1.5 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBreitWigner.cc,v 1.7 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -18,7 +19,7 @@
 // -- CLASS DESCRIPTION [PDF] --
 
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooBreitWigner.hh"

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.cc,v 1.6 2002/09/10 02:01:33 verkerke Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.8 2004/08/07 06:45:42 bartoldu Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *
@@ -24,7 +25,7 @@
 
 //#include "BaBar/BaBar.hh"
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooVoigtian.hh"

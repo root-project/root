@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id$
+ *    File: $Id: RooParametricStepFunction.cc,v 1.2 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -40,13 +41,15 @@
 //                                    *list,limits,nbins);
 				
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooParametricStepFunction.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooParametricStepFunction)
 ;

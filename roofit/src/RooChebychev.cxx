@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.3 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooChebychev.cc,v 1.5 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -15,13 +16,15 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooChebychev.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooChebychev)
 ;

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.4 2003/05/14 05:30:32 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.6 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *

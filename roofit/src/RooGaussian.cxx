@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussian.cc,v 1.18 2003/10/16 23:27:14 wverkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.20 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +19,7 @@
 // Gaussian PDF...
 
 //#include "BaBar/BaBar.hh"
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooGaussian.hh"

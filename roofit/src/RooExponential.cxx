@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooExponential.cc,v 1.7 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooExponential.cc,v 1.9 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +18,7 @@
 // -- CLASS DESCRIPTION [PDF] --
 
 //#include "BaBar/BaBar.hh"
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooExponential.hh"

@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.13 2003/10/16 23:27:14 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.15 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,11 +18,13 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitModels/RooGExpModel.hh"
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooRealConstant.hh"
 #include "RooFitCore/RooRandom.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooGExpModel) 
 ;

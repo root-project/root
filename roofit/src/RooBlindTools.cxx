@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBlindTools.cc,v 1.8 2003/05/14 05:30:31 wverkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.10 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
@@ -20,11 +21,14 @@
 #include "RooFitModels/RooBlindTools.hh"
 
 #include "RooFitCore/RooErrorHandler.hh"
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <math.h>  
 #include <string.h>
 #include <ctype.h>
+using std::cout;
+using std::endl;
+using std::fstream;
 
 ClassImp(RooBlindTools)
 

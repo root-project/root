@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.14 2003/05/14 05:30:31 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.16 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -38,10 +39,12 @@
 //    a_c^Q = C + Q*deltaC
 // where Q denotes the charge of the rho.
 
-#include <iostream.h>
+#include <iostream>
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitModels/RooNonCPEigenDecay.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooNonCPEigenDecay);
 

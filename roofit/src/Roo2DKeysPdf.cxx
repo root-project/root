@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.14 2003/10/16 23:27:14 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.16 2004/08/07 06:45:40 bartoldu Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -44,6 +45,9 @@
 #include "TBranch.h"
 
 #include <math.h>
+using std::cout;
+using std::endl;
+using std::ostream;
 
 ClassImp(Roo2DKeysPdf)
 

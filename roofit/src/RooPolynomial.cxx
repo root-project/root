@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooPolynomial.cc,v 1.7 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooPolynomial.cc,v 1.9 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,13 +17,15 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooPolynomial.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
+using std::cout;
+using std::endl;
 
 ClassImp(RooPolynomial)
 ;

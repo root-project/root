@@ -1,7 +1,8 @@
+#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.12 2003/10/16 23:27:14 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.14 2004/08/07 06:45:41 bartoldu Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,13 +17,15 @@
  *****************************************************************************/
 //#include "BaBar/BaBar.hh"
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
 
 #include "RooFitModels/RooKeysPdf.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooDataSet.hh"
+using std::cerr;
+using std::endl;
 
 ClassImp(RooKeysPdf)
 
