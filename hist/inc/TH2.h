@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.9 2001/01/08 08:34:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.10 2001/01/08 14:24:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -64,10 +64,10 @@ public:
    virtual Stat_t  GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
    virtual void    GetRandom2(Axis_t &x, Axis_t &y);
    virtual void    GetStats(Stat_t *stats) const;
-   virtual Stat_t  Integral();
-   virtual Stat_t  Integral(Int_t, Int_t) {return 0;}
-   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2);
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) {return 0;}
+   virtual Stat_t  Integral(Option_t *option="");
+   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") {return 0;}
+   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="");
+   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
       TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=0, Int_t lastybin=9999, Option_t *option="");   // *MENU*
       TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=0, Int_t lastxbin=9999, Option_t *option="");   // *MENU*

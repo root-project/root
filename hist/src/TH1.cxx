@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.36 2001/02/07 21:03:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.37 2001/02/07 21:34:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3321,25 +3321,36 @@ Stat_t TH1::GetSumOfWeights() const
 
 
 //______________________________________________________________________________
-Stat_t TH1::Integral()
+Stat_t TH1::Integral(Option_t *option)
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
+// By default the integral is computed as the sum of bin contents in the range.
+// if option "width" is specified, the integral is the sum of
+// the bin contents multiplied by the bin width in x.
 
-   return Integral(fXaxis.GetFirst(),fXaxis.GetLast());
+   return Integral(fXaxis.GetFirst(),fXaxis.GetLast(),option);
 }
 
 //______________________________________________________________________________
-Stat_t TH1::Integral(Int_t binx1, Int_t binx2)
+Stat_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option)
 {
 //Return integral of bin contents between binx1 and binx2 for a 1-D histogram
+// By default the integral is computed as the sum of bin contents in the range.
+// if option "width" is specified, the integral is the sum of
+// the bin contents multiplied by the bin width in x.
 
    if (binx1 < 0) binx1 = 0;
    Stat_t integral = 0;
 
 //*-*- Loop on bins in specified range
+   TString opt = option;
+   opt.ToLower();
+   Bool_t width = kFALSE;
+   if (opt.Contains("width")) width = kTRUE;
    Int_t binx;
    for (binx=binx1;binx<=binx2;binx++) {
-      integral += GetBinContent(binx);
+      if (width) integral += GetBinContent(binx)*fXaxis.GetBinWidth(binx);
+      else       integral += GetBinContent(binx);
    }
    return integral;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.12 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.13 2001/02/07 21:03:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -642,20 +642,26 @@ void TH2::GetStats(Stat_t *stats) const
 }
 
 //______________________________________________________________________________
-Stat_t TH2::Integral()
+Stat_t TH2::Integral(Option_t *option)
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
+// By default the integral is computed as the sum of bin contents in the range.
+// if option "width" is specified, the integral is the sum of
+// the bin contents multiplied by the bin width in x and in y.
 
    return Integral(fXaxis.GetFirst(),fXaxis.GetLast(),
-                   fYaxis.GetFirst(),fYaxis.GetLast());
+                   fYaxis.GetFirst(),fYaxis.GetLast(),option);
 }
 
 //______________________________________________________________________________
-Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
+Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option)
 {
 //Return integral of bin contents in range [binx1,binx2],[biny1,biny2]
 // for a 2-D histogram
-
+// By default the integral is computed as the sum of bin contents in the range.
+// if option "width" is specified, the integral is the sum of
+// the bin contents multiplied by the bin width in x and in y.
+   
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    if (binx1 < 0) binx1 = 0;
@@ -667,11 +673,16 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
    Stat_t integral = 0;
 
 //*-*- Loop on bins in specified range
+   TString opt = option;
+   opt.ToLower();
+   Bool_t width = kFALSE;
+   if (opt.Contains("width")) width = kTRUE;
    Int_t bin, binx, biny;
    for (biny=biny1;biny<=biny2;biny++) {
       for (binx=binx1;binx<=binx2;binx++) {
          bin = binx +(nbinsx+2)*biny;
-         integral += GetBinContent(bin);
+         if (width) integral += GetBinContent(bin)*fXaxis.GetBinWidth(binx)*fYaxis.GetBinWidth(biny);
+         else       integral += GetBinContent(bin);
       }
    }
    return integral;
