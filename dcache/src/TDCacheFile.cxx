@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.15 2003/12/30 13:16:50 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.16 2004/04/16 17:03:04 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -89,17 +89,22 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    }
 
    TString stmp;
+   TString stmp2;
    const char *fname;
+   const char *fnameWithPrefix;
 
    if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
-      fname = path;
+      fnameWithPrefix = fname = path;
    } else {
       // Metadata provided by PNFS
       char *tname;
       if ((tname = gSystem->ExpandPathName(path))) {
          stmp = tname;
+	 stmp2 = DCAP_PREFIX;
+	 stmp2 += tname;
          delete [] tname;
          fname = stmp.Data();
+         fnameWithPrefix = stmp2.Data();
       } else {
          Error("TDCacheFile", "error expanding path %s", path);
          goto zombie;
@@ -107,33 +112,23 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    }
 
    if (recreate) {
-      if (!gSystem->AccessPathName(fname, kFileExists))
+      if (!gSystem->AccessPathName(fnameWithPrefix, kFileExists))
          gSystem->Unlink(fname);
       recreate = kFALSE;
       create   = kTRUE;
       fOption  = "CREATE";
    }
-   if (create && !gSystem->AccessPathName(fname, kFileExists)) {
+   if (create && !gSystem->AccessPathName(fnameWithPrefix, kFileExists)) {
       Error("TDCacheFile", "file %s already exists", fname);
       goto zombie;
    }
    if (update) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
+      if (gSystem->AccessPathName(fnameWithPrefix, kFileExists)) {
          update = kFALSE;
          create = kTRUE;
       }
-      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fnameWithPrefix, kWritePermission)) {
          Error("TDCacheFile", "no write permission, could not open file %s", fname);
-         goto zombie;
-      }
-   }
-   if (read) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TDCacheFile", "file %s does not exist", fname);
-         goto zombie;
-      }
-      if (gSystem->AccessPathName(fname, kReadPermission)) {
-         Error("TDCacheFile", "no read permission, could not open file %s", fname);
          goto zombie;
       }
    }
@@ -159,7 +154,15 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TFile", "file %s can not be opened for reading", fname);
+         if (gSystem->AccessPathName(fnameWithPrefix, kFileExists)) {
+            Error("TDCacheFile", "file %s does not exist", fname);
+            goto zombie;
+         }
+         if (gSystem->AccessPathName(fnameWithPrefix, kReadPermission)) {
+            Error("TDCacheFile", "no read permission, could not open file %s", fname);
+            goto zombie;
+         }
+         SysError("TDCacheFile", "file %s can not be opened for reading", fname);
          goto zombie;
       }
       fWritable = kFALSE;
@@ -428,11 +431,58 @@ Int_t TDCacheFile::SysSync(Int_t)
 Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime)
 {
-   // Return file stat information. The interface and return value is
-   // identical to TDCacheSystem::GetPathInfo(). The function returns 0 in
-   // case of success and 1 if the file could not be stat'ed.
+   // Get info about a file: id, size, flags, modification time.
+   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
-   return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
+   // If in read mode, uses the cached file status, if available, to avoid
+   // costly dc_stat() call.
+
+   struct stat & statbuf = fStatBuffer; // reference the cache
+
+   if (fOption != "READ" || !fStatCached) {
+     // We are not in read mode, or the file status information is not yet
+     // in the cache.  Update or read the status information with dc_stat().
+
+     const char *path = GetName();
+     TString pathString = GetDcapPath(path);
+     path = pathString.Data();
+     
+     if (path != 0 && dc_stat(path, &statbuf) >= 0) {
+        fStatCached = kTRUE;
+     }
+   }
+
+   if (fStatCached) {
+      if (id)
+#if defined(R__KCC) && defined(R__LINUX)
+         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
+#else
+         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
+#endif
+      if (size)
+         *size = statbuf.st_size;
+      if (modtime)
+         *modtime = statbuf.st_mtime;
+      if (flags) {
+         *flags = 0;
+         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+            *flags |= 1;
+         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+            *flags |= 2;
+         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+             (statbuf.st_mode & S_IFMT) != S_IFDIR)
+            *flags |= 4;
+      }
+      return 0;
+   }
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -539,6 +589,7 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
          default:
             return kFALSE;
       }
+      return kTRUE;
    }
 
    fLastErrorString = GetError();
