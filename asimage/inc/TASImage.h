@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.1 2002/08/09 14:12:22 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.2 2002/08/23 14:51:44 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -50,10 +50,10 @@ protected:
    ASImage  *fScaledImage;  //! pointer to scaled and zoomed image structure
    Double_t  fMaxValue;     // max value in image
    Double_t  fMinValue;     // min value in image
-   UInt_t    fZoomOffX;     // X - offset for zooming
-   UInt_t    fZoomOffY;     // Y - offset for zooming
-   UInt_t    fZoomWidth;    // width of zoomed image
-   UInt_t    fZoomHeight;   // hight of zoomed image
+   UInt_t    fZoomOffX;     // X - offset for zooming in image pixels
+   UInt_t    fZoomOffY;     // Y - offset for zooming im image pixels
+   UInt_t    fZoomWidth;    // width of zoomed image in image pixels
+   UInt_t    fZoomHeight;   // hight of zoomed image in image pixels
    Bool_t    fZoomUpdate;   // kTRUE: new zooming required
 
    static ASVisual *fgVisual;  // pointer to visual structure
@@ -105,6 +105,8 @@ public:
    // Utilities
    UInt_t GetWidth() const;
    UInt_t GetHeight() const;
+   UInt_t GetScaledWidth() const;
+   UInt_t GetScaledHeight() const;
    Bool_t IsValid() const { return fImage ? kTRUE : kFALSE; }
    const ASImage *GetImage() const { return fImage; }
 
