@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.18 2001/02/07 21:11:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.19 2001/02/08 11:48:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -41,6 +41,7 @@ TStreamerElement::TStreamerElement()
    fArrayLength = 0;
    fStreamer    = 0;
    fMethod      = 0;
+   fOffset      = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -348,10 +349,9 @@ TStreamerBasicPointer::~TStreamerBasicPointer()
 //______________________________________________________________________________
 ULong_t TStreamerBasicPointer::GetMethod() const
 {
-   // return address of counter
+   // return offset of counter
    
-//printf("getmethod, counterAddress=%x\n",fCounter->GetCounterAddress());
-   return (ULong_t)fCounter->GetMethod();
+   return (ULong_t)fCounter->GetOffset();
 }
 
 //______________________________________________________________________________
@@ -431,7 +431,7 @@ ULong_t TStreamerLoop::GetMethod() const
 {
    // return address of counter
    
-   return (ULong_t)fCounter->GetMethod();
+   return (ULong_t)fCounter->GetOffset();
 }
 
 //______________________________________________________________________________

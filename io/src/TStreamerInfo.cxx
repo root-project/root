@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.39 2001/02/08 08:51:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.40 2001/02/08 11:50:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -840,7 +840,7 @@ void TStreamerInfo::Optimize(Bool_t opt)
 //______________________________________________________________________________
 Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 {
-//  Deserialize information from buffer b into object at pointer
+//  Deserialize information from buffer b into object at pointer 
 
 
 //==========CPP macros
@@ -863,7 +863,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    Char_t isArray; \
    b >> isArray; \
    if (isArray == 0) break; \
-   Int_t *l = (Int_t*)fMethod[i]; \
+   Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
    delete [] *f; \
    *f = 0; if (*l ==0) break; \
@@ -887,7 +887,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 
 #define SkipBasicPointer(name) \
 { \
-   Int_t *n = (Int_t*)fMethod[i]; \
+   Int_t *n = (Int_t*)(pointer+fMethod[i]); \
    Int_t l = b.Length(); \
    b.SetBufferOffset(l+1+(*n)*sizeof( name )); \
    break; \
@@ -935,7 +935,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    Char_t isArray; \
    b >> isArray; \
    if (isArray == 0) break; \
-   Int_t *l = (Int_t*)fMethod[i]; name dummy; \
+   Int_t *l = (Int_t*)(pointer+fMethod[i]); name dummy; \
    switch(fNewType[i]) { \
       case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); delete [] *f; \
                     *f = 0; if (*l ==0) continue; \
@@ -1055,8 +1055,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          // array counter //[n]
          case kCounter: { Int_t *x=(Int_t*)(pointer+fOffset[i]);
                           b >> *x;
-                          Int_t *counter = (Int_t*)fMethod[i];
-                          *counter = *x;
+                          //Int_t *counter = (Int_t*)fMethod[i];
+                          //*counter = *x;
                           break;
                         }
 
@@ -1111,7 +1111,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             element->ls();
                             break;
                          }
-                         Int_t *counter = (Int_t*)fMethod[i];
+                         Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                          UInt_t start,count;
                          b.ReadVersion(&start, &count);
                          (*pstreamer)(b,pointer+fOffset[i],*counter);
@@ -1173,9 +1173,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                                 }
 
          // skip array counter //[n]
-         case kSkip + kCounter: { Int_t *counter = (Int_t*)fMethod[i];
-                                  b >> *counter;
-                                  break;
+         case kSkip + kCounter: { //Int_t *counter = (Int_t*)fMethod[i];
+                                  //b >> *counter;
+                                  Int_t dummy; b >> dummy; break;
                                 }
 
          // skip Class    derived from TObject
@@ -1261,7 +1261,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 //  The TClonesArray clones is deserialized from the buffer b
 
 
-   char *pointer;
+   char *pointer=0;
    UInt_t start, count;
    Int_t leng,offset;
    
@@ -1285,11 +1285,11 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 #define ReadCBasicPointer(name) \
 { \
    Char_t isArray; \
-   Int_t *l = (Int_t*)fMethod[i]; \
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
       if (isArray == 0) continue; \
       pointer = (char*)clones->UncheckedAt(k); \
+      Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       delete [] *f; \
       *f = 0; if (*l ==0) continue; \
@@ -1315,7 +1315,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
 #define SkipCBasicPointer(name) \
 { \
-   Int_t *n = (Int_t*)fMethod[i]; \
+   Int_t *n = (Int_t*)(pointer+fMethod[i]); \
    Int_t l = b.Length(); \
    b.SetBufferOffset(l+1+nc*(*n)*sizeof( name )); \
    break; \
@@ -1399,8 +1399,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k);
                Int_t *x=(Int_t*)(pointer+offset);
                b >> *x;
-               Int_t *counter = (Int_t*)fMethod[i];
-               *counter = *x;
+               //Int_t *counter = (Int_t*)fMethod[i];
+               //*counter = *x;
             }
             break;}
 
@@ -1488,11 +1488,11 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                             element->ls();
                             break;
                          }
-                         Int_t *counter = (Int_t*)fMethod[i];
                          UInt_t start,count;
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
+                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                             (*pstreamer)(b,pointer+offset,*counter);
                          }
                          b.CheckByteCount(start,count,IsA());
@@ -1555,8 +1555,9 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          // skip array counter //[n]
          case kSkip + kCounter: {
             for (Int_t k=0;k<nc;k++) {
-               Int_t *counter = (Int_t*)fMethod[i];
-               b >> *counter;
+               //Int_t *counter = (Int_t*)fMethod[i];
+               //b >> *counter;
+               Int_t dummy; b >> dummy;
             }
             break;}
 
@@ -1687,7 +1688,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
 #define WriteBasicPointer(name) \
 { \
-   Int_t *l = (Int_t*)fMethod[i]; \
+   Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
    name *af = *f; \
    if (af)  b << Char_t(1); \
@@ -1770,8 +1771,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // array counter [n]
          case kCounter: { Int_t *x=(Int_t*)(pointer+fOffset[i]);
                           b << x[0];
-                          Int_t *counter = (Int_t*)fMethod[i];
-                          *counter = x[0];
+                          //Int_t *counter = (Int_t*)fMethod[i];
+                          //*counter = x[0];
                           break;
                         }
 
@@ -1825,7 +1826,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                             element->ls();
                             break;
                          }
-                         Int_t *counter = (Int_t*)fMethod[i];
+                         Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          (*pstreamer)(b,pointer+fOffset[i],*counter);
                          b.SetByteCount(pos,kTRUE);
@@ -1869,9 +1870,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
 #define WriteCBasicPointer(name) \
 { \
-   Int_t *l = (Int_t*)fMethod[i]; \
    for (Int_t k=0;k<nc;k++) { \
       pointer = (char*)clones->UncheckedAt(k); \
+      Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       name *af = *f; \
       if (af)  b << Char_t(1); \
@@ -1949,12 +1950,11 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
          // array counter [n]
          case kCounter: {
-            Int_t *counter = (Int_t*)fMethod[i];
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
                Int_t *x=(Int_t*)(pointer+fOffset[i]);
                b << x[0];
-               *counter = x[0];
+               //*counter = x[0];
             }
             break;}
 
@@ -2042,10 +2042,10 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                             element->ls();
                             break;
                          }
-                         Int_t *counter = (Int_t*)fMethod[i];
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
+                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                             (*pstreamer)(b,pointer+fOffset[i],*counter);
                          }
                          b.SetByteCount(pos,kTRUE);
