@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.28 2001/12/06 07:06:37 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.29 2002/02/06 01:31:38 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -469,7 +469,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
   if (!proxy) {
     cout << "RooSimultaneous::genContext(" << GetName() 
 	 << ") ERROR: no PDF associated with current state (" 
-	 << _indexCat.arg().GetName() << ")" << endl ;
+         << _indexCat.arg().GetName() << "=" << _indexCat.arg().getLabel() << ")" << endl ; 
     return 0 ;
   }
   return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,verbose) ;
