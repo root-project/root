@@ -37,7 +37,7 @@ SOEXT         = a
 
 # System libraries:
 SYSLIBS       = -lm -lld
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -lld
 
 # Fortran:
@@ -46,52 +46,3 @@ F77FLAGS      = -qextname -qcharlen=32767
 F77LIBS       = -lxlf -lxlf90
 
 # Extras
-EXPLICITLINK        = YES
-HISTLIBDEP          = $(MATRIXLIB)
-HISTLIBEXTRA        = -lMatrix
-GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
-GRAFLIBEXTRA        = -lHist -lMatrix
-GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
-GPADLIBEXTRA        = -lGraf -lHist
-G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
-G3DLIBEXTRA         = -lGraf -lHist
-GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
-GUILIBEXTRA         = -lGpad -lGraf
-HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-HISTPAINTERLIBEXTRA = -lGraf -lHist -lMatrix
-HTMLLIBDEP          = $(GRAFLIB)
-HTMLLIBEXTRA        = -lGraf
-PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
-PROOFLIBEXTRA       = -lTree -lHist
-PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
-PROOFGUILIBEXTRA    = -lProof -lGui
-TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-TREEPLAYERLIBEXTRA  = -lTree -lGraf3d -lGraf -lHist
-TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
-TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf -lHist -lGui
-X3DLIBDEP           = $(G3DLIB) $(GUILIB)
-X3DLIBEXTRA         = -lGraf3d -lGui -lX11
-EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
-EGLIBEXTRA          = -lGraf3d -lGraf
-MCLIBDEP            = $(EGLIB)
-MCLIBEXTRA          = -lEG
-PHYSICSLIBDEP       = $(MATRIXLIB)
-PHYSICSLIBEXTRA     = -lMatrix
-PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = -lEG -lGraf $(FPYTHIALIBDIR) $(FPYTHIALIB)
-PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = -lEG -lGraf $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
-VENUSLIBDEP         = $(EGLIB)
-VENUSLIBEXTRA       = -lEG $(FVENUSLIBDIR) $(FVENUSLIB)
-X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
-X11TTFLIBEXTRA      = -lGX11 -lGraf -lX11
-TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-TABLELIBEXTRA       = -lTree -lGpad -lGraf3d -lGraf -lHist
-GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
-GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
-                      $(OPENGLLIB) -lX11 -lXext -lXmu -lXi
-HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                      $(TREEPLAYERLIB)
-HBOOKLIBEXTRA       = -lHist -lMatrix -lTree -lGraf -lTreePlayer
-GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
-GEOMPAINTERLIBEXTRA = -lGeom -lTree -lGraf3d -lHist

@@ -22,10 +22,15 @@ ifeq ($(ARCH),win32)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
 else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
+ifneq ($(OPENGLLIB),)
+GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
+endif
 ifneq ($(OPENIVLIB),)
 GLS          += TRootOIViewer.cxx
 IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
-IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) -lXm -lXt -lXext -lX11 -lm
+IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) \
+                $(X11LIBDIR) -lXm -lXt -lXext -lX11 -lm
 endif
 endif
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
@@ -50,7 +55,7 @@ include/%.h:    $(GLDIRI)/%.h
 $(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" \
-		   "$(GLLIBEXTRA) $(IVLIBS)"
+		   "$(GLLIBEXTRA) $(GLLIBS) $(IVLIBS)"
 
 all-gl:         $(GLLIB)
 

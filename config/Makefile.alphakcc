@@ -58,7 +58,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap -lbsd
 CRYPTLIBS     = -L$(ROOTSYS)/lib -lcrypt
 
@@ -69,8 +69,6 @@ F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 
 # Extras
 CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -lX11 -lXext -lXmu -lXi -lm
 
 # Override default in Makefile.config
 INSTALL        := cp -pR

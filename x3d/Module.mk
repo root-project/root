@@ -42,7 +42,7 @@ include/%.h:    $(X3DDIRI)/%.h
 $(X3DLIB):      $(X3DO) $(X3DDO) $(MAINLIBS) $(X3DLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libX3d.$(SOEXT) $@ "$(X3DO) $(X3DDO)" \
-		   "$(X3DLIBEXTRA)"
+		   "$(X3DLIBEXTRA) $(XLIBS)"
 
 $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

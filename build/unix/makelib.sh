@@ -15,6 +15,11 @@ if [ "$1" = "-v" ] ; then
    shift
 fi
 
+if [ "$1" = "-x" ] ; then
+   EXPLICIT="yes"
+   shift
+fi
+
 PLATFORM=$1
 LD=$2
 LDFLAGS=$3
@@ -33,29 +38,40 @@ if [ $PLATFORM = "aix5" ]; then
    makeshared="/usr/vacpp/bin/makeC++SharedLib"
 fi
 
+if [ "x$EXPLICIT" = "xyes" ]; then
+   if [ $LIB != "lib/libCint.so" ]; then
+      if [ $LIB != "lib/libCore.so" ]; then
+         EXPLLNKCORE="-Llib -lCore -lCint"
+      else
+         EXPLLNKCORE="-Llib -lCint"
+      fi
+   fi
+fi
+
 if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    if [ $LD = "xlC" ]; then
-      if [ $LIB = "lib/libCint.a" ]; then
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
-      elif [ $LIB = "lib/libCore.a" ]; then
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
-      else
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
+      EXPLLNKCORE=
+      if [ $LIB != "lib/libCint.a" ]; then
+         if [ $LIB != "lib/libCore.a" ]; then
+            EXPLLNKCORE="-Llib -lCore -lCint"
+         else
+            EXPLLNKCORE="-Llib -lCint"
+         fi
       fi
+
+      echo $makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE
+      $makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE
    fi
 elif [ $PLATFORM = "alphaegcs" ] || [ $PLATFORM = "hpux" ] || \
      [ $PLATFORM = "solaris" ]   || [ $PLATFORM = "sgi" ]; then
-   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA
-   $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA
+   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+   $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "lynxos" ]; then
    echo ar rv $LIB $OBJS $EXTRA
    ar rv $LIB $OBJS $EXTRA
 elif [ $PLATFORM = "fbsd" ]; then
-   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA
-   $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA
+   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+   $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
    # for elf:  echo $PLATFORM: $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS
    # for elf:  $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB `lorder $OBJS | tsort -q`
 elif [ $PLATFORM = "macosx" ]; then
@@ -75,28 +91,29 @@ elif [ $PLATFORM = "macosx" ]; then
    $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
 	$OBJS `[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
 elif [ $LD = "KCC" ]; then
-   echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
-   $LD $LDFLAGS -o $LIB $OBJS $EXTRA
+   echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+   $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
-   if [ $SONAME != "libCint.dll" ]; then 
+   EXPLLNKCORE=
+   if [ $SONAME != "libCint.dll" ]; then
       if [ $SONAME != "libCore.dll" ]; then
-         EXPLLNKCORE="-lCore -lCint"
-      else 
-         EXPLLNKCORE=-lCint
+         EXPLLNKCORE="-Llib -lCore -lCint"
+      else
+         EXPLLNKCORE="-Llib -lCint"
       fi
    fi
    line="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB -Wl,--whole-archive $OBJS \
-         -Wl,--no-whole-archive -Llib/ $EXTRA $EXPLLNKCORE"
+         -Wl,--no-whole-archive $EXTRA $EXPLLNKCORE"
    echo $line
    $line
 else
    if [ "x$MAJOR" = "x" ] ; then
-      echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
-      $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
+      echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+      $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
    else
-      echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA
+      echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE
       $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS \
-         -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA
+         -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE
    fi
 fi
 

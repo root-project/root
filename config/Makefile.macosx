@@ -15,7 +15,7 @@ NOOPT         =
 endif
 
 # Compiler:
-# if you want to compile for 10.1 you just have to change those 
+# if you want to compile for 10.1 you just have to change those
 # 3 variables to:
 # CXX           = c++
 # CC            = cc
@@ -45,7 +45,7 @@ SOEXT         = dylib
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
@@ -57,10 +57,6 @@ INSTALL      := cp -pPR
 INSTALLDATA  := cp -pPR
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -lXmu -lXext -lX11
-X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11
-
 FINK_CXXFLAGS = $(shell [ -d /sw/include ] && echo -I/sw/include)
 FINK_CFLAGS   = $(shell [ -d /sw/include ] && echo -I/sw/include)
 FINK_LDFLAGS  = $(shell [ -d /sw/lib ] && echo -L/sw/lib)

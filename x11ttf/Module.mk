@@ -39,7 +39,8 @@ include/%.h:    $(X11TTFDIRI)/%.h
 $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPELIB) $(MAINLIBS) $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
-		   "$(X11TTFO) $(X11TTFDO)" "$(FREETYPELIB) $(X11TTFLIBEXTRA)"
+		   "$(X11TTFO) $(X11TTFDO)" \
+		   "$(FREETYPELIB) $(X11TTFLIBEXTRA) $(XLIBS)"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

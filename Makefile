@@ -27,6 +27,12 @@ ifeq ($(MAKECMDGOALS),clean)
 include config/Makefile.$(ARCH)
 endif
 
+##### Include library dependencies for explicit linking #####
+
+ifeq ($(EXPLICITLINK),yes)
+include config/Makefile.depend
+endif
+
 ##### Allow local macros #####
 
 -include MyConfig.mk
@@ -227,7 +233,7 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
 ##### if shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
-ifneq ($(EXPLICITLINK),)
+ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
 else
 MAINLIBS      =

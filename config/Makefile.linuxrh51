@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for Linux gcc 2.7.x.x with glibc
 
 PLATFORM      = linux
@@ -33,7 +33,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lg++ -lm -ldl -rdynamic
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lg++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -lg++
 CILIBS        = -lm -ltermcap -lbsd -ldl -lg++ -rdynamic
 CRYPTLIBS     =
 
@@ -43,5 +43,4 @@ F77FLAGS      = $(OPT) -Nx800 -NC200
 F77LIBS       =
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+

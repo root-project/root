@@ -29,10 +29,12 @@ TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
 ACLOCALDIR     := @aclocaldir@
 
+X11LIBDIR      := @x11libdir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
 
 EXCEPTIONS     := @exceptions@
+EXPLICITLINK   := @explicitlink@
 
 ENABLETHREAD   := @enable_thread@
 OSTHREADLIBDIR := @threadlibdir@

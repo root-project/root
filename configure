@@ -44,6 +44,7 @@ enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_venus=yes
 enable_exceptions=yes
+enable_explicitlink=no
 show_pkglist=no
 
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
@@ -51,7 +52,7 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_table enable_thread enable_venus \
          enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
-         enable_asimage enable_chirp"
+         enable_asimage enable_chirp enable_explicitlink"
 
 
 ######################################################################
@@ -357,6 +358,8 @@ enable/disable options, prefix with either --enable- or --disable-
    cern            CERNLIB usage, build h2root and g2root
    chirp           Chirp support (Condor remote I/O), requires libchirp_client
    dcache          dCache support, requires libdcap from DESY
+   exceptions      Turn on compiler exception handling capability
+   explicitlink    Explicitly link with all dependent libraries
    krb5            Kerberos5 support, requires Kerberos libs
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
@@ -408,6 +411,7 @@ with options, prefix with --with-, enables corresponding support
    sys-iconpath    Extra icon path
    thread-libdir   Thread support, path to libpthread
    venus-libdir    VENUS support, location of libVenus
+   x11-libdir      X11 support, path to libX11
    xpm-libdir      XPM support, path to libXpm
 
 EOF
@@ -502,6 +506,7 @@ if test $# -gt 0 ; then
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
+      --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       ################################################################
       #
@@ -602,12 +607,23 @@ fi
 
 ######################################################################
 #
-### echo %%% XPM Library - Mandatory lib on Unix
+### echo %%% X11 and XPM Library - Mandatory lib on Unix
 #
-# Mandetory test, must succeed
-# Check for Xpm library
+# Mandatory test, must succeed
+# Check for X11 and Xpm library
 #
 if test ! "$platform" = "win32"; then
+    check_library "libX11" "$enable_shared" "$x11libdir" \
+	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
+	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
+	/usr/X11/lib /usr/lib32 /usr/lib/X11R5
+    x11libdir=$found_dir
+
+    if test "x$x11libdir" = "x" ; then
+	echo "`basename $0`: libX11 MUST be installed"
+        exit 1
+    fi
+
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
 	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /use/local/X11R6/lib \
@@ -631,6 +647,22 @@ fi
 e=`echo $rootbuild | sed 's/.*exceptions.*/1/'`
 if test "x$e" = "x1" ; then
     enable_exceptions=no
+fi
+
+######################################################################
+#
+### echo %%% Explicitlink - explicitly link with all dependent libraries
+#
+case $platform in
+freebsd4|aix*|win32*)
+    enable_explicitlink="yes"
+    ;;
+esac
+if test "$platform" = "macosx" ; then
+    enable_explicitlink="no"
+fi
+if test "x$enable_explicitlink" = "xyes"; then
+    mkliboption=$mkliboption"-x "
 fi
 
 ######################################################################
@@ -1582,87 +1614,89 @@ fi
 #
 message "Writing $MAKEOUT"
 sed \
-    -e "s|@aclocaldir@|$aclocaldir|"        \
-    -e "s|@afslib@|$afslib|"                \
-    -e "s|@afslibdir@|$afslibdir|"          \
-    -e "s|@alienincdir@|$alienincdir|"      \
-    -e "s|@alienlib@|$alienlib|"            \
-    -e "s|@alienlibdir@|$alienlibdir|"      \
-    -e "s|@architecture@|$arch|"            \
-    -e "s|@asimageincdir@|$asimageincdir|"  \
-    -e "s|@asimagelib@|$asimagelib|"        \
-    -e "s|@asimagelibdir@|$asimagelibdir|"  \
-    -e "s|@bindir@|$bindir|"                \
-    -e "s|@cernlibdir@|$cernlibdir|"        \
-    -e "s|@cernlibs@|$cernlib|"             \
-    -e "s|@chirpincdir@|$chirpincdir|"      \
-    -e "s|@chirplib@|$chirplib|"            \
-    -e "s|@chirplibdir@|$chirplibdir|"      \
-    -e "s|@cintincdir@|$cintincdir|"        \
-    -e "s|@datadir@|$datadir|"              \
-    -e "s|@dcapincdir@|$dcapincdir|"        \
-    -e "s|@dcaplib@|$dcaplib|"              \
-    -e "s|@dcaplibdir@|$dcaplibdir|"        \
-    -e "s|@docdir@|$docdir|"                \
-    -e "s|@elispdir@|$elispdir|"            \
-    -e "s|@enable_table@|$enable_table|"    \
-    -e "s|@enable_thread@|$enable_thread|"  \
-    -e "s|@etcdir@|$etcdir|"                \
-    -e "s|@exceptions@|$enable_exceptions|" \
-    -e "s|@iconpath@|$iconpath|"            \
-    -e "s|@incdir@|$incdir|"                \
-    -e "s|@krb5incdir@|$krb5incdir|"        \
-    -e "s|@krb5lib@|$krb5lib|"              \
-    -e "s|@krb5libdir@|$krb5libdir|"        \
-    -e "s|@ldapincdir@|$ldapincdir|"        \
-    -e "s|@ldaplib@|$ldaplib|"              \
-    -e "s|@ldaplibdir@|$ldaplibdir|"        \
-    -e "s|@ldflags@||"                      \
-    -e "s|@libdir@|$libdir|"                \
-    -e "s|@macrodir@|$macrodir|"            \
-    -e "s|@mandir@|$mandir|"                \
-    -e "s|@mkliboption@|$mkliboption|"      \
-    -e "s|@mysqlincdir@|$mysqlincdir|"      \
-    -e "s|@mysqllib@|$mysqllib|"            \
-    -e "s|@mysqllibdir@|$mysqllibdir|"      \
-    -e "s|@openglincdir@|$openglincdir|"    \
-    -e "s|@opengllib@|$opengllib|"          \
-    -e "s|@opengllibdir@|$opengllibdir|"    \
-    -e "s|@openglulib@|$openglulib|"        \
-    -e "s|@openivincdir@|$openivincdir|"    \
-    -e "s|@openivlib@|$openivlib|"          \
-    -e "s|@openivlibdir@|$openivlibdir|"    \
-    -e "s|@pgsqlincdir@|$pgsqlincdir|"      \
-    -e "s|@pgsqllib@|$pgsqllib|"            \
-    -e "s|@pgsqllibdir@|$pgsqllibdir|"      \
-    -e "s|@proofdir@|$proofdir|"            \
-    -e "s|@pythia6lib@|$pythia6lib|"        \
-    -e "s|@pythia6libdir@|$pythia6libdir|"  \
-    -e "s|@pythialib@|$pythialib|"          \
-    -e "s|@pythialibdir@|$pythialibdir|"    \
-    -e "s|@rootbuild@|$rootbuild|"          \
-    -e "s|@sapdbincdir@|$sapdbincdir|"      \
-    -e "s|@sapdblib@|$sapdblib|"            \
-    -e "s|@sapdblibdir@|$sapdblibdir|"      \
-    -e "s|@shadowpw@|$shadowpw|"            \
-    -e "s|@shiftlib@|$shiftlib|"            \
-    -e "s|@shiftlibdir@|$shiftlibdir|"      \
-    -e "s|@srcdir@|$srcdir|"                \
-    -e "s|@srpincdir@|$srpincdir|"          \
-    -e "s|@srplib@|$srplib|"                \
-    -e "s|@srplibdir@|$srplibdir|"          \
-    -e "s|@srputilincdir@|$srputilincdir|"  \
-    -e "s|@srputillib@|$srputillib|"        \
-    -e "s|@srputillibdir@|$srputillibdir|"  \
-    -e "s|@testdir@|$testdir|"              \
-    -e "s|@threadlib@|$threadlib|"          \
-    -e "s|@threadlibdir@|$threadlibdir|"    \
-    -e "s|@ttffontdir@|$fontdir|"           \
-    -e "s|@tutdir@|$tutdir|"                \
-    -e "s|@venuslib@|$venuslib|"            \
-    -e "s|@venuslibdir@|$venuslibdir|"      \
-    -e "s|@xpmlib@|$xpmlib|"                \
-    -e "s|@xpmlibdir@|$xpmlibdir|"          \
+    -e "s|@aclocaldir@|$aclocaldir|"            \
+    -e "s|@afslib@|$afslib|"                    \
+    -e "s|@afslibdir@|$afslibdir|"              \
+    -e "s|@alienincdir@|$alienincdir|"          \
+    -e "s|@alienlib@|$alienlib|"                \
+    -e "s|@alienlibdir@|$alienlibdir|"          \
+    -e "s|@architecture@|$arch|"                \
+    -e "s|@asimageincdir@|$asimageincdir|"      \
+    -e "s|@asimagelib@|$asimagelib|"            \
+    -e "s|@asimagelibdir@|$asimagelibdir|"      \
+    -e "s|@bindir@|$bindir|"                    \
+    -e "s|@cernlibdir@|$cernlibdir|"            \
+    -e "s|@cernlibs@|$cernlib|"                 \
+    -e "s|@chirpincdir@|$chirpincdir|"          \
+    -e "s|@chirplib@|$chirplib|"                \
+    -e "s|@chirplibdir@|$chirplibdir|"          \
+    -e "s|@cintincdir@|$cintincdir|"            \
+    -e "s|@datadir@|$datadir|"                  \
+    -e "s|@dcapincdir@|$dcapincdir|"            \
+    -e "s|@dcaplib@|$dcaplib|"                  \
+    -e "s|@dcaplibdir@|$dcaplibdir|"            \
+    -e "s|@docdir@|$docdir|"                    \
+    -e "s|@elispdir@|$elispdir|"                \
+    -e "s|@enable_table@|$enable_table|"        \
+    -e "s|@enable_thread@|$enable_thread|"      \
+    -e "s|@etcdir@|$etcdir|"                    \
+    -e "s|@exceptions@|$enable_exceptions|"     \
+    -e "s|@explicitlink@|$enable_explicitlink|" \
+    -e "s|@iconpath@|$iconpath|"                \
+    -e "s|@incdir@|$incdir|"                    \
+    -e "s|@krb5incdir@|$krb5incdir|"            \
+    -e "s|@krb5lib@|$krb5lib|"                  \
+    -e "s|@krb5libdir@|$krb5libdir|"            \
+    -e "s|@ldapincdir@|$ldapincdir|"            \
+    -e "s|@ldaplib@|$ldaplib|"                  \
+    -e "s|@ldaplibdir@|$ldaplibdir|"            \
+    -e "s|@ldflags@||"                          \
+    -e "s|@libdir@|$libdir|"                    \
+    -e "s|@macrodir@|$macrodir|"                \
+    -e "s|@mandir@|$mandir|"                    \
+    -e "s|@mkliboption@|$mkliboption|"          \
+    -e "s|@mysqlincdir@|$mysqlincdir|"          \
+    -e "s|@mysqllib@|$mysqllib|"                \
+    -e "s|@mysqllibdir@|$mysqllibdir|"          \
+    -e "s|@openglincdir@|$openglincdir|"        \
+    -e "s|@opengllib@|$opengllib|"              \
+    -e "s|@opengllibdir@|$opengllibdir|"        \
+    -e "s|@openglulib@|$openglulib|"            \
+    -e "s|@openivincdir@|$openivincdir|"        \
+    -e "s|@openivlib@|$openivlib|"              \
+    -e "s|@openivlibdir@|$openivlibdir|"        \
+    -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
+    -e "s|@pgsqllib@|$pgsqllib|"                \
+    -e "s|@pgsqllibdir@|$pgsqllibdir|"          \
+    -e "s|@proofdir@|$proofdir|"                \
+    -e "s|@pythia6lib@|$pythia6lib|"            \
+    -e "s|@pythia6libdir@|$pythia6libdir|"      \
+    -e "s|@pythialib@|$pythialib|"              \
+    -e "s|@pythialibdir@|$pythialibdir|"        \
+    -e "s|@rootbuild@|$rootbuild|"              \
+    -e "s|@sapdbincdir@|$sapdbincdir|"          \
+    -e "s|@sapdblib@|$sapdblib|"                \
+    -e "s|@sapdblibdir@|$sapdblibdir|"          \
+    -e "s|@shadowpw@|$shadowpw|"                \
+    -e "s|@shiftlib@|$shiftlib|"                \
+    -e "s|@shiftlibdir@|$shiftlibdir|"          \
+    -e "s|@srcdir@|$srcdir|"                    \
+    -e "s|@srpincdir@|$srpincdir|"              \
+    -e "s|@srplib@|$srplib|"                    \
+    -e "s|@srplibdir@|$srplibdir|"              \
+    -e "s|@srputilincdir@|$srputilincdir|"      \
+    -e "s|@srputillib@|$srputillib|"            \
+    -e "s|@srputillibdir@|$srputillibdir|"      \
+    -e "s|@testdir@|$testdir|"                  \
+    -e "s|@threadlib@|$threadlib|"              \
+    -e "s|@threadlibdir@|$threadlibdir|"        \
+    -e "s|@ttffontdir@|$fontdir|"               \
+    -e "s|@tutdir@|$tutdir|"                    \
+    -e "s|@venuslib@|$venuslib|"                \
+    -e "s|@venuslibdir@|$venuslibdir|"          \
+    -e "s|@x11libdir@|$x11libdir|"              \
+    -e "s|@xpmlib@|$xpmlib|"                    \
+    -e "s|@xpmlibdir@|$xpmlibdir|"              \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 echo "done"

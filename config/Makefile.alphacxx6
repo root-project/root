@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile to build ROOT for DEC unix with cxx 6
 
 PLATFORM      = alpha
@@ -27,7 +27,7 @@ CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
 EXTRA_CXXFLAGS := -Iinclude -long_double_size 64
 
 # Linker:
-LD            = cxx 
+LD            = cxx
 F77LD         = f77
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym,-soname,
@@ -35,7 +35,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
@@ -43,8 +43,6 @@ F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
 
 # Extras
 CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -lX11 -lXext -lXmu -lXi -lm
 
 # Override default in Makefile.config
 INSTALL        := cp -pR

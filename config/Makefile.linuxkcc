@@ -63,7 +63,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
@@ -76,5 +76,4 @@ F77LIBS       = -lf2c -lnsl
 
 # fix for libGui.so that needs lstat
 GUILIBEXTRA   = -lc
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/X11R6/lib -lXmu
+

@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for Solaris with CC 5.0
 
 PLATFORM      = solaris
@@ -44,7 +44,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lnsl -lsocket
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap -ldl
 
 # Fortran:
@@ -57,5 +57,4 @@ INSTALL      := cp -pR
 INSTALLDATA  := cp -pR
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
+

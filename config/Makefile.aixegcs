@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for AIX 4.x with glibc and egcs1.1
 # origin Richard Dubois & Donald Benton
 
@@ -36,7 +36,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -lld -lg++
-XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11 -L/share/lib
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -L/share/lib
 CILIBS        = -lm -L../lib -lCint -lbsd -lcurses -lld
 
 # Fortran:
