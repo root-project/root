@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -341,7 +341,8 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
   const Double_t * const vp = vc.GetElements();
 
   Double_t c = TMath::Abs(vp[lp]);
-  for (Int_t i = l; i < n; i++)
+  Int_t i;
+  for (i = l; i < n; i++)
     c = TMath::Max(TMath::Abs(vp[i]),c);
 
   up   = 0.0;
@@ -352,7 +353,7 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
   }
 
   Double_t sd = vp[lp]/c; sd *= sd;
-  for (Int_t i = l; i < n; i++) {
+  for (i = l; i < n; i++) {
     const Double_t tmp = vp[i]/c;
     sd += tmp*tmp;
   }
@@ -412,12 +413,13 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
         Double_t *       cp = cc.GetPtr();
 
   Double_t s = cp[lp*inc_c]*up;
-  for (Int_t i = l; i < nv; i++)
+  Int_t i;
+  for (i = l; i < nv; i++)
     s += cp[i*inc_c]*vp[i];
 
   s = s*beta;
   cp[lp*inc_c] += s*up;
-  for (Int_t i = l; i < nv; i++)
+  for (i = l; i < nv; i++)
     cp[i*inc_c] += s*vp[i];
 }
 
@@ -439,12 +441,13 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
         Double_t *       cp = cv.GetElements();
 
   Double_t s = cp[lp]*up;
-  for (Int_t i = l; i < nv; i++)
+  Int_t i;
+  for (i = l; i < nv; i++)
     s += cp[i]*vp[i];
 
   s = s*beta;
   cp[lp] += s*up;
-  for (Int_t i = l; i < nv; i++)
+  for (i = l; i < nv; i++)
     cp[i] += s*vp[i];
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -132,7 +132,8 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
   TArrayD ups(nCol_v);
   TArrayD betas(nCol_v);
 
-  for (Int_t i = 0; i < nCol_v; i++) {
+  Int_t i;
+  for (i = 0; i < nCol_v; i++) {
     // Set up Householder Transformation q(i)
 
     Double_t up,beta;
@@ -192,7 +193,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
   // construct product matrix h = h(1)*h(2)*...*h(nCol_v-1), h(nCol_v-1) = I
 
   TVectorD vr_i(nCol_v);
-  for (Int_t i = nCol_v-1; i >= 0; i--) {
+  for (i = nCol_v-1; i >= 0; i--) {
     if (i < nCol_v-1)
       vr_i = TMatrixDRow_const(v,i);
     TMatrixDRow(v,i) = 0.0;
@@ -357,6 +358,7 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
   const Int_t nCol_u = u.GetNcols();
 
   Double_t h,cs,sn;
+  Int_t j;
   for (Int_t i = l; i <= k-1; i++) {
     if (i == l)
       // define r[l]
@@ -371,7 +373,7 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
 
     TMatrixDColumn vc_i  = TMatrixDColumn(v,i);
     TMatrixDColumn vc_i1 = TMatrixDColumn(v,i+1);
-    for (Int_t j = 0; j < nCol_v; j++)
+    for (j = 0; j < nCol_v; j++)
       ApplyGivens(vc_i(j),vc_i1(j),cs,sn);
     // define t[i]
     DefAplGivens(pS[i],h,cs,sn);
@@ -383,7 +385,7 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
 
     TMatrixDRow ur_i  = TMatrixDRow(u,i);
     TMatrixDRow ur_i1 = TMatrixDRow(u,i+1);
-    for (Int_t j = 0; j < nCol_u; j++)
+    for (j = 0; j < nCol_u; j++)
       ApplyGivens(ur_i(j),ur_i1(j),cs,sn);
   }
 }
@@ -409,10 +411,11 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 
   // order singular values
 
+  Int_t i,j;
   if (nCol_v > 1) {
     while (1) {
       Bool_t found = kFALSE;
-      Int_t i = 1;
+      i = 1;
       while (!found && i < nCol_v) {
         if (pS[i] > pS[i-1])
           found = kTRUE;
@@ -420,10 +423,10 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
           i++;
       }
       if (!found) break;
-      for (Int_t i = 1; i < nCol_v; i++) {
+      for (i = 1; i < nCol_v; i++) {
         Double_t t = pS[i-1];
         Int_t k = i-1;
-        for (Int_t j = i; j < nCol_v; j++) {
+        for (j = i; j < nCol_v; j++) {
           if (t < pS[j]) {
             t = pS[j];
             k = j;
@@ -434,14 +437,14 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
           pS[k]   = pS[i-1];
           pS[i-1] = t;
           // perform permutation on matrix v
-          for (Int_t j = 0; j < nCol_v; j++) {
+          for (j = 0; j < nCol_v; j++) {
             const Int_t off_j = j*nCol_v;
             t             = pV[off_j+k];
             pV[off_j+k]   = pV[off_j+i-1];
             pV[off_j+i-1] = t;
           }
           // perform permutation on vector u
-          for (Int_t j = 0; j < nCol_u; j++) {
+          for (j = 0; j < nCol_u; j++) {
             const Int_t off_k  = k*nCol_u;
             const Int_t off_i1 = (i-1)*nCol_u;
             t            = pU[off_k+j];

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -96,13 +96,14 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
   const Int_t low  = 0;
   const Int_t high = n-1;
    
-  for (Int_t m = low+1; m <= high-1; m++) {
+  Int_t i,j,m;
+  for (m = low+1; m <= high-1; m++) {
     const Int_t off_m = m*n;
    
     // Scale column.
    
     Double_t scale = 0.0;
-    for (Int_t i = m; i <= high; i++) {
+    for (i = m; i <= high; i++) {
       const Int_t off_i = i*n;
       scale = scale + TMath::Abs(pH[off_i+m-1]);
     }
@@ -111,7 +112,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
       // Compute Householder transformation.
    
       Double_t h = 0.0;
-      for (Int_t i = high; i >= m; i--) {
+      for (i = high; i >= m; i--) {
         const Int_t off_i = i*n;
         pO[i] = pH[off_i+m-1]/scale;
         h += pO[i]*pO[i];
@@ -125,28 +126,28 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
       // Apply Householder similarity transformation
       // H = (I-u*u'/h)*H*(I-u*u')/h)
    
-      for (Int_t j = m; j < n; j++) {
+      for (j = m; j < n; j++) {
         Double_t f = 0.0;
-        for (Int_t i = high; i >= m; i--) {
+        for (i = high; i >= m; i--) {
           const Int_t off_i = i*n;
           f += pO[i]*pH[off_i+j];
         }
         f = f/h;
-        for (Int_t i = m; i <= high; i++) {
+        for (i = m; i <= high; i++) {
           const Int_t off_i = i*n;
           pH[off_i+j] -= f*pO[i];
         }
       }
    
-      for (Int_t i = 0; i <= high; i++) {
+      for (i = 0; i <= high; i++) {
         const Int_t off_i = i*n;
         Double_t f = 0.0;
-        for (Int_t j = high; j >= m; j--) {
+        for (j = high; j >= m; j--) {
           const Int_t off_i = i*n;
           f += pO[j]*pH[off_i+j];
         }
         f = f/h;
-        for (Int_t j = m; j <= high; j++)
+        for (j = m; j <= high; j++)
           pH[off_i+j] -= f*pO[j];
       }
       pO[m] = scale*pO[m];
@@ -156,20 +157,20 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    
   // Accumulate transformations (Algol's ortran).
 
-  for (Int_t i = 0; i < n; i++) {
+  for (i = 0; i < n; i++) {
     const Int_t off_i = i*n;
-    for (Int_t j = 0; j < n; j++)
+    for (j = 0; j < n; j++)
       pV[off_i+j] = (i == j ? 1.0 : 0.0);
   }
 
-  for (Int_t m = high-1; m >= low+1; m--) {
+  for (m = high-1; m >= low+1; m--) {
     const Int_t off_m = m*n;
     if (pH[off_m+m-1] != 0.0) {
-      for (Int_t i = m+1; i <= high; i++) {
+      for (i = m+1; i <= high; i++) {
         const Int_t off_i = i*n;
         pO[i] = pH[off_i+m-1];
       }
-      for (Int_t j = m; j <= high; j++) {
+      for (j = m; j <= high; j++) {
         Double_t g = 0.0;
         for (Int_t i = m; i <= high; i++) {
           const Int_t off_i = i*n;
@@ -177,7 +178,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
         }
         // Double division avoids possible underflow
         g = (g/pO[m])/pH[off_m+m-1];
-        for (Int_t i = m; i <= high; i++) {
+        for (i = m; i <= high; i++) {
           const Int_t off_i = i*n;
           pV[off_i+j] += g*pO[i];
         }
@@ -230,13 +231,14 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
   // Store roots isolated by balanc and compute matrix norm
    
   Double_t norm = 0.0;
-  for (Int_t i = 0; i < nn; i++) {
+  Int_t i,j,k;
+  for (i = 0; i < nn; i++) {
     const Int_t off_i = i*nn;
     if ((i < low) || (i > high)) {
       pD[i] = pH[off_i+i];
       pE[i] = 0.0;
     }
-    for (Int_t j = TMath::Max(i-1,0); j < nn; j++)
+    for (j = TMath::Max(i-1,0); j < nn; j++)
       norm += TMath::Abs(pH[off_i+j]);
   }
    
@@ -305,7 +307,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
  
         // Row modification
 
-        for (Int_t j = n-1; j < nn; j++) {
+        for (j = n-1; j < nn; j++) {
           z = pH[off_n1+j];
           pH[off_n1+j] = q*z+p*pH[off_n+j];
           pH[off_n+j]  = q*pH[off_n+j]-p*z;
@@ -313,7 +315,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
         // Column modification
 
-        for (Int_t i = 0; i <= n; i++) {
+        for (i = 0; i <= n; i++) {
           const Int_t off_i = i*nn;
           z = pH[off_i+n-1];
           pH[off_i+n-1] = q*z+p*pH[off_i+n];
@@ -322,7 +324,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
         // Accumulate transformations
 
-        for (Int_t i = low; i <= high; i++) {
+        for (i = low; i <= high; i++) {
           const Int_t off_i = i*nn;
           z = pV[off_i+n-1];
           pV[off_i+n-1] = q*z+p*pV[off_i+n];
@@ -358,7 +360,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
       if (iter == 10) {
         exshift += x;
-        for (Int_t i = low; i <= n; i++) {
+        for (i = low; i <= n; i++) {
           const Int_t off_i = i*nn;
           pH[off_i+i] -= x;
         }
@@ -377,7 +379,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
            if (y<x)
              s = -s;
            s = x-w/((y-x)/2.0+s);
-           for (Int_t i = low; i <= n; i++) {
+           for (i = low; i <= n; i++) {
              const Int_t off_i = i*nn;
              pH[off_i+i] -= s;
            }
@@ -415,7 +417,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         m--;
       }
    
-      for (Int_t i = m+2; i <= n; i++) {
+      for (i = m+2; i <= n; i++) {
         const Int_t off_i = i*nn;
         pH[off_i+i-2] = 0.0;
         if (i > m+2)
@@ -424,7 +426,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
       // Double QR step involving rows l:n and columns m:n
    
-      for (Int_t k = m; k <= n-1; k++) {
+      for (k = m; k <= n-1; k++) {
         const Int_t off_k  = k*nn;
         const Int_t off_k1 = (k+1)*nn;
         const Int_t off_k2 = (k+2)*nn;
@@ -460,7 +462,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
           // Row modification
    
-          for (Int_t j = k; j < nn; j++) {
+          for (j = k; j < nn; j++) {
             p = pH[off_k+j]+q*pH[off_k1+j];
             if (notlast) {
               p = p+r*pH[off_k2+j];
@@ -472,7 +474,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
   
           // Column modification
  
-          for (Int_t i = 0; i <= TMath::Min(n,k+3); i++) {
+          for (i = 0; i <= TMath::Min(n,k+3); i++) {
             const Int_t off_i = i*nn;
             p = x*pH[off_i+k]+y*pH[off_i+k+1];
             if (notlast) {
@@ -485,7 +487,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
           // Accumulate transformations
 
-          for (Int_t i = low; i <= high; i++) {
+          for (i = low; i <= high; i++) {
             const Int_t off_i = i*nn;
             p = x*pV[off_i+k]+y*pV[off_i+k+1];
             if (notlast) {
@@ -515,12 +517,12 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
     if (q == 0) {
       Int_t l = n;
       pH[off_n+n] = 1.0;
-      for (Int_t i = n-1; i >= 0; i--) {
+      for (i = n-1; i >= 0; i--) {
         const Int_t off_i  = i*nn;
         const Int_t off_i1 = (i+1)*nn;
         w = pH[off_i+i]-p;
         r = 0.0;
-        for (Int_t j = l; j <= n; j++) {
+        for (j = l; j <= n; j++) {
           const Int_t off_j = j*nn;
           r = r+pH[off_i+j]*pH[off_j+n];
         }
@@ -553,7 +555,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
             t = TMath::Abs(pH[off_i+n]);
             if ((eps*t)*t > 1) {
-              for (Int_t j = i; j <= n; j++) {
+              for (j = i; j <= n; j++) {
                 const Int_t off_j = j*nn;
                 pH[off_j+n] = pH[off_j+n]/t;
               }
@@ -579,12 +581,12 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
       }
       pH[off_n+n-1] = 0.0;
       pH[off_n+n]   = 1.0;
-      for (Int_t i = n-2; i >= 0; i--) {
+      for (i = n-2; i >= 0; i--) {
         const Int_t off_i  = i*nn;
         const Int_t off_i1 = (i+1)*nn;
         Double_t ra = 0.0;
         Double_t sa = 0.0;
-        for (Int_t j = l; j <= n; j++) {
+        for (j = l; j <= n; j++) {
           const Int_t off_j = j*nn;
           ra += pH[off_i+j]*pH[off_j+n-1];
           sa += pH[off_i+j]*pH[off_j+n];
@@ -630,7 +632,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
           t = TMath::Max(TMath::Abs(pH[off_i+n-1]),TMath::Abs(pH[off_i+n]));
           if ((eps*t)*t > 1) {
-            for (Int_t j = i; j <= n; j++) {
+            for (j = i; j <= n; j++) {
               const Int_t off_j = j*nn;
               pH[off_j+n-1] = pH[off_j+n-1]/t;
               pH[off_j+n]   = pH[off_j+n]/t;
@@ -643,7 +645,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
   // Vectors of isolated roots
    
-  for (Int_t i = 0; i < nn; i++) {
+  for (i = 0; i < nn; i++) {
     if (i < low || i > high) {
       const Int_t off_i = i*nn;
       for (Int_t j = i; j < nn; j++)
@@ -653,11 +655,11 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    
   // Back transformation to get eigenvectors of original matrix
    
-  for (Int_t j = nn-1; j >= low; j--) {
-    for (Int_t i = low; i <= high; i++) {
+  for (j = nn-1; j >= low; j--) {
+    for (i = low; i <= high; i++) {
       const Int_t off_i = i*nn;
       z = 0.0;
-      for (Int_t k = low; k <= TMath::Min(j,high); k++) {
+      for (k = low; k <= TMath::Min(j,high); k++) {
         const Int_t off_k = k*nn;
         z = z+pV[off_i+k]*pH[off_k+j];
       }

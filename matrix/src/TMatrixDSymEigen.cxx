@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -71,7 +71,8 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 
   // Householder reduction to tridiagonal form.
 
-  for (Int_t i = n-1; i > 0; i--) {
+  Int_t i,j,k;
+  for (i = n-1; i > 0; i--) {
     const Int_t off_i1 = (i-1)*n;
     const Int_t off_i  = i*n;
 
@@ -79,11 +80,11 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 
     Double_t scale = 0.0;
     Double_t h = 0.0;
-    for (Int_t k = 0; k < i; k++)
+    for (k = 0; k < i; k++)
       scale = scale+TMath::Abs(pD[k]);
     if (scale == 0.0) {
       pE[i] = pD[i-1];
-      for (Int_t j = 0; j < i; j++) {
+      for (j = 0; j < i; j++) {
         const Int_t off_j = j*n;
         pD[j] = pV[off_i1+j];
         pV[off_i+j] = 0.0;
@@ -93,7 +94,7 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 
      // Generate Householder vector.
 
-      for (Int_t k = 0; k < i; k++) {
+      for (k = 0; k < i; k++) {
         pD[k] /= scale;
         h += pD[k]*pD[k];
       }
@@ -104,17 +105,17 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
       pE[i]   = scale*g;
       h       = h-f*g;
       pD[i-1] = f-g;
-      for (Int_t j = 0; j < i; j++)
+      for (j = 0; j < i; j++)
         pE[j] = 0.0;
 
       // Apply similarity transformation to remaining columns.
 
-      for (Int_t j = 0; j < i; j++) {
+      for (j = 0; j < i; j++) {
         const Int_t off_j = j*n;
         f = pD[j];
         pV[off_j+i] = f;
         g = pE[j]+pV[off_j+j]*f;
-        for (Int_t k = j+1; k <= i-1; k++) {
+        for (k = j+1; k <= i-1; k++) {
           const Int_t off_k = k*n;
           g += pV[off_k+j]*pD[k];
           pE[k] += pV[off_k+j]*f;
@@ -122,17 +123,17 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
         pE[j] = g;
       }
       f = 0.0;
-      for (Int_t j = 0; j < i; j++) {
+      for (j = 0; j < i; j++) {
         pE[j] /= h;
         f += pE[j]*pD[j];
       }
       Double_t hh = f/(h+h);
-      for (Int_t j = 0; j < i; j++)
+      for (j = 0; j < i; j++)
         pE[j] -= hh*pD[j];
-      for (Int_t j = 0; j < i; j++) {
+      for (j = 0; j < i; j++) {
         f = pD[j];
         g = pE[j];
-        for (Int_t k = j; k <= i-1; k++) {
+        for (k = j; k <= i-1; k++) {
           const Int_t off_k = k*n;
           pV[off_k+j] -= (f*pE[k]+g*pD[k]);
         }
@@ -145,34 +146,34 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 
   // Accumulate transformations.
 
-  for (Int_t i = 0; i < n-1; i++) {
+  for (i = 0; i < n-1; i++) {
     const Int_t off_i  = i*n;
     pV[off_n1+i] = pV[off_i+i];
     pV[off_i+i] = 1.0;
     Double_t h = pD[i+1];
     if (h != 0.0) {
-      for (Int_t k = 0; k <= i; k++) {
+      for (k = 0; k <= i; k++) {
         const Int_t off_k = k*n;
         pD[k] = pV[off_k+i+1]/h;
       }
-      for (Int_t j = 0; j <= i; j++) {
+      for (j = 0; j <= i; j++) {
         Double_t g = 0.0;
-        for (Int_t k = 0; k <= i; k++) {
+        for (k = 0; k <= i; k++) {
           const Int_t off_k = k*n;
           g += pV[off_k+i+1]*pV[off_k+j];
         }
-        for (Int_t k = 0; k <= i; k++) {
+        for (k = 0; k <= i; k++) {
           const Int_t off_k = k*n;
           pV[off_k+j] -= g*pD[k];
         }
       }
     }
-    for (Int_t k = 0; k <= i; k++) {
+    for (k = 0; k <= i; k++) {
       const Int_t off_k = k*n;
       pV[off_k+i+1] = 0.0;
     }
   }
-  for (Int_t j = 0; j < n; j++) {
+  for (j = 0; j < n; j++) {
     pD[j] = pV[off_n1+j];
     pV[off_n1+j] = 0.0;
   }
@@ -194,14 +195,15 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 
   const Int_t n = v.GetNrows();
 
-  for (Int_t i = 1; i < n; i++)
+  Int_t i,j,k,l;
+  for (i = 1; i < n; i++)
     pE[i-1] = pE[i];
   pE[n-1] = 0.0;
 
   Double_t f = 0.0;
   Double_t tst1 = 0.0;
   Double_t eps = TMath::Power(2.0,-52.0);
-  for (Int_t l = 0; l < n; l++) {
+  for (l = 0; l < n; l++) {
 
     // Find small subdiagonal element
 
@@ -235,7 +237,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
         pD[l+1] = pE[l]*(p+r);
         Double_t dl1 = pD[l+1];
         Double_t h = g-pD[l];
-        for (Int_t i = l+2; i < n; i++)
+        for (i = l+2; i < n; i++)
           pD[i] -= h;
         f = f+h;
 
@@ -248,7 +250,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
         Double_t el1 = pE[l+1];
         Double_t s = 0.0;
         Double_t s2 = 0.0;
-        for (Int_t i = m-1; i >= l; i--) {
+        for (i = m-1; i >= l; i--) {
           c3 = c2;
           c2 = c;
           s2 = s;
@@ -263,7 +265,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 
           // Accumulate transformation.
 
-          for (Int_t k = 0; k < n; k++) {
+          for (k = 0; k < n; k++) {
             const Int_t off_k = k*n;
             h = pV[off_k+i+1];
             pV[off_k+i+1] = s*pV[off_k+i]+c*h;
@@ -284,10 +286,10 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 
   // Sort eigenvalues and corresponding vectors.
 
-  for (Int_t i = 0; i < n-1; i++) {
+  for (i = 0; i < n-1; i++) {
     Int_t k = i;
     Double_t p = pD[i];
-    for (Int_t j = i+1; j < n; j++) {
+    for (j = i+1; j < n; j++) {
       if (pD[j] > p) {
         k = j;
         p = pD[j];
@@ -296,7 +298,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
     if (k != i) {
       pD[k] = pD[i];
       pD[i] = p;
-      for (Int_t j = 0; j < n; j++) {
+      for (j = 0; j < n; j++) {
         const Int_t off_j = j*n;
         p = pV[off_j+i];
         pV[off_j+i] = pV[off_j+k];
