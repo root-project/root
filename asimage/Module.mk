@@ -59,16 +59,13 @@ $(ASTEPLIBSO):
 				fi; \
 			fi; \
 			cd $(ASTEPVERS); \
-			ACC=""; \
+			ACC=; \
 			ACFLAGS="-O"; \
-			if [ $(CC) = "gcc" ]; then \
-				ACFLAGS="-fPIC -O"; \
-			fi; \
 			if [ $(CC) = "icc" ]; then \
 				ACC="icc"; \
 			fi; \
-			export GNUMAKE=$(MAKE); export CC=$$ACC; \
-			export CFLAGS=$$ACFLAGS; \
+			GNUMAKE=$(MAKE) CC=$$ACC \
+			CFLAGS=$$ACFLAGS \
 			./configure --enable-sharedlibs \
 				--with-ttf=no --with-afterbase=no; \
 			$(MAKE); \
