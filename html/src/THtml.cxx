@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.21 2002/04/25 06:30:15 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.22 2002/05/12 16:06:22 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -885,7 +885,12 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
 
    // find a .cxx file
-   char *tmp1 = GetSourceFileName(classPtr->GetImplFileName());
+   char *tmp1; 
+   if (classPtr->GetImplFileLine()) {
+      tmp1 = GetSourceFileName(classPtr->GetImplFileName());
+   } else {
+      tmp1 = GetSourceFileName(classPtr->GetDeclFileName());
+   }
    char *realFilename = StrDup(tmp1, 16);
    if (!realFilename)
       Error("Make", "Can't find file '%s' !", tmp1);
@@ -2673,7 +2678,11 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
 
    if (classPtr) {
 
-      const char *filename = classPtr->GetImplFileName();
+      const char *filename;
+      if ( classPtr->GetImplFileLine() )
+         filename = classPtr->GetImplFileName();
+      else 
+         filename = classPtr->GetDeclFileName();
 
       char varName[80];
       const char *colon = strchr(filename, ':');
@@ -2768,7 +2777,10 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 
    switch (type) {
    case kSource:
-      strPtr2 = GetSourceFileName(classPtr->GetImplFileName());
+      if (classPtr->GetImplFileLine()) 
+         strPtr2 = GetSourceFileName(classPtr->GetImplFileName());
+      else 
+         strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
       strPtr =
@@ -3003,7 +3015,11 @@ void THtml::MakeIndex(const char *filter)
 
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
-      const char *impname = classPtr->GetImplFileName();
+      const char *impname;
+      if (classPtr->GetImplFileName()) 
+         impname = classPtr->GetImplFileName();
+      else 
+         impname = classPtr->GetDeclFileName();
 
       if (impname) {
          fileNames[numberOfImpFiles] = StrDup(impname, 64);
