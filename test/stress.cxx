@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.52 2004/01/07 10:02:28 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.53 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -94,27 +94,26 @@
 #include <TClassTable.h>
 #include "Event.h"
 
-   void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
-   void stress1();
-   void stress2();
-   void stress3();
-   void stress4();
-   void stress5();
-   void stress6();
-   void stress7();
-   void stress8(Int_t nevent);
-   void stress9tree(TTree *tree, Int_t realTestNum);
-   void stress9();
-   void stress10();
-   void stress11();
-   void stress12(Int_t testid);
-   void stress13();
-   void stress14();
-   void stress15();
-   void stress16();
-   void cleanup();
+void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
+void stress1();
+void stress2();
+void stress3();
+void stress4();
+void stress5();
+void stress6();
+void stress7();
+void stress8(Int_t nevent);
+void stress9tree(TTree *tree, Int_t realTestNum);
+void stress9();
+void stress10();
+void stress11();
+void stress12(Int_t testid);
+void stress13();
+void stress14();
+void stress15();
+void stress16();
+void cleanup();
 
-int gPrintSubBench = 0;
 
 int main(int argc, char **argv)
 {
@@ -136,6 +135,8 @@ int main(int argc, char **argv)
 
 class TH1;
 class TTree;
+
+int gPrintSubBench = 0;
 
 //_______________________common part_________________________
 
