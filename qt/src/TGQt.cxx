@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.6 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -93,6 +93,7 @@ Int_t         TGQt::iwid(QPaintDevice *wid)
    else if (wid)  intWid = Int_t(wid);
    return intWid;
 }
+
 //______________________________________________________________________________
 QPaintDevice *TGQt::iwid(Int_t wid)
 {
@@ -103,6 +104,7 @@ QPaintDevice *TGQt::iwid(Int_t wid)
    else topDevice = (QPaintDevice *)wid;
    return topDevice;
 }
+
 //______________________________________________________________________________
 QWidget      *TGQt::winid(Window_t id)
 {
@@ -125,6 +127,7 @@ QWidget      *TGQt::wid(Window_t id)
    //}
    return (QWidget *)dev;
 }
+
 //______________________________________________________________________________
 void TGQt::PrintEvent(Event_t &ev)
 {
@@ -201,6 +204,7 @@ static inline float FontMagicFactor(float size)
 
 int TGQt::fgCoinFlag = 0; // no current coin viewer;
 int TGQt::fgCoinLoaded = 0; // coint viewer DLL has not been loaded
+
 //______________________________________________________________________________
 int TGQt::CoinFlag()
 {
@@ -210,6 +214,7 @@ int TGQt::CoinFlag()
    qApp->unlock();
    return ret;
 }
+
 //______________________________________________________________________________
 void TGQt::SetCoinFlag(int flag)
 {
@@ -218,6 +223,7 @@ void TGQt::SetCoinFlag(int flag)
    fgCoinFlag=flag;
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 void TGQt::SetCoinLoaded() {  fgCoinLoaded = 1; }
 
@@ -262,6 +268,7 @@ class TQtInputHandler : public TFileHandler
       return TFileHandler::Notify();
     }
 };
+
 //______________________________________________________________________________
 QPixmap *TGQt::MakeIcon(Int_t i)
 {
@@ -306,6 +313,7 @@ ClassImp(TGQt)
 //______________________________________________________________________________
 QString TGQt::RootFileFormat(const char *selector)
 {  return RootFileFormat(QString(selector)); }
+
 //______________________________________________________________________________
 QString TGQt::RootFileFormat(const QString &selector)
 {
@@ -377,6 +385,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
    }
    return app;
 }
+
 //______________________________________________________________________________
 void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 {
@@ -400,6 +409,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
    fSelectedBuffer = 0;
    fSelectedWindow = fPrevWindow = NoOperation;
 }
+
 //______________________________________________________________________________
 TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplayOpened(kFALSE)
 ,fQPainter(0),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
@@ -414,6 +424,7 @@ TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplay
    Init();
 #endif
 }
+
 //______________________________________________________________________________
 TGQt::~TGQt()
 {
@@ -430,12 +441,13 @@ TGQt::~TGQt()
    TQtApplication::Terminate();
    // fprintf(stderr, "TGQt::~TGQt()<------\n");
 }
+
 //______________________________________________________________________________
 Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.5 2004/07/26 19:10:17 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.6 2004/07/28 00:12:40 rdm Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -527,6 +539,7 @@ Bool_t TGQt::Init(void* /*display*/)
    fDisplayOpened = kTRUE;
    return fDisplayOpened;
 }
+
 //______________________________________________________________________________
 Int_t TGQt::CreatROOTThread()
 {
@@ -534,6 +547,7 @@ Int_t TGQt::CreatROOTThread()
 //*-*
   return 0;
 }
+
 //______________________________________________________________________________
 Int_t TGQt::InitWindow(ULong_t window)
 {
@@ -553,6 +567,7 @@ Int_t TGQt::InitWindow(ULong_t window)
 
    return iwid(wid);
 }
+
 //______________________________________________________________________________
 Int_t TGQt::OpenPixmap(UInt_t w, UInt_t h)
 {
@@ -589,6 +604,7 @@ QColor &TGQt::ColorIndex(Color_t ic)
    return c;
 #endif
 }
+
 //______________________________________________________________________________
 UInt_t TGQt::ExecCommand(TGWin32Command* /*command*/)
 {
@@ -603,12 +619,14 @@ void TGQt::SetDoubleBufferOFF()
    // deprecated
    fprintf(stderr,"** Error **:  TGQt::SetDoubleBufferOFF no implementation\n");
 }
+
 //______________________________________________________________________________
 void TGQt::SetDoubleBufferON()
 {
    // deprecated
    fprintf(stderr,"** Error **:  TGQt::SetDoubleBufferON no implementation\n");
 }
+
 //______________________________________________________________________________
 void TGQt::GetPlanes(Int_t &nplanes){
 //*-*-*-*-*-*-*-*-*-*-*-*Get maximum number of planes*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -643,18 +661,21 @@ void  TGQt::ClearWindow()
       };
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::ClosePixmap()
 {
    // Delete current pixmap.
    DeleteSelectedObj();
 }
+
 //______________________________________________________________________________
 void  TGQt::CloseWindow()
 {
    // Delete current window.
    DeleteSelectedObj();
 }
+
 //______________________________________________________________________________
 void  TGQt::DeleteSelectedObj()
 {
@@ -676,6 +697,7 @@ void  TGQt::DeleteSelectedObj()
   fSelectedBuffer = fSelectedWindow = 0;
   fPrevWindow     = 0;
 }
+
 //______________________________________________________________________________
 QRect TGQt::GetQRect(QPaintDevice &dev)
 {
@@ -705,6 +727,7 @@ QRect TGQt::GetQRect(QPaintDevice &dev)
   };
   return res;
 }
+
 //______________________________________________________________________________
 void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
 {
@@ -732,6 +755,7 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
       }
    }
 }
+
 //______________________________________________________________________________
 void TGQt::CreateOpenGLContext(int wid)
 {
@@ -803,6 +827,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    }
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *ic)
 {
@@ -864,6 +889,7 @@ void  TGQt::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
    qApp->unlock();
 
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawFillArea(int n, TPoint *xy)
 {
@@ -890,6 +916,7 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
    }
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawLine(int x1, int y1, int x2, int y2)
 {
@@ -901,6 +928,7 @@ void  TGQt::DrawLine(int x1, int y1, int x2, int y2)
   if (fSelectedWindow) fQPainter->drawLine(x1,y1,x2,y2);
   qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawPolyLine(int n, TPoint *xy)
 {
@@ -918,6 +946,7 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
   }
   qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawPolyMarker(int n, TPoint *xy)
 {
@@ -1009,6 +1038,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
    }
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVirtualX::ETextMode /*mode*/)
 {
@@ -1062,6 +1092,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       qApp->unlock();
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
@@ -1072,6 +1103,7 @@ void  TGQt::GetCharacterUp(Float_t &chupx, Float_t &chupy)
    chupy = fCharacterUpY;
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 Int_t  TGQt::GetDoubleBuffer(Int_t wid)
 {
@@ -1117,6 +1149,7 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
    h = devSize.height();
    // fprintf(stderr," TGQt::GetGeometry %d %d %d %d\n", x,y,w,h);
 }
+
 //______________________________________________________________________________
 const char *TGQt::DisplayName(const char *){ return "localhost"; }
 
@@ -1152,6 +1185,7 @@ void  TGQt::GetRGB(int index, float &r, float &g, float &b)
    }
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 const QTextCodec *TGQt::GetTextDecoder()
 {
@@ -1164,10 +1198,13 @@ const QTextCodec *TGQt::GetTextDecoder()
    }
    return fCodec;
 }
+
 //______________________________________________________________________________
 Float_t      TGQt::GetTextMagnitude(){return fTextMagnitude;}
+
 //______________________________________________________________________________
 void         TGQt::SetTextMagnitude(Float_t mgn){ fTextMagnitude = mgn;}
+
 //______________________________________________________________________________
 void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 {
@@ -1203,15 +1240,18 @@ void  TGQt::MoveWindow(Int_t wid, Int_t x, Int_t y)
       ((TQtWidget *)widget)->move(x,y);
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::PutByte(Byte_t )
 {   // deprecated
 }
+
 //______________________________________________________________________________
 void  TGQt::QueryPointer(int &ix, int &iy){
    // deprecated
    if (ix*iy);
 }
+
 //______________________________________________________________________________
 Pixmap_t TGQt::ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id)
 {
@@ -1230,6 +1270,7 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
    // deprecated
    return 0;
 }
+
 //______________________________________________________________________________
 Int_t  TGQt::RequestString(int x, int y, char *text)
 {
@@ -1308,6 +1349,7 @@ void  TGQt::RescaleWindow(int wid, UInt_t w, UInt_t h)
    }
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
 {
@@ -1334,6 +1376,7 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
    qApp->unlock();
    return 1;
 }
+
 //______________________________________________________________________________
 void  TGQt::ResizeWindow(int wid)
 {
@@ -1349,6 +1392,7 @@ void  TGQt::ResizeWindow(int wid)
       if (painting) Begin();
    }
 }
+
 //______________________________________________________________________________
 void   TGQt::SelectPixmap(Int_t qpixid){ SelectWindow(qpixid);}
 
@@ -1372,6 +1416,7 @@ void  TGQt::SelectWindow(int wid)
    if (fPrevWindow && (iwid(fPrevWindow) != -1) )            End();
    if (fSelectedWindow && (fSelectedWindow != NoOperation))  Begin();
 }
+
 //______________________________________________________________________________
 void  TGQt::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
@@ -1398,6 +1443,7 @@ void  TGQt::SetCharacterUp(Float_t chupx, Float_t chupy)
    fCharacterUpY = chupy;
    qApp->unlock();
 }
+
 //______________________________________________________________________________
 void  TGQt::SetClipOFF(Int_t /*wid*/)
 {
@@ -1405,6 +1451,7 @@ void  TGQt::SetClipOFF(Int_t /*wid*/)
    // deprecated
    // fQPainter->setClipping(FALSE);
 }
+
 //______________________________________________________________________________
 void  TGQt::SetClipRegion(int wid, int x, int y, UInt_t w, UInt_t h)
 {
@@ -1422,6 +1469,7 @@ void  TGQt::SetClipRegion(int wid, int x, int y, UInt_t w, UInt_t h)
    }
    qApp->unlock();
 }
+
 //____________________________________________________________________________
 void  TGQt::SetCursor(Int_t wid, ECursor cursor)
 {
@@ -1436,6 +1484,7 @@ void  TGQt::SetCursor(Int_t wid, ECursor cursor)
       }
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetDoubleBuffer(int wid, int mode)
 {
@@ -1452,6 +1501,7 @@ void  TGQt::SetDoubleBuffer(int wid, int mode)
       widget->SetDoubleBuffer(mode);
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 {
@@ -1472,6 +1522,7 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
       if (fQPainter->isActive()) { fQPainter->setRasterOp(fDrawMode); }
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetFillColor(Color_t cindex)
 {
@@ -1486,6 +1537,7 @@ void  TGQt::SetFillColor(Color_t cindex)
       }
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetFillStyle(Style_t fstyle)
 {
@@ -1505,6 +1557,7 @@ void  TGQt::SetFillStyle(Style_t fstyle)
       }
    }
 }
+
 //______________________________________________________________________________
 void TGQt::SetFillStyleIndex( Int_t style, Int_t fasi )
 {
@@ -1512,6 +1565,7 @@ void TGQt::SetFillStyleIndex( Int_t style, Int_t fasi )
 
    SetFillStyle(1000*style + fasi);
 }
+
 //______________________________________________________________________________
 void  TGQt::SetLineColor(Color_t cindex)
 {
@@ -1528,6 +1582,7 @@ void  TGQt::SetLineColor(Color_t cindex)
     }
   }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetLineType(int n, int* /*dash*/)
 {
@@ -1562,6 +1617,7 @@ void  TGQt::SetLineType(int n, int* /*dash*/)
     UpdatePen();
   }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetLineStyle(Style_t linestyle)
 {
@@ -1583,6 +1639,7 @@ void  TGQt::SetLineStyle(Style_t linestyle)
       SetLineType(-linestyle, NULL);
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetLineWidth(Width_t width)
 {
@@ -1599,6 +1656,7 @@ void  TGQt::SetLineWidth(Width_t width)
       }
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetMarkerColor( Color_t cindex)
 {
@@ -1862,6 +1920,7 @@ void  TGQt::SetRGB(int cindex, float r, float g, float b)
          );
    }
 }
+
 //______________________________________________________________________________
 void  TGQt::SetTextAlign(Short_t talign)
 {
@@ -1923,10 +1982,12 @@ void  TGQt::SetTextColor(Color_t cindex)
    fTextColor = cindex;
    if (cindex < 0) return;
 }
+
 //______________________________________________________________________________
 Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/){
   return 1;
 }
+
 //______________________________________________________________________________
 void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
 {
@@ -2059,6 +2120,7 @@ void  TGQt::SetTextFont(Font_t fontnumber)
    }
    SetTextFont(fontName, italic, bold);
 }
+
 //______________________________________________________________________________
 void  TGQt::SetTextSize(Float_t textsize)
 {
@@ -2096,11 +2158,7 @@ void  TGQt::UpdateWindow(int mode)
       ((TQtWidget *)fSelectedWindow)->repaint();
    }
 }
-//______________________________________________________________________________
-void  TGQt::Warp(Int_t /*ix*/, Int_t /*iy*/, Window_t /*id*/) {
-//     SafeCallWin32
-//      ->W32_Warp(ix, iy);
-}
+
 //______________________________________________________________________________
 Int_t  TGQt::WriteGIF(char *name)
 {
@@ -2120,6 +2178,7 @@ Int_t  TGQt::WriteGIF(char *name)
    WritePixmap(iwid(fSelectedWindow),UInt_t(-1),UInt_t(-1),name);
    return kTRUE;
 }
+
 //______________________________________________________________________________
 void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
 {
@@ -2177,6 +2236,7 @@ void TGQt::UpdateFont()
       fTextFontModified = 0;
    }
 }
+
 //______________________________________________________________________________
 void TGQt::UpdatePen()
 {
@@ -2186,6 +2246,7 @@ void TGQt::UpdatePen()
       // fprintf(stderr," uu --- uu TGQt::UpdatePen() %p\n",fQPainter->device());
    }
 }
+
 //______________________________________________________________________________
 void TGQt::UpdateBrush()
 {
@@ -2197,6 +2258,7 @@ void TGQt::UpdateBrush()
       //   fQBrush->color().red(),fQBrush->color().green(),fQBrush->color().blue());
    }
 }
+
 //______________________________________________________________________________
 void TGQt::UpdateClipRectangle()
 {
@@ -2262,6 +2324,7 @@ Int_t TGQt::LoadQt(const char *shareLibFileName)
    // Make sure we load the GUI DLL from the gui thread
    return gSystem->Load(shareLibFileName);
 }
+
 //______________________________________________________________________________
 Int_t TGQt::processQtEvents()
 {
