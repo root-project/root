@@ -188,6 +188,10 @@ check_library() {
 	else
 	    found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
 	    found_dir=-L${found_dir}
+            # Avoid inclusion of /usr/lib, which is always included anyway
+            if test "x$found_dir" = "x-L/usr/lib" ; then
+		found_dir=""
+	    fi
 	fi
     fi
     unset shared
