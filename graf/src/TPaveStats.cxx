@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.18 2004/05/13 19:39:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.19 2005/03/23 15:26:06 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -348,6 +348,8 @@ void TPaveStats::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"ptstats",1,1,1);
    SaveTextAttributes(out,"ptstats",22,0,1,62,0);
    SaveLines(out,"ptstats");
+   out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<endl;
+   out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<endl;
    out<<"   ptstats->Draw();"<<endl;
 }
 
