@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.97 2004/05/07 16:35:42 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.98 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
+#include "TObjString.h"
 #include "Riostream.h"
 
 //#define G__OLDEXPAND
@@ -2078,6 +2079,63 @@ void TUnixSystem::ListLibraries(const char *regexp)
 #else
    TSystem::ListLibraries(regexp);
 #endif
+}
+
+//______________________________________________________________________________
+const char *TUnixSystem::GetLinkedLibraries()
+{
+   // Get list of shared libraries loaded at the start of the executable.
+   // Returns 0 in case list cannot be obtained or in case of error.
+
+   if (!gApplication) return 0;
+
+   static Bool_t once = kFALSE;
+   static TString linkedLibs;
+
+   if (!linkedLibs.IsNull())
+      return linkedLibs;
+
+   if (once)
+      return 0;
+
+#if defined(R__MACOSX)
+   FILE *p = OpenPipe(Form("otool -L %s", gApplication->Argv(0)), "r");
+   TString otool;
+   while (otool.Gets(p)) {
+      TString delim(" \t");
+      TObjArray *tok = otool.Tokenize(delim);
+      TString dylib = ((TObjString*)tok->At(0))->String();
+      if (dylib.EndsWith(".dylib")) {
+         if (!linkedLibs.IsNull())
+            linkedLibs += " ";
+         linkedLibs += dylib;
+      }
+      delete tok;
+   }
+   ClosePipe(p);
+#elif defined(R__LINUX) || defined(R__SOLARIS)
+   FILE *p = OpenPipe(Form("ldd %s", gApplication->Argv(0)), "r");
+   TString ldd;
+   while (ldd.Gets(p)) {
+      TString delim(" \t");
+      TObjArray *tok = ldd.Tokenize(delim);
+      TString solib = ((TObjString*)tok->At(2))->String();
+      if (solib.EndsWith(".so")) {
+         if (!linkedLibs.IsNull())
+            linkedLibs += " ";
+         linkedLibs += solib;
+      }
+      delete tok;
+   }
+   ClosePipe(p);
+#endif
+
+   once = kTRUE;
+
+   if (linkedLibs.IsNull())
+      return 0;
+
+   return linkedLibs;
 }
 
 //---- Time & Date -------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.17 2004/05/07 16:35:42 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.18 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -37,6 +37,9 @@ typedef void (*SigHandler_t)(ESignals);
 class TUnixSystem : public TSystem {
 
 protected:
+   char          *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
+   const char    *GetLinkedLibraries();
+
    // static functions providing semi-low level interface to raw Unix
    static int          UnixMakedir(const char *name);
    static void        *UnixOpendir(const char *name);
@@ -66,7 +69,6 @@ protected:
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
    static const char  *GetDynamicPath();
-          char        *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
    static void        *FindDynLib(const char *lib);
    static int          UnixDynLoad(const char *lib);
    static Func_t       UnixDynFindSymbol(const char *lib, const char *entry);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.39 2004/05/07 16:35:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.40 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -186,6 +186,7 @@ protected:
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
+   virtual const char    *GetLinkedLibraries();
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");

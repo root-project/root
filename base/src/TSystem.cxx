@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.84 2004/05/07 16:35:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.85 2004/05/10 17:31:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1194,10 +1194,24 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    AbstractMethod("Load");
    return 0;
 #else
+   // don't load libraries that have already been loaded
+   TString libs = GetLibraries();
+   TString l    = BaseName(module);
+   Ssiz_t idx   = l.Index(".");
+   if (idx != kNPOS)
+      l.Remove(idx+1);
+   if (libs.Index(l) != kNPOS)
+      return 1;
+   l.Remove(idx);
+   if (l.BeginsWith("lib"))
+      l.Replace(0, 3, "-l");
+   if (libs.Index(l) != kNPOS)
+      return 1;
+
    char *path;
    int i = -1;
    if ((path = DynamicPathName(module))) {
-      i = gInterpreter->Load(path,system);
+      i = gInterpreter->Load(path, system);
       delete [] path;
    }
 
@@ -1291,6 +1305,15 @@ void TSystem::ListLibraries(const char *regexp)
 }
 
 //______________________________________________________________________________
+const char *TSystem::GetLinkedLibraries()
+{
+   // Get list of shared libraries loaded at the start of the executable.
+   // Returns 0 in case list cannot be obtained or in case of error.
+
+   return 0;
+}
+
+//______________________________________________________________________________
 const char *TSystem::GetLibraries(const char *regexp, const char *options,
                                   Bool_t isRegexp)
 {
@@ -1310,7 +1333,11 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    if ((opt.Length()==0) || (opt.First('S')!=kNPOS)) {
       if (!libs.IsNull()) libs.Append(" ");
-      libs.Append(fLinkedLibs);
+      const char *linked;
+      if ((linked = GetLinkedLibraries()))
+         libs.Append(linked);
+      else
+         libs.Append(fLinkedLibs);
    }
 
    // Select according to regexp
