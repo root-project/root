@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.116 2003/04/18 19:27:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.117 2003/06/02 09:37:01 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -982,6 +982,7 @@ TRealData *TClass::GetRealData(const char *name) const
    if (rd) return rd;
    const char *dot = strchr(name,'.');
    if (!dot) return 0;
+
    //may be a pointer like in TH1 fXaxis.fLabels (in TRealdata is fXaxis.*fLabels)
    char starname[1024];
    Int_t nch = dot-name;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.171 2003/05/21 17:53:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.172 2003/05/27 00:39:04 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -825,16 +825,16 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
    while ((element = (TStreamerElement*)next())) {
       TClass *cl = element->GetClassPointer();
       if (cl) {
-	 const char *name = cl->GetName();
-	 static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-	 if (!strcmp(name, "string")||!strcmp(name,full_string_name)) continue; //reject string
-	 if (strstr(name, "vector<")   || strstr(name, "list<") ||
-	     strstr(name, "set<")      || strstr(name, "map<")  ||
-	     strstr(name, "deque<")    || strstr(name, "multimap<") ||
-	     strstr(name, "multiset<") || strstr(name, "::" ))
- 	    continue; //reject STL containers
-
-	 cl->BuildRealData();
+         const char *name = cl->GetName();
+         static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+         if (!strcmp(name, "string")||!strcmp(name,full_string_name)) continue; //reject string
+         if (strstr(name, "vector<")   || strstr(name, "list<") ||
+             strstr(name, "set<")      || strstr(name, "map<")  ||
+             strstr(name, "deque<")    || strstr(name, "multimap<") ||
+             strstr(name, "multiset<") || strstr(name, "::" ))
+            continue; //reject STL containers
+         
+         cl->BuildRealData();
          cl->GetStreamerInfo()->ForceWriteInfo(file, force);
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.111 2003/05/07 08:33:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.112 2003/06/02 10:25:22 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -850,8 +850,19 @@ void TBranchElement::FillLeaves(TBuffer &b)
 //______________________________________________________________________________
 Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
 {
+// This function is for internal use only!
+// Return the offset if 'name' is found in the list of real data for cl
+// Output an error message if the 'name' is NOT found (to prevent reliance on the previous
+// implementation.
+
+// The previous implementation of the class had the following comments:
+
+// Return the offset if 'name' is found in the list of real data for cl
 // return offset od member name in class cl
 // check for the following cases Otto and Axel
+//
+// Return the opposite of the offset if name is of the form 'XXX.YYY' where
+//    XXX is a name found in the list of real data for cl
 //
 // case Otto
 //    class TUsrSevtData2:public TMrbSubevent_Caen {
@@ -862,25 +873,33 @@ Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
 //       TClonesArray *fHits;
 //    code below to get the correct address for fHitBuffer.fHits
 //
-// case Axel
+//    i.e. this is the case where we have a TClonesArray inside an object
+//    which is embedded into another (which is stored in a branch)
+//
+// case Axel 
 //    class jet: public TLorentzVector {
 //    TClonesArray* caJet=new TClonesArray("jet");
 //    TTree* tree=new TTree("test","test",99);
 //    tree->Branch("jet", "TClonesArray",&caJet, 32000);
+//
+//    i.e this is the case where we have an embedded object inside an object
+//    stored in a TClonesArray
 
+   Int_t offset = 0;
    TRealData *rd = cl->GetRealData(name);
+
    if (!rd) {
-      char aname[512];
-      strcpy(aname,name);
-      char *dot = (char*)strchr(aname,'.');
-      if (!dot) return 0;
-      *dot = 0;
-      rd = cl->GetRealData(aname);
-      if (rd) return -rd->GetThisOffset();
+      Error("GetDataMemberOffset","obsolete call with (%s,%s)\n",
+            cl->GetName(),name);
    } else {
-     return rd->GetThisOffset();
+      offset = rd->GetThisOffset();
    }
-   return 0;
+
+   if (gDebug > 3) {
+      printf("GetDataMemberOffset(%s,%s) => %d\n",
+              cl->GetName(),name,offset);
+   }
+   return offset;
 } 
   
 //______________________________________________________________________________
@@ -1374,7 +1393,8 @@ void TBranchElement::SetAddress(void *add)
    if (!fInfo ) GetInfo();
    Int_t nbranches = fBranches.GetEntriesFast();
    if (gDebug > 0) {
-      printf("SetAddress, branch:%s, classname=%s, parent=%s, fID=%d, fType=%d, nbranches=%d, add=%lx, fInfo=%s, version=%d\n",GetName(),fClassName.Data(),fParentName.Data(),fID,fType,nbranches,(Long_t)add,fInfo->GetName(),fClassVersion);
+      printf("SetAddress, branch:%s, classname=%s, parent=%s, fID=%d, fType=%d, nbranches=%d, add=%p, fInfo=%s, version=%d => ",
+             GetName(),fClassName.Data(),fParentName.Data(),fID,fType,nbranches,add,fInfo->GetName(),fClassVersion);
    }
    fAddress = (char*)add;
    if (fTree->GetMakeClass()) {
@@ -1430,6 +1450,10 @@ void TBranchElement::SetAddress(void *add)
       }
    }
 
+   if (gDebug > 0 ) {
+      printf("fAddress=%p, fObject=%p, ",fAddress,fObject);
+   }
+
    const char *ename = 0;
    if (fID>=0) ename = ((TStreamerElement*)fInfo->GetElements()->At(fID))->GetName();
    TClass *clparent = gROOT->GetClass(GetParentName()); 
@@ -1437,31 +1461,110 @@ void TBranchElement::SetAddress(void *add)
    Int_t lOffset; // offset in the local streamerInfo.
    lOffset = clm->GetStreamerInfo()->GetOffset(ename);
    if (fType == 31) {
-      if (fClassName != fParentName) {
+      if (fClassName != fParentName) { 
+         // We are in the case where we have a missing link.
+         // This information is realliable here (or so it seems) 
+         // (In order cases fParentName does seems to be set correctly in all cases).
+         
          if (clparent != clm) {
-            const char *clast = strstr(GetName(),Form("%s.",fBranchCount->GetName()));
-            if (clast) clast += strlen(fBranchCount->GetName());
-            else       clast  = strchr(GetName(),'.');
-            if (clast) {
-               if (!clparent || !clm) return;
-               Int_t mOffset  = GetDataMemberOffset(clparent,clast+1);
-               if (mOffset > 0) fOffset = mOffset - lOffset;
-               else             fOffset = -mOffset;
+            if (!clparent || !clm) return;
+
+            TBranchElement *parent = (TBranchElement*) GetMother()->GetSubBranch(this);
+
+            TString parentDataName = GetName();
+            
+            // remove the TClonesArray main name (if present)
+            if (parentDataName.Index(fBranchCount->GetName())==0) {
+               parentDataName.Remove(0,strlen(fBranchCount->GetName()));
             }
+            
+            // remove the parent branch name (if present)
+            if (parentDataName.Index(parent->GetName())==0) {
+               parentDataName.Remove(0,strlen(parent->GetName()));
+            }
+            
+            // remove the current data member name
+            Ssiz_t pos = parentDataName.Last('.');
+            if (pos>0) {
+               // We had a branch name of the style:
+               //     [X.]Y.Z
+               // and we are looking up 'Y'
+               parentDataName.Remove(pos);
+               fOffset = GetDataMemberOffset(clparent,parentDataName);
+            } else {
+               // We had a branch name of the style:
+               //     [X.]Z
+               // and we are looking up 'Z'
+               // Because we are missing 'Y' (or more exactly the name of the 
+               // thing that contains Z, we can only get the offset of Z and
+               // then remove the offset Z inside 'Y' (i.e. lOffset)
+               fOffset = GetDataMemberOffset(clparent,parentDataName) - lOffset;                  
+            }
+
          }
+      }
+      if (gDebug > 0 ) {
+         printf("fOffset=%d\n",fOffset);
       }
       return;
    }
    if (nbranches == 0) {
       if (clparent) {
          if (clparent != clm) {
-            const char *clast = strstr(GetName(),Form("%s.",fParentName.Data()));
-            if (clast) {
-               fObject += clparent->GetDataMemberOffset(clast+1) - lOffset;
+
+            // We need to discover if 'this' represents a direct datamember of the class in parent or
+            // if it is an indirect one (with a missing branch in the hierachy)
+
+            TBranchElement *parent = (TBranchElement*) GetMother()->GetSubBranch(this);
+            assert(parent!=this);
+            
+            Int_t parentID = parent->GetID();
+            assert(parentID>=0);  // if the ID was negative, the branch would not have been split!
+            
+            TStreamerInfo *parentInfo = parent->GetInfo();
+            assert(parentInfo);
+            
+            TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElements()->At(parentID);
+            TClass *parentBranchClass = parentElem->GetClassPointer();
+
+            if ( parentBranchClass != clm ) {
+
+               // We are in the case where there is a missing branch in the hiearchy
+
+               // remove the main branch name (if present)
+               TString parentDataName = GetName();
+               if (parentDataName.Index(parent->GetName())==0) {
+                  parentDataName.Remove(0,strlen(parent->GetName()));
+               }
+
+               // remove the current data member name
+               Ssiz_t pos = parentDataName.Last('.');
+               Int_t offset = 0;
+               if (pos>0) {
+                  // We had a branch name of the style:
+                  //     [X.]Y.Z
+                  // and we are looking up 'Y'
+                  parentDataName.Remove(pos);
+                  offset = GetDataMemberOffset(clparent,parentDataName);
+               } else {
+                  // We had a branch name of the style:
+                  //     [X.]Z
+                  // and we are looking up 'Z'
+                  // Because we are missing 'Y' (or more exactly the name of the 
+                  // thing that contains Z, we can only get the offset of Z and
+                  // then remove the offset Z inside 'Y' (i.e. lOffset)
+                  offset = GetDataMemberOffset(clparent,parentDataName) - lOffset;                  
+               }
+               
+               fObject += offset;
+
             } else {
-               Int_t mOffset  = GetDataMemberOffset(clparent,GetName());
-               if (mOffset > 0) fObject += mOffset - lOffset;
-               else             fObject -= mOffset;
+
+               // Case where we have a proper branch hierachy
+               // fObject is already correct!
+              
+               // nothing to do :)
+               // fprintf(stderr,"section has nothing to do!\n");
             }
          }
       }
@@ -1482,19 +1585,85 @@ void TBranchElement::SetAddress(void *add)
       TStreamerInfo *info = branch->GetInfo();
 
       if (nb2 > 0) {
+         // The branch has some sub-branches
+         
          if (info) {
             Int_t *leafOffsets = info->GetOffsets();
-            Int_t mOffset  = GetDataMemberOffset(clparent,branch->GetName());
-            if (mOffset > 0) mOffset = 0;
-            if (leafOffsets) {
-               branch->SetAddress(fObject - mOffset + leafOffsets[id]);
+         
+            // Test if we are in the case where the class described by 'clparent'
+            // did not get its own branch in the tree.  In this case the immediate
+            // parent branch will have a different type.
+            
+            // First get the immediate parent (i.e a branch which has 'branch' has
+            // a direct sub-branch.
+
+
+            TBranchElement *parent = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
+            assert(parent==this);
+
+            if ( strcmp(GetClassName(),info->GetName())!=0 ) {               
+
+               // Since we do not have a proper hierachy, fObject does NOT point
+               // to object of type 'clparent'.  Instead it points to an object 
+               // which 'contains' an object of type 'clparent'.  So the first
+               // order of business is to find the address of the object of type
+               // 'clparent' and then just add 'leafOffsets[id]' (i.e. the offset
+               // of this branch inside the object of type 'clparent'
+
+               // We need to extract from branch->GetName() the qualified name
+               // of the data member which contains us               
+
+               TString parentDataName = branch->GetName();
+
+               // remove the main branch name (if present)
+               if (parentDataName.Index(branch->GetMother()->GetName())==0) {
+                  parentDataName.Remove(0,strlen(branch->GetMother()->GetName()));
+               }
+
+               // remove the current data member name
+               Ssiz_t pos = parentDataName.Last('.');
+               Int_t offset = 0;
+               if (pos>0) {
+                  // We had a branch name of the style:
+                  //     [X.]Y.Z
+                  // and we are looking up 'Y'
+                  parentDataName.Remove(pos);
+                  offset = GetDataMemberOffset(clparent,parentDataName);
+               } else {
+                  // We had a branch name of the style:
+                  //     [X.]Z
+                  // and we are looking up 'Z'
+                  // Because we are missing 'Y' (or more exactly the name of the 
+                  // thing that contains Z, we can only get the offset of Z and
+                  // then remove the offset Z inside 'Y' (i.e. lOffset)
+                  offset = GetDataMemberOffset(clparent,parentDataName) - lOffset;                  
+               }
+               
+               if (leafOffsets) {
+                  branch->SetAddress( fObject + offset + leafOffsets[id]);
+               } else {
+                  Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
+               }
+
             } else {
-               Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
+               
+               // Case where we have a proper branch hierachy
+               // fObject is already correct!
+               if (leafOffsets) {
+                  branch->SetAddress( fObject + leafOffsets[id]);
+               } else {
+                  Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
+               }
+               
             }
+
          } else {
+            // fInfo==0
             Error("SetAddress","branch=%s, info=0",branch->GetName());
-         }
+         }           
+
       } else {
+         // The branch has no sub-branches
          branch->SetAddress(fObject);
       }
    }
