@@ -1,6 +1,5 @@
-*.log
 *.out
 Event
 Event.root
 Event.h
- *.dll 
+ *.exe *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 

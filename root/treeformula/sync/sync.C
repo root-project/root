@@ -7,7 +7,7 @@
 #include "Event.h"
 #endif
 #include "TMath.h"
-#include "iostream.h"
+#include "Riostream.h"
 
 bool Compare(TH1F *draw, TH1F *loop, const char *title) {
 
@@ -95,7 +95,7 @@ Int_t sync(bool skipKnownFail) {
     }
   }
   new TCanvas("c2");
-  int result = true;
+  bool result = true;
   cout << result << endl;
   result &= Compare(h1,h2,h1->GetTitle());
   cout << result << endl;
