@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.66 2004/04/26 07:30:19 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.67 2004/04/26 08:25:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -791,7 +791,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
    Int_t maxDigits = 5;
-   if (fAxis && fAxis->GetNbins() <2) maxDigits = fgMaxDigits;
+   if (fAxis) maxDigits = fgMaxDigits;
    
    TLine *lineaxis = new TLine();
    TLatex *textaxis = new TLatex();
