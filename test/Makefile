@@ -111,16 +111,21 @@ QPRANDOMO     = QpRandomDriver.$(ObjSuf)
 QPRANDOMS     = QpRandomDriver.$(SrcSuf)
 QPRANDOM      = QpRandomDriver$(ExeSuf)
 
+THREADSO      = threads.$(ObjSuf)
+THREADSS      = threads.$(SrcSuf)
+THREADS       = threads$(ExeSuf)
+
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) \
-                $(CTORTUREO) $(QPRANDOMO)
+                $(CTORTUREO) $(QPRANDOMO) $(THREADO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM)
+                $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
+                $(THREADS)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -210,6 +215,14 @@ $(STRESSL):     $(STRESSLO)
 
 $(TESTBITS):    $(TESTBITSO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(THREADS):     $(THREADSO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libThread.lib $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lThread $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(QPRANDOM):    $(QPRANDOMO)
