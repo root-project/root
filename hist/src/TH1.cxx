@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.179 2004/05/10 06:58:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.180 2004/05/13 09:10:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2273,7 +2273,7 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 //  Note that it is the user's responsibility to manage the created histogram.
 //
 //  code proposed by Jason Seely (seely@mit.edu) and adapted by R.Brun
-
+//  
   // clone the histograms so top and bottom will have the
   // correct dimensions:
   // Sumw2 just makes sure the errors will be computed properly
@@ -2295,7 +2295,7 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
   Int_t   xmax = asym->GetNbinsX();
   Int_t   ymax = asym->GetNbinsY();
   Int_t   zmax = asym->GetNbinsZ();
-  Float_t as, bot, error, a, b;
+  Double_t as, bot, error, a, b, da, db;
 
   // now loop over bins to calculate the correct errors
   // the reason this error calculation looks complex is because of c2
@@ -2314,9 +2314,10 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 	// automatically.
         if(bot < 1){}
         else{
-          // remember: da = sqrt(a), and form the error:
-          error = TMath::Sqrt((1-as)*(1-as)*a
-                       +(1+as)*(1+as)*(c2*c2*b+b*b*dc2*dc2))/bot;
+          // computation of errors by Christos Leonidopoulos
+          da    = h1->GetBinError(i,j,k); 
+          db    = h2->GetBinError(i,j,k); 
+          error = 2*TMath::Sqrt(a*a*c2*c2*db*db + c2*c2*b*b*da*da+a*a*b*b*dc2*dc2)/(a+b);
           asym->SetBinError(i,j,k,error);
         }
       }
