@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.59 2004/01/03 09:41:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.60 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2320,7 +2320,7 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
       version = kMaxVersion;
    }
 
-   if (cl->IsForeign()) {
+   if (cl->IsForeign() && version<=1) {
       *this << Version_t(0);
       *this << cl->GetCheckSum();
    } else {

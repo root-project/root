@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.129 2004/01/10 10:52:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.130 2004/01/15 15:49:31 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2047,6 +2047,18 @@ Bool_t  TClass::IsForeign() const
 //______________________________________________________________________________
 Long_t TClass::Property() const
 {
+   // Set TObject::fBits and fStreamerType to cache information about the
+   // class.  The bits are
+   //    kIsTObject : the class inherits from TObject
+   //    kStartWithTObject:  TObject is the left-most class in the inheritance tree
+   //    kIsForeign : the class doe not have a Streamer method
+   // The value of fStreamerType are
+   //    kTObject : the class inhetis from TObject
+   //    kForeign : the class does not have a Streamer method
+   //    kInstrumented: the class does have a Streamer method
+   //    kExternal: the class has a free standing way of streaming itself
+   //    kEmulated: the class is missing its shared library.
+
    if (fProperty!=(-1)) return fProperty;
 
    Long_t dummy;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.68 2004/01/12 16:08:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.69 2004/01/13 18:46:39 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ ClassImp(TFormula)
 //*-*   This class is the base class for the function classes TF1,TF2 and TF3.
 //*-*   It is also used by the ntuple selection mechanism TNtupleFormula.
 //*-*
-//*-*   In version 7 of TFomrula, the usage of fOper has been changed
+//*-*   In version 7 of TFormula, the usage of fOper has been changed
 //*-*   to improve the performance of TFormula::EvalPar.
 //*-*   Conceptually, fOper was changed from a simple array of Int_t
 //*-*   to an array of composite values.

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.186 2004/01/10 10:52:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.187 2004/01/12 16:55:15 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -514,7 +514,30 @@ void TStreamerInfo::BuildOld()
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
 
-   fClass->BuildRealData();
+   if (fClass->GetClassVersion()==fClassVersion) fClass->BuildRealData();
+   else {
+      // This is to support the following case
+      //  Shared library: Event v2
+      //  calling cl->GetStreamerInfo(1)->BuildOld();  (or equivalent)
+      //  which calls cl->BuildReadData()
+      //  which set fRealData to some value
+      //  then call Event()
+      //  which call cl->GetStreamerInfo()
+      //  which call cl->BuildRealData();
+      //  which returns immediately (upon seeing fRealData!=0)
+      //  then the main StreamerInfo build using the partial content of fRealData
+      //  then BuildRealData returns
+      //  then GetStreamerInfo() returns
+      //  then Event() returns 
+      //  then fRealData is finished being populated
+      //  then this function continue,
+      //  then it uses the main streamerInfo 
+      //  .... which is incomplete.
+      //
+      //  Instead we force the creation of the main streamerInfo object 
+      //  before the creation of fRealData.
+      fClass->GetStreamerInfo();
+   }
 
    TIter next(fElements);
    TStreamerElement *element;
@@ -1363,7 +1386,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
    } else {
       if (i < 0) return 0;
       ladd  = pointer + fOffset[i];
-      atype = fType[i];
+      atype = fNewType[i];
    }
    return GetValueAux(atype,ladd,j);
    
@@ -2063,7 +2086,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char **arr,  Int_t i, Int_t kase
       case kConv + kLong64:  ConvCBasicType(Long64_t);
       case kConv + kFloat:   ConvCBasicType(Float_t);
       case kConv + kDouble:  ConvCBasicType(Double_t);
-      case kConv + kDouble32:ConvCBasicType(Double_t);
+      case kConv + kDouble32:ConvCBasicType(Float_t);
       case kConv + kUChar:   ConvCBasicType(UChar_t);
       case kConv + kUShort:  ConvCBasicType(UShort_t);
       case kConv + kUInt:    ConvCBasicType(UInt_t);
@@ -2083,7 +2106,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char **arr,  Int_t i, Int_t kase
       case kConvL + kLong64:  ConvCBasicArray(Long64_t);
       case kConvL + kFloat:   ConvCBasicArray(Float_t);
       case kConvL + kDouble:  ConvCBasicArray(Double_t);
-      case kConvL + kDouble32:ConvCBasicArray(Double_t);
+      case kConvL + kDouble32:ConvCBasicArray(Float_t);
       case kConvL + kUChar:   ConvCBasicArray(UChar_t);
       case kConvL + kUShort:  ConvCBasicArray(UShort_t);
       case kConvL + kUInt:    ConvCBasicArray(UInt_t);
@@ -2102,7 +2125,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char **arr,  Int_t i, Int_t kase
       case kConvP + kLong64:  ConvCBasicPointer(Long64_t);
       case kConvP + kFloat:   ConvCBasicPointer(Float_t);
       case kConvP + kDouble:  ConvCBasicPointer(Double_t);
-      case kConvP + kDouble32:ConvCBasicPointer(Double_t);
+      case kConvP + kDouble32:ConvCBasicPointer(Float_t);
       case kConvP + kUChar:   ConvCBasicPointer(UChar_t);
       case kConvP + kUShort:  ConvCBasicPointer(UShort_t);
       case kConvP + kUInt:    ConvCBasicPointer(UInt_t);
