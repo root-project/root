@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.2 2000/10/20 12:18:27 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -113,8 +113,11 @@ void TGVerticalLayout::Layout()
             nb_expand++;
             exp += size.fHeight;
             exp_max = TMath::Min(exp_max, (Int_t)size.fHeight);
-         } else
+         } else {
             remain -= size.fHeight;
+            if (remain < 0)
+               remain = 0;
+         }
       }
    }
 
@@ -243,8 +246,11 @@ void TGHorizontalLayout::Layout()
             nb_expand++;
             exp += size.fWidth;
             exp_max = TMath::Min(exp_max, (Int_t)size.fWidth);
-         } else
+         } else {
             remain -= size.fWidth;
+            if (remain < 0)
+               remain = 0;
+         }
       }
    }
 
