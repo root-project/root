@@ -88,6 +88,7 @@ Browser.SortBy:             name
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
+# Record session commands, set to "-" to turn off command recording
 Rint.History:            $(HOME)/.root_hist
 
 # Example of custom setting for the Rint application (root.exe).

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.2 2000/05/31 18:41:37 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.3 2000/06/16 15:23:01 rdm Exp $ */
 /* Author: */
 
 /*
@@ -1311,6 +1311,8 @@ Gl_histinit(char *file)
    gl_savehist = 0;
 
    hist_init();
+   
+   if (!strcmp(file, "-")) return;
 
    sprintf(gl_histfile, "%s", file);
 
