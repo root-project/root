@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.1 2000/11/27 10:35:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.2 2000/11/27 15:40:36 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -43,18 +43,18 @@ private:
    TString   fProtocol;  // remote service (root, roots, proof, proofs)
    TString   fRemote;    // remote host to which we want to connect
    TSocket  *fSocket;    // connection to remote daemon
+   Bool_t    fSecure;    // true if secure login is needed (roots, proofs)
 
    static char         *fgUser;
    static char         *fgPasswd;
    static SecureAuth_t  fgSecAuthHook;
-
-   Bool_t CheckNetrc(char *&user, char *&passwd);
 
 public:
    TAuthenticate(TSocket *sock, const char *proto, const char *remote);
    virtual ~TAuthenticate() { }
 
    Bool_t Authenticate(TString &user);
+   Bool_t CheckNetrc(char *&user, char *&passwd);
 
    static void  SetUser(const char *user);
    static void  SetPasswd(const char *passwd);

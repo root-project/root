@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.1 2000/11/27 10:35:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.2 2000/11/27 15:40:36 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -48,6 +48,10 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *proto,
    fSocket   = sock;
    fProtocol = proto;
    fRemote   = remote;
+   if (fProtocol == "roots" || fProtocol == "proofs")
+      fSecure = kTRUE;
+   else
+      fSecure = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -162,17 +166,32 @@ out:
 //______________________________________________________________________________
 Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
 {
-   // Try to get user name and passwd from the ~/.netrc file.
-   // This file will only be used when its access mask is 0600.
+   // Try to get user name and passwd from the ~/.rootnetrc or
+   // ~/.netrc files. First ~/.rootnetrc is tried, after that ~/.netrc.
+   // These files will only be used when their access masks are 0600.
    // Returns kTRUE if user and passwd were found for the machine
    // specified in the URL. User and passwd must be deleted by
    // the caller. If kFALSE, user and passwd are 0.
+   // The format of these files are:
+   //
+   // # this is a comment line
+   // machine <machine fqdn> login <user> password <passwd>
+   //
+   // and in addition ~/.rootnetrc also supports:
+   //
+   // secure <machine fqdn> login <user> password <passwd>
+   //
+   // for the secure protocols. All lines must start in the first column.
 
-   Bool_t result = kFALSE;
+   Bool_t  result = kFALSE;
+   Bool_t  first  = kTRUE;
+   TString remote = fRemote;
+
    user = passwd = 0;
 
-   char *net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
+   char *net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootnetrc");
 
+again:
 #ifdef WIN32
    // Since Win32 does not have proper protections use file always
    FILE *fd1;
@@ -186,6 +205,11 @@ Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
       if (S_ISREG(buf.st_mode) && !S_ISDIR(buf.st_mode) &&
           (buf.st_mode & 0777) == (S_IRUSR | S_IWUSR)) {
 #endif
+         if (first) {
+            TInetAddress addr = gSystem->GetHostByName(fRemote);
+            if (addr.IsValid())
+               remote = addr.GetHostName();
+         }
          FILE *fd = fopen(net, "r");
          char line[256];
          while (fgets(line, sizeof(line), fd) != 0) {
@@ -194,11 +218,12 @@ Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
             int nword = sscanf(line, "%s %s %s %s %s %s", word[0], word[1],
                                word[2], word[3], word[4], word[5]);
             if (nword != 6) continue;
-            if (strcmp(word[0], "machine"))  continue;
+            if (fSecure &&  strcmp(word[0], "secure"))  continue;
+            if (!fSecure && strcmp(word[0], "machine"))  continue;
             if (strcmp(word[2], "login"))    continue;
             if (strcmp(word[4], "password")) continue;
 
-            if (!strcmp(word[1], fRemote)) {
+            if (!strcmp(word[1], remote)) {
                user   = StrDup(word[3]);
                passwd = StrDup(word[5]);
                result = kTRUE;
@@ -206,9 +231,16 @@ Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
             }
          }
          fclose(fd);
-      }
+      } else
+         Warning("CheckNetrc", "file %s exists but has not 0600 permission", net);
    }
    delete [] net;
+
+   if (first && !fSecure && !result) {
+      net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
+      first = kFALSE;
+      goto again;
+   }
 
    return result;
 }
