@@ -2,11 +2,12 @@
 // native Root TClonesArray.
 // See main program bench.cxx
    
-#include "TBench.h"
 #include "TRandom.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TClass.h"
+//the next include must be the last one on systems like Windows/NT
+#include "TBench.h"
 
 THit hit;
 char *demofile = "/tmp/bench.root";
