@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.7 2001/12/09 00:34:37 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -354,14 +354,14 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
 Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar)
 {
   if(thisH == 0.0) return 0.0;
-  Double_t correction = (thisH + tVar - 2.0* high )/thisH;
+  Double_t correction = (thisVar + tVar - 2.0* high )/thisH;
   return exp(-0.5*correction*correction)/thisH;
 }
 
 Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar)
 {
   if(thisH == 0.0) return 0.0;
-  Double_t correction = (thisH + tVar - 2.0* low )/thisH;
+  Double_t correction = (thisVar + tVar - 2.0* low )/thisH;
   return exp(-0.5*correction*correction)/thisH;
 }
 
