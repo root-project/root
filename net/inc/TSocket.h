@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.8 2003/08/29 10:46:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.9 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -87,7 +87,7 @@ protected:
    static UInt_t fgBytesRecv;     // total bytes received by all socket objects
    static UInt_t fgBytesSent;     // total bytes sent by all socket objects
 
-   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; }
+   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fSecContext=0;}
    Bool_t       Authenticate(const char *user);
 
 private:
