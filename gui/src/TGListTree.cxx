@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.23 2003/08/03 06:41:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.26 2003/08/06 09:42:57 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1576,20 +1576,38 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    const char *p = path, *s;
    char dirname[256];
    TGListTreeItem *item = 0;
-   item = FindChildByName(item, "/");  // dirty trick for a while
+   item = FindChildByName(item, "/");
+   TGListTreeItem *diritem = 0;
+   TString fulldir;
 
+start:
    while (1) {
       while (*p && *p == '/') p++;
       if (!*p) break;
 
       s = strchr(p, '/');
+
       if (!s) {
          strcpy(dirname, p);
       } else {
          strncpy(dirname, p, s-p);
          dirname[s-p] = 0;
       }
+
       item = FindChildByName(item, dirname);
+
+      if (!diritem && dirname) {
+         fulldir += "/";
+         fulldir += dirname;
+
+         if ((diritem=FindChildByName(0, fulldir.Data()))) {
+            if (!s || !strlen(s)) return diritem;
+            p = ++s;
+            item = diritem;
+            goto start;
+         }
+      }
+
       if (!s || !strlen(s)) return item;
       p = ++s;
    }
