@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.33 2004/03/15 17:13:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.34 2004/04/06 21:12:24 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -541,7 +541,7 @@ void TGClient::WaitFor(TGWindow *w)
    fWaitForEvent  = kDestroyNotify;
 
    while (fWaitForWindow != kNone)
-      gSystem->InnerLoop();
+      gSystem->ProcessEvents();
 
    fWaitForWindow = wsave;
    fWaitForEvent  = esave;

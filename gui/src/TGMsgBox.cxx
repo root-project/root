@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.4 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.5 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -271,7 +271,7 @@ void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
                               kMWMFuncMinimize,
                kMWMInputModeless);
 
-   MapWindow();
+   MapRaised();
    fClient->WaitFor(this);
 }
 
