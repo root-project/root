@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.38 2004/01/22 14:44:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.39 2004/02/21 08:39:11 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -105,7 +105,7 @@ TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
 }
 
 //______________________________________________________________________________
-TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
+TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
@@ -122,7 +122,7 @@ TKey::TKey(const char *name, const char *title, TClass *cl, Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
+TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes)
       : TNamed(name,title)
 {
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
@@ -139,11 +139,10 @@ TKey::TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
+TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
      : TNamed(name, obj->GetTitle())
 {
-//*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
-//*-*                ===========================================
+   // Create a TKey object for a TObject* and fill output buffer
 
    if (!obj->IsA()->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
@@ -171,7 +170,82 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
    fBufferRef->MapObject(obj);    //register obj in map in case of self reference
-   obj->Streamer(*fBufferRef);    //write object
+   ((TObject*)obj)->Streamer(*fBufferRef);    //write object
+   lbuf       = fBufferRef->Length();
+   fObjlen    = lbuf - fKeylen;
+
+   Int_t cxlevel = gFile->GetCompressionLevel();
+   if (cxlevel && fObjlen > 256) {
+      if (cxlevel == 2) cxlevel--;
+      Int_t nbuffers = fObjlen/kMAXBUF;
+      Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 8); //add 8 bytes in case object is placed in a deleted gap
+      fBuffer = new char[buflen];
+      char *objbuf = fBufferRef->Buffer() + fKeylen;
+      char *bufcur = &fBuffer[fKeylen];
+      noutot = 0;
+      nzip   = 0;
+      for (Int_t i=0;i<=nbuffers;i++) {
+         if (i == nbuffers) bufmax = fObjlen -nzip;
+         else               bufmax = kMAXBUF;
+         R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
+         if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
+            fBuffer = fBufferRef->Buffer();
+            Create(fObjlen);
+            fBufferRef->SetBufferOffset(0);
+            Streamer(*fBufferRef);         //write key itself again
+            return;
+         }
+         bufcur += nout;
+         noutot += nout;
+         objbuf += kMAXBUF;
+         nzip   += kMAXBUF;
+      }
+      Create(noutot);
+      fBufferRef->SetBufferOffset(0);
+      Streamer(*fBufferRef);         //write key itself again
+      memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
+      delete fBufferRef; fBufferRef = 0;
+   } else {
+      fBuffer = fBufferRef->Buffer();
+      Create(fObjlen);
+      fBufferRef->SetBufferOffset(0);
+      Streamer(*fBufferRef);         //write key itself again
+   }
+}
+
+//______________________________________________________________________________
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
+     : TNamed(name, "object title")
+{
+   // Create a TKey object for any object obj of class cl  and fill output buffer
+
+   if (!cl->HasDefaultConstructor()) {
+      Warning("TKey", "since %s had no public constructor\n"
+              "\twhich can be called without argument, objects of this class\n"
+              "\tcan not be read with the current library. You would need to\n"
+              "\tadd a default constructor before attempting to read it.",
+              cl->GetName());
+   }
+   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
+   Int_t lbuf, nout, noutot, bufmax, nzip;
+   fClassName = cl->GetName();
+   fNbytes    = 0;
+   fBuffer    = 0;
+   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef->SetParent(gFile);
+   fCycle     = gDirectory->AppendKey(this);
+   fObjlen    = 0;
+   fKeylen    = 0;
+   fSeekKey   = 0;
+   fSeekPdir  = 0;
+
+   fVersion = TKey::Class_Version();
+   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
+
+   Streamer(*fBufferRef);         //write key itself
+   fKeylen    = fBufferRef->Length();
+//   fBufferRef->MapObject(obj);    //register obj in map in case of self reference
+   ((TClass*)cl)->Streamer((void*)obj, *fBufferRef);    //write object
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
@@ -662,11 +736,11 @@ void TKey::ReadFile()
 }
 
 //______________________________________________________________________________
-void TKey::SetParent(TObject *parent)
+void TKey::SetParent(const TObject *parent)
 {
 //  Set parent in key buffer
 
-   if (fBufferRef) fBufferRef->SetParent(parent);
+   if (fBufferRef) fBufferRef->SetParent((TObject*)parent);
 }
 
 //______________________________________________________________________________

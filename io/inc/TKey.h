@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.9 2004/02/08 18:54:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.10 2004/02/09 09:51:21 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -55,9 +55,10 @@ protected:
 
 public:
     TKey();
-    TKey(const char *name, const char *title, TClass *cl, Int_t nbytes);
-    TKey(const TString &name, const TString &title, TClass *cl, Int_t nbytes);
-    TKey(TObject *obj, const char *name, Int_t bufsize);
+    TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes);
+    TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes);
+    TKey(const TObject *obj, const char *name, Int_t bufsize);
+    TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize);
     TKey(Long64_t pointer, Int_t nbytes);
     virtual ~TKey();
     virtual void      Browse(TBrowser *b);
@@ -86,7 +87,7 @@ public:
     virtual void      ReadBuffer(char *&buffer);
     virtual void      ReadFile();
     virtual void      SetBuffer() { fBuffer = new char[fNbytes];}
-    virtual void      SetParent(TObject *parent);
+    virtual void      SetParent(const TObject *parent);
     virtual Int_t     Sizeof() const;
     virtual Int_t     WriteFile(Int_t cycle=1);
 
