@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.12 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.13 2004/09/01 07:48:11 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -243,7 +243,7 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
 {
 // add an element to the mixture
    if ((i<0) || (i>fNelements)) {
-      Error("DefineElement", "wrong index");
+      Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", i, GetName(), fNelements);
       return;
    }
    fZmixture[i] = z;
@@ -277,6 +277,30 @@ void TGeoMixture:: DefineElement(Int_t i, TGeoElement *elem, Double_t weight)
 {
    DefineElement(i, elem->A(), elem->Z(), weight);
 }   
+
+//-----------------------------------------------------------------------------
+void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
+{
+// Define the mixture element at index iel by number of atoms in the chemical formula.
+   if ((iel<0) || (iel>fNelements)) {
+      Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", iel, GetName(), fNelements);
+      return;
+   }
+   TGeoElementTable *table = TGeoElementTable::Instance();
+   TGeoElement *elem = table->GetElement(z);
+   if (!elem) Fatal("DefineElement", "In mixture %s, element with Z=%i not found",GetName(),z);
+   fZmixture[iel] = elem->Z();
+   fAmixture[iel] = elem->A();
+   fWeights[iel]  = natoms;
+   if (iel == fNelements-1) {
+      Double_t wtot = 0.;
+      for (Int_t i=0; i<fNelements; i++) wtot += fWeights[i];
+      for (Int_t i=0; i<fNelements; i++) {
+         fWeights[i] /= wtot;
+         DefineElement(i, fAmixture[i], fZmixture[i], fWeights[i]);
+      }
+   }
+}          
 
 //-----------------------------------------------------------------------------
 TGeoElement *TGeoMixture::GetElement(Int_t i) const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.13 2004/09/06 16:42:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.14 2004/09/07 08:15:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -122,8 +122,9 @@ public:
    // destructor
    virtual ~TGeoMixture();
    // methods
-   void                     DefineElement(Int_t i, Double_t a, Double_t z, Double_t weight);
-   void                     DefineElement(Int_t i, TGeoElement *elem, Double_t weight);
+   void                     DefineElement(Int_t iel, Double_t a, Double_t z, Double_t weight);
+   void                     DefineElement(Int_t iel, TGeoElement *elem, Double_t weight);
+   void                     DefineElement(Int_t iel, Int_t z, Int_t natoms);
    virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
    Int_t                    GetNelements() const {return fNelements;}
