@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.35 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.36 2002/12/12 12:02:04 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -971,12 +971,14 @@ void TRootBrowser::BrowseObj(TObject *obj)
 {
    // Browse object. This, in turn, will trigger the calling of
    // TRootBrowser::Add() which will fill the IconBox and the tree.
+   // Emits signal "BrowseObj(TObject*)".
 
    fIconBox->RemoveAll();
    obj->Browse(fBrowser);
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
+   Emit("BrowseObj(TObject*)", obj);
 }
 
 //______________________________________________________________________________
@@ -1042,6 +1044,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
    // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+   // Emits signal "ExecuteDefaultAction(TObject*)".
 
    char action[512];
 
@@ -1056,12 +1059,12 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          } else
             gApplication->ProcessLine(act.Data());
       }
+      Emit("ExecuteDefaultAction(TObject*)", obj);
       return;
    }
 
    // For other objects the default action is still hard coded in
    // their Browse() member function.
-
 }
 
 //______________________________________________________________________________

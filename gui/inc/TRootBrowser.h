@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.4 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.5 2002/11/20 08:24:06 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -52,11 +52,9 @@ class TRootBrowser : public TGMainFrame, public TBrowserImp {
 friend class TRootIconBox;
 
 private:
-   TGHorizontal3DLine  *fToolBarSep;
+   TGMenuBar           *fMenuBar;
    TGToolBar           *fToolBar;
-   TGButton            *fToolBarButton[7];  // same size as gToolBarData[]
-   TGFSComboBox        *fFSComboBox;
-   TGStatusBar         *fStatusBar;
+   TGHorizontal3DLine  *fToolBarSep;
    TGVerticalFrame     *fV1;
    TGVerticalFrame     *fV2;
    TGLabel             *fLbl1;
@@ -64,11 +62,6 @@ private:
    TGHorizontalFrame   *fHf;
    TGCompositeFrame    *fTreeHdr;
    TGCompositeFrame    *fListHdr;
-   TGListView          *fListView;
-   TRootIconBox        *fIconBox;
-
-   TGCanvas            *fTreeView;
-   TGListTree          *fLt;
 
    TGLayoutHints       *fMenuBarLayout;
    TGLayoutHints       *fMenuBarItemLayout;
@@ -76,21 +69,8 @@ private:
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
 
-   TGMenuBar           *fMenuBar;
-   TGPopupMenu         *fFileMenu;
-   TGPopupMenu         *fViewMenu;
-   TGPopupMenu         *fOptionMenu;
-   TGPopupMenu         *fHelpMenu;
-   TGPopupMenu         *fSortMenu;
-
    TList               *fWidgets;
-
-   char                 fCurrentDir[1024];
    Cursor_t             fWaitCursor;        // busy cursor
-   TGListTreeItem      *fListLevel;         // current TGListTree level
-   Bool_t               fTreeLock;          // true when we want to lock TGListTree
-   Int_t                fViewMode;          // current IconBox view mode
-   Int_t                fSortMode;          // current IconBox sort mode
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);
@@ -102,24 +82,42 @@ private:
    void  SetSortMode(Int_t new_mode);
    void  ToUpSystemDirectory();
 
+protected:
+   TGPopupMenu         *fFileMenu;
+   TGPopupMenu         *fViewMenu;
+   TGPopupMenu         *fOptionMenu;
+   TGPopupMenu         *fHelpMenu;
+   TGPopupMenu         *fSortMenu;
+   TGListView          *fListView;
+   TRootIconBox        *fIconBox;
+   TGCanvas            *fTreeView;
+   TGListTree          *fLt;
+   TGButton            *fToolBarButton[7];  // same size as gToolBarData[]
+   TGFSComboBox        *fFSComboBox;
+   TGStatusBar         *fStatusBar;
+   TGListTreeItem      *fListLevel;         // current TGListTree level
+   Bool_t               fTreeLock;          // true when we want to lock TGListTree
+   Int_t                fViewMode;          // current IconBox view mode
+   Int_t                fSortMode;          // current IconBox sort mode
+
 public:
    TRootBrowser(TBrowser *b, const char *title, UInt_t width, UInt_t height);
    TRootBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootBrowser();
 
-   void     Add(TObject *obj, const char *name = 0);
-   void     AddToBox(TObject *obj, const char *name);
-   void     AddToTree(TObject *obj, const char *name);
-   void     BrowseObj(TObject *obj);
-   void     ExecuteDefaultAction(TObject *obj);
-   void     Iconify() { }
-   void     RecursiveRemove(TObject *obj);
-   void     Refresh(Bool_t force = kFALSE);
-   void     ResizeBrowser() { }
-   void     ShowToolBar(Bool_t show = kTRUE);
-   void     ShowStatusBar(Bool_t show = kTRUE);
-   void     Show() { MapRaised(); }
-   void     SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
+   virtual void Add(TObject *obj, const char *name = 0);
+   virtual void AddToBox(TObject *obj, const char *name);
+   virtual void AddToTree(TObject *obj, const char *name);
+   virtual void BrowseObj(TObject *obj);            //*SIGNAL*
+   virtual void ExecuteDefaultAction(TObject *obj); //*SIGNAL*
+   virtual void Iconify() { }
+   virtual void RecursiveRemove(TObject *obj);
+   virtual void Refresh(Bool_t force = kFALSE);
+   virtual void ResizeBrowser() { }
+   virtual void ShowToolBar(Bool_t show = kTRUE);
+   virtual void ShowStatusBar(Bool_t show = kTRUE);
+   virtual void Show() { MapRaised(); }
+   virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
 
    // overridden from TGMainFrame
    void     CloseWindow();
