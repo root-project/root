@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.2 2003/07/17 12:24:03 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -13,10 +13,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "TMCProcess.h"
+#include "TMCParticleType.h"
 #include "TVirtualMCApplication.h"
 #include "TVirtualMCStack.h"
 #include "TVirtualMCDecayer.h"
 #include "TRandom.h"
+#include "TString.h"
 
 class TLorentzVector;
 class TArrayI;
@@ -45,6 +47,7 @@ class TVirtualMC : public TNamed {
     virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,  
   		         Double_t &dens, Double_t &radl, Double_t &absl,
 		         Double_t* ubuf, Int_t& nbuf) = 0; 
+    virtual void  Gckmat(Int_t imed, char* name) = 0;
 
     // detector composition
     virtual void  Material(Int_t& kmat, const char* name, Double_t a, 
@@ -102,6 +105,7 @@ class TVirtualMC : public TNamed {
   
     
     // functions for drawing
+    // to be removed with complete move to TGeo
     virtual void  DrawOneSpec(const char* name) = 0;
     virtual void  Gsatt(const char* name, const char* att, Int_t val) = 0;
     virtual void  Gdraw(const char*,Double_t theta = 30, Double_t phi = 30,
@@ -128,12 +132,23 @@ class TVirtualMC : public TNamed {
     // set methods
     virtual void     SetCut(const char* cutName, Double_t cutValue) = 0;
     virtual void     SetProcess(const char* flagName, Int_t flagValue) = 0;
+    virtual void     DefineParticle(Int_t pdg, const char* name, 
+                        TMCParticleType pType, 
+                        Double_t mass, Double_t charge, Double_t lifetime) = 0; 
+    virtual void     DefineIon(const char* name, Int_t Z, Int_t A,  
+                        Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0; 
     virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0; 
  
         // particle table usage         
     virtual Int_t   IdFromPDG(Int_t id) const =0;  
-    virtual Int_t   PDGFromId(Int_t pdg) const =0;  
-    virtual void    DefineParticles() = 0;      
+    virtual Int_t   PDGFromId(Int_t pdg) const =0;
+    
+        // get methods
+    virtual TString   ParticleName(Int_t pdg) const = 0;	  
+    virtual Double_t  ParticleMass(Int_t pdg) const = 0;	  
+    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;	  
+    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;	  
+    virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
   
     //
     // methods for step management
@@ -201,21 +216,21 @@ class TVirtualMC : public TNamed {
     
     //
     // Geant3 specific methods
-    // !!! need to be transformed to common interface
+    // !!! to be removed with move to TGeo
     //
     virtual void Gdopt(const char*,const char*) = 0;
     virtual void SetClipBox(const char*,Double_t=-9999,Double_t=0, Double_t=-9999,
-                             Double_t=0,Double_t=-9999,Double_t=0) = 0;
+                            Double_t=0,Double_t=-9999,Double_t=0) = 0;    
     virtual void DefaultRange() = 0;
     virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;   
     virtual void Gdman(Double_t, Double_t, const char*) = 0;
-    virtual void SetColors() = 0;
-    virtual void Gtreve() = 0;
-    virtual void GtreveRoot() = 0;
-    virtual void Gckmat(Int_t, char*) = 0;
-    virtual void InitLego() = 0;
-    virtual void Gfpart(Int_t, char*, Int_t&, Float_t&, Float_t&, Float_t&) = 0; 
-    virtual void Gspart(Int_t, const char*, Int_t, Double_t, Double_t, Double_t) = 0; 
+
+    // Removed unused Geant3 specific methods
+    //
+    //virtual void SetColors() = 0;
+    //virtual void Gtreve() = 0;
+    //virtual void GtreveRoot() = 0;
+    //virtual void Gfpart(Int_t, char*, Int_t&, Float_t&, Float_t&, Float_t&) = 0; 
 
     //
     // control methods
@@ -223,10 +238,10 @@ class TVirtualMC : public TNamed {
     //
 
     virtual void Init() = 0;
-    virtual void FinishGeometry() = 0;
     virtual void BuildPhysics() = 0;
     virtual void ProcessEvent() = 0;
     virtual void ProcessRun(Int_t nevent) = 0;
+    virtual void InitLego() = 0;
 
     //
     // Set methods
@@ -257,7 +272,7 @@ class TVirtualMC : public TNamed {
     Bool_t              fIsRootGeometrySupported; // Info about support for
                                   //  geometries defined directly via TGeo 
 
-  ClassDef(TVirtualMC,1)  //Virtual MonteCarlo Interface
+  ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
 
 R__EXTERN TVirtualMC *gMC;
