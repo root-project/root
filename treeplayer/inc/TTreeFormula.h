@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.22 2002/03/19 17:05:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.23 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -98,7 +98,7 @@ protected:
    TAxis      *fAxis;           //! pointer to histogram axis if this is a string
 
    TTreeFormulaManager *fManager; //! The dimension coordinator.
-   friend TTreeFormulaManager;
+   friend class TTreeFormulaManager;
 
    void       ResetDimensions();
    Bool_t     LoadCurrentDim();

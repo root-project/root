@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.1 2002/03/26 08:24:01 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
 
    Bool_t      fNeedSync;         // Indicate whether a new formula has been added since the last synchronization
 
-   friend TTreeFormula;
+   friend class TTreeFormula;
 
 private:   
    // Not implemented yet
