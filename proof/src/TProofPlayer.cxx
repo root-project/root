@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.4 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.5 2002/04/19 18:24:01 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TProofPlayer::TProofPlayer()
 {
    // Default ctor.
 
-   fInput    = new THashList;
+   fInput    = new TList;
    fOutput   = 0;
    fSelector = 0;
 }
@@ -94,7 +94,11 @@ void TProofPlayer::ClearInput()
 //______________________________________________________________________________
 TObject *TProofPlayer::GetOutput(const char *name) const
 {
-   return fOutput->FindObject(name);
+   if (fOutput != 0) {
+      return fOutput->FindObject(name);
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -117,7 +121,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    Info("Process","Enter");
 
-   delete fSelector;
+   fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {

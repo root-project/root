@@ -358,7 +358,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
    TDSetElement *base = file->fElement;
    Int_t last = base->GetFirst() + base->GetNum();
    Int_t first;
-   Int_t num = 10;  // target packet size TODO: variable packet size
+   Int_t num = 1000;  // target packet size TODO: variable packet size
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;
