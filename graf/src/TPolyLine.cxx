@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.18 2004/12/13 16:32:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.19 2004/12/13 16:56:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -462,10 +462,23 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
 //  if option = 'f' or 'F' the fill area is drawn
 //  default is to draw the lines only
 
+   if (n <= 0) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
-   if (*option == 'f' || *option == 'F') gPad->PaintFillArea(n,x,y,option);
-   else                                  gPad->PaintPolyLine(n,x,y,option);
+   Double_t *xx = x;
+   Double_t *yy = y;
+   if (gPad->GetLogx()) {
+      xx = new Double_t[n];
+      for (Int_t ix=0;ix<n;ix++) xx[ix] = gPad->XtoPad(x[ix]);
+   }
+   if (gPad->GetLogy()) {
+      yy = new Double_t[n];
+      for (Int_t iy=0;iy<n;iy++) yy[iy] = gPad->YtoPad(y[iy]);
+   }
+   if (*option == 'f' || *option == 'F') gPad->PaintFillArea(n,xx,yy,option);
+   else                                  gPad->PaintPolyLine(n,xx,yy,option);
+   if (x != xx) delete [] xx;
+   if (y != yy) delete [] yy;
 }
 
 //______________________________________________________________________________

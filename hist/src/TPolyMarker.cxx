@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.13 2004/12/13 16:32:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.14 2004/12/13 16:56:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -129,6 +129,31 @@ void TPolyMarker::Copy(TObject &obj) const
 }
 
 //______________________________________________________________________________
+Int_t TPolyMarker::DistancetoPrimitive(Int_t px, Int_t py)
+{
+//*-*-*-*-*-*-*-*-*Compute distance from point px,py to a polymarker*-*-*-*-*-*
+//*-*              ===============================================
+//  Compute the closest distance of approach from point px,py to each point
+//  of the polymarker.
+//  Returns when the distance found is below DistanceMaximum.
+//  The distance is computed in pixels units.
+//
+   const Int_t big = 9999;
+
+//*-*- check if point is near one of the points
+   Int_t i, pxp, pyp, d;
+   Int_t distance = big;
+
+   for (i=0;i<Size();i++) {
+      pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
+      if (d < distance) distance = d;
+   }
+   return distance;
+}
+
+//______________________________________________________________________________
 void TPolyMarker::Draw(Option_t *option)
 {
 
@@ -209,9 +234,21 @@ void TPolyMarker::Paint(Option_t *option)
 void TPolyMarker::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 
+   if (n <= 0) return;
    TAttMarker::Modify();  //Change marker attributes only if necessary
-   gPad->PaintPolyMarker(n,x,y,option);
-
+   Double_t *xx = x;
+   Double_t *yy = y;
+   if (gPad->GetLogx()) {
+      xx = new Double_t[n];
+      for (Int_t ix=0;ix<n;ix++) xx[ix] = gPad->XtoPad(x[ix]);
+   }
+   if (gPad->GetLogy()) {
+      yy = new Double_t[n];
+      for (Int_t iy=0;iy<n;iy++) yy[iy] = gPad->YtoPad(y[iy]);
+   }
+   gPad->PaintPolyMarker(n,xx,yy,option);
+   if (x != xx) delete [] xx;
+   if (y != yy) delete [] yy;
 }
 
 //______________________________________________________________________________
