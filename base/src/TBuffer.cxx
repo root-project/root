@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.64 2004/03/26 12:03:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.65 2004/03/26 16:43:50 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -379,7 +379,7 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
 }
 
 //______________________________________________________________________________
-void TBuffer::MapObject(const void *obj, TClass* cl, UInt_t offset)
+void TBuffer::MapObject(const void *obj, const TClass* cl, UInt_t offset)
 {
    // Add object to the fMap container.
    // If obj is not 0 add object to the map (in read mode also add 0 objects to
@@ -1331,7 +1331,7 @@ void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::ReadFastArray(void  *start, TClass *cl, Int_t n,
+void TBuffer::ReadFastArray(void  *start, const TClass *cl, Int_t n,
                             TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
@@ -1347,11 +1347,11 @@ void TBuffer::ReadFastArray(void  *start, TClass *cl, Int_t n,
    char *obj = (char*)start;
    char *end = obj + n*objectSize;
 
-   for(; obj<end; obj+=objectSize) cl->Streamer(obj,*this);
+   for(; obj<end; obj+=objectSize) ((TClass*)cl)->Streamer(obj,*this);
 }
 
 //______________________________________________________________________________
-void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n,
+void TBuffer::ReadFastArray(void **start, const TClass *cl, Int_t n,
                             Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
@@ -1365,7 +1365,7 @@ void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n,
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j=0;j<n;j++) {
-            if (!start[j]) start[j] = cl->New();
+            if (!start[j]) start[j] = ((TClass*)cl)->New();
          }
       }
       (*streamer)(*this,(void*)start,0);
@@ -1376,15 +1376,15 @@ void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n,
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
-         if (start[j] && TStreamerInfo::CanDelete()) cl->Destructor(start[j],kFALSE); // call delete and desctructor
+         if (start[j] && TStreamerInfo::CanDelete()) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
          start[j] = ReadObjectAny(cl);
       }
 
    } else {	//case //-> in comment
 
       for (Int_t j=0; j<n; j++){
-         if (!start[j]) start[j] = cl->New();
-         cl->Streamer(start[j],*this);
+         if (!start[j]) start[j] = ((TClass*)cl)->New();
+         ((TClass*)cl)->Streamer(start[j],*this);
       }
 
    }
@@ -1819,7 +1819,7 @@ void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n,
+void TBuffer::WriteFastArray(void  *start, const TClass *cl, Int_t n,
                              TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address 'start' and of length 'n'
@@ -1835,12 +1835,12 @@ void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n,
    int size = cl->Size();
 
    for(Int_t j=0; j<n; j++,obj+=size) {
-      cl->Streamer(obj,*this);
+      ((TClass*)cl)->Streamer(obj,*this);
    }
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n,
+Int_t TBuffer::WriteFastArray(void **start, const TClass *cl, Int_t n,
                              Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address '*start' and of length 'n'
@@ -1866,7 +1866,7 @@ Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n,
 
       for (Int_t j=0;j<n;j++) {
          //must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j] ) cl->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent());
+         if (!strInfo && !start[j] ) ((TClass*)cl)->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent());
          strInfo = 2003;
          res |= WriteObjectAny(start[j],cl);
       }
@@ -1874,8 +1874,8 @@ Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n,
    } else {	//case //-> in comment
 
       for (Int_t j=0;j<n;j++) {
-         if (!start[j]) start[j] = cl->New();
-         cl->Streamer(start[j],*this);
+         if (!start[j]) start[j] = ((TClass*)cl)->New();
+         ((TClass*)cl)->Streamer(start[j],*this);
       }
 
    }
@@ -2031,7 +2031,7 @@ void TBuffer::WriteObject(const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
+void TBuffer::WriteObject(const void *actualObjectStart, const TClass *actualClass)
 {
    // Write object to I/O buffer.
    // This function assumes that the value of 'actualObjectStart' is the actual start of
@@ -2081,7 +2081,7 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
       // (+kMapOffset so it's != kNullTag)
       MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
 
-      actualClass->Streamer((void*)actualObjectStart,*this);
+      ((TClass*)actualClass)->Streamer((void*)actualObjectStart,*this);
 
       // write byte count
       SetByteCount(cntpos);
@@ -2089,7 +2089,7 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::WriteObjectAny(const void *obj, TClass *ptrClass)
+Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
 {
    // Write object to I/O buffer.
    // This function assumes that the value in 'obj' is the value stored in
@@ -2239,7 +2239,7 @@ void TBuffer::WriteClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, TClass *cl)
+Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
    // Read class version from I/O buffer.
 
@@ -2370,11 +2370,11 @@ void TBuffer::StreamObject(void *obj, const char *className)
 }
 
 //______________________________________________________________________________
-void TBuffer::StreamObject(void *obj, TClass *cl)
+void TBuffer::StreamObject(void *obj, const TClass *cl)
 {
    // Stream an object given a pointer to its actual class.
 
-   cl->Streamer(obj, *this);
+   ((TClass*)cl)->Streamer(obj, *this);
 }
 
 //______________________________________________________________________________

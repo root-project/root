@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.33 2004/05/07 09:08:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.34 2004/05/08 14:34:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -69,7 +69,7 @@ protected:
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
                                 { return TObject::Write(name, opt, bufs); }
 
-   virtual  void     WriteObject(const void *actualObjStart, TClass *actualClass);
+   virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
@@ -82,7 +82,7 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
-   void     MapObject(const void *obj, TClass *cl, UInt_t offset = 1);
+   void     MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
@@ -103,7 +103,7 @@ public:
    virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    virtual   void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
-   virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
+   virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void      *ReadObjectAny(const TClass* cast);
@@ -128,7 +128,7 @@ public:
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
 
-   Int_t    WriteObjectAny(const void *obj, TClass *ptrClass);
+   virtual Int_t    WriteObjectAny(const void *obj, const TClass *ptrClass);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
@@ -179,8 +179,8 @@ public:
    virtual   void     ReadFastArray(Float_t   *f, Int_t n);
    virtual   void     ReadFastArray(Double_t  *d, Int_t n);
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
-   virtual   void     ReadFastArray(void  *start , TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual   void     ReadFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
    
    virtual   void     WriteArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteArray(const Char_t    *c, Int_t n);
@@ -211,12 +211,12 @@ public:
    virtual   void     WriteFastArray(const Float_t   *f, Int_t n);
    virtual   void     WriteFastArray(const Double_t  *d, Int_t n);
    virtual   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
-   virtual   void     WriteFastArray(void  *start,  TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual   Int_t    WriteFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
    virtual   void     StreamObject(void *obj, const type_info &typeinfo);
    virtual   void     StreamObject(void *obj, const char *className);
-   virtual   void     StreamObject(void *obj, TClass *cl);
+   virtual   void     StreamObject(void *obj, const TClass *cl);
 
    virtual   TBuffer  &operator>>(Bool_t    &b);
    virtual   TBuffer  &operator>>(Char_t    &c);
