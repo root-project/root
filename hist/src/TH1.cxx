@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.102 2002/07/05 22:23:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.103 2002/07/15 10:42:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1636,7 +1636,8 @@ TObject *TH1::FindObject(const char *name) const
 {
 // search object named name in the list of functions
 
-   return fFunctions->FindObject(name);
+   if (fFunctions) return fFunctions->FindObject(name);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1644,7 +1645,8 @@ TObject *TH1::FindObject(const TObject *obj) const
 {
 // search object obj in the list of functions
 
-   return fFunctions->FindObject(obj);
+   if (fFunctions) return fFunctions->FindObject(obj);
+   return 0;
 }
 
 //______________________________________________________________________________
