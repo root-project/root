@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.18 2001/05/13 06:54:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.19 2001/08/08 07:17:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1605,12 +1605,16 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 //______________________________________________________________________________
 TH2F::TH2F(const TMatrix &m)
-     :TH2("TMatrix","",m.GetNrows(),0,m.GetNrows(),m.GetNcols(),0,m.GetNcols())
+     :TH2("TMatrix","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
    TArrayF::Set(fNcells);
-   for (Int_t i=0;i<m.GetNrows();i++) {
-      for (Int_t j=0;j<m.GetNcols();j++) {
-         SetCellContent(i+1,j+1,m(i,j));
+   Int_t ilow = m.GetRowLwb();
+   Int_t iup  = m.GetRowUpb();
+   Int_t jlow = m.GetColLwb();
+   Int_t jup  = m.GetColUpb();
+   for (Int_t i=ilow;i<=iup;i++) {
+      for (Int_t j=jlow;j<=jup;j++) {
+         SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
       }
    }     
 }
@@ -1812,12 +1816,16 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 //______________________________________________________________________________
 TH2D::TH2D(const TMatrixD &m)
-     :TH2("TMatrixD","",m.GetNrows(),0,m.GetNrows(),m.GetNcols(),0,m.GetNcols())
+     :TH2("TMatrixD","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
    TArrayD::Set(fNcells);
-   for (Int_t i=0;i<m.GetNrows();i++) {
-      for (Int_t j=0;j<m.GetNcols();j++) {
-         SetCellContent(i+1,j+1,m(i,j));
+   Int_t ilow = m.GetRowLwb();
+   Int_t iup  = m.GetRowUpb();
+   Int_t jlow = m.GetColLwb();
+   Int_t jup  = m.GetColUpb();
+   for (Int_t i=ilow;i<=iup;i++) {
+      for (Int_t j=jlow;j<=jup;j++) {
+         SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
       }
    }     
 }
