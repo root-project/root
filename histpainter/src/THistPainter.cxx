@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.150 2003/09/15 17:19:02 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.151 2003/09/18 10:46:55 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2557,7 +2557,7 @@ void THistPainter::PaintErrors(Option_t *)
       yi4 = TMath::Min(yi4,ymax);
 
      //  test if the marker is on the frame limits. If "Yes", the
-     //  marker will be not drawn and the error bars will be readjusted.
+     //  marker will not be drawn and the error bars will be readjusted.
 
       drawmarker = kTRUE;
       if (!option0) {   // <=====Please check
@@ -2590,7 +2590,7 @@ void THistPainter::PaintErrors(Option_t *)
             if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
          }
       }
-      if (optionE && !drawmarker) {
+      if (optionE && !drawmarker && ey1 != 0) {
          if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
          if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
  	 //don't duplicate the horizontal line
