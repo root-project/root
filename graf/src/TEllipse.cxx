@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.16 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.17 2004/03/22 15:56:27 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -163,6 +163,7 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
    TAttFill::Copy(*newellipse);
    newellipse->SetBit(kCanDelete);
    newellipse->AppendPad(option);
+   if (TestBit(kNoEdges)) newellipse->SetBit(kNoEdges);
 }
 
 //______________________________________________________________________________
