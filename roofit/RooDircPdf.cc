@@ -1,11 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.cc,v 1.7 2001/10/08 05:21:16 verkerke Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.1.2.4 2002/04/30 17:47:45 zhanglei Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
  *   02-May-2001 WV Port to RooFitModels/RooFitCore
+ *   17-Apr-2002 LZ Implement event generator for RooDircPdf
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
@@ -20,17 +22,24 @@
 #include "RooFitCore/RooAbsReal.hh"
 
 ClassImp(RooDircPdf)
+  ;
 
 RooDircPdf::RooDircPdf(const char *name, const char *title, 		       
-		       RooAbsReal& _drcMtm,      RooAbsReal& _thetaC,
-		       RooAbsReal& _refraction,  RooAbsReal& _mass, 
-		       RooAbsReal& _otherMass,   RooAbsReal& _coreMean,  RooAbsReal& _coreSigma, 
-		       RooAbsReal& _tailMean,    RooAbsReal& _tailSigma, RooAbsReal& _relNorm,
-		       Double_t minMtmVal, Double_t minThetaCVal, Bool_t milliRadians) :
+		       RooAbsReal& _drcMtm, RooAbsReal& _thetaC,
+		       RooAbsReal& _refraction,
+		       RooAbsReal& _mass, RooAbsReal& _otherMass,
+		       RooAbsReal& _coreMean, RooAbsReal& _coreSigma, 
+		       RooAbsReal& _tailMean, RooAbsReal& _tailSigma,
+		       RooAbsReal& _relNorm,
+		       Double_t minMtmVal, Double_t minThetaCVal,
+		       Bool_t milliRadians,
+		       RooAbsPdf *_pThetaPdf):
   RooAbsPdf(name,title), _minMtmVal(minMtmVal), _minThetaCVal(minThetaCVal), 
-  _milliRadians(milliRadians),
+  _milliRadians(milliRadians), pThetaPdf(_pThetaPdf), pThetaCache(0),
+  cachePtr(0), _MaxP(0), _selfGen(kFALSE),
   drcMtm    ("drcMtm"    , "DIRC momentum"         , this, _drcMtm),
   thetaC    ("thetaC"    , "DIRC thetaC"           , this, _thetaC),
+  theta     ("thetaC"    , "DIRC thetaC"           , this, _thetaC),
   refraction("refraction", "Refraction"            , this, _refraction),
   mass      ("mass"      , "Mass"                  , this, _mass),
   otherMass ("otherMass" , "Other Mass"            , this, _otherMass),
@@ -42,12 +51,44 @@ RooDircPdf::RooDircPdf(const char *name, const char *title,
 {
 }
 
+RooDircPdf::RooDircPdf(const char *name, const char *title, 		       
+		       RooAbsReal& _drcMtm, RooAbsReal& _thetaC,
+		       RooAbsReal& _theta,
+		       RooAbsReal& _refraction,
+		       RooAbsReal& _mass, RooAbsReal& _otherMass,
+		       RooAbsReal& _coreMean, RooAbsReal& _coreSigma, 
+		       RooAbsReal& _tailMean, RooAbsReal& _tailSigma,
+		       RooAbsReal& _relNorm,
+		       Double_t minMtmVal, Double_t minThetaCVal,
+		       Bool_t milliRadians,
+		       RooAbsPdf *_pThetaPdf):
+  RooAbsPdf(name,title), _minMtmVal(minMtmVal), _minThetaCVal(minThetaCVal), 
+  _milliRadians(milliRadians), pThetaPdf(_pThetaPdf), pThetaCache(0),
+  cachePtr(0), _MaxP(0), _selfGen(kFALSE),
+  drcMtm    ("drcMtm"    , "DIRC momentum"         , this, _drcMtm),
+  thetaC    ("thetaC"    , "DIRC thetaC"           , this, _thetaC),
+  theta     ("theta",      "Polar angle"           , this, _theta),
+  refraction("refraction", "Refraction"            , this, _refraction),
+  mass      ("mass"      , "Mass"                  , this, _mass),
+  otherMass ("otherMass" , "Other Mass"            , this, _otherMass),
+  coreMean  ("coreMean"  , "Core Mean"             , this, _coreMean),
+  coreSigma ("coreSigma" , "Core Sigma"            , this, _coreSigma),
+  tailMean  ("tailMean"  , "Tail Mean"             , this, _tailMean),
+  tailSigma ("tailSigma" , "Tails Sigma"           , this, _tailSigma),
+  relNorm   ("relNorm"   , "Relative Normalization", this, _relNorm)
+{
+  if (pThetaPdf) _selfGen=kTRUE;
+}
+
 
 RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) : 
   RooAbsPdf(other,name), _minMtmVal(other._minMtmVal), 
   _minThetaCVal(other._minThetaCVal), _milliRadians(other._milliRadians),
+  pThetaPdf(other.pThetaPdf),
+  pThetaCache(0), cachePtr(0), _MaxP(other._MaxP), _selfGen(other._selfGen),
   drcMtm    ("drcMtm"    , this, other.drcMtm),
   thetaC    ("thetaC"    , this, other.thetaC),
+  theta     ("theta"     , this, other.theta),
   refraction("refraction", this, other.refraction),
   mass      ("mass"      , this, other.mass),
   otherMass ("otherMass" , this, other.otherMass),
@@ -59,6 +100,9 @@ RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) :
 {
 }
 
+RooDircPdf::~RooDircPdf() {
+  if (pThetaCache) delete pThetaCache;
+}
 
 // WVE - these PDFs need to be expressed as function 
 // of (cosTheta,drcMtm) in their constructors
@@ -150,9 +194,76 @@ Double_t RooDircPdf::evaluate() const
   Double_t result = corePart + tailPart;
 
   return result;
-
-
 }
 
+Bool_t RooDircPdf::isDirectGenSafe(const RooAbsArg& arg) const
+{
+  if (_selfGen) return _selfGen;
+  return RooAbsPdf::isDirectGenSafe(arg);
+}
 
+void RooDircPdf::initGenerator(Int_t code) {
+  
+  // find the _MaxP
+  cout<<"Begin initGenerator"<<endl;
+  for(Int_t i=0; i<minInitTrial; i++) {
+    generateEvent(code);
+  }
+  cout<<"End initGenerator"<<endl;
+}
+  
 
+Int_t RooDircPdf::getGenerator(const RooArgSet& directVars,
+			       RooArgSet &generateVars)const
+{
+  //cout <<"we are in RooDircPdf::getGenerator line 1"<<endl;
+  Int_t haveGen=0;
+  if (matchArgs(directVars, generateVars, drcMtm)) haveGen=2;
+  if (matchArgs(directVars, generateVars, thetaC)) haveGen=3;
+  if (matchArgs(directVars, generateVars, theta)) haveGen=4;
+  if (!_selfGen) haveGen=0;
+  return haveGen;
+}
+
+void RooDircPdf::generateEvent(Int_t code)
+{
+  if (!_selfGen) return;
+  if ((!pThetaCache||cachePtr>=nCache) && pThetaPdf) {
+    cachePtr=0;
+    if (pThetaCache) {
+      delete pThetaCache;
+      pThetaCache=0;
+    }
+    pThetaCache=pThetaPdf->
+      generate(RooArgSet(drcMtm.arg(), theta.arg()), nCache);
+  }
+  if (pThetaCache) {
+    RooArgSet *argset=pThetaCache->get(cachePtr++);
+    if(argset) {
+      drcMtm=((RooAbsReal*)(argset->find(drcMtm.arg().GetName())))->getVal();
+      theta=((RooAbsReal*)(argset->find(theta.arg().GetName())))->getVal();
+    }
+  }
+  
+  // finally calculate thetaC
+  Int_t trials(minTrial);
+  while (trials--) {
+    thetaC=(thetaC.max()-thetaC.min())*RooRandom::uniform()+thetaC.min();
+    Double_t prob=evaluate();
+    if (prob>_MaxP) {
+      cout<<"Increasing "<<fName<<" maxProb from "<<_MaxP<<" to ";
+      _MaxP=1.1*prob;
+      cout<<_MaxP<<endl;
+    }
+    // accept or reject
+    Double_t r=RooRandom::uniform();
+    if(_MaxP*r < prob) break;
+  }
+  if (0==trials) {
+    cout<<"Failed to find values after "<<minTrial<<" trials."
+	<<" But still use the value of last trial, "<<thetaC.arg().getVal()
+	<<endl;
+  }
+  
+  return;
+}

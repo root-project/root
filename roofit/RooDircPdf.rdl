@@ -1,11 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.rdl,v 1.7 2001/08/02 21:40:04 verkerke Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.1.2.3 2002/04/18 23:56:20 zhanglei Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
  *   02-May-2001 WV Port to RooFitModels/RooFitCore
+ *   17-Apr-2002 LZ Implement event generator for RooDircPdf
  *
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
@@ -15,43 +17,73 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooRandom.hh"
 
 class RooRealVar;
 
 class RooDircPdf : public RooAbsPdf {
 public:
   RooDircPdf(const char *name, const char *title, 		       
-	     RooAbsReal& _drcMtm,      RooAbsReal& _thetaC, 
-	     RooAbsReal& _refraction,  RooAbsReal& _mass, 
-	     RooAbsReal& _otherMass,   RooAbsReal& _coreMean,  RooAbsReal& _coreSigma, 
-	     RooAbsReal& _tailMean,    RooAbsReal& _tailSigma, RooAbsReal& _relNorm,
+	     RooAbsReal& _drcMtm, RooAbsReal& _thetaC,
+	     RooAbsReal& _refraction,
+	     RooAbsReal& _mass, RooAbsReal& _otherMass,
+	     RooAbsReal& _coreMean, RooAbsReal& _coreSigma,
+	     RooAbsReal& _tailMean, RooAbsReal& _tailSigma,
+	     RooAbsReal& _relNorm,
              Double_t minMtmVal = 0.0, Double_t minThetaCVal = 0.0,
-	     Bool_t milliRadians = kFALSE) ;
+	     Bool_t milliRadians = kFALSE,
+	     RooAbsPdf *_pThetaPdf=0);
+  RooDircPdf(const char *name, const char *title, 		       
+	     RooAbsReal& _drcMtm, RooAbsReal& _thetaC,
+	     RooAbsReal& _theta,
+	     RooAbsReal& _refraction,
+	     RooAbsReal& _mass, RooAbsReal& _otherMass,
+	     RooAbsReal& _coreMean, RooAbsReal& _coreSigma,
+	     RooAbsReal& _tailMean, RooAbsReal& _tailSigma,
+	     RooAbsReal& _relNorm,
+             Double_t minMtmVal = 0.0, Double_t minThetaCVal = 0.0,
+	     Bool_t milliRadians = kFALSE,
+	     RooAbsPdf *_pThetaPdf=0);
   RooDircPdf(const RooDircPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooDircPdf(*this,newname); }
-  inline virtual ~RooDircPdf() { }
-
+  virtual ~RooDircPdf();
+  
   // WVE - This is cheating, this PDF is not normalized.
   //       Making it so, would require major work, and may not be necessary 
   //       for the current analysis.
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
+  // generator of our own
+  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const;
+  virtual void initGenerator(Int_t code);
+  virtual Int_t getGenerator(const RooArgSet& directVars,RooArgSet &generateVars)const;
+  virtual void generateEvent(Int_t code);
+  
 protected:
 
   RooRealProxy drcMtm ;
-  RooRealProxy thetaC ;     
-  RooRealProxy refraction ; 
-  RooRealProxy mass ;       
-  RooRealProxy otherMass ;  
-  RooRealProxy coreMean ;
-  RooRealProxy coreSigma ;
-  RooRealProxy tailMean ;
-  RooRealProxy tailSigma ;
-  RooRealProxy relNorm ; 
-  Bool_t _milliRadians ;
+  RooRealProxy thetaC;
+  RooRealProxy theta;
+  RooRealProxy refraction;
+  RooRealProxy mass;
+  RooRealProxy otherMass;
+  RooRealProxy coreMean;
+  RooRealProxy coreSigma;
+  RooRealProxy tailMean;
+  RooRealProxy tailSigma;
+  RooRealProxy relNorm;
+  Bool_t _milliRadians;
   Double_t _minMtmVal, _minThetaCVal;
   
-  Double_t evaluate() const ;
+  Double_t evaluate() const;
+
+  enum {nCache=500, minInitTrial=2000, minTrial=2000};
+  RooAbsPdf *pThetaPdf;
+  RooDataSet *pThetaCache;
+  Int_t cachePtr;
+  Double_t _MaxP;
+  Bool_t _selfGen;
 
 private:
 
