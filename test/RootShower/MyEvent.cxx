@@ -734,5 +734,5 @@ void MyEvent::CheckMatter(Int_t id)
               GetParticle(id)->GetvLocation().x(),
               GetParticle(id)->GetvLocation().y(),
               GetParticle(id)->GetvLocation().z());
-    if(Node) fMatter = Node->GetNumber() - 1;
+    if(Node) fMatter = Node->GetNumber();
 }
