@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.11 2004/07/07 09:23:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.12 2004/07/07 10:17:20 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -107,6 +107,8 @@ public:
            { fListBox->RemoveEntry(id); }
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
            { fListBox->RemoveEntries(from_ID, to_ID); }
+   virtual Int_t GetNumberOfEntries() const
+           { return fListBox->GetNumberOfEntries(); }
 
    virtual TGListBox    *GetListBox() const { return fListBox; }
    virtual TGTextEntry  *GetTextEntry() const { return fTextEntry; }

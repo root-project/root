@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.21 2004/04/21 08:36:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.22 2004/04/21 10:13:51 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -875,6 +875,21 @@ void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
 
    fItemVsize = TMath::Max(fItemVsize, lbe->GetDefaultHeight());
    fLbc->InsertEntry(lbe, lhints, afterID);
+}
+
+//______________________________________________________________________________
+TGLBEntry *TGListBox::GetEntry(Int_t id) const
+{
+   // returns list box entry with specified id
+
+   TIter next(fLbc->GetList());
+   TGFrameElement *el;
+
+   while ((el = (TGFrameElement *)next())) {
+      TGLBEntry *lbe = (TGLBEntry *)el->fFrame;
+      if (lbe->EntryId() == id) return lbe;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________

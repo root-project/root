@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.54 2004/07/06 10:55:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.55 2004/07/07 10:17:20 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -999,6 +999,33 @@ void TRootBrowser::BrowseObj(TObject *obj)
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
+
+   UpdateDrawOption();
+}
+
+//______________________________________________________________________________
+void TRootBrowser::UpdateDrawOption()
+{
+   // add new draw option to the "history"
+ 
+   TString opt = GetDrawOption();
+   TGListBox *lb = fDrawOption->GetListBox();
+   TGLBContainer *lbc = (TGLBContainer *)lb->GetContainer();
+
+   TIter next(lbc->GetList());
+   TGFrameElement *el;
+   Bool_t newopt = kTRUE;
+
+   while ((el = (TGFrameElement *)next())) {
+      TGTextLBEntry *lbe = (TGTextLBEntry *)el->fFrame;
+      if (lbe->GetText()->GetString() == opt) {
+         newopt = kFALSE;
+         break;
+      }
+   }
+   if (newopt) {
+      fDrawOption->AddEntry(opt.Data(), fDrawOption->GetNumberOfEntries() + 1);
+   } 
 }
 
 //______________________________________________________________________________
