@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.21 2003/08/06 20:25:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.22 2003/11/14 17:34:55 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -84,13 +84,13 @@ public:
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
-   virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, 
+   virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                                    Int_t nx, Int_t ny, Int_t *ic);
    virtual void      DrawFillArea(Int_t n, TPoint *xy);
    virtual void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    virtual void      DrawPolyLine(Int_t n, TPoint *xy);
    virtual void      DrawPolyMarker(Int_t n, TPoint *xy);
-   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, 
+   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text,
                               ETextMode mode);
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
@@ -353,9 +353,11 @@ public:
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
+
 #ifndef __CINT__
 #define gVirtualX (TVirtualX::Instance())
-R__EXTERN TVirtualX* (*gPtr2VirtualX)();
+R__EXTERN TVirtualX *(*gPtr2VirtualX)();
 #endif
 R__EXTERN TVirtualX  *gGXBatch;
+
 #endif
