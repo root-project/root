@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.35 2004/02/09 14:03:34 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.36 2004/02/19 12:58:30 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2449,7 +2449,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    pxmax = gPad->UtoAbsPixel(1);
    pymin = gPad->VtoAbsPixel(1);
    pymax = gPad->VtoAbsPixel(0);
-   TGeoNode *next;
+   TGeoNode *next, *nextnode;
    Double_t step,steptot;
 //   Double_t dotni;
    Double_t *norm;
@@ -2473,6 +2473,8 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
    Int_t n10 = npoints/10;
    Int_t ipoint = 0;
+   TGeoVolume *nextvol;
+   Int_t up;
    for (px=pxmin; px<pxmax; px++) {
       for (py=pymin; py<pymax; py++) {         
          ipoint++;
@@ -2492,9 +2494,6 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          local[2] = dproj/modloc;
          LocalToMasterVect(local,dir);
          fGeom->InitTrack(cop,dir);
-//         fGeom->CdTop();
-//         fGeom->SetCurrentPoint(cop);
-//         fGeom->SetCurrentDirection(dir);
          // current ray pointing to pixel (px,py)
          done = kFALSE;
          norm = 0;
@@ -2518,9 +2517,10 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   next = gGeoManager->Step();
                   steptot = 0;
                   stemin = 0;
-                  if (next) {
+                  up = 0;
+                  while (next) {
                      // we found something after clipping region
-                     TGeoVolume *nextvol = next->GetVolume();
+                     nextvol = next->GetVolume();
                      if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
                         done = kTRUE;
                         base_color = nextvol->GetLineColor();
@@ -2528,7 +2528,10 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                         norm = normal;
                         break;
                      }
+                     up++;
+                     next = gGeoManager->GetMother(up);
                   }
+                  if (done) break;
                   inclip = fClippingShape->Contains(point);
                   gGeoManager->SetStep(1E-3);
                   while (inclip) {
@@ -2538,17 +2541,41 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   stemax = fClippingShape->DistToIn(point,dir,3);
                }
             }              
-            fGeom->FindNextBoundary();
+            nextnode = fGeom->FindNextBoundary();
             step = fGeom->GetStep();
-            if (step>1E10) {
-//               printf("pixels :%i,%i  (%f, %f, %f, %f, %f, %f)\n",px,py,
-//                      cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
-               break;
-            }   
+            if (!nextnode || step>1E10) break;
             steptot += step;
-            next = fGeom->Step();
+            next = gGeoManager->Step();
+            // Check the step
+            if (fClippingShape) {
+               if (steptot>stemax) {
+                  steptot = 0;
+                  inclip = fClippingShape->Contains(point);
+                  if (inclip) {
+                     stemin = fClippingShape->DistToOut(point,dir,3);
+                     stemax = TGeoShape::Big();
+                     continue;
+                  } else {
+                     stemin = 0;
+                     stemax = fClippingShape->DistToIn(point,dir,3);  
+                  }
+               }
+            }      
+            // Check if next node is visible
+            nextvol = nextnode->GetVolume();
+            if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
+               done = kTRUE;
+               base_color = nextvol->GetLineColor();
+               next = nextnode;
+               break;
+            }
+            // Propagate and recheck the point            
             istep = 0;
-            if (!fGeom->IsEntering()) fGeom->SetStep(1E-3);
+            if (!fGeom->IsEntering()) {
+               if (fGeom->IsOutside()) break;
+               fGeom->SetStep(1E-3);
+               printf("EXTRA STEPS\n");
+            }   
             while (!fGeom->IsEntering()) {
                istep++;
                if (istep>1E2) break;
@@ -2556,11 +2583,9 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                next = fGeom->Step();
             }
             if (istep>1E2) {
-//               printf("Woops: Wrong dist from: (%f, %f, %f, %f, %f, %f)\n",
-//                      cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
-//               return;
+               printf("WOOPS\n");
                break; 
-            }     
+            }   
             if (fClippingShape) {
                if (steptot>stemax) {
                   steptot = 0;
@@ -2576,28 +2601,18 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                }
             }      
             if (next) {
-               TGeoVolume *nextvol = next->GetVolume();
+               nextvol = next->GetVolume();
                if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
                   done = kTRUE;
-                  base_color = next->GetVolume()->GetLineColor();
+                  base_color = nextvol->GetLineColor();
                   break;
                }
             }
          }
          if (!done) continue;
          // current ray intersect a visible volume having color=base_color
-//         view->WCtoNDC(point,ndc);
-//         ppx = gPad->XtoPixel(ndc[0]);
-//         ppy = gPad->YtoPixel(ndc[1]);
          if (!norm) norm = fGeom->FindNormal(kFALSE);
-         if (!norm) {
-            printf("Woops: Wrong norm from: (%f, %f, %f, %f, %f, %f)\n",
-                   cop[0],cop[1],cop[2],dir[0],dir[1],dir[2]);
-            break;       
-         }
-//         dotni = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
-//         for (i=0; i<3; i++) refl[i] = dir[i] - 2.*dotni*norm[i];
-//         calf = refl[0]*tosource[0]+refl[1]*tosource[1]+refl[2]*tosource[2];
+         if (!norm) continue;
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
          light = 0.25+0.5*TMath::Abs(calf);
          color = GetColor(base_color, light);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.20 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.21 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -100,6 +100,7 @@ public:
    Int_t                 GetId() const  {return fShapeId;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
    virtual const char   *GetName() const;
+   virtual Int_t         GetNmeshVertices() const {return 0;}
    virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
    static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);

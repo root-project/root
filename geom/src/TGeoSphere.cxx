@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.22 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.23 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -986,6 +986,17 @@ void TGeoSphere::SetPoints(Float_t *buff) const
             }
         }
     }
+}
+
+//_____________________________________________________________________________
+Int_t TGeoSphere::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n;
+   n = fNseg+1;
+   Int_t nz = fNz+1;
+   Int_t numPoints = 2*n*nz;
+   return numPoints;
 }
 
 //_____________________________________________________________________________

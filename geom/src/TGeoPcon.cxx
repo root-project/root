@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.25 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.26 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -457,10 +457,8 @@ void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    fZ[snum]    = z;
    fRmin[snum] = rmin;
    fRmax[snum] = rmax;
-   if (rmin>rmax) {
-      Warning("DefineSection", "invalid rmin/rmax");
-      printf("rmin=%f rmax=%f\n", rmin, rmax);
-   }
+   if (rmin>rmax) 
+      Warning("DefineSection", "Shape %s: invalid rmin=%g rmax=%g", GetName(), rmin, rmax);
    if (snum==(fNz-1)) ComputeBBox();
 }
 
@@ -491,7 +489,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Int_t is, id, ipl;
    switch (iaxis) {
       case 1:  //---               R division
-         Error("Divide", "cannot divide a pcon on radius");
+         Error("Divide", "Shape %s: cannot divide a pcon on radius", GetName());
          return 0;
       case 2:  //---               Phi division
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
@@ -522,7 +520,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             break;
          }
          if (isect<0) {
-            Error("Divide", "cannot divide pcon on Z if divided region is not between 2 planes");
+            Error("Divide", "Shape %s: cannot divide pcon on Z if divided region is not between 2 planes", GetName());
             return 0;
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
@@ -553,7 +551,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       default:
-         Error("Divide", "Wrong axis type for division");
+         Error("Divide", "Shape %s: Wrong axis %d for division",GetName(), iaxis);
          return 0;            
    }
 }
@@ -870,6 +868,14 @@ void TGeoPcon::SetPoints(Float_t *buff) const
         }
     }
 }
+//_____________________________________________________________________________
+Int_t TGeoPcon::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t numPoints = fNz*2*n;
+   return numPoints;
+}   
 
 //_____________________________________________________________________________
 void TGeoPcon::Sizeof3D() const

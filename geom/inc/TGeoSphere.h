@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.12 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.13 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 42;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual Int_t         GetNmeshVertices() const;
    Int_t                 GetNumberOfDivisions() const {return fNseg;}
    Int_t                 GetNz() const   {return fNz;}
    virtual Double_t      GetRmin() const {return fRmin;}

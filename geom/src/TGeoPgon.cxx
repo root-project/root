@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.33 2003/12/30 21:44:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.34 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1356,6 +1356,14 @@ void TGeoPgon::SetPoints(Float_t *buff) const
         }
     }
 }
+//_____________________________________________________________________________
+Int_t TGeoPgon::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = fNedges+1;
+   Int_t numPoints = fNz*2*n;
+   return numPoints;
+}   
 
 //_____________________________________________________________________________
 void TGeoPgon::Sizeof3D() const

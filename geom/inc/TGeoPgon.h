@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.12 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.13 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    virtual Int_t         GetByteCount() const {return 64+12*fNz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    Int_t                 GetNedges() const   {return fNedges;}
+   virtual Int_t         GetNmeshVertices() const;
    virtual Int_t         GetNsegments() const {return fNedges;}     
    virtual void          InspectShape() const;
    virtual void          Paint(Option_t *option);

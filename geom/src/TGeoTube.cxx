@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.33 2004/03/15 12:23:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.34 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -764,6 +764,15 @@ void TGeoTube::SetPoints(Float_t *buff) const
 }
 
 //_____________________________________________________________________________
+Int_t TGeoTube::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = gGeoManager->GetNsegments();
+   Int_t numPoints = n*4;
+   return numPoints;
+}
+
+//_____________________________________________________________________________
 void TGeoTube::Sizeof3D() const
 {
 // fill size of this 3-D object
@@ -1523,6 +1532,15 @@ void TGeoTubeSeg::SetPoints(Float_t *buff) const
 }
 
 //_____________________________________________________________________________
+Int_t TGeoTubeSeg::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t numPoints = n*4;
+   return numPoints;
+}
+
+//_____________________________________________________________________________
 void TGeoTubeSeg::Sizeof3D() const
 {
 // fill size of this 3-D object
@@ -2212,4 +2230,13 @@ void TGeoCtub::SetPoints(Float_t *buff) const
             indx++;
         }
     }
+}
+
+//_____________________________________________________________________________
+Int_t TGeoCtub::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t numPoints = n*4;
+   return numPoints;
 }

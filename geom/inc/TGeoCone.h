@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.14 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.15 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    virtual Int_t         GetByteCount() const {return 56;}
    virtual Double_t      GetDz() const    {return fDz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const;
    virtual Double_t      GetRmin1() const {return fRmin1;}
    virtual Double_t      GetRmax1() const {return fRmax1;}
    virtual Double_t      GetRmin2() const {return fRmin2;}
@@ -153,6 +154,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 64;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const;
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;

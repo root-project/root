@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.11 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.12 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    Double_t              GetDz() const {return fDz;}
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t             *GetVertices() {return &fXY[0][0];}
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          InspectShape() const;
@@ -152,6 +153,7 @@ public:
    Double_t              GetTl2() const   {return fTl2;}
    Double_t              GetAlpha2() const   {return fAlpha2;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const {return 8;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
 
   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
@@ -193,6 +195,7 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistToIn(point,dir,iact,step,safe);}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}
   ClassDef(TGeoGtra, 1)         // G3 GTRA shape
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.2 2004/02/09 14:29:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.3 2004/03/15 12:11:51 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -43,11 +43,16 @@ protected:
    Double_t             *fScale; //[fNz] array of scale factors (for each Z)
    Double_t             *fX0;    //[fNz] array of X offsets (for each Z)
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
+   Int_t                 fSeg;   // !current segment [0,fNvert-1]
+   Int_t                 fIz;    // !current z plane [0,fNz-1]
 
-   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax) const;
+   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const;
    void                  GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const;
    void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
    Bool_t                IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const;
+   Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin);
+   void                  SetIz(Int_t iz) {fIz = iz;}
+   void                  SetSeg(Int_t iseg) {fSeg = iseg;}
 public:
    // constructors
    TGeoXtru();
@@ -72,6 +77,7 @@ public:
    Double_t             *GetZ() const     {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
@@ -85,7 +91,7 @@ public:
    virtual void          SetPoints(Float_t *buff) const;
    virtual void          Sizeof3D() const;
 
-  ClassDef(TGeoXtru, 1)         // extruded polygon class 
+  ClassDef(TGeoXtru, 2)         // extruded polygon class 
 };
 
 #endif

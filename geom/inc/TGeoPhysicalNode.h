@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.1 2004/02/19 15:00:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.2 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -45,11 +45,15 @@ protected:
    Int_t             fLevel;          // depth in the geometry tree
    TObjArray        *fMatrices;       // global transformation matrices
    TObjArray        *fNodes;          // branch of nodes
+
+   void              SetAligned(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeAligned,flag);}
+
 public:
    enum {
       kGeoPNodeFull    = BIT(10),     // full branch is visible (default only last node)
       kGeoPNodeVisible = BIT(11),     // this node is visible (default)
-      kGeoPNodeVolAtt  = BIT(12)      // preserve volume attributes (default)
+      kGeoPNodeVolAtt  = BIT(12),     // preserve volume attributes (default)
+      kGeoPNodeAligned = BIT(13)      // alignment bit
    };
 
    // constructors
@@ -70,6 +74,7 @@ public:
    TGeoVolume       *GetVolume(Int_t level=-1) const;
    
  
+   Bool_t            IsAligned() const {return TObject::TestBit(kGeoPNodeAligned);}
    Bool_t            IsVolAttributes() const {return TObject::TestBit(kGeoPNodeVolAtt);}
    Bool_t            IsVisible() const {return TObject::TestBit(kGeoPNodeVisible);}
    Bool_t            IsVisibleFull() const {return TObject::TestBit(kGeoPNodeFull);}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.7 2004/03/15 12:23:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.8 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -678,6 +678,16 @@ void TGeoTorus::SetPoints(Float_t *buff) const
       }
    }      
 }        
+
+//_____________________________________________________________________________
+Int_t TGeoTorus::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t numPoints = n*(n-1);
+   return numPoints;
+}
+
 //_____________________________________________________________________________
 void TGeoTorus::Sizeof3D() const
 {

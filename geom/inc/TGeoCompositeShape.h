@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.11 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.12 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -52,9 +52,11 @@ public:
    TGeoBoolNode         *GetBoolNode() const {return fNode;}
    virtual void          GetBoundingCylinder(Double_t * /*param*/) const {;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsComposite() const {return kTRUE;}
    virtual Bool_t        IsCylType() const {return kFALSE;}
+   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    void                  MakeNode(const char *expression);
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.1 2004/01/20 15:43:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.2 2004/01/29 11:59:11 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -79,7 +79,7 @@ TGeoPolygon::TGeoPolygon(Int_t nvert)
    SetConvex(kFALSE);
    TObject::SetBit(kGeoFinishPolygon, kFALSE);
    SetNextIndex();
-   printf("=== Polygon with %i vertices\n", fNvert);
+//   printf("=== Polygon with %i vertices\n", fNvert);
 }
 
 //_____________________________________________________________________________
@@ -140,14 +140,14 @@ void TGeoPolygon::FinishPolygon()
    // find outscribed convex polygon indices
    OutscribedConvex();
    if (IsConvex()) {
-      printf(" -> polygon convex -> same indices\n");
+//      printf(" -> polygon convex -> same indices\n");
       memcpy(fIndc, fInd, fNvert*sizeof(Int_t));
       return;
    }   
-   printf(" -> polygon NOT convex\n");
-   printf("Convex indices:\n");
-   for (Int_t i=0; i<fNconvex; i++) printf(" %i ",fInd[fIndc[i]]);
-   printf("\n");
+//   printf(" -> polygon NOT convex\n");
+//   printf("Convex indices:\n");
+//   for (Int_t i=0; i<fNconvex; i++) printf(" %i ",fInd[fIndc[i]]);
+//   printf("\n");
    // make daughters if necessary
    if (IsConvex()) return;
    // ... algorithm here
@@ -165,7 +165,7 @@ void TGeoPolygon::FinishPolygon()
          continue;
       }
       // gap -> make polygon
-      printf(" making daughter with %i vertices\n", nskip+1);
+//      printf(" making daughter with %i vertices\n", nskip+1);
       poly = new TGeoPolygon(nskip+1);
       poly->SetXY(fX,fY);
       poly->SetNextIndex(fInd[fIndc[indconv]]);   
@@ -256,11 +256,59 @@ void TGeoPolygon::OutscribedConvex()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPolygon::Safety(Double_t * /*point*/, Int_t & /*isegment*/) const
+Double_t TGeoPolygon::Safety(Double_t *point, Int_t &isegment) const
 {
 // Compute minimum distance from POINT to any segment. Returns segment index.
-   Warning("Safety", "not yet implemented");
-   return 0.;
+   Int_t i1, i2;
+   Double_t p1[2], p2[3];
+   Double_t lsq, ssq, dx, dy, dpx, dpy, u;
+   Double_t safe=1E30;
+   Int_t isegmin=0;
+   for (i1=0; i1<fNvert; i1++) {
+      if (safe==0.) {
+         isegment = isegmin;
+         return 0.;
+      }   
+      i2 = (i1+1)%fNvert;
+      p1[0] = fX[i1];
+      p1[1] = fY[i1];
+      p2[0] = fX[i2];
+      p2[1] = fY[i2];
+      
+      dx = p2[0] - p1[0];
+      dy = p2[1] - p1[1];
+      dpx = point[0] - p1[0];
+      dpy = point[1] - p1[1];
+      
+      lsq = dx*dx + dy*dy;
+      if (lsq==0) {
+         ssq = dpx*dpx + dpy*dpy;
+         if (ssq < safe) {
+            safe = ssq;
+            isegmin = i1;
+         }
+         continue;
+      } 
+      u = (dpx*dx + dpy*dy)/lsq;
+      if (u>1) {
+         dpx = point[0]-p2[0];
+         dpy = point[1]-p2[1];
+      } else {
+         if (u>=0) {
+            dpx -= u*dx;
+            dpy -= u*dy;
+         }
+      }
+      ssq = dpx*dpx + dpy*dpy;      
+      if (ssq < safe) {
+         safe = ssq;
+         isegmin = i1;
+      }
+   }
+   isegment = isegmin;
+   safe = TMath::Sqrt(safe);
+//   printf("== segment %d: (%f, %f) - (%f, %f) safe=%f\n", isegment, fX[isegment],fY[isegment],fX[(isegment+1)%fNvert],fY[(isegment+1)%fNvert],safe);
+   return safe;
 }
 
 //_____________________________________________________________________________
@@ -277,8 +325,8 @@ void TGeoPolygon::SetNextIndex(Int_t index)
       return;
    }
    fInd[fNconvex++] = index;  
-   printf(" %i ", index);
-   if (fNconvex == fNvert) printf ("\n");   
+//   printf(" %i ", index);
+//   if (fNconvex == fNvert) printf ("\n");   
 }
 
 

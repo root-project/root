@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.15 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.16 2004/04/13 07:04:42 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -434,6 +434,12 @@ void TGeoEltu::SetPoints(Double_t *buff) const
     }
 }
 
+//_____________________________________________________________________________
+Int_t TGeoEltu::GetNmeshVertices() const
+{
+   return TGeoTube::GetNmeshVertices();
+}   
+   
 //_____________________________________________________________________________
 void TGeoEltu::SetPoints(Float_t *buff) const
 {

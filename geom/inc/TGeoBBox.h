@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.10 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.11 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    virtual Int_t         GetByteCount() const {return 36;}
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const {return 8;}
    virtual Double_t      GetDX() const  {return fDX;}
    virtual Double_t      GetDY() const  {return fDY;}
    virtual Double_t      GetDZ() const  {return fDZ;}

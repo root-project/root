@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.26 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.27 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -835,6 +835,15 @@ void TGeoCone::SetPoints(Float_t *buff) const
             buff[indx++] = dz;
         }
     }
+}
+
+//_____________________________________________________________________________
+Int_t TGeoCone::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+    Int_t n = gGeoManager->GetNsegments();
+    Int_t numPoints = n*4;
+    return numPoints;
 }
 
 //_____________________________________________________________________________
@@ -1726,6 +1735,14 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
             buff[indx++] = dz;
         }
     }
+}
+//_____________________________________________________________________________
+Int_t TGeoConeSeg::GetNmeshVertices() const
+{
+// Return number of vertices of the mesh representation
+    Int_t n = gGeoManager->GetNsegments()+1;
+    Int_t numPoints = n*4;
+    return numPoints;
 }
 
 //_____________________________________________________________________________

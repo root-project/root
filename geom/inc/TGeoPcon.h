@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.12 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.13 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -74,6 +74,7 @@ public:
    Double_t             *GetZ() const    {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;

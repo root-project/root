@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.3 2003/12/10 15:31:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.4 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual Int_t         GetNmeshVertices() const;
    Double_t              GetR() const    {return fR;}
    Double_t              GetRmin() const {return fRmin;}
    Double_t              GetRmax() const {return fRmax;}
