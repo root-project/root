@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.6 2001/10/30 07:38:53 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.7 2001/10/31 07:21:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -32,7 +32,7 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
   _tag("tag","Mixing state",this,tag),_type(type),
   _tau("tau","Mixing life time",this,tau),
   _dm("dm","Mixing frequency",this,dm),
-  x("x","time",this,t)
+  _t("_t","time",this,t), _genMixFrac(0)
 {
   // Constructor
   switch(type) {
@@ -58,10 +58,11 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
   _tag("tag",this,other._tag),
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
-  x("x",this,other.x),
+  _t("t",this,other._t),
   _basisExp(other._basisExp),
   _basisCos(other._basisCos),
-  _type(other._type)
+  _type(other._type),
+  _genMixFrac(other._genMixFrac)
 {
   // Copy constructor
 }
@@ -121,9 +122,22 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
 
 Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
 {
-  if (matchArgs(directVars,generateVars,x,_tag)) return 2 ;  
-  if (matchArgs(directVars,generateVars,x)) return 1 ;  
+  if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;  
+  if (matchArgs(directVars,generateVars,_t)) return 1 ;  
   return 0 ;
+}
+
+
+
+void RooBMixDecay::initGenerator(Int_t code)
+{
+  if (code==2) {
+    // Calculate the fraction of mixed events to generate
+    Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
+    _tag = -1 ;
+    Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+    _genMixFrac = mixInt/sumInt ;
+  }  
 }
 
 
@@ -133,10 +147,8 @@ void RooBMixDecay::generateEvent(Int_t code)
 {
   // Generate mix-state dependent
   if (code==2) {
-    Double_t taudm2 = _tau*_tau*_dm*_dm ;
-    Double_t mixedFrac = 0.5 * ( 1 - (1-2*_mistag)/(1+taudm2)) ;
     Double_t rand = RooRandom::uniform() ;
-    _tag = (rand<=mixedFrac) ? -1 : 1 ;
+    _tag = (rand<=_genMixFrac) ? -1 : 1 ;
   }
 
   // Generate delta-t dependent
@@ -161,10 +173,9 @@ void RooBMixDecay::generateEvent(Int_t code)
     Double_t acceptProb = 1 + _tag*(1-2*_mistag)*cos(_dm*tval);
     Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
     
-    if (tval<x.max() && tval>x.min() && mixAccept) {
-      x = tval ;
+    if (tval<_t.max() && tval>_t.min() && mixAccept) {
+      _t = tval ;
       break ;
     }
-  }
-  
+  }  
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDecay.cc,v 1.3 2001/10/08 05:21:16 verkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.4 2001/10/31 07:21:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -16,6 +16,7 @@
 #include <iostream.h>
 #include "RooFitModels/RooDecay.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooDecay) 
 ;
@@ -24,7 +25,10 @@ ClassImp(RooDecay)
 RooDecay::RooDecay(const char *name, const char *title, 
 		   RooRealVar& t, RooAbsReal& tau, 
 		   const RooResolutionModel& model, DecayType type) :
-  RooConvolutedPdf(name,title,model,t)
+  RooConvolutedPdf(name,title,model,t), 
+  _t("t","time",this,t),
+  _tau("tau","decay time",this,tau),
+  _type(type)
 {
   // Constructor
   switch(type) {
@@ -43,7 +47,10 @@ RooDecay::RooDecay(const char *name, const char *title,
 
 RooDecay::RooDecay(const RooDecay& other, const char* name) : 
   RooConvolutedPdf(other,name), 
-  _basisExp(other._basisExp)
+  _t("t",this,other._t),
+  _tau("tau",this,other._tau),
+  _basisExp(other._basisExp),
+  _type(other._type)
 {
   // Copy constructor
 }
@@ -62,3 +69,39 @@ Double_t RooDecay::coefficient(Int_t basisIndex) const
 }
 
 
+
+Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+{
+  if (matchArgs(directVars,generateVars,_t)) return 1 ;  
+  return 0 ;
+}
+
+
+
+void RooDecay::generateEvent(Int_t code)
+{
+  assert(code==1) ;
+
+  // Generate delta-t dependent
+  while(1) {
+    Double_t rand = RooRandom::uniform() ;
+    Double_t tval(0) ;
+
+    switch(_type) {
+    case SingleSided:
+      tval = -_tau*log(rand);
+      break ;
+    case Flipped:
+      tval= +_tau*log(rand);
+      break ;
+    case DoubleSided:
+      tval = (rand<=0.5) ? -_tau*log(2*rand) : +_tau*log(2*(rand-0.5)) ;
+      break ;
+    }
+    
+    if (tval<_t.max() && tval>_t.min()) {
+      _t = tval ;
+      break ;
+    }
+  }  
+}
