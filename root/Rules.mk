@@ -76,15 +76,23 @@ CXXFLAGS += -g
 else
 CXXFLAGS += -O
 endif
-SOFLAGS  = -shared
+SOFLAGS  = -shared 
 DllSuf   = so
 ExeSuf   = 
 OutPutOpt     = -o 
 endif
 
+
+##### utilities #####
+
+MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
+ifeq ($(PLATFORM),win32)
+MAKELIB       = $(ROOTSYS)/build/win/makelib.sh
+endif
+
 %.o: %.C
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CXX) $(CXXFLAGS) -c $<
 
 %.o: %.cxx
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CXX) $(CXXFLAGS) -c $<
 
