@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.6 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.7 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -37,7 +37,8 @@ protected :
   Int_t    fRowLwb;    // Row    lower bound of decomposed matrix
   Int_t    fColLwb;    // Column lower bound of decomposed matrix
 
-  Int_t Hager(Double_t& est,Int_t iter=5);
+  void  ResetStatus() { for (Int_t i = 14; i < 22; i++) ResetBit(BIT(i)); }
+  Int_t Hager      (Double_t& est,Int_t iter=5);
 
   virtual const TMatrixDBase &GetDecompMatrix() const = 0;
 

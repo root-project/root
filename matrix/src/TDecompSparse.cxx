@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.3 2004/05/19 15:47:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.4 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -148,6 +148,7 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 //  fFact.Set((Int_t) 1.2*this->MinRealWorkspace()+1);
   fFact.Set((Int_t) 3*this->MinRealWorkspace()+1);
 
+  ResetStatus();
   SetBit(kMatrixSet);
 }
 

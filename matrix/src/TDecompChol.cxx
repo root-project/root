@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.8 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.9 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -155,6 +155,7 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
     return;
   } 
   
+  ResetStatus();
   SetBit(kMatrixSet);
   fCondition = -1.0;
     
