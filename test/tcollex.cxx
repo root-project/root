@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.3 2000/12/14 13:52:27 brun Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
@@ -33,8 +33,8 @@ public:
    void    SetNum(int i) { num = i; }
    int     GetNum() { return num; }
    void    Print(Option_t *) const { Printf("TObjNum = %d", num); }
-   ULong_t  Hash() const { return num; }
-   Bool_t IsEqual(const TObject *obj) const { return num == ((TObjNum*)obj)->num; }
+   ULong_t Hash() const { return num; }
+   Bool_t  IsEqual(const TObject *obj) const { return num == ((TObjNum*)obj)->num; }
    Bool_t  IsSortable() const { return kTRUE; }
    Int_t   Compare(const TObject *obj) const { if (num > ((TObjNum*)obj)->num)
                                       return 1;
