@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.29 2000/12/04 16:45:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.30 2000/12/05 10:52:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -247,6 +247,8 @@
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TF1.h"
+#include "TArrayC.h"
+#include "TStreamerInfo.h"
 #include "TVirtualFitter.h"
 
 TTree *gTree;
@@ -441,7 +443,6 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    const char *rdname;
    const char *dname;
    char branchname[128];
-   if (!cl->GetListOfRealData()) cl->BuildRealData();
    char **apointer = (char**)(addobj);
    TObject *obj = (TObject*)(*apointer);
    Bool_t delobj = kFALSE;
@@ -449,6 +450,9 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       obj = (TObject*)cl->New();
       delobj = kTRUE;
    }
+   //build the StreamerInfo if first time for the class
+   BuildStreamerInfo(cl,obj);
+   
 //*-*- Loop on all public data members of the class and its base classes
    Int_t lenName = strlen(name);
    Int_t isDot = 0;
@@ -457,8 +461,15 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    TRealData *rd;
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
-      if (rd->IsObject()) continue;
       TDataMember *dm = rd->GetDataMember();
+      if (rd->IsObject()) {
+//printf("found IsObject:%s, class:%s\n",dm->GetName(),dm->GetFullTypeName());
+         TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
+         //We should build the StreamerInfo in this case.
+         //However, there is a problem in case one cannot call class->New !!
+         //if (clm) BuildStreamerInfo(clm,obj+rd->GetThisOffset());
+         continue;
+      }
       if (!dm->IsPersistent()) continue; //do not process members with a ! as the first
                                          // character in the comment field
       rdname = rd->GetName();
@@ -740,6 +751,24 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    // clean up
    delete [] ind;
    delete [] varexp;
+}
+
+//______________________________________________________________________________
+void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
+{
+  // Build StreamerInfo for class cl
+  // pointer is an optional argument that may contain a pointer to an object of cl
+   
+   cl->BuildRealData(pointer);
+   TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
+   if (gFile) {
+      TArrayC *cindex = gFile->GetClassIndex();
+      Int_t number = sinfo->GetNumber();
+      if (cindex->fArray[number] == 0) {
+         cindex->fArray[0]       = 1;
+         cindex->fArray[number]  = 1;
+      }
+   }
 }
 
 //______________________________________________________________________________
