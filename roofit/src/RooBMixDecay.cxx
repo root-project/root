@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.4 2001/10/17 05:15:06 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.5 2001/10/27 22:32:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,17 +35,20 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
   x("x","time",this,t)
 {
   // Constructor
-  if (type==SingleSided || type==DoubleSided) 
-    _basisExpPlus  = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau,dm)) ;
-
-  if (type==Flipped || type==DoubleSided)
-    _basisExpMinus = declareBasis("exp(-abs(-@0)/@1)",RooArgList(tau,dm)) ;
-
-  if (type==SingleSided || type==DoubleSided) 
-    _basisCosPlus  = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
-
-  if (type==Flipped || type==DoubleSided)
-    _basisCosMinus = declareBasis("exp(-abs(-@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
+  switch(type) {
+  case SingleSided:
+    _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau,dm)) ;
+    _basisCos = declareBasis("exp(-@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
+    break ;
+  case Flipped:
+    _basisExp = declareBasis("exp(@0)/@1)",RooArgList(tau,dm)) ;
+    _basisCos = declareBasis("exp(@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
+    break ;
+  case DoubleSided:
+    _basisExp = declareBasis("exp(-abs(@0)/@1)",RooArgList(tau,dm)) ;
+    _basisCos = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
+    break ;
+  }
 }
 
 
@@ -56,10 +59,8 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
   x("x",this,other.x),
-  _basisExpPlus(other._basisExpPlus),
-  _basisExpMinus(other._basisExpMinus),
-  _basisCosPlus(other._basisCosPlus),
-  _basisCosMinus(other._basisCosMinus),
+  _basisExp(other._basisExp),
+  _basisCos(other._basisCos),
   _type(other._type)
 {
   // Copy constructor
@@ -75,11 +76,11 @@ RooBMixDecay::~RooBMixDecay()
 
 Double_t RooBMixDecay::coefficient(Int_t basisIndex) const 
 {
-  if (basisIndex==_basisExpPlus || basisIndex==_basisExpMinus) {
+  if (basisIndex==_basisExp) {
     return 1 ;
   }
 
-  if (basisIndex==_basisCosPlus || basisIndex==_basisCosMinus) {
+  if (basisIndex==_basisCos) {
     return _tag*(1-2*_mistag) ;
   }
   
@@ -104,10 +105,10 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) cons
 
     // Integration over 'tag'
   case 1:
-    if (basisIndex==_basisExpPlus || basisIndex==_basisExpMinus) {
+    if (basisIndex==_basisExp) {
       return 2.0 ;
     }    
-    if (basisIndex==_basisCosPlus || basisIndex==_basisCosMinus) {
+    if (basisIndex==_basisCos) {
       return 0.0 ;
     }
   default:

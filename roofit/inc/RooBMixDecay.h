@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.rdl,v 1.2 2001/07/31 05:58:10 verkerke Exp $
+ *    File: $Id: RooBMixDecay.rdl,v 1.3 2001/10/17 05:15:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -49,10 +49,8 @@ protected:
   RooRealProxy     _tau ;
   RooRealProxy     _dm ;
   RooRealProxy     x ;
-  Int_t _basisExpPlus ;
-  Int_t _basisExpMinus ;
-  Int_t _basisCosPlus ;
-  Int_t _basisCosMinus ;
+  Int_t _basisExp ;
+  Int_t _basisCos ;
 
   ClassDef(RooBMixDecay,1) // B Mixing decay PDF
 };
