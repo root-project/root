@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.19 2000/08/16 06:32:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.20 2000/08/21 06:10:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -154,7 +154,7 @@
 //*-*  The Fill functions return the bin number for 1-D histograms or global
 //*-*  bin number for 2-D and 3-D histograms.
 //*-*  If TH1::Sumw2 has been called before filling, the sum of squares of
-//*-*  is also stored.
+//*-*  weights is also stored.
 //*-*  One can also increment directly a bin number via TH1::AddBinContent
 //*-*  or replace the existing content via TH1::SetBinContent.
 //*-*  To access the bin content of a given bin, do:

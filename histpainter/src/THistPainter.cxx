@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.12 2000/08/20 10:06:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.13 2000/08/21 06:12:47 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -557,30 +557,42 @@ void THistPainter::Paint(Option_t *option)
 //*-*-*-*-*-*-*-*-*Control routine to paint any kind of histograms*-*-*-*-*-*-*
 //*-*              ===============================================
 //
-//  Histograms are drawn via the THistPainter class. Each histogram has
-//  a pointer to its own painter (to be usable in a multithreaded program).
-//  The same histogram can be drawn with different options in different pads.
-//  When an histogram drawn in a pad is deleted, the histogram is
-//  automatically removed from the pad or pads where it was drawn.
-//  If an histogram is drawn in a pad, then filled again, the new status
-//  of the histogram will be automatically shown in the pad next time
-//  the pad is updated. One does not need to redraw the histogram.
-//  To draw the current version of an histogram in a pad, one can use
-//     h->DrawCopy();
-//  This makes a clone of the histogram. Once the clone is drawn, the original 
-//  histogram may be modified or deleted without affecting the aspect of the 
-//  clone.
-//  By default, TH1::Draw clears the current pad.
+// When you call the Draw method of a histogram for the first time (TH1::Draw), 
+// it creates a THistPainter object and saves a pointer to painter as a 
+// data member of the histogram. 
+// The THistPainter class specializes in the drawing of histograms. It is 
+// separate from the histogram so that one can have histograms without 
+// the graphics overhead, for example in a batch program. The choice 
+// to give each histogram have its own painter rather than a central 
+// singleton painter, allows two histograms to be drawn in two threads 
+// without overwriting the painter's values.
 //
-//  One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
-//  value for the maximum or the minimum scale on the plot.
+// When a displayed histogram is filled again you do not have to call the Draw 
+// method again. The image is refreshed the next time the pad is updated. 
+// A pad is updated after one of these three actions:
+//   - a carriage control on the ROOT command line 
+//   - a click inside the pad
+//   - a call to TPad::Update
 //
-//  TH1::UseCurrentStyle can be used to change all histogram graphics
-//  attributes to correspond to the current selected style.
-//  This function must be called for each histogram.
-//  In case one reads and draws many histograms from a file, one can force
-//  the histograms to inherit automatically the current graphics style
-//  by calling before gROOT->ForceStyle();
+// By default a call to TH1::Draw clears the pad of all objects before drawing the
+// new image of the histogram. You can use the "SAME" option to leave the previous
+// display intact and superimpose the new histogram. The same histogram can be 
+// drawn with different graphics options in different pads.
+//
+// When a displayed histogram is deleted, its image is automatically removed from the pad.
+//
+// To create a copy of the histogram when drawing it, you can use TH1::DrawClone. This 
+// will clone the histogram and allow you to change and delete the original one 
+// without affecting the clone.
+//
+// Setting the Style
+// =================
+// Histograms use the current style (gStyle). When you change the current style and 
+// would like to propagate the change to the histogram you can call TH1::UseCurrentStyle.
+// You will need to call UseCurrentStyle on each histogram.
+// When reading many histograms from a file and you wish to update them to the current 
+// style you can use gROOT::ForceStyle and all histograms read after this call
+// will be updated to use the current style.
 //
 //  The following options are supported on all types:
 //  =================================================
@@ -631,44 +643,46 @@ void THistPainter::Paint(Option_t *option)
 //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
 //    "SCAT"   : Draw a scatter-plot (default)
 //
-//  Note that most options above can be concatenated, example:
-//        h-Draw("e1same");
-//  Options are case insensitive
+// Most options can be concatenated without spaces or commas, for example:
+//        h->Draw("E1SAME");
 //
-//  When using the options "BOX", "COL" or "COLZ", the color palette used
-//  is the one defined in the current style (see TStyle::SetPalette)
+// The options are not case sensitive:
+//	h->Draw("e1same");
 //
-//  When using the "CONT" or "SURF" or "LEGO" options, the number
-//  of contour levels can be changed via TH1::SetContour.
-//  (default is 20 equidistant levels)
+// The options "BOX", "COL" or "COLZ", use the color palette 
+// defined in the current style (see TStyle::SetPalette)
 //
-//  One can set a default drawing option via TH1::SetOption. If an option 
-//  is set, it will be the default drawing option.
+// The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
+// levels, you can change the number of levels with TH1::SetContour.
 //
+// You can also set the default drawing option with TH1::SetOption. To see the current 
+// option use TH1::GetOption.
 //
-//  Setting basic graphics attributes
-//  =====================================
-//  The histogram classes inherit from the attribute classes:
+// Setting line, fill, marker, and text attributes
+// =====================================
+// The histogram classes inherit from the attribute classes:
 //    TAttLine, TAttFill, TAttMarker and TAttText.
-//  See the member functions of these classes for the list of options.
+// See the description of these classes for the list of options.
 //
 //
 //  Setting Tick marks on the histogram axis
 //  ========================================
-// The TPad functions SetTicks can be used to specify the type of tick
-//  marks used for the histogram axis.
-//   Assume tx = gPad->GetTickx() and ty = gPad->GetTicky()
-//   by default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
+// The TPad::SetTicks method specifies the type of tick marks on the axis. 
+// 
+// Assume tx = gPad->GetTickx() and ty = gPad->GetTicky(). 
+//
 //    tx = 1 ;  tick marks on top side are drawn (inside)
 //    tx = 2;   tick marks and labels on top side are drawn
 //    ty = 1;   tick marks on right side are drawn (inside)
 //    ty = 2;   tick marks and labels on right side are drawn
-//       Use TPad::SetTicks(tx,ty) to set these options
+// By default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
+//       
+// Use TPad::SetTicks(tx,ty) to set these options
+// See also The TAxis functions to set specific axis attributes.
 //
-//  In case multiple histograms are drawn inside the same pad and they
-//  have a fill color set, it may happen that the fill area hides the tick marks.
-//  One can force a redraw of the axis on top of all the histograms by
-//  calling:
+//  In case multiple collor filled histograms are drawn on the same pad, the fill 
+//  area may hide the axis tick marks. One can force a redraw of the axis
+//  over all the histograms by calling:
 //    gPad->RedrawAxis();
 //
 //
@@ -682,10 +696,11 @@ void THistPainter::Paint(Option_t *option)
 //  
 //  Superimposing two histograms with different scales in the same pad
 //  ==================================================================
-//  The following macro creates two histograms, the second histogram being
-//  the bins integral of the first one. It shows a possible procedure to
+//  The following script creates two histograms, the second histogram is
+//  the bins integral of the first one. It shows a procedure to
 //  draw the two histograms in the same pad and it draws the scale of
 //  the second histogram using a new vertical axis on the right side.
+//   
 //   void twoscales() {
 //    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
 //
@@ -726,11 +741,14 @@ void THistPainter::Paint(Option_t *option)
 //End_Html
 //
 //
-//  Type of information in the "STATS" box.
-//  ======================================
-// The type of information printed in the histogram statistics box
-//  can be selected via gStyle->SetOptStat(mode).
-//  The parameter mode can be = iourmen  (default = 0001111)
+// Statistics Display
+// ======================================
+// The type of information shown in the histogram statistics box
+//  can be selected with gStyle->SetOptStat(mode).
+//
+//  The mode has up to seven digits that can be set to on(1) or off(0). 
+//
+//  mode = iourmen  (default = 0001111)
 //    n = 1;  name of histogram is printed
 //    e = 1;  number of entries printed
 //    m = 1;  mean value printed
@@ -738,29 +756,34 @@ void THistPainter::Paint(Option_t *option)
 //    u = 1;  number of underflows printed
 //    o = 1;  number of overflows printed
 //    i = 1;  integral of bins printed
-//  Example: gStyle->SetOptStat(11);
-//           print only name of histogram and number of entries.
 //
-// The type of information about fit parameters printed in the histogram
-// statistics box can be selected via the parameter mode.
-//  The parameter mode can be = pcev  (default = 0111)
-//    v = 1;  print name/values of parameters
-//    e = 1;  print errors (if e=1, v must be 1)
-//    c = 1;  print Chisquare/Number of degress of freedom
-//    p = 1;  print Probability
-//  Example: gStyle->SetOptFit(1011);
-//           print fit probability, parameter names/values and errors.
+// When trailing digits is left out, they are assumed to be 0.
+// For example: gStyle->SetOptStat(11);
+// displays only the name of histogram and the number of entries.
+// 
+//When the option "same", the statistic box is not redrawn, and hence 
+// the statistics from the previously drawn hostgram will still show. 
+// With the option "sames", you can rename a previous "stats" box 
+// and/or change its position with these lines:
 //
-//  When option "same" is specified, the statistic box is not drawn.
-//  Specify option "sames" to force painting statistics with option "same"
-//  When option "sames" is given, one can use the following technique
-//  to rename a previous "stats" box and/or change its position
 //  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
 //  Root > st->SetName(newname)
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
 //  Root > newhist->Draw("sames")
 //
+// Fit Statistics
+// ==============
+// You can change the statistics box to display the fit paramters with
+// the TH1::SetOptFit(mode) method. This mode has four digits.
+// mode = pcev  (default = 0111)
+//    v = 1;  print name/values of parameters
+//    e = 1;  print errors (if e=1, v must be 1)
+//    c = 1;  print Chisquare/Number of degress of freedom
+//    p = 1;  print Probability
+//  
+// For example: gStyle->SetOptFit(1011);
+// prints the fit probability, parameter names/values, and errors.
 //
 //
 //  The ERROR bars options
@@ -771,19 +794,18 @@ void THistPainter::Paint(Option_t *option)
 //   'E3' A filled area is drawn through the end points of the vertical error bars.
 //   '4' A smoothed filled area is drawn through the end points of the
 //       vertical error bars.
-//   'E0' Turn off the symbols clipping.
+//   'E0' Draw also bins with null contents.  
 //Begin_Html
 /*
 <img src="gif/PaintErrors.gif">
 */
 //End_Html
 //
-//  The scatter plot option (default for 2-D histograms)
+//  The SCATter plot option (default for 2-D histograms)
 // =======================
-//  For each cell (i,j) a number of points proportional to the cell
-//    content is drawn.
-//    A maximum of 500 points per cell is drawn. If the maximum is above 500
-//    contents are normalized to 500.
+//  For each cell (i,j) a number of points proportional to the cell content is drawn.
+//  A maximum of 500 points per cell are drawn. If the maximum is above 500
+//  contents are normalized to 500.
 //
 //
 //  The ARRow option.  Shows gradient between adjacent cells
@@ -798,7 +820,7 @@ void THistPainter::Paint(Option_t *option)
 //    For each cell (i,j) a box is drawn with surface proportional to contents
 //
 //
-//  The COL option
+//  The COLor option
 //  ==============
 //  For each cell (i,j) a box is drawn with a color proportional
 //    to the cell content.
@@ -827,24 +849,27 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The CONTour options
 //  ===================
-//  The following CONT options are supported:
-//   CONT   The contour is drawn with filled colour levels.
-//   CONT1  Use colour to distinguish contours.
-//   CONT2  Use line style to distinguish contours.
-//   CONT3  Line style and colour are the same for all contours.
-//   CONT4  same as 1 but uses the "SURF" algorithm
+//  The following contour options are supported:
+//    "CONT"   : Draw a contour plot (same as CONT0)
+//    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
+//    "CONT1"  : Draw a contour plot using line styles to distinguish contours
+//    "CONT2"  : Draw a contour plot using the same line style for all contours
+//    "CONT3"  : Draw a contour plot using fill area colors
+//    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
+// 
+//  The default number of contour levels is 20 equidistant levels and can
+//  be changed with TH1::SetContour.
 //
-//  The number of contour levels can be changed via TH1::SetContour.
-//      (default is 20 equidistant levels)
-//
-//  When option "List" is specified together with option "CONT",
-//  the points used to draw the contours are saved in the TGraph format
+//  When option "LIST" is specified together with option "CONT",
+//  the points used to draw the contours are saved in the TGraph object
 //  and are accessible in the following way:
+//
 //     TObjArray *contours = 
 //           gROOT->GetListOfSpecials()->FindObject("contours")
 //     Int_t ncontours = contours->GetSize();
 //     TList *list = (TList*)contours->At(i); 
-// where i is a contour number list contains a list of TGraph objects. 
+//
+// Where i is a contour number, and list contains a list of TGraph objects. 
 // For one given contour, more than one disjoint polyline may be generated. 
 // The number of TGraphs per countour is given by list->GetSize(). 
 // Here we show only the case to access the first graph in the list.
@@ -860,18 +885,18 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The LEGO options
 //  ================
-//     In a lego plot, cell contents are represented as 3-d boxes.
-//     The height of the box is proportional to the cell content.
-//    A lego plot can be represented in several coordinate systems.
-//    Default system is Cartesian coordinates.
-//    Possible systems are CYL,POL,SPH,PSR.
+//    In a lego plot the cell contents are drawn as 3-d boxes, with
+//    the height of the box proportional to the cell content.
+//    A lego plot can be represented in several coordinate systems, the
+//    default system is Cartesian coordinates.
+//    Other possible coordinate systems are CYL,POL,SPH,PSR.
 //
 //    "LEGO"   : Draw a lego plot with hidden line removal
 //    "LEGO1"  : Draw a lego plot with hidden surface removal
 //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
 //
 //      See TStyle::SetPalette to change the color palette.
-//      It is suggested to use palette 1 via the call
+//      We suggest you use palette 1 with the call
 //        gStyle->SetColorPalette(1)
 //
 //Begin_Html
@@ -886,9 +911,9 @@ void THistPainter::Paint(Option_t *option)
 //  In a surface plot, cell contents are represented as a mesh.
 //     The height of the mesh is proportional to the cell content.
 //
-//    A surface plot can be represented in several coordinate systems.
-//    Default system is Cartesian coordinates.
-//    Possible systems are CYL,POL,SPH,PSR.
+//  A surface plot can be represented in several coordinate systems.
+//  The default is cartesian coordinates, and the other possible systems
+//  are CYL,POL,SPH,PSR.
 //
 //    "SURF"   : Draw a surface plot with hidden line removal
 //    "SURF1"  : Draw a surface plot with hidden surface removal
@@ -896,10 +921,10 @@ void THistPainter::Paint(Option_t *option)
 //    "SURF3"  : same as SURF with in addition a contour view drawn on the top
 //    "SURF4"  : Draw a surface using Gouraud shading
 //
-//  The following picture is generated with option SURF1.
+//  The following picture uses SURF1.
 //
 //      See TStyle::SetPalette to change the color palette.
-//      It is suggested to use palette 1 via the call
+//      We suggest you use palette 1 with the call
 //      gStyle->SetColorPalette(1)
 //
 //Begin_Html
@@ -911,38 +936,43 @@ void THistPainter::Paint(Option_t *option)
 //
 //  Option "Z" : Adding the color palette on the right side of the pad
 //  ==================================================================
-// When using the drawing options "BOX", "COL", "CONT", "SURF", "LEGO"
-//  one can add a color palette with a axis indicating the value
-//  of the corresponding color.
-// A color palette can be set via TStyle::SetPalette, eg
+// For the options "BOX", "COL", "CONT", "SURF", "LEGO"
+// you can display the color palette with an axis indicating the value
+// of the corresponding color.
+//  
+//  Setting the color palette
+//  =========================
+// You can set the color palette with TStyle::SetPalette, eg
+//
 //      gStyle->SetPalette(ncolors,colors);
+//
 // For example the option "COL" draws a 2-D histogram with cells
-// represented by a box filled with a color CI function of the cell content.
-// if the cell content is N, the color CI used will be the color number
+// represented by a box filled with a color index which is a function 
+// of the cell content.
+// If the cell content is N, the color index used will be the color number
 // in colors[N],etc. If the maximum cell content is > ncolors, all
 // cell contents are scaled to ncolors.
 //
-// if ncolors <= 0 a default palette (see below) of 50 colors is defined.
-//     the colors defined in this palette are OK for coloring pads, labels
+// if ncolors <= 0, a default palette (see below) of 50 colors is defined.
+// This palette is recommended for pads, labels
 //
-// if ncolors == 1 && colors == 0, then
-//     a Pretty Palette with a Spectrum Violet->Red is created.
-//   It is recommended to use this Pretty palette when drawing legos,
-//   surfaces or contours.
+// if ncolors == 1 && colors == 0, a pretty palette with a violet to red 
+// spectrum is created. We recommend you use this palette when drawing legos,
+// surfaces or contours.
 //
-// if ncolors > 0 and colors = 0, the default palette is used
+// if ncolors > 0 and colors == 0, the default palette is used
 // with a maximum of ncolors.
 //
 // The default palette defines:
-//   index 0->9   : grey colors from light to dark grey
-//   index 10->19 : "brown" colors
-//   index 20->29 : "blueish" colors
-//   index 30->39 : "redish" colors
-//   index 40->49 : basic colors
+//   index  0  to  9 : shades of grey 
+//   index 10  to 19 : shades of brown
+//   index 20  to 29 : shades of blue
+//   index 30  to 39 : shades of red
+//   index 40  to 49 : basic colors
 //
 //  The color numbers specified in the palette can be viewed by selecting
 //  the item "colors" in the "VIEW" menu of the canvas toolbar.
-//  The color parameters can be changed via TColor::SetRGB.
+//  The color'a red, green, and blue values can be changed via TColor::SetRGB.
 //
 //
 //   Drawing options for 3-D histograms
