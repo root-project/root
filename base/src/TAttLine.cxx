@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.2 2000/05/18 17:07:35 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -80,7 +80,7 @@ void TAttLine::Copy(TAttLine &attline)
 }
 
 //______________________________________________________________________________
-Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Float_t xp1, Float_t yp1, Float_t xp2, Float_t yp2 )
+Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, Double_t xp2, Double_t yp2 )
 {
 //*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
 //*-*                  ===========================================
@@ -109,35 +109,35 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Float_t xp1, Float_t yp1, Flo
 //*-*     ==> u = (A -B +C)/2c
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   Float_t xl, xt, yl, yt;
-   Float_t x     = px;
-   Float_t y     = py;
-   Float_t x1    = gPad->XtoAbsPixel(xp1);
-   Float_t y1    = gPad->YtoAbsPixel(yp1);
-   Float_t x2    = gPad->XtoAbsPixel(xp2);
-   Float_t y2    = gPad->YtoAbsPixel(yp2);
+   Double_t xl, xt, yl, yt;
+   Double_t x     = px;
+   Double_t y     = py;
+   Double_t x1    = gPad->XtoAbsPixel(xp1);
+   Double_t y1    = gPad->YtoAbsPixel(yp1);
+   Double_t x2    = gPad->XtoAbsPixel(xp2);
+   Double_t y2    = gPad->YtoAbsPixel(yp2);
    if (x1 < x2) {xl = x1; xt = x2;}
    else         {xl = x2; xt = x1;}
    if (y1 < y2) {yl = y1; yt = y2;}
    else         {yl = y2; yt = y1;}
    if (x < xl-2 || x> xt+2) return 9999;  //following algorithm only valid in the box
    if (y < yl-2 || y> yt+2) return 9999;  //surrounding the line
-   Float_t xx1   = x  - x1;
-   Float_t xx2   = x  - x2;
-   Float_t x1x2  = x1 - x2;
-   Float_t yy1   = y  - y1;
-   Float_t yy2   = y  - y2;
-   Float_t y1y2  = y1 - y2;
-   Float_t A     = xx1*xx1   + yy1*yy1;
-   Float_t B     = xx2*xx2   + yy2*yy2;
-   Float_t C     = x1x2*x1x2 + y1y2*y1y2;
+   Double_t xx1   = x  - x1;
+   Double_t xx2   = x  - x2;
+   Double_t x1x2  = x1 - x2;
+   Double_t yy1   = y  - y1;
+   Double_t yy2   = y  - y2;
+   Double_t y1y2  = y1 - y2;
+   Double_t A     = xx1*xx1   + yy1*yy1;
+   Double_t B     = xx2*xx2   + yy2*yy2;
+   Double_t C     = x1x2*x1x2 + y1y2*y1y2;
    if (C <= 0)  return 9999;
-   Float_t c     = TMath::Sqrt(C);
-   Float_t u     = (A - B + C)/(2*c);
-   Float_t D     = TMath::Abs(A - u*u);
+   Double_t c     = TMath::Sqrt(C);
+   Double_t u     = (A - B + C)/(2*c);
+   Double_t D     = TMath::Abs(A - u*u);
    if (D < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(D) - 0.5*float(fLineWidth));
+   return Int_t(TMath::Sqrt(D) - 0.5*Double_t(fLineWidth));
 }
 
 //______________________________________________________________________________
