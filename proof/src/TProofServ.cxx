@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.31 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.32 2002/10/25 10:40:16 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -103,6 +103,10 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
       loglevel = kLogErr;
       type = "Error";
    }
+   if (level >= kBreak) {
+      loglevel = kLogErr;
+      type = "*** Break ***";
+   }
    if (level >= kSysError) {
       loglevel = kLogErr;
       type = "SysError";
@@ -116,7 +120,8 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
    if (node != "master") node += gProofServ->GetOrdinal();
    char *bp;
 
-   if (!location || strlen(location) == 0) {
+   if (!location || strlen(location) == 0 ||
+       (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
       bp = Form("%s:%s:%s:%s", gProofServ->GetUser(), node.Data(), type, msg);
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.32 2002/11/15 18:14:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.33 2002/11/15 20:02:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -380,8 +380,9 @@ void TProof::Close(Option_t *)
       if (fIntHandler)
          fIntHandler->Remove();
 
-      //Broadcast(kPROOF_STOP, kAll);
-      Interrupt(kShutdownInterrupt, kAll);
+      // tell master and slaves to stop
+      if (!IsMaster())
+         Interrupt(kShutdownInterrupt, kAll);
 
       fSlaves->Delete();
       fActiveSlaves->Clear();

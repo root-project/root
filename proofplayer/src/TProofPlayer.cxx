@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.13 2002/10/25 01:23:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.14 2002/11/15 20:02:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -531,7 +531,7 @@ void TProofPlayerRemote::SetupFeedback()
 
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
 
-   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sFound",
+   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
       fb == 0 ? "NOT ":"");
 
    if (fb == 0) return;
@@ -562,7 +562,6 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *timer)
    if ( fFeedbackLists == 0 ) return kFALSE;
 
    TList *fb = MergeFeedback();
-
 
    PDB(kFeedback,2) Info("HandleTimer","Sending %d objects", fb->GetSize());
 
@@ -619,7 +618,7 @@ void TProofPlayerSlave::SetupFeedback()
    //
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
 
-   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sFound",
+   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
       fb == 0 ? "NOT ":"");
 
    if (fb == 0) return;

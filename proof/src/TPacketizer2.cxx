@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.7 2002/10/15 08:41:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.8 2002/10/25 01:23:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -346,6 +346,8 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    Int_t files = 0;
    fTotalEntries = 0;
+   fUnAllocated->Clear();
+   fActive->Clear();
    fFileNodes->Clear(); // Delete all objects
 
    dset->Reset();
@@ -389,13 +391,11 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    }
 
    PDB(kGlobal,1) Info("TPacketizer2","Processing %ld entries in %d files on %d hosts",
-                       fTotalEntries, files, fFileNodes->GetSize() );
+                       fTotalEntries, files, fFileNodes->GetSize());
 
-   fUnAllocated->Clear();
    fUnAllocated->AddAll(fFileNodes);
    fUnAllocNext = fUnAllocated->First();
 
-   fActive->Clear();
    fActive->AddAll(fFileNodes);
    fActiveNext = fActive->First();
 
