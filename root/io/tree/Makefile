@@ -10,7 +10,8 @@ TEST_TARGETS += missingClass
 include ../../Rules.mk
 
 missingClass: test.root copy.root
-		  $(CMDECHO) root.exe -q -l -b read.C
+		  $(CMDECHO) root.exe -q -l -b read.C > read.out 2>&1 \
+	&& diff read.out read.ref
 
 testWithFailure:
 ifeq ($(FAIL),)
@@ -18,7 +19,7 @@ ifeq ($(FAIL),)
 endif
 
 test.root: classes.C write.C
-		  $(CMDECHO) root.exe -q -l -b write.C > write.out
+		  $(CMDECHO) root.exe -q -l -b write.C > write.out 2>&1
 
-copy.root: classes.C copy.C
-		  $(CMDECHO) root.exe -q -l -b copy.C > copy.out
+copy.root: classes.C copy.C test.root
+		  $(CMDECHO) root.exe -q -l -b copy.C > copy.out 2>&1
