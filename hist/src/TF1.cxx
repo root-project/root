@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.38 2002/05/18 08:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.39 2002/06/29 16:32:14 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1618,9 +1618,25 @@ void TF1::Paint(Option_t *option)
    }
 
 //*-*- Copy Function attributes to histogram attributes
+   Double_t minimum   = fHistogram->GetMinimumStored();
+   Double_t maximum   = fHistogram->GetMaximumStored();
+   if (minimum == -1111) { //this can happen after unzooming
+      if (fHistogram->TestBit(TH1::kIsZoomed)) {
+         minimum = fHistogram->GetYaxis()->GetXmin();
+      } else {
+         minimum = fMinimum;
+      }
+      fHistogram->SetMinimum(minimum);
+   }
+   if (maximum == -1111) {
+      if (fHistogram->TestBit(TH1::kIsZoomed)) {
+         maximum = fHistogram->GetYaxis()->GetXmax();
+      } else {
+         maximum = fMaximum;
+      }
+      fHistogram->SetMaximum(maximum);
+   }
    fHistogram->SetBit(TH1::kNoStats);
-   fHistogram->SetMinimum(fMinimum);
-   fHistogram->SetMaximum(fMaximum);
    fHistogram->SetLineColor(GetLineColor());
    fHistogram->SetLineStyle(GetLineStyle());
    fHistogram->SetLineWidth(GetLineWidth());
