@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.2 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.3 2004/04/06 21:12:24 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -148,6 +148,33 @@ TGFont *TGFontPool::GetFont(const TGFont *font)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+TGFont *TGFontPool::GetFont(FontStruct_t fs)
+{
+   // Use font, i.e. increases ref count of specified font. 
+
+   TGFont *f = FindFont(fs);
+
+   if (f) {
+      f->AddReference();
+      return f;
+   }
+
+   static int i = 0;
+
+   f = new TGFont(Form("unknown-%d", i));
+   f->fFontStruct = fs;
+   f->fFontH      = gVirtualX->GetFontHandle(fs);
+   gVirtualX->GetFontProperties(fs, f->fFM.fAscent, f->fFM.fDescent);
+   f->fFM.fLinespace = f->fFM.fAscent + f->fFM.fDescent;
+   f->fFM.fMaxWidth = gVirtualX->TextWidth(fs, "w", 1);
+   f->fFM.fFixed = (f->fFM.fMaxWidth == gVirtualX->TextWidth(fs, "i", 1)) ? kTRUE : kFALSE;
+   fList->Add(f);
+   i++;
+
+   return f;
 }
 
 //______________________________________________________________________________
