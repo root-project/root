@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.4 2000/12/13 15:13:47 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 // ***********************************************************************
 // * C++ class library to paint 3D axice "arround" TView object
@@ -284,7 +284,7 @@ char *TAxis3D::GetObjectInfo(Int_t , Int_t ) const
 {
 //  Dummy method
 //  returns the const char * to "axis3d"
-  return "axis3d";
+  return (char*)"axis3d";
 }
 
 //______________________________________________________________________________

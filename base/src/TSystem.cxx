@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.23 2001/10/22 14:54:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.24 2001/11/21 07:38:19 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1384,9 +1384,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
      char * status = 0;
      if (modified) {
-        status = "Modified ";
+        status = (char*)"Modified ";
      } else {
-        status = "Unmodified ";
+        status = (char*)"Unmodified ";
      }
      ::Warning("ACLiC","%s script has already been compiled and loaded. ",status);
      if ( !recompile ) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.69 2001/12/08 15:22:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.70 2001/12/11 13:32:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2646,7 +2646,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    if (fScanRedirect) {
       fTree->SetScanField(0);  // no page break if Scan is redirected
       fname = (char *) fScanFileName;
-      if (!fname) fname = "";
+      if (!fname) fname = (char*)"";
       lenfile = strlen(fname);
       if (!lenfile) {
          Int_t nch = strlen(fTree->GetName());

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.12 2001/12/04 16:42:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.13 2001/12/05 11:18:03 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -288,7 +288,7 @@ static Bool_t CheckConnectArgs(TClass *sender_class, const char *signal,
       if ((tmp = strrchr(signal_proto,')'))) *tmp = '\0';
    }
 
-   if (!signal_proto) signal_proto = ""; // avoid zero strings
+   if (!signal_proto) signal_proto = (char*)""; // avoid zero strings
 
    TMethod *signalMethod = GetMethodWithPrototype(sender_class,
                                                   signal_method,
@@ -332,7 +332,7 @@ static Bool_t CheckConnectArgs(TClass *sender_class, const char *signal,
       if ((tmp = strrchr(slot_proto,')'))) *tmp = '\0';
    }
 
-   if (!slot_proto) slot_proto = "";     // avoid zero strings
+   if (!slot_proto) slot_proto = (char*)"";     // avoid zero strings
    if (slot_proto &&
        (slot_params = strchr(slot_proto,'='))) *slot_params = ' ';
 
