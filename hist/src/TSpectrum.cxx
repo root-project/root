@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.2 2000/10/01 20:23:44 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -65,20 +65,29 @@ TSpectrum::TSpectrum()
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
+   fResolution= 1;
    fHistogram = 0;
    fNPeaks    = 0;
 }
 
 //______________________________________________________________________________
-TSpectrum::TSpectrum(Int_t maxpositions)
+TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution)
    :TNamed("Spectrum","Miroslav Morhac peak finder")
 {
+//  maxpositions:  maximum number of peaks 
+//  resolution:    determines resolution of the neighboring peaks 
+//                 default value is 1 correspond to 3 sigma distance
+//                 between peaks. Higher values allow higher resolution 
+//                 (smaller distance between peaks.
+//                 May be set later through SetResolution.
+   
    Int_t n = TMath::Max(maxpositions,100);
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
+   SetResolution(resolution);
 }
 
 //______________________________________________________________________________
@@ -675,7 +684,7 @@ stav1:
             a  = n1-4; if (a<0) a=0;
             a  = a*(1-2.*(fi4/si4))+1/2.;
             a  = TMath::Abs(a);
-            n3 = (int)a;
+            n3 = (int)(a/fResolution);
             a  = TMath::Abs(si4); if(a<=(2.*fi4)) stav=0;
             if (n2>=1) {
                if ((i3-i2-1)>n2)
@@ -761,7 +770,7 @@ Int_t TSpectrum::PeakEvaluate(double *temp,int size,int xmax,double xmin)
             a  = n1-4; if(a<0) a=0;
             a  = a*(1-2.*(fi4/si4))+1/2.;
             a  = TMath::Abs(a);
-            n3 = (int)a;
+            n3 = (int)(a/fResolution);
             a  = TMath::Abs(si4);
             if (a<=(2.0*fi4))
                stav = 0;
@@ -780,7 +789,7 @@ Int_t TSpectrum::PeakEvaluate(double *temp,int size,int xmax,double xmin)
             a  = n1-2;
             a  = a*(1-2.*(fi4/si4))+1/2.;
             a  = TMath::Abs(a);
-            n3 = (int)a;
+            n3 = (int)(a/fResolution);
             a  = TMath::Abs(si4);
             if (a<=(2.*fi4)) stav=0;
             if (n2>=1) {
@@ -1019,4 +1028,17 @@ Int_t TSpectrum::Search2(float **source,int sizex,int sizey,double sigma)
 
    fNPeaks = peak_index;
    return fNPeaks;
+}
+
+//______________________________________________________________________________
+void TSpectrum::SetResolution(Float_t resolution)
+{
+//  resolution: determines resolution of the neighboring peaks 
+//              default value is 1 correspond to 3 sigma distance
+//              between peaks. Higher values allow higher resolution 
+//              (smaller distance between peaks.
+//              May be set later through SetResolution.
+
+   if (resolution > 1) fResolution = resolution;
+   else                fResolution = 1;
 }

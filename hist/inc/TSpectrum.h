@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -44,11 +44,12 @@ protected:
    Float_t      *fPosition;       //!array of current peak positions
    Float_t      *fPositionX;      //!X position of peaks
    Float_t      *fPositionY;      //!Y position of peaks
+   Float_t       fResolution;     //resolution of the neighboring peaks  
    TH1          *fHistogram;      //resulting histogram
 
 public:
    TSpectrum();
-   TSpectrum(Int_t maxpositions);
+   TSpectrum(Int_t maxpositions, Float_t resolution=1);
    virtual          ~TSpectrum();
    virtual  char    *Background(TH1 *hist,int niter, Option_t *option="goff");
    virtual  char    *Background1(float *spectrum,int size,int niter);
@@ -63,8 +64,9 @@ public:
    virtual  Int_t    Search(TH1 *hist, Double_t sigma, Option_t *option="goff");
    virtual  Int_t    Search1(float *spectrum,int size,double sigma);
    virtual  Int_t    Search2(float **source,int sizex,int sizey,double sigma);
-
-    ClassDef(TSpectrum,1)  //Peak Finder, background estimator, Deconvolution
+   virtual  void     SetResolution(Float_t resolution=1);
+   
+   ClassDef(TSpectrum,1)  //Peak Finder, background estimator, Deconvolution
 };
 
 #endif
