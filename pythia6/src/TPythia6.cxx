@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.8 2002/11/26 17:57:43 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.9 2002/12/04 09:13:55 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +503,10 @@ void TPythia6::Pylist(int flag) {
 }
 
 void TPythia6::Pyname(int kf, char* name) {
-  pyname(&kf,name,15);
+  //Note that the array name must be dimesioned in the calling program
+  //to at least name[16]
+   
+   pyname(&kf,name,15);
 				// cut trailing blanks to get C string
 
   for (int i=15; (i>=0) && (name[i] != ' '); i--) {
