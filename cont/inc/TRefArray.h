@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.2 2001/10/04 19:26:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.3 2001/10/05 16:38:04 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
+
 
 class TRefArray : public TSeqCollection {
 
@@ -91,7 +92,7 @@ public:
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TRefArray has to be sorted, -1 == not found !!
 
-        ClassDef(TRefArray,1)  //An array of references to TObjects
+   ClassDef(TRefArray,1)  //An array of references to TObjects
 };
 
 
@@ -138,25 +139,22 @@ inline Bool_t TRefArray::BoundsOk(const char *where, Int_t at) const
 
 inline TObject *&TRefArray::operator[](Int_t at)
 {
-   int j = at-fLowerBound;
-   if (j >= 0 && j < fSize) return (TObject*&)fUIDs[j];
-   BoundsOk("operator[]", at);
-   fLast = -2; // invalidate fLast since the result may be used as an lvalue
-   Error("operator= ","Cannot use this operator");
+   MayNotUse("operator[]");
    return (TObject*&)fUIDs[0];
 }
 
 inline TObject *TRefArray::At(Int_t i) const
 {
    // Return the object at position i. Returns 0 if i is out of bounds.
-  if (i >= 0 && i < fSize) {
-   TObject *obj = 0;
-      if (!fRefBits.TestBitNumber(i)) return (TObject*)fUIDs[i];
+   int j = i-fLowerBound;
+   if (j >= 0 && j < fSize) {
+      TObject *obj = 0;
+      if (!fRefBits.TestBitNumber(j)) return (TObject*)fUIDs[j];
       if (!fPID) return 0;
-      obj = fPID->GetObjectWithID(fUIDs[i]-(Long_t)gSystem);
+      obj = fPID->GetObjectWithID(fUIDs[j]-(Long_t)gSystem);
       if (obj) {
-         ((TBits&)fRefBits).ResetBitNumber(i);
-         fUIDs[i] = (Long_t)obj;
+         ((TRefArray*)this)->fRefBits.ResetBitNumber(j);
+         fUIDs[j] = (Long_t)obj;
       }
       return obj;
    }
