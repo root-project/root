@@ -22,7 +22,7 @@ Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 
 Simple: Event.root
 ifeq ($(FAIL),)
-	$(CMDECHO) echo Simple has a known failure
+	$(WarnFailTest)
 	$(CMDECHO) root.exe -l -b -q 'Run.C(1)' > readfile.out
 else
 	$(CMDECHO) root.exe -l -b -q 'Run.C(0)' > readfile.out

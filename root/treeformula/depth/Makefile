@@ -16,7 +16,7 @@ depthTest: depth.root
 	$(CMDECHO) root.exe -q -l -b Read.C 
 else
 depthTest: 
-	$(CMDECHO) echo depthTest known to fail
+	$(WarnFailTest)
 endif
 
 depth.root: Create.C

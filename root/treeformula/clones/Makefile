@@ -25,11 +25,9 @@ mytest:
 
 nestedClones:
 ifeq ($(FAIL),)
-	# one of the reason of the failure is the fact that the first	
-	# clones array is empty!
+# one of the reason of the failure is the fact that the first	
+# clones array is empty!
 	$(WarnFailTest)
 else
 	$(CMDECHO) root.exe -b -q -l runNestedClones.C
 endif
-
-
