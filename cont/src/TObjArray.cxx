@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.18 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.19 2002/11/15 13:26:29 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -359,7 +359,7 @@ Int_t TObjArray::GetEntries() const
    // Attention: use this method ONLY if you want to know the number of
    // non-empty slots. This function loops over the complete array and
    // is therefore very slow when applied in a loop. Most of the time you
-   // better use GetLast()+1.
+   // better use GetEntriesFast() (only in case when there are no empty slots).
 
    Int_t cnt = 0;
 
