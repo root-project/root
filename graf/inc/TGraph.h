@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.3 2000/07/10 06:07:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.4 2000/08/31 17:00:59 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,19 +24,10 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TAttLine
-#include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
-#include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
-#include "TAttMarker.h"
+#ifndef ROOT_TH1
+#include "TH1.h"
 #endif
 
-
-class TH1F;
-class TAxis;
 class TBrowser;
 class TF1;
 
@@ -46,11 +37,11 @@ protected:
     Int_t       fNpoints;    //Number of points
     Double_t   *fX;          //[fNpoints] array of X points
     Double_t   *fY;          //[fNpoints] array of Y points
-    Option_t   *fOption;     //Axis options
+    Option_t   *fOption;     //!Axis options
     TList      *fFunctions;  //Pointer to list of functions (fits and user)
     TH1F       *fHistogram;  //Pointer to histogram used for drawing axis
-    Double_t    fMaximum;    //Maximum value for plotting along y
     Double_t    fMinimum;    //Minimum value for plotting along y
+    Double_t    fMaximum;    //Maximum value for plotting along y
 
     virtual void    LeastSquareFit(Int_t n, Int_t m, Double_t *a);
     virtual void    LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
