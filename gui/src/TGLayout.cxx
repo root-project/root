@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.6 2003/12/03 00:25:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.7 2003/12/05 01:17:03 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -92,12 +92,12 @@ void TGVerticalLayout::Layout()
    Int_t    exp = 0;
    Int_t    exp_max = 0;
    Int_t    remain;
-   Int_t    tmp;
    Int_t    x = 0, y = 0;
    Int_t    bw = fMain->GetBorderWidth();
    TGDimension size, csize;
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
+   Int_t size_expand, esize_expand, rem_expand, tmp_expand = 0;
 
    if (!fList) return;
 
@@ -114,13 +114,21 @@ void TGVerticalLayout::Layout()
          if ((hints & kLHintsExpandY) || (hints & kLHintsCenterY)) {
             nb_expand++;
             exp += size.fHeight;
-            exp_max = TMath::Min(exp_max, (Int_t)size.fHeight);
+            exp_max = TMath::Max(exp_max, (Int_t)size.fHeight);
          } else {
             remain -= size.fHeight;
             if (remain < 0)
                remain = 0;
          }
       }
+   }
+
+   if (nb_expand) {
+      size_expand = remain/nb_expand;
+      
+      if (size_expand < exp_max)
+         esize_expand = (remain - exp)/nb_expand;
+      rem_expand = remain % nb_expand;
    }
 
    next.Reset();
@@ -136,8 +144,8 @@ void TGVerticalLayout::Layout()
          if (hints & kLHintsRight) {
             x = msize.fWidth - bw - csize.fWidth - pad_right;
          } else if (hints & kLHintsCenterX) {
-            tmp = msize.fWidth - (bw << 1) - csize.fWidth;
-            x = tmp > 0 ? tmp >> 1 : 0;
+            int tmp = msize.fWidth - (bw << 1) - csize.fWidth;
+            x = tmp>0 ? tmp >> 1 : 0;
          } else { // defaults to kLHintsLeft
             x = pad_left + bw;
          }
@@ -150,19 +158,24 @@ void TGVerticalLayout::Layout()
          }
 
          if (hints & kLHintsExpandY) {
-            if ((remain / nb_expand) >= exp_max)
-               size.fHeight = (remain / nb_expand) - pad_top - pad_bottom;
+            if (size_expand >= exp_max)
+               size.fHeight = size_expand - pad_top - pad_bottom;
             else
-               size.fHeight = csize.fHeight + (remain - exp) / nb_expand;
+               size.fHeight = csize.fHeight + esize_expand;
+  
+            tmp_expand += rem_expand;
+            if (tmp_expand >= nb_expand) {
+               size.fHeight++;
+               tmp_expand -= nb_expand;
+            }
          } else {
             size.fHeight = csize.fHeight;
             if (hints & kLHintsCenterY) {
-               if ((remain / nb_expand) >= exp_max) {
-                  tmp = (remain / nb_expand) - pad_top - pad_bottom - size.fHeight;
-                  extra_space = tmp ? tmp >> 1 : 0;
-               } else {
-                  tmp = (remain - exp) / nb_expand;
+               if (size_expand >= exp_max) {
+                  int tmp = size_expand - pad_top - pad_bottom - size.fHeight;
                   extra_space = tmp>0 ? tmp >> 1 : 0;
+               } else {
+                  extra_space = esize_expand>0 ? esize_expand >> 1 : 0;
                }
                y += extra_space;
                top += extra_space;
@@ -236,7 +249,7 @@ void TGHorizontalLayout::Layout()
    TGDimension size, csize;
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
-   Int_t    tmp = 0;
+   Int_t size_expand, esize_expand, rem_expand, tmp_expand = 0;
 
    if (!fList) return;
 
@@ -253,13 +266,21 @@ void TGHorizontalLayout::Layout()
          if ((hints & kLHintsExpandX) || (hints & kLHintsCenterX)) {
             nb_expand++;
             exp += size.fWidth;
-            exp_max = TMath::Min(exp_max, (Int_t)size.fWidth);
+            exp_max = TMath::Max(exp_max, (Int_t)size.fWidth);
          } else {
             remain -= size.fWidth;
             if (remain < 0)
                remain = 0;
          }
       }
+   }
+   if (nb_expand) {
+      size_expand = remain/nb_expand;
+
+      if (size_expand < exp_max) {
+         esize_expand = (remain - exp)/nb_expand;
+      }
+      rem_expand = remain % nb_expand;
    }
 
    next.Reset();
@@ -274,9 +295,9 @@ void TGHorizontalLayout::Layout()
 
          if (hints & kLHintsBottom) {
             y = msize.fHeight - bw - csize.fHeight - pad_bottom;
-         } else if (hints & kLHintsCenterY) {
+         } else if (hints & kLHintsCenterY) {int tmp = 0;
             tmp = msize.fHeight - (bw << 1) - csize.fHeight;
-            y = tmp ? tmp >> 1 : 0;
+            y = 1 ? tmp >> 1 : 0;
          } else { // kLHintsTop by default
             y = pad_top + bw;
          }
@@ -289,19 +310,25 @@ void TGHorizontalLayout::Layout()
          }
 
          if (hints & kLHintsExpandX) {
-            if ((remain / nb_expand) >= exp_max)
-               size.fWidth = (remain / nb_expand) - pad_left - pad_right;
+            if (size_expand >= exp_max)
+               size.fWidth = size_expand - pad_left - pad_right;
             else
-               size.fWidth = csize.fWidth + (remain - exp) / nb_expand;
+               size.fWidth = csize.fWidth +  esize_expand;
+
+            tmp_expand += rem_expand;
+
+            if (tmp_expand >= nb_expand) {
+               size.fWidth++;
+               tmp_expand -= nb_expand;
+            }
          } else {
             size.fWidth = csize.fWidth;
             if (hints & kLHintsCenterX) {
-               if ((remain / nb_expand) >= exp_max) {
-                  tmp = (remain / nb_expand) - pad_left - pad_right - size.fWidth;
-                  extra_space =tmp>0 ? tmp >> 1 : 0;
-               } else {
-                  tmp = (remain - exp) / nb_expand;
+               if (size_expand >= exp_max) {
+                  int tmp = size_expand - pad_left - pad_right - size.fWidth;
                   extra_space = tmp>0 ? tmp >> 1 : 0;
+               } else {
+                  extra_space = esize_expand >> 1;
                }
                x += extra_space;
                left += extra_space;
@@ -342,11 +369,11 @@ TGDimension TGHorizontalLayout::GetDefaultSize() const
          csize = ptr->fFrame->GetDefaultSize();
          size.fWidth += csize.fWidth + ptr->fLayout->GetPadLeft() +
                         ptr->fLayout->GetPadRight();
+
          size.fHeight = TMath::Max(size.fHeight, csize.fHeight + ptr->fLayout->GetPadTop() +
                                    ptr->fLayout->GetPadBottom());
       }
    }
-
    size.fWidth  += fMain->GetBorderWidth() << 1;
    size.fHeight += fMain->GetBorderWidth() << 1;
 
