@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.79 2001/05/31 08:54:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.80 2001/06/02 20:28:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1097,6 +1097,11 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    //  tree.BuildIndex("Run","Event"); //creates an index using leaves Run and Event
    //  tree.GetEntryWithIndex(1234,56789); //reads entry corresponding to
    //                                        Run=1234 and Event=56789
+   //
+   // Note that majorname and minorname may be expressions using original
+   // Tree variables eg: "run-90000", "event +3*xx"
+   // In case an expression is specified, the equivalent expression must be computed
+   // when calling GetEntryWithIndex.
    //
    // Note that once the index is built, it can be saved with the TTree object
    // with tree.Write(); //if the file has been open in "update" mode.
