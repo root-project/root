@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.73 2005/03/07 16:18:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.74 2005/03/07 22:45:31 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2330,6 +2330,27 @@ void TBuffer::WriteClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
+static Version_t R__FindStreamerInfoVersion(const TClass *cl, UInt_t checksum)
+{
+   //find the version number in the StreamerInfos corresponding to checksum
+
+   Version_t version = 0;
+   Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
+   for (Int_t i=1;i<ninfos;i++) {
+      // TClass::fStreamerInfos has a lower bound not equal to 0,
+      // so we should use At and not use UncheckedAt
+      TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
+      if (!info) continue;
+      if (info->GetCheckSum() == checksum) {
+         version = i;
+         //printf("ReadVersion, setting version=%d\n",version);
+         break;
+      }
+   }
+   return version;
+}
+
+//______________________________________________________________________________
 Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
    // Read class version from I/O buffer.
@@ -2375,24 +2396,25 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          *this >> version;
       }
    }
-   if (version <= 0 && cl && cl->GetClassVersion() != 0) {
-      UInt_t checksum = 0;
-      *this >> checksum;
-      //find the version number in the StreamerInfos corresponding to checksum
-      Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
-      for (Int_t i=1;i<ninfos;i++) {
-         // TClass::fStreamerInfos has a lower bound not equal to 0,
-         // so we should use At and not use UncheckedAt
-         TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
-         if (!info) continue;
-         if (info->GetCheckSum() == checksum) {
-            version = i;
-            //printf("ReadVersion, setting version=%d\n",version);
-            break;
+   if (cl && cl->GetClassVersion() != 0) {
+      if (version <= 0)  {
+         UInt_t checksum = 0;
+         *this >> checksum;
+         version = R__FindStreamerInfoVersion(cl,checksum);
+      }  else if (version == 1 &&  ((TFile*)fParent)->GetVersion()<40000 ) {
+         // We could have a file created using a Foreign class before
+         // the introduction of the CheckSum.  We need to check
+         if ((!cl->IsLoaded() || cl->IsForeign()) && 
+            cl->GetStreamerInfos()->GetLast()>1 ) {
+            
+            TList *list = ((TFile*)fParent)->GetStreamerInfoList();
+            TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            UInt_t checksum = local->GetCheckSum();
+            delete list;
+            version = R__FindStreamerInfoVersion(cl,checksum);
          }
       }
    }
-
    return version;
 }
 
