@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.2 2000/11/21 16:33:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFree.cxx,v 1.3 2003/02/26 10:11:51 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -125,7 +125,7 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
    if (idcur == 0) return 0;
    TFree *idcur1 = 0;
    do {
-      Int_t nleft = Int_t(idcur->fLast - idcur->fFirst +1);
+      Seek_t nleft = Seek_t(idcur->fLast - idcur->fFirst +1);
       if (nleft == nbytes) return idcur;             //*-* found an exact match
       if(nleft > nbytes+3) if (idcur1 == 0) idcur1=idcur;
       idcur = (TFree*)lfree->After(idcur);
