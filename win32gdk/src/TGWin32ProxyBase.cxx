@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.4 2003/08/11 14:55:32 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.5 2003/08/23 14:51:25 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -169,6 +169,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    //
    // returns kTRUE if callback execution is delayed (batched)
 
+   Int_t wait = 0;
    if (!fgMainThreadId) return kFALSE;
 
    Bool_t batch = !sync &&  (fListOfCallBacks->GetSize()<fBatchLimit);
@@ -179,10 +180,9 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    }
 
    while (::PostThreadMessage(fgMainThreadId,fgPostMessageId,(WPARAM)this,0L)==0) {
-     Int_t wait = 0;
       // wait because there is chance that message queue does not exist yet
       ::SleepEx(50,1);
-      if (wait++>100) return kFALSE; // failed to post
+      if (wait++>5) return kFALSE; // failed to post
    }
 
    ::WaitForSingleObject(fPimpl->fEvent,INFINITE);
@@ -201,6 +201,6 @@ void TGWin32ProxyBase::SendExitMessage()
    while (::PostThreadMessage(fgMainThreadId, fgPostMessageId, 0, 0L)==0) {
       // wait because there is chance that message queue does not exist yet
       ::SleepEx(50,1);
-      if (wait++>100) return;
+      if (wait++>5) return;
    }
 }
