@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.4 2001/02/28 07:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.5 2003/06/25 13:39:31 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TBrowser.h"
-#include <fstream>
+#include "Riostream.h"
 
 ClassImp(TNtuple)
 
