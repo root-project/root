@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.14 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.15 2004/04/20 22:12:43 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -134,7 +134,6 @@ char *ItoA(int i);
 
 //
 // net.cxx
-int NetRecv(void *&buf, int &len, EMessageTypes &kind);
 int NetRecv(char *msg, int max);
 int NetRecvRaw(int sock, void *buf, int len);
 int NetSend(const void *buf, int len, EMessageTypes kind);

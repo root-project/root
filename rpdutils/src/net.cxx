@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.3 2004/02/20 09:52:14 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.4 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -268,7 +268,7 @@ int NetSendError(ERootdErrors err)
 }
 
 //______________________________________________________________________________
-int NetRecv(void *&buf, int &len, EMessageTypes &kind)
+static int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
 {
    // Receive a buffer. Returns the newly allocated buffer, the length
    // of the buffer and message type in kind.
@@ -297,7 +297,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
    int   mlen;
    char *buf;
 
-   if (NetRecv((void *&)buf, mlen, kind) < 0)
+   if (NetRecvAllocate((void *&)buf, mlen, kind) < 0)
       return -1;
 
    if (mlen == 0) {
