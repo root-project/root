@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.28 2001/09/22 00:30:57 david Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.29 2001/09/24 16:23:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,6 +42,8 @@ public:
   // Toy MC generation
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Bool_t verbose=kFALSE) const;
+
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.32 2001/09/24 23:05:58 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.33 2001/09/25 01:15:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -72,17 +72,10 @@ public:
   const char *getPlotLabel() const;
   virtual Bool_t inPlotRange(Double_t value) const;
 
-  // Plotting, binned fit interface
-  virtual Int_t getPlotBin() const ;
-  virtual Int_t numPlotBins() const { return getPlotBins() ; }
-  virtual RooAbsBinIter* createPlotBinIterator() const ;
-  virtual Double_t plotBinCenter(Int_t i) const ;
-  virtual Double_t plotBinLow(Int_t i) const ;
-  virtual Double_t plotBinHigh(Int_t i) const ;
-
   // Build 1-dimensional plots
   RooPlot *frame() const;
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
+  enum ScaleType { Relative, Absolute, NumEvent } ;
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative) const;
 
   // Create empty 1D and 2D histograms
   TH1F *createHistogram(const char *name, const char *yAxisLabel= 0, Int_t bins= 0) const;
@@ -139,13 +132,10 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
   friend class RooRealFixedBinIter ;
-  void calcBinWidth() ;
-  Double_t getPlotBinWidth() { return _plotBinW ; }
 
   Double_t _plotMin ;
   Double_t _plotMax ;
   Int_t    _plotBins ;
-  Double_t _plotBinW ;
   mutable Double_t _value ;
   TString  _unit ;
   TString  _label ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.13 2001/09/25 17:09:57 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.14 2001/09/26 18:29:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -64,8 +64,9 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
 
-  addPdf(pdf1,coef1) ;
-  addLastPdf(pdf2) ;    
+  _pdfList.add(pdf1) ;
+  _pdfList.add(pdf2) ;
+  _coefList.add(coef1) ;
 }
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList) :
@@ -141,23 +142,6 @@ RooAddPdf::~RooAddPdf()
   delete _coefIter ;
 }
 
-
-
-void RooAddPdf::addPdf(RooAbsPdf& pdf, RooAbsReal& coef) 
-{  
-  // Add a PDF/coefficient pair to the PDF sum
-  _pdfList.add(pdf) ;
-  _coefList.add(coef) ;
-}
-
-
-void RooAddPdf::addLastPdf(RooAbsPdf& pdf) 
-{
-  // Specify the last PDF, whose coefficient is automatically 
-  // calculated from the normalization requirement
-//   RooRealProxy *pdfProxy = new RooRealProxy("pdf","pdf",this,pdf) ;
-  _pdfList.add(pdf) ;
-}
 
 
 Double_t RooAddPdf::evaluate() const 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.9 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.10 2001/09/17 18:48:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -64,6 +64,29 @@ Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeSe
   }
   return ret ;  
 }
+
+
+
+Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
+{
+  Bool_t ret=RooArgSet::addOwned(var,silent) ;
+  if (ret) {
+    _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
+  }
+  return ret ;  
+}
+				 
+
+RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent) 
+{
+  cout << "RooSetProxy::addClone(" << var.GetName() << ")" << endl ;
+  RooAbsArg* ret=RooArgSet::addClone(var,silent) ;
+  if (ret) {
+    _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
+  }
+  return ret ;
+}
+
 
 
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t silent) 

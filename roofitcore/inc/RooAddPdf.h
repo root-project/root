@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.14 2001/09/26 18:29:33 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.15 2001/09/26 18:33:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,9 +33,6 @@ public:
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
   virtual ~RooAddPdf() ;
-
-  void addPdf(RooAbsPdf& pdf, RooAbsReal& coef) ;
-  void addLastPdf(RooAbsPdf& pdf) ;
 
   Double_t evaluate() const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	

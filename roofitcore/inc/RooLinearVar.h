@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.rdl,v 1.4 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.5 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,6 +38,7 @@ public:
   // Jacobian and limits
   virtual Double_t getFitMin() const ;
   virtual Double_t getFitMax() const ;
+  virtual Int_t getFitBins() const ;
   virtual Double_t jacobian() const ;
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
 

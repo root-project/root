@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealFixedBinIter.cc,v 1.1 2001/08/17 00:35:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -12,7 +12,7 @@
  *****************************************************************************/
 
 #include "RooFitCore/RooRealFixedBinIter.hh"
-#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 
 ClassImp(RooRealFixedBinIter) 
 ;
@@ -37,17 +37,17 @@ RooRealFixedBinIter::~RooRealFixedBinIter()
 void RooRealFixedBinIter::reset()
 {
   _curBin = 0 ;
-  _curCenter = ((RooAbsReal*)_arg)->getPlotMin() ;
+  _curCenter = ((RooAbsRealLValue*)_arg)->getFitMin() ;
 }
 
 RooAbsArg* RooRealFixedBinIter::next() 
 {
   // Check for upper limit
-  if (_curBin>=((RooAbsReal*)_arg)->getPlotBins()) return 0 ;
+  if (_curBin>=((RooAbsRealLValue*)_arg)->getFitBins()) return 0 ;
 
   // Increment bin counter and central value
   _curBin++ ;
-  _curCenter += ((RooAbsReal*)_arg)->getPlotBinWidth() ;
+  _curCenter += ((RooAbsRealLValue*)_arg)->getFitBinWidth() ;
 
   // Return RooRealVar 
   return _arg ;
@@ -61,12 +61,12 @@ Double_t RooRealFixedBinIter::currentCenter() const
 
 Double_t RooRealFixedBinIter::currentLow() const  
 {
-  return ((RooAbsReal*)_arg)->plotBinLow(_curBin) ;
+  return ((RooAbsRealLValue*)_arg)->fitBinLow(_curBin) ;
 }
 
 
 Double_t RooRealFixedBinIter::currentHigh() const 
 {
-  return ((RooAbsReal*)_arg)->plotBinHigh(_curBin) ;
+  return ((RooAbsRealLValue*)_arg)->fitBinHigh(_curBin) ;
 }
 

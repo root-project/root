@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.17 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.18 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.17 2001/08/03 18:11:34 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.18 2001/09/17 18:48:15 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
@@ -100,7 +100,8 @@ void RooPlot::initialize() {
   // Default vertical padding of our enclosed objects
   setPadFactor(0.05);
   // We don't know our normalization yet
-  _normValue= 0;
+  _normNumEvts= 0;
+  _normBinWidth = 0;
   _normVars= 0;
   // Create an iterator over our enclosed objects
   _iterator= _items.MakeIterator();
@@ -192,7 +193,7 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions) {
   updateYAxis(hist->GetMinimum(),hist->GetMaximum(),hist->GetYaxis()->GetTitle());
 
   // use this histogram's normalization if necessary
-  updateFitRangeNorm(hist->GetEntries());
+  updateFitRangeNorm(hist);
 
   // add the histogram to our list
   addObject(hist,options.Data());
@@ -209,7 +210,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
   updateYAxis(plotable->getYAxisMin(),plotable->getYAxisMax(),plotable->getYAxisLabel());
 
   // use this object's normalization if necessary
-  updateFitRangeNorm(plotable->getFitRangeNorm());
+  updateFitRangeNorm(plotable) ;
 
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
@@ -221,11 +222,25 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
   }
 }
 
-void RooPlot::updateFitRangeNorm(Double_t value) {
+void RooPlot::updateFitRangeNorm(const TH1* hist) {
   // Update our plot normalization over our plot variable's fit range,
   // which will be determined by the first suitable object added to our plot.
 
-  if(_normValue == 0) _normValue= value;
+  if(_normNumEvts == 0) {
+    const TAxis* xa = ((TH1*)hist)->GetXaxis() ;
+    _normBinWidth = (xa->GetXmax()-xa->GetXmin())/hist->GetNbinsX() ;
+    _normNumEvts = hist->GetEntries()/_normBinWidth ;
+  }      
+}
+
+void RooPlot::updateFitRangeNorm(const RooPlotable* rp) {
+  // Update our plot normalization over our plot variable's fit range,
+  // which will be determined by the first suitable object added to our plot.
+
+  if(_normNumEvts == 0) {
+    _normNumEvts = rp->getFitRangeNEvt() ;
+    _normBinWidth = rp->getFitRangeBinW() ;
+  }      
 }
 
 void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.24 2001/08/23 01:21:48 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.25 2001/09/07 01:23:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ ClassImp(RooRealVar)
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0)
+  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
 {
   // Constructor with value and unit
   _value = value ;
@@ -41,7 +41,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0)
+  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
 {
   // Constructor with range and unit. Value is set to middle of range
 
@@ -54,7 +54,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(0)
+  RooAbsRealLValue(name, title, unit), _error(0), _fitBins(100)
 {
   // Constructor with value, range and unit
   _value = value ;
@@ -66,7 +66,8 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   RooAbsRealLValue(other,name), 
   _error(other._error),
   _fitMin(other._fitMin),
-  _fitMax(other._fitMax)
+  _fitMax(other._fitMax),
+  _fitBins(other._fitBins)
 {
   // Copy Constructor
 }
@@ -209,12 +210,16 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 	// Next tokens are fit limits
 	Double_t fitMin, fitMax ;
+	Int_t fitBins ;
 	if (parser.expectToken("(",kTRUE) ||
 	    parser.readDouble(fitMin,kTRUE) ||
 	    parser.expectToken("-",kTRUE) ||
 	    parser.readDouble(fitMax,kTRUE) ||
+	    parser.expectToken(":",kTRUE) ||
+	    parser.readInteger(fitBins,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
 	setFitRange(fitMin,fitMax) ;
+	setFitBins(fitBins) ;
 	setConstant(kFALSE) ;
       } else {
 	// Token is value
@@ -263,8 +268,10 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << " - " << getFitMax() << ") ";
     }
     else {
-      os << " - +INF) ";
+      os << " - +INF";
     }
+    os << " : " << getFitBins() << ") " ;
+
     // Add comment with unit, if unit exists
     if (!_unit.IsNull())
       os << "// [" << getUnit() << "]" ;

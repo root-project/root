@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlotable.rdl,v 1.4 2001/06/16 20:28:21 david Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.5 2001/06/30 01:33:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,7 +36,8 @@ public:
 
   // the normalization value refers to the full "fit range" instead of
   // the "plot range"
-  virtual Double_t getFitRangeNorm() const = 0;
+  virtual Double_t getFitRangeNEvt() const = 0;
+  virtual Double_t getFitRangeBinW() const = 0;
 
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   TObject *crossCast();

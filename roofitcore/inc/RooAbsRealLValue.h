@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.10 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.11 2001/08/23 01:21:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,12 +36,24 @@ public:
   virtual void setVal(Double_t value)=0;
   virtual RooAbsRealLValue& operator=(Double_t newValue);
   virtual RooAbsRealLValue& operator=(const RooAbsReal& other) ;
-  virtual void setPlotBin(Int_t ibin) ;
   void randomize();
+
+  // Binned fit interface
+  virtual void setFitBin(Int_t ibin) ;
+  virtual Int_t getFitBin() const ;
+  virtual Int_t numFitBins() const { return getFitBins() ; }
+  virtual Double_t getFitBinWidth() const { return fitBinWidth() ; }
+  virtual RooAbsBinIter* createFitBinIterator() const ;
+
+  virtual Double_t fitBinCenter(Int_t i) const ;
+  virtual Double_t fitBinLow(Int_t i) const ;
+  virtual Double_t fitBinHigh(Int_t i) const ;
+  virtual Double_t fitBinWidth() const ;
 
   // Get fit range limits
   virtual Double_t getFitMin() const = 0 ;
   virtual Double_t getFitMax() const = 0 ;
+  virtual Int_t getFitBins() const = 0 ;
   inline Bool_t hasFitMin() const { return !RooNumber::isInfinite(getFitMin()); }
   inline Bool_t hasFitMax() const { return !RooNumber::isInfinite(getFitMax()); }
 

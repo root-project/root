@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.rdl,v 1.13 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.14 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,8 +49,8 @@ public:
   void dumpFormula() { _formula.dump() ; }
 
   // In general, we cannot be normalized sensibly so pretend that we are always normalized
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
-  Double_t analyticalIntegral(Int_t code) const ;
+//   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
+//   Double_t analyticalIntegral(Int_t code) const ;
   //inline Bool_t selfNormalized() const { return kTRUE; }
 
 protected:

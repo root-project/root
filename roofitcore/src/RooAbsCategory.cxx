@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.24 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.25 2001/08/23 01:21:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -402,20 +402,3 @@ RooAbsArg *RooAbsCategory::createFundamental() const
 }
 
 
-Int_t RooAbsCategory::getPlotBin() const 
-{
-  // Get index of plot bin for current value this category.
-
-  //Synchronize _value
-  getIndex() ; 
-
-  // Lookup ordinal index number 
-  return _types.IndexOf(_types.FindObject(_value.GetName())) ;
-}
-
-
-RooAbsBinIter* RooAbsCategory::createPlotBinIterator() const 
-{
-  // Create an iterator over the plot bins of category
-  return new RooCatBinIter(*this) ;
-}

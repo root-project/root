@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.7 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooHist.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
+"$Id: RooHist.cc,v 1.8 2001/08/03 18:11:34 verkerke Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
@@ -85,9 +85,14 @@ void RooHist::initialize() {
   _entries= 0;
 }
 
-Double_t RooHist::getFitRangeNorm() const {
-  return _entries*_nominalBinWidth;
+Double_t RooHist::getFitRangeNEvt() const {
+  return _entries ;
 }
+
+Double_t RooHist::getFitRangeBinW() const {
+  return _nominalBinWidth ;
+}
+
 
 Int_t RooHist::roundBin(Stat_t y) {
   // Return the nearest positive integer to the input value

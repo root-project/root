@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.35 2001/09/24 16:23:12 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.36 2001/09/26 18:29:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -125,6 +125,18 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 }
 
 
+Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const
+{
+  // Implement pass-through scenario, defer other codes to subclass implementations
+  if (code==0) return getVal(normSet) ;
+  if (normSet) {
+    return analyticalIntegral(code) / _norm->getVal(normSet) ;
+  } else {
+    return analyticalIntegral(code) ;
+  }
+}
+
+
 void RooAbsPdf::traceEvalPdf(Double_t value) const
 {
   // Check that passed value is positive and not 'not-a-number'.
@@ -199,7 +211,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   RooArgSet* depList = fullNorm ? ((RooArgSet*)nset) : getDependents(nset) ;
 
   if (_verboseEval>0) {
-    if (selfNormalized()) {
+    if (!selfNormalized()) {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() 
 	   << ") recreating normalization integral(" 
 	   << _lastNormSet << " -> " << nset << "=" ;

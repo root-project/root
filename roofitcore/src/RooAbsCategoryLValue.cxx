@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.8 2001/08/22 00:50:24 david Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.9 2001/08/23 01:21:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooCatBinIter.hh"
 
 ClassImp(RooAbsCategoryLValue) 
 ;
@@ -110,6 +111,8 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
   // Write object contents to given stream
 }
 
+
+
 void RooAbsCategoryLValue::randomize() {
   UInt_t ordinal= RooRandom::integer(numTypes());
   setOrdinal(ordinal);
@@ -117,12 +120,12 @@ void RooAbsCategoryLValue::randomize() {
 
 
 
-void RooAbsCategoryLValue::setPlotBin(Int_t ibin) 
+void RooAbsCategoryLValue::setFitBin(Int_t ibin) 
 {
   // Check validity of ibin
-  if (ibin<0 || ibin>=numPlotBins()) {
-    cout << "RooAbsCategoryLValue::setPlotBin(" << GetName() << ") ERROR: bin index " << ibin
-	 << " is out of range (0," << numPlotBins()-1 << ")" << endl ;
+  if (ibin<0 || ibin>=numFitBins()) {
+    cout << "RooAbsCategoryLValue::setFitBin(" << GetName() << ") ERROR: bin index " << ibin
+	 << " is out of range (0," << numFitBins()-1 << ")" << endl ;
     return ;
   }
 
@@ -131,4 +134,32 @@ void RooAbsCategoryLValue::setPlotBin(Int_t ibin)
 
   // Set value to requested state
   setIndex(type->getVal()) ;
+}
+
+
+
+Int_t RooAbsCategoryLValue::getFitBin() const 
+{
+  // Get index of plot bin for current value this category.
+
+  //Synchronize _value
+  getIndex() ; 
+
+  // Lookup ordinal index number 
+  return _types.IndexOf(_types.FindObject(_value.GetName())) ;
+}
+
+
+
+Int_t RooAbsCategoryLValue::numFitBins() const 
+{
+  return numTypes() ;
+}
+
+
+
+RooAbsBinIter* RooAbsCategoryLValue::createFitBinIterator() const 
+{
+  // Create an iterator over the plot bins of category
+  return new RooCatBinIter(*this) ;
 }

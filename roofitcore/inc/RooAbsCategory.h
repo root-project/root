@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.22 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.23 2001/08/17 01:18:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,11 +47,6 @@ public:
   Int_t numTypes() const { return _types.GetEntries() ; }
 
   Roo1DTable *createTable(const char *label) const ;
-
-  // Binned fit interface
-  virtual Int_t getPlotBin() const ;
-  virtual Int_t numPlotBins() const { return numTypes() ; }
-  virtual RooAbsBinIter* createPlotBinIterator() const ;
 
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

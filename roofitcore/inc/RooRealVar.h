@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.25 2001/08/08 23:11:25 david Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.26 2001/08/23 01:21:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,8 +47,10 @@ public:
   void setFitMin(Double_t value) ;
   void setFitMax(Double_t value) ;
   void setFitRange(Double_t min, Double_t max) ;
+  void setFitBins(Int_t nBins) { _fitBins = nBins ; }
   virtual Double_t getFitMin() const { return _fitMin ; }
   virtual Double_t getFitMax() const { return _fitMax ; }
+  virtual Int_t getFitBins() const { return _fitBins ; }
 
   // Set infinite fit range limits
   inline void removeFitMin() { _fitMin= -RooNumber::infinity; }
@@ -75,6 +77,7 @@ protected:
 
   Double_t _fitMin ;
   Double_t _fitMax ;
+  Int_t    _fitBins ;
   Double_t _error;
 
   ClassDef(RooRealVar,1) // Real-valued variable 

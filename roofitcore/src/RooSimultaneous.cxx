@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.12 2001/09/24 23:06:01 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.13 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -202,7 +202,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 }
 
 
-RooPlot *RooSimultaneous::plotOn(RooPlot* frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor) const {
+RooPlot *RooSimultaneous::plotOn(RooPlot* frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor, ScaleType stype) const {
   // Plot a smooth curve of this object's value on the specified frame.
 
   // check that we are passed a valid plot frame to use
@@ -260,8 +260,10 @@ RooPlot *RooSimultaneous::plotOn(RooPlot* frame, RooAbsData* wdata, Option_t* dr
 
 
   // normalize ourself to any previous contents in the frame
-  if(frame->getFitRangeNorm() > 0) scaleFactor*= frame->getFitRangeNorm();
-  frame->updateNormVars(plotSet);
+  if (frame->getFitRangeNEvt() > 0 && stype != Absolute) {
+    if (stype==Relative) scaleFactor *= frame->getFitRangeNEvt() ;
+    scaleFactor*= frame->getFitRangeBinW() ;
+  }
 
   // create a new curve of our function using the clone to do the evaluations
   RooCurve* curve= new RooCurve(*plotSumVar,*realVar,scaleFactor,frame->getNormVars());

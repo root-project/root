@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.2 2001/09/12 01:25:43 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.3 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -52,18 +52,18 @@ void RooDataHist::initialize()
 
   _arrSize = 1 ;
   _iterator->Reset() ;
-  RooAbsArg* arg ;
+  RooAbsLValue* arg ;
   Int_t n(0), i ;
-  while(arg=(RooAbsArg*)_iterator->Next()) {
+  while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
     
     // Calculate sub-index multipliers for master index
     for (i=0 ; i<n ; i++) {
-      _idxMult[i] *= arg->numPlotBins() ;
+      _idxMult[i] *= arg->numFitBins() ;
     }
     _idxMult[n++] = 1 ;
 
     // Calculate dimension of weight array
-    _arrSize *= arg->numPlotBins() ;
+    _arrSize *= arg->numFitBins() ;
   }  
 
   // Allocate and initialize weight array 
@@ -76,13 +76,13 @@ void RooDataHist::initialize()
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
     _iterator->Reset() ;
-    RooAbsArg* arg ;
+    RooAbsLValue* arg ;
     Int_t i(0), idx(0), tmp(ibin) ;
-    while(arg=(RooAbsArg*)_iterator->Next()) {
+    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-      arglv->setPlotBin(idx) ;
+      arglv->setFitBin(idx) ;
     }
     Fill() ;
   }
@@ -138,14 +138,29 @@ RooDataHist::~RooDataHist()
 Int_t RooDataHist::calcTreeIndex() const {
   // Calculate the master index corresponding to the current set of values in _var
   _iterator->Reset() ;
-  RooAbsArg* arg ;
+  RooAbsLValue* arg ;
   Int_t masterIdx(0), i(0) ;
-  while(arg=(RooAbsArg*)_iterator->Next()) {
-    masterIdx += _idxMult[i++]*arg->getPlotBin() ;
+  while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+    masterIdx += _idxMult[i++]*arg->getFitBin() ;
   }
   return masterIdx ;
 }
 
+
+void RooDataHist::dump2() 
+{
+  Int_t i ;
+  for (i=0 ; i<_arrSize ; i++) {
+    cout << "wgt[" << i << "] = " << _wgt[i] << endl ;
+  }
+}
+
+
+Double_t RooDataHist::weight(const RooArgSet& bin) 
+{
+  _vars = bin ;
+  return _wgt[calcTreeIndex()] ;
+}
 
 
 
@@ -189,6 +204,91 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
     delete tmp ;
   } 
 }
+
+
+
+Double_t RooDataHist::sum(Bool_t correctForBinSize) const 
+{
+  Double_t binVolume(1) ;
+  
+  if (correctForBinSize) {
+    _iterator->Reset() ;
+    RooAbsLValue* arg ;
+    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+      if (!dynamic_cast<RooAbsReal*>(arg)) continue ;
+      binVolume *= arg->getFitBinWidth() ;
+    }
+  }
+
+  Int_t i ;
+  Double_t total(0) ;
+  for (i=0 ; i<_arrSize ; i++) {
+    total += _wgt[i] ;
+  }
+
+  return total*binVolume ;
+}
+
+
+
+
+Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize)
+{
+  _vars = sliceSet ;
+
+  Double_t binVolume(1) ;
+  TIterator* ssIter = sumSet.createIterator() ;
+  
+  // Calculate binVolume if correction for that is requested
+  RooAbsLValue* rArg ;
+  if (correctForBinSize) {
+    while(rArg=dynamic_cast<RooAbsLValue*>(ssIter->Next())) {
+      if (!dynamic_cast<RooAbsReal*>(rArg)) continue ;
+      binVolume *= rArg->getFitBinWidth() ;
+    }
+  }
+  
+  // Calculate mask and refence plot bins for non-iterating variables
+  RooAbsArg* arg ;
+  Bool_t* mask = new Bool_t[_vars.getSize()] ;
+  Int_t*  refBin = new Int_t[_vars.getSize()] ;
+  Int_t i(0) ;
+  _iterator->Reset() ;
+  while(arg=(RooAbsArg*)_iterator->Next()) {
+    if (sumSet.find(arg->GetName())) {
+      mask[i] = kFALSE ;
+    } else {
+      mask[i] = kTRUE ;
+      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getFitBin() ;
+    }
+    i++ ;
+  }
+    
+  // Loop over entire data set, skipping masked entries
+  Double_t total(0) ;
+  Int_t ibin ;
+  for (ibin=0 ; ibin<_arrSize ; ibin++) {
+
+    Int_t idx(0), tmp(ibin), ivar(0) ;
+    Bool_t skip(kFALSE) ;
+
+    // Check if this bin belongs in selected slice
+    _iterator->Reset() ;
+    while(!skip && (arg=(RooAbsArg*)_iterator->Next())) {
+      idx  = tmp / _idxMult[ivar] ;
+      tmp -= idx*_idxMult[ivar] ;
+      if (mask[ivar] && idx!=refBin[ivar]) skip=kTRUE ;
+      ivar++ ;
+    }
+    
+    if (!skip) total += _wgt[ibin] ;
+  }
+  delete ssIter ;
+
+  return total*binVolume ;
+}
+
+
 
 
 Int_t RooDataHist::numEntries(Bool_t useWeights) const 

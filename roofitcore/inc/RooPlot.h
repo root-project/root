@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.13 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.14 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -52,7 +52,8 @@ public:
 
   // data member get/set methods
   inline RooAbsReal *getPlotVar() const { return _plotVarClone; }
-  inline Double_t getFitRangeNorm() const { return _normValue; }
+  inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
+  inline Double_t getFitRangeBinW() const { return _normBinWidth; }
   inline Double_t getPadFactor() const { return _padFactor; }
   inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
   void updateNormVars(const RooArgSet &vars);
@@ -77,14 +78,17 @@ protected:
   TString histName() const ; 
   TString caller(const char *method) const;
   void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
-  void updateFitRangeNorm(Double_t value);
+  void updateFitRangeNorm(const TH1* hist);
+  void updateFitRangeNorm(const RooPlotable* rp);
 
   RooList _items;            // A list of the items we contain.
   Double_t _padFactor;       // Scale our y-axis to _padFactor of our maximum contents.
   RooAbsReal *_plotVarClone; // A clone of the variable we are plotting.
   RooArgSet *_plotVarSet;    // A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
-  Double_t _normValue;       // Fit-range normalization to use for plotting PDFs
+  Double_t _normNumEvts;     // Number of events in histogram (for normalization)
+  Double_t _normBinWidth;    // Histogram bin width (for normalization)
+  //Double_t _normValue;       // Fit-range normalization to use for plotting PDFs
   TIterator *_iterator;      //! non-persistent
 
   RooPlot(const RooPlot& other); // object cannot be copied

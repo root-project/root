@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.18 2001/09/20 23:17:31 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.19 2001/09/24 23:05:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.18 2001/09/20 23:17:31 david Exp $";
+"$Id: RooCurve.cc,v 1.19 2001/09/24 23:05:59 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -234,7 +234,11 @@ void RooCurve::addPoint(Double_t x, Double_t y) {
   SetPoint(next, x, y);
 }
 
-Double_t RooCurve::getFitRangeNorm() const {
+Double_t RooCurve::getFitRangeNEvt() const {
+  return 1;
+}
+
+Double_t RooCurve::getFitRangeBinW() const {
   return 1;
 }
 
