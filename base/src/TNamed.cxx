@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.5 2001/01/12 08:27:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.6 2001/02/13 07:54:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -60,13 +60,13 @@ TNamed& TNamed::operator=(const TNamed& rhs)
 TObject *TNamed::Clone(const char *newname) const
 {
    // Make a clone of an object using the Streamer facility.
-   // if newname is specified, this will be the name of the new object
-   
+   // If newname is specified, this will be the name of the new object
+
    TNamed *named = (TNamed*)TObject::Clone(newname);
-   if (strlen(newname)) named->SetName(newname);
+   if (newname && strlen(newname)) named->SetName(newname);
    return named;
 }
-   
+
 //______________________________________________________________________________
 Int_t TNamed::Compare(const TObject *obj) const
 {

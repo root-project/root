@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.16 2001/02/08 11:56:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.17 2001/02/13 07:52:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -279,22 +279,27 @@ const char *TObject::ClassName() const
 TObject *TObject::Clone(const char *) const
 {
    // Make a clone of an object using the Streamer facility.
-   // if the object derives from TNamed, this function is called
+   // If the object derives from TNamed, this function is called
    // by TNamed::Clone. TNamed::Clone uses the optional argument to set
    // a new name to the new created object.
-      
+
+   // if no default ctor return immediately (error issued by New())
+   TObject *newobj = (TObject *)IsA()->New();
+   if (!newobj) return 0;
+
    //create a buffer where the object will be streamed
    TFile *filsav = gFile;
    gFile = 0;
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
+   buffer->MapObject(this);  //register obj in map to handle self reference
    ((TObject*)this)->Streamer(*buffer);
-   
+
    // read new object from buffer
    buffer->SetReadMode();
    buffer->ResetMap();
    buffer->SetBufferOffset(0);
-   TObject *newobj = (TObject *)IsA()->New();
+   buffer->MapObject(newobj);  //register obj in map to handle self reference
    newobj->Streamer(*buffer);
    gFile = filsav;
 
@@ -650,7 +655,7 @@ void TObject::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TObject::Pop() 
+void TObject::Pop()
 {
    // Pop on object drawn in a pad to the top of the display list. I.e. it
    // will be drawn last and on top of all other primitives.
