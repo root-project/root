@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.21 2004/07/20 09:40:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.22 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -37,7 +37,8 @@ class TVirtualTreePlayer : public TObject {
 
 
 private:
-   static TClass   *fgPlayer; //Pointer to Tree player
+   static TClass              *fgPlayer;  //Pointer to class of Tree player
+   static TVirtualTreePlayer  *fgCurrent; //Pointer to current Tree player
 
 public:
     TVirtualTreePlayer() { }
@@ -86,6 +87,7 @@ public:
                             ,Long64_t nentries, Long64_t firstentry) = 0;
     virtual void           UpdateFormulaLeaves() = 0;
 
+   static  TVirtualTreePlayer *GetCurrentPlayer();
    static  TVirtualTreePlayer *TreePlayer(TTree *obj);
    static void        SetPlayer(const char *player);
 

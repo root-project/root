@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.2 2002/07/16 17:20:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.3 2002/09/19 13:54:58 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -13,9 +13,11 @@
 #include "TVirtualTreePlayer.h"
 #include "TPluginManager.h"
 
-TClass  *TVirtualTreePlayer::fgPlayer = 0;
+TClass              *TVirtualTreePlayer::fgPlayer  = 0;
+TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;
 
 ClassImp(TVirtualTreePlayer)
+
 
 //______________________________________________________________________________
 TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
@@ -40,7 +42,16 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    //create an instance of the Tree player
    TVirtualTreePlayer *p = (TVirtualTreePlayer*)fgPlayer->New();
    if (p) p->SetTree(obj);
+   fgCurrent = p;
    return p;
+}
+
+//______________________________________________________________________________
+TVirtualTreePlayer *TVirtualTreePlayer::GetCurrentPlayer()
+{
+   // Static function: return the current player (if any)
+   
+   return fgCurrent;
 }
 
 //______________________________________________________________________________
