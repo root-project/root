@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.12 2002/04/26 10:23:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.13 2002/06/21 06:57:27 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -89,6 +89,26 @@ THStack::~THStack()
 }
 
 //______________________________________________________________________________
+THStack::THStack(const THStack &hstack)
+{
+// THStack copy constructor
+   
+   fHistogram = 0;
+   fMaximum = hstack.fMaximum;
+   fMinimum = hstack.fMinimum;
+   fStack = 0;
+   fHists = 0;
+   fName  = hstack.fName;
+   fTitle = hstack.fTitle;
+   if (hstack.GetHists() == 0) return;
+   TIter next(hstack.GetHists());
+   TH1 *h;
+   while ((h=(TH1*)next())) {
+      Add(h);
+   }
+}
+
+//______________________________________________________________________________
 void THStack::Add(TH1 *h1)
 {
    // add a new histogram to the list
@@ -101,6 +121,7 @@ void THStack::Add(TH1 *h1)
    }
    if (!fHists) fHists = new TObjArray();
    fHists->Add(h1);
+   Modified(); //invalidate stack
 }
 
 //______________________________________________________________________________
