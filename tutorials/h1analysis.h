@@ -335,7 +335,11 @@ class h1analysis : public TSelector {
    void    SlaveBegin(TTree *tree);
    void    Init(TTree *tree);
    Bool_t  Notify();
+#ifdef __CINT__
    Bool_t  Process(Int_t entry);
+#else
+   Bool_t  Process(Long64_t entry);
+#endif
    void    SetOption(const char *option) { fOption = option; }
    void    SetObject(TObject *obj) { fObject = obj; }
    void    SetInputList(TList *input) {fInput = input;}
@@ -351,7 +355,7 @@ class h1analysis : public TSelector {
 
 
 //_____________________________________________________________________
-h1analysis::h1analysis(TTree *tree)
+h1analysis::h1analysis(TTree * /*tree*/)
 {
 // Build the chain of Root files
 //

@@ -134,7 +134,7 @@ Double_t fdm2(Double_t *xx, Double_t *par)
 }
 
 //_____________________________________________________________________
-void h1analysis::Begin(TTree *tree)
+void h1analysis::Begin(TTree * /*tree*/)
 {
 // function called before starting the event loop
 //  -it performs some cleanup
@@ -184,7 +184,11 @@ void h1analysis::SlaveBegin(TTree *tree)
 }
 
 //_____________________________________________________________________
+#ifdef __CINT__
 Bool_t h1analysis::Process(Int_t entry)
+#else
+Bool_t h1analysis::Process(Long64_t entry)
+#endif
 {
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
