@@ -13,9 +13,13 @@ NOOPT         =
 endif
 
 ifeq (exception,$(findstring exception,$(ROOTBUILD)))
-EXCEPTION     = --exceptions
+EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
 else
 EXCEPTION     = --no_exceptions
+endif
+
+ifneq ($(OSTHREADLIB),)
+CXXOPT        += --thread_safe
 endif
 
 # Compiler:
@@ -32,6 +36,10 @@ CINTCXXFLAGS  = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
+
+ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
+endif
 
 # Linker:
 LD            = KCC

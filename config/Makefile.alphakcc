@@ -21,8 +21,7 @@ EXCEPTION     = --no_exceptions
 endif
 
 ifneq ($(OSTHREADLIB),)
-CXXOPT        += --thread_safe -g3
-OPT           += -g
+CXXOPT        += --thread_safe
 endif
 
 # Compiler:

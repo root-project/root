@@ -24,15 +24,14 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifeq (n32,$(findstring n32,$(ROOTBUILD)))
+ifeq ($(O32),)
 ABI           = -n32
 else
 ABI           = -32 -mips2
 endif
 
 ifneq ($(OSTHREADLIB),)
-CXXOPT        += --thread_safe -g
-OPT           += -g
+CXXOPT        += --thread_safe
 endif
 
 # Compiler:
@@ -41,15 +40,13 @@ CC            = cc
 CXXFLAGS      = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
                 --diag_suppress 837 $(CXXOPT) -DSGI_REL=$(SGI_REL) \
-                $(EXTRA_CXXFLAGS) \
-
+                $(EXTRA_CXXFLAGS)
 CFLAGS        = $(ABI) -signed $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
                 --diag_suppress 837 -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(CXXOPT) \
                 --diag_suppress 426 $(EXTRA_CXXFLAGS)
-
 CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
