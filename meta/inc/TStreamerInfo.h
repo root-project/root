@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.40 2003/04/18 16:42:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.41 2003/09/12 11:09:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -52,6 +52,7 @@ private:
    Bool_t            fOptimized;      //! true if has been optimized
    TClass           *fClass;          //!pointer to class
    TObjArray        *fElements;       //Array of TStreamerElements
+   Bool_t            fIsBuilt;        //! true if the TStreamerInfo has been 'built'
 
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
    static  Bool_t    fgCanDelete;     //True if ReadBuffer can delete object
@@ -107,6 +108,7 @@ public:
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   Bool_t              IsBuilt() const { return fIsBuilt; }
    Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
    Int_t               New(const char *p);

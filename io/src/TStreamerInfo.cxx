@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.176 2003/09/12 11:09:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.177 2003/09/12 19:00:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -63,6 +63,7 @@ TStreamerInfo::TStreamerInfo()
    fSize     = 0;
    fClassVersion = 0;
    fOptimized = kFALSE;
+   fIsBuilt  = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -85,6 +86,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fNdata    = 0;
    fSize     = 0;
    fOptimized = kFALSE;
+   fIsBuilt  = kFALSE;
    fClassVersion = fClass->GetClassVersion();
 
    if (info) BuildUserInfo(info);
@@ -115,6 +117,9 @@ void TStreamerInfo::Build()
    // Build the I/O data structure for the current class version
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
+
+   // This is used to avoid unwanted recursive call to Build
+   fIsBuilt = kTRUE;
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
    //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
@@ -468,6 +473,9 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+
+   // This is used to avoid unwanted recursive call to Build
+   fIsBuilt = kTRUE;
 
    fClass->BuildRealData();
 
@@ -1047,7 +1055,17 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
 
    TObjArray *sinfos = cl->GetStreamerInfos();
    TStreamerInfo *info = (TStreamerInfo *)sinfos->At(cl->GetClassVersion());
-   if (!info) info = cl->GetStreamerInfo();
+
+   if (!info || !info->IsBuilt()) {
+      // Even if the streamerInfo exist, it could still need to be 'build'
+      // It is important to figure this out, because
+      //   a) if it is not build, we need to build
+      //   b) if is build, we should not build it (or we could end up in an
+      //      infinite loop, if the element and its counter are in the same
+      //      class!
+      
+      info = cl->GetStreamerInfo();
+   } 
    if (!info) return 0;
    TStreamerElement *element = (TStreamerElement *)info->fElements->FindObject(countName);
    if (!element) return 0;
