@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.42 2003/07/16 06:52:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.43 2003/07/16 19:24:03 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -277,7 +277,6 @@ void TMatrix::ResizeTo(Int_t nrows, Int_t ncols)
 
       for (Int_t i = 0; i < ncols_copy; i++) {
          memcpy(fIndex[i],index_old[i],nrows_copy*sizeof(Real_t));
-         delete [] index_old[i];
       }
 
       if (ncols_old != 1) delete [] index_old;
@@ -335,8 +334,7 @@ void TMatrix::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_up
          }
       }
 
-     if (ncols_old != 1)
-        delete [] index_old;
+     if (ncols_old != 1) delete [] index_old;
      delete [] elements_old;
    } else {
       Allocate(new_nrows, new_ncols, row_lwb, col_lwb);
