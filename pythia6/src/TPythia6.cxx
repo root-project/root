@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.11 2004/02/11 13:23:30 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.12 2004/02/12 13:46:53 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,10 +508,10 @@ void TPythia6::Pyname(int kf, char* name) {
    
    pyname(&kf,name,15);
 				// cut trailing blanks to get C string
-
-  for (int i=15; (i>=0) && (name[i] != ' '); i--) {
-    name[i] = 0;
-  }
+ name[15] = 0;
+  //for (int i=15; (i>=0) && (name[i] == ' '); i--) {
+  //  name[i] = 0;
+  // }
 }
 
 double TPythia6::Pyr(int idummy) {
