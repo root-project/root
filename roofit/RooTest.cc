@@ -2,6 +2,7 @@
 #include <iostream.h>
 #include <fstream.h>
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TMinuit.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFormulaVar.hh"
@@ -34,6 +35,7 @@
 
 main(int argc, char **argv) {
   TROOT root("root", "root"); // initialize ROOT
+  TApplication app("TAppTest",&argc,argv) ;
 
   RooArgSet
     *mixVars, *splitPars, *mbsVars ;
@@ -69,7 +71,7 @@ main(int argc, char **argv) {
   RooAbsPdf* k1 ;
   RooFitContext* ck1, *sig ;
   
-  RooTrace::level(4) ;
+  RooTrace::active(0) ;
   
   //--- Constants ---
   zero  = new RooRealVar("zero","zero",0.0) ;
@@ -104,7 +106,7 @@ main(int argc, char **argv) {
   mixProb->setPlotRange(-1.01,1.01) ;
 
   mixState_func = new RooThresholdCategory("mixState","B0-B0bar Mixing State",*mixProb,"Mixed",-1) ;
-  mixState_func->addThreshold(0.,"Unmixed",1) ;  
+  mixState_func->addThreshold(0.,"Unmixed",+1) ;  
 
   tagCat_func = new RooMappedCategory("tagCat","Condensed Tagging Category",*tagCatRaw,"Lep") ; 
   tagCat_func->map("El*"        ,"Lep") ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.6 2001/07/31 05:58:11 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.7 2001/08/02 21:40:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -36,8 +36,6 @@ public:
 
 protected:
 
-  RooUnblindCPAsymVar& operator=(const RooUnblindCPAsymVar& other) { return *this ; } ;
-  
   // Only PDFs can access the unblinded values
   friend class RooAbsPdf ;
   
