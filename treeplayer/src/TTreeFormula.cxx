@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.135 2004/01/10 10:52:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.136 2004/01/13 18:46:39 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1418,6 +1418,7 @@ TTreeFormula::TTreeFormula(): TFormula()
    Int_t j,k;
    for (j=0; j<kMAXCODES; j++) {
       fNdimensions[j] = 0;
+      fCodes[j] = 0;
       fNdata[j] = 1;
       fHasMultipleVarDim[j] = kFALSE;
       for (k = 0; k<kMAXFORMDIM; k++) {
@@ -1450,6 +1451,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    for (j=0; j<kMAXCODES; j++) {
       fNdimensions[j] = 0;
       fLookupType[j] = kDirect;
+      fCodes[j] = 0;
       fNdata[j] = 1;
       fHasMultipleVarDim[j] = kFALSE;
       for (k = 0; k<kMAXFORMDIM; k++) {

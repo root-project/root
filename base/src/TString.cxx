@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.24 2004/01/29 23:08:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.23 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TError.h"
 #include "Bytes.h"
 #include "TClass.h"
+#include <string>
 
 // Amount to shift hash values to avoid clustering
 
@@ -276,6 +277,16 @@ TString::TString(const char *cs)
 }
 
 //______________________________________________________________________________
+TString::TString(const std::string &s)
+{
+   // Create TString and initialize it with string cs.
+
+   Ssiz_t n = s.length();
+   fData = TStringRef::GetRep(n, n)->Data();
+   memcpy(fData, s.c_str(), n);
+}
+
+//______________________________________________________________________________
 TString::TString(const char *cs, Ssiz_t n)
 {
    // Create TString and initialize it with the first n characters of cs.
@@ -346,6 +357,20 @@ TString& TString::operator=(const char *cs)
       return *this;
    }
    return Replace(0, Length(), cs, strlen(cs));
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(const std::string &s)
+{
+   // Assign std::string s to TString.
+
+   if (s.length()==0) {
+      Pref()->UnLink();
+      gNullStringRef->AddReference();
+      fData = gNullStringRef->Data();
+      return *this;
+   }
+   return Replace(0, Length(), s.c_str(), s.length());
 }
 
 //______________________________________________________________________________

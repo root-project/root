@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.65 2004/01/29 23:08:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.66 2004/01/30 08:12:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TFolder.h"
 #include "TRef.h"
 #include "Api.h"
+#include "TInterpreter.h"
 
 const Int_t kMaxLen = 1024;
 static char gIncludeName[kMaxLen];
@@ -84,7 +85,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fNewType     = fType;
    fArrayDim    = 0;
    fArrayLength = 0;
-   fTypeName    = typeName; 
+   fTypeName    = TClassEdit::ResolveTypedef(typeName);
    fStreamer    = 0;
    fMethod      = 0;
    fClassObject = (TClass*)(-1);
@@ -279,7 +280,7 @@ void TStreamerElement::ls(Option_t *) const
 {
    sprintf(gIncludeName,GetTypeName());
    if (IsaPointer() && !fTypeName.Contains("*")) strcat(gIncludeName,"*");
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",gIncludeName,GetFullName(),fOffset,fType,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d %-20s\n",gIncludeName,GetFullName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
@@ -448,7 +449,7 @@ const char *TStreamerBase::GetInclude() const
 //______________________________________________________________________________
 void TStreamerBase::ls(Option_t *) const
 {
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",GetFullName(),GetTypeName(),fOffset,fType,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d %-20s\n",GetFullName(),GetTypeName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
@@ -891,7 +892,6 @@ TStreamerObjectAny::TStreamerObjectAny(const char *name, const char *title, Int_
         : TStreamerElement(name,title,offset,TStreamerInfo::kAny,typeName)
 {
    // Create a TStreamerObjectAny object.
-
    Init();
 }
 
@@ -1218,6 +1218,15 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    
    const char *t = trueType;
    if (!t || !*t) t = typeName;
+
+   fTypeName = TClassEdit::ShortType(fTypeName,TClassEdit::kDropStlDefault).c_str();
+
+   if (name==typeName /* intentional pointer comparison */
+       || strcmp(name,typeName)==0) {
+      // We have a base class.
+      fName = fTypeName;
+   }
+
    Int_t nch = strlen(t);
    char *s = new char[nch+1];
    strcpy(s,t);
@@ -1292,7 +1301,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       }
    }
    delete [] s;
-   
+
    if (TStreamerSTL::IsaPointer()) fType = TStreamerInfo::kSTLp;
 }
 
@@ -1364,7 +1373,7 @@ void TStreamerSTL::ls(Option_t *) const
       sprintf(cdim,"[%d]",fMaxIndex[i]);
       strcat(name,cdim);
    }
-   printf("  %-14s%-15s offset=%3d type=%2d ,stl=%d, ctype=%d, %-20s",GetTypeName(),name,fOffset,fType,fSTLtype,fCtype,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d ,stl=%d, ctype=%d, %-20s",GetTypeName(),name,fOffset,fType,fSTLtype,fCtype,GetTitle());
    printf("\n");
 }
 

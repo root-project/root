@@ -478,6 +478,25 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
          case kOffsetL + kTString:
          case kOffsetL + kTObject:
          case kOffsetL + kTNamed:
+         {
+            //  Backward compatibility. Some TStreamerElement's where without
+            //  Streamer but were not removed from element list
+            UInt_t start,count;
+            Version_t v = b.ReadVersion(&start, &count, cle);
+            if (fOldVersion<3){   // case of old TStreamerInfo
+               if (count<= 0    || v   !=  fOldVersion) {
+                  b.SetBufferOffset(start);
+                  continue;
+               }
+            }
+            DOLOOP {
+               b.ReadFastArray((void*)(arr[k]+ioffset),cle,fLength[i],pstreamer);
+            }
+            b.CheckByteCount(start,count,aElement->GetFullName());
+            continue;
+         }
+
+
          case kStreamer:{
             //  Backward compatibility. Some TStreamerElement's where without
             //  Streamer but were not removed from element list

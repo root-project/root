@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.64 2004/01/30 07:07:33 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.65 2004/01/30 08:12:56 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -123,6 +123,7 @@
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
@@ -139,6 +140,10 @@
 #   define NEED_STRING
 #   define NEED_SIGJMP
 #   define R__SEEK64
+#   if !defined(__KCC)
+#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
+#   endif
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   ifdef IRIX64
 #      define R__SGI64
 #   endif
@@ -284,6 +289,9 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
+#   if __GNUC__ >= 3 
+#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
@@ -311,6 +319,7 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
@@ -376,6 +385,7 @@
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if _MSC_VER >= 1200
 #     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
 #   endif

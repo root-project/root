@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.76 2004/01/30 07:07:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.77 2004/01/30 08:12:56 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TGlobal.h"
 #include "TDataType.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMethod.h"
@@ -42,6 +43,10 @@
 #    undef GetClassInfo
 #  endif
 #endif
+
+#include <vector>
+#include <string>
+using namespace std;
 
 R__EXTERN int optind;
 
@@ -949,7 +954,32 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
    // the TClass for class "item".
 
    if (gROOT && gROOT->GetListOfClasses()) {
-      TClass *cl = gROOT->GetClass(item, kFALSE);
+
+      Bool_t load = kFALSE;
+
+      if (strchr(item,'<')) {
+         // We have a template which may have duplicates.
+
+         TIter next( gROOT->GetListOfClasses() );
+         TClass *cl;
+         
+         TString resolvedItem(
+            TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
+                                       ,kTRUE) );
+         TString resolved;
+         while ( (cl = (TClass*)next()) ) {
+            resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
+                                                                        TClassEdit::kDropStlDefault).c_str()
+                                                  ,kTRUE);
+            if (resolved==resolvedItem) {
+               // we found at least one equivalent.
+               // let's force a reload
+               load = kTRUE;
+            }
+         }
+      }
+      
+      TClass *cl = gROOT->GetClass(item, load);
       if (cl) {
          G__ClassInfo *info = cl->GetClassInfo();
          if (info && info->Tagnum() != tagnum) {
