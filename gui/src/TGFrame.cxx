@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.77 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -899,10 +899,12 @@ void TGCompositeFrame::SetLayoutManager(TGLayoutManager *l)
 //______________________________________________________________________________
 void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 {
-   //  set broken layout. No Layout method is called
+   // Set broken layout. No Layout method is called.
 
    fLayoutBroken = on;
-   if (!fLayoutBroken) Resize();
+   if (!fLayoutBroken) {
+      Layout();
+   }
 }
 
 //______________________________________________________________________________
