@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.49 2002/01/28 17:01:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.50 2002/02/01 07:14:01 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -514,10 +514,9 @@ void TFile::Close(Option_t *)
    TProcessID *pid;
    while ((pid = (TProcessID*)next())) {
       if (!pid->DecrementCount()) {
-         fProcessIDs->Remove(pid);
-         if (pid != TProcessID::GetProcessID(0)) delete pid;
+         if (pid != TProcessID::GetSessionProcessID()) delete pid;
       }
-   }
+  }
 
    gROOT->GetListOfFiles()->Remove(this);
 
