@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.49 2001/12/02 08:13:00 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.50 2002/01/25 00:23:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -88,6 +88,7 @@ public:
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
 			      Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
   virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds") ;
+  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -133,7 +134,6 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
-  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
 
   friend class RooExtendPdf ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
