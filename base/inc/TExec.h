@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -38,7 +38,6 @@ public:
         virtual void     Exec(const char *command="");
         virtual void     Paint(Option_t *option="");
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetAction(const char *action) {SetTitle(action);}
 
         ClassDef(TExec,1)  //To execute a CINT command
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.15 2002/01/23 22:48:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.7 2000/11/30 10:52:13 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -43,9 +43,9 @@ Long_t TMath::Sqrt(Long_t x)
 }
 
 //______________________________________________________________________________
-Long_t TMath::Hypot(Long_t x, Long_t y)
+Long_t TMath::Hypot(Long_t x, Long_t y)     // return sqrt(px*px + py*py);
 {
-   return (Long_t) (hypot((Double_t)x, (Double_t)y) + 0.5);
+   return (Long_t) (hypot(x, y) + 0.5);
 }
 
 //______________________________________________________________________________
@@ -193,8 +193,7 @@ Double_t *TMath::Cross(Double_t v1[3],Double_t v2[3],Double_t out[3])
 Double_t TMath::Erf(Double_t x)
 {
    // Computation of the error function erf(x).
-   // Erf(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between 0 and x
-
+   //
    //--- NvE 14-nov-1998 UU-SAP Utrecht
 
    return (1-Erfc(x));
@@ -204,7 +203,6 @@ Double_t TMath::Erf(Double_t x)
 Double_t TMath::Erfc(Double_t x)
 {
    // Computation of the complementary error function erfc(x).
-   // Erfc(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between x and infinity
    //
    // The algorithm is based on a Chebyshev fit as denoted in
    // Numerical Recipes 2nd ed. on p. 214 (W.H.Press et al.).
@@ -232,90 +230,6 @@ Double_t TMath::Erfc(Double_t x)
    if (x < 0) v = 2-v; // erfc(-x)=2-erfc(x)
 
    return v;
-}
-
-//______________________________________________________________________________
-Double_t TMath::Freq(Double_t x)
-{
-   // Computation of the normal frequency function freq(x).
-   // Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x
-   //
-   // translated from CERNLIB C300 by Rene Brun
-
-   const Double_t C1 = 0.56418958354775629;
-   const Double_t W2 = 1.41421356237309505;
-
-   const Double_t p10 = 2.4266795523053175e+2,  q10 = 2.1505887586986120e+2,
-                  p11 = 2.1979261618294152e+1,  q11 = 9.1164905404514901e+1,
-                  p12 = 6.9963834886191355e+0,  q12 = 1.5082797630407787e+1,
-                  p13 =-3.5609843701815385e-2,  q13 = 1;
-
-   const Double_t p20 = 3.00459261020161601e+2, q20 = 3.00459260956983293e+2,
-                  p21 = 4.51918953711872942e+2, q21 = 7.90950925327898027e+2,
-                  p22 = 3.39320816734343687e+2, q22 = 9.31354094850609621e+2,
-                  p23 = 1.52989285046940404e+2, q23 = 6.38980264465631167e+2,
-                  p24 = 4.31622272220567353e+1, q24 = 2.77585444743987643e+2,
-                  p25 = 7.21175825088309366e+0, q25 = 7.70001529352294730e+1,
-                  p26 = 5.64195517478973971e-1, q26 = 1.27827273196294235e+1,
-                  p27 =-1.36864857382716707e-7, q27 = 1;
-
-   const Double_t p30 =-2.99610707703542174e-3, q30 = 1.06209230528467918e-2,
-                  p31 =-4.94730910623250734e-2, q31 = 1.91308926107829841e-1,
-                  p32 =-2.26956593539686930e-1, q32 = 1.05167510706793207e+0,
-                  p33 =-2.78661308609647788e-1, q33 = 1.98733201817135256e+0,
-                  p34 =-2.23192459734184686e-2, q34 = 1;
-
-   Double_t v  = TMath::Abs(x)/W2;
-   Double_t vv = v*v;
-   Double_t ap, aq, h, hc, y;
-   if (v < 0.5) {
-      y=vv;
-      ap=p13;
-      aq=q13;
-      ap = p12 +y*ap;
-      ap = p11 +y*ap;
-      ap = p10 +y*ap;
-      aq = q12 +y*aq;
-      aq = q11 +y*aq;
-      aq = q10 +y*aq;
-      h  = v*ap/aq;
-      hc = 1-h;
-   } else if (v < 4) {
-      ap = p27;
-      aq = q27;
-      ap = p26 +v*ap;
-      ap = p25 +v*ap;
-      ap = p24 +v*ap;
-      ap = p23 +v*ap;
-      ap = p22 +v*ap;
-      ap = p21 +v*ap;
-      ap = p20 +v*ap;
-      aq = q26 +v*aq;
-      aq = q25 +v*aq;
-      aq = q24 +v*aq;
-      aq = q23 +v*aq;
-      aq = q22 +v*aq;
-      aq = q21 +v*aq;
-      aq = q20 +v*aq;
-      hc = TMath::Exp(-vv)*ap/aq;
-      h  = 1-hc;
-   } else {
-      y  = 1/vv;
-      ap = p34;
-      aq = q34;
-      ap = p33 +y*ap;
-      ap = p32 +y*ap;
-      ap = p31 +y*ap;
-      ap = p30 +y*ap;
-      aq = q33 +y*aq;
-      aq = q32 +y*aq;
-      aq = q31 +y*aq;
-      aq = q30 +y*aq;
-      hc = TMath::Exp(-vv)*(C1+y*ap/aq)/v;
-      h  = 1-hc;
-   }
-   if (x > 0) return 0.5 +0.5*h;
-   else return 0.5*hc;
 }
 
 //______________________________________________________________________________
@@ -434,9 +348,9 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
+Double_t TMath::Landau(Double_t x, Double_t mean, Double_t sigma)
 {
-   // The LANDAU function with mpv(most probable value) and sigma.
+   // The LANDAU function with mean and sigma.
    // This function has been adapted from the CERNLIB routine G110 denlan.
 
    Double_t p1[5] = {0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253};
@@ -462,7 +376,7 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma)
    Double_t a2[2] = {-1.845568670,-4.284640743};
 
    if (sigma <= 0) return 0;
-   Double_t v = (x-mpv)/sigma;
+   Double_t v = (x-mean)/sigma;
    Double_t u, ue, us, den;
    if (v < -5.5) {
       u   = TMath::Exp(v+1.0);
@@ -651,7 +565,7 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 
    // Gaussian approximation for large ndf
    Double_t q = Sqrt(2*chi2)-Sqrt(Double_t(2*ndf-1));
-   if (ndf > 30 && q > 5) {
+   if (ndf > 30 && q > 0) {
       Double_t v = 0.5*(1-Erf(q/Sqrt(2.)));
       return v;
    }
@@ -727,7 +641,7 @@ Double_t TMath::KolmogorovProb(Double_t z)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMin(Int_t n, const Short_t *a)
+Int_t TMath::LocMin(Int_t n, Short_t *a)
 {
    // Return index of array with the minimum element
    // If more than one element is minimum returns first found
@@ -745,7 +659,7 @@ Int_t TMath::LocMin(Int_t n, const Short_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMin(Int_t n, const Int_t *a)
+Int_t TMath::LocMin(Int_t n, Int_t *a)
 {
    // Return index of array with the minimum element
    // If more than one element is minimum returns first found
@@ -763,7 +677,7 @@ Int_t TMath::LocMin(Int_t n, const Int_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMin(Int_t n, const Float_t *a)
+Int_t TMath::LocMin(Int_t n, Float_t *a)
 {
    // Return index of array with the minimum element
    // If more than one element is minimum returns first found
@@ -781,7 +695,7 @@ Int_t TMath::LocMin(Int_t n, const Float_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMin(Int_t n, const Double_t *a)
+Int_t TMath::LocMin(Int_t n, Double_t *a)
 {
    // Return index of array with the minimum element
    // If more than one element is minimum returns first found
@@ -799,25 +713,7 @@ Int_t TMath::LocMin(Int_t n, const Double_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMin(Int_t n, const Long_t *a)
-{
-   // Return index of array with the minimum element
-   // If more than one element is minimum returns first found
-
-  if  (n <= 0) return -1;
-  Long_t xmin = a[0];
-  Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
-     if (xmin > a[i])  {
-         xmin = a[i];
-         loc = i;
-     }
-  }
-  return loc;
-}
-
-//______________________________________________________________________________
-Int_t TMath::LocMax(Int_t n, const Short_t *a)
+Int_t TMath::LocMax(Int_t n, Short_t *a)
 {
    // Return index of array with the maximum element
    // If more than one element is maximum returns first found
@@ -835,7 +731,7 @@ Int_t TMath::LocMax(Int_t n, const Short_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMax(Int_t n, const Int_t *a)
+Int_t TMath::LocMax(Int_t n, Int_t *a)
 {
    // Return index of array with the maximum element
    // If more than one element is maximum returns first found
@@ -853,7 +749,7 @@ Int_t TMath::LocMax(Int_t n, const Int_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMax(Int_t n, const Float_t *a)
+Int_t TMath::LocMax(Int_t n, Float_t *a)
 {
    // Return index of array with the maximum element
    // If more than one element is maximum returns first found
@@ -871,7 +767,7 @@ Int_t TMath::LocMax(Int_t n, const Float_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMax(Int_t n, const Double_t *a)
+Int_t TMath::LocMax(Int_t n, Double_t *a)
 {
    // Return index of array with the maximum element
    // If more than one element is maximum returns first found
@@ -889,25 +785,7 @@ Int_t TMath::LocMax(Int_t n, const Double_t *a)
 }
 
 //______________________________________________________________________________
-Int_t TMath::LocMax(Int_t n, const Long_t *a)
-{
-   // Return index of array with the maximum element
-   // If more than one element is maximum returns first found
-
-  if  (n <= 0) return -1;
-  Long_t xmax = a[0];
-  Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
-     if (xmax < a[i])  {
-         xmax = a[i];
-         loc = i;
-     }
-  }
-  return loc;
-}
-
-//______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Short_t *array, Short_t value)
+Int_t TMath::BinarySearch(Int_t n, Short_t *array, Short_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -928,7 +806,7 @@ Int_t TMath::BinarySearch(Int_t n, const Short_t *array, Short_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Short_t **array, Short_t value)
+Int_t TMath::BinarySearch(Int_t n, Short_t **array, Short_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -949,7 +827,7 @@ Int_t TMath::BinarySearch(Int_t n, const Short_t **array, Short_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Int_t *array, Int_t value)
+Int_t TMath::BinarySearch(Int_t n, Int_t *array, Int_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -970,7 +848,7 @@ Int_t TMath::BinarySearch(Int_t n, const Int_t *array, Int_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Int_t **array, Int_t value)
+Int_t TMath::BinarySearch(Int_t n, Int_t **array, Int_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -991,7 +869,7 @@ Int_t TMath::BinarySearch(Int_t n, const Int_t **array, Int_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Float_t *array, Float_t value)
+Int_t TMath::BinarySearch(Int_t n, Float_t *array, Float_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -1012,7 +890,7 @@ Int_t TMath::BinarySearch(Int_t n, const Float_t *array, Float_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Float_t **array, Float_t value)
+Int_t TMath::BinarySearch(Int_t n, Float_t **array, Float_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -1033,7 +911,7 @@ Int_t TMath::BinarySearch(Int_t n, const Float_t **array, Float_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Double_t *array, Double_t value)
+Int_t TMath::BinarySearch(Int_t n, Double_t *array, Double_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -1054,49 +932,7 @@ Int_t TMath::BinarySearch(Int_t n, const Double_t *array, Double_t value)
 }
 
 //______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Double_t **array, Double_t value)
-{
-   // Binary search in an array of n values to locate value
-   //
-   // Array is supposed  to be sorted prior to this call.
-   // If match is found, function returns position of element.
-   // If no match found, function gives nearest element smaller than value.
-
-   Int_t nabove, nbelow, middle;
-   nabove = n+1;
-   nbelow = 0;
-   while(nabove-nbelow > 1) {
-      middle = (nabove+nbelow)/2;
-      if (value == *array[middle-1]) return middle-1;
-      if (value  < *array[middle-1]) nabove = middle;
-      else                           nbelow = middle;
-   }
-   return nbelow-1;
-}
-
-//______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Long_t *array, Long_t value)
-{
-   // Binary search in an array of n values to locate value
-   //
-   // Array is supposed  to be sorted prior to this call.
-   // If match is found, function returns position of element.
-   // If no match found, function gives nearest element smaller than value.
-
-   Int_t nabove, nbelow, middle;
-   nabove = n+1;
-   nbelow = 0;
-   while(nabove-nbelow > 1) {
-      middle = (nabove+nbelow)/2;
-      if (value == array[middle-1]) return middle-1;
-      if (value  < array[middle-1]) nabove = middle;
-      else                          nbelow = middle;
-   }
-   return nbelow-1;
-}
-
-//______________________________________________________________________________
-Int_t TMath::BinarySearch(Int_t n, const Long_t **array, Long_t value)
+Int_t TMath::BinarySearch(Int_t n, Double_t **array, Double_t value)
 {
    // Binary search in an array of n values to locate value
    //
@@ -1117,7 +953,7 @@ Int_t TMath::BinarySearch(Int_t n, const Long_t **array, Long_t value)
 }
 
 //_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
+void TMath::Sort(Int_t n1, Short_t *a, Int_t *index, Bool_t down)
 {
    //  Sort the n1 elements of the Short_t array a.
    //  In output the array index contains the indices of the sorted array.
@@ -1183,7 +1019,7 @@ void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
 }
 
 //_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
+void TMath::Sort(Int_t n1, Int_t *a, Int_t *index, Bool_t down)
 {
    //  Sort the n1 elements of the Int_t array a.
    //  In output the array index contains the indices of the sorted array.
@@ -1249,7 +1085,7 @@ void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
 }
 
 //_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
+void TMath::Sort(Int_t n1, Float_t *a, Int_t *index, Bool_t down)
 {
    //  Sort the n1 elements of the Float_t array a.
    //  In output the array index contains the indices of the sorted array.
@@ -1315,7 +1151,7 @@ void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
 }
 
 //_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
+void TMath::Sort(Int_t n1, Double_t *a, Int_t *index, Bool_t down)
 {
    //  Sort the n1 elements of the Double_t array a.
    //  In output the array index contains the indices of the sorted array.
@@ -1328,72 +1164,6 @@ void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
    Double_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
-}
-
-//_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
-{
-   //  Sort the n1 elements of the Long_t array a.
-   //  In output the array index contains the indices of the sorted array.
-   //  If down is false sort in increasing order (default is decreasing order).
-   //  This is a translation of the CERNLIB routine sortzv (M101)
-   //  based on the quicksort algorithm.
-   //  NOTE that the array index must be created with a length >= n1
-   //  before calling this function.
-
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Long_t ai;
    n = n1;
    if (n <= 0) return;
    if (n == 1) {index[0] = 0; return;}
@@ -1627,7 +1397,7 @@ Double_t TMath::BesselI0(Double_t x)
     result = p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7)))));
  } else {
     y = 3.75/ax;
-    result = (TMath::Exp(ax)/TMath::Sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
+    result = (exp(ax)/sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
  }
  return result;
 }
@@ -1826,259 +1596,4 @@ Double_t TMath::BesselI(Int_t n,Double_t x)
  if ((x < 0) && (n%2 == 1)) result = -result;
 
  return result;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BesselJ0(Double_t x) {
-//Returns the Bessel function J0(x) for any real x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-
-       Double_t ax,z;
-       double xx,y,ans,ans1,ans2;
-
-       if ((ax=fabs(x)) < 8.0) {
-           y=x*x;
-           ans1=57568490574.0+y*(-13362590354.0+y*(651619640.7
-               +y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));
-           ans2=57568490411.0+y*(1029532985.0+y*(9494680.718
-               +y*(59272.64853+y*(267.8532712+y*1.0))));
-           ans=ans1/ans2;
-       } else {
-           z=8.0/ax;
-           y=z*z;
-           xx=ax-0.785398164;
-           ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-               +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-           ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-               +y*(-0.6911147651e-5+y*(0.7621095161e-6
-               -y*0.934935152e-7)));
-           ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-       }return ans;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BesselJ1(Double_t x) {
-//Returns the Bessel function J1(x) for any real x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-
-     Double_t ax,z;
-     Double_t xx,y,ans,ans1,ans2;
-
-     if ((ax=fabs(x)) < 8.0) {
-         y=x*x;
-         ans1=x*(72362614232.0+y*(-7895059235.0+y*(242396853.1
-             +y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));
-         ans2=144725228442.0+y*(2300535178.0+y*(18583304.74
-             +y*(99447.43394+y*(376.9991397+y*1.0))));
-         ans=ans1/ans2;
-     } else {
-         z=8.0/ax;
-         y=z*z;
-         xx=ax-2.356194491;
-         ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-             +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-         ans2=0.04687499995+y*(-0.2002690873e-3
-             +y*(0.8449199096e-5+y*(-0.88228987e-6
-             +y*0.105787412e-6)));
-         ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-         if (x < 0.0) ans = -ans;
-     }return ans;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BesselY0(Double_t x) {
-//Returns the Bessel function Y0(x) for positive x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-
-       Double_t z,xx,y,ans,ans1,ans2;
-
-       if (x < 8.0) { 
-           y=x*x;
-           ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6
-               +y*(10879881.29+y*(-86327.92757+y*228.4622733))));
-           ans2=40076544269.0+y*(745249964.8+y*(7189466.438
-               +y*(47447.26470+y*(226.1030244+y*1.0))));
-           ans=(ans1/ans2)+0.636619772*TMath::BesselJ0(x)*log(x);
-       } else {
-         z=8.0/x;
-         y=z*z;
-         xx=x-0.785398164;
-         ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-             +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-         ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-             +y*(-0.6911147651e-5+y*(0.7621095161e-6
-             +y*(-0.934945152e-7)))); 
-         ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-     }return ans;
-}
-
-//______________________________________________________________________________
-Double_t TMath::BesselY1(Double_t x) {
-//Returns the Bessel function Y1(x) for positive x.
-//
-// as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-
-     Double_t z,xx,y,ans,ans1,ans2;
-
-     if (x < 8.0) { 
-         y=x*x;
-         ans1=x*(-0.4900604943e13+y*(0.1275274390e13
-             +y*(-0.5153438139e11+y*(0.7349264551e9
-             +y*(-0.4237922726e7+y*0.8511937935e4)))));
-         ans2=0.2499580570e14+y*(0.4244419664e12
-             +y*(0.3733650367e10+y*(0.2245904002e8
-             +y*(0.1020426050e6+y*(0.3549632885e3+y)))));
-           ans=(ans1/ans2)+0.636619772*(TMath::BesselJ1(x)*log(x)-1.0/x);
-       } else {
-           z=8.0/x;
-           y=z*z;
-           xx=x-2.356194491;
-           ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-                 +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-           ans2=0.04687499995+y*(-0.2002690873e-3 
-                 +y*(0.8449199096e-5+y*(-0.88228987e-6
-                 +y*0.105787412e-6)));
-           ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-       }return ans;
-}
-
-//______________________________________________________________________________   
-Double_t TMath::Struve(Int_t n, Double_t x)
-{
-//   Struve Functions of Orders Zero and One 
-//
-//  n = 0; compute Struve function of order 0
-//  n = 1; compute Struve function of order 1
-//
-//  converted from CERNLIB M342 by Rene Brun
-
-    const Int_t n1 = 15;
-    const Int_t n2 = 25;
-    const Int_t n3 = 16;
-    const Int_t n4 = 22;
-    const Double_t c1[16] = { 1.00215845609911981, -1.63969292681309147,
-                              1.50236939618292819, -.72485115302121872,
-                               .18955327371093136, -.03067052022988,
-                               .00337561447375194, -2.6965014312602e-4,
-                              1.637461692612e-5,   -7.8244408508e-7,
-                              3.021593188e-8,      -9.6326645e-10,
-                              2.579337e-11,        -5.8854e-13,
-                              1.158e-14,           -2e-16 };
-    const Double_t c2[26] = {  .99283727576423943, -.00696891281138625,
-                              1.8205103787037e-4,  -1.063258252844e-5,
-                              9.8198294287e-7,     -1.2250645445e-7,
-                              1.894083312e-8,      -3.44358226e-9,
-                              7.1119102e-10,       -1.6288744e-10,
-                              4.065681e-11,        -1.091505e-11,
-                              3.12005e-12,         -9.4202e-13,
-                              2.9848e-13,          -9.872e-14,
-                              3.394e-14,           -1.208e-14,
-                              4.44e-15,            -1.68e-15,
-                              6.5e-16,             -2.6e-16,
-                              1.1e-16,             -4e-17,
-                              2e-17,               -1e-17 };
-    const Double_t c3[17] = { .5578891446481605,   -.11188325726569816,
-                             -.16337958125200939,   .32256932072405902,
-                             -.14581632367244242,   .03292677399374035,
-                             -.00460372142093573,  4.434706163314e-4,
-                             -3.142099529341e-5,   1.7123719938e-6,
-                             -7.416987005e-8,      2.61837671e-9,
-                             -7.685839e-11,        1.9067e-12,
-                             -4.052e-14,           7.5e-16,
-                             -1e-17 };
-    const Double_t c4[23] = { 1.00757647293865641,  .00750316051248257,
-                             -7.043933264519e-5,   2.66205393382e-6,
-                             -1.8841157753e-7,     1.949014958e-8,
-                             -2.6126199e-9,        4.236269e-10,
-                             -7.955156e-11,        1.679973e-11,
-                             -3.9072e-12,          9.8543e-13,
-                             -2.6636e-13,          7.645e-14,
-                             -2.313e-14,           7.33e-15,
-                             -2.42e-15,            8.3e-16,
-                             -3e-16,               1.1e-16,
-                             -4e-17,               2e-17,-1e-17 };
-
-    const Double_t c0  = 2/TMath::Pi();
-    const Double_t cc  = 2/(3*TMath::Pi());
-
-    Int_t i, i1;
-    Double_t alfa, h, r, y, b0, b1, b2;
-    Double_t v = TMath::Abs(x);
-
-    switch(n) {
-//___________________________________________________________
-       case 0: {
-           v = TMath::Abs(x);
-           if (v < 8) {
-	      y = v/8;
-	      h = 2*y*y -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n1; i >= 0; --i) {
-	         b0 = c1[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = y*(b0 - h*b2);
-           } else {
-	      r = 1/v;
-	      h = 128*r*r -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n2; i >= 0; --i) {
-	         b0 = c2[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = TMath::BesselY0(v) + r*c0*(b0 - h*b2);
-           }
-           if (x < 0)  h = -h;
-           return h;
-        }
-//___________________________________________________________     
-        case 1: {
-           if (v == 0) {
-	      h = 0;
-           } else if (v <= 0.3) {
-	      y = v*v;
-	      r = 1;
-	      h = 1;
-	      i1 = (Int_t)(-8. / TMath::Log10(v));
-	      for (i = 1; i <= i1; ++i) {
-	         h = -h*y / ((2*i+ 1)*(2*i + 3));
-	         r += h;
-	      }
-	      h = cc*y*r;
-           } else if (v < 8) {
-	      h = v*v/32 -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n3; i >= 0; --i) {
-	         b0 = c3[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = b0 - h*b2;
-           } else {
-	      h = 128/(v*v) -1;
-	      alfa = h + h;
-	      b1 = 0;
-	      b2 = 0;
-	      for (i = n4; i >= 0; --i) {
-	         b0 = c4[i] + alfa*b1 - b2;
-	         b2 = b1;
-	         b1 = b0;
-	      }
-	      h = TMath::BesselY1(v) + c0*(b0 - h*b2);
-           }
-           return h;
-       }
-    }
-    return 0;
 }

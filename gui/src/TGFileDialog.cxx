@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -18,12 +18,9 @@
 // files in the current directory and a combo box with which you can    //
 // select a filter (on file extensions).                                //
 // When creating a file dialog one passes a pointer to a TGFileInfo     //
-// object. In this object you can set the fFileTypes and fIniDir to     //
-// specify the list of file types for the filter combo box and the      //
-// initial directory. When the TGFileDialog ctor returns the selected   //
-// file name can be found in the TGFileInfo::fFilename field and the    //
-// selected directory in TGFileInfo::fIniDir. The fFilename and         //
-// fIniDir are deleted by the TGFileInfo dtor.                          //
+// object. When the TGFileDialog ctor returns the selected file name    //
+// can be found in the TGFileInfo::fFileName field. This string must    //
+// be freed by the users.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +39,6 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef GDK_WIN32
-#include <sys/stat.h>
-#endif
 
 enum {
    kIDF_CDUP,
@@ -57,45 +51,20 @@ enum {
    kIDF_CANCEL
 };
 
-static const char *gDefTypes[] = { "All files",     "*",
-                                   "ROOT files",    "*.root",
-                                   "ROOT macros",   "*.C",
-                                    0,               0 };
-
-static TGFileInfo gInfo;
-
 
 ClassImp(TGFileDialog)
 
 //______________________________________________________________________________
 TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                            EFileDialogMode dlg_type, TGFileInfo *file_info) :
-   TGTransientFrame(p, main, 10, 10, kVerticalFrame)
+   TGTransientFrame(p, main, 10, 10, kMainFrame | kVerticalFrame)
 {
    // Create a file selection dialog. Depending on the dlg_type it can be
    // used for opening or saving a file.
 
    int i;
 
-   if (!file_info) {
-      Error("TGFileDialog", "file_info argument not set");
-      fFileInfo = &gInfo;
-      if (fFileInfo->fIniDir) {
-         delete [] fFileInfo->fIniDir;
-         fFileInfo->fIniDir = 0;
-      }
-      if (fFileInfo->fFilename) {
-         delete [] fFileInfo->fFilename;
-         fFileInfo->fFilename = 0;
-      }
-   } else
-      fFileInfo = file_info;
-
-   if (!fFileInfo->fFileTypes)
-      fFileInfo->fFileTypes = gDefTypes;
-
-   if (!fFileInfo->fIniDir)
-      fFileInfo->fIniDir = StrDup(".");
+   fFileInfo = file_info;
 
    fHtop = new TGHorizontalFrame(this, 10, 10);
 
@@ -164,7 +133,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    fFc->SetFilter(fFileInfo->fFileTypes[1]);
    fFc->Sort(kSortByType);
-   fFc->ChangeDirectory(fFileInfo->fIniDir);
+   fFc->ChangeDirectory(".");
    fTreeLB->Update(fFc->GetDirectory());
 
    fList->SetState(kButtonEngaged);
@@ -200,15 +169,17 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fTypes->Associate(this);
    fTypes->Resize(220, fName->GetDefaultHeight());
 
-   char s[64];
-   for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
-      sprintf(s, "%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
-      fTypes->AddEntry(s, i);
-   }
-   fTypes->Select(0);
+   if (fFileInfo->fFileTypes) {
+      char s[64];
+      for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
+         sprintf(s, "%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
+         fTypes->AddEntry(s, i);
+      }
+      fTypes->Select(0);
 
-   fTbfname->Clear();
-   //fTbfname->AddText(0, fFileInfo->fFileTypes[1]);
+      fTbfname->Clear();
+      //fTbfname->AddText(0, fFileInfo->fFileTypes[1]);
+   }
 
    fHftype->AddFrame(fLftypes, fLhl);
    fHftype->AddFrame(fTypes, fLht1);
@@ -253,9 +224,9 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       int      ax, ay;
       Window_t wdummy;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdummy);
+                                 (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                                 (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                                 ax, ay, wdummy);
       if (ax < 0) ax = 10;
       if (ay < 0) ay = 10;
       Move(ax, ay);
@@ -361,8 +332,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kIDF_CDUP:
                      fFc->ChangeDirectory("..");
                      fTreeLB->Update(fFc->GetDirectory());
-                     if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                     fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      break;
 
                   case kIDF_NEW_FOLDER:
@@ -388,8 +357,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (e) {
                         fFc->ChangeDirectory(e->GetPath()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
-                        if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                        fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      }
                      break;
 
@@ -431,8 +398,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (S_ISDIR(f->GetType())) {
                         fFc->ChangeDirectory(f->GetItemName()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
-                        if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                        fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      } else {
                         fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                        fTbfname->GetString());
@@ -440,22 +405,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                   }
                }
-#else
-#ifdef GDK_WIN32
-               if (parm1 == kButton1) {
-                  if (fFc->NumSelected() == 1) {
-                     f = (TGFileItem *) fFc->GetNextSelected(&p);
-                     if ((f->GetType()) & _S_IFDIR) {
-                        fFc->ChangeDirectory(f->GetItemName()->GetString());
-                        fTreeLB->Update(fFc->GetDirectory());
-                     } else {
-                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                       fTbfname->GetString());
-                        delete this;
-                     }
-                  }
-               }
-#endif
 #endif
                break;
 

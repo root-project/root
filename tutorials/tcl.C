@@ -29,12 +29,6 @@ void tclwrite(Int_t split)
    TClonesArray *arr = new TClonesArray("TLine");
    TClonesArray &ar = *arr;
    T.Branch("tcl",&arr,256000,split);
-   //By default a TClonesArray is created with its BypassStreamer bit set.
-   //However, because TLine has a custom Streamer, this bit was reset 
-   //by TTree::Branch above. We set again this bit because the current 
-   //version of TLine uses the automatic Streamer.
-   //BypassingStreamer saves space and time.
-   arr->BypassStreamer();
    for (Int_t ev=0;ev<10000;ev++) {
       ar.Clear();
       Int_t nlines = Int_t(gRandom->Gaus(50,10));

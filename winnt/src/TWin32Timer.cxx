@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.2 2001/05/16 08:53:16 brun Exp $
+// @(#)root/winnt:$Name$:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>
@@ -120,7 +120,7 @@ static unsigned int _stdcall ROOT_TimerLoop(void *threadcmd)
   {
      if (EventLoopStop = (!(erret=GetMessage(&msg,NULL,0,0)) || erret == -1))
                                                                    continue;
-     if (msg.hwnd == NULL && (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD))
+     if (msg.hwnd == NULL & (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD))
            if (TWin32HookViaThread::ExecuteEvent(&msg, msg.message==ROOT_SYNCH_CMD)) continue;
 
      TranslateMessage(&msg);
@@ -213,9 +213,8 @@ UInt_t TWin32Timer::CreateTimer(TTimer *timer)
 void TWin32Timer::CreateTimerCB(TTimer *timer)
 {
   if (timer)
-    timer->SetTimerID((UInt_t)(::SetTimer(fhdTimerWindow,(UINT)timer,
-                      (unsigned long)timer->GetTime(),
-                      (TIMERPROC) ::DispatchTimers)) );
+    timer->SetTimerID((UInt_t)(::SetTimer(fhdTimerWindow,(UINT)timer,timer->GetTime()
+                                                         , (TIMERPROC) ::DispatchTimers)) );
 }
 //______________________________________________________________________________
 void TWin32Timer::ExecTimerThread(TGWin32Command *command)

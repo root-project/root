@@ -47,7 +47,7 @@ extern int G__list_stub G__P((FILE *fp));
 
 /* in src/xxx.c */
 /* struct G__var_array *G__rawvarentry G__P((char *name,int hash,int *ig15,struct G__var_array *memvar)); */
-/* int G__split G__P((char *line,char *string,int *argc,char **argv)); */
+int G__split G__P((char *line,char *string,int *argc,char **argv));
 int G__readsimpleline G__P((FILE *fp,char *line));
 #ifdef G__OLDIMPLEMENTATION451
 int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char **arg));
@@ -86,6 +86,7 @@ void G__DISPfgetc G__P((int c));
 void G__lockedvariable G__P((char *item));
 int G__lock_variable G__P((char *varname));
 int G__unlock_variable G__P((char *varname));
+int G__setbreakpoint G__P((char *breakline,char *breakfile));
 G__value G__interactivereturn G__P((void));
 void G__set_tracemode G__P((char *name));
 void G__del_tracemode G__P((char *name));
@@ -189,11 +190,9 @@ int G__btest G__P((int operator2,G__value lresult,G__value rresult));
 int G__fgetspace G__P((void));
 int G__fgetvarname G__P((char *string,char *endmark));
 int G__fgetname G__P((char *string,char *endmark));
-int G__getname G__P((char* source,int* isrc,char *string,char *endmark));
 int G__fdumpstream G__P((char *string,char *endmark));
 int G__fgetstream G__P((char *string,char *endmark));
 int G__fignorestream G__P((char *endmark));
-int G__ignorestream G__P((char *string,int* isrc,char *endmark));
 int G__fgetstream_new G__P((char *string,char *endmark));
 void G__fignoreline G__P((void));
 void G__fsetcomment G__P((struct G__comment_info *pcomment));
@@ -206,9 +205,6 @@ int G__special_func G__P((G__value *result7,char *funcname,struct G__param *libp
 int G__library_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash));
 char *G__charformatter G__P((int ifmt,struct G__param *libp,char *result));
 int G__istypename G__P((char *temp));
-#ifndef G__OLDIMPLEMENTATION1543
-char* G__savestring G__P((char** pbuf,char* name));
-#endif
 void G__make_ifunctable G__P((char *funcheader));
 int G__readansiproto G__P((struct G__ifunc_table *ifunc,int func_now));
 int G__interpret_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int funcmatch,int memfunc_flag));
@@ -528,9 +524,6 @@ char* G__find_last_scope_operator G__P((char* name));
 int G__defined_tagname G__P((char *tagname,int noerror));
 int G__search_tagname G__P((char *tagname,int type));
 #endif
-#ifndef G__OLDIMPLEMENTATION1560
-int G__checkset_charlist G__P((char *tname,struct G__Charlist *pcall_para,int narg,int ftype));
-#endif
 void G__define_struct G__P((char type));
 G__value G__classassign G__P((long pdest,int tagnum,G__value result));
 int G__cattemplatearg G__P((char *tagname,struct G__Charlist *charlist));
@@ -538,7 +531,6 @@ char *G__catparam G__P((struct G__param *libp,int catn,char *connect));
 int G__fgetname_template G__P((char *string,char *endmark));
 int G__fgetstream_newtemplate G__P((char *string,char *endmark));
 int G__fgetstream_template G__P((char *string,char *endmark));
-int G__fgetstream_spaces G__P((char *string,char *endmark));
 int G__getstream_template G__P((char *source,int *isrc,char *string,char *endmark));
 #ifndef G__OLDIMPLEMENTATION691
 void G__IntList_init G__P((struct G__IntList *body,long iin,struct G__IntList *prev));
@@ -557,12 +549,6 @@ int G__createtemplateclass G__P((char *new_name,struct G__Templatearg *targ,int 
 int G__createtemplateclass G__P((char *new_name,struct G__Templatearg *targ));
 #endif
 struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
-#ifndef G__OLDIMPLEMENTATION1560
-struct G__Definetemplatefunc *G__defined_templatefunc G__P((char *name));
-#endif
-#ifndef G__OLDIMPLEMENTATION1611
-struct G__Definetemplatefunc *G__defined_templatememfunc G__P((char *name));
-#endif
 void G__declare_template G__P((void));
 int G__gettemplatearglist G__P((char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara));
 int G__instantiate_templateclass G__P((char *tagname));
@@ -585,10 +571,6 @@ int G__defined_type G__P((char *typenamein,int len));
 char *G__valuemonitor G__P((G__value buf,char *temp));
 char *G__access2string G__P((int caccess));
 char *G__tagtype2string G__P((int tagtype));
-#ifndef G__OLDIMPLEMENTATION1560
-void G__rename_templatefunc G__P((char* funcname,int isrealloc));
-char *G__fulltypename G__P((int typenum));
-#endif
 char *G__fulltagname G__P((int tagnum,int mask_dollar));
 int G__val2pointer G__P((G__value *result7));
 char *G__getbase G__P((unsigned int expression,int base,int digit,char *result1));
@@ -765,12 +747,6 @@ int G__fprinterr G__P((FILE* fp,char* fmt,...));
 int G__fputerr G__P((int c));
 #else
 #define G__fprinterr  fprintf
-#endif
-
-#ifdef G__SHMGLOBAL
-void* G__shmmalloc G__P((int size));
-void* G__shmcalloc G__P((int atomsize,int num));
-void G__initshm G__P((void));
 #endif
 
 #ifdef __cplusplus

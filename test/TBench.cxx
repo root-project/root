@@ -2,15 +2,14 @@
 // native Root TClonesArray.
 // See main program bench.cxx
    
+#include "TBench.h"
 #include "TRandom.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TClass.h"
-//the next include must be the last one on systems like Windows/NT
-#include "TBench.h"
 
 THit hit;
-const char *demofile = "/tmp/bench.root";
+char *demofile = "/tmp/bench.root";
 
 //-------------------------------------------------------------
 ClassImp(THit)
@@ -45,7 +44,6 @@ void THit::Set(int t) {
   fX = gRandom->Gaus(0,1);
   fY = gRandom->Gaus(0,1);
   fZ = gRandom->Gaus(0,10);
-  if (fPulses && fNpulses > 0) delete [] fPulses;
   fNpulses = t%20 + 1;
   fPulses = new int[fNpulses];
   for (int j=0;j<fNpulses;j++) fPulses[j] = j+1;
@@ -110,7 +108,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
   if (mode > 0) {
      f = new TFile(demofile,"recreate","STLhit",compression);  
      T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhit",&top,64000,split);
+     T->Bronch("event","TSTLhit",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);
@@ -184,7 +182,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
   if (mode > 0) {
      f = new TFile(demofile,"recreate","STLhitStar",compression);  
      T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStar",&top,64000,split);
+     T->Bronch("event","TSTLhitStar",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);
@@ -258,7 +256,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
   if (mode > 0) {
      f = new TFile(demofile,"recreate","Cloneshit",compression);  
      T = new TTree("T","Demo tree");
-     T->Branch("event","TCloneshit",&top,64000,split);
+     T->Bronch("event","TCloneshit",&top,64000,split);
   }
   for (int ievent=0; ievent<nevents; ievent++) {
      MakeEvent(ievent);

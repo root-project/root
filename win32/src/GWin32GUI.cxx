@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.5 2000/10/19 10:42:31 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.4 2000/09/07 00:26:06 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -207,8 +207,7 @@ void         TGWin32::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
                                     UInt_t w, UInt_t h, UInt_t border,
                                     Int_t depth, UInt_t clss,
-                                    void *visual, SetWindowAttributes_t *attr,
-                                    UInt_t)
+                                    void *visual, SetWindowAttributes_t *attr)
 {
 //*-*
 //*-*  window must be casted to  TGWin32WindowsObject *winobj

@@ -128,7 +128,7 @@ char *string;
 #endif
 
 /************************************************************
-* char *G__input()
+* char *G__input(char *prompt)
 *
 *  command input frontend
 *************************************************************/
@@ -225,6 +225,7 @@ char *prompt;
 #endif
   return(line);
 }
+
 
 /****************************************************************
 *  Support libraries for GNU readline completion

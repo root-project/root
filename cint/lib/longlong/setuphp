@@ -1,4 +1,4 @@
-makecint -mk Makefile -dl $CINTSYSDIR/include/long.dll -H longlong.h longdbl.h -cint -M0x1c -Z0
+makecint -mk Makefile -dl $CINTSYSDIR/include/long.dll -H longlong.h -cint -M0x1c -Z0
 make -f Makefile
 rm G__* Makefile 
 

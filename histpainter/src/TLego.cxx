@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.5 2001/07/20 13:49:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.3 2000/11/21 12:30:39 rdm Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TROOT.h"
 #include "TLego.h"
 #include "TVirtualPad.h"
-#include "THistPainter.h"
 #include "TH1.h"
 #include "TView.h"
 #include "TVirtualX.h"
@@ -37,7 +36,6 @@
 #include "Hparam.h"
 #include "TMath.h"
 #include "TStyle.h"
-#include "TObjArray.h"
 
 #ifdef R__SUNCCBUG
 const Double_t kRad = 1.74532925199432955e-02;
@@ -2064,19 +2062,18 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *
 
     vv[1] = Hparam.zmin;
     vv[2] = gCurrentHist->GetCellContent(ixt, iyt);
-    TObjArray *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t nids = 0; //not yet implemented
-    if (stack) nids = stack->GetEntriesFast();
-    if (nids) {
-	for (i = 2; i <= nids + 1; ++i) {
-            TH1 *hid = (TH1*)stack->At(i-2);
-            vv[i + 1] = hid->GetCellContent(ixt, iyt) + vv[i];
+    Int_t gNIDS = 0; //not yet implemented
+    if (gNIDS) {
+	for (i = 2; i <= gNIDS + 1; ++i) {
+//          ixt = ia + hihid_1.ixfcha[i - 1] - 1;
+//          iyt = ib + hihid_1.iyfcha[i - 1] - 1;
+            vv[i + 1] = gCurrentHist->GetCellContent(ixt, iyt) + vv[i];
 	    vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
-	    //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
+	    vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
 	}
     }
 
-    nv = nids + 2;
+    nv = gNIDS + 2;
     for (i = 2; i <= nv; ++i) {
 	if (Hoption.Logz) {
             if (vv[i] > 0)
@@ -2222,11 +2219,9 @@ void TLego::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 
 //*-*-          D R A W   S T A C K   O F   L E G O - P L O T S
 
-    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
 	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-	    if (!painter->IsInside(ix,iy)) continue;
-            (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+	    (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
 	    if (nv < 2 || nv > 20) continue;
 	    icodes[0] = ix;
 	    icodes[1] = iy;
@@ -3444,10 +3439,8 @@ void TLego::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt
 
 //*-*-          D R A W   S U R F A C E
 
-    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
 	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-	    if (!painter->IsInside(ix,iy)) continue;
 	    (this->*fSurfaceFunction)(ix, iy, f, tt);
 	    for (i = 1; i <= 4; ++i) {
 		xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;

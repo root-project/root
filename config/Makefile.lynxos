@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for LynxOS  with gcc
 
 PLATFORM      = lynxos

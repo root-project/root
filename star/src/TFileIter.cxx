@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.4 2001/07/11 06:46:19 brun Exp $
+// $Id: TFileIter.cxx,v 1.2 2001/03/02 21:44:40 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -11,7 +11,16 @@
 //                                                                       //
 // and stored as the TKey name of the object written                     //
 //                                                                       //
-//        ///////        //////////      ////////        ///////     //////
+///////////////////////////////////////////////////////////////////////////
+
+
+#include "TFile.h"
+#include "TKey.h"
+
+#include "TFileIter.h"
+#include "TDsKey.h"
+
+///////////////////////////////////////////////////////////////////////////
 // 
 // void TestFileIter(){
 // // This macros tests the various methods of TFileIter class.
@@ -100,13 +109,6 @@
 //-----------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////
 
-
-#include "TFile.h"
-#include "TKey.h"
-
-#include "TFileIter.h"
-#include "TDsKey.h"
-
 ClassImp(TFileIter)
 
 //__________________________________________________________________________
@@ -116,104 +118,31 @@ TFileIter::TFileIter(TFile *file) : fRootFile(file),
 { Initialize(); }
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                   , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
+                   , Int_t compress, Int_t /*netopt*/)
 { 
   // Open ROOT TFile by the name provided;
-  // This TFile is to be deleted by the TFileIter alone
-  if (name && name[0]) {
-    fOwnTFile = kTRUE;
-    fRootFile = TFile::Open(name,option,ftitle,compress);
-    Initialize();
-  }
+  // This TFile is to be deleted by the TFileIter along
+  fOwnTFile = kTRUE;
+  fRootFile = TFile::Open(name,option,ftitle,compress);
+  Initialize();
 }
-
 //__________________________________________________________________________
 TFileIter::~TFileIter() 
 { 
   if (fRootFile && fOwnTFile )
   {  // delete own TFile if any
-    if (fRootFile->IsWritable()) fRootFile->Write();
+    fRootFile->Write();
     fRootFile->Close();
     delete fRootFile;
     fRootFile = 0;
   }
 }
-#if 0
-//__________________________________________________________________________
-Int_t TFileIter::Copy(TFile *destFile)
-{ 
-   Int_t nBytes = 0;
-   class TCopyKey : public TKey {
-     public:
-       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-       TCopyKey(const TKey &src) : TName(src) {
-         Mirror(src);  
-       }
-       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-       void Mirror(const TKey &src) {
-         fVersion = src.fVersion;     //Key version identifier
-         fNbytes  = src.fNbytes;      //Number of bytes for the object on file
-         fObjlen  = src.fObjlen;      //Length of uncompressed object in bytes
-         fDatime  = src.fDatime;      //Date/Time of insertion in file
-         fKeylen  = src.fKeylen;      //Number of bytes for the key itself
-         fCycle   = src.fCycle;       //Cycle number
-         fSeekKey = src.fSeekKey;     //Location of object on file
-         fSeekPdir= src.fSeekPdir;    //Location of parent directory on file
-         fClassName = src.fClassName; //Object Class name
-         fLeft    = src.fLeft;        //Number of bytes left in current segment
-
-         fBuffer = 0;  //Object buffer
-         fBufferRef = 0;;     //Pointer to the TBuffer object
-       }
-       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-       virtual ~TCopyKey();
-       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-       virtual TObject   ReadObj() {
-         fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-         if (!fBufferRef) {
-            Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-           return 0;
-         }
-         if (fObjlen > fNbytes-fKeylen) {
-           fBuffer = new char[fNbytes];
-           ReadFile();                    //Read object structure from file
-           memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
-         } else {
-            fBuffer = fBufferRef->Buffer();
-            ReadFile();                    //Read object structure from file
-         }
-      }
-   };
-
-==
-   TKey *cKey = GetCurrentKey();
-   if (cKey) {
-     TFile *save = gFile;
-     TDirectiry *savedir = gDirectrory;
-     destFile->cd();
-     TCopyKey *key = new TCopyKey(*cKey);
-
-     if (!key->GetSeekKey()) {
-       gDirectory->GetListOfKeys()->Remove(key);
-       delete key;
-     } else {
-       gFile->SumBuffer(key->GetObjlen());
-       nBytes = key->WriteFile(0);
-     }
-   }
-==
-   return nBytes;
-}
-#endif
 //__________________________________________________________________________
 void TFileIter::Initialize() 
 { 
   fDirection =  kIterForward;
   if (fRootFile &&  fRootFile->IsOpen() ) Reset();
-  else  {
-    if (fRootFile) delete fRootFile;
-    fRootFile = 0;
-  }      
+  else                                    fRootFile = 0;
 }
 //__________________________________________________________________________
 TKey *TFileIter::GetCurrentKey() const 
@@ -239,9 +168,9 @@ TObject *TFileIter::GetObject() const
   //
   // ATTENTION:  memory leak danger !!!
   // ---------
-  // This method does create a new object and it is the end-user
+  // This method does create a new object and it is end-user
   // code responsibility to take care about the object returned
-  // to avoid memeory leak.
+  // to avoid memeory leak.s
   //
   return ReadObj(GetCurrentKey());
 }
@@ -257,10 +186,6 @@ Int_t TFileIter::GetObjlen() const
 //__________________________________________________________________________
 Int_t TFileIter::TotalKeys() const
 {  
-  // The total number of the TKey keys in this current TFile
-  // Usually this means the total number of different objects
-  // thos can be read separately with one "read" operation
-
   Int_t size = 0; 
   if(fList) size =  fList->GetSize(); 
   return size;
@@ -304,7 +229,7 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
   // Find the key by the name provided
   Reset();
-  while( (*this != keyNameToFind) && SkipObjects() );
+  while( SkipObjects() && *this != keyNameToFind);
 }
 //__________________________________________________________________________
 TObject *TFileIter::SkipObjects(Int_t  nSkip)

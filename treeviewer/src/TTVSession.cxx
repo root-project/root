@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.12 2000/12/14 15:23:47 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -10,12 +10,12 @@
  *************************************************************************/
 
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TTVSession.h"
 #include "TTreeViewer.h"
 #include "TTVLVContainer.h"
 #include "TClonesArray.h"
-#include "TInterpreter.h"
 
 
 ClassImp(TTVRecord)
@@ -27,19 +27,6 @@ TTVRecord::TTVRecord()
    fName = "";
    fScanRedirected = kFALSE;
    fCutEnabled     = kTRUE;
-   fUserCode = "";
-   fAutoexec = kFALSE;
-}
-//______________________________________________________________________________
-void TTVRecord::ExecuteUserCode()
-{
-// Execute user-defined code
-   if (fUserCode.Length()) {
-      char code[250];
-      code[0] = 0;
-      sprintf(code, "%s", fUserCode.Data());
-      gInterpreter->ProcessLine(code);
-   }
 }
 //______________________________________________________________________________
 void TTVRecord::FormFrom(TTreeViewer *tv)
@@ -51,8 +38,8 @@ void TTVRecord::FormFrom(TTreeViewer *tv)
    fYAlias   = tv->ExpressionItem(1)->GetAlias();
    fZ        = tv->ExpressionItem(2)->GetTrueName();
    fZAlias   = tv->ExpressionItem(2)->GetAlias();
-   fCut      = tv->ExpressionItem(3)->GetTrueName();
-   fCutAlias = tv->ExpressionItem(3)->GetAlias();
+   fCut      = tv->ExpressionItem(3)->GetTrueName();   
+   fCutAlias = tv->ExpressionItem(3)->GetAlias();   
    fOption   = tv->GetGrOpt();
    fScanRedirected = tv->IsScanRedirected();
    fCutEnabled = tv->IsCutEnabled();
@@ -103,12 +90,6 @@ void TTVRecord::SaveSource(ofstream &out)
       out <<"   tv_record->fCutEnabled = kTRUE;"<<endl;
    else
       out <<"   tv_record->fCutEnabled = kFALSE;"<<endl;
-   if (fUserCode.Length()) {
-      out <<"   tv_record->SetUserCode(\""<<fUserCode.Data()<<"\");"<<endl;
-      if (fAutoexec) {
-         out <<"   tv_record->SetAutoexec();"<<endl;
-      }
-   }
 }
 
 ClassImp(TTVSession)
@@ -126,7 +107,7 @@ TTVSession::TTVSession(TTreeViewer *tv)
 TTVSession::~TTVSession()
 {
    fList->Delete();
-   delete fList;
+   delete fList;  
 }
 //______________________________________________________________________________
 TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
@@ -193,7 +174,6 @@ void TTVSession::Show(TTVRecord *rec)
 {
    rec->PlugIn(fViewer);
    fViewer->ExecuteDraw();
-   if (rec->HasUserCode() && rec->MustExecuteCode()) rec->ExecuteUserCode();
    fViewer->SetHistogramTitle(rec->GetName());
 }
 //______________________________________________________________________________
@@ -207,8 +187,8 @@ void TTVSession::SaveSource(ofstream &out)
       record = GetRecord(i);
       record->SaveSource(out);
    }
-   out<<"//--- Connect first record"<<endl;
-   out<<"   tv_session->First();"<<endl;
+   out<<"//--- Show first record"<<endl;
+   out<<"   tv_session->Show(tv_session->First());"<<endl;
 }
 //______________________________________________________________________________
 void TTVSession::UpdateRecord(const char *name)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.5 2001/02/06 10:58:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.4 2001/01/18 10:37:33 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -14,8 +14,14 @@
 // A TLeaf for a general object derived from TObject.                   //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TLeafElement.h"
-//#include "TMethodCall.h"
+#include "TStreamerInfo.h"
+#include "TStreamerElement.h"
+#include "TBranchElement.h"
+#include "TClass.h"
+#include "TMethodCall.h"
+#include "TDataType.h"
 
 
 ClassImp(TLeafElement)
@@ -61,10 +67,30 @@ TMethodCall *TLeafElement::GetMethodCall(const char *name)
    return 0;
 }
 
+//______________________________________________________________________________
+Double_t TLeafElement::GetValue(Int_t) const
+{
+// Returns leaf value
+
+   return Double_t(fType);
+}
 
 //______________________________________________________________________________
-Bool_t TLeafElement::IsOnTerminalBranch() const
+void TLeafElement::PrintValue(Int_t) const
 {
-   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
-   return kTRUE;
+// Prints leaf value
+
+   // basic types
+   switch (fType) {
+      case TStreamerInfo::kChar:   {printf("should print Char"); break;}
+      case TStreamerInfo::kShort:  {Short_t *val = (Short_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kInt:    {Int_t *val = (Int_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kLong:   {printf("should print Long"); break;}
+      case TStreamerInfo::kFloat:  {Float_t *val = (Float_t*)fAbsAddress; printf("%f",*val); break;}
+      case TStreamerInfo::kDouble: {Double_t *val = (Double_t*)fAbsAddress; printf("%g",*val); break;}
+      case TStreamerInfo::kUChar:  {printf("should print UChar"); break;}
+      case TStreamerInfo::kUShort: {UShort_t *val = (UShort_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kUInt:   {UInt_t *val = (UInt_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kULong:  {ULong_t *val = (ULong_t*)fAbsAddress; printf("%ld",*val); break;}
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.3 2000/11/21 20:39:57 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -55,28 +55,13 @@
 #endif
 
 
-class TVectorD;
 class TMatrixD;
 class TElementActionD;
 class TElementPosActionD;
-class TMatrixDRow;
-class TMatrixDColumn;
-class TMatrixDDiag;
-
-TVectorD &operator+=(TVectorD &target, const TVectorD &source);
-TVectorD &operator-=(TVectorD &target, const TVectorD &source);
-Double_t  operator*(const TVectorD &v1, const TVectorD &v2);
-TVectorD &Add(TVectorD &target, Double_t scalar, const TVectorD &source);
-TVectorD &ElementMult(TVectorD &target, const TVectorD &source);
-TVectorD &ElementDiv(TVectorD &target, const TVectorD &source);
-Bool_t    operator==(const TVectorD &v1, const TVectorD &v2);
-void      Compare(const TVectorD &im1, const TVectorD &im2);
-Bool_t    AreCompatible(const TVectorD &v1, const TVectorD &v2);
 
 
 class TVectorD : public TObject {
 
-friend class TMatrixD;
 friend class TMatrixDRow;
 friend class TMatrixDColumn;
 friend class TMatrixDDiag;
@@ -170,7 +155,7 @@ void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2);
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#ifndef R__HPUX
 
 #ifndef __CINT__
 
@@ -219,7 +204,7 @@ inline TVectorD &TVectorD::operator=(const TVectorD &source)
    return *this;
 }
 
-inline TVectorD::TVectorD(const TVectorD &another) : TObject()
+inline TVectorD::TVectorD(const TVectorD &another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.6 2001/10/22 14:26:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.4 2000/12/11 22:17:19 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -56,12 +56,11 @@ TEventList::TEventList(): TNamed()
    fDelta      = 100;
    fList       = 0;
    fDirectory  = 0;
-   fReapply    = kFALSE;
 }
 
 //______________________________________________________________________________
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-  :TNamed(name,title), fReapply(kFALSE)
+    :TNamed(name,title)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a EventList*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
@@ -90,8 +89,6 @@ TEventList::TEventList(const TEventList &list)
    fList  = new Int_t[fSize];
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
-   fReapply = list.fReapply;
-   fDirectory = 0;
 }
 
 //______________________________________________________________________________
@@ -145,11 +142,6 @@ void TEventList::Add(const TEventList *alist)
    fN    = newpos;
    fSize = newsize;
    fList = newlist;
-
-   TCut orig = GetTitle();
-   TCut added = alist->GetTitle();
-   TCut updated = orig || added;
-   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________
@@ -172,7 +164,6 @@ void TEventList::Enter(Int_t entry)
       fN = 1;
       return;
    }
-   if (GetIndex(entry)>=0) return;
    if (fN >= fSize) {
       Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
       Resize(newsize-fSize);
@@ -210,29 +201,6 @@ Int_t TEventList::GetIndex(Int_t entry) const
       else                          nbelow = middle;
    }
    return -1;
-}
-
-//______________________________________________________________________________
-Int_t TEventList::Merge(TCollection *list)
-{
-// Merge entries in all the TEventList in the collection in this event list
-   
-   if (!list) return -1;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TEventList *el;
-   Int_t nevents = 0;
-   while ((el = (TEventList*)next())) {
-      if (!el->InheritsFrom(TEventList::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",el->ClassName(),this->ClassName());
-         return -1;
-      }
-      Add(el);
-      nevents += el->GetN();
-   }
-   
-   return nevents;   
 }
 
 //______________________________________________________________________________
@@ -382,11 +350,6 @@ void TEventList::Subtract(const TEventList *alist)
    delete [] fList;
    fN    = newpos;
    fList = newlist;
-
-   TCut orig = GetTitle();
-   TCut removed = alist->GetTitle();
-   TCut updated = orig && !removed;
-   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________

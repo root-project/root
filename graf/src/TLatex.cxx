@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.26 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.13 2001/02/06 14:40:59 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TVirtualPad.h"
@@ -23,8 +22,7 @@ const Double_t kPI = 3.14159265358979323846;
 #else
 const Double_t kPI = TMath::Pi();
 #endif
-const Int_t kLatex      = BIT(10);
-const Int_t kPrintingPS = BIT(11); //set in TPad.h
+const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
 
@@ -92,7 +90,7 @@ ClassImp(TLatex)
 //   The command to produce a lowercase Greek letter is obtained by adding a # to
 //   the name of the letter. For an uppercase Greek letter, just capitalize the first
 //   letter of the command name.
-//   #alpha #beta #gamma #delta #varepsilon #epsilon #zeta #eta #theta #iota #kappa #lambda #mu
+//   #alpha #beta #gamma #delta #epsilon #zeta #eta #theta #iota #kappa #lambda #mu
 //   #nu #xi #omicron #pi #varpi #rho #sigma #tau #upsilon #phi #varphi #chi #psi #omega
 //   #Gamma #Delta #Theta #Lambda #Xi #Pi #Sigma #Upsilon #Phi #Psi #Omega
 //
@@ -109,17 +107,13 @@ ClassImp(TLatex)
 //    #grave  = agrave
 //    #dot    = derivative
 //    #ddot   = double derivative
-//    #tilde  = tilde
-//
-//    #slash special sign. Draw a slash on top of the text between brackets
-//   for example #slash{E}_{T}  generates "Missing ET"
 //
 //Begin_Html
 /*
 <img src="gif/latex_above.gif">
 */
 //End_Html
-//   #dot  #ddot  #hat  #check  #acute  #grave  #tilde
+//   #dot  #ddot  #hat  #check  #acute  #grave
 //
 //   ** Changing Style in Math Mode
 //   ------------------------------
@@ -251,8 +245,6 @@ TLatex::TLatex()
       fError       = 0;
       fShow        = kFALSE;
       fPos=fTabMax = 0;
-      fOriginSize  = 0.04;
-      fTabSize     = 0;
       SetLineWidth(2);
 }
 
@@ -267,8 +259,6 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
       fError       = 0;
       fShow        = kFALSE;
       fPos=fTabMax = 0;
-      fOriginSize  = 0.04;
-      fTabSize     = 0;
       SetLineWidth(2);
 }
 
@@ -294,7 +284,6 @@ void TLatex::Copy(TObject &obj)
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
    ((TLatex&)obj).fError       = fError;
    ((TLatex&)obj).fShow        = fShow;
-   ((TLatex&)obj).fTabSize     = 0;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fTabMax      = fTabMax;
    ((TLatex&)obj).fPos         = fPos;
@@ -334,9 +323,9 @@ FormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* 
 // t : chain to be analyzed
 // length : number of chars in t.
 //
-const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
+const char *tab[] = { "alpha","beta","chi","delta","epsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varpi","omega","xi","psi","zeta",
-                "epsilon","varpi","varpi","Delta","varpi","Phi","Gamma","varpi","varpi","varpi",
+                "varpi","varpi","varpi","Delta","varpi","Phi","Gamma","varpi","varpi","varpi",
                 "varpi","Lambda","varpi","varpi","varpi","Pi","Theta","varpi","Sigma","varpi",
                 "Upsilon","varpi","Omega","Xi","Psi" };
 
@@ -353,7 +342,7 @@ const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
                  "ltbar","void04","void05","void06","GT","int" };
 
-const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
+const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
 
       if (fError != 0) return FormSize(0,0,0);
 
@@ -601,7 +590,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                   }
                }
             }
-            for(k=0;k<10;k++) {
+            for(k=0;k<8;k++) {
                if (!OpFound && UInt_t(length)>i+strlen(tab3[k])) {
                   if (strncmp(&text[i+1],tab3[k],strlen(tab3[k]))==0) {
                      OpAbove=k;
@@ -915,7 +904,6 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
  //        Double_t yoffset = GetHeight()*spec.size/20.; // Greek letter too low
          Double_t yoffset = 0.; // Greek letter too low
          if (OpGreek>25) letter -= 58;
-         if (OpGreek == 26) letter = '\316'; //epsilon
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
@@ -1030,33 +1018,6 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                y1 = y-sub-fs1.Dessus() ;
                DrawLine(x2,y-3*sub-fs1.Dessus(),x1,y1,spec);
                DrawLine(x3,y-3*sub-fs1.Dessus(),x1,y1,spec);
-               break;
-            case 8: // tilde
-               x2 = x+fs1.Width()/2 ;
-               y2 = y -fs1.Dessus() ;
-               if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) y2 -= 2*sub;
-               {
-                  Double_t sinang  = TMath::Sin(spec.angle/180*kPI);
-                  Double_t cosang  = TMath::Cos(spec.angle/180*kPI);
-                  Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
-                  Double_t Yorigin = (Double_t)gPad->YtoAbsPixel(fY);
-                  Double_t X  = gPad->AbsPixeltoX(Int_t((x2-Xorigin)*cosang+(y2-Yorigin)*sinang+Xorigin));
-                  Double_t Y  = gPad->AbsPixeltoY(Int_t((x2-Xorigin)*-sinang+(y2-Yorigin)*cosang+Yorigin));
-                  TText tilde;
-                  tilde.SetTextFont(fTextFont);
-                  tilde.SetTextColor(fTextColor);
-                  tilde.SetTextSize(0.9*spec.size);
-                  tilde.SetTextAlign(22);
-                  tilde.SetTextAngle(fTextAngle);
-                  tilde.PaintText(X,Y,"~");
-               }
-               break;
-            case 9: // slash
-               x1 = x + 0.8*fs1.Width();
-               y1 = y -fs1.Dessus() ;
-               x2 = x + 0.3*fs1.Width();
-               y2 = y1 + 1.2*fs1.Height();
-               DrawLine(x1,y1,x2,y2,spec);
                break;
            }
          }
@@ -1481,15 +1442,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       Double_t saveSize = size;
       Int_t saveFont = fTextFont;
       if (fTextFont%10 > 2) {
-         UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                               gPad->XtoAbsPixel(gPad->GetX1()));
-         UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                               gPad->YtoAbsPixel(gPad->GetY1()));
-         if (w < h)
-            size = size/w;
-         else
-            size = size/h;
-         SetTextFont(10*(saveFont/10) + 2);
+         size = size/gPad->GetWh();
+         SetTextFont(10*(saveFont/10) +2);
       }
       if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
@@ -1568,7 +1522,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // Check if the Latex syntax is correct
 
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
-                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{",
+                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{",
                        "\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
    const Char_t *kWord2[] = {"#color[","#font[","#sqrt[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
@@ -1577,12 +1531,12 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
    Int_t lkWord1[] = {4,4,2,2,7,6,6,4,4,4,
-                      5,5,5,5,6,7,7,7,7,7,
+                      5,5,5,5,6,7,7,7,
                       7,6,6,4,4,4,4,4,
                       5,5,5,5,6,7,7,7} ;
    Int_t lkWord2[] = {7,6,6,7,6,6} ;
    Int_t lkWord3[] = {6,6} ;
-   Int_t NkWord1 = 36, NkWord2 = 6, NkWord3 = 2 ;
+   Int_t NkWord1 = 34, NkWord2 = 6, NkWord3 = 2 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
@@ -1809,11 +1763,8 @@ FormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text) {
 //______________________________________________________________________________
 Double_t TLatex::GetHeight() const
 {
-// return height of current pad in pixels
+// return height of current font in pixels
 
-   if (gPad->GetWw() < gPad->GetWh())
-      return gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
-   else
       return gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
 }
 
@@ -1842,6 +1793,7 @@ Double_t TLatex::GetXsize()
 Double_t TLatex::GetYsize()
 {
 // return size of the formula along Y in pad coordinates
+      if (!gPad) return 0;
       if (!gPad) return 0;
       TString newText = GetTitle();
       if( newText.Length() == 0) return 0;
@@ -1902,8 +1854,7 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
    }
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
+   out<<"tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
 
    SaveTextAttributes(out,"tex",11,0,1,62,1);
    SaveLineAttributes(out,"tex",1,1,1);

@@ -269,11 +269,6 @@ char *temp;
       sprintf(temp,"(int*)0x%lx",buf.obj.i);
     }
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-    sprintf(temp,"(bool)%d",(int)buf.obj.i?1:0);
-    break;
-#endif
   case 'k':
     if(G__in_pause)
       sprintf(temp,"(unsigned long)%lu",(unsigned long)buf.obj.i);
@@ -489,28 +484,12 @@ int mask_dollar;
     --pt;
     if('$'==G__struct.name[p_tagnum[pt]][0]) os = 1*mask_dollar;
     else                                     os = 0;
-#define G__OLDIMPLEMENTATION1503
-#ifndef G__OLDIMPLEMENTATION1503
-    if(-1!=G__struct.defaulttypenum[p_tagnum[pt]]) 
-      sprintf(string+len,"%s::"
-	      ,G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
-    else
-      sprintf(string+len,"%s::",G__struct.name[p_tagnum[pt]]+os);
-#else
     sprintf(string+len,"%s::",G__struct.name[p_tagnum[pt]]+os);
-#endif
     len=strlen(string);
   }
   if('$'==G__struct.name[tagnum][0]) os = 1*mask_dollar;
   else                               os = 0;
-#ifndef G__OLDIMPLEMENTATION1503
-  if(-1!=G__struct.defaulttypenum[tagnum]) 
-    sprintf(string+len,"%s",G__newtype.name[G__struct.defaulttypenum[tagnum]]);
-  else
-    sprintf(string+len,"%s",G__struct.name[tagnum]+os);
-#else
   sprintf(string+len,"%s",G__struct.name[tagnum]+os);
-#endif
 
   return(string);
 }
@@ -539,12 +518,6 @@ int type,tagnum,typenum,reftype,isconst;
     strcpy(string,"const ");
     string+=6;
   }
-#ifndef G__OLDIMPLEMENTATION1503
-  if(-1==typenum && tagnum>=0 && -1!=G__struct.defaulttypenum[tagnum] &&
-     'u'==G__newtype.type[G__struct.defaulttypenum[tagnum]]) {
-    typenum = G__struct.defaulttypenum[tagnum];
-  }
-#endif
   if(-1!=typenum) {
     if(0<=G__newtype.parent_tagnum[typenum]) 
       sprintf(string,"%s::%s"
@@ -685,9 +658,6 @@ int type,tagnum,typenum,reftype,isconst;
     case 'i': strcpy(string,"int"); break;
     case 'k': strcpy(string,"unsigned long"); break;
     case 'l': strcpy(string,"long"); break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': strcpy(string,"bool"); break;
-#endif
     case 'f': strcpy(string,"float"); break;
     case 'd': strcpy(string,"double"); break;
     case 'q': 
@@ -738,11 +708,7 @@ int type,tagnum,typenum,reftype,isconst;
     case G__PARAREFERENCE:
 #ifndef G__OLDIMPLEMENTATION1112
       if(-1==typenum||G__PARAREFERENCE!=G__newtype.reftype[typenum]) {
-	if(isconst&G__PCONSTVAR
-#ifndef G__OLDIMPLEMENTATION1574
-	   && 0==(isconst&G__CONSTVAR)
-#endif
-	   ) strcpy(string+strlen(string)," const&");
+	if(isconst&G__PCONSTVAR) strcpy(string+strlen(string)," const&");
 	else strcpy(string+strlen(string),"&");
       }
 #else
@@ -1585,16 +1551,6 @@ int noerror;
       typenam[--len]='\0';
       flag=1;
       break;
-#ifndef G__OLDIMPLEMENTATION1557
-    case ' ':
-    case '\t':
-    case '\n':
-    case '\r':
-    case '\f':
-      typenam[--len]='\0';
-      flag=1;
-      break;
-#endif
     default:
       flag=0;
       break;
@@ -1625,12 +1581,6 @@ int noerror;
       result.type='y';
       break;
     }
-#ifndef G__OLDIMPLEMENTATION1604
-    if(strcmp(typenam,"bool")==0) {
-      result.type='g';
-      break;
-    }
-#endif
     break;
   case 5:
     if(strcmp(typenam,"short")==0) {

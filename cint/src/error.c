@@ -39,15 +39,6 @@ int G__const_resetnoerror() {
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1528
-/******************************************************************
-* G__const_whatnoerror()
-******************************************************************/
-int G__const_whatnoerror() {
-  return(G__const_noerror);
-}
-#endif
-
 /******************************************************************
 * G__nosupport()
 *
@@ -271,11 +262,8 @@ char *item;
 int G__warnundefined(item)
 char *item;
 {
-#ifndef G__OLDIMPLEMENTATION997
+#ifndef G__OLDIMPLEMENtATION997
   if(G__prerun&&G__static_alloc&&G__func_now>=0) return(0);
-#endif
-#ifndef G__OLDIMPLEMENTATION997
-  if(G__no_exec_compile && 0==G__asm_noverflow) return(0);
 #endif
   if(G__in_pause) return(0);
   if(G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
@@ -290,37 +278,6 @@ char *item;
 #endif
        ) {
 #endif
-#ifndef G__OLDIMPLEMENTATION1571
-      char *p = strchr(item,'(');
-      if(p) {
-	char tmp[G__ONELINE];
-	strcpy(tmp,item);
-	p = G__strrstr(tmp,"::");
-	if(p) {
-	  *p = 0; p+=2;
-	  G__fprinterr(G__serr,
-		       "Error: Function %s is not defined in %s ",p,tmp);
-	}
-	else {
-	  G__fprinterr(G__serr,
-		       "Error: Function %s is not defined in current scope "
-		       ,item[0]=='$'?item+1:item);
-	}
-      }
-      else {
-	char tmp[G__ONELINE];
-	strcpy(tmp,item);
-	if(p) {
-	  *p = 0; p+=2;
-	  G__fprinterr(G__serr,
-		       "Error: Symbol %s is not defined in %s ",p,tmp);
-	}
-	else {
-	  G__fprinterr(G__serr,
-		       "Error: Symbol %s is not defined in current scope ",item[0]=='$'?item+1:item);
-	}
-      }
-#else
 #ifdef G__ROOT
       G__fprinterr(G__serr,
 	      "Error: No symbol %s in current scope ",item[0]=='$'?item+1:item);
@@ -328,16 +285,10 @@ char *item;
       G__fprinterr(G__serr,
 	      "Error: No symbol %s in current scope ",item);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1519
-      G__genericerror((char*)NULL);
-#endif
 #ifndef G__OLDIMPLEMENTATION1103
     }
 #endif
-#ifdef G__OLDIMPLEMENTATION1519
     G__genericerror((char*)NULL);
-#endif
   }
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;

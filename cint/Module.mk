@@ -14,21 +14,10 @@ CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
 
-##### check for g++ v3 #####
-ifneq ($(findstring g++,$(CXX)),)
-GCCVERS      := $(shell $(CXX) -v 2>&1 | \
-                        awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
-endif
-
 ##### libCint #####
 CINTH        := $(wildcard $(MODDIRI)/*.h)
 CINTS1       := $(wildcard $(MODDIRS)/*.c)
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx)
-
-CINTS1       += $(CINTDIRM)/G__setup.c
-
-CINTALLO     := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
-CINTALLDEP   := $(CINTALLO:.o=.d)
 
 CINTS1       := $(filter-out $(MODDIRS)/sunos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
@@ -38,7 +27,6 @@ CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/gcc3strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
@@ -46,24 +34,19 @@ CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
 
+CINTS1       += $(CINTDIRM)/G__setup.c
+
 ifeq ($(CXX),KCC)
 CINTS2       += $(MODDIRS)/kccstrm.cxx
 else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
-ifeq ($(PLATFORM),hurd)
-CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 ifeq ($(PLATFORM),fbsd)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),hpux)
-ifeq ($(ARCH),hpuxia64acc)
-CINTS2       += $(MODDIRS)/fakestrm.cxx
-else
 CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)
@@ -78,13 +61,9 @@ CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),aix3)
-CINTS1       += $(MODDIRS)/dlfcn.c
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),aix)
-CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
-ifeq ($(PLATFORM),aix5)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),sgi)
@@ -97,15 +76,16 @@ ifeq ($(PLATFORM),alphaegcs)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 endif
+
 ifeq ($(PLATFORM),sunos)
 CINTS1       += $(MODDIRS)/sunos.c
+endif
+ifeq ($(PLATFORM),aix3)
+CINTS1       += $(MODDIRS)/dlfcn.c
 endif
 ifeq ($(PLATFORM),macos)
 CINTS1       += $(MODDIRS)/macos.c
 CINTS2       += $(MODDIRS)/fakestrm.cxx
-endif
-ifeq ($(PLATFORM),macosx)
-CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
@@ -116,18 +96,6 @@ CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
 ifeq ($(PLATFORM),vms)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
-endif
-ifeq ($(CXX),icc)
-CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/fakestrm.cxx
-endif
-ifeq ($(CXX),ecc)
-CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/fakestrm.cxx
-endif
-ifeq ($(GCCVERS),3)
-CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/gcc3strm.cxx
 endif
 
 CINTS        := $(CINTS1) $(CINTS2)
@@ -195,12 +163,12 @@ $(IOSENUMA):    $(CINTTMP) $(MAKEINFO)
 all-cint:       $(CINTLIB) $(CINT) $(CINTTMP) $(MAKECINT) $(IOSENUM)
 
 clean-cint:
-		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO)
+		@rm -f $(CINTTMPO) $(CINTO) $(CINTEXEO) $(MAKECINTO)
 
 clean::         clean-cint
 
 distclean-cint: clean-cint
-		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
+		@rm -f $(CINTDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
 		   $(CINT) $(CINTTMP) $(MAKECINT)
 
 distclean::     distclean-cint
@@ -217,9 +185,6 @@ $(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
 
 $(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
-
-$(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm -o $@ -c $<
 
 $(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<

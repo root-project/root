@@ -306,7 +306,7 @@ protected:
    UInt_t   fValue;   // value  to be displayed
 
 public:
-   InfoPad(const char *title="",Float_t xlow=0, Float_t ylow=0, Float_t xup=0, Float_t yup=0);
+   InfoPad(Text_t *title="",Float_t xlow=0, Float_t ylow=0, Float_t xup=0, Float_t yup=0);
    virtual ~InfoPad() { }
 
    UInt_t  GetValue()                  { return fValue; }
@@ -328,7 +328,7 @@ class KeyHandler : public TGFrame {
 
 public:
    KeyHandler();
-   ~KeyHandler();
+   ~KeyHandler() { }
 
    Bool_t HandleKey(Event_t *event);    // handler of the key events
 };
@@ -366,7 +366,6 @@ private:
    NewGameButton    *fNewGame;            // clicking on button initiates new game
    QuitButton       *fQuit;               // clicking on button makes game over
    PauseButton      *fPause;              // pause/continue button
-   KeyHandler       *fKeyHandler;         // handler for arrow keys
 
    Int_t             fPiecesDropped;      // number of pieces dropped
    UpdateLevelTimer *fUpdateLevelTimer;   // periodically updates game level
@@ -388,7 +387,7 @@ protected:
 
 public:
    Tetris();
-   virtual ~Tetris() { delete fKeyHandler; }
+   virtual ~Tetris() { }
 
    Int_t  GetLevel()           { return fLevel->GetValue(); }
    Int_t  GetLinesRemoved()    { return fLinesRemoved->GetValue(); }

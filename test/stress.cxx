@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.32 2002/02/03 16:14:46 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.17 2001/02/10 07:13:49 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@
 // with the amount of I/O, Real Time and Cpu Time.
 // One single number (ROOTMARKS) is also calculated showing the relative
 // performance of your machine compared to a reference machine
-// a DELL Inspiron 7500 (Pentium III 600 Mhz) with 256 MBytes of memory
+// a DELL Inspiron 7500 (Pentium III 650 Mhz) with 256 MBytes of memory
 // and 18 GBytes IDE disk.
 //
 // An example of output when all the tests run OK is shown below:
@@ -56,13 +56,13 @@
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
 //******************************************************************
-//*  Linux pcnotebrun 2.2.19 #9 Mon Jul 2 12:54:50 MEST 2001 i68
+//*  Linux pcnotebrun 2.2.14 #2 Tue Mar 21 16:36:17 MET 2000 i68
 //******************************************************************
-//stress    : Total I/O =  597.4 Mbytes, I =  459.9, O = 137.6
-//stress    : Compr I/O =  521.1 Mbytes, I =  403.3, O = 117.8
-//stress    : Real Time = 183.31 seconds Cpu Time = 177.99 seconds
+//stress    : Total I/O =  630.9 Mbytes, I =  478.3, O = 152.6
+//stress    : Compr I/O =  600.3 Mbytes, I =  456.0, O = 144.3
+//stress    : Real Time =  86.47 seconds Cpu Time =  72.89 seconds
 //******************************************************************
-//*  ROOTMARKS = 200.5   *  Root3.02/06   20011211/1825
+//*  ROOTMARKS = 200.2   *  Root3.00/06   20010309/1847
 //******************************************************************
 //
 //_____________________________batch only_____________________
@@ -92,7 +92,7 @@
 #include <TClassTable.h>
 #include "Event.h"
 
-   void stress(Int_t nevent, Int_t style);
+   void stress(Int_t nevent);
    void stress1();
    void stress2();
    void stress3();
@@ -115,13 +115,12 @@
 
 int main(int argc, char **argv)
 {
+   TROOT root("stress","The Root test program");
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    Int_t nevent = 1000;      // by default create 1000 events
    if (argc > 1)  nevent = atoi(argv[1]);
-   Int_t style  = 1;        // by default the new branch style
-   if (argc > 2)  style  = atoi(argv[2]);
-   stress(nevent, style);
+   stress(nevent);
    return 0;
 }
 
@@ -134,7 +133,7 @@ class TTree;
 
 Double_t ntotin=0, ntotout=0;
 
-void stress(Int_t nevent, Int_t style = 1)
+void stress(Int_t nevent)
 {
    //Main control function invoking all test programs
 
@@ -146,9 +145,6 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("******************************************************************\n");
    printf("*  Starting  R O O T - S T R E S S test suite with %d events\n",nevent);
    printf("******************************************************************\n");
-   // select the branch style
-   TTree::SetBranchStyle(style);
-
    //Run the standard test suite
    gBenchmark->Start("stress");
    stress1();
@@ -197,15 +193,15 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_dell_30   = 35.21;  //Pentium III 600 Mhz times with the native compiler
-   Float_t cp_dell_30   = 32.88;
-   Float_t rt_dell_1000 = 183.31;
-   Float_t cp_dell_1000 = 178.00;
+   Float_t rt_dell_30   = 32.00;  //Pentium III 650 Mhz times with the native compiler
+   Float_t cp_dell_30   = 29.88;
+   Float_t rt_dell_1000 = 86.56;
+   Float_t cp_dell_1000 = 72.94;
 #else
-   Float_t rt_dell_30   = 94.11;  //Pentium III 600 Mhz times with CINT
-   Float_t cp_dell_30   = 90.94;  //The difference is essentially coming from stress16
-   Float_t rt_dell_1000 = 261.83;
-   Float_t cp_dell_1000 = 254.83;
+   Float_t rt_dell_30   = 88.62;  //Pentium III 650 Mhz times with CINT
+   Float_t cp_dell_30   = 86.05;  //The difference is essentially coming from stress16
+   Float_t rt_dell_1000 = 161.38;
+   Float_t cp_dell_1000 = 147.95;
 #endif
    Float_t cp_dell = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt_dell = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
@@ -325,7 +321,7 @@ void stress2()
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Int_t lastgood = 8906;
+   Int_t lastgood = 8241;
    if (last <lastgood-200 || last > lastgood+200 || comp <1.9 || comp > 2.5) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -355,7 +351,7 @@ void stress3()
    Int_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Int_t lastgood = 47855;
+   Int_t lastgood = 47516;
    if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -743,12 +739,25 @@ Int_t stress8write(Int_t nevent, Int_t comp, Int_t split)
    tree->Branch("event", "Event", &event, bufsize,split);
 
    //Fill the Tree
-   Int_t ev, nb=0, meanTracks=600;
-   Float_t ptmin = 1;
+   Int_t ev, t, ntrack, nb=0, meanTracks=600;
    for (ev = 0; ev < nevent; ev++) {
-      event->Build(ev,meanTracks,ptmin);
+      Float_t sigmat, sigmas;
+      gRandom->Rannor(sigmat,sigmas);
+      ntrack   = Int_t(meanTracks +meanTracks*sigmat/120.);
+      Float_t random = gRandom->Rndm(1);
+
+      event->SetHeader(ev, 200, 960312, random);
+      event->SetNseg(Int_t(10*ntrack+20*sigmas));
+      event->SetNvertex(1);
+      event->SetFlag(UInt_t(random+0.5));
+      event->SetTemperature(random+20.);
+
+      //  Create and Fill the Track objects
+      for (t = 0; t < ntrack; t++) event->AddTrack(random);
 
       nb += tree->Fill();  //fill the tree
+
+      event->Clear();
    }
    hfile->Write();
    ntotout += hfile->GetBytesWritten();
@@ -792,7 +801,7 @@ void stress8(Int_t nevent)
 
    // Create the file compressed, in split mode and read it back
    gRandom->SetSeed();
-   Int_t nbw2 = stress8write(nevent,1,9);
+   Int_t nbw2 = stress8write(nevent,1,1);
    Int_t nbr2 = stress8read(0);
    Event::Reset();
 
@@ -838,7 +847,7 @@ void stress9tree(TTree *tree)
 // or TChain::Draw with an explicit loop on events.
 // Also a good test for the interpreter
 
-   Event *event = 0;
+   Event *event = new Event();
    tree->SetBranchAddress("event",&event);
    gROOT->cd();
    TDirectory *hfile = gDirectory;
@@ -1104,6 +1113,7 @@ void stress9()
    stress9tree(tree);
 
    // Save test9 histograms
+   delete tree;
    TFile f("stress_test9.root","recreate");
    gROOT->GetList()->Write();
    gROOT->GetList()->Delete();
@@ -1127,7 +1137,7 @@ void stress10()
    TFile *hfile = new TFile("Event.root");
    TTree *tree = (TTree*)hfile->Get("T");
 
-   Event *event = 0;
+   Event *event = new Event();
    tree->SetBranchAddress("event",&event);
 
    // Create 10 clones of this tree
@@ -1264,13 +1274,10 @@ void stress13()
       chain->Add(filename);
    }
 
-   Event *event = 0;
+   Event *event = new Event();
    chain->SetBranchAddress("event",&event);
 
    chain->Merge("Event.root");
-
-   Double_t chentries = chain->GetEntries();
-   delete chain;
 
    event->ResetHistogramPointer(); // fH was deleted above!!
    delete event;
@@ -1283,7 +1290,9 @@ void stress13()
    ntotout += f.GetEND();
 
    Bool_t OK = kTRUE;
-   if (chentries != tree->GetEntries()) OK = kFALSE;
+   if (chain->GetEntries() != tree->GetEntries()) OK = kFALSE;
+   delete tree;
+   delete chain;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -1311,7 +1320,7 @@ void stress15()
    //We want to copy only a few branches.
    TFile *oldfile = new TFile("Event.root");
    TTree *oldtree = (TTree*)oldfile->Get("T");
-   Event *event   = 0;
+   Event *event   = new Event();
    oldtree->SetBranchAddress("event",&event);
    oldtree->SetBranchStatus("*",0);
    oldtree->SetBranchStatus("event",1);
@@ -1468,7 +1477,7 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 3895;
+   Int_t nlinesGood = 3950;
    while (fgets(line,255,fp)) {
       nlines++;
    }

@@ -1,16 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.1.1.3 2001/01/22 12:59:38 fisyak Exp $
 #include <stdlib.h>
 
-#include "TROOT.h"
 #include "TTableDescriptor.h"
 #include "TTable.h"
 #include "TClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "Ttypes.h"
-#include "TInterpreter.h"
 
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
 TableClassImp(TTableDescriptor,tableDescriptor_st)
@@ -19,13 +17,12 @@ TableClassImp(TTableDescriptor,tableDescriptor_st)
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
   // The custom Streamer for this table
-  fSecondDescriptor = 0;
   TTable::Streamer(R__b);
 }
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0)
 {
   if (parentTable) {
      TClass *classPtr = parentTable->GetRowClass();
@@ -36,7 +33,7 @@ TTableDescriptor::TTableDescriptor(const TTable *parentTable)
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(TClass *classPtr)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0),fSecondDescriptor(0)
+ : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0)
 {
   // Create a descriptor of the C-structure defined by TClass
   // TClass *classPtr must be a valid pointer to TClass object for
@@ -49,7 +46,6 @@ void TTableDescriptor::Init(TClass *classPtr)
   // Create a descriptor of the C-structure defined by TClass
   // TClass *classPtr must be a valid pointer to TClass object for
   // "plain" C_structure only !!!
-  fSecondDescriptor = 0;
   SetType("tableDescriptor");
   if (classPtr) {
     fRowClass = classPtr; // remember my row class
@@ -72,7 +68,6 @@ TTableDescriptor::~TTableDescriptor()
     }
   }
 #endif
-  delete fSecondDescriptor;
 }
 
 //____________________________________________________________________________
@@ -120,26 +115,6 @@ TString TTableDescriptor::CreateLeafList() const
   return string;
 }
 
-//______________________________________________________________________________
-TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
-{
-	///////////////////////////////////////////////////////////
-	//
-	// MakeDescriptor(const char *structName) - static method
-	//                structName - the name of the C structure 
-	//                             to create descriptor of
-	// return a new instance of the TTableDescriptor or 0 
-	// if the "structName is not present with the dictionary
-	//
-	///////////////////////////////////////////////////////////
-	TTableDescriptor *dsc = 0;
-//    TClass *cl = gROOT->GetClass(structName, kFALSE);
-    TClass *cl = new TClass(structName,1,0,0);
-	assert(cl);
-	dsc = new TTableDescriptor(cl);
-	return dsc;
-}
-
 //____________________________________________________________________________
 void TTableDescriptor::LearnTable(const TTable *parentTable)
 {
@@ -171,15 +146,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 
   if (!classPtr) return;
 
-  if (!classPtr->GetListOfRealData()) {
-	  const char *name = classPtr->GetName();
-	   char buffer[512];
-	   sprintf(buffer," new %s();",name);
- 	   void *p = (void *)gInterpreter->Calc(buffer);
- 	   classPtr->BuildRealData(p);
-  	   sprintf(buffer,"delete ((%s *)(0x%lx);",name,(Long_t)p);
-
-  }
+  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
   if (!(classPtr->GetNdata())) return;
 
   Char_t *varname;
@@ -232,16 +199,16 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     (new TDataSet(varname,comments))->SetTitle(member->GetTitle());
   }
 }
- 
+
 //______________________________________________________________________________
 Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 {
   //                  "Schema evolution"
-  // Method updates the offsets with a new ones from another descriptor
+  // Method updates the offsets with a new ones from another descritor
   // 
   Int_t maxColumns = NumberOfColumns();
   Int_t mismathes = 0;
- 
+
   if (   (UInt_t(maxColumns) == newDescriptor->NumberOfColumns())
       && (memcmp(GetArray(),newDescriptor->GetArray(),sizeof(tableDescriptor_st)*GetNRows()) == 0)
      ) return mismathes; // everything fine for sure !
@@ -251,14 +218,9 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
   {
     Int_t colNewIndx = newDescriptor->ColumnByName(ColumnName(colCounter));
     // look for analog
-    EColumnType newType = newDescriptor->ColumnType(colNewIndx);
-#ifdef __STAR__
-    if (newType == kInt)       newType = kLong;
-    else if (newType == kUInt) newType = kULong;
-#endif
     if (    colNewIndx >=0
          && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
-         && ColumnType(colCounter) == newType
+         && ColumnType(colCounter) == newDescriptor->ColumnType(colNewIndx)
        )  {
       SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
       if (colNewIndx != colCounter) {
@@ -268,8 +230,8 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
       }
     }
     else {
-      printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
-        colCounter,ColumnName(colCounter),ColumnType(colCounter));
+      printf("Schema evolution: \t%d column of the \"%s\" table has been lost\n",
+        colCounter,ColumnName(colCounter));
       printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
       SetOffset(UInt_t(-1),colCounter);
       mismathes++;
@@ -356,4 +318,3 @@ TTable::EColumnType TTableDescriptor::ColumnType(const Char_t *columnName) const
   if (indx >= 0 ) indx = ColumnType(indx);
   return EColumnType(indx);
 }
-

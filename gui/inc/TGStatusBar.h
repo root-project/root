@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.4 2001/04/11 11:10:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 #include "TGFrame.h"
 #endif
 
-class TGStatusBarPart;
 
 class TGStatusBar : public TGFrame {
 
@@ -48,7 +47,7 @@ protected:
 public:
    TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
+               ULong_t back = fgDefaultFrameBackground);
    virtual ~TGStatusBar();
 
    virtual void DrawBorder();

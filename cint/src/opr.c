@@ -162,12 +162,6 @@ double val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
-    defined->obj.i = (int)val?1:0;
-    break;
-#endif
   default:
     G__genericerror("Invalid operation and assignment, G__doubleassignbyref");
     break;
@@ -220,12 +214,6 @@ long val;
     *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
-    defined->obj.i = (int)val?1:0;
-    break;
-#endif
   case 'd': /* double */
     *(double*)defined->ref = (double)val;
     defined->obj.d = (double)val;
@@ -1852,16 +1840,6 @@ G__value *pios;
     result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1585
-  if(0==ig2) {
-    sprintf(buf,"operator char*()" /* ,pios->obj.i */ );
-    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
-  }
-  if(0==ig2) {
-    sprintf(buf,"operator const char*()" /* ,pios->obj.i */ );
-    result = G__getfunction(buf,&ig2,G__TRYMEMFUNC);
-  }
-#endif
 
   /* restore environment */
   G__store_struct_offset = store_struct_offset;
@@ -2454,7 +2432,7 @@ int flag;
   int store_memberfunc_struct_offset;
 
 #ifndef G__OLDIMPLEMENTATION745
-  if(strncmp(funcname,"operator",8)==0 || strcmp(funcname,"G__ateval")==0) 
+  if(strncmp(funcname,"operatr",8)==0 || strcmp(funcname,"G__ateval")==0) 
     return(0);
 #endif
 

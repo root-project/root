@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.40 2002/01/10 08:25:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.23 2001/02/28 07:11:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -24,11 +24,8 @@
 #include "TDataType.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
-#include "TFolder.h"
-#include "TRef.h"
 
-const Int_t kMaxLen = 512;
-static char gIncludeName[kMaxLen];
+static char includeName[100];
 
 ClassImp(TStreamerElement)
 
@@ -45,7 +42,6 @@ TStreamerElement::TStreamerElement()
    fStreamer    = 0;
    fMethod      = 0;
    fOffset      = 0;
-   fClassObject = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -64,7 +60,6 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fTypeName    = typeName;
    fStreamer    = 0;
    fMethod      = 0;
-   fClassObject = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -79,17 +74,14 @@ TStreamerElement::~TStreamerElement()
 //______________________________________________________________________________
 Bool_t TStreamerElement::CannotSplit() const
 {
-   //returns true if the element cannot be split, false otherwise
+   //returns true if the element cannot be split, falso otherwise
    //An element cannot be split if the corresponding class member
    //has the special characters "||" as the first characters in the comment field
    
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type or STL
-   if (cl->InheritsFrom("TRef"))      return kTRUE;
-   if (cl->InheritsFrom("TRefArray")) return kTRUE;
-   if (cl->InheritsFrom("TArray"))    return kTRUE;
-   
+
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
    TBaseClass *base;
@@ -103,38 +95,11 @@ Bool_t TStreamerElement::CannotSplit() const
 TClass *TStreamerElement::GetClassPointer() const
 {
    //returns a pointer to the TClass of this element
-   
-   if (fClassObject) return fClassObject;
-   TString className = fTypeName.Strip(TString::kTrailing, '*');
+   char className[128];
+   sprintf(className,fTypeName.Data());
+   char *star = strchr(className,'*');
+   if (star) *star = 0;
    return gROOT->GetClass(className);
-}
-
-//______________________________________________________________________________
-Int_t TStreamerElement::GetExecID() const
-{
-   //returns the TExec id for the EXEC instruction in the comment field
-   //of a TRef data member
-   
-   //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
-   
-   //if the UniqueID of this element has already been set, we assume
-   //that it contains the exec id of a TRef object.
-   if (GetUniqueID()) return GetUniqueID();
-   
-   //check if an Exec is specified in the comment field
-   char *action = (char*)strstr(GetTitle(),"EXEC:");
-   if (!action) return 0;
-   char caction[512];
-   strcpy(caction,action+5);
-   char *blank = (char*)strchr(caction,' ');
-   if (blank) *blank = 0;
-   //we have found the Exec name in the comment
-   //we register this Exec to the list of Execs.
-   Int_t index = TRef::AddExec(caction);
-   //we save the Exec index as the uniqueid of this STreamerElement
-   ((TStreamerElement*)this)->SetUniqueID(index+1);
-   return index+1;
 }
 
 //______________________________________________________________________________
@@ -144,8 +109,8 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should may be copy the result.
    
-   static char name[kMaxLen];
-   char cdim[20];
+   static char name[128];
+   char cdim[8];
    sprintf(name,GetName());
    for (Int_t i=0;i<fArrayDim;i++) {
       sprintf(cdim,"[%d]",fMaxIndex[i]);
@@ -155,46 +120,8 @@ const char *TStreamerElement::GetFullName() const
 }
 
 //______________________________________________________________________________
-Int_t TStreamerElement::GetSize() const
-{
-   //returns size of this element in bytes
-   
-   if (fArrayLength) return fArrayLength*fSize;
-   return fSize;
-}
-
-//______________________________________________________________________________
-const char *TStreamerElement::GetTypeNameBasic() const
-{
-   //return type name of this element
-   //in case the type name is not a standard basic type, return
-   //the basic type name known to CINT
-   
-   TDataType *dt = gROOT->GetType(fTypeName.Data());
-   if (fType < 1 || fType > 55) return fTypeName.Data();
-   if (dt && dt->GetType() > 0) return fTypeName.Data();
-   Int_t dtype = fType%20;
-   switch (dtype) {
-      case  1: return "Char_t";   
-      case  2: return "Short_t";   
-      case  3: return "Int_t";   
-      case  4: return "Long_t";   
-      case  5: return "Float_t";   
-      case  6: return "Int_t";   
-      case  8: return "Double_t";   
-      case 11: return "UChar_t";   
-      case 12: return "UShort_t";   
-      case 13: return "UInt_t";   
-      case 14: return "ULong_t"; 
-      case 15: return "UInt_t"; 
-   }
-   return "";  
-}
-
-//______________________________________________________________________________
 void TStreamerElement::Init(TObject *)
 {
-   fClassObject = GetClassPointer();
 }
 
 //______________________________________________________________________________
@@ -214,9 +141,9 @@ Bool_t TStreamerElement::IsOldFormat(const char *newTypeName)
 //______________________________________________________________________________
 void TStreamerElement::ls(Option_t *) const
 {
-   sprintf(gIncludeName,GetTypeName());
-   if (IsaPointer() && !fTypeName.Contains("*")) strcat(gIncludeName,"*");
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",gIncludeName,GetFullName(),fOffset,fType,GetTitle());
+   sprintf(includeName,GetTypeName());
+   if (IsaPointer() && !fTypeName.Contains("*")) strcat(includeName,"*");
+   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",includeName,GetFullName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
@@ -247,8 +174,7 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
 
    fStreamer = streamer;
    if (streamer) {
-      //if (fArrayLength == 0 && fType != kSTL) return;
-      if (fType != kSTL) return;
+      if (fArrayLength == 0 && fType != kSTL) return;
       //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
       fType = TStreamerInfo::kStreamer;
       fNewType = fType;
@@ -265,9 +191,6 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         SetUniqueID(0);
-         //check if element is a TRef or TRefArray
-         GetExecID();
          return;
       }
       //====process old versions before automatic schema evolution
@@ -284,16 +207,6 @@ void TStreamerElement::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
-void TStreamerElement::Update(TClass *oldClass, TClass *newClass)
-{
-   //function called by the TClass constructor when replacing a fake class
-   //by the real class
-   
-   if (fClassObject == oldClass) fClassObject = newClass;
-}
-
-   
 //______________________________________________________________________________
 
 //////////////////////////////////////////////////////////////////////////
@@ -336,50 +249,32 @@ TStreamerBase::~TStreamerBase()
 TClass *TStreamerBase::GetClassPointer() const
 {
    //returns a pointer to the TClass of this element
-   if (fBaseClass) return fBaseClass;
-   return gROOT->GetClass(GetName());   
-}
-
-//______________________________________________________________________________
-Int_t TStreamerBase::GetSize() const
-{
-   //returns size of baseclass in bytes
-   
-   return GetClassPointer()->Size();
+   return fBaseClass;
 }
 
 //______________________________________________________________________________
 void TStreamerBase::Init(TObject *)
 {
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
-   fBaseClass = gROOT->GetClass(GetName());
-   if (!fBaseClass) return;
-   if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
-   //fBaseClass = gROOT->GetClass(GetName());
 }
 
 //______________________________________________________________________________
 const char *TStreamerBase::GetInclude() const
 {
-   if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",fBaseClass->GetDeclFileName());
-   else                            sprintf(gIncludeName,"\"%s.h\"",GetName());
-   return gIncludeName;
+   if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(includeName,"\"%s\"",fBaseClass->GetDeclFileName());
+   else                            sprintf(includeName,"\"%s.h\"",GetName());
+   return includeName;
 }
 
 //______________________________________________________________________________
 Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
 {
-   if (fMethod) {
-      ULong_t args[1];
-      args[0] = (ULong_t)&b;
-      fMethod->SetParamPtrs(args);
-      fMethod->Execute((void*)(pointer+fOffset));
-   } else {
-      //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      if (!fBaseClass->GetClassInfo()) fBaseClass->ReadBuffer(b,pointer);
-   }
+   ULong_t args[1];
+   args[0] = (ULong_t)&b;
+   fMethod->SetParamPtrs(args);
+   fMethod->Execute((void*)(pointer+fOffset));
    return 0;
 }
 
@@ -405,19 +300,8 @@ void TStreamerBase::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
-void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
-{
-   //function called by the TClass constructor when replacing a fake class
-   //by the real class
-   
-   if (fClassObject == oldClass) fClassObject = newClass;
-   if (fBaseClass   == oldClass) fBaseClass   = newClass;
-}
-
-//______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
-   if (!fMethod) return 0;
    ULong_t args[1];
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
@@ -471,15 +355,6 @@ ULong_t TStreamerBasicPointer::GetMethod() const
    if (!fCounter) ((TStreamerBasicPointer*)this)->Init();
    if (!fCounter) return 0;
    return (ULong_t)fCounter->GetOffset();
-}
-
-//______________________________________________________________________________
-Int_t TStreamerBasicPointer::GetSize() const
-{
-   //returns size of basicpointer in bytes
-   
-   if (fArrayLength) return fArrayLength*sizeof(void *);
-   return sizeof(void *);
 }
 
 //______________________________________________________________________________
@@ -559,20 +434,7 @@ ULong_t TStreamerLoop::GetMethod() const
 {
    // return address of counter
    
-   //if (!fCounter) {
-   //   Init();
-   //   if (!fCounter) return 0;
-   //}
-   return (ULong_t)fCounter->GetOffset(); 
-}
-
-//______________________________________________________________________________
-Int_t TStreamerLoop::GetSize() const
-{
-   //returns size of counter in bytes
-   
-   if (fArrayLength) return fArrayLength*sizeof(Int_t);
-   return sizeof(Int_t);
+   return (ULong_t)fCounter->GetOffset();
 }
 
 //______________________________________________________________________________
@@ -589,8 +451,8 @@ void TStreamerLoop::Init(TObject *)
 //______________________________________________________________________________
 const char *TStreamerLoop::GetInclude() const
 {
-   sprintf(gIncludeName,"<%s>","TString.h"); //to be generalized
-   return gIncludeName;
+   sprintf(includeName,"<%s>","TString.h"); //to be generalized
+   return includeName;
 }
 
 //______________________________________________________________________________
@@ -659,15 +521,6 @@ ULong_t TStreamerBasicType::GetMethod() const
 }
 
 //______________________________________________________________________________
-Int_t TStreamerBasicType::GetSize() const
-{
-   //returns size of pointer to basictype in bytes
-   
-   if (fArrayLength) return fArrayLength*fSize;
-   return fSize;
-}
-
-//______________________________________________________________________________
 void TStreamerBasicType::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TStreamerBasicType.
@@ -703,6 +556,7 @@ TStreamerObject::TStreamerObject()
 {
    // Default ctor.
 
+   fClassObject = 0;
 }
 
 //______________________________________________________________________________
@@ -734,18 +588,9 @@ void TStreamerObject::Init(TObject *)
 const char *TStreamerObject::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   return gIncludeName;
-}
-
-//______________________________________________________________________________
-Int_t TStreamerObject::GetSize() const
-{
-   //returns size of object class in bytes
-   
-   if (fArrayLength) return fArrayLength*GetClassPointer()->Size();
-   return GetClassPointer()->Size();
+   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
+   return includeName;
 }
 
 //______________________________________________________________________________
@@ -783,6 +628,7 @@ TStreamerObjectAny::TStreamerObjectAny()
 {
    // Default ctor.
 
+   fClassObject = 0;
 }
 
 //______________________________________________________________________________
@@ -810,18 +656,9 @@ void TStreamerObjectAny::Init(TObject *)
 const char *TStreamerObjectAny::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   return gIncludeName;
-}
-
-//______________________________________________________________________________
-Int_t TStreamerObjectAny::GetSize() const
-{
-   //returns size of anyclass in bytes
-   
-   if (fArrayLength) return fArrayLength*GetClassPointer()->Size();
-   return GetClassPointer()->Size();
+   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
+   return includeName;
 }
 
 //______________________________________________________________________________
@@ -860,6 +697,7 @@ TStreamerObjectPointer::TStreamerObjectPointer()
 {
    // Default ctor.
 
+   fClassObject = 0;
 }
 
 //______________________________________________________________________________
@@ -889,30 +727,11 @@ void TStreamerObjectPointer::Init(TObject *)
 const char *TStreamerObjectPointer::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   char *star = strchr(gIncludeName,'*');
+   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
+   char *star = strchr(includeName,'*');
    if (star) strcpy(star,star+1);
-   return gIncludeName;
-}
-
-//______________________________________________________________________________
-Int_t TStreamerObjectPointer::GetSize() const
-{
-   //returns size of objectpointer in bytes
-   
-   if (fArrayLength) return fArrayLength*sizeof(void *);
-   return sizeof(void *);
-}
-
-//______________________________________________________________________________
-void TStreamerObjectPointer::SetArrayDim(Int_t dim)
-{
-   // Set number of array dimensions.
-   
-   fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
-   fNewType = fType;
+   return includeName;
 }
 
 //______________________________________________________________________________
@@ -967,15 +786,6 @@ TStreamerString::~TStreamerString()
 }
 
 //______________________________________________________________________________
-Int_t TStreamerString::GetSize() const
-{
-   //returns size of anyclass in bytes
-   
-   if (fArrayLength) return fArrayLength*sizeof(TString);
-   return sizeof(TString);
-}
-
-//______________________________________________________________________________
 void TStreamerString::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TStreamerString.
@@ -1021,24 +831,11 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    char *s = new char[nch+1];
    strcpy(s,typeName);
    char *sopen  = strchr(s,'<'); *sopen  = 0; sopen++;
-   // We are looking for the first arguments of the STL container, because
-   // this arguments can be a templates we need to count the < and >
-   char* current=sopen;
-   for(int count = 0; *current!='\0'; current++) {
-      if (*current=='<') count++;
-      if (*current=='>') {
-         if (count==0) break;
-         count--;
-      }
-      if (*current==',' && count==0) break;
-   }
-   char *sclose = current; *sclose = 0;
+   char *sclose = strchr(sopen+1,'>'); *sclose = 0;
    char *sconst = strstr(sopen,"const");
    if (sconst) sopen = sconst + 5;
    fSTLtype = 0;
    fCtype   = 0;
-   // Any class name that 'contains' the word will be counted
-   // as a STL container. Is that really what we want.
    if      (strstr(s,"vector"))   fSTLtype = kSTLvector;
    else if (strstr(s,"list"))     fSTLtype = kSTLlist;
    else if (strstr(s,"deque"))    fSTLtype = kSTLdeque;
@@ -1050,13 +847,9 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    if (dmPointer) fSTLtype += TStreamerInfo::kOffsetP;
    
    // find STL contained type
-   while (*sopen==' ') sopen++;
+    while (*sopen==' ') sopen++;
    Bool_t isPointer = kFALSE;
-   // Find stars outside of any template definitions in the
-   // first template argument.
-   char *star = strrchr(sopen,'>');
-   if (star) star = strchr(star,'*');
-   else star = strchr(sopen,'*');
+   char *star = strchr(sopen,'*');
    if (star) {
       isPointer = kTRUE;
       *star = 0;
@@ -1089,19 +882,10 @@ TStreamerSTL::~TStreamerSTL()
 }
 
 //______________________________________________________________________________
-Int_t TStreamerSTL::GetSize() const
-{
-   //returns size of STL container in bytes
-   
-   if (fArrayLength) return fArrayLength*8;
-   return 8;
-}
-
-//______________________________________________________________________________
 void TStreamerSTL::ls(Option_t *) const
 {
-   char name[kMaxLen];
-   char cdim[20];
+   char name[128];
+   char cdim[8];
    sprintf(name,GetName());
    for (Int_t i=0;i<fArrayDim;i++) {
       sprintf(cdim,"[%d]",fMaxIndex[i]);
@@ -1113,14 +897,14 @@ void TStreamerSTL::ls(Option_t *) const
 //______________________________________________________________________________
 const char *TStreamerSTL::GetInclude() const
 {
-   if      (fSTLtype == kSTLvector)   sprintf(gIncludeName,"<%s>","vector");
-   else if (fSTLtype == kSTLlist)     sprintf(gIncludeName,"<%s>","list");
-   else if (fSTLtype == kSTLdeque)    sprintf(gIncludeName,"<%s>","deque");
-   else if (fSTLtype == kSTLmap)      sprintf(gIncludeName,"<%s>","map");
-   else if (fSTLtype == kSTLset)      sprintf(gIncludeName,"<%s>","set");
-   else if (fSTLtype == kSTLmultimap) sprintf(gIncludeName,"<%s>","multimap");
-   else if (fSTLtype == kSTLmultiset) sprintf(gIncludeName,"<%s>","multiset");
-   return gIncludeName;
+   if      (fSTLtype == kSTLvector)   sprintf(includeName,"<%s>","vector");
+   else if (fSTLtype == kSTLlist)     sprintf(includeName,"<%s>","list");
+   else if (fSTLtype == kSTLdeque)    sprintf(includeName,"<%s>","deque");
+   else if (fSTLtype == kSTLmap)      sprintf(includeName,"<%s>","map");
+   else if (fSTLtype == kSTLset)      sprintf(includeName,"<%s>","set");
+   else if (fSTLtype == kSTLmultimap) sprintf(includeName,"<%s>","multimap");
+   else if (fSTLtype == kSTLmultiset) sprintf(includeName,"<%s>","multiset");
+   return includeName;
 }
 
 //______________________________________________________________________________
@@ -1186,17 +970,8 @@ TStreamerSTLstring::~TStreamerSTLstring()
 //______________________________________________________________________________
 const char *TStreamerSTLstring::GetInclude() const
 {
-   sprintf(gIncludeName,"<string>");
-   return gIncludeName;
-}
-
-//______________________________________________________________________________
-Int_t TStreamerSTLstring::GetSize() const
-{
-   //returns size of anyclass in bytes
-   
-   if (fArrayLength) return fArrayLength*12;
-   return 12;
+   sprintf(includeName,"<string>");
+   return includeName;
 }
 
 //______________________________________________________________________________

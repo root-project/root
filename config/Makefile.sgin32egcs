@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.4 and 6.5 with EGCS compiler for n32 ABI
 # contributed by Martin Weber
 

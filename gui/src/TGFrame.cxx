@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.13 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.11 2001/01/08 14:34:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -88,8 +88,7 @@ ClassImp(TGGroupFrame)
 
 //______________________________________________________________________________
 TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
-                 UInt_t options, ULong_t back)
-   : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
+    UInt_t options, ULong_t back) : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0)
 {
    // Create a TGFrame object. Options is an OR of the EFrameTypes.
 
@@ -711,11 +710,11 @@ TGMainFrame::~TGMainFrame()
 {
    // TGMainFrame destructor.
 
+   DestroyWindow();
    if (fBindList) {
       fBindList->Delete();
       delete fBindList;
    }
-   DestroyWindow();
 }
 
 //______________________________________________________________________________
@@ -919,8 +918,7 @@ void TGMainFrame::SetWMState(EInitialState state)
 
 //______________________________________________________________________________
 TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
-                                   UInt_t w, UInt_t h, UInt_t options)
-   : TGMainFrame(p, w, h, options | kTransientFrame)
+     UInt_t w, UInt_t h, UInt_t options) : TGMainFrame(p, w, h, options)
 {
    // Create a transient window. A transient window is typically used for
    // dialog boxes.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.11 2001/02/22 13:54:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.10 2001/02/21 08:56:08 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -181,6 +181,5 @@ void TLeafC::SetAddress(void *add)
    }
    else {
       fValue = new char[fNdata];
-      fValue[0] = 0;
    }
 }

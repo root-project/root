@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.10 2001/10/30 17:22:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.6 2000/11/21 16:24:07 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -107,7 +107,6 @@ public:
    virtual Double_t GetAbsYlowNDC() const = 0;
    virtual Double_t GetAbsWNDC() const = 0;
    virtual Double_t GetAbsHNDC() const = 0;
-   virtual Double_t GetAspectRatio() const = 0;
    virtual Double_t GetPhi() const = 0;
    virtual Double_t GetTheta() const = 0;
    virtual Double_t GetUxmin() const = 0;
@@ -141,13 +140,11 @@ public:
    virtual TPadView3D *GetView3D() const = 0;
    virtual Bool_t   HasCrosshair() const = 0;
    virtual void     HighLight(Color_t col=kRed, Bool_t set=kTRUE) = 0;
-   virtual Bool_t   HasFixedAspectRatio() const = 0;
    virtual Bool_t   IsBatch() const = 0;
    Bool_t           IsBeingResized() const { return fResizing; }
    virtual Bool_t   IsEditable() const = 0;
    virtual Bool_t   IsModified() const = 0;
    virtual Bool_t   IsRetained() const = 0;
-   virtual Bool_t   IsVertical() const = 0;
    virtual void     ls(Option_t *option="") const = 0;
    virtual void     Modified(Bool_t flag=1) = 0;
    virtual Bool_t   OpaqueMoving() const = 0;
@@ -188,13 +185,11 @@ public:
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;
    virtual void     SetBorderMode(Short_t bordermode) = 0;
    virtual void     SetBorderSize(Short_t bordersize) = 0;
-   virtual void     SetCanvas(TCanvas *c) = 0;
    virtual void     SetCanvasSize(UInt_t ww, UInt_t wh) = 0;
    virtual void     SetCrosshair(Int_t crhair=1) = 0;
    virtual void     SetCursor(ECursor cursor) = 0;
    virtual void     SetDoubleBuffer(Int_t mode=1) = 0;
    virtual void     SetEditable(Bool_t mode=kTRUE) = 0;
-   virtual void     SetFixedAspectRatio(Bool_t fixed = kTRUE) = 0;
    virtual void     SetGrid(Int_t valuex = 1, Int_t valuey = 1) = 0;
    virtual void     SetGridx(Int_t value = 1) = 0;
    virtual void     SetGridy(Int_t value = 1) = 0;
@@ -219,7 +214,6 @@ public:
    virtual void     SetTheta(Double_t theta=30) = 0;
    virtual void     SetPhi(Double_t phi=30) = 0;
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
-   virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
    virtual void     SetView(TView *view) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;

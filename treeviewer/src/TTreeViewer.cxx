@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.22 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.16 2001/03/09 11:02:24 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -160,7 +160,9 @@
 //End_Html
 //
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TTreeViewer.h"
 #include "HelpTextTV.h"
 #include "TTVLVContainer.h"
@@ -246,7 +248,6 @@ enum ERootTreeViewerCommands {
    kRunCommand,
    kRunMacro,
 
-   kOptionsReset,
    kOptionsGeneral = 20,
    kOptions1D = 50,
    kOptions2D = 70,
@@ -291,12 +292,6 @@ TTreeViewer::TTreeViewer(const char* treeName)
    // TTreeViewer default constructor
 
    fTree = 0;
-   gROOT->ProcessLine("TTree *tv__tree = 0;");
-   fTreeList = new TList;
-   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
-   fFilename = 0;
-   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
-   gInterpreter->SaveContext();
    BuildInterface();
    SetTreeName(treeName);
 }
@@ -368,12 +363,17 @@ void TTreeViewer::SetTreeName(const char* treeName)
       char command[100];
       command[0] = 0;
       // define a global "tree" variable for the same tree
-      sprintf(command, "tv__tree = (TTree *) gROOT->FindObject(\"%s\");", treeName);
+      sprintf(command, "TTree *tree = (TTree *) gROOT->FindObject(\"%s\");", treeName);
       ExecuteCommand(command);
+   }
+   //--- add the list of trees
+   if (!fTreeList) {
+      fTreeList = new TList();
+      ExecuteCommand("TList *list = new TList;");
    }
    //--- add the tree to the list if it is noy already in
    fTreeList->Add(fTree);
-   ExecuteCommand("tv__tree_list->Add(tv__tree);");
+   ExecuteCommand("list->Add(tree);");
    //--- map this tree
    TGListTreeItem *base = 0;
    TGListTreeItem *parent = fLt->FindChildByName(base, "TreeList");
@@ -451,10 +451,10 @@ void TTreeViewer::BuildInterface()
    fDimension = 0;
    fVarDraw = kFALSE;
    fStopMapping = kFALSE;
-//   fFilename = 0;
+   fFilename = 0;
    fSourceFile = "treeviewer.C";
    //--- lists : trees and widgets to be removed
-//   fTreeList = 0;
+   fTreeList = 0;
    fTreeIndex = 0;
    fWidgets = new TList();
    //--- create menus --------------------------------------------------------
@@ -546,8 +546,6 @@ void TTreeViewer::BuildInterface()
    fOptionsMenu->AddPopup("&General Options...", fOptionsGen);
    fOptionsMenu->AddPopup("&1D Options",         fOptions1D);
    fOptionsMenu->AddPopup("&2D Options",         fOptions2D);
-   fOptionsMenu->AddSeparator();
-   fOptionsMenu->AddEntry("&Reset options",      kOptionsReset);
    //--- Help menu
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
    fHelpMenu->AddEntry("&About...",              kHelpAbout);
@@ -702,7 +700,7 @@ void TTreeViewer::BuildInterface()
    fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder);
    //--- container frame
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
-                        GetWhitePixel());
+                        fgWhitePixel);
    fLt->Associate(this);
    fTreeView->SetContainer(fLt);
 
@@ -716,8 +714,8 @@ void TTreeViewer::BuildInterface()
    fLVContainer->Associate(this);
    fLVContainer->SetListView(fListView);
    fLVContainer->SetViewer(this);
-   fLVContainer->SetBackgroundColor(GetWhitePixel());
-   fListView->GetViewPort()->SetBackgroundColor(GetWhitePixel());
+   fLVContainer->SetBackgroundColor(fgWhitePixel);
+   fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fListView->SetContainer(fLVContainer);
    fListView->SetViewMode(kLVList);
 
@@ -1162,10 +1160,6 @@ void TTreeViewer::ExecuteDraw()
          if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
       }
    }
-   if (!dimension) {
-      Warning("Nothing to draw on X,Y,Z");
-      return;
-   }
    // find ListIn
    fTree->SetEventList(0);
    TEventList *elist = 0;
@@ -1201,7 +1195,7 @@ void TTreeViewer::ExecuteDraw()
 //      fBarScan->SetState(kButtonUp);
       fScanMode = kFALSE;
       if (strlen(ScanList())) sprintf(varexp, ScanList());
-      sprintf(command, "tv__tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
+      sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);",
               varexp, cut, gopt, nentries, firstentry);
       if (fBarScan->GetState() == kButtonDown) {
          ((TTreePlayer *)fTree->GetPlayer())->SetScanRedirect(kTRUE);
@@ -1217,42 +1211,24 @@ void TTreeViewer::ExecuteDraw()
       fBarH->SetState(kButtonUp);
       TH1 *hist = fTree->GetHistogram();
       if (hist && gPad) {
+         hist->Draw(gopt);
          hist = (TH1*)gPad->GetListOfPrimitives()->FindObject(fBarHist->GetText());
          if (hist) {
-            // check if graphic option was modified
-            TString last(fLastOption);
-            TString current(gopt);
-            current.ToUpper();
-            last.ToUpper();
-            if (current == last) {
+            if (!strcmp(gopt, fLastOption)) {
                gPad->Update();
-               return;
-            }
-            if (dimension == 3 && strlen(gopt)) {
-               cout << "Graphics option " << gopt << " not valid for 3D histograms" << endl;
                return;
             }
             cout << " Graphics option for current histogram changed to " << gopt << endl;
             hist->Draw(gopt);
-            fLastOption = fBarOption->GetText();
+            fLastOption = gopt;
             gPad->Update();
             return;
          }
       }
    }
    // send draw command
-   fLastOption = fBarOption->GetText();
-   if (!strlen(gopt) && dimension!=3)
-   //{
-   //   gopt = "hist";
-   //   fLastOption = "hist";
-   //}
-   if (dimension == 3 && strlen(gopt)) {
-      cout << "Graphics option " << gopt << " not valid for 3D histograms" << endl;
-      gopt = "";
-      fLastOption = "";
-   }
-   sprintf(command, "tv__tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
+   if (!strlen(gopt)) gopt = "hist";
+   sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);",
            varexp, cut, gopt, nentries, firstentry);
    if (fCounting) return;
    fCounting = kTRUE;
@@ -1265,6 +1241,7 @@ void TTreeViewer::ExecuteDraw()
    fCounting = kFALSE;
    fProgressBar->SetPosition(0);
    fProgressBar->ShowPosition();
+   fLastOption = gopt;
    TH1 *hist = fTree->GetHistogram();
    if (hist) {
    // put expressions aliases on axes
@@ -1593,9 +1570,9 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                }
                break;
             case kCM_MENU:
-            // handle menu messages
+            // hanlde menu messages
                // check if sent by Options menu
-               if ((parm1>=kOptionsReset) && (parm1<kHelpAbout)) {
+               if ((parm1>=kOptionsGeneral) && (parm1<kHelpAbout)) {
                   Dimension();
                   if ((fDimension==0) && (parm1>=kOptions1D)) {
                      Warning("Edit expressions first");
@@ -1619,20 +1596,18 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kFileBrowse:
                      if (1) {
-                        static TString dir(".");
                         TGFileInfo info;
-                        info.fFileTypes = gOpenTypes;
-                        info.fIniDir    = StrDup(dir);
+                        info.fFileTypes = (char **) gOpenTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
-                        dir = info.fIniDir;
                         char command[1024];
                         command[0] = 0;
-                        sprintf(command, "tv__tree_file = new TFile(\"%s\");", info.fFilename);
+                        sprintf(command, "TFile *treeFile = new TFile(\"%s\");", info.fFilename);
                         ExecuteCommand(command);
-                        ExecuteCommand("tv__tree_file->ls();");
+                        ExecuteCommand("treeFile->ls();");
                         cout << "Use SetTreeName() from context menu and supply a tree name" << endl;
                         cout << "The context menu is activated by right-clicking the panel from right" << endl;
+                        delete[] info.fFilename;
                      }
                      break;
                   case kFileLoadLibrary:
@@ -1648,19 +1623,16 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kFileOpenSession:
                      if (1) {
-                        static TString dir(".");
                         TGFileInfo info;
-                        info.fFileTypes = gMacroTypes;
-                        info.fIniDir    = StrDup(dir);
+                        info.fFileTypes = (char **) gMacroTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
-                        dir = info.fIniDir;
-                        gInterpreter->Reset();
                         if (!gInterpreter->IsLoaded(info.fFilename)) gInterpreter->LoadMacro(info.fFilename);
                         char command[1024];
                         command[0] = 0;
                         sprintf(command,"open_session((void*)0x%lx);", (Long_t)this);
                         ExecuteCommand(command);
+                        delete[] info.fFilename;
                      }
                      break;
                   case kFileSaveMacro:
@@ -1937,21 +1909,14 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
    // make sure that 'draw on double-click' flag is reset
    fVarDraw = kFALSE;
 }
+
 //______________________________________________________________________________
 void TTreeViewer::MapOptions(Long_t parm1)
 {
    // Scan the selected options from option menu.
 
    Int_t ind;
-   if (parm1 == kOptionsReset) {
-      for (ind=kOptionsGeneral; ind<kOptionsGeneral+16; ind++)
-         fOptionsGen->UnCheckEntry(ind);
-      for (ind=kOptions1D; ind<kOptions1D+12; ind++)
-         fOptions1D->UnCheckEntry(ind);
-      for (ind=kOptions2D; ind<kOptions2D+14; ind++)
-         fOptions2D->UnCheckEntry(ind);
-   }
-   if ((parm1 < kOptions1D) && (parm1 != kOptionsReset)) {
+   if (parm1 < kOptions1D) {
       if (fOptionsGen->IsEntryChecked((Int_t)parm1)) {
          fOptionsGen->UnCheckEntry((Int_t)parm1);
       } else {
@@ -1966,7 +1931,7 @@ void TTreeViewer::MapOptions(Long_t parm1)
       }
    }
 
-   if ((parm1 < kOptions2D) && (parm1 >= kOptions1D)) {
+   if (parm1 < kOptions2D) {
       if (fOptions1D->IsEntryChecked((Int_t)parm1)) {
          fOptions1D->UnCheckEntry((Int_t)parm1);
       } else {
@@ -1990,7 +1955,7 @@ void TTreeViewer::MapOptions(Long_t parm1)
       }
       if (fOptions2D->IsEntryChecked((Int_t)kOptions2D)) {
       // uncheck all in this menu
-         for (ind=kOptions2D+1; ind<kOptions2D+14; ind++) {
+         for (ind=kOptions2D+1; ind<kOptions1D+14; ind++) {
             fOptions2D->UnCheckEntry(ind);
          }
       }
@@ -2375,11 +2340,12 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
    if ((tree == fTree) && (tree == fMappedTree)) return kFALSE;     // nothing to switch
    char *command = new char[50];
    if (tree != fTree) {
-      sprintf(command, "tv__tree = (TTree *) tv__tree_list->At(%i);", index);
+      sprintf(command, "tree = (TTree *) list->At(%i);", index);
       ExecuteCommand(command);
    }
 
    fTree = tree;
+   // ((TTreePlayer *)fTree->GetPlayer())->SetViewer(this);
    fSlider->SetRange(0,fTree->GetEntries()-1);
    fSlider->SetPosition(0,fTree->GetEntries()-1);
    sprintf(command, "Current tree : %s", fTree->GetName());
@@ -2411,13 +2377,7 @@ void TTreeViewer::SetHistogramTitle(const char *title)
       gPad->Update();
    }
 }
-//______________________________________________________________________________
-void TTreeViewer::SetUserCode(const char *code, Bool_t autoexec)
-{
-// user defined command for current record
-   TTVRecord *rec = fSession->GetCurrent();
-   if (rec) rec->SetUserCode(code, autoexec);
-}
+
 //______________________________________________________________________________
 void TTreeViewer::UpdateCombo()
 {

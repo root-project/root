@@ -267,7 +267,6 @@
 **************************************************************************/
 #define G__HAS_DEFAULTCONSTRUCTOR  0x01
 #define G__HAS_COPYCONSTRUCTOR     0x02
-#define G__HAS_CONSTRUCTOR         0x03
 #define G__HAS_DESTRUCTOR          0x04
 #define G__HAS_ASSIGNMENTOPERATOR  0x08
 #define G__HAS_OPERATORNEW1ARG     0x10
@@ -513,19 +512,9 @@ struct G__breakcontinue_list {
 #define G__TMPLT_FLOATARG     'f'
 #define G__TMPLT_DOUBLEARG    'd'
 
-#ifndef G__OLDIMPLEMENTATION1587
-#define G__TMPLT_POINTERARG1   0x10000
-#define G__TMPLT_POINTERARG2   0x20000
-#define G__TMPLT_POINTERARG3   0x30000
-#define G__TMPLT_POINTERARGMASK 0xffff0000
-#else
 #define G__TMPLT_POINTERARG1   1
 #define G__TMPLT_POINTERARG2   2
 #define G__TMPLT_POINTERARG3   3
-#endif
-
-#define G__TMPLT_CONSTARG      0x100
-#define G__TMPLT_REFERENCEARG  0x200
 
 #ifdef G__TEMPLATEMEMFUNC
 
@@ -575,10 +564,6 @@ struct G__Definedtemplateclass {
 #endif
 #ifndef G__OLDIMPLEMENTATION972
   int friendtagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION1587
-  struct G__Definedtemplateclass *specialization;
-  struct G__Templatearg *spec_arg;
 #endif
 };
 
@@ -817,11 +802,6 @@ typedef unsigned long G__UINT32 ;
 typedef void (*G__DLLINIT)();
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1536
-#define G__NONCINTHDR   0x01
-#define G__CINTHDR      0x10
-#endif
-
 struct G__filetable {
   FILE *fp;
   int hash;
@@ -840,9 +820,6 @@ struct G__filetable {
 #endif
 #ifndef G__OLDIMPLEMENTATION1273
   struct G__dictposition *hasonlyfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-  char hdrprop;
 #endif
 };
 
@@ -916,12 +893,6 @@ struct G__AppPragma {
 #define G__RETURN_EXIT1     3
 #define G__RETURN_EXIT2     4
 #endif
-
-/*********************************************************************
-* x
-*********************************************************************/
-#define G__NAMEDMACROEXT  "_NM"
-#define G__NAMEDMACROEXT2 "_cint_NM"
 
 /*********************************************************************
 * cint parser function and global variable prototypes

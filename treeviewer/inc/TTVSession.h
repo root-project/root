@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.1 2001/02/22 14:45:17 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.6 2000/12/14 15:23:47 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -38,20 +38,14 @@ public:
    TString              fOption;                // graphic option
    Bool_t               fScanRedirected;        // redirect switch
    Bool_t               fCutEnabled;            // true if current cut is active
-   TString              fUserCode;              // command executed when record is conected
-   Bool_t               fAutoexec;              // autoexecute user code command   
+   
 public:
    TTVRecord();                                 // default constructor
    ~TTVRecord() {}                              // destructor
    
-   void           ExecuteUserCode();
    void           FormFrom(TTreeViewer *tv);
    void           PlugIn(TTreeViewer *tv);
    virtual const char *GetName() const {return fName.Data();}
-   const char    *GetUserCode() {return fUserCode.Data();}
-   Bool_t         HasUserCode() {return (Bool_t)fUserCode.Length();}
-   Bool_t         MustExecuteCode() {return fAutoexec;}
-   void           SetAutoexec(Bool_t autoexec=kTRUE) {fAutoexec=autoexec;} // *MENU*
    void           SetName(const char* name = "") {fName = name;}
    void           SetX(const char *x = "", const char *xal = "-empty-") {fX = x; fXAlias = xal;} 
    void           SetY(const char *y = "", const char *yal = "-empty-") {fY = y; fYAlias = yal;}
@@ -59,7 +53,6 @@ public:
    void           SetCut(const char *cut = "", const char *cal = "-empty-") {fCut = cut; fCutAlias = cal;}
    void           SetOption(const char *option = "")             {fOption = option;}
    void           SetRC(Bool_t redirect = kFALSE, Bool_t cut = kTRUE) {fScanRedirected = redirect; fCutEnabled = cut;}
-   void           SetUserCode(const char *code, Bool_t autoexec=kTRUE) {fUserCode = code; fAutoexec=autoexec;} // *MENU*
    void           SaveSource(ofstream &out);
 
    ClassDef(TTVRecord, 0)    // A draw record for TTreeViewer
@@ -82,7 +75,6 @@ public:
    void           SetRecordName(const char* name);
    TTVRecord     *AddRecord(Bool_t fromFile = kFALSE);
    Int_t          GetEntries() {return fRecords;}
-   TTVRecord     *GetCurrent() {return GetRecord(fCurrent);}
    TTVRecord     *GetRecord(Int_t i);
    TTVRecord     *First()    {return GetRecord(0);}
    TTVRecord     *Last()     {return GetRecord(fRecords-1);}

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.6 2001/06/07 08:38:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.3 2000/10/05 06:56:38 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -51,6 +51,8 @@
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
 #include "TMath.h"
+   #define MAX_NUMBER_OF_PEAKS1 1000
+   #define MAX_NUMBER_OF_PEAKS2 100
    #define PEAK_WINDOW 1024
 
 ClassImp(TSpectrum)
@@ -60,7 +62,6 @@ TSpectrum::TSpectrum()
    :TNamed("Spectrum","Miroslav Morhac peak finder")
 {
    Int_t n = 100;
-   fMaxPeaks  = n;
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
@@ -73,15 +74,14 @@ TSpectrum::TSpectrum()
 TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution)
    :TNamed("Spectrum","Miroslav Morhac peak finder")
 {
-//  maxpositions:  maximum number of peaks
-//  resolution:    determines resolution of the neighboring peaks
+//  maxpositions:  maximum number of peaks 
+//  resolution:    determines resolution of the neighboring peaks 
 //                 default value is 1 correspond to 3 sigma distance
-//                 between peaks. Higher values allow higher resolution
+//                 between peaks. Higher values allow higher resolution 
 //                 (smaller distance between peaks.
 //                 May be set later through SetResolution.
-
+   
    Int_t n = TMath::Max(maxpositions,100);
-   fMaxPeaks  = n;
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
@@ -100,7 +100,7 @@ TSpectrum::~TSpectrum()
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Background(TH1 *h,int number_of_iterations, Option_t *option)
+char *TSpectrum::Background(TH1 *h,int number_of_iterations, Option_t *option)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
@@ -120,7 +120,7 @@ const char *TSpectrum::Background(TH1 *h,int number_of_iterations, Option_t *opt
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Background1(float *spectrum,int size,int number_of_iterations)
+char *TSpectrum::Background1(float *spectrum,int size,int number_of_iterations)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
@@ -135,7 +135,7 @@ const char *TSpectrum::Background1(float *spectrum,int size,int number_of_iterat
 /////////////////////////////////////////////////////////////////////////////
    int i,j;
    float a,b;
-   if (size <= 0) return "Wrong Parameters";
+   if (size <= 0) return (char*)"Wrong Parameters";
    float *working_space = new float[size];
    for(i=1;i<=number_of_iterations;i++) {
       for(j=i;j<size-i;j++) {
@@ -147,11 +147,11 @@ const char *TSpectrum::Background1(float *spectrum,int size,int number_of_iterat
       for(j=i;j<size-i;j++) spectrum[j]=working_space[j];
    }
    delete [] working_space;
-   return 0;
+   return(0);
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Background2(float **spectrum,int sizex,int sizey,int number_of_iterations)
+char *TSpectrum::Background2(float **spectrum,int sizex,int sizey,int number_of_iterations)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
@@ -166,7 +166,7 @@ const char *TSpectrum::Background2(float **spectrum,int sizex,int sizey,int numb
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
-   if (sizex <=0 || sizey <= 0) return "Wrong parameters";
+   if (sizex <=0 || sizey <= 0) return (char*)"Wrong parameters";
        //   working_space-pointer to the working array
    float **working_space = new float* [sizex];
    int i,x,y;
@@ -205,11 +205,11 @@ const char *TSpectrum::Background2(float **spectrum,int sizex,int sizey,int numb
    }
    for(i=0;i<sizex;i++) delete [] working_space[i];
    delete [] working_space;
-   return 0;
+   return(0);
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Deconvolution1(float *source,float *resp,int size,int number_of_iterations)
+char *TSpectrum::Deconvolution1(float *source,float *resp,int size,int number_of_iterations)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
@@ -225,7 +225,7 @@ const char *TSpectrum::Deconvolution1(float *source,float *resp,int size,int num
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
-   if (size <= 0) return "Wrong Parameters";
+   if (size <= 0) return (char*)"Wrong Parameters";
       //   working_space-pointer to the working vector
       //   (its size must be 6*size of source spectrum)
    double *working_space = new double[6*size];
@@ -246,7 +246,7 @@ const char *TSpectrum::Deconvolution1(float *source,float *resp,int size,int num
          posit   = i;
       }
    }
-   if(lh_gold==-1) return "ZERO RESPONSE VECTOR";
+   if(lh_gold==-1) return("ZERO RESPONSE VECTOR");
 //read source vector
    for(i=0;i<size;i++) working_space[2*size+i] = source[i];
 //create matrix at*a(vector b)
@@ -352,11 +352,11 @@ const char *TSpectrum::Deconvolution1(float *source,float *resp,int size,int num
 //write back resulting spectrum
    for(i=0;i<size;i++) source[i] = area*working_space[size+i];
    delete [] working_space;
-   return 0;
+   return(0);
 }
 
 //______________________________________________________________________________
-const char *TSpectrum::Deconvolution2(float** source,float** resp,int sizex,int sizey,int number_of_iterations)
+char *TSpectrum::Deconvolution2(float** source,float** resp,int sizex,int sizey,int number_of_iterations)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL DECONVOLUTION FUNCTION                                //
@@ -373,7 +373,7 @@ const char *TSpectrum::Deconvolution2(float** source,float** resp,int sizex,int 
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
-   if (sizex <=0 || sizey <= 0) return "Wrong parameters";
+   if (sizex <=0 || sizey <= 0) return (char*)"Wrong parameters";
       //   working_space-pointer to the working matrix
       //   (its size must be sizex*21*sizey of source spectrum)
    double **working_space = new double* [sizex];
@@ -399,7 +399,7 @@ const char *TSpectrum::Deconvolution2(float** source,float** resp,int sizex,int 
          }
       }
    }
-   if (lhx==-1||lhy==-1) return "ZERO RESPONSE DATA";
+   if (lhx==-1||lhy==-1) return("ZERO RESPONSE DATA");
 //calculate at*y and write into p
    i2min = -lhy+1,i2max=sizey+lhy-2;
    i1min = -lhx+1,i1max=sizex+lhx-2;
@@ -536,7 +536,7 @@ const char *TSpectrum::Deconvolution2(float** source,float** resp,int sizex,int 
    }
    for(i=0;i<sizex;i++) delete [] working_space[i];
    delete [] working_space;
-   return 0;
+   return(0);
 }
 
 //______________________________________________________________________________
@@ -578,7 +578,7 @@ Int_t TSpectrum::Search(TH1 *hin, Double_t sigma, Option_t *option)
 
       npeaks=Search1(source,size,sigma);
       for(i=0;i<npeaks;i++) {
-         bin = 1+Int_t(fPositionX[i] +0.5);
+         bin = Int_t(fPositionX[i] +0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
          fPositionY[i] = hin->GetBinContent(bin);
       }
@@ -708,7 +708,7 @@ stav1:
          }
          if (stav!=0) {
             b = sumai/suma;
-            if (peak_index < fMaxPeaks) {
+            if (peak_index<MAX_NUMBER_OF_PEAKS1) {
                fPositionX[peak_index] = b;
                peak_index += 1;
             } else {
@@ -816,7 +816,7 @@ Int_t TSpectrum::PeakEvaluate(double *temp,int size,int xmax,double xmin)
          if (stav!=0) {
             if (suma!=0) b = sumai/suma;
             else         b = i4+xmin;
-            if (peak_index >= fMaxPeaks)
+            if (peak_index>=MAX_NUMBER_OF_PEAKS1)
                return(-1);
             else{
                fPosition[peak_index] = b;
@@ -1008,7 +1008,7 @@ Int_t TSpectrum::Search2(float **source,int sizex,int sizey,double sigma)
                                  }
                               }
                               dpeaky = fPosition[poly];
-                              if (peak_index < fMaxPeaks) {
+                              if (peak_index<MAX_NUMBER_OF_PEAKS2) {
                                  fPositionX[peak_index] = dpeakx;
                                  fPositionY[peak_index] = dpeaky;
                                  peak_index += 1;
@@ -1044,9 +1044,9 @@ Int_t TSpectrum::Search2(float **source,int sizex,int sizey,double sigma)
 //______________________________________________________________________________
 void TSpectrum::SetResolution(Float_t resolution)
 {
-//  resolution: determines resolution of the neighboring peaks
+//  resolution: determines resolution of the neighboring peaks 
 //              default value is 1 correspond to 3 sigma distance
-//              between peaks. Higher values allow higher resolution
+//              between peaks. Higher values allow higher resolution 
 //              (smaller distance between peaks.
 //              May be set later through SetResolution.
 

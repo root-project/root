@@ -1,28 +1,17 @@
-// @(#)root/star:$Name:  $:$Id: TCL.cxx,v 1.2 2001/05/27 02:38:14 fine Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 //
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f112/top.html
 //
-// $Id: TCL.cxx,v 1.2 2001/05/27 02:38:14 fine Exp $
+// $Id: TCL.cxx,v 1.7 2000/01/28 23:40:17 fine Exp $
 // $Log: TCL.cxx,v $
-// Revision 1.2  2001/05/27 02:38:14  fine
-// New method trsedu to solev Ax=B from Victor
-//
-// Revision 1.1.1.1  2000/11/27 22:57:14  fisyak
-//
-//
-// Revision 1.1.1.1  2000/05/16 17:00:48  rdm
-// Initial import of ROOT into CVS
-//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <assert.h>
 #include "TCL.h"
 #include "TMath.h"
-#include <TArrayD.h>
-#include <TError.h>
 
 ClassImp(TCL)
 
@@ -1886,59 +1875,3 @@ double *TCL::trsat(double *s, double *a, double *b, int m, int n)
 
     return 0;
 } /* trsat_ */
-
-// ------------ Victor Perevoztchikov's addition
-
-//_____________________________________________________________________________
-float *TCL::trsequ(float *smx, int m, float *b, int n)
-{
-  // Linear Equations, Matrix Inversion 
-  // trsequ solves the matrix equation 
-  //
-  //             SMX*x = B
-  //
-  // which represents a system of m simultaneous linear equations with n right-hand sides: 
-  // SMX is an  unpacked symmetric matrix (all  elements) (m x m)
-  // B is an unpacked matrix of right-hand sides (n x m)
-  //
-   float *mem = new float[(m*(m+1))/2+m];
-   float *v = mem;
-   float *s = v+m;
-   if (!b) n=0;
-   TCL::trpck (smx,s    ,m);
-   TCL::trsinv(s  ,s,    m);
-   
-   for (int i=0;i<n;i++) {
-     TCL::trsa  (s  ,b+i*m, v, m, 1);
-     TCL::ucopy (v  ,b+i*m, m);}
-   TCL::trupck(s  ,smx,  m);
-   delete [] mem;
-   return b;
-}
-//_____________________________________________________________________________
-double *TCL::trsequ(double *smx, int m, double *b, int n)
-{
-  // Linear Equations, Matrix Inversion 
-  // trsequ solves the matrix equation 
-  //
-  //             SMX*x = B
-  //
-  // which represents a system of m simultaneous linear equations with n right-hand sides: 
-  // SMX is an  unpacked symmetric matrix (all  elements) (m x m)
-  // B is an unpacked matrix of right-hand sides (n x m)
-  //
-   double *mem = new double[(m*(m+1))/2+m];
-   double *v = mem;
-   double *s = v+m;
-   if (!b) n=0;
-   TCL::trpck (smx,s    ,m);
-   TCL::trsinv(s  ,s,    m);
-   
-   for (int i=0;i<n;i++) {
-     TCL::trsa  (s  ,b+i*m, v, m, 1);
-     TCL::ucopy (v  ,b+i*m, m);}
-   TCL::trupck(s  ,smx,  m);
-   delete [] mem;
-   return b;
-}
-

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.6 2001/04/30 19:19:08 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.12 2001/02/07 08:18:15 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -78,14 +78,10 @@ class TDataSet : public TNamed
  friend class TDataSetIter;
  private:
     void operator=(const TDataSet &){}
-// --   Int_t IncCnt(){ fCnt++; return fCnt;}
-// --   Int_t DecCnt(){ fCnt--; return fCnt;}
-// --   Int_t Cnt()   { return fCnt;}
  protected:
     static TDataSet    *fgMainSet; // pointer the main dataset;
     TDataSet           *fParent;   // pointer to mother of the directory
     TSeqCollection     *fList;     // List of the the the objects included into this dataset
-// --     Int_t               fCnt;      // reference counter.
     virtual void SetMother(TObject *mother) {SetParent((TDataSet*)mother);}
     TDataSet(const char *name,const char *title):
     TNamed(name,title),fParent(0),fList(0){} // to support TDictionary
@@ -118,7 +114,7 @@ class TDataSet : public TNamed
             TObject     *FindObject(const TObject *o)  const { return TObject::FindObject(o);}
     virtual TDataSet    *First() const;
             TObjArray   *GetObjArray() const { return (TObjArray *)fList; }
-    virtual TSeqCollection *GetCollection() const { return (TSeqCollection *)fList; }
+            TSeqCollection *GetCollection() const { return (TSeqCollection *)fList; }
             TList       *GetList()   const { return (TList *)fList; }
     virtual Int_t        GetListSize() const;
     static  TDataSet    *GetMainSet(){ return fgMainSet;}
@@ -126,8 +122,6 @@ class TDataSet : public TNamed
     virtual TObject     *GetObject() const {printf("***DUMMY GetObject***\n");return 0;}
     virtual TDataSet    *GetParent() const { return fParent;}
     virtual Long_t       HasData() const {return 0;}    // Check whether this dataset has extra "data-members"
-    virtual TDataSet    *Instance() const;
-    static  TDataSet    *instance();
     virtual TString      Path() const;                  // return the "full" path of this dataset
     virtual EDataSetPass Pass(EDataSetPass ( *callback)(TDataSet *),Int_t depth=0);
     virtual EDataSetPass Pass(EDataSetPass ( *callback)(TDataSet *,void*),void *user,Int_t depth=0);
@@ -164,7 +158,6 @@ inline void        TDataSet::Add(TDataSet *dataset){ AddLast(dataset); }
 inline void        TDataSet::AddMain(TDataSet *set){ if (fgMainSet && set) fgMainSet->AddFirst(set);}
 inline TDataSet   *TDataSet::At(Int_t idx) const {return fList ? (TDataSet *)fList->At(idx) : 0;  }
 inline Int_t       TDataSet::GetListSize() const {return (fList) ? fList->GetSize():0;}
-inline TDataSet   *TDataSet::instance() { return new TDataSet();}
 inline Bool_t      TDataSet::IsMarked() const { return TestBit(kMark); }
 inline void        TDataSet::Mark(UInt_t flag,EBitOpt reset){ SetBit(flag,reset); }
 inline void        TDataSet::Mark()     { Mark(kMark,kSet); }

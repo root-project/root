@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.16 2002/01/02 21:48:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.12 2000/12/21 14:03:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -86,8 +86,10 @@ public:
     virtual void      CreatePacketGenerator(Int_t nentries, Stat_t firstEntry);
     virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual void      EstimateLimits(Int_t estimate, Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
 
+            void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax);
     virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     GetDimension() const {return fDimension;}
@@ -127,8 +129,7 @@ public:
     virtual void      StartViewer(Int_t ww, Int_t wh);
     virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option 
                        ,Int_t nentries, Int_t firstentry);
-    virtual void      UpdateFormulaLeaves();
-    
+
     ClassDef(TTreePlayer,1)  //manager class to play with TTrees
 };
 

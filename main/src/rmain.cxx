@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: rmain.cxx,v 1.4 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/main:$Name$:$Id$
 // Author: Fons Rademakers   02/03/95
 
 /*************************************************************************
@@ -17,15 +17,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TRint.h"
+
+
+TROOT root("Rint","The ROOT Interactive Interface");
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   // Create an interactive ROOT application
    TRint *theApp = new TRint("Rint", &argc, argv, 0, 0);
 
-   // and enter the event loop...
+   // Enter the event loop...
    theApp->Run();
 
    delete theApp;

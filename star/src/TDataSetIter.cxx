@@ -1,8 +1,10 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.7 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1.1.3 2001/01/22 12:59:37 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
-#include "Riostream.h"
+#include <iostream.h>
+#include <iomanip.h>
+
 #include "TDataSetIter.h"
 #include "TBrowser.h"
 #include "TSystem.h"
@@ -298,16 +300,16 @@ TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *o
 }
 //______________________________________________________________________________
 TObject *TDataSetIter::FindObject(const Char_t *name) const
-{
+{ 
   // This method is not recommended.
   // It is done to back TObject::FindObject method only.
   // One is recommnened to use FindByName method instead.
   return ((TDataSetIter *)this)->FindByName(name);
 }
-
+ 
 //______________________________________________________________________________
 TObject  *TDataSetIter::FindObject(const TObject *dataset) const
-{
+{ 
   // This method is not recommended.
   // It is done to back TObject::FindObject method only.
   // One is recommended to use FindByName method instead.
@@ -328,7 +330,7 @@ TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t 
   if (path && path[0]) startset = Find(path);
   else      startset = fWorkingDataSet;
   if (!startset) return 0;
-
+ 
   TDataSetIter next(startset);
   TDataSet *nextSet = 0;
   while ( (nextSet = next()) )
@@ -424,14 +426,14 @@ TDataSet *TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
 //  becomes the "current dataset" or 0 if this dataset has no parent.
 //
 //  returns: the "current dataset" pointer
-//
+// 
 //
   TDataSet *set = dataset;
   if (set) {
     if (set == fWorkingDataSet) {
         fWorkingDataSet = set->GetParent();
     }
-    if (set == fRootDataSet) {
+    if (set == fRootDataSet) { 
         fRootDataSet = 0;
     }
     delete set;
@@ -602,16 +604,9 @@ TDataSet *TDataSetIter::Find(const Char_t *path, TDataSet *rootset,
 NOTFOUND:
    if (mkdirflag)
    {
-     // create dir the same type as the type of the fRootDataSet if present
-     // Create TDataSet by default.
+     // create dir
      char buf[512];buf[0]=0; strncat(buf,name,len);
-     if (!fRootDataSet)
-       ds = new TDataSet(buf);
-     else {
-       ds = fRootDataSet->Instance();
-       ds->SetName(buf);
-     }
-
+     ds = new TDataSet(buf);
      if (!fRootDataSet)         fRootDataSet    = ds;
      if (!fWorkingDataSet)      fWorkingDataSet = ds;
      if (dataset)

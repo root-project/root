@@ -8,9 +8,6 @@
 #else
 #include <vector>
 #endif
-#ifdef WIN32
-using namespace std;
-#endif
       
 //-------------------------------------------------------------
 class THit {

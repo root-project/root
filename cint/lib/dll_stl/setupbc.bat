@@ -12,7 +12,6 @@ del ..\..\stl\valarray.dll
 del ..\..\stl\stack.dll
 del ..\..\stl\queue.dll
 del ..\..\stl\exception.dll
-del ..\..\stl\stdexcept.dll
 del G__*
 del *.dll
 
@@ -76,10 +75,6 @@ move valarray.dll ..\..\stl\valarray.dll
 makecint -mk Makeeh -dl exception.dll -H eh.h -cint  -Z0
 make.exe -f Makeeh
 move exception.dll ..\..\stl\exception.dll
-
-makecint -mk Makese -dl stdexcept.dll -H se.h -cint  -Z0
-make.exe -f Makese
-move stdexcept.dll ..\..\stl\stdexcept.dll
 
 del G__*
 del Make*

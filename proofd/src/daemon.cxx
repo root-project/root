@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: daemon.cxx,v 1.2 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/proofd:$Name:$:$Id:$
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -34,22 +34,17 @@
 #include <sys/wait.h>
 #endif
 
-#ifndef NOFILE
-#   define NOFILE 0
-#endif
-
 #if defined(__hpux)
 #define USE_SIGCHLD
 #endif
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__)
 #define USE_SIGCHLD
 #define	SIGCLD SIGCHLD
 #endif
 
-#if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+#if defined(__linux) || defined(__linux__) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
+    defined(_AIX) || defined(__FreeBSD__)
 #define USE_SETSID
 #endif
 
@@ -61,7 +56,7 @@
 static void SigChild(int)
 {
    int         pid;
-#if defined(__hpux) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__hpux) || defined(__FreeBSD__)
    int status;
 #else
    union wait  status;

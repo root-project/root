@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.3 2001/03/16 14:25:56 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -22,12 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 
 class TRint : public TApplication {
@@ -44,7 +39,7 @@ public:
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   virtual Bool_t      HandleTermInput();
+   virtual void        HandleTermInput();
    virtual void        PrintLogo();
    virtual void        Run(Bool_t retrn = kFALSE);
    virtual void        Terminate(int status);

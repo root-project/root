@@ -59,7 +59,6 @@ class G__ClassInfo {
   long IsBase(G__ClassInfo& a);
   long Tagnum() { return(tagnum); }
   G__ClassInfo EnclosingClass() ;
-  G__ClassInfo EnclosingSpace() ;
 #ifndef G__OLDIMPLEMENTATION1020
   struct G__friendtag* GetFriendInfo(); 
 #endif
@@ -72,7 +71,6 @@ class G__ClassInfo {
 #else
   int IsValid();
 #endif
-  int IsLoaded();
   int SetFilePos(const char *fname);
   int Next();
   int Linkage();

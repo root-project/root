@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.10 2001/08/21 17:33:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.6 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -23,8 +23,6 @@
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
 // Hitting the enter key will generate:                                 //
 // kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
-// Hitting the tab key will generate:                                   //
-// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -91,17 +89,17 @@ protected:
    static FontStruct_t  fgDefaultFontStruct;
    static TGGC          fgDefaultSelectedGC;
    static TGGC          fgDefaultSelectedBackgroundGC;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC          fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id = -1,
-               GContext_t norm = GetDefaultGC()(),
-               FontStruct_t font = GetDefaultFontStruct(),
+               GContext_t norm = fgDefaultGC(),
+               FontStruct_t font = fgDefaultFontStruct,
                UInt_t option = kSunkenFrame | kDoubleBorder,
-               ULong_t back = GetWhitePixel());
+               ULong_t back = fgWhitePixel);
 
    TGTextEntry(const TGWindow *parent, const char *text,  Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent,  Int_t id = -1);
@@ -135,7 +133,6 @@ public:
    virtual  void        InsertText(const char *text, Int_t pos);
             Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
             Bool_t      IsEdited() const           { return fEdited; }
-   virtual  void        Layout() { UpdateOffset(); }
             void        MarkWord(Int_t pos);
             Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
             Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
@@ -165,18 +162,19 @@ public:
    virtual  Bool_t      HandleKey(Event_t *event);
    virtual  Bool_t      HandleFocusChange(Event_t *event);
    virtual  Bool_t      HandleSelection(Event_t *event);
-   virtual  Bool_t      HandleSelectionRequest(Event_t *event);
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);
 
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
-   virtual  void        TabPressed();                           //*SIGNAL*
    virtual  void        CursorOutLeft();                        //*SIGNAL*
    virtual  void        CursorOutRight();                       //*SIGNAL*
    virtual  void        CursorOutUp();                          //*SIGNAL*
    virtual  void        CursorOutDown();                        //*SIGNAL*
    virtual  void        DoubleClicked();                        //*SIGNAL*
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGTextEntry,0) // The TGTextEntry widget is a simple line editor for inputting text
 };

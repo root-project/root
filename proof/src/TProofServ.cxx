@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.14 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.11 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -45,9 +45,6 @@ typedef long off_t;
 #include "TEnv.h"
 #include "TError.h"
 #include "TTree.h"
-#include "TProofPlayer.h"
-#include "TDSet.h"
-
 
 TProofServ *gProofServ;
 
@@ -173,7 +170,7 @@ ClassImp(TProofServ)
 
 //______________________________________________________________________________
 TProofServ::TProofServ(int *argc, char **argv)
-       : TApplication("proofserv", argc, argv, 0, -1)
+       : TApplication("proofserv", argc, argv)
 {
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
@@ -230,11 +227,6 @@ TProofServ::TProofServ(int *argc, char **argv)
          Terminate(0);
       }
    }
-
-   // Everybody expects iostream to be available, so load it...
-#ifndef WIN32
-   ProcessLine("#include <iostream>");
-#endif
 
    // Load user functions
    const char *logon;
@@ -514,49 +506,6 @@ void TProofServ::HandleSocketInput()
                t->SetMaxVirtualSize(maxv);
                t->SetEstimate(est);
             }
-         }
-         break;
-
-      case kPROOF_PROCESS:
-         {
-            TDSet *dset;
-            TString filename;
-            TList *input;
-            Int_t nentries, first;
-
-            Info("TProofServ::HandleSocketInput", "### kPROOF_PROCESS:");
-
-            (*mess) >> dset >> filename >> input >> nentries >> first;
-
-            TProofPlayer *p;
-
-            if (IsMaster()) {
-               p = new TProofPlayerRemote(gProof);
-            } else {
-               p = new TProofPlayerSlave;
-            }
-
-            TIter next(input);
-            for (TObject *obj; (obj = next()); ) {
-               Info("Copying: ", obj->GetName());
-               p->AddInput(obj);
-            }
-            delete input;
-
-            p->Process(dset, filename, nentries, first);
-
-            TList *output;
-            if (IsMaster()) {
-               // handle slave output
-            } else {
-               output = p->GetOutputList();
-            }
-
-            // return output!
-
-            SendLogFile();
-
-            delete p;
          }
          break;
 
@@ -1053,18 +1002,8 @@ void TProofServ::Setup()
    // Set $HOME and $PATH. The HOME directory was already set to the
    // user's home directory by proofd.
    gSystem->Setenv("HOME", gSystem->HomeDirectory());
-
 #ifdef R__UNIX
-   TString bindir;
-# ifdef ROOTBINDIR
-   bindir = ROOTBINDIR;
-# else
-   bindir = gSystem->Getenv("ROOTSYS");
-   if (!bindir.IsNull()) bindir += "/bin";
-# endif
-   if (!bindir.IsNull()) bindir += ":";
-   bindir += "/bin:/usr/bin:/usr/local/bin";
-   gSystem->Setenv("PATH", bindir);
+   gSystem->Setenv("PATH", "/bin:/usr/bin:/usr/contrib/bin:/usr/local/bin");
 #endif
 
    // set the working directory to ~/proof

@@ -1,9 +1,10 @@
-// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.6 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.3 2000/12/14 13:52:27 brun Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
+#include <iostream.h>
 
-#include "Riostream.h"
+#include "TROOT.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TSortedList.h"
@@ -378,6 +379,9 @@ void Test_TBtree()
 
 int main()
 {
+   // Initialize the ROOT framework
+   TROOT tcollex("Collection", "Test collection classes");
+
    Test_TObjArray();
    Test_TOrdCollection();
    Test_TList();

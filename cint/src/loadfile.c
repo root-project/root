@@ -279,18 +279,14 @@ char *item;
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
-  char line[G__LARGEBUF];
-  char argbuf[G__LARGEBUF];
+  char line[G__LONGLINE*2];
+  char argbuf[G__LONGLINE*2];
   char *arg[G__MAXARG];
   int argn;
   char *p;
   static char buf[G__ONELINE];
 
   buf[0]='\0';
-
-#ifdef G__NOMAKEINFO
-  return("");
-#endif
 
 #ifndef G__OLDIMPLEMENTATION466
   /****************************************************************
@@ -965,9 +961,6 @@ char *filenamein;
 #if defined(R__FBSD)
   char soext[]=SOEXT;
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-  char hdrprop = G__NONCINTHDR;
-#endif
   char filename[G__ONELINE];
   strcpy(filename,filenamein);
 
@@ -1070,7 +1063,7 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	G__fprinterr(G__serr,"Warning: File \"%s\" already loaded\n",filename);
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1229,12 +1222,8 @@ char *filenamein;
 	{
 	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
 	  while(sysdir) {
-	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
+	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0)
 	      G__globalcomp=G__NOLINK;
-#ifndef G__OLDIMPLEMENTATION1536
-	      hdrprop = G__CINTHDR;
-#endif
-	    }
 	    sysdir = sysdir->prev;
 	  }
 	}
@@ -1260,9 +1249,6 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1284,9 +1270,6 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1329,9 +1312,6 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1353,9 +1333,6 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1398,44 +1375,41 @@ char *filenamein;
        /**********************************************
        * try $ROOTSYS[include]
        **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-	/*  sprintf(G__ifile.name,getenv("ROOTSYS"));
-	    sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-	/*G__globalcomp=G__store_globalcomp;*/
-      }
-      if(G__ifile.fp) break;
-      
+   if('\0'!=G__cintsysdir[0]) {
+/*   sprintf(G__ifile.name,getenv("ROOTSYS"));
+     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+     sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
+
+     G__ifile.fp = fopen(G__ifile.name,"r");
+     /*G__globalcomp=G__store_globalcomp;*/
+   }
+   if(G__ifile.fp) break;
+
        /**********************************************
        * try $ROOTSYS[cint.include]
        **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-	/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
-	     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
-	G__globalcomp=G__NOLINK;
+   if('\0'!=G__cintsysdir[0]) {
+/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
+     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+     sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
+
+     G__ifile.fp = fopen(G__ifile.name,"r");
+     G__globalcomp=G__NOLINK;
       }
-      if(G__ifile.fp) break;
-      
+   if(G__ifile.fp) break;
+
        /**********************************************
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
-      sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
-      printf("Trying to open %s\n",G__ifile.name,"r");
-      
-      G__ifile.fp = fopen(G__ifile.name,"r");
-      G__globalcomp=G__store_globalcomp;
-      
-      if(G__ifile.fp) break;
-      
+   sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
+   printf("Trying to open %s\n",G__ifile.name,"r");
+
+   G__ifile.fp = fopen(G__ifile.name,"r");
+   G__globalcomp=G__store_globalcomp;
+
+   if(G__ifile.fp) break;
+
 #endif  /*G__VMS*/
 
       /**********************************************
@@ -1592,10 +1566,6 @@ char *filenamein;
       fentry=null_entry;
     }
 
-#ifndef G__OLDIMPLEMENTATION1536
-    G__srcfile[fentry].hdrprop = hdrprop;
-#endif
-
 #ifdef G__SECURITY
     store_security = G__security;
     G__srcfile[fentry].security = G__security;
@@ -1641,12 +1611,7 @@ char *filenamein;
   store_p_local=G__p_local;
 #ifndef G__OLDIMPLEMENTATION616
   if(0==G__def_struct_member||-1==G__tagdefining||
-     ('n'!=G__struct.type[G__tagdefining]
-#ifndef G__OLDIMPLEMENTATION1608
-      && 'c'!=G__struct.type[G__tagdefining]
-      && 's'!=G__struct.type[G__tagdefining]
-#endif
-     )) {
+     'n'!=G__struct.type[G__tagdefining]) {
     G__p_local=NULL;
   }
 #else
@@ -1756,10 +1721,8 @@ char *filenamein;
    ******************************************************/
   if(G__NOLINK!=G__globalcomp && G__srcfile[fentry].fp) {
     if(!G__macroORtemplateINfile) {
-#ifdef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(G__srcfile[fentry].fp);
-#endif
 #ifndef G__PHILIPPE0
       /* After closing the file let's make sure than all reference to
 	 the file pointer are reset. When a preprocessor is used, we
@@ -1770,15 +1733,7 @@ char *filenamein;
 	  G__srcfile[i1].fp = (FILE*)NULL;
 	}
       }
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(tmpfp);
-#endif
 #else
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(G__srcfile[fentry].fp);
-#endif
       G__srcfile[fentry].fp = (FILE*)NULL;
 #endif
     }
@@ -1865,7 +1820,7 @@ char *outname,*inname;
 int cppflag;
 char *macros,*undeflist,*ppopt,*includepath;
 {
-  char temp[G__LARGEBUF];
+  char temp[G__LONGLINE*2];
   /* char *envcpp; */
   char tmpfile[G__MAXFILENAME];
   int tmplen;
@@ -2202,6 +2157,7 @@ char *badname;
 #endif
 }
 
+
 /**************************************************************************
 * G__tmpnam()
 **************************************************************************/
@@ -2258,12 +2214,10 @@ void G__openmfp()
 int G__closemfp()
 {
 #ifndef G__TMPFILE
-  if(G__mfp) return(fclose(G__mfp));
-  else return(0);
+  return(fclose(G__mfp));
 #else
-  if(G__mfp) fclose(G__mfp);
-  if(G__mfpname[0]) return(remove(G__mfpname));
-  else return(0);
+  fclose(G__mfp);
+  return(remove(G__mfpname));
 #endif
 }
 

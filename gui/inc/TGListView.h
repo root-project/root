@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.7 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.5 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
              const TGPicture *bigpic, const TGPicture *smallpic,
              TGString *name, TGString **subnames, EListViewMode ViewMode,
              UInt_t options = kChildFrame,
-             ULong_t back = GetWhitePixel());
+             ULong_t back = fgWhitePixel);
    virtual ~TGLVEntry();
 
    virtual void SetViewMode(EListViewMode ViewMode);
@@ -131,7 +131,7 @@ protected:
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options = kSunkenFrame,
-                 ULong_t back = GetDefaultFrameBackground());
+                 ULong_t back = fgDefaultFrameBackground);
    virtual ~TGLVContainer();
 
    virtual void AddItem(TGLVEntry *item)
@@ -183,7 +183,7 @@ protected:
 public:
    TGListView(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kSunkenFrame | kDoubleBorder,
-              ULong_t back = GetDefaultFrameBackground());
+              ULong_t back = fgDefaultFrameBackground);
    virtual ~TGListView();
 
    virtual void   Layout();
@@ -196,10 +196,8 @@ public:
    virtual const char *GetHeader(Int_t idx) const;
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
-   virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
-   virtual void Clicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void DoubleClicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
-   virtual void DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+   virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
 
    ClassDef(TGListView,0)  // List view widget (iconbox, small icons or tabular view)
 };

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.4 2001/04/03 10:40:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.2 2000/06/16 12:24:47 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -75,10 +75,10 @@ private:
    EPriority    fPriority;              // thread priority
    EState       fState;                 // thread state
    EState       fStateComing;           // coming thread state
-   Long_t       fId;                    // thread id
-   Long_t       fJoinId;                // thread id to whome can join
+   Int_t        fId;                    // thread id
    Bool_t       fDetached;              // kTRUE if thread is Detached
    Bool_t       fNamed;                 // kTRUE if thread is Named
+   Int_t        fJoinId;                // thread id to whom can join
    void       *(*fFcnRetn)(void *);     // void* start function of thread
    void        (*fFcnVoid)(void *);     // void  start function of thread
    void        *fThreadArg;             // thread start function arguments
@@ -94,23 +94,22 @@ private:
    static TThread       *fgMain;        // pointer to chain of TThread's
    static TMutex        *fgMainMutex;   // mutex to protect chain of threads
    static TMutex        *fgXActMutex;   // mutex to protect XAction
-   static TCondition    *fgXActCondi;   // Condition for XAction
+   static TCondition    *fgXActCondi;   // Condition for  XAction
 
    // Private Member functions
    void         Constructor();
-   void         PutComm(const char *txt = 0) { fComm[0]='\0'; if (txt) strcpy(fComm,txt); }
-   char        *GetComm() { return fComm; }
    static void *Fun(void *ptr);
    static Int_t XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
-   static ULong_t Call(void  *p2f, void *arg);
+   static unsigned long Call(void  *p2f, void *arg);
    static void  AfterCancel(TThread *th);
+   void PutComm(const char *txt = NULL){fComm[0]='\0'; if (txt) strcpy(fComm,txt);};
+   char *GetComm(){ return fComm;};
 
 public:
    TThread(void  *(*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
    TThread(void   (*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(Int_t id = 0);
-   TThread(const char *thname, void  *(*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(const char *thname, void   (*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
+   TThread(const Text_t *thname, void  *(*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
+   TThread(const Text_t *thname, void   (*fn)(void*), void *arg = 0, EPriority pri = kNormalPriority);
    virtual ~TThread();
 
    Int_t               Kill();
@@ -119,26 +118,26 @@ public:
    void                Delete(Option_t *option="") { TObject::Delete(option); }
    EPriority           GetPriority() const { return fPriority; }
    EState              GetState() const { return fState; }
-   Long_t              GetId() const { return fId; }
+   Int_t               GetId() const { return fId; }
    void                Ps();
    void                ps() { Ps(); }
-   Long_t              GetJoindId() const { return fJoinId; }
+   Int_t               GetJoindId() const { return fJoinId; }
    void                SetJoinId(TThread *tj);
-   void                SetJoinId(Long_t jid);
+   void                SetJoinId(Int_t jid);
 
-   static Long_t       Join(Long_t id, void **ret=0);
-   static Long_t       Join(void **ret=0);
+   static Int_t        Join(Int_t id, void **ret=0);
+   static Int_t        Join(void **ret=0);
 
    static Int_t        Exit(void *ret = 0);
    static Int_t        Exists();
-   static TThread     *GetThread(Long_t id);
-   static TThread     *GetThread(const char *name);
+   static TThread     *GetThread(Int_t id);
+   static TThread     *GetThread(const Text_t *name);
 
    static Int_t        Lock();                  //User's lock of main mutex
    static Int_t        TryLock();               //User's try lock of main mutex
    static Int_t        UnLock();                //User's unlock of main mutex
    static TThread     *Self();
-   static Long_t       SelfId();
+   static Int_t        SelfId();
    static Int_t        Sleep(ULong_t secs, ULong_t nanos = 0);
    static Int_t        GetTime(ULong_t *absSec, ULong_t *absNanoSec);
 
@@ -152,21 +151,21 @@ public:
    //    ASYNCHRONOUS - In any point
    //    DEFERRED is more safe, it is DEFAULT.
 
-   static Int_t Kill(Long_t id);
-   static Int_t Kill(const char *name);
+   static Int_t Kill(Int_t id);
+   static Int_t Kill(const Text_t *name);
    static Int_t SetCancelOff();
    static Int_t SetCancelOn();
    static Int_t SetCancelAsynchronous();
    static Int_t SetCancelDeferred();
    static Int_t CancelPoint();
-   static Int_t CleanUpPush(void *free, void *arg=0);
+   static Int_t CleanUpPush(void *free,void *arg=0);
    static Int_t CleanUpPop(Int_t exe=0);
    static Int_t CleanUp();
 
    // XActions
    static void Printf(const char *txt);
-   static void Printf(const char *txt, Long_t i);
-   static void Printf(const char *txt, void* i) { Printf(txt,(Long_t)i); }
+   static void Printf(const char *txt,Int_t i);
+   static void Printf(const char *txt,void* i) { Printf(txt,(int)i); }
 
    // Compilation and dynamic link
    static Int_t MakeFun(char *funname);

@@ -246,11 +246,6 @@ char *oldtype,*newtype;
   else if(strcmp(oldtype,"float")==0) {
     type='f'+ispointer;
   }
-#ifndef G__OLDIMPLEMENTATION1604
-  else if(strcmp(oldtype,"bool")==0) {
-    type='g'+ispointer;
-  }
-#endif
   else if(strncmp(oldtype,"struct",6)==0) {
     ptype=oldtype+6;
     type='u'+ispointer;
@@ -886,7 +881,7 @@ int G__execfuncmacro_noexec (char* macroname)
 
   /* Snarf the arg list. */
   *p = '(';
-  /* #define G__OLDIMPLEMENTATION1061 */
+#define G__OLDIMPLEMENTATION1061
 #ifndef G__OLDIMPLEMENTATION1061
   c=G__fgetstream_spaces (p+1 ,")");
 #else
@@ -936,11 +931,7 @@ int G__execfuncmacro_noexec (char* macroname)
   /* substitute macro if not already done so */
   if(0==found
 #ifndef G__OLDIMPLEMENTATION1413
-#ifndef G__OLDIMPLEMENTATION1601
-     || G__ifile.filenum > G__gettempfilenum() 
-#else
      || G__MAXFILE-1==G__ifile.filenum
-#endif
 #endif
      ) {
     G__transfuncmacro(macroname,deffuncmacro,callfuncmacro,call_pos,p,1,1);
@@ -1062,16 +1053,7 @@ struct G__Charlist *callpara,*defpara;
 {
   while(defpara->next) {
     if(strcmp(defpara->string,symbol)==0) {
-#ifndef G__OLDIMPLEMENTATION1629
-      if(callpara->string) strcpy(symbol,callpara->string);
-      else {
-	/* Line number is not quite correct in following error messaging */
-	G__genericerror("Error: insufficient number of macro arguments");
-	symbol[0] = 0;
-      }
-#else
       strcpy(symbol,callpara->string);
-#endif
       break;
     }
     defpara = defpara->next;
@@ -1095,11 +1077,7 @@ char *new_name;
   int c;
 
 #ifndef G__OLDIMPLEMENTATION1412
-#ifndef G__OLDIMPLEMENTATION1601
-  if(G__ifile.filenum>G__gettempfilenum()) {
-#else
   if(G__MAXFILE-1==G__ifile.filenum) {
-#endif
     G__fprinterr(G__serr,"Limitation: Macro function can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
     G__fprinterr(G__serr,"Besides, it is recommended to use function template instead\n");

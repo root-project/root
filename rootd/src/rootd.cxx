@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.37 2002/01/27 17:44:18 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.29 2001/02/26 02:49:07 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -132,30 +132,16 @@
 #include <netinet/in.h>
 #include <errno.h>
 #if defined(__alpha) && !defined(linux)
-#   ifdef _XOPEN_SOURCE
-#      if _XOPEN_SOURCE+0 > 0
-#         define R__TRUE64
-#      endif
-#   endif
-#include <sys/mount.h>
-#ifndef R__TRUE64
-extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-#endif
-#elif defined(__APPLE__)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux)
 #include <sys/vfs.h>
-#elif defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/mount.h>
 #else
 #include <sys/statfs.h>
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
-    defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
-    defined(__APPLE__)
+    defined(__sun) || defined(__sgi) || defined(__FreeBSD__)
 #define HAVE_MMAP
 #endif
 
@@ -174,11 +160,8 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
+#if defined(__FreeBSD__) && (__FreeBSD__ < 4)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
 #define	F_LOCK             (LOCK_EX | LOCK_NB)
@@ -186,8 +169,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+    defined(_AIX) || defined(__FreeBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -213,7 +195,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   //int initgroups(const char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
@@ -854,11 +836,7 @@ void RootdSRPUser(const char *user)
       return;
    }
 
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
    if (!ts)
       ErrorFatal(kErrNoUser, "RootdSRPUser: user %s not found SRP password file", gUser);
 
@@ -1180,6 +1158,8 @@ void RootdOpen(const char *msg)
          close(gFd);
          gFd = -1;
       }
+      if (!RootdCheckTab(1))
+         ErrorFatal(kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
 #ifndef WIN32
       gFd = open(gFile, O_RDWR, 0644);
 #else
@@ -1188,14 +1168,11 @@ void RootdOpen(const char *msg)
       if (gFd == -1)
          ErrorSys(kErrFileOpen, "RootdOpen: error opening file %s in write mode", gFile);
 
-      if (!RootdCheckTab(1)) {
-         close(gFd);
-         ErrorFatal(kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
-      }
-
       gWritable = 1;
 
    } else {
+      if (!RootdCheckTab(0))
+         ErrorFatal(kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
 #ifndef WIN32
       gFd = open(gFile, O_RDONLY);
 #else
@@ -1203,11 +1180,6 @@ void RootdOpen(const char *msg)
 #endif
       if (gFd == -1)
          ErrorSys(kErrFileOpen, "RootdOpen: error opening file %s in read mode", gFile);
-
-      if (!RootdCheckTab(0)) {
-         close(gFd);
-         ErrorFatal(kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
-      }
 
       gWritable = 0;
 
@@ -1343,7 +1315,7 @@ void RootdPutFile(const char *msg)
    struct stat st;
    if (!stat(gFile, &st)) {
       if (gAnon) {
-         Error(kErrFileExists, "RootdPutFile: anonymous users may not overwrite existing file %s", gFile);
+         Error(kErrNoAccess, "RootdPutFile: anonymous users may not overwrite existing files");
          return;
       }
    } else if (GetErrno() != ENOENT) {
@@ -1355,30 +1327,16 @@ void RootdPutFile(const char *msg)
    if (restartat || forceopen)
       RootdCloseTab(1);
 
+   // check if file is not in use by somebody and prevent from somebody
+   // using it before upload is completed
+   if (!RootdCheckTab(1)) {
+      Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+      return;
+   }
+
    // open local file
    int fd;
    if (!restartat) {
-
-      // make sure file exists so RootdCheckTab works correctly
-#ifndef WIN32
-      fd = open(gFile, O_RDWR | O_CREAT, 0600);
-#else
-      fd = open(gFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
-#endif
-      if (fd < 0) {
-         Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
-         return;
-      }
-
-      close(fd);
-
-      // check if file is not in use by somebody and prevent from somebody
-      // using it before upload is completed
-      if (!RootdCheckTab(1)) {
-         Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
-         return;
-      }
-
 #ifndef WIN32
       fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #else
@@ -1398,32 +1356,26 @@ void RootdPutFile(const char *msg)
       else
          fd = open(gFile, O_WRONLY, S_IREAD | S_IWRITE);
 #endif
-      if (fd < 0) {
-         Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
-         return;
-      }
-      if (!RootdCheckTab(1)) {
-         close(fd);
-         Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
-         return;
-      }
+   }
+
+   if (fd < 0) {
+      Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
+      return;
    }
 
    // check file system space
-   if (strcmp(gFile, "/dev/null")) {
-      struct statfs statfsbuf;
+   struct statfs statfsbuf;
 #if defined(__sgi) || (defined(__sun) && !defined(linux))
-      if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
+   if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
 #else
-      if (fstatfs(fd, &statfsbuf) == 0) {
-         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
+   if (fstatfs(fd, &statfsbuf) == 0) {
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
-         if (space < size - restartat) {
-            Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
-            close(fd);
-            return;
-         }
+      if (space < size - restartat) {
+         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
+         close(fd);
+         return;
       }
    }
 
@@ -1550,6 +1502,13 @@ void RootdGetFile(const char *msg)
    if (forceopen)
       RootdCloseTab(1);
 
+   // check if file is not in use by somebody and prevent from somebody
+   // using it before download is completed
+   if (!RootdCheckTab(0)) {
+      Error(kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
+      return;
+   }
+
    // open file for reading
 #ifndef WIN32
    int fd = open(gFile, O_RDONLY);
@@ -1558,14 +1517,6 @@ void RootdGetFile(const char *msg)
 #endif
    if (fd < 0) {
       Error(kErrFileOpen, "RootdGetFile: cannot open file %s", gFile);
-      return;
-   }
-
-   // check if file is not in use by somebody and prevent from somebody
-   // using it before download is completed
-   if (!RootdCheckTab(0)) {
-      close(fd);
-      Error(kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
       return;
    }
 
@@ -1761,17 +1712,10 @@ void RootdLsdir(const char *cmd)
    char buffer[kMAXPATHLEN];
 
    // make sure all commands start with ls (should use snprintf)
-   if (gAnon) {
-      if (strlen(cmd) < 2 || strncmp(cmd, "ls", 2))
-         sprintf(buffer, "ls %s", cmd);
-      else
-         sprintf(buffer, "%s", cmd);
-   } else {
-      if (strlen(cmd) < 2 || strncmp(cmd, "ls", 2))
-         sprintf(buffer, "ls %s 2>/dev/null", cmd);
-      else
-         sprintf(buffer, "%s 2>/dev/null", cmd);
-   }
+   if (strlen(cmd) < 2 || strncmp(buffer, "ls", 2))
+      sprintf(buffer, "ls %s 2>/dev/null", cmd);
+   else
+      sprintf(buffer, "%s 2>/dev/null", cmd);
 
    FILE *pf;
    if ((pf = popen(buffer, "r")) == 0) {

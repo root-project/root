@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.10 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.7 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -473,21 +473,6 @@ TObject *TList::First() const
 }
 
 //______________________________________________________________________________
-TObject **TList::GetObjectRef(TObject *obj) const
-{
-   // Return address of pointer to obj
-
-   TObjLink *lnk = FirstLink();
-
-   while (lnk) {
-      TObject *ob = lnk->GetObject();
-      if (ob->IsEqual(obj)) return lnk->GetObjectRef();
-      lnk = lnk->Next();
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
 TObject *TList::Last() const
 {
    // Return the last object in the list. Returns 0 when list is empty.
@@ -558,10 +543,8 @@ TObject *TList::Remove(TObject *obj)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -591,10 +574,8 @@ TObject *TList::Remove(TObjLink *lnk)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.5 2001/11/11 15:44:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.2 2000/09/27 09:16:42 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -125,21 +125,8 @@ inline void tobuf(char *&buf, ULong_t x)
 inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)  && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__)
    *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
-   union {
-     volatile char  c[4];
-     volatile float f;
-   } u;
-   u.f = x;
-   buf[0] = u.c[3];
-   buf[1] = u.c[2];
-   buf[2] = u.c[1];
-   buf[3] = u.c[0];
 # else
    char *sw = (char *)&x;
    buf[0] = sw[3];
@@ -156,25 +143,8 @@ inline void tobuf(char *&buf, Float_t x)
 inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
    *((unsigned long long *)buf) = Rbswap_64(*((unsigned long long *)&x));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
-   union {
-     volatile char   c[8];
-     volatile double d;
-   } u;
-   u.d = x;
-   buf[0] = u.c[7];
-   buf[1] = u.c[6];
-   buf[2] = u.c[5];
-   buf[3] = u.c[4];
-   buf[4] = u.c[3];
-   buf[5] = u.c[2];
-   buf[6] = u.c[1];
-   buf[7] = u.c[0];
 # else
    char *sw = (char *)&x;
    buf[0] = sw[7];
@@ -263,21 +233,8 @@ inline void frombuf(char *&buf, ULong_t *x)
 inline void frombuf(char *&buf, Float_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__)
    *((UInt_t*)x) = Rbswap_32(*((UInt_t *)buf));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
-   union {
-     volatile char  c[4];
-     volatile float f;
-   } u;
-   u.c[0] = buf[3];
-   u.c[1] = buf[2];
-   u.c[2] = buf[1];
-   u.c[3] = buf[0];
-   *x = u.f;
 # else
    char *sw = (char *)x;
    sw[0] = buf[3];
@@ -294,25 +251,8 @@ inline void frombuf(char *&buf, Float_t *x)
 inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
    *((unsigned long long*)x) = Rbswap_64(*((unsigned long long *)buf));
-# elif defined(R__KCC)
-   // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
-   // + Use a volatile here to work around error in KCC optimizer
-   union {
-     volatile char   c[8];
-     volatile double d;
-   } u;
-   u.c[0] = buf[7];
-   u.c[1] = buf[6];
-   u.c[2] = buf[5];
-   u.c[3] = buf[4];
-   u.c[4] = buf[3];
-   u.c[5] = buf[2];
-   u.c[6] = buf[1];
-   u.c[7] = buf[0];
-   *x = u.d;
 # else
    char *sw = (char *)x;
    sw[0] = buf[7];
@@ -389,9 +329,8 @@ inline ULong_t host2net(ULong_t x)
 
 inline Float_t host2net(Float_t xx)
 {
-# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   UInt_t t = Rbswap_32(*((UInt_t *)&xx));
-   return *(Float_t *)&t;
+# if defined(__linux) && defined(__i386__)
+   return Rbswap_32(*((UInt_t *)&xx));
 # else
    UInt_t *x = (UInt_t *)&xx;
    *x = (((*x & 0x000000ffU) << 24) | ((*x & 0x0000ff00U) <<  8) |
@@ -402,9 +341,8 @@ inline Float_t host2net(Float_t xx)
 
 inline Double_t host2net(Double_t x)
 {
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   unsigned long long t = Rbswap_64(*((unsigned long long *)&x));
-   return *(Double_t *)&t;
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+   return Rbswap_64(*((unsigned long long *)&x));
 # else
    char sw[sizeof(Double_t)];
    *(Double_t *)sw = x;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.14 2002/01/15 00:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.8 2000/12/10 10:55:27 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -138,60 +138,13 @@ inline static void Mash(unsigned& hash, unsigned chars)
 }
 
 //______________________________________________________________________________
-unsigned Hash(const char *str)
-{
-   // Return a case-sensitive hash value.
-
-   unsigned len = strlen(str);
-   unsigned hv  = len; // Mix in the string length.
-   unsigned i   = hv*sizeof(char)/sizeof(unsigned);
-
-   if (((unsigned long)str)%sizeof(unsigned) == 0) {
-      // str is word aligned
-      const unsigned *p = (const unsigned*)str;
-
-      while (i--)
-         Mash(hv, *p++);                   // XOR in the characters.
-
-      // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-         unsigned h = 0;
-         const char* c = (const char*)p;
-         while (i--)
-            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
-         Mash(hv, h);
-      }
-   } else {
-      // str is not word aligned
-      unsigned h;
-      const unsigned char *p = (const unsigned char*)str;
-
-      while (i--) {
-         memcpy(&h, p, sizeof(unsigned));
-         Mash(hv, h);
-         p += sizeof(unsigned);
-      }
-
-      // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-         h = 0;
-         const char* c = (const char*)p;
-         while (i--)
-            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
-         Mash(hv, h);
-      }
-   }
-   return hv;
-}
-
-//______________________________________________________________________________
 unsigned TStringRef::Hash() const
 {
    // Return a case-sensitive hash value.
 
    unsigned hv       = (unsigned)Length(); // Mix in the string length.
    unsigned i        = hv*sizeof(char)/sizeof(unsigned);
-   const unsigned *p = (const unsigned*)Data();
+   const unsigned* p = (const unsigned*)Data();
    {
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
@@ -214,7 +167,7 @@ unsigned TStringRef::HashFoldCase() const
 
    unsigned hv = (unsigned)Length();    // Mix in the string length.
    unsigned i  = hv;
-   const unsigned char *p = (const unsigned char*)Data();
+   const unsigned char* p = (const unsigned char*)Data();
    while (i--) {
       Mash(hv, toupper(*p));
       ++p;
@@ -776,13 +729,12 @@ void TString::ReadBuffer(char *&buffer)
    for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
 }
 
-//______________________________________________________________________________
 TString* TString::ReadString(TBuffer &b, const TClass *clReq)
 {
    // Read TString object from buffer. Simplified version of
    // TBuffer::ReadObject (does not keep track of multiple
    // references to same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
+   // because TBuffer::ReadObject can only handle descendant 
    // of TObject
 
    Assert(b.IsReading());
@@ -866,7 +818,7 @@ void TString::WriteString(TBuffer &b, const TString *a)
    // Write TString object to buffer. Simplified version of
    // TBuffer::WriteObject (does not keep track of multiple
    // references to the same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
+   // because TBuffer::ReadObject can only handle descendant 
    // of TObject
 
    Assert(b.IsWriting());
@@ -1308,15 +1260,12 @@ Bool_t TString::IsAscii() const
 }
 
 //______________________________________________________________________________
-Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
+Bool_t TString::EndsWith(const char* s, ECaseCompare cmp) const
 {
    Ssiz_t l = strlen(s);
-   if (l > Length()) return kFALSE;
-   const char *s2 = Data() + Length() - l;
-
-   if (cmp == kExact)
-      return strcmp(s, s2) == 0;
-   return strcasecmp(s, s2) == 0;
+   Ssiz_t i = Index(s, l, (Ssiz_t)0, cmp);
+   if (i == kNPOS) return kFALSE;
+   return i == Length() - l;
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.9 2002/01/25 11:21:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -15,34 +15,40 @@
 //                                                                      //
 // The TEnv class reads a config file, by default .rootrc. Three types  //
 // of .rootrc files are read: global, user and local files. The global  //
-// file resides in $ROOTSYS/etc, the user file in ~/ and the local file //
-// in the current working directory.                                    //
+// file resides in $ROOTSYS, the user file in ~/ and the local file in  //
+// the current working directory.                                       //
 // The format of the .rootrc file is similar to the .Xdefaults format:  //
 //                                                                      //
-//   [+]<SystemName>.<RootName|ProgName>.<name>[(type)]:  <value>       //
+//   <SystemName>.<RootName|ProgName>.<name>[(type)]:  <value>          //
 //                                                                      //
 // Where <SystemName> is either Unix, WinNT, MacOS or Vms,              //
-// <RootName> the name as given in the TApplication ctor (or "RootApp"  //
-// in case no explicit TApplication derived object was created),        //
-// <ProgName> the current program name and <name> the resource name,    //
-// with optionally a type specification. <value> can be either a        //
-// string, an integer, a float/double or a boolean with the values      //
-// TRUE, FALSE, ON, OFF, YES, NO, OK, NOT. Booleans will be returned as //
-// an integer 0 or 1. The options [+] allows the concatenation of       //
-// values to the same resouce name.                                     //
+// <RootName> the root name as given in the TROOT ctor,                 //
+// <ProgName> the current program name and                              //
+// <name> is the resource name, with optionally a type specification.   //
 //                                                                      //
 // E.g.:                                                                //
 //                                                                      //
-//   Unix.Rint.Root.DynamicPath: .:$ROOTSYS/lib:~/lib                   //
-//   myapp.Root.Debug:  FALSE                                           //
+//   Unix.rint.Root.DynamicPath: .:$ROOTSYS/lib:~/lib                   //
+//   Rint.Root.Debug:  FALSE                                            //
 //   TH.Root.Debug: YES                                                 //
 //   *.Root.MemStat: 1                                                  //
 //                                                                      //
 // <SystemName> and <ProgName> or <RootName> may be the wildcard "*".   //
 // A # in the first column starts comment line.                         //
 //                                                                      //
-// For the currently defined resources (and their default values) see   //
-// $ROOTSYS/etc/system.rootrc.                                          //
+// Currently the following resources are defined:                       //
+//    Root.Debug                (bool)         (*)                      //
+//    Root.MemStat              (bool)         (*)                      //
+//    Root.MemStat.size         (int)          (*)                      //
+//    Root.MemStat.cnt          (int)          (*)                      //
+//    Root.ObjectStat           (bool)         (*)                      //
+//    Root.MacroPath            (string)                                //
+//    Root.DynamicPath          (string)                                //
+//    Rint.Logon                (string)                                //
+//    Rint.Logoff               (string)                                //
+//                                                                      //
+// (*) work only with the <RootName> since no <ProgName> is available   //
+//     at time of initialization.                                       //
 //                                                                      //
 // Note that the .rootrc config files contain the config for all ROOT   //
 // based applications.                                                  //
@@ -58,21 +64,24 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "RConfig.h"
+#ifndef WIN32
+# ifdef ANSILIB
+#  include <sstream.h>
+# else
+#  include <strstream.h>
+# endif
+#else
+# ifdef ANSILIB
+#  include <strstream>
+# else
+#  include <strstrea.h>
+# endif
+#endif
 #include "TEnv.h"
-#include "TROOT.h"
 #include "TSystem.h"
 #include "TOrdCollection.h"
 #include "TError.h"
-
-#if defined(R__ANSISTREAM)
-#  include <strstream>
-#else
-#  ifndef R__WIN32
-#    include <strstream.h>
-#  else
-#    include <strstrea.h>
-#  endif
-#endif
 
 
 TEnv *gEnv;
@@ -213,7 +222,7 @@ private:
 public:
    TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) { }
    void KeyValue(const TString &name, const TString &value, const TString &type)
-      { fEnv->SetValue(name, value, fLevel, type); }
+      { fEnv->SetValue(name.Data(), value, fLevel, type.Data()); }
 };
 
 //---- TWriteEnvParser ---------------------------------------------------------
@@ -238,6 +247,8 @@ void TWriteEnvParser::KeyValue(const TString &name, const TString &value,
    TEnvRec *er = fEnv->Lookup(name.Data());
    if (er && er->fModified) {
       er->fModified = kFALSE;
+      if (er->fObject)
+         er->Write(er->fObject);
       fprintf(fOfp, "%s", er->fValue.Data());
    } else
       fprintf(fOfp, "%s", value.Data());
@@ -248,7 +259,7 @@ void TWriteEnvParser::KeyValue(const TString &name, const TString &value,
 
 //______________________________________________________________________________
 TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
-   : fName(n), fType(t), fLevel(l)
+   : fName(n), fType(t), fLevel(l), fObject(0)
 {
    // Ctor of a single resource.
 
@@ -257,33 +268,91 @@ TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
 }
 
 //______________________________________________________________________________
-void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
-                          Bool_t append)
+TEnvRec::TEnvRec(const char *n, const TString &v, const char *t, EEnvLevel l)
+   : fName(n), fType(t), fLevel(l), fObject(0)
+{
+   // Ctor of a single resource.
+
+   fValue = ExpandValue(v.Data());
+   fModified = (l == kEnvChange);
+}
+
+//______________________________________________________________________________
+void TEnvRec::Read(TObject *)
+{
+   // Read a resource record.
+
+#ifdef ANSILIB
+
+#else
+   istrstream is((char*)fValue.Data(), fValue.Length());
+#endif
+   //op->ReadFrom(is);
+}
+
+//______________________________________________________________________________
+void TEnvRec::Write(TObject *)
+{
+   // Write a changed resource record.
+
+   char *cp = new char[1000];
+#ifdef ANSILIB
+
+#else
+   ostrstream os(cp, 1000);
+#endif
+   //op->PrintOn(os);
+   ChangeValue(cp, 0, kEnvChange);
+   delete cp;
+}
+
+//______________________________________________________________________________
+void TEnvRec::ChangeValue(const char *v, const char*, EEnvLevel l)
 {
    // Change the value of a resource.
 
-   if (l != kEnvChange && fLevel == l && !append) {
+   if (l != kEnvChange && fLevel == l) {
       // use global Warning() since interpreter might not yet be initialized
       // at this stage (called from TROOT ctor)
       ::Warning("TEnvRec::ChangeValue",
-        "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v, l);
+      "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v, l);
       return;
    }
-   if (!append) {
-      if (fValue != v) {
-         if (l == kEnvChange)
-            fModified = kTRUE;
-         else {
-            fModified = kFALSE;
-            fLevel = l;
-         }
-         fValue = ExpandValue(v);
-      }
-   } else {
+   if (fValue != v) {
       if (l == kEnvChange)
          fModified = kTRUE;
-      fValue += " ";
-      fValue += ExpandValue(v);
+      else {
+         fModified = kFALSE;
+         fLevel = l;
+      }
+      fValue = ExpandValue(v);
+      if (fModified && fObject)
+         Read(fObject);
+   }
+}
+
+//______________________________________________________________________________
+void TEnvRec::ChangeValue(const TString &v, const char *, EEnvLevel l)
+{
+   // Change the value of a resource.
+
+   if (l != kEnvChange && fLevel == l) {
+      // use global Warning() since interpreter might not yet be initialized
+      // at this stage (called from TROOT ctor)
+      ::Warning("TEnvRec::ChangeValue",
+      "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v.Data(), l);
+      return;
+   }
+   if (fValue != v) {
+      if (l == kEnvChange)
+         fModified = kTRUE;
+      else {
+         fModified = kFALSE;
+         fLevel = l;
+      }
+      fValue = ExpandValue(v.Data());
+      if (fModified && fObject)
+         Read(fObject);
    }
 }
 
@@ -301,9 +370,8 @@ TString TEnvRec::ExpandValue(const char *value)
    // Replace all $(XXX) strings by the value defined in the shell
    // (obtained via TSystem::Getenv()).
 
+   const char *v = value;
    const char *vv;
-   char *v, *vorg = StrDup(value);
-   v = vorg;
 
    char *s1, *s2;
    int len = 0;
@@ -315,18 +383,16 @@ TString TEnvRec::ExpandValue(const char *value)
          break;
       }
       *s2 = 0;
-      vv = gSystem->Getenv(s1);
+      vv =  gSystem->Getenv(s1);
       if (vv) len += strlen(vv);
       *s2 = ')';
       v = s2 + 1;
    }
 
-   if (!len) {
-      delete [] vorg;
+   if (!len)
       return TString(value);
-   }
 
-   v = vorg;
+   v = value;
    char *nv = new char[strlen(v) + len];
    *nv = 0;
 
@@ -337,7 +403,7 @@ TString TEnvRec::ExpandValue(const char *value)
       s1 += 2;
       s2 = (char*)strchr(s1, ')');
       *s2 = 0;
-      vv = gSystem->Getenv(s1);
+      vv =  gSystem->Getenv(s1);
       if (vv) strcat(nv, vv);
       *s2 = ')';
       v = s2 + 1;
@@ -347,7 +413,6 @@ TString TEnvRec::ExpandValue(const char *value)
 
    TString val = nv;
    delete [] nv;
-   delete [] vorg;
 
    return val;
 }
@@ -428,15 +493,15 @@ const char *TEnv::Getvalue(const char *name)
 
    TEnvRec *er = 0;
    if (haveProgName)
-      er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gProgName, name));
+      er = Lookup(Form("%s.%s.%s", gSystemName, gProgName, name));
    if (er == 0)
-      er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gROOT->GetName(), name));
+      er = Lookup(Form("%s.%s.%s", gSystemName, gRootName, name));
    if (er == 0)
-      er = Lookup(Form("%s.*.%s", gSystem->GetName(), name));
+      er = Lookup(Form("%s.*.%s", gSystemName, name));
    if (er == 0 && haveProgName)
       er = Lookup(Form("%s.%s", gProgName, name));
    if (er == 0)
-      er = Lookup(Form("%s.%s", gROOT->GetName(), name));
+      er = Lookup(Form("%s.%s", gRootName, name));
    if (er == 0)
       er = Lookup(Form("*.*.%s", name));
    if (er == 0)
@@ -456,7 +521,7 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
 
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
-      char buf2[512], *cp2 = buf2;
+      char buf2[100], *cp2 = buf2;
 
       while (isspace((int)*cp))
          cp++;
@@ -502,6 +567,24 @@ const char *TEnv::GetValue(const char *name, const char *dflt)
    if (cp)
       return cp;
    return dflt;
+}
+
+//______________________________________________________________________________
+TObject *TEnv::GetValue(const char *name, TObject *op)
+{
+   // Read in object op the values of the resource and return the object.
+
+   TEnvRec *er = Lookup(Form("%s.%s", gProgName, name));
+   if (er == 0)
+      er = Lookup(Form("*.%s", name));
+   if (er == 0)
+      er = Lookup(name);
+
+   if (er) {
+      er->fObject = op;
+      er->Read(op);
+   }
+   return op;
 }
 
 //______________________________________________________________________________
@@ -644,38 +727,40 @@ void TEnv::SaveLevel(EEnvLevel level)
 }
 
 //______________________________________________________________________________
-void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
-                    const char *type)
+void TEnv::SetValue(const char *name, const TString &value, EEnvLevel level, const char *type)
 {
    // Set the value of a resource or create a new resource.
 
-   const char *nam = name;
-   Bool_t append = kFALSE;
-   if (name[0] == '+') {
-      nam    = &name[1];
-      append = kTRUE;
-   }
-
-   TEnvRec *er = Lookup(nam);
+   TEnvRec *er = Lookup(name);
    if (er)
-      er->ChangeValue(value, type, level, append);
+      er->ChangeValue(value, type, level);
    else
-      fTable->Add(new TEnvRec(nam, value, type, level));
+      fTable->Add(new TEnvRec(name, value, type, level));
+}
+
+//______________________________________________________________________________
+void TEnv::SetValue(const char *name, const char *value, EEnvLevel level, const char *type)
+{
+   // Set the value of a resource or create a new resource.
+
+   TEnvRec *er = Lookup(name);
+   if (er)
+      er->ChangeValue(value, type, level);
+   else
+      fTable->Add(new TEnvRec(name, value, type, level));
 }
 
 //______________________________________________________________________________
 void TEnv::SetValue(const char *name, EEnvLevel level)
 {
    // Set the value of a resource or create a new resource.
-   // Use this method to set a resource like, "name=val".
-   // If just "name" is given it will be interpreted as "name=1".
 
    TString buf = name;
    int l = buf.Index("=");
    if (l > 0) {
       TString nm  = buf(0, l);
       TString val = buf(l+1, buf.Length());
-      SetValue(nm, val, level);
+      SetValue(nm.Data(), val.Data(), level);
    } else
       SetValue(name, "1", level);
 }

@@ -1,9 +1,11 @@
-// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Nikolay Root   05/07/98
 
 #include <stdlib.h>
+#include <iostream.h>
 
-#include "Riostream.h"
+#include "TROOT.h"
+
 #include "TCollection.h"
 #include "TSortedList.h"
 #include "TObjArray.h"
@@ -97,8 +99,8 @@ public:
   Double_t TestByIndex();    // benchmark by index
   Double_t DoTest();         // Tests multiplexsor
 
-  void        CleanUp()    { fColl->Delete(); }
-  void        Dump() const { fColl->Dump(); }
+  void        CleanUp() { fColl->Delete(); }
+  void        Dump()    { fColl->Dump(); }
 
   virtual const Text_t* GetName() const
   { return fColl->ClassName(); }
@@ -207,6 +209,7 @@ Double_t deltas[ntests];  // benchmark results
 int main(int argc,char **argv)
 {
   // Initialize the ROOT framework
+  TROOT tcollbm("Collection", "Benchmark collection classes");
   if(argc == 2 && !strcmp(argv[1],"-h")) {
     Printf("Usage: tcollbm [-n|-i] [nobjects] [ntimes]");
     Printf("  -n        - benchmark access by name");

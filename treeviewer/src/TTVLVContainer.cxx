@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.3 2001/02/26 10:28:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -16,8 +16,6 @@
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
-#include "TList.h"
-
 
 ClassImp(TGItemContext)
 
@@ -106,19 +104,13 @@ const char *TTVLVEntry::ConvertAliases()
 // Convert all aliases into true names
    TList *list = GetContainer()->GetViewer()->ExpressionList();
    fConvName = fTrueName;
-   TString start(fConvName);
    TIter next(list);
    TTVLVEntry* item;
    while (!FullConverted()) {
       next.Reset();
-      start = fConvName;
       while ((item=(TTVLVEntry*)next())) {
          if (item != this)
             fConvName.ReplaceAll(item->GetAlias(), item->GetTrueName());
-      }
-      if (fConvName == start) {
-         Warning(item->GetAlias(), "Cannot convert aliases for this expression.");
-         return(fConvName.Data());
       }
    }
    return(fConvName.Data());
@@ -142,9 +134,11 @@ void TTVLVEntry::CopyItem(TTVLVEntry *dest)
 {
    // Copy this item's name and alias to an other.
    if (!dest) return;
+   UInt_t *type = (UInt_t *)GetUserData();
+   if (*type & TTreeViewer::kLTExpressionType) {
+      if (!fAlias.BeginsWith("~") && !fAlias.Contains("empty")) fAlias.Prepend("~");
+   }
    dest->SetExpression(fTrueName.Data(), fAlias.Data(), fIsCut);
-   TString alias = dest->GetAlias();
-   if (!alias.BeginsWith("~") && !alias.Contains("empty")) dest->PrependTilde();
 }
 //______________________________________________________________________________
 Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
@@ -165,13 +159,6 @@ Bool_t TTVLVEntry::HasAlias()
 
    if (fAlias.Length()) return kTRUE;
    return kFALSE;
-}
-//______________________________________________________________________________
-void TTVLVEntry::PrependTilde()
-{
-// Prepend a ~ to item alias
-   fAlias = "~" + fAlias;
-   SetItemName(fAlias.Data());
 }
 //______________________________________________________________________________
 void TTVLVEntry::SetItemName(const char* name)
@@ -448,7 +435,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
                        f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
                     } else {
                        TString name(2000);
-                       TString dragged = ((TTVLVEntry *)fLastActive)->ConvertAliases();
+                       TString dragged = ((TTVLVEntry *)fLastActive)->GetTrueName();
                        name  = f->GetTrueName();
                        if ((name.Length()+dragged.Length()) < 228) {
                           name += ":";
@@ -577,6 +564,7 @@ void TTVLVContainer::SelectItem(const char* name)
    }
 }
 
+
 ClassImp(TGSelectBox)
 
 //////////////////////////////////////////////////////////////////////////
@@ -646,8 +634,8 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       Window_t wdum;
       Int_t ax, ay;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
+                                      (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                                      ax, ay, wdum);
       MoveResize(ax, ay, w, GetDefaultHeight());
       MapWindow();
    }
@@ -757,7 +745,7 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       case kC_TEXTENTRY:
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
-               if (ValidateAlias()) SaveText();
+               SaveText();
                break;
             default:
                break;
@@ -768,7 +756,6 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCM_BUTTON:
                switch (parm1) {
                   case kTFDone:
-                     if (!ValidateAlias()) break;
                      SaveText();
                      CloseWindow();
                      break;
@@ -786,28 +773,6 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       default:
          if (parm2) break;       // just to avoid warning on CC compiler
          break;
-   }
-   return kTRUE;
-}
-//______________________________________________________________________________
-Bool_t TGSelectBox::ValidateAlias()
-{
-//--- return true if edited alias is not a leading string of other expression aliases
-   if (!strcmp(fTeAlias->GetText(), "-empty-") || !strlen(fTeAlias->GetText())) {
-      fViewer->Warning("You should define the alias first");
-      return kFALSE;
-   }
-   TList *list = fViewer->ExpressionList();
-   TIter next(list);
-   TTVLVEntry* item;
-   while ((item=(TTVLVEntry*)next())) {
-      if (item != fEntry) {
-         TString itemalias(item->GetAlias());
-         if (itemalias.Contains(fTeAlias->GetText())) {
-            fViewer->Warning("Alias can not be the leading string of other alias");
-            return kFALSE;
-         }
-      }
    }
    return kTRUE;
 }

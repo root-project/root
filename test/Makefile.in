@@ -15,16 +15,12 @@ ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o 
 
+EVENTLIB      = $(EVENTSO)
+
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 
-ifeq ($(ARCH),win32)
-PLATFORM      = win32
-endif
-ifeq ($(ARCH),win32gdk)
-PLATFORM      = win32
-endif
 
 ifeq ($(ARCH),hpux)
 # HP-UX with CC
@@ -45,15 +41,6 @@ LDFLAGS       = -O -z
 SOFLAGS       = -b
 endif
 
-ifeq ($(ARCH),hpuxia64acc)
-# HP-UX 11i 1.5 (IA-64) with aCC
-CXX           = aCC
-CXXFLAGS      = -O +Z
-LD            = aCC
-LDFLAGS       = -O -z
-SOFLAGS       = -b
-endif
-
 ifeq ($(ARCH),hpuxegcs)
 # HP-UX 10.x with g++
 CXXFLAGS      = -O -fPIC
@@ -63,29 +50,8 @@ LDFLAGS       = -O
 SOFLAGS       = -fPIC -shared
 endif
 
-
-ifeq ($(ARCH),hurddeb)
-# GNU/Hurd
-CXX           = g++
-CXXFLAGS      = -O -Wall -fPIC
-LD            = g++
-LDFLAGS       = -O
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),aix)
-# IBM AIX xlC 4.x
-CXX           = xlC
-CXXFLAGS      = -O
-LD            = xlC
-LDFLAGS       = -O
-SOFLAGS       =
-ROOTLIBS     := $(shell root-config --nonew --libs)
-ROOTGLIBS    := $(shell root-config --nonew --glibs)
-endif
-
-ifeq ($(ARCH),aix5)
-# IBM AIX xlC 5.x
+# IBM AIX
 CXX           = xlC
 CXXFLAGS      = -O
 LD            = xlC
@@ -196,7 +162,7 @@ endif
 
 ifeq ($(ARCH),sgikcc)
 # SGI with KCC
-CXX           = KCC -n32 --no_exceptions --one_instantiation_per_object
+CXX           = KCC -n32 --no_exceptions
 CXXFLAGS      = -O
 LD            = KCC -n32 --no_exceptions
 LDFLAGS       = -O
@@ -248,7 +214,7 @@ LDFLAGS       = -O
 SOFLAGS       = -Wl,-expect_unresolved,* -call_shared
 endif
 
-ifeq ($(ARCH),linuxrh51)
+ifeq ($(ARCH),linux)
 # Linux with gcc 2.7.2.x
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
@@ -293,8 +259,8 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),linux)
-# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+ifeq ($(ARCH),linuxegcs)
+# Linux with egcs (>= RedHat 5.2)
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
@@ -311,22 +277,13 @@ LDFLAGS       = -O
 SOFLAGS       =
 endif
 
-ifeq ($(ARCH),linuxicc)
-# Linux with Intel icc compiler
-CXX           = icc
-CXXFLAGS      = -O -KPIC
-LD            = icc
-LDFLAGS       = -O
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),linuxppcegcs)
 # MkLinux with egcs/glibc
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared
+SOFLAGS       = -shared -Wl,-soname,
 endif
 
 ifeq ($(ARCH),linuxia64gcc)
@@ -347,26 +304,8 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),linuxia64ecc)
-# Itanium Linux with Intel ecc
-CXX           = ecc
-CXXFLAGS      = -O -KPIC
-LD            = ecc
-LDFLAGS       = -O -i_dynamic
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),linuxalphaegcs)
 # Alpha Linux with egcs
-CXX           = g++
-CXXFLAGS      = -O -Wall -fPIC
-LD            = g++
-LDFLAGS       = -O
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxarm)
-# ARM Linux with egcs
 CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
@@ -380,7 +319,7 @@ CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared
+SOFLAGS       = -shared -Wl,-soname,
 endif
 
 ifeq ($(ARCH),freebsd)
@@ -401,18 +340,6 @@ LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-x
 endif
 
-ifeq ($(ARCH),macosx)
-# MacOS X with cc (GNU cc 2.95.2)
-CXX           = c++
-CXXFLAGS      = -O -pipe -Wall
-LD            = c++
-LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
-# The SOFLAGS will be used to create the .dylib; the .so will
-# be created separately
-DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nostdlib ../lib/macosx-fpsave.o
-endif
-
 ifeq ($(ARCH),hiux)
 # Hitachi HIUX
 CXX           = g++
@@ -423,7 +350,7 @@ SOFLAGS       = -Wl,-b,-E -nostdlib -nostartfiles
 DllSuf        = sl
 endif
 
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx
@@ -443,6 +370,7 @@ SOFLAGS       = -DLL
 SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
                 advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib \
                 msvcirt.lib
+EVENTLIB      = libEvent.lib
 
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
@@ -458,18 +386,17 @@ GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 
-EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
-EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
-EVENTSO       = libEvent.$(DllSuf)
-EVENT         = Event$(ExeSuf)
-ifeq ($(PLATFORM),win32)
-EVENTLIB      = libEvent.lib
-else
-EVENTLIB      = $(EVENTSO)
-endif
+EVENTO        = Event.$(ObjSuf) \
+                EventDict.$(ObjSuf)
+
+EVENTS        = Event.$(SrcSuf) \
+                EventDict.$(SrcSuf)
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
+
+EVENT         = Event$(ExeSuf)
+EVENTSO       = libEvent.$(DllSuf)
 
 HWORLDO       = hworld.$(ObjSuf)
 HWORLDS       = hworld.$(SrcSuf)
@@ -511,10 +438,6 @@ GUITESTO      = guitest.$(ObjSuf)
 GUITESTS      = guitest.$(SrcSuf)
 GUITEST       = guitest$(ExeSuf)
 
-GUIVIEWERO    = guiviewer.$(ObjSuf) guiviewerDict.$(ObjSuf)
-GUIVIEWERS    = guiviewer.$(SrcSuf) guiviewerDict.$(SrcSuf)
-GUIVIEWER     = guiviewer$(ExeSuf)
-
 HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
 HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
 HELLOSO       = Hello.$(DllSuf)
@@ -541,15 +464,14 @@ BENCH         = bench$(ExeSuf)
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO)
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
-                $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
+                $(TCOLLEX) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH)
 ifneq ($(ARCH),win32)
-OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
-PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
+OBJS         += $(GUITESTO) $(TETRISO)
+PROGRAMS     += $(GUITEST) $(TETRISSO)
 endif
 
 #------------------------------------------------------------------------------
@@ -561,10 +483,8 @@ all:            $(PROGRAMS)
 
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(EVENTSO) \
+		   $(LIBS) -p 0 $(EVENTO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -572,24 +492,17 @@ ifeq ($(ARCH),alphacxx)
 		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
 		   -expect_unresolved "*" -g0 -O1 -shared \
 		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
+		   -o libEvent.so Event.o EventDict.o -lcxxstd -lcxx \
+		   -lexc -lots -lc
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
-else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
-endif
+		$(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
 endif
 endif
 endif
@@ -640,50 +553,30 @@ $(GUITEST):     $(GUITESTO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(GUIVIEWER):   $(GUIVIEWERO)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
 $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
-ifeq ($(ARCH),macosx)
-		$(LD) -flat_namespace $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
-else
-		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
-endif
+		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
+ -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+ -o Hello.so Hello.o HelloDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
-else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
-endif
 endif
 endif
 endif
@@ -691,31 +584,19 @@ endif
 Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
+ -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+ -o Aclock.so Aclock.o AclockDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
-else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
-endif
 endif
 endif
 endif
@@ -723,62 +604,38 @@ endif
 Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
+ -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+ -o Tetris.so Tetris.o TetrisDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) $@
-else
-ifeq ($(PLATFORM),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
+ifeq ($(ARCH),win32)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
-endif
 endif
 endif
 endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
-		   -expect_unresolved "*" -g0 -O1 -shared \
-		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
+ -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+ -o TBench.so TBench.o TBenchDict.o -lcxxstd -lcxx -lexc -lots -lc
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
-else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
-endif
-endif
 endif
 endif
 endif
@@ -789,7 +646,6 @@ clean:
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so .def so_locations
-		@rm -rf cxx_repository
 
 .SUFFIXES: .$(SrcSuf)
 
@@ -799,33 +655,28 @@ Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@echo "Generating dictionary EventDict..."
+	@rootcint -f EventDict.$(SrcSuf) -c Event.h EventLinkDef.h
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@echo "Generating dictionary HelloDict..."
+	@rootcint -f HelloDict.$(SrcSuf) -c Hello.h
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@echo "Generating dictionary AclockDict..."
+	@rootcint -f AclockDict.$(SrcSuf) -c Aclock.h
 
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@echo "Generating dictionary TetrisDict..."
+	@rootcint -f TetrisDict.$(SrcSuf) -c Tetris.h
 
 TBench.$(ObjSuf): TBench.h
-TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
-
-guiviewer.$(ObjSuf): guiviewer.h
-guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
-	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+TBenchDict.$(SrcSuf): TBench.h
+	@echo "Generating dictionary TBenchDict..."
+	@rootcint -f TBenchDict.$(SrcSuf) -c TBench.h benchLinkDef.h
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

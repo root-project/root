@@ -108,9 +108,6 @@ G__value result3;
 #ifndef G__OLDIMPLEMENTATION961
   int isconst=0;
 #endif
-#ifndef G__PHILIPPE31
-  char hasstar=0;
-#endif
   G__value store_result;
   store_result = result3;
 
@@ -132,48 +129,13 @@ G__value result3;
   else if (strncmp (casttype, "typename", 8) == 0) {
     strcpy (casttype, casttype+8);
   }
-#ifndef G__PHILIPPE33
-  if (casttype[0]==' ') strcpy (casttype, casttype+1);
-  while (strncmp(casttype,"const ",6)==0) {
+  if(strncmp(casttype,"const",5)==0 && 
+     -1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
 #ifndef G__OLDIMPLEMENTATION961
     isconst=1;
 #endif
-    strcpy(casttype,casttype+6);
-  } 
-#endif
-#ifndef G__PHILIPPE31
-  if(strncmp(casttype,"const",5)==0) {
-     for( lenitem=strlen(casttype)-1;
-          lenitem>=5 && (casttype[lenitem]=='*' || casttype[lenitem]=='&');
-          lenitem--) {}
-     if (lenitem>=5) {
-        lenitem++;
-        hasstar = casttype[lenitem];
-        casttype[lenitem] = '\0';
-     }
-     if (-1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
-#else
-  if(strncmp(casttype,"const",5)==0 && 
-     -1==G__defined_tagname(casttype,2)&&-1==G__defined_typename(casttype)) {
-#endif
-#ifndef G__OLDIMPLEMENTATION961
-        isconst=1;
-#endif
-#ifndef G__PHILIPPE31
-        if (hasstar) casttype[lenitem] = hasstar;
-#endif
-        strcpy(casttype,casttype+5);
-#ifndef G__PHILIPPE31
-     } else if (hasstar) casttype[lenitem] = hasstar;
-#endif
+    strcpy(casttype,casttype+5);
   }
-#ifndef G__PHILIPPE32
-  /* since we have the information let's return it */
-  result3.isconst = isconst;
-#endif
-#ifndef G__OLDIMPLEMENTATION1539
-  if(isspace(casttype[0])) strcpy(casttype,casttype+1);
-#endif
   lenitem=strlen(casttype);
   castflag=0;
 
@@ -289,14 +251,6 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
-#ifndef G__OLDIMPLEMENTATION1604
-    if(strcmp(casttype,"bool")==0) {
-      type='g'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-#endif
     break;
   case 5:
     if(strcmp(casttype,"short")==0) {
@@ -343,12 +297,6 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
-    if(strcmp(casttype,"long double")==0) {
-      type='d'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     break;
   case 12:
     if(strcmp(casttype,"unsignedchar")==0) {
@@ -363,35 +311,9 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
-    if(strcmp(casttype,"unsigned int")==0) {
-      type='h'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     break;
   case 13:
-    if(strcmp(casttype,"unsigned char")==0) {
-      type='b'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"unsigned long")==0) {
-      type='k'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     if(strcmp(casttype,"unsignedshort")==0) {
-      type='r'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    break;
-  case 14:
-    if(strcmp(casttype,"unsigned short")==0) {
       type='r'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
@@ -534,10 +456,6 @@ G__value result3;
   if(type!=result3.type) result3.ref = 0; /* questionable */
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1628
-  result3.isconst = isconst;
-#endif
-
   switch(type) {
   case 'd':
     G__letdouble(&result3,type ,(double)G__double(result3));
@@ -569,11 +487,6 @@ G__value result3;
   case 'l':
     G__letint(&result3,type ,(long)G__int(result3));
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-    G__letint(&result3,type ,(int)G__int(result3)?1:0);
-    break;
-#endif
   default:
     G__letint(&result3,type,G__int(result3));
 #ifndef G__OLDIMPLEMENTATION1071
@@ -630,11 +543,6 @@ G__value *buf;
   case 'l':
     G__letint(buf,(char)type ,(long)G__int(*buf));
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-    G__letint(buf,(char)type ,(int)G__int(*buf)?1:0);
-    break;
-#endif
   default:
     G__letint(buf,(char)type ,G__int(*buf));
     buf->ref = buf->obj.i;

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.3 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.2 2000/11/21 20:18:22 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -486,9 +486,7 @@ void TSPHE::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TSPHE::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         Int_t ndiv = fNdiv;
-         fNdiv = 0;
-         SetNumberOfDivisions (ndiv);
+         SetNumberOfDivisions (fNdiv);
          return;
       }
       //====process old versions before automatic schema evolution

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.10 2001/12/05 11:18:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.5 2000/11/10 02:26:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -53,15 +53,14 @@ class TQObject {
 friend class TQConnection;
 
 protected:
-   TList   *fListOfSignals;        //! list of signals from this object
-   TList   *fListOfConnections;    //! list of connections to this object
+   TList   *fListOfSignals;       //! list of signals from this object
+   TList   *fListOfConnections;   //! list of connections to this object
 
    TList   *GetListOfClassSignals() const;
    TList   *GetListOfSignals() const { return fListOfSignals; }
    TList   *GetListOfConnections() const { return fListOfConnections; }
 
-   virtual void       *GetSender() { return this; }
-   virtual const char *GetSenderClassName() const { return ""; }
+   virtual void *GetSender() { return this; }
 
    static Bool_t ConnectToClass(TQObject *sender,
                                 const char *signal,
@@ -74,11 +73,6 @@ protected:
                                 TClass *receiver_class,
                                 void *receiver,
                                 const char *slot);
-
-   static Bool_t CheckConnectArgs(TQObject *sender,
-                                  TClass *sender_class, const char *signal,
-                                  TClass *receiver_class, const char *slot);
-
 public:
    TQObject();
    virtual ~TQObject();
@@ -120,9 +114,7 @@ public:
    virtual void   LowPriority(const char *signal_name,
                               const char *slot_name = 0);
 
-   virtual Bool_t HasConnection(const char *signal_name) const;
-   virtual Int_t  NumberOfSignals() const;
-   virtual Int_t  NumberOfConnections() const;
+   virtual Bool_t HasConnection(const char *signal_name);
    virtual void   Connected(const char * /*signal_name*/) { }
    virtual void   Disconnected(const char * /*signal_name*/) { }
 
@@ -167,18 +159,15 @@ R__EXTERN void *gTQSender;   // the latest sender object
 class TQObjSender : public TQObject {
 
 protected:
-   void    *fSender;        //delegation object
-   TString  fSenderClass;   //class name of delegation object
+   void   *fSender;    //delegation object
 
-   virtual void       *GetSender() { return fSender; }
-   virtual const char *GetSenderClassName() const { return fSenderClass; }
+   virtual void *GetSender() { return fSender; }
 
 public:
    TQObjSender() : TQObject() { }
-   virtual ~TQObjSender() { Disconnect(); }
+   virtual ~TQObjSender() { }
 
    virtual void SetSender(void *sender) { fSender = sender; }
-   void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
    ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
                            //to interpreted classes, see also RQ_OBJECT.h
@@ -198,19 +187,17 @@ public:
            Int_t dl = 0, Int_t il = 0) :
            TQObject(), TClass(name, cversion, dfil, ifil, dl, il) { }
 
-   virtual ~TQClass() { Disconnect(); }
+   virtual ~TQClass() { }
 
    ClassDef(TQClass,0)  // Class with connections
 };
-
 
 // Global function which simplifies making connections in interpreted
 // ROOT session
 //
 //  ConnectCINT      - connects to interpreter(CINT) command
 
-extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
-                          const char *slot);
+extern Bool_t ConnectCINT(TQObject *sender, char *signal, char *slot);
 
 
 //---- ClassImpQ macro ----------------------------------------------

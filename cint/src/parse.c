@@ -173,7 +173,7 @@ struct G__breakcontinue_list *pbreakcontinue;
       G__asm_inst[G__pbreakcontinue->destination] = continue_dest;
     }
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"  assigned %x %d JMP %lx  break,continue\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"  assigned %lx %ld JMP %lx  break,continue\n"
 			   ,G__pbreakcontinue->destination
 			   ,G__pbreakcontinue->breakcontinue
 			   ,G__asm_inst[G__pbreakcontinue->destination]);
@@ -498,19 +498,6 @@ G__value *presult;
 #endif
     *presult=G__getexpr(statement);
   }
-#ifndef G__OLDIMPLEMENTATION1515
-  else if(*pc=='(') {
-    int len = strlen(statement);
-    statement[len++] = *pc;
-    *pc = G__fgetstream_newtemplate(statement+len,")");
-    len = strlen(statement);
-    statement[len++] = *pc;
-#ifdef G__ASM
-    if(G__asm_noverflow) G__asm_clear();
-#endif
-    *presult=G__getexpr(statement);
-  }
-#endif
   /* macro function without ';' at the end */
   else {
     if(G__breaksignal&& G__beforelargestep(statement,piout,plargestep)>1) {
@@ -594,11 +581,6 @@ char *statement;
 #ifndef G__OLDIMPLEMENTATION410
   if(strcmp(statement,"#line")==0) {
     G__setline(statement,c,&iout);
-#ifndef G__OLDIMPLEMENTATION1592
-    /* restore statement[0] as we found it because the
-       callers might look at it! */
-    statement[0]='#';
-#endif
     return(1);
   }
 #endif
@@ -835,28 +817,6 @@ int *piout,*pspaceflag,mparen;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1584
-/***********************************************************************
-* G__toLowerString
-***********************************************************************/
-void G__toUniquePath(s)
-char *s;
-{
-  int i=0,j=0;
-  char *d;
-  if(!s) return;
-  d = (char*)malloc(strlen(s)+1);
-  while(s[i]) {
-    d[j] = tolower(s[i]);
-    if(i && '\\'==s[i] && '\\'==s[i-1]) { /* do nothing */ }
-    else { ++j; }
-    ++i;
-  }
-  d[j] = 0;
-  strcpy(s,d);
-  free((void*)d);
-}
-#endif
 
 /***********************************************************************
 * G__setline()
@@ -904,13 +864,6 @@ int *piout;
 	  sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
 	  len=strlen(sysinclude);
 	  lenstl=strlen(sysstl);
-#ifndef G__OLDIMPLEMENTATION1584
-#ifdef G__WIN32
-	  G__toUniquePath(sysinclude);
-	  G__toUniquePath(sysstl);
-	  G__toUniquePath(statement);
-#endif
-#endif
 	  if(strncmp(sysinclude,statement+1,(size_t)len)==0||
 	     strncmp(sysstl,statement+1,(size_t)lenstl)==0) {
 	    G__globalcomp=G__NOLINK;
@@ -997,11 +950,7 @@ int *piout;
 	    G__ifile.filenum = null_entry;
 	  }
 	  else {
-#ifndef G__OLDIMPLEMENTATION1601
-	    if(G__nfile==G__gettempfilenum()+1) {
-#else
 	    if(G__nfile==G__MAXFILE) {
-#endif
 	      G__fprinterr(G__serr,
 		  "Limitation: Sorry, can not create any more file entry\n");
 	    }
@@ -1079,9 +1028,6 @@ int *piout;
 int G__skip_comment()
 {
   char statement[5];
-#ifndef G__OLDIMPLEMENTATION1616
-  int c;
-#endif
   statement[0]=G__fgetc();
   statement[1]=G__fgetc();
   statement[2]='\0';
@@ -1097,22 +1043,12 @@ int G__skip_comment()
 #else
     statement[0]=statement[1];
 #endif
-#ifndef G__OLDIMPLEMENTATION1616
-    if(EOF==(c=G__fgetc())) {
-      G__genericerror("Error: unexpected /* ...EOF");
-      if(G__key!=0) system("key .cint_key -l execute");
-      G__eof=2;
-      return(EOF);
-    }
-    statement[1] = c;
-#else
     if(EOF==(statement[1]=G__fgetc())) {
       G__genericerror("Error: unexpected /* ...EOF");
       if(G__key!=0) system("key .cint_key -l execute");
       G__eof=2;
       return(EOF);
     }
-#endif
   }
   return(0);
 }
@@ -1596,9 +1532,7 @@ G__value G__exec_do()
   if(result.type==G__block_break.type) {
     switch(result.obj.i) {
     case G__BLOCK_BREAK:
-#ifdef G__OLDIMPLEMENTATION1625 /* Don't know why following line is here */
-      G__fignorestream(";"); 
-#endif
+      G__fignorestream(";");
       if(result.ref==G__block_goto.ref) {
 	/* free breakcontinue buffer */
 	if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
@@ -1848,26 +1782,6 @@ char *statement;
 }
 
 /***********************************************************************
- * G__display_tempobject()
- ***********************************************************************/
-void G__display_tempobject(action) 
-char* action;
-{
-  struct G__tempobject_list *ptempbuf = G__p_tempbuf;
-  G__fprinterr(G__serr,"\n%s ",action);
-  while(ptempbuf) {
-    G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level
-	    ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
-			    ,ptempbuf->obj.typenum
-			    ,ptempbuf->obj.obj.reftype.reftype
-			    ,ptempbuf->obj.isconst)
-	    ,(void*)ptempbuf->obj.obj.i);
-    ptempbuf = ptempbuf->prev;
-  }
-  G__fprinterr(G__serr,"\n");
-}
-
-/***********************************************************************
 * G__free_tempobject()
 *
 * Called by
@@ -1881,15 +1795,7 @@ void G__free_tempobject()
   int store_tagnum;
   int iout=0;
   int store_return;
-#ifndef G__OLDIMPLEMENTATION1596
-   /* The only 2 potential risks of making this a static are
-    * - a destructor indirectly provokes a call to G__free_tempobject
-    * - multi-thread application (but the rest of CINT is not 
-    *   multi-threadable anyway). */
-  static char statement[G__ONELINE];
-#else
   char statement[G__ONELINE];
-#endif
   struct G__tempobject_list *store_p_tempbuf;
 
 #ifndef G__OLDIMPLEMENTATION1164
@@ -1900,10 +1806,6 @@ void G__free_tempobject()
      ) return;
 #endif
 
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("freetemp");
-#endif
-
   /*****************************************************
    * free temp object buffer
    *****************************************************/
@@ -1912,8 +1814,13 @@ void G__free_tempobject()
 
 #ifdef G__DEBUG
     if(G__asm_dbg) {
+#ifndef G__FONS31
       G__fprinterr(G__serr,"free_tempobject(%d)=0x%lx\n"
 	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
+#else
+      G__fprinterr(G__serr,"free_tempobject(%d)=0x%x\n"
+	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
+#endif
     }
 #endif
     
@@ -1944,26 +1851,24 @@ void G__free_tempobject()
     store_return=G__return;
     G__return=G__RETURN_NON;
     
-#ifndef G__OLDIMPLEMENTATION1516
-    if(0==G__p_tempbuf->no_exec
-#ifndef G__OLDIMPLEMENTATION1626
-       || 1==G__no_exec_compile
+    if(G__dispsource) {
+#ifndef G__FONS31
+      G__fprinterr(G__serr,
+	      "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
+	      ,G__struct.name[G__tagnum]
+	      ,G__p_tempbuf->obj.obj.i
+	      ,G__p_tempbuf->level,G__templevel);
+#else
+      G__fprinterr(G__serr,
+	      "!!!Destroy temp object (%s)0x%x createlevel=%d destroylevel=%d\n"
+	      ,G__struct.name[G__tagnum]
+	      ,G__p_tempbuf->obj.obj.i
+	      ,G__p_tempbuf->level,G__templevel);
 #endif
-       ) {
-#endif
-      if(G__dispsource) {
-	G__fprinterr(G__serr,
-		     "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
-		     ,G__struct.name[G__tagnum]
-		     ,G__p_tempbuf->obj.obj.i
-		     ,G__p_tempbuf->level,G__templevel);
-      }
-      
-      sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
-      G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
-#ifndef G__OLDIMPLEMENTATION1516
     }
-#endif
+    
+    sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
+    G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -2028,9 +1933,6 @@ char *string;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = 0;
-#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc(strlen(string)+1);
@@ -2042,8 +1944,13 @@ char *string;
 
 #ifdef G__DEBUG
   if(G__asm_dbg)
+#ifndef G__FONS31
     G__fprinterr(G__serr,"alloc_tempstring(%s)=0x%lx\n",string
 	    ,G__p_tempbuf->obj.obj.i);
+#else
+    G__fprinterr(G__serr,"alloc_tempstring(%s)=0x%x\n",string
+	    ,G__p_tempbuf->obj.obj.i);
+#endif
 #endif
 
   return(G__p_tempbuf->obj);
@@ -2078,9 +1985,6 @@ int tagnum,typenum;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
@@ -2091,12 +1995,14 @@ int tagnum,typenum;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
+#ifndef G__FONS31
     G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
 	    G__p_tempbuf->obj.obj.i);
-  }
+#else
+    G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%x\n",tagnum,typenum,
+	    G__p_tempbuf->obj.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("alloctemp");
+  }
 #endif
 }
 
@@ -2115,7 +2021,7 @@ G__value reg;
 {
   struct G__tempobject_list *store_p_tempbuf;
 
-  /* G__ASSERT( 'u'==reg.type || '\0'==reg.type ); */
+  G__ASSERT( 'u'==reg.type || '\0'==reg.type );
 
 #ifndef G__OLDIMPLEMENTATION1164
   if(G__xrefflag) return;
@@ -2140,20 +2046,18 @@ G__value reg;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 1;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-#endif
 
   /* copy pointer to created class object */
   G__p_tempbuf->obj = reg;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
+#ifndef G__FONS31
     G__fprinterr(G__serr,"store_tempobject(%d)=0x%lx\n",reg.tagnum,reg.obj.i);
-  }
+#else
+    G__fprinterr(G__serr,"store_tempobject(%d)=0x%x\n",reg.tagnum,reg.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("storetemp");
+  }
 #endif
 }
 
@@ -2174,12 +2078,14 @@ int G__pop_tempobject()
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
+#ifndef G__FONS31
     G__fprinterr(G__serr,"pop_tempobject(%d)=0x%lx\n"
 	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
-  }
+#else
+    G__fprinterr(G__serr,"pop_tempobject(%d)=0x%x\n"
+	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("poptemp");
+  }
 #endif
 
   store_p_tempbuf = G__p_tempbuf->prev;
@@ -2454,8 +2360,8 @@ G__value G__exec_if()
     /* if(G__return!=G__RETURN_NON)return(result); */
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:1) %d\n"
-		,store_no_exec_compile,G__asm_noverflow);
+	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:1)\n"
+		,store_no_exec_compile);
 #endif
     G__no_exec_compile=store_no_exec_compile;
     G__no_exec=0;
@@ -2566,8 +2472,7 @@ G__value G__exec_if()
       G__no_exec_compile=store_no_exec_compile;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) 
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:2) %d\n"
-		     ,store_no_exec_compile,G__asm_noverflow);
+	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:2)\n",store_no_exec_compile);
 #endif
       G__no_exec=0;
     }
@@ -2586,7 +2491,7 @@ G__value G__exec_if()
 
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"   %x: JMP assigned %x\n",asm_jumppointer-1,G__asm_cp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"     JMP assigned %x\n",G__asm_cp);
 #endif
     G__asm_inst[asm_jumppointer] = G__asm_cp;
 #ifndef G__OLDIMPLEMENTATION599
@@ -3075,10 +2980,6 @@ G__value G__exec_statement()
   int add_fake_space = 0;
   int fake_space = 0;
 #endif
-#ifndef G__PHILIPPE33
-  int discard_space = 0;
-  int discarded_space = 0;
-#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -3098,9 +2999,6 @@ G__value G__exec_statement()
     } else 
 #endif
       c=G__fgetc();
-#ifndef G__PHILIPPE33
-    discard_space = 0;
-#endif
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3121,9 +3019,6 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
       }
       else {
-#ifndef G__PHILIPPE33
-        if (!fake_space) discard_space = 1;
-#endif
 	if(spaceflag==1) {
 	  statement[iout] = '\0' ;
 	  /* search keyword */
@@ -3386,15 +3281,7 @@ G__value G__exec_statement()
 	    break;
 	  case 3:
 	    if(strcmp(statement,"int")==0) {
-#if 0
 	      G__DEFVAR('i');
-#else
-	      G__var_type='i' + G__unsigned;
-	      G__define_var(-1,-1);          
-	      spaceflag = -1;                
-	      iout=0;                      
-	      if(mparen==0) return(G__null);
-#endif
 	      break;
 	    }
 #ifndef G__OLDIMPLEMENTATION698
@@ -3454,12 +3341,6 @@ G__value G__exec_statement()
 	      G__DEFVAR('y');
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool")==0) {
-	      G__DEFVAR('g');
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"int*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('I');
@@ -3558,12 +3439,6 @@ G__value G__exec_statement()
 	      G__DEFREFVAR('c');
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool&")==0) {
-	      G__DEFREFVAR('g');
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"FILE*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('E');
@@ -3576,14 +3451,6 @@ G__value G__exec_statement()
 	      G__typepdecl=0;
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool*")==0) {
-	      G__typepdecl=1;
-	      G__DEFVAR('G');
-	      G__typepdecl=0;
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"long&")==0) {
 	      G__DEFREFVAR('l');
 	      break;
@@ -4128,13 +3995,6 @@ G__value G__exec_statement()
 	    iout=0;
 	    spaceflag=0;
 	  }
-#ifndef G__OLDIMPLEMENTATION1544
-	  if(strcmp(statement,"throw(")==0) {
-            c=G__fignorestream(")");
-	    iout=0;
-	    spaceflag=0;
-	  }
-#endif
 	  break;
 	  
 	case 4:
@@ -4529,15 +4389,6 @@ G__value G__exec_statement()
       
     default:
       /* G__CHECK(G__SECURE_BUFFER_SIZE,iout==G__LONGLINE,return(G__null)); */
-#ifndef G__PHILIPPE33
-       /* Make sure that the delimiters that have not been treated
-        * in the switch statement do drop the discarded_space */
-      if (c!='[' && c!=']' && discarded_space && iout) {
-	/* since the character following a discarded space is NOT a
-	   separator, we have to keep the space */
-	statement[iout++] = ' ';
-      }
-#endif
       statement[iout++] = c ;
       spaceflag |= 1;
 #ifdef G__MULTIBYTE
@@ -4549,9 +4400,6 @@ G__value G__exec_statement()
 #endif
       break;
     } /* end of switch */
-#ifndef G__PHILIPPE33
-    discarded_space = discard_space;
-#endif
   } /* end of infinite loop */
   
 }
@@ -4786,26 +4634,6 @@ int *pmparen;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1596
-void G__settemplevel(val)
-int val; 
-{
-   G__templevel += val;
-}
-
-void G__clearstack() 
-{
-   int store_command_eval = G__command_eval;
-   ++G__templevel;
-   G__command_eval = 0;
-
-   G__free_tempobject();
-
-   G__command_eval = store_command_eval;
-   --G__templevel;
-}
-#endif
-   
 
 
 /*

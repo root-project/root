@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32GuiFactory.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Rene Brun   11/12/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
    TWin32GuiFactory(const char *name, const char *title);
    virtual ~TWin32GuiFactory() { }
 
-   TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
+   TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv, void *option, Int_t numOptions);
 
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);

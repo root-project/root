@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.3 2001/05/29 16:21:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
 
    const char  *AsString() const;
    const char  *AsSQLString() const;
-   UInt_t       Convert(Bool_t toGMT = kFALSE) const;
+   UInt_t       Convert() const;
    void         Copy(TDatime &datime);
    UInt_t       Get() const { return fDatime; }
    Int_t        GetDate() const;
@@ -53,7 +53,6 @@ public:
    void         Print(Option_t *option="") const;
    void         ReadBuffer(char *&buffer);
    void         Set();
-   void         Set(UInt_t tloc);
    void         Set(Int_t date, Int_t time);
    void         Set(Int_t year, Int_t month, Int_t day,
                     Int_t hour, Int_t min, Int_t sec);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.13 2001/10/03 20:59:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.8 2001/03/07 11:50:20 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -265,22 +265,14 @@ TGClient::TGClient(const char *dpyName)
    WindowAttributes_t  root_attr;
 
    // Load GUI defaults from .rootrc
-#ifndef GDK_WIN32
    strcpy(norm_font,    gEnv->GetValue("Gui.NormalFont","-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
    strcpy(bold_font,    gEnv->GetValue("Gui.BoldFont", "-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1"));
    strcpy(small_font,   gEnv->GetValue("Gui.SmallFont", "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
    strcpy(prop_font,    gEnv->GetValue("Gui.ProportionalFont", "-adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-#else
-   strcpy(norm_font,    gEnv->GetValue("Gui.NormalFont","-adobe-Arial-medium-r-normal--12-*-*-*-*-*-iso8859-1"));
-   strcpy(bold_font,    gEnv->GetValue("Gui.BoldFont", "-adobe-Arial-bold-r-normal--12-*-*-*-*-*-iso8859-1"));
-   strcpy(small_font,   gEnv->GetValue("Gui.SmallFont", "-adobe-Arial-medium-r-normal--10-*-*-*-*-*-iso8859-1"));
-   strcpy(prop_font,    gEnv->GetValue("Gui.ProportionalFont", "-adobe-Arial-medium-r-normal--12-*-*-*-*-*-iso8859-1"));
-#endif
    strcpy(backcolor,    gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0"));
    strcpy(forecolor,    gEnv->GetValue("Gui.ForegroundColor", "black"));
    strcpy(selforecolor, gEnv->GetValue("Gui.SelectForegroundColor", "white"));
    strcpy(selbackcolor, gEnv->GetValue("Gui.SelectBackgroundColor", "#000080"));
-#ifndef GDK_WIN32
 #ifndef R__VMS
 # ifdef ROOTICONPATH
    sprintf(icon_path, "%s/icons:%s:.:",
@@ -299,16 +291,11 @@ TGClient::TGClient(const char *dpyName)
    sprintf(line, "%s/.root.mimes", gSystem->Getenv("HOME"));
 #else
    sprintf(line,"[%s.ICONS]",gSystem->Getenv("ROOTSYS"));
-   strcpy(icon_path, gEnv->GetValue("Gui.IconPath",line));
+   strcpy(icon_path,gEnv->GetValue("Gui.IconPath",line));
    sprintf(line,"%sroot.mimes",gSystem->Getenv("HOME"));
 #endif
 
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
-   char *mf = gSystem->ExpandPathName(mime_file);
-   if (mf) {
-      strcpy(mime_file, mf);
-      delete [] mf;
-   }
    if (gSystem->AccessPathName(mime_file, kReadPermission))
 #ifdef R__VMS
       sprintf(mime_file,"[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
@@ -319,14 +306,6 @@ TGClient::TGClient(const char *dpyName)
       sprintf(mime_file, "%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
 # endif
 #endif
-#else // GDK_WIN32
-   sprintf(icon_path, "%s\\icons", gSystem->Getenv("ROOTSYS"));
-   sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
-   strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
-   if (gSystem->AccessPathName(mime_file, kReadPermission))
-       sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
-#endif // GDK_WIN32
-
    // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
    gSystem->SetDisplay();
 
@@ -341,7 +320,6 @@ TGClient::TGClient(const char *dpyName)
    // finding of windows based on window id (see GetWindowById()).
 
    fWlist = new THashList(200);
-   fUWHandlers = 0;
 
    // Setup some atoms (defined in TVirtualX)...
 
@@ -350,16 +328,11 @@ TGClient::TGClient(const char *dpyName)
    gROOT_MESSAGE     = gVirtualX->InternAtom("_ROOT_MESSAGE", kFALSE);
 
    TGTextEntry::fgClipboard =
-#ifndef GDK_WIN32
    TGView::fgClipboard = gVirtualX->InternAtom("_ROOT_CLIPBOARD", kFALSE);
-#else
-   TGView::fgClipboard = gVirtualX->InternAtom("CLIPBOARD", kFALSE);
-#endif
 
    // Create an object for the root window, create picture pool, etc...
 
    fGlobalNeedRedraw = kFALSE;
-   fForceRedraw      = kFALSE;
 
    fRoot = new TGFrame(this, gVirtualX->GetDefaultRootWindow());
 
@@ -701,25 +674,6 @@ void TGClient::UnregisterWindow(TGWindow *w)
 }
 
 //______________________________________________________________________________
-void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
-{
-   // Add handler for unknown (i.e. unregistered) windows.
-
-   if (!fUWHandlers)
-      fUWHandlers = new TList;
-
-   fUWHandlers->Add(h);
-}
-
-//______________________________________________________________________________
-void TGClient::RemoveUnknownWindowHandler(TGUnknownWindowHandler *h)
-{
-   // Remove handler for unknown (i.e. unregistered) windows.
-
-   fUWHandlers->Remove(h);
-}
-
-//______________________________________________________________________________
 TGWindow *TGClient::GetWindowById(Window_t wid) const
 {
    // Find a TGWindow via its handle. If window is not found return 0.
@@ -736,8 +690,6 @@ TGClient::~TGClient()
 
    if (fWlist) fWlist->Delete("slow");
    delete fWlist;
-   if (fUWHandlers) fUWHandlers->Delete();
-   delete fUWHandlers;
    delete fPicturePool;
    delete fMimeTypeList;
 
@@ -766,21 +718,13 @@ Bool_t TGClient::ProcessOneEvent()
 
    if (gVirtualX->EventsPending()) {
       gVirtualX->NextEvent(event);
-#ifdef GDK_WIN32
-      if (event.fType == kOtherEvent)
-         return kFALSE;
-#endif      
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
-         if (fForceRedraw)
-            DoRedraw();
          return kTRUE;
       } else {
          HandleMaskEvent(&event, fWaitForWindow);
          if ((event.fType == fWaitForEvent) && (event.fWindow == fWaitForWindow))
             fWaitForWindow = kNone;
-         if (fForceRedraw)
-            DoRedraw();
          return kTRUE;
       }
    }
@@ -841,27 +785,6 @@ void TGClient::WaitForUnmap(TGWindow *w)
 }
 
 //______________________________________________________________________________
-Bool_t TGClient::ProcessEventsFor(TGWindow *w)
-{
-   // Like gSystem->ProcessEvents() but then only allow events for w to
-   // be processed. For example to interrupt the processing and destroy
-   // the window, call gROOT->SetInterrupt() before destroying the window.
-
-   Window_t wsave    = fWaitForWindow;
-   EGEventType esave = fWaitForEvent;
-
-   fWaitForWindow = w->GetId();
-   fWaitForEvent  = kDestroyNotify;
-
-   Bool_t intr = gSystem->ProcessEvents();
-
-   fWaitForWindow = wsave;
-   fWaitForEvent  = esave;
-
-   return intr;
-}
-
-//______________________________________________________________________________
 Bool_t TGClient::DoRedraw()
 {
    // Redraw all windows that need redrawing. Returns kFALSE if no redraw
@@ -883,8 +806,6 @@ Bool_t TGClient::DoRedraw()
    }
 
    fGlobalNeedRedraw = kFALSE;
-   fForceRedraw      = kFALSE;
-
    return kTRUE;
 }
 
@@ -897,19 +818,7 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    TGWindow *w;
 
    // Find window where event happened
-   if ((w = GetWindowById(event->fWindow)) == 0) {
-      if (fUWHandlers && fUWHandlers->GetSize() > 0) {
-         TGUnknownWindowHandler *unkwh;
-         TListIter it(fUWHandlers);
-         while ((unkwh = (TGUnknownWindowHandler*)it.Next())) {
-            if (unkwh->HandleEvent(event))
-               return kTRUE;
-         }
-      }
-      //Warning("HandleEvent", "unknown window %ld not handled\n",
-      //        event->fWindow);
-      return kFALSE;
-   }
+   if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
 
    // and let it handle the event
    w->HandleEvent(event);

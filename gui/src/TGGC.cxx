@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.2 2000/10/02 15:46:49 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -440,7 +440,7 @@ void TGGC::SetDashOffset(Int_t v)
 }
 
 //______________________________________________________________________________
-void TGGC::SetDashList(const char v[], Int_t len)
+void TGGC::SetDashList(char v[], Int_t len)
 {
    // Set dash pattern. First use SetDashOffset() if not 0.
 

@@ -55,37 +55,13 @@ int G__asm_step=0;
 /****************************************************************
 * G__doubleM()
 ****************************************************************/
-#if 1
-double G__doubleM(buf)
-     G__value *buf;
-{
-  return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
-	  ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
-	  (double)(buf->obj.i) );
-}
-#else
-#ifndef G__OLDIMPLEMENTATION1494
-#define G__doubleM(buf)                                                \
-  (('f'==buf->type||'d'==buf->type) ? buf->obj.d :                     \
-   ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :         \
-                                      (double)(buf->obj.i) )
-#else
 #define G__doubleM(buf)                                                \
   (('f'==buf->type||'d'==buf->type) ? buf->obj.d : (double)(buf->obj.i) )
-#endif
-#endif
 
 /****************************************************************
 * G__isdoubleM()
 ****************************************************************/
 #define G__isdoubleM(buf) ('f'==buf->type||'d'==buf->type)
-
-#ifndef G__OLDIMPLEMENTATION1494
-/****************************************************************
-* G__isunsignedM()
-****************************************************************/
-#define G__isunsignedM(buf) ('h'==buf->type||'k'==buf->type)
-#endif
 
 
 /*************************************************************************
@@ -425,7 +401,7 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
 	var=(struct G__var_array*)G__asm_inst[pc+4];
-	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_P index=%d ldst=%d %s"
+	G__fprinterr(G__serr,"%3x,%d: LDST_VAR_P index=%d ldst=%d %s\n"
 		,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+3]
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
@@ -434,11 +410,6 @@ long localmem;
       (*p2f)(G__asm_stack,&sp,0
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
       pc+=5;
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) {
-	G__fprinterr(G__serr," -> %d\n", G__asm_stack[sp-1].obj.i);
-      }
-#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -615,18 +586,15 @@ long localmem;
       * sp    G__null
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) 
-	G__fprinterr(G__serr,"%3x,%d: OP2_OPTIMIZED %c:%d %c:%d" ,pc,sp
-		     ,G__asm_stack[sp-2].type,G__asm_stack[sp-2].obj.i
-		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: OP2_OPTIMIZED" ,pc,sp );
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
       pc+=2;
       --sp;
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
-				  ,G__asm_stack[sp-1].obj.i);
+      if(G__asm_dbg) G__fprinterr(G__serr," %c %d\n" ,G__asm_stack[sp-1].type
+			     ,G__asm_stack[sp-1].obj.i);
 #endif
 #ifdef G__ASM_DBG
       break;
@@ -644,17 +612,13 @@ long localmem;
       * sp    G__null     <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) 
-	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED %c:%d" ,pc,sp 
-		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
+      if(G__asm_dbg) {
+	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED\n" ,pc,sp );
+      }
 #endif
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1]);
       pc+=2;
-#ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
-				  ,G__asm_stack[sp-1].obj.i);
-#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -2039,28 +2003,18 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx %d\n"
-			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx\n"
+			     ,pc,sp ,store_p_tempbuf);
 #else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x %d\n"
-			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x\n"
+			     ,pc,sp ,store_p_tempbuf);
 #endif
 #endif
-#ifndef G__OLDIMPLEMENTATION1500
-      if(-1!=G__asm_inst[pc+1]) {
-	G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
-	G__asm_stack[sp-1].typenum = -1;
-	G__asm_stack[sp-1].type = 'u';
-	G__asm_stack[sp-1].obj.i = G__store_struct_offset;
-	G__asm_stack[sp-1].ref = G__store_struct_offset;
-      }
-#else
       G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
       G__asm_stack[sp-1].typenum = -1;
       G__asm_stack[sp-1].type = 'u';
       G__asm_stack[sp-1].obj.i = G__store_struct_offset;
       G__asm_stack[sp-1].ref = G__store_struct_offset;
-#endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       G__return=store_return;
@@ -3607,21 +3561,6 @@ long ig15;
 {
   G__ASM_ASSIGN_INT(int);
 }
-#ifndef G__OLDIMPLEMENTATION1604
-/****************************************************************
-* G__ST_p0_bool()
-****************************************************************/
-void G__ST_p0_bool(pbuf,psp,offset,var,ig15)
-G__value *pbuf;
-int *psp;
-long offset;
-struct G__var_array *var;
-long ig15;
-{
-  G__value *val = &pbuf[*psp-1];
-  *(int*)(var->p[ig15]+offset)=(int)G__intM(val)?1:0;
-}
-#endif
 /****************************************************************
 * G__ST_p0_uint()
 ****************************************************************/
@@ -5270,11 +5209,6 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
-    else if(G__isunsignedM(bufm1)) {
-      bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.ulo;
-    }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.i;
     }
@@ -5282,14 +5216,7 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.d = (double)bufm2->obj.ulo + bufm1->obj.d;
-    else
-      bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
-#else
     bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
-#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -5306,16 +5233,6 @@ G__value *bufm2;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
-#ifndef G__OLDIMPLEMENTATION1494
-  else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
-    else
-      bufm2->obj.ulo = bufm2->obj.i + bufm1->obj.ulo;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i + bufm1->obj.i;
     bufm2->type = 'i';
@@ -5335,11 +5252,6 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
-    else if(G__isunsignedM(bufm1)) {
-      bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.ulo;
-    }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.i;
     }
@@ -5347,14 +5259,7 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.d = (double)bufm2->obj.ulo - bufm1->obj.d;
-    else
-      bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
-#else
     bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
-#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -5377,16 +5282,6 @@ G__value *bufm2;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
-#ifndef G__OLDIMPLEMENTATION1494
-  else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
-    else
-      bufm2->obj.ulo = bufm2->obj.i - bufm1->obj.ulo;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i - bufm1->obj.i;
     bufm2->type = 'i';
@@ -5406,37 +5301,15 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
     }
-#ifndef G__OLDIMPLEMENTATION1494
-    else if(G__isunsignedM(bufm1)) {
-      bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.ulo;
-    }
-#endif
     else {
       bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.i;
     }
     bufm2->type = 'd';
   }
   else if(G__isdoubleM(bufm1)) {
-#ifndef G__OLDIMPLEMENTATION1494
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.d = (double)bufm2->obj.ulo * bufm1->obj.d;
-    else
-      bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
-#else
     bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
-#endif
     bufm2->type = 'd';
   }
-#ifndef G__OLDIMPLEMENTATION1494
-  else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
-    else
-      bufm2->obj.ulo = bufm2->obj.i * bufm1->obj.ulo;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-#endif
   else {
     bufm2->obj.i = bufm2->obj.i * bufm1->obj.i;
     bufm2->type = 'i';
@@ -5458,32 +5331,10 @@ G__value *bufm2;
     return;
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
-  if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.ulo;
-    else
-      bufm2->obj.ulo = bufm2->obj.i % bufm1->obj.ulo;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-  else if(G__isunsignedM(bufm2)) {
-    bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.i;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-  else {
-    bufm2->obj.i = bufm2->obj.i % bufm1->obj.i;
-    bufm2->type = 'i';
-  }
-  bufm2->tagnum = bufm2->typenum = -1;
-  bufm2->ref = 0;
-#else
   bufm2->obj.i = bufm2->obj.i % bufm1->obj.i;
   bufm2->type = 'i';
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
-#endif
 }
 
 /*************************************************************************
@@ -5510,14 +5361,7 @@ G__value *bufm2;
 	return;
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
-      if(G__isunsignedM(bufm1)) 
-	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
-      else
-	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
-#else
       bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
-#endif
     }
     bufm2->type = 'd';
   }
@@ -5528,32 +5372,9 @@ G__value *bufm2;
       return;
     }
 #endif
-#ifndef G__OLDIMPLEMENTATION1494
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.d = (double)bufm2->obj.ulo / bufm1->obj.d;
-    else
-      bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
-#else
     bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
-#endif
     bufm2->type = 'd';
   }
-#ifndef G__OLDIMPLEMENTATION1494
-  else if(G__isunsignedM(bufm1)) {
-#ifdef G__TUNEUP_W_SECURITY
-    if(0==bufm1->obj.i) {
-      G__genericerror("Error: operator '/' divided by zero");
-      return;
-    }
-#endif
-    if(G__isunsignedM(bufm2)) 
-      bufm2->obj.ulo = bufm2->obj.ulo / bufm1->obj.ulo;
-    else
-      bufm2->obj.ulo = bufm2->obj.i / bufm1->obj.ulo;
-    bufm2->type = 'h';
-    bufm2->tagnum = bufm2->typenum = -1;
-  }
-#endif
   else {
 #ifdef G__TUNEUP_W_SECURITY
     if(0==bufm1->obj.i) {
@@ -5604,15 +5425,8 @@ G__value *bufm2;
 #ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
 #endif
-#ifndef G__OLDIMPLEMENTATION1511
-  if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
-    bufm2->obj.i = (G__doubleM(bufm2)==G__doubleM(bufm1));
-  else
-    bufm2->obj.i = (bufm2->obj.i == bufm1->obj.i);
-#else
   if(G__doubleM(bufm2)==G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
-#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -5628,15 +5442,8 @@ G__value *bufm2;
 #ifndef G__OLDIMPLEMENTATION697
   if('U'==bufm1->type && 'U'==bufm2->type) G__publicinheritance(bufm1,bufm2);
 #endif
-#ifndef G__OLDIMPLEMENTATION1511
-  if(G__isdoubleM(bufm2)||G__isdoubleM(bufm1))
-    bufm2->obj.i = (G__doubleM(bufm2)!=G__doubleM(bufm1));
-  else
-    bufm2->obj.i = (bufm2->obj.i != bufm1->obj.i);
-#else
   if(G__doubleM(bufm2)!=G__doubleM(bufm1)) bufm2->obj.i = 1;
   else                                     bufm2->obj.i = 0;
-#endif
   bufm2->type='i';
   bufm2->typenum = bufm2->tagnum= -1;
   bufm2->ref = 0;
@@ -5719,7 +5526,6 @@ G__value *bufm2;
  case 'r': *(unsigned short*)p=v; break;  \
  case 'b': *(unsigned char*)p=v;  break;  \
  case 'k': *(unsigned long*)p=v;  break;  \
- case 'g': *(int*)p=v?1:0;/*1604*/break;  \
  default:  *(long*)p=v;           break;  \
  }
 
@@ -5836,26 +5642,7 @@ G__value *bufm2;
     return;
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1627
-  if(G__isunsignedM(bufm2)) {
-    if(G__isunsignedM(bufm1)) {
-      bufm2->obj.ulo %= bufm1->obj.ulo;
-    }
-    else {
-      bufm2->obj.ulo %= bufm1->obj.i;
-    }
-  }
-  else {
-    if(G__isunsignedM(bufm1)) {
-      bufm2->obj.i %= bufm1->obj.ulo;
-    }
-    else {
-      bufm2->obj.i %= bufm1->obj.i;
-    }
-  }
-#else
   bufm2->obj.i %= bufm1->obj.i;
-#endif
   G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
 }
 
@@ -5904,26 +5691,7 @@ G__value *bufm2;
 	return;
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1627
-      if(G__isunsignedM(bufm2)) {
-	if(G__isunsignedM(bufm1)) {
-	  bufm2->obj.ulo /= bufm1->obj.ulo;
-	}
-	else {
-	  bufm2->obj.ulo /= bufm1->obj.i;
-	}
-      }
-      else {
-	if(G__isunsignedM(bufm1)) {
-	  bufm2->obj.i /= bufm1->obj.ulo;
-	}
-	else {
-	  bufm2->obj.i /= bufm1->obj.i;
-	}
-      }
-#else
       bufm2->obj.i /= bufm1->obj.i;
-#endif
     }
     G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
   }
@@ -6343,7 +6111,7 @@ void G__suspendbytecode()
   G__asm_noverflow=0;
 }
 /******************************************************************
-* G__resetbytecode()
+* G__abortbytecode()
 ******************************************************************/
 void G__resetbytecode() 
 {
@@ -6461,9 +6229,6 @@ int G__clear_asm()
 ******************************************************************/
 int G__asm_clear()
 {
-#ifndef G__OLDIMPLEMENTATION1570
-  if(G__asm_clear_mask) return(0);
-#endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
 			 ,G__ifile.name ,G__ifile.line_number);
@@ -7220,9 +6985,6 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_p0_struct; break;
     case 'f': *pinst = (long)G__LD_p0_float; break;
     case 'd': *pinst = (long)G__LD_p0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_p0_int; break;
-#endif
     default: done=0; break;
     }
   }
@@ -7254,9 +7016,6 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_p1_struct; break;
     case 'f': *pinst = (long)G__LD_p1_float; break;
     case 'd': *pinst = (long)G__LD_p1_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_p1_int; break;
-#endif
     default: done=0; break;
     }
   }
@@ -7289,9 +7048,6 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_pn_struct; break;
     case 'f': *pinst = (long)G__LD_pn_float; break;
     case 'd': *pinst = (long)G__LD_pn_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_pn_int; break;
-#endif
     default: done=0; break;
     }
   }
@@ -7359,9 +7115,6 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_p0_struct; break;
     case 'f': *pinst = (long)G__ST_p0_float; break;
     case 'd': *pinst = (long)G__ST_p0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_p0_bool; break;
-#endif
     default: done=0; break;
     }
   }
@@ -7393,9 +7146,6 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_p1_struct; break;
     case 'f': *pinst = (long)G__ST_p1_float; break;
     case 'd': *pinst = (long)G__ST_p1_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_p1_int; break; /* to be fixed */
-#endif
     default: done=0; break;
     }
   }
@@ -7428,9 +7178,6 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_pn_struct; break;
     case 'f': *pinst = (long)G__ST_pn_float; break;
     case 'd': *pinst = (long)G__ST_pn_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_pn_int; break; /* to be fixed */
-#endif
     default: done=0; break;
     }
   }
@@ -7498,9 +7245,6 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_Rp0_struct; break;
     case 'f': *pinst = (long)G__LD_Rp0_float; break;
     case 'd': *pinst = (long)G__LD_Rp0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_Rp0_int; break; /* to be fixed */
-#endif
     default: done=0; break;
     }
   }
@@ -7531,9 +7275,6 @@ long *pinst;
     case 'u': *pinst = (long)G__ST_Rp0_struct; break;
     case 'f': *pinst = (long)G__ST_Rp0_float; break;
     case 'd': *pinst = (long)G__ST_Rp0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_Rp0_int; break; /* to be fixed */
-#endif
     default: done=0; break;
     }
   }
@@ -7564,9 +7305,6 @@ long *pinst;
     case 'u': *pinst = (long)G__LD_RP0_struct; break;
     case 'f': *pinst = (long)G__LD_RP0_float; break;
     case 'd': *pinst = (long)G__LD_RP0_double; break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_RP0_int; break; /* to be fixed */
-#endif
     default: done=0; break;
     }
   }
@@ -9935,11 +9673,8 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	if(-1!=G__asm_inst[pc+1])
-	  G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
-		       ,G__struct.name[G__asm_inst[pc+1]]);
-	else 
-	  G__fprinterr(G__serr,"%3lx: POPTEMP -1\n" ,pc);
+	G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
+		,G__struct.name[G__asm_inst[pc+1]]);
       }
 #endif
       /* no optimization */
@@ -11139,11 +10874,7 @@ int isthrow;
       * sp      <-  sp
       ***************************************/
       if(0==isthrow) {
-	if(-1!=G__asm_inst[pc+1])
-	  fprintf(fout,"%3x: POPTEMP %s\n" 
-		  ,pc,G__struct.name[G__asm_inst[pc+1]]);
-	else
-	  fprintf(fout,"%3x: POPTEMP -1\n",pc);
+	fprintf(fout,"%3x: POPTEMP %s\n" ,pc,G__struct.name[G__asm_inst[pc+1]]);
       }
       pc+=2;
       break;

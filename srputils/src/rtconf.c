@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $ */
+/* @(#)root/srputils:$Name$:$Id$ */
 /*
  * Copyright (c) 1997-1999  The Stanford SRP Authentication Project
  * All Rights Reserved.
@@ -14,9 +14,9 @@
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
  *
  * IN NO EVENT SHALL STANFORD BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
  * INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
    fgets(cbuf, sizeof(cbuf), stdin);
    if (*cbuf != 'n' && *cbuf != 'N') {
       for (i = 0; i < NPARAMS; ++i) {
-         tcent->modulus.len = t_fromb64((char *)tcent->modulus.data,
+         tcent->modulus.len = t_fromb64(tcent->modulus.data,
                                         pre_params[i].pre_mod);
          printf("(%d) [%d bits]  %s\n    Modulus = %s\n  Generator = %s\n",
                 i + 1, 8 * tcent->modulus.len,
@@ -205,9 +205,9 @@ int main(int argc, char *argv[])
          exit(1);
       }
       tcent->index = lastidx + 1;
-      tcent->modulus.len = t_fromb64((char *)tcent->modulus.data,
+      tcent->modulus.len = t_fromb64(tcent->modulus.data,
                                      pre_params[i - 1].pre_mod);
-      tcent->generator.len = t_fromb64((char *)tcent->generator.data,
+      tcent->generator.len = t_fromb64(tcent->generator.data,
                                        pre_params[i - 1].pre_gen);
       t_putconfent(tcent, efp);
       t_closeconf(tc);
@@ -258,11 +258,10 @@ int main(int argc, char *argv[])
 
       printf("\nParameters successfully generated.\n");
       printf("N = [%s]\n", t_tob64(b64buf,
-                                   (char *)tcent->modulus.data,
+                                   tcent->modulus.data,
                                    tcent->modulus.len));
       printf("g = [%s]\n",
-             t_tob64(b64buf,
-                     (char *)tcent->generator.data, tcent->generator.len));
+             t_tob64(b64buf, tcent->generator.data, tcent->generator.len));
       printf("\nUpdate the configuration file with these parameters? [Ynq] ");
 
       fgets(cbuf, sizeof(cbuf), stdin);

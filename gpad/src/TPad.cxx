@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.66 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.28 2001/02/01 18:04:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,10 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
-#include "TError.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TFile.h"
@@ -52,7 +51,8 @@
 #include "TExec.h"
 #include "TPadView3D.h"
 #include "TDatime.h"
-#include "TColor.h"
+
+const Int_t kDistanceMaximum = 5;
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -64,9 +64,7 @@ const Int_t kCurlyArc  = 201;
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
 
-Int_t TPad::fgMaxPickDistance = 5;
-
-ClassImpQ(TPad)
+ClassImp(TPad)
 
 //______________________________________________________________________________
 //  The Pad class is the most important graphics class in the ROOT system.
@@ -141,9 +139,6 @@ TPad::TPad(): TVirtualPad()
    fCrosshair  = 0;
    fCrosshairPos = 0;
    fPadView3D  = 0;
-
-   fFixedAspectRatio = kFALSE;
-   fAspectRatio      = 0.;
 
    fLogx  = 0;
    fLogy  = 0;
@@ -222,28 +217,20 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
-   fFixedAspectRatio = kFALSE;
-   fAspectRatio      = 0.;
-
 //*-*- Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
    fY1 = 0;
    fY2 = 1;
 
-   if (!gPad) {
-      Error("TPad", "You must create a TCanvas before creating a TPad");
-      MakeZombie();
-      return;
-   }
-
+   if (!gPad) return;
    TPad *padsav = (TPad*)gPad;
 
-   if ((xlow < 0) || (xlow > 1) || (ylow < 0) || (ylow > 1)) {
+   if ((xlow < 0) || (xlow > 1) || (ylow <0) || (ylow > 1)) {
       Error("TPad", "illegal bottom left position: x=%f, y=%f", xlow, ylow);
       goto zombie;
    }
-   if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
+   if ((xup < 0) || (xup > 1) || (yup <0) || (yup > 1)) {
       Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
       goto zombie;
    }
@@ -389,22 +376,18 @@ void TPad::Clear(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Delete all pad primitives*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================
-//
-//   If the bit kClearAfterCR has been set for this pad, the Clear function
-//   will execute only after having pressed a CarriageReturn
-//   Set the bit with mypad->SetBit(TPad::kClearAfterCR)
 
-   if (!IsEditable()) return;
+
+//*-*- Do not delete editor pads when in editor mode
+
+   SafeDelete(fView);
 
    if (!fPadPaint) {
-      SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
    }
 
    cd();
-
-   if (TestBit(kClearAfterCR)) getchar();
 
    if (!gPad->IsBatch()) gVirtualX->ClearWindow();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
@@ -519,18 +502,8 @@ Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Dou
    }
 
 //Compute the first endpoint codes.
-   //Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
-   //Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
-   Int_t code1 = 0;
-   if (x[0] < xclipl) code1 = code1 | 0x1;
-   if (x[0] > xclipr) code1 = code1 | 0x2;
-   if (y[0] < yclipb) code1 = code1 | 0x4;
-   if (y[0] > yclipt) code1 = code1 | 0x8;
-   Int_t code2 = 0;
-   if (x[1] < xclipl) code2 = code2 | 0x1;
-   if (x[1] > xclipr) code2 = code2 | 0x2;
-   if (y[1] < yclipb) code2 = code2 | 0x4;
-   if (y[1] > yclipt) code2 = code2 | 0x8;
+   Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
+   Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
 
    Double_t xt=0, yt=0;
    Int_t clipped = 0; //this variable could be used in a future version
@@ -1208,16 +1181,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 //          of the current pad.
 //
 
-   if (!IsEditable()) return;
-
-
-   if (gThreadXAR) {
-      void *arr[7];
-      arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
-      arr[4] = (void*)&xmargin; arr[5] = (void *)& ymargin; arr[6] = (void *)&color;
-      if ((*gThreadXAR)("PDCD", 7, arr, NULL)) return;
-   }
-
    TPad *padsav = (TPad*)gPad;
    cd();
    if (nx <= 0) nx = 1;
@@ -1248,7 +1211,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    }
    delete [] name;
    Modified();
-   if (padsav) padsav->cd();
+   padsav->cd();
 }
 
 //______________________________________________________________________________
@@ -1521,8 +1484,6 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 //  Compute real pad range taking into account all margins
 //  Use services of TH1F class
 
-   if (!IsEditable()) return 0;
-
    TH1F *hframe = (TH1F*)FindObject("hframe");
    if (hframe) delete hframe;
    hframe = new TH1F("hframe",title,1000,xmin,xmax);
@@ -1532,7 +1493,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetMaximum(ymax);
    hframe->GetYaxis()->SetLimits(ymin,ymax);
    hframe->SetDirectory(0);
-   hframe->Draw("a");
+   hframe->Draw();
    Update();
    return hframe;
 }
@@ -1649,8 +1610,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //
 //  If the mouse is clicked inside the pad, the pad is moved.
 //
-//  If the mouse is clicked on the 4 edges (L,R,T,B), the pad is scaled
-//  parallel to this edge.
+//  If the mouse is clicked on the 4 edges (L,R,T,B), the pad is rscaled
+//  parallel to this edge (same as Motif window manager).
 //
 //    PA                    T                       PB
 //     +--------------------------------------------+
@@ -1686,7 +1647,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TVirtualPad  *parent;
    Bool_t opaque  = OpaqueMoving();
    Bool_t ropaque = OpaqueResizing();
-   Bool_t fixedr  = HasFixedAspectRatio();
 
    if (!IsEditable() && event != kMouseEnter) return;
 
@@ -1717,15 +1677,11 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 #ifndef WIN32
          CreateNewText(event,px,py,newcode);
 #else
-#ifndef GDK_WIN32
         {
             if (event == kButton1Down) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewText(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py, newcode));
         }
-#else
-         CreateNewText(event,px,py,newcode);
-#endif
 #endif
          break;
       case kLine:
@@ -1759,14 +1715,12 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kPavesText:
       case kDiamond:
 #ifdef WIN32
-#ifndef GDK_WIN32
          if (newcode == kPaveLabel || newcode == kButton) {
             if (event == kButton1Up) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewPave(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py,newcode));
          }
          else
-#endif
 #endif
            CreateNewPave(event,px,py,newcode);
          return;
@@ -1917,19 +1871,6 @@ again:
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
          if (!ropaque) gVirtualX->DrawBox(px   , pyt, pxt, py,    TVirtualX::kHollow);  // draw the new box
       }
       if (PB) {
@@ -1938,19 +1879,6 @@ again:
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
       }
       if (PC) {
@@ -1959,19 +1887,6 @@ again:
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
          if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, px ,   py,    TVirtualX::kHollow);
       }
       if (PD) {
@@ -1980,19 +1895,6 @@ again:
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
          if (!ropaque) gVirtualX->DrawBox(px   , py ,   pxt, pyl, TVirtualX::kHollow);
       }
       if (T) {
@@ -2000,15 +1902,6 @@ again:
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py2 -= py - pyold;
-            else
-               px2 = npx2;
-         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (B) {
@@ -2016,15 +1909,6 @@ again:
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py1 -= py - pyold;
-            else
-               px2 = npx2;
-         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (L) {
@@ -2032,16 +1916,6 @@ again:
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px1 -= px - pxold;
-            else
-               py2 = npy2;
-         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (R) {
@@ -2049,16 +1923,6 @@ again:
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px2 -= px - pxold;
-            else
-               py2 = npy2;
-         }
          if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       }
       if (INSIDE) {
@@ -2093,26 +1957,26 @@ again:
    case kButton1Up:
 
       if (PA) {
-         fX1 = AbsPixeltoX(pxold);
+         fX1 = AbsPixeltoX(px);
          fY1 = AbsPixeltoY(pyt);
          fX2 = AbsPixeltoX(pxt);
-         fY2 = AbsPixeltoY(pyold);
+         fY2 = AbsPixeltoY(py);
       }
       if (PB) {
          fX1 = AbsPixeltoX(pxl);
          fY1 = AbsPixeltoY(pyt);
-         fX2 = AbsPixeltoX(pxold);
-         fY2 = AbsPixeltoY(pyold);
+         fX2 = AbsPixeltoX(px);
+         fY2 = AbsPixeltoY(py);
       }
       if (PC) {
          fX1 = AbsPixeltoX(pxl);
-         fY1 = AbsPixeltoY(pyold);
-         fX2 = AbsPixeltoX(pxold);
+         fY1 = AbsPixeltoY(py);
+         fX2 = AbsPixeltoX(px);
          fY2 = AbsPixeltoY(pyl);
       }
       if (PD) {
-         fX1 = AbsPixeltoX(pxold);
-         fY1 = AbsPixeltoY(pyold);
+         fX1 = AbsPixeltoX(px);
+         fY1 = AbsPixeltoY(py);
          fX2 = AbsPixeltoX(pxt);
          fY2 = AbsPixeltoY(pyl);
       }
@@ -2240,13 +2104,6 @@ Color_t TPad::GetHighLightColor() const
 }
 
 //______________________________________________________________________________
-Int_t TPad::GetMaxPickDistance()
-{
-   //static function (see also TPad::SetMaxPickDistance)
-   return fgMaxPickDistance;
-}
-
-//______________________________________________________________________________
 TObject *TPad::GetSelected() const
 {
    return fCanvas->GetSelected();
@@ -2288,7 +2145,7 @@ void TPad::HideToolTip(Int_t event)
 }
 
 //______________________________________________________________________________
-Bool_t TPad::IsBatch() const
+Bool_t TPad::IsBatch() const 
 {
    return fCanvas->IsBatch();
 }
@@ -2540,21 +2397,8 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
-   Color_t light;
-   Color_t dark;
-   if (color <= 50) {
-      light    = color + 150;
-      dark     = color + 100;
-   } else {
-      Float_t r, g, b, h, l, s;
-      TColor *c = gROOT->GetColor(color);
-      c->GetRGB(r, g, b);
-      TColor::RGBtoHLS(r, g, b, h, l, s);
-      TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
-      dark = TColor::GetColor(r, g, b);
-      TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
-      light = TColor::GetColor(r, g, b);
-   }
+   Color_t light    = color + 150;
+   Color_t dark     = color + 100;
 
 //*-*- Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
@@ -2720,20 +2564,15 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 
-   Color_t fcolor;
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
       Int_t px2 = XtoPixel(x2);
       Int_t py1 = YtoPixel(y1);
       Int_t py2 = YtoPixel(y2);
-      //box width must be at least one pixel
-      if (TMath::Abs(px2-px1) < 1) px2 = px1+1;
-      if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
 
       Int_t style = gVirtualX->GetFillStyle();
       if (style) {
          if (style > 3000 && style < 4000) {
-            fcolor = -1;
 #ifndef WIN32
             if (style < 3020) {
                // set solid background color
@@ -2750,50 +2589,14 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             if (style > 3020 && style < 3100) {
                gVirtualX->SetFillStyle(style-10);
             } else {
-               fcolor = gVirtualX->GetFillColor(); // save fill color
                gVirtualX->SetFillColor(1);
                gVirtualX->SetFillStyle(style);
             }
-#else
-#ifdef GDK_WIN32
-            if (style < 3020) {
-               // set solid background color
-               gVirtualX->SetFillStyle(1001);
-               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
-            }
-
-            if (style > 3100) {
-               char gifname[32];
-               sprintf(gifname,"gif%d",style);
-               TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
-               if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
-            }
-            if (style > 3020 && style < 3100) {
-               gVirtualX->SetFillStyle(style-10);
-            } else {
-               fcolor = gVirtualX->GetFillColor(); // save fill color
-               gVirtualX->SetFillColor(1);
-               gVirtualX->SetFillStyle(style);
-            }
-#endif
 #endif
             // draw stipples
             gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
 
-#ifndef WIN32
-            // restore fill color
-            if (fcolor >= 0) {
-               gVirtualX->SetFillColor(fcolor);
-            }
-#else
-#ifdef GDK_WIN32
-            // restore fill color
-            if (fcolor >= 0) {
-               gVirtualX->SetFillColor(fcolor);
-            }
-#endif
-#endif
-            } else if (style >= 4000 && style <= 4100) {
+         } else if (style >= 4000 && style <= 4100) {
             // For style >=4000 we make the window transparent.
             // From 4000 to 4100 the window is 100% transparent to 100% opaque
 
@@ -3441,7 +3244,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    TPad *pick   = 0;
    TPad *picked = this;
    pickobj      = 0;
-   if (DistancetoPrimitive(px,py) < fgMaxPickDistance) {
+   if (DistancetoPrimitive(px,py) < kDistanceMaximum) {
       dummyLink.SetObject(this);
       pickobj = &dummyLink;
    }
@@ -3466,7 +3269,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
          if (!gotPrim) {
             if (!obj->TestBit(kCannotPick)) {
                dist = obj->DistancetoPrimitive(px, py);
-               if (dist < fgMaxPickDistance) {
+               if (dist < kDistanceMaximum) {
                   pickobj = lnk;
                   gotPrim = kTRUE;
                   if (dist == 0) break;
@@ -3585,9 +3388,8 @@ void TPad::Print(const char *filename, Option_t *option)
       Update();
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
-      if (gVirtualX->WriteGIF(psname)) {
-         Info("TPad::Print", "GIF file %s has been created", psname);
-      }
+      gVirtualX->WriteGIF(psname);
+      Printf("GIF file: %s has been created.",psname);
       return;
    }
 
@@ -3602,7 +3404,7 @@ void TPad::Print(const char *filename, Option_t *option)
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      Info("TPad::Print", "ROOT file %s has been created", psname);
+      Printf("ROOT file: %s has been created",psname);
       return;
    }
 
@@ -3631,8 +3433,9 @@ void TPad::Print(const char *filename, Option_t *option)
    gVirtualPS->Open(psname,pstype);
    gVirtualPS->SetBit(kPrintingPS);
    Paint();
+   gVirtualPS->Close();
    if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-   Info("TPad::Print", "PostScript file %s has been created", psname);
+   Printf("PostScript file: %s has been created",psname);
    delete gVirtualPS;
    gVirtualPS = psave;
    padsav->cd();
@@ -3641,9 +3444,8 @@ void TPad::Print(const char *filename, Option_t *option)
 //______________________________________________________________________________
 void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Set world coordinate system for the pad.
-   // Emits signal "RangeChanged()", in the slot get the range
-   // via GetRange().
+//*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
+//*-*                  =======================================
 
    if ((x1 >= x2) || (y1 >= y2)) {
       Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
@@ -3662,23 +3464,21 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fX2  = x2;
    fY2  = y2;
 
-   // compute pad conversion coefficients
+//*-*- Compute pad conversion coefficients
    ResizePad();
-
-   // emit signal
-   RangeChanged();
 }
 
 //______________________________________________________________________________
 void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
-   // Set axis coordinate system for the pad.
-   // The axis coordinate system is a subset of the world coordinate system
-   // xmin,ymin is the origin of the current coordinate system,
-   // xmax is the end of the X axis, ymax is the end of the Y axis.
-   // By default a margin of 10 per cent is left on all sides of the pad
-   // Emits signal "RangeAxisChanged()", in the slot get the axis range
-   // via GetRangeAxis().
+//*-*-*-*-*-*-*-*-*-*-*Set axis coordinate system for the pad*-*-*-*-*-*-*
+//*-*                  =======================================
+//  The axis coordinate system is a subset of the world coordinate system
+//  xmin,ymin are the origin of the current coordinate system
+//  xmax is the end of the X axis
+//  ymax is the end of the Y axis
+//  By default a margin of 10 per cent is left on all sides of the pad
+//
 
    if ((xmin >= xmax) || (ymin >= ymax)) {
       Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f",
@@ -3690,9 +3490,6 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    fUymin  = ymin;
    fUxmax  = xmax;
    fUymax  = ymax;
-
-   // emit signal
-   RangeAxisChanged();
 }
 
 //______________________________________________________________________________
@@ -3899,18 +3696,6 @@ void TPad::ResizePad(Option_t *option)
       if (fPixmapID) {
          int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
          int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
-         //protection in case of wrong pad parameters.
-         //without this protection, the OpenPixmap or ResizePixmap crashes with
-         //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
-         //resulting in a frozen xterm
-         if (w <= 0 || w > 10000) {
-            Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
-            w = 10;
-         }
-         if (h <= 0 || h > 10000) {
-            Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
-            h = 10;
-         }
          if (fPixmapID == -1)       // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
          else
@@ -3965,19 +3750,6 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 
    TPad *padsav = (TPad*)gPad;
    char quote='"';
-   char lcname[10];
-   const char *cname = GetName();
-   Int_t nch = strlen(cname);
-   if (nch < 10) {
-      strcpy(lcname,cname);
-      for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-      if (lcname[0] == 0) {
-         if (this == gPad->GetCanvas()) {strcpy(lcname,"c1");  nch = 2;}
-         else                           {strcpy(lcname,"pad"); nch = 3;}
-      }
-      cname = lcname;
-   }
-
 //   Write pad parameters
    if (this != gPad->GetCanvas()) {
       out <<"  "<<endl;
@@ -3988,17 +3760,17 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       } else {
          out<<"   TPad *";
       }
-      out<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<GetName()<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
-      out<<"   "<<cname<<"->Draw();"<<endl;
-      out<<"   "<<cname<<"->cd();"<<endl;
+      out<<"   "<<GetName()<<"->Draw();"<<endl;
+      out<<"   "<<GetName()<<"->cd();"<<endl;
    }
-   out<<"   "<<cname<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
+   out<<"   "<<GetName()<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
    TView *view = GetView();
    Double_t rmin[3], rmax[3];
    if (view) {
@@ -4008,102 +3780,78 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<endl;
    }
    if (GetFillColor() != 19) {
-      out<<"   "<<cname<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
    }
    if (GetBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetBorderMode("<<GetBorderMode()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBorderMode("<<GetBorderMode()<<");"<<endl;
    }
    if (GetBorderSize() != 4) {
-      out<<"   "<<cname<<"->SetBorderSize("<<GetBorderSize()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBorderSize("<<GetBorderSize()<<");"<<endl;
    }
    if (GetLogx()) {
-      out<<"   "<<cname<<"->SetLogx();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogx();"<<endl;
    }
    if (GetLogy()) {
-      out<<"   "<<cname<<"->SetLogy();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogy();"<<endl;
    }
    if (GetLogz()) {
-      out<<"   "<<cname<<"->SetLogz();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogz();"<<endl;
    }
    if (GetGridx()) {
-      out<<"   "<<cname<<"->SetGridx();"<<endl;
+      out<<"   "<<GetName()<<"->SetGridx();"<<endl;
    }
    if (GetGridy()) {
-      out<<"   "<<cname<<"->SetGridy();"<<endl;
+      out<<"   "<<GetName()<<"->SetGridy();"<<endl;
    }
    if (GetTickx()) {
-      out<<"   "<<cname<<"->SetTickx();"<<endl;
+      out<<"   "<<GetName()<<"->SetTickx();"<<endl;
    }
    if (GetTicky()) {
-      out<<"   "<<cname<<"->SetTicky();"<<endl;
+      out<<"   "<<GetName()<<"->SetTicky();"<<endl;
    }
    if (GetTheta() != 30) {
-      out<<"   "<<cname<<"->SetTheta("<<GetTheta()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetTheta("<<GetTheta()<<");"<<endl;
    }
    if (GetPhi() != 30) {
-      out<<"   "<<cname<<"->SetPhi("<<GetPhi()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetPhi("<<GetPhi()<<");"<<endl;
    }
    if (TMath::Abs(fLeftMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<endl;
    }
    if (TMath::Abs(fRightMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetRightMargin("<<GetRightMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetRightMargin("<<GetRightMargin()<<");"<<endl;
    }
    if (TMath::Abs(fTopMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetTopMargin("<<GetTopMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetTopMargin("<<GetTopMargin()<<");"<<endl;
    }
    if (TMath::Abs(fBottomMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
    }
 
-   if (GetFrameFillColor() != GetFillColor()) {
-      out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<endl;
-   }
-   if (GetFrameFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<endl;
-   }
-   if (GetFrameLineStyle() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<endl;
-   }
-   if (GetFrameLineColor() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<endl;
-   }
-   if (GetFrameLineWidth() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<endl;
-   }
-   if (GetFrameBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetFrameBorderMode("<<GetFrameBorderMode()<<");"<<endl;
-   }
-   if (GetFrameBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<GetFrameBorderSize()<<");"<<endl;
-   }
-
-   TFrame *frame = fFrame;
-   if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
-   if (frame) {
-      if (frame->GetFillColor() != GetFillColor()) {
-         out<<"   "<<cname<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<endl;
+   if (fFrame) {
+      if (fFrame->GetFillColor() != 19) {
+         out<<"   "<<GetName()<<"->SetFrameFillColor("<<fFrame->GetFillColor()<<");"<<endl;
       }
-      if (frame->GetFillStyle() != 1001) {
-         out<<"   "<<cname<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<endl;
+      if (fFrame->GetFillStyle() != 1001) {
+         out<<"   "<<GetName()<<"->SetFrameFillStyle("<<fFrame->GetFillStyle()<<");"<<endl;
       }
-      if (frame->GetLineStyle() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<endl;
+      if (fFrame->GetLineStyle() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineStyle("<<fFrame->GetLineStyle()<<");"<<endl;
       }
-      if (frame->GetLineColor() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<endl;
+      if (fFrame->GetLineColor() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineColor("<<fFrame->GetLineColor()<<");"<<endl;
       }
-      if (frame->GetLineWidth() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<endl;
+      if (fFrame->GetLineWidth() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineWidth("<<fFrame->GetLineWidth()<<");"<<endl;
       }
-      if (frame->GetBorderMode() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderMode("<<frame->GetBorderMode()<<");"<<endl;
+      if (fFrame->GetBorderMode() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderMode("<<fFrame->GetBorderMode()<<");"<<endl;
       }
-      if (frame->GetBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<frame->GetBorderSize()<<");"<<endl;
+      if (fFrame->GetBorderSize() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderSize("<<fFrame->GetBorderSize()<<");"<<endl;
       }
    }
 
@@ -4112,39 +3860,17 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 
    while ((obj = next()))
          obj->SavePrimitive(out, (Option_t *)next.GetOption());
-   out<<"   "<<cname<<"->Modified();"<<endl;
+   out<<"   "<<GetName()<<"->Modified();"<<endl;
    out<<"   "<<GetMother()->GetName()<<"->cd();"<<endl;
    if (padsav) padsav->cd();
-}
-
-//______________________________________________________________________________
-void TPad::SetFixedAspectRatio(Bool_t fixed)
-{
-   // Fix pad aspect ratio to current value if fixed is true.
-
-   if (fixed) {
-      if (!fFixedAspectRatio) {
-         if (fHNDC != 0.)
-            fAspectRatio = fWNDC / fHNDC;
-         else {
-            Error("SetAspectRatio", "cannot fix aspect ratio, height of pad is 0");
-            return;
-         }
-         fFixedAspectRatio = kTRUE;
-      }
-   } else {
-      fFixedAspectRatio = kFALSE;
-      fAspectRatio = 0;
-   }
 }
 
 //______________________________________________________________________________
 void TPad::SetEditable(Bool_t mode)
 {
    // Set pad editable yes/no
-   // If a pad is not editable:
-   // - one cannot modify the pad and its objects via the mouse.
-   // - one cannot add new objects to the pad
+   // If a pad is not editable, one cannot modify the pad and its objects
+   // via the mouse.
 
    fEditable = mode;
 
@@ -4175,7 +3901,6 @@ void TPad::SetLogx(Int_t value)
 //*-*              ========================
    if (value) fLogx = 1;
    else       fLogx = 0;
-   delete fView; fView=0;
 }
 
 //______________________________________________________________________________
@@ -4185,7 +3910,6 @@ void TPad::SetLogy(Int_t value)
 //*-*              ========================
    if (value) fLogy = 1;
    else       fLogy = 0;
-   delete fView; fView=0;
 }
 
 //______________________________________________________________________________
@@ -4195,38 +3919,20 @@ void TPad::SetLogz(Int_t value)
 //*-*              ========================
    if (value) fLogz = 1;
    else       fLogz = 0;
-   delete fView; fView=0;
 }
 
 //______________________________________________________________________________
 void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 {
-   // Set canvas range for pad and resize the pad. If the aspect ratio
-   // was fixed before the call it will be un-fixed.
+//*-*-*-*-*-*-*-*-*Set canvas range for pad*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              ========================
 
-   //if (!IsEditable()) return;
+  fXlowNDC = xlow;
+  fYlowNDC = ylow;
+  fWNDC    = xup - xlow;
+  fHNDC    = yup - ylow;
 
-   // Reorder points to make sure xlow,ylow is bottom left point and
-   // xup,yup is top right point.
-   if (xup < xlow) {
-      Double_t x = xlow;
-      xlow = xup;
-      xup  = x;
-   }
-   if (yup < ylow) {
-      Double_t y = ylow;
-      ylow = yup;
-      yup  = y;
-   }
-
-   fXlowNDC = xlow;
-   fYlowNDC = ylow;
-   fWNDC    = xup - xlow;
-   fHNDC    = yup - ylow;
-
-   SetFixedAspectRatio(kFALSE);
-
-   ResizePad();
+  ResizePad();
 }
 
 //______________________________________________________________________________
@@ -4236,8 +3942,6 @@ void TPad::SetPad(const char *name, const char *title,
 {
 //*-*-*-*-*-*-*-*-*Set all pad parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ======================
-   //if (!IsEditable()) return;
-
    fName  = name;
    fTitle = title;
    SetFillStyle(1001);
@@ -4306,7 +4010,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
       gVirtualPS->SetTextFont(font);
       if (font%10 > 2) {
          gVirtualPS->SetTextSize(tsize);
-         Float_t dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
+         Float_t dy = AbsPixeltoY(0) - AbsPixeltoY(tsize);
          tsize = dy/(fY2-fY1);
       }
       gVirtualPS->SetTextSize(tsize);
@@ -4333,18 +4037,6 @@ void TPad::SetCrosshair(Int_t crhair)
 }
 
 //______________________________________________________________________________
-void TPad::SetMaxPickDistance(Int_t maxPick)
-{
-   // static function to set the maximum Pick Distance fgMaxPickDistance
-   // This parameter is used in TPad::Pick to select an object if
-   // its DistancetoPrimitive returns a value < fgMaxPickDistance
-   // The default value is 5 pixels. Setting a smaller value will make
-   // picking more precise but also more difficult
-
-   fgMaxPickDistance = maxPick;
-}
-
-//______________________________________________________________________________
 void TPad::SetToolTipText(const char *text, Long_t delayms)
 {
    // Set tool tip text associated with this pad. The delay is in
@@ -4358,14 +4050,6 @@ void TPad::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = CreateToolTip((TBox*)0, text, delayms);
-}
-
-//______________________________________________________________________________
-void TPad::SetVertical(Bool_t vert)
-{
-   // Set pad vertical (default) or horizontal
-   if (vert) ResetBit(kHori);
-   else      SetBit(kHori);
 }
 
 //_______________________________________________________________________
@@ -4382,14 +4066,15 @@ void TPad::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
          if (!gPad) gPad = new TCanvas(GetName());
-         TPad *padsave = (TPad*)gPad;
-         fMother = (TPad*)gPad;
+         if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
+         else                fMother = (TPad*)gPad;
+         if (!fMother) fMother = (TPad*)gPad;
          if (fMother)  fCanvas = fMother->GetCanvas();
-         gPad      = this;
+         gPad      = fMother;
          fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
          readLevel++;
          gROOT->SetReadingObject(kTRUE);
-
+         
          TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
          fModified = kTRUE;
@@ -4397,10 +4082,9 @@ void TPad::Streamer(TBuffer &b)
          readLevel--;
          if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
          gROOT->SetReadingObject(kFALSE);
-         gPad = padsave;
          return;
       }
-
+      
       //====process old versions before automatic schema evolution
       if (v < 5) {   //old TPad in single precision
          if (v < 3) {   //old TPad derived from TWbox
@@ -4564,7 +4248,7 @@ void TPad::Streamer(TBuffer &b)
       if (readLevel == 0 && IsA() == TPad::Class()) ResizePad();
       b.CheckByteCount(R__s, R__c, TPad::IsA());
       //====end of old versions
-
+      
    } else {
       TPad::Class()->WriteBuffer(b,this);
    }
@@ -4590,7 +4274,7 @@ void TPad::UseCurrentStyle()
    fLogx  = gStyle->GetOptLogx();
    fLogy  = gStyle->GetOptLogy();
    fLogz  = gStyle->GetOptLogz();
-
+   
    TIter next(GetListOfPrimitives());
    TObject *obj;
 
@@ -4600,7 +4284,7 @@ void TPad::UseCurrentStyle()
 
    TPaveText *stats  = (TPaveText*)FindObject("stats");
    if (stats) {
-      stats->SetFillStyle(gStyle->GetStatStyle());
+      stats->SetFillColor(gStyle->GetStatStyle());
       stats->SetFillColor(gStyle->GetStatColor());
       stats->SetTextFont(gStyle->GetStatFont());
       stats->SetTextColor(gStyle->GetStatTextColor());
@@ -4707,14 +4391,7 @@ TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
                                            (Long_t)box,text,(Int_t)delayms));
 #else
-#ifdef GDK_WIN32
-   if (gPad->IsBatch()) return 0;
-   // return new TGToolTip(box, text, delayms);
-   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
-                                           (Long_t)box,text,(Int_t)delayms));
-#else
    return 0;
-#endif
 #endif
 }
 
@@ -4727,11 +4404,6 @@ void TPad::DeleteToolTip(TObject *tip)
    // delete tip;
    if (!tip) return;
    gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
-#endif
 #endif
 }
 
@@ -4746,13 +4418,6 @@ void TPad::ResetToolTip(TObject *tip)
    // tip->Reset(this);
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
                           (Long_t)tip,(Long_t)this));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   // tip->Reset(this);
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
-                          (Long_t)tip,(Long_t)this));
-#endif
 #endif
 }
 
@@ -4765,12 +4430,6 @@ void TPad::CloseToolTip(TObject *tip)
    if (!tip) return;
    // tip->Hide();
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   // tip->Hide();
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
-#endif
 #endif
 }
 
@@ -4804,7 +4463,7 @@ void TPad::x3d(Option_t *option)
 #ifndef WIN32
    if (gROOT->LoadClass("TViewerX3D","X3d")) return;
 
-   gROOT->ProcessLine(Form("TViewerX3D *R__x3d = new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
-                      (Long_t)this, option));
+   gROOT->ProcessLineFast(Form("new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
+                          (Long_t)this, option));
 #endif
 }

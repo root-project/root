@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.9 2001/06/07 10:47:09 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.7 2001/02/12 14:30:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1177,7 +1177,7 @@ char *TVmsSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -1199,14 +1199,20 @@ int TVmsSystem::ConnectService(const char *servername, int port,
 //______________________________________________________________________________
 int TVmsSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
+   // Open a connection to a service on a server. Try 3 times with an
+   // interval of 1 second.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   return ConnectService(server, port, tcpwindowsize);
+   for (int i = 0; i < 3; i++) {
+      int fd = ConnectService(server, port, tcpwindowsize);
+      if (fd >= 0)
+         return fd;
+      sleep(1);
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -1925,7 +1931,7 @@ int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int tcpwindowsize)
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2019,7 +2025,7 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
