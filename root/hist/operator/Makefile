@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += addTest
+TEST_TARGETS += copy addTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -20,3 +20,6 @@ ifeq ($(FAIL),)
 endif
 
 
+
+copy: copy.clog
+	$(TestDiff)
