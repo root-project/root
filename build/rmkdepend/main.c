@@ -50,8 +50,11 @@ in this Software without prior written authorization from the X Consortium.
 #ifndef WIN32
 #include <unistd.h>
 #endif
+#ifdef hpux
+#include <sys/stat.h>
+#else
 extern int fchmod();
-
+#endif
 
 #ifdef MINIX
 #define USE_CHMOD	1
