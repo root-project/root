@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.33 2004/09/01 17:44:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.34 2004/10/04 17:00:21 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
+#include "TFrame.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TList.h"
@@ -690,9 +691,25 @@ void THStack::Paint(Option_t *option)
       }
    } else {
       TObjOptLink *lnk = (TObjOptLink*)fHists->LastLink();
+      TH1 *h1;
+      Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
          sprintf(loption,"%ssame%s",noption,lnk->GetOption());
-         fStack->At(nhists-i-1)->Paint(loption);
+         h1 = (TH1*)fStack->At(nhists-i-1);
+         if (i>0) {
+            // Erase before drawing the histogram 
+            h1col  = h1->GetFillColor();
+            h1fill = h1->GetFillStyle();
+            h1->SetFillColor(1000);
+            h1->SetFillStyle(1001);
+            h1->Paint(loption);
+            h1->SetFillColor(gPad->GetFrame()->GetFillColor());
+            h1->SetFillStyle(gPad->GetFrame()->GetFillStyle());
+            h1->Paint(loption);
+            h1->SetFillColor(h1col);
+            h1->SetFillStyle(h1fill);
+          }
+         h1->Paint(loption);
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
