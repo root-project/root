@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.86 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.87 2002/01/26 21:07:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1183,8 +1183,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             h2->SetMarkerSize(fTree->GetMarkerSize());
             if (CanRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
-               h2->SetBit(kCanDelete);
                h2->SetBit(TH1::kNoStats);
+               h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
             }
          }
@@ -3222,7 +3222,10 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      }
      
      if (!strstr(option,"same") && !strstr(option,"goff")) {
+        UInt_t statbit = h2->TestBit(TH1::kNoStats);
+        h2->SetBit(TH1::kNoStats);
         h2->DrawCopy(option);
+        if (statbit) h2->SetBit(TH1::kNoStats);
         gPad->Update();
      }
      TPolyMarker *pm = new TPolyMarker(nfill);
