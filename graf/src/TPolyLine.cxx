@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.6 2001/04/10 06:25:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -369,7 +369,8 @@ void TPolyLine::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint this polyline with its current attributes*-*-*-*-*-*-*
 //*-*              ===============================================
-   PaintPolyLine(fN, fX, fY, option);
+   if (strlen(option) > 0) PaintPolyLine(fN, fX, fY, option);
+   else                    PaintPolyLine(fN, fX, fY, fOption.Data());
 }
 
 //______________________________________________________________________________
