@@ -416,7 +416,7 @@ ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
-CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual
+CXXFLAGS      = -O2 -pipe -Wall -W -Wno-long-double -Woverloaded-virtual
 LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
