@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.3 2002/01/27 16:28:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.4 2002/01/27 17:22:47 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -193,7 +193,7 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
    // Returns the handler if there exists a handler for the specified URI.
    // Returns 0 in case handler is not found.
 
-   if (!fHandlers) return kFALSE;
+   if (!fHandlers) return 0;
 
    TIter next(fHandlers);
    TPluginHandler *h;
