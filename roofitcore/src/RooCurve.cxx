@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.26 2001/11/09 03:12:08 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.27 2001/11/19 18:03:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.26 2001/11/09 03:12:08 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.27 2001/11/19 18:03:20 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -198,8 +198,8 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t minDx= resolution*(xhi-xlo);
   Double_t x1,x2= xlo;
 
-  addPoint(xlo-1,0) ;
-  addPoint(xlo-1,yval[0]) ;
+  addPoint(xlo-dx,0) ;
+  addPoint(xlo-dx,yval[0]) ;
 
   addPoint(xlo,yval[0]);
   for(Int_t step= 1; step < minPoints; step++) {
@@ -209,8 +209,8 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   }
   addPoint(xhi,yval[minPoints-1]) ;
 
-  addPoint(xhi+1,yval[minPoints-1]) ;
-  addPoint(xhi+1,0) ;
+  addPoint(xhi+dx,yval[minPoints-1]) ;
+  addPoint(xhi+dx,0) ;
 
   // cleanup
   delete [] yval;
@@ -243,7 +243,7 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
 void RooCurve::addPoint(Double_t x, Double_t y) {
   // Add a point with the specified coordinates. Update our y-axis limits.
 
-  //cout << "RooCurve("<< GetName() << ") adding point at " << x << endl ;
+  // cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
 }

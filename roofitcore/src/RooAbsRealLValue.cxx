@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.20 2001/12/06 07:06:37 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.21 2001/12/10 22:51:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -72,21 +72,19 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
   Bool_t inRange(kTRUE) ;
 
   // test this value against our upper fit limit
-  if(hasFitMax() && value > getFitMax()) {
-    if(value - getFitMax() > 1e-6) {
-      if (clippedValPtr)
-	cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	     << " rounded down to max limit " << getFitMax() << endl ;
+  if(hasFitMax() && value > (getFitMax()+1e-6)) {
+    if (clippedValPtr) {
+      cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+	   << " rounded down to max limit " << getFitMax() << endl ;
     }
     clippedValue = getFitMax();
     inRange = kFALSE ;
   }
   // test this value against our lower fit limit
-  if(hasFitMin() && value < getFitMin()) {
-    if(getFitMin() - value > 1e-6) {
-      if (clippedValPtr)
-	cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	     << " rounded up to min limit " << getFitMin() << endl;
+  if(hasFitMin() && value < getFitMin()-1e-6) {
+    if (clippedValPtr) {
+      cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+	   << " rounded up to min limit " << getFitMin() << endl;
     }
     clippedValue = getFitMin();
     inRange = kFALSE ;

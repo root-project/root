@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.12 2001/11/19 07:23:55 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.13 2001/11/22 01:07:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -119,9 +119,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
     assert(0) ;
   }
-//   xvar->setPlotBins(histo->GetNbinsX()) ;
   xvar->setFitBins(histo->GetNbinsX()) ;
-//   xvar->setPlotRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
+  ((RooRealVar*)vars.at(0))->setFitBins(histo->GetNbinsX()) ;
   xvar->setFitRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
 
   // Y
@@ -131,9 +130,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-//     yvar->setPlotBins(histo->GetNbinsY()) ;
     yvar->setFitBins(histo->GetNbinsY()) ;
-//     yvar->setPlotRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
+    ((RooRealVar*)vars.at(1))->setFitBins(histo->GetNbinsY()) ;
     yvar->setFitRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
   }
   
@@ -144,9 +142,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-//     zvar->setPlotBins(histo->GetNbinsZ()) ;
     zvar->setFitBins(histo->GetNbinsZ()) ;
-//     zvar->setPlotRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
+    ((RooRealVar*)vars.at(2))->setFitBins(histo->GetNbinsZ()) ;
     zvar->setFitRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
   }
   
