@@ -20,19 +20,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
-#endif
-#ifndef ROOT_TGFrame
-#include "TGFrame.h"
-#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
 
-class TNamed;
-
-class TVirtualPadEditor : public TNamed {
+class TVirtualPadEditor {
 
 protected:
    static TVirtualPadEditor *fgPadEditor;    // singleton editor dialog
