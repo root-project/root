@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.7 2002/03/08 18:44:17 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.8 2002/03/13 17:00:33 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -152,12 +152,6 @@ void TPaveStats::Paint(Option_t *option)
       longest = wtok[0]+wtok[1]+2.*margin;
       if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
       SetTextSize(textsize);
-   }
-   Double_t yfont;
-   if (GetTextFont()%10 > 2) {
-      yfont = (gPad->PixeltoY(Int_t(-textsize))-gPad->PixeltoY(0))/(y2-y1)*dy;
-   } else {
-      yfont = textsize*dy;
    }
    Double_t ytext = fY2 + 0.5*yspace;
    Double_t xtext = 0;
