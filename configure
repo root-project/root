@@ -591,7 +591,6 @@ with options, prefix with --with-, enables corresponding support
    krb5-incdir     Kerberos5 support, location of krb5.h
    krb5-libdir     Kerberos5 support, location of libkrb5
    globus          Globus support, path to what should be GLOBUS_LOCATION
-   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.GLOBUS)
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -1651,6 +1650,7 @@ if test "x$enable_globus" = "xyes"; then
                 fi
            done
        fi
+       gsicredentialh=$found_dir/globus_gsi_credential.h
        echo "Checking for gsi version ... yes"
    else
        echo "Checking for gsi version ... no"
@@ -1765,8 +1765,12 @@ if test "x$enable_globus" = "xyes"; then
 
    # Everything seems ok: now check if there is the need for a patch
    patchneeded="no"
+
    tobepatched="globus_gsi_credential"
    package="globus_gsi_credential"
+   version=""
+
+   # No explicit version given: try to find version out from gpt files ...
    packdir="$globusdir/etc/globus_packages/$package"
    if test -d $packdir ; then
       for i in pkg_data_${flavour}_rtl.gpt pkg_data_${flavour}_dev.gpt ; do
@@ -1778,7 +1782,7 @@ if test "x$enable_globus" = "xyes"; then
       version=""
       if test ! "x$packfileinfo" = "x" ; then
          packfiletmp=`basename $packfileinfo`
-         echo "Checking $packfiletmp ... $packdir"
+         echo "Checking for $packfiletmp ... $packdir"
          versionstring=`grep Minor $packfileinfo`
          for i in $versionstring ; do
             for k in 5 7 8 9 ; do
@@ -1791,14 +1795,60 @@ if test "x$enable_globus" = "xyes"; then
       fi
       if test "x$version" = "x" ; then
          patchneeded="no"
-         echo "Checking need for globus patch ... no"
+         echo "Checking for need of globus patch ... no"
       else
          patchneeded="yes"
-         echo "Checking need for globus patch ... yes"
+         echo "Checking for need of globus patch ... yes, version $version"
+         # Check consistency: get reference versions
+         gsicredconstantsh=`echo $gsicredentialh | sed 's|credential.h|cred_constants.h|'`
+         grepout=`grep "Revision:" $gsicredentialh`
+         grepout=`echo "$grepout" | sed 's|Revision:||'`
+         for i in $grepout ; do
+           if test ! "x$i" = "x\$"; then
+              gcver=$i
+           fi
+         done
+         grepout=`grep "Revision:" $gsicredconstantsh`
+         grepout=`echo "$grepout" | sed 's|Revision:||'`
+         for i in $grepout ; do
+           if test ! "x$i" = "x\$"; then
+              gccver=$i
+           fi
+         done
+
+         # Get info from map file
+         vertmp=""
+         mismatch="no"
+         mapfile="globusauth/src/patches/$tobepatched/map"
+         exec 10< $mapfile
+         read v1 v2 v3 <&10
+         while [ ! "x$v1" = "x" ] ; do
+           if test "x$v1" = "x$version" ; then
+              if test ! "x$gcver" = "x$v2" || test ! "x$gccver" = "x$v3"; then
+                 mismatch="yes"
+              fi
+           fi
+           if test "x$gcver" = "x$v2" && test "x$gccver" = "x$v3"; then
+              vertmp=$v1
+           fi
+           read v1 v2 v3 <&10
+         done
+         # Final check
+         message "Checking for patch version consistency"
+         if test "x$mismatch" = "xyes" ; then
+            if test ! "x$vertmp" = "x" ; then
+               version=$vertmp
+               echo "no: guess value from map file: $version"
+            else
+               echo "no: unable to guess value from map file: keep $version"
+            fi
+         else
+            echo "yes"
+         fi
       fi
 
    else
-      echo "Checking globus patch need ... no"
+      echo "Checking for need of globus patch ... information directory not available"
    fi
 
    # Now find includes needed for patch, if the case
