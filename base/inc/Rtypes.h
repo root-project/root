@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.22 2002/05/13 10:39:08 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.23 2002/05/13 16:46:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -238,15 +238,18 @@ public: \
 #endif
 
 
+#define ClassImpUnique(name,key) \
+namespace ROOT { \
+   TGenericClassInfo *GenerateInitInstance(const name*); \
+   static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+}
+
 #if defined(__CINT__) && !defined(__MAKECINT__)
 #define ClassImp(name)
 #else
 #define ClassImp(name) \
-namespace ROOT { \
-   TGenericClassInfo *GenerateInitInstance(const name*); \
-   static int _NAME3_(R__,name,Int) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-}
+   ClassImpUnique(name,1)
 #endif
 
 //---- ClassDefT macros for templates with one template argument ---------------
@@ -303,10 +306,10 @@ static TNamed *_R__UNIQUE_(R__dummyholder) = \
 
 //---- Macro to set the class version of non instrumented classes --------------
 
-#define RootClassVersion(name, VersionNumber) \
+#define RootClassVersion(name,VersionNumber) \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
-   static Short_t _NAME3_(R__,name,VersionNumber) = \
+   static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
 }
 
