@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.52 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.53 2003/01/14 00:07:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -582,7 +582,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 	//cout << "***RooAddPdf::getAI(" << GetName() << "): pdf #" << n << " needs factorization integral for " << arg->GetName() << endl ;
       }
       if (!subAnalVars.find(arg->GetName()) && pdf->dependsOn(*arg)) {
-	allAnalVars.remove(*arg,kTRUE) ;
+	allAnalVars.remove(*arg,kTRUE,kTRUE) ;
       }	
     }
     n++ ;
