@@ -45,7 +45,10 @@ CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
 
-ifeq ($(CXX),KCC)
+# strip off possible leading path from compiler command name
+CXXCMD       := $(shell echo $(CXX) | sed s/".*\/"//)
+
+ifeq ($(CXXCMD),KCC)
 CINTS2       += $(MODDIRS)/kccstrm.cxx
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/longif3.cxx
@@ -130,13 +133,13 @@ endif
 ifeq ($(PLATFORM),vms)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
-ifeq ($(CXX),icc)
+ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/iccstrm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
-ifeq ($(CXX),ecc)
+ifeq ($(CXXCMD),ecc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/iccstrm.cxx
@@ -148,7 +151,7 @@ CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
-ifeq ($(CXX),xlC)
+ifeq ($(CXXCMD),xlC)
 ifeq ($(PLATFORM),macosx)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
