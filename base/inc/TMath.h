@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.6 2001/12/03 12:46:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.7 2001/12/03 12:47:24 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -291,6 +291,9 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
 //---- Trig and other functions ------------------------------------------------
+
+
+#include <float.h>
 
 #ifdef R__WIN32
 #   ifndef finite
