@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.7 2003/01/12 11:19:09 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.8 2003/01/12 12:50:46 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -429,9 +429,9 @@ void TViewerX3D::DeleteX3DWindow()
 //______________________________________________________________________________
 void TViewerX3D::CloseWindow()
 {
-   // In case window is closed via WM we get here.
+   // In case viewer is closed via WM we get here.
 
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
