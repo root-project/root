@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.5 2000/12/19 14:30:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.6 2000/12/19 15:27:44 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -214,6 +214,12 @@ public:
    virtual void     FillBuffer(char *&buffer);
    virtual void     ReadBuffer(char *&buffer);
    virtual Int_t    Sizeof() const;
+
+   static TString  *ReadString(TBuffer &b, const TClass *clReq);
+   static void      WriteString(TBuffer &b, const TString *a);
+
+   friend TBuffer &operator<<(TBuffer &b, const TString *obj);
+
 
    // Type conversion
    operator const char*() const { return fData; }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.47 2001/02/28 07:13:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.48 2001/02/28 11:04:07 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -176,7 +176,7 @@ void TStreamerInfo::Build()
          if (lbracket && rbracket) {
             refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(dm->GetArrayIndex());
             if (!refcount) {
-               Error("Build","%s, discarding: %s %s, illegal %s\n",GetName(),dm->GetFullTypeName(),dm->GetName(),lbracket);
+               Error("Build","%s, discarding: %s %s, illegal %s\n",GetName(),dm->GetFullTypeName(),dm->GetName(),title);
                continue;
             }
             dmref = refcount->GetDataMember();
@@ -285,7 +285,7 @@ void TStreamerInfo::Build()
             element->SetArrayDim(ndim);
             element->SetStreamer(streamer);
             continue;
-         } else if(clm == TString::Class()) {
+         } else if(clm == TString::Class() && !dm->IsaPointer()) {
             element = new TStreamerString(dm->GetName(),dm->GetTitle(),offset);
             fElements->Add(element);
             for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
