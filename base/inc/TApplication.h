@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.6 2001/09/20 17:07:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.7 2001/12/19 07:15:19 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -58,7 +58,6 @@ protected:
    virtual void Help(const char *line);
    virtual void InitializeColors();
    virtual void LoadGraphicsLibs();
-   void         SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
    void         SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
@@ -101,6 +100,7 @@ public:
    void            ClearInputFiles();
 
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
+   void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
    static void     CreateApplication();
 
