@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.8 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.9 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -117,10 +117,9 @@ void TNamed::Print(Option_t *) const
 void TNamed::SetName(const char *name)
 {
    // Change (i.e. set) the name of the TNamed.
-   // WARNING !!
-   // If the object is a member of a THashTable, THashList container
-   // The HashTable must be Rehashed after SetName
-   // For example the list of objects in the current directory is a THashList
+   // WARNING: if the object is a member of a THashTable or THashList container
+   // the container must be Rehash()'ed after SetName(). For example the list
+   // of objects in the current directory is a THashList.
 
    fName = name;
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
@@ -130,7 +129,10 @@ void TNamed::SetName(const char *name)
 void TNamed::SetNameTitle(const char *name, const char *title)
 {
    // Change (i.e. set) all the TNamed parameters (name and title).
-   // See also WARNING in SetName
+   // WARNING: if the name is changed and the object is a member of a
+   // THashTable or THashList container the container must be Rehash()'ed
+   // after SetName(). For example the list of objects in the current
+   // directory is a THashList.
 
    fName  = name;
    fTitle = title;
