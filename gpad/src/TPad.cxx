@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.36 2001/05/31 13:24:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.37 2001/05/31 16:27:19 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -378,7 +378,7 @@ void TPad::Clear(Option_t *option)
 //*-*              =========================
 
    if (!IsEditable()) return;
-   
+
    if (!fPadPaint) {
       SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
@@ -1190,8 +1190,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 //
 
    if (!IsEditable()) return;
-   
- 
+
+
    if (gThreadXAR) {
       void *arr[7];
       arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
@@ -1503,7 +1503,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 //  Use services of TH1F class
 
    if (!IsEditable()) return 0;
-   
+
    TH1F *hframe = (TH1F*)FindObject("hframe");
    if (hframe) delete hframe;
    hframe = new TH1F("hframe",title,1000,xmin,xmax);
@@ -3471,7 +3471,7 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 //*-*                  =======================================
 
    //if (!IsEditable()) return;
-   
+
    if ((x1 >= x2) || (y1 >= y2)) {
       Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
       return;
@@ -3506,7 +3506,7 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 //
 
    //if (!IsEditable()) return;
-   
+
    if ((xmin >= xmax) || (ymin >= ymax)) {
       Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f",
             xmin, ymin, xmax, ymax);
@@ -3955,7 +3955,7 @@ void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 //*-*              ========================
 
   //if (!IsEditable()) return;
-  
+
   fXlowNDC = xlow;
   fYlowNDC = ylow;
   fWNDC    = xup - xlow;
@@ -3972,7 +3972,7 @@ void TPad::SetPad(const char *name, const char *title,
 //*-*-*-*-*-*-*-*-*Set all pad parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ======================
    //if (!IsEditable()) return;
-   
+
    fName  = name;
    fTitle = title;
    SetFillStyle(1001);
@@ -4494,7 +4494,7 @@ void TPad::x3d(Option_t *option)
 #ifndef WIN32
    if (gROOT->LoadClass("TViewerX3D","X3d")) return;
 
-   gROOT->ProcessLineFast(Form("new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
-                          (Long_t)this, option));
+   gROOT->ProcessLine(Form("TViewerX3D *R__x3d = new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
+                      (Long_t)this, option));
 #endif
 }
