@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.14 2001/10/11 01:28:49 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.15 2001/10/13 00:38:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.14 2001/10/11 01:28:49 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.15 2001/10/13 00:38:53 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -170,6 +170,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 }
 
 RooAcceptReject::~RooAcceptReject() {
+  delete _cache ;
   delete _nextCatVar;
   delete _nextRealVar;
   delete _cloneSet;
@@ -238,7 +239,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
     if(r*_maxFuncVal > _funcValPtr->getVal()) continue;
     // copy this event into the output container
     if(_verbose && (_eventsUsed%1000==0)) {
-      cout << "RooAcceptReject: accepted event (used " << _eventsUsed << " of "
+      cerr << "RooAcceptReject: accepted event (used " << _eventsUsed << " of "
 	   << _cache->numEntries() << " so far)" << endl;
     }
     break;
@@ -275,7 +276,7 @@ void RooAcceptReject::addEventToCache() {
   _totalEvents++;
 
   if (_verbose &&_totalEvents%10000==0) {
-    cout << "RooAccepReject: generated " << _totalEvents << " events so far." << endl ;
+    cerr << "RooAccepReject: generated " << _totalEvents << " events so far." << endl ;
   }
 }
 

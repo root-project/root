@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.6 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.7 2001/10/08 05:20:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -88,7 +88,8 @@ RooMultiCatIter::~RooMultiCatIter()
 const TCollection* RooMultiCatIter::GetCollection() const 
 {
   // Return set of categories iterated over
-  return &_catList.getCollection() ;
+  //return &_catList.getCollection() ;
+  return 0 ;
 }
 
 

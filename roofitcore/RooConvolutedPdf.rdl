@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.12 2001/10/05 07:01:50 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.13 2001/10/13 21:53:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,6 +22,8 @@ class TIterator ;
 
 class RooResolutionModel ;
 class RooRealVar ;
+class RooAbsGenContext ;
+class RooConvGenContext ;
 
 class RooConvolutedPdf : public RooAbsPdf {
 public:
@@ -49,12 +51,19 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+
     
 protected:
 
   Bool_t _isCopy ;
 
   virtual Double_t evaluate() const ;
+
+
+  friend class RooConvGenContext ;
+  Bool_t changeModel(const RooResolutionModel& newModel) ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
+				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
   // Following pointers are only used during 
   // construction and need not to be proxied

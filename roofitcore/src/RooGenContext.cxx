@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.19 2001/10/12 01:48:45 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.20 2001/10/13 00:38:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,10 +28,11 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.19 2001/10/12 01:48:45 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.20 2001/10/13 00:38:53 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
-			     const RooDataSet *prototype, Bool_t verbose) :  
+			     const RooDataSet *prototype, Bool_t verbose,
+			     const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,verbose),
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0)
 {
@@ -74,13 +75,17 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // f(x) or f(x,g(x,y)) or even f(x,x) ?
       RooAbsArg *direct= _pdfClone->findServer(arg->GetName());
       if(direct) {
-	// is this the only way that the model depends on this variable?
-	servers->Reset();
-	const RooAbsArg *server(0);
-	while(direct && (server= (const RooAbsArg*)servers->Next())) {
-	  if(server == direct) continue;
-	  if(server->dependsOn(*arg)) direct= 0;
+
+	if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
+	  // is this the only way that the model depends on this variable?
+	  servers->Reset();
+	  const RooAbsArg *server(0);
+	  while(direct && (server= (const RooAbsArg*)servers->Next())) {
+	    if(server == direct) continue;
+	    if(server->dependsOn(*arg)) direct= 0;
+	  }
 	}
+
 	if(direct) {
 	  _directVars.add(*arg);
 	}

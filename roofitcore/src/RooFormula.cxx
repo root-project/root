@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.30 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.31 2001/10/13 21:53:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -36,7 +36,7 @@ RooFormula::RooFormula() : TFormula(), _nset(0)
 }
 
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& list) : 
-  TFormula(), _isOK(kTRUE)
+  TFormula(), _isOK(kTRUE), _compiled(kFALSE)
 {
   // Constructor with expression string and list of variables
   SetName(name) ;
@@ -49,16 +49,16 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& l
   }
   delete iter ;
 
-  if (Compile()) {
-    cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
-    _isOK = kFALSE ;
-    return ;
-  }
+//   if (Compile()) {
+//     cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
+//     _isOK = kFALSE ;
+//     return ;
+//   }
 }
 
 
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormula(), _isOK(other._isOK)
+  TFormula(), _isOK(other._isOK), _compiled(kFALSE) 
 {
   // Copy constructor
 
@@ -72,7 +72,7 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
   }
   delete iter ;
   
-  Compile() ;
+  // Compile() ;
 }
 
 
@@ -107,6 +107,11 @@ RooFormula::~RooFormula()
 
 RooArgSet& RooFormula::actualDependents() const
 {
+  if (!_compiled) {
+    _isOK = !((RooFormula*)this)->Compile() ;
+    _compiled = kTRUE ;
+  }
+
   // Return list of dependents used in formula expression
 
   _actual.removeAll();
@@ -180,6 +185,10 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
 Double_t RooFormula::eval(const RooArgSet* nset)
 { 
   // Return current value of formula  
+  if (!_compiled) {
+    _isOK = !Compile() ;
+    _compiled = kTRUE ;
+  }
 
   // WVE sanity check should go here
   if (!_isOK) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.14 2001/10/05 07:01:50 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.15 2001/10/08 05:20:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -113,8 +113,8 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
   // to avoid multiple convolution objects with the same name in complex PDF structures.
 
   // Check that primary variable of basis functions is our convolution variable  
-  if (basis->findServer(0) != x.absArg()) {
-    cout << "RooResolutionModel::convolution(" << GetName() 
+  if (basis->getParameter(0) != x.absArg()) {
+    cout << "RooResolutionModel::convolution(" << GetName() << "," << this  
 	 << ") convolution parameter of basis function and PDF don't match" << endl ;
     cout << "basis->findServer(0) = " << basis->findServer(0) << endl ;
     cout << "x.absArg()           = " << x.absArg() << endl ;
@@ -155,7 +155,12 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
       removeServer(*basisServer) ;
     }
     delete bsIter ;
+
+    if (_ownBasis) {
+      delete _basis ;
+    }
   }
+  _ownBasis = kFALSE ;
 
   // Change basis pointer and update client-server link
   _basis = basis ;
@@ -229,6 +234,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
   if (newBasis) {
     _basis = newBasis ;
+    _ownBasis = kFALSE ;
   }
 
   _basis->redirectServers(newServerList,mustReplaceAll) ;

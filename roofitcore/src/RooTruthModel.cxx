@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.6 2001/10/08 05:20:23 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.7 2001/10/09 00:44:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,9 +14,8 @@
 // RooTruthModel is the delta-function resolution model
 //
 // The truth model supports all basis functions because it evaluates each basis function as  
-// as a RooFormulaVar. The downside of this technique is that RooTruthModel is not exceptionally 
-// fast, but this is usually not a problem as this model is mostly used in debugging.
-// If necessary, the performance can be improved by hard coding frequently used basis functions.
+// as a RooFormulaVar. The 6 basis functions used in B mixing and decay have been
+// hand coded for speed.
 
 #include <iostream.h>
 #include "RooFitCore/RooTruthModel.hh"
@@ -30,7 +29,6 @@ RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& x)
 {  
   // Constructor
 
-  //addServer((RooAbsArg&)basis()) ;
 }
 
 
@@ -38,8 +36,6 @@ RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) :
   RooResolutionModel(other,name)
 {
   // Copy constructor
-
-  //addServer((RooAbsArg&)basis()) ;
 }
 
 
@@ -51,10 +47,20 @@ RooTruthModel::~RooTruthModel()
 
 Int_t RooTruthModel::basisCode(const char* name) const 
 {
+  // Check for optimized basis functions
+  if (!TString("exp(-abs(@0)/@1)").CompareTo(name)) return expBasisPlus ;
+  if (!TString("exp(-abs(-@0)/@1)").CompareTo(name)) return expBasisMinus ;
+  if (!TString("exp(-abs(@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisPlus ;
+  if (!TString("exp(-abs(-@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisMinus ;
+  if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
+  if (!TString("exp(-abs(-@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
+
   // Truth model is delta function, i.e. convolution integral
   // is basis function, therefore we can handle any basis function
-  return 1 ;
+  return genericBasis ;
 }
+
+
 
 
 void RooTruthModel::changeBasis(RooFormulaVar* basis) 
@@ -80,16 +86,57 @@ void RooTruthModel::changeBasis(RooFormulaVar* basis)
 
 
 
+
 Double_t RooTruthModel::evaluate() const 
 {
   // Evaluate the truth model: a delta function when used as PDF,
   // The basis function itself, when convoluted with a basis function.
+  
   switch(_basisCode) {
+
   case 0:
+    if (x==0) return 1 ;
+    return 0 ;
+
+  case expBasisPlus:
     {
-      if (x==0) return 1 ;
-      return 0 ;
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      return x>0?exp(-x/tau):0 ;
     }
+  case expBasisMinus:
+    {
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      return x<0?exp(x/tau):0 ;
+    }
+
+  case cosBasisPlus:
+    {
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      return x>0?exp(-x/tau)*cos(x*dm):0. ;
+    }
+
+  case cosBasisMinus:
+    {
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      return x<0?exp(x/tau)*cos(x*dm):0. ;
+    }
+
+  case sinBasisPlus:
+    {
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      return x>0?exp(-x/tau)*sin(x*dm):0. ;
+    }
+
+  case sinBasisMinus:
+    {
+      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+      return x<0?exp(x/tau)*sin(x*dm):0. ;
+    }
+
   default:
     return basis().getVal() ;
   }

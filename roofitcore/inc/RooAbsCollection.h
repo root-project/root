@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.6 2001/10/11 01:28:49 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.7 2001/10/13 21:53:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #include "TClass.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
+#include "RooFitCore/RooLinkedList.hh"
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
@@ -83,9 +84,10 @@ public:
 protected:
 
   friend class RooMultiCatIter ;
-  inline const TCollection &getCollection() const { return _list; }
-     
-  THashList _list ; // Actual object store
+  //inline const TCollection &getCollection() const { return _list; }
+
+  RooLinkedList _list ; // Actual object store
+  //THashList _list ; // Actual object store
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.

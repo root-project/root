@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooProdGenContext.rdl,v 1.2 2001/10/13 00:38:54 david Exp $
+ *    File: $Id: RooProdGenContext.rdl,v 1.3 2001/10/13 23:02:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -37,7 +37,6 @@ protected:
 
   RooProdGenContext(const RooProdGenContext& other) ;
 
-  const RooDataSet *_prototype;  //  Prototype data set
   const RooProdPdf *_pdf ;       //  Original PDF
   TList _gcList ;                //  List of component generator contexts
   TIterator* _gcIter ;           //! Iterator over gcList

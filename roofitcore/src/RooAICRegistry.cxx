@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAICRegistry.cc,v 1.2 2001/09/26 18:29:32 verkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.3 2001/10/08 05:20:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -43,8 +43,8 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
     i=0 ;
     while(other._clArr[i] && i<_regSize) {
       _clSize[i] = other._clSize[i] ;
-      _asArr1[i] = other._asArr1[i] ;
-      _asArr2[i] = other._asArr2[i] ;
+      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->Clone()) : 0 ; 
+      _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->Clone()) : 0 ;
       _clArr[i] = new Int_t[_clSize[i]] ;
       for (j=0 ; j<_clSize[i] ; j++) {
 	_clArr[i][j] = other._clArr[i][j] ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.51 2001/10/11 01:28:49 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.52 2001/10/11 18:07:18 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -958,12 +958,13 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   TIterator* iter = allVars->createIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()) {
-    if (!dependsOn(*arg)) projectedVars.remove(*arg,kTRUE) ;
-
-    if (!silent) {
-      cout << "RooAbsReal::plotOn(" << GetName() 
-	   << ") WARNING: function doesn't depend on projection variable " 
-	   << arg->GetName() << ", ignoring" << endl ;
+    if (!dependsOn(*arg)) {
+      projectedVars.remove(*arg,kTRUE) ;
+      if (!silent) {
+	cout << "RooAbsReal::plotOn(" << GetName() 
+	     << ") WARNING: function doesn't depend on projection variable " 
+	     << arg->GetName() << ", ignoring" << endl ;
+      }
     }
   }
   delete iter ;

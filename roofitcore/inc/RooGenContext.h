@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.rdl,v 1.6 2001/10/12 01:48:45 verkerke Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.7 2001/10/13 00:38:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -24,7 +24,7 @@ class TRandom;
 class RooGenContext : public RooAbsGenContext {
 public:
   RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-		Bool_t verbose= kFALSE);
+		Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
   virtual ~RooGenContext();
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;

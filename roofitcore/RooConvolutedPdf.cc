@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.21 2001/10/08 05:20:14 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.22 2001/10/13 21:53:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -56,6 +56,9 @@
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFormulaVar.hh"
+#include "RooFitCore/RooConvGenContext.hh"
+#include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooTruthModel.hh"
 
 ClassImp(RooConvolutedPdf) 
 ;
@@ -76,11 +79,12 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
 
 
 RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* name) : 
-  RooAbsPdf(other,name), _model(0), _convVar(0), _isCopy(kTRUE),
+  RooAbsPdf(other,name), _convVar(0), _isCopy(kTRUE),
   _convSet("convSet",this,other._convSet),
   _convNormSet(new RooArgSet(*other._convNormSet)),
   _convSetIter(_convSet.createIterator()),
   _codeReg(other._codeReg),
+  _model(other._model),
   _basisList(other._basisList)
 {
   // Copy constructor
@@ -154,6 +158,67 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   _convSet.add(*conv) ;
 
   return _convSet.index(conv) ;
+}
+
+
+Bool_t RooConvolutedPdf::changeModel(const RooResolutionModel& newModel) 
+{
+  // Change the resolution model to given model
+  TIterator* cIter = _convSet.createIterator() ;
+  RooResolutionModel* conv ;
+  RooArgList newConvSet ;
+  Bool_t allOK(kTRUE) ;
+  while(conv=(RooResolutionModel*)cIter->Next()) {
+
+    // Build new resolution model
+    RooResolutionModel* newConv = newModel.convolution((RooFormulaVar*)&conv->basis(),this) ;
+    if (!newConvSet.add(*newConv)) {
+      allOK = kFALSE ;
+      break ;
+    }
+  }
+  delete cIter ;
+
+  // Check if all convolutions were succesfully built
+  if (!allOK) {
+    // Delete new basis functions created sofar
+    TIterator* iter = newConvSet.createIterator() ;
+    while(conv=(RooResolutionModel*)iter->Next()) delete conv ;
+    delete iter ;
+
+    return kTRUE ;
+  }
+  
+  // Replace old convolutions with new set
+  _convSet.removeAll() ;
+  _convSet.addOwned(newConvSet) ;
+
+  _model = (RooResolutionModel*) &newModel ;
+  return kFALSE ;
+}
+
+
+
+
+RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars, 
+					       const RooDataSet *prototype, Bool_t verbose) const 
+{
+  RooArgSet* modelDep = _model->getDependents(&vars) ;
+  modelDep->remove(*convVar(),kTRUE,kTRUE) ;
+  Int_t numAddDep = modelDep->getSize() ;
+  delete modelDep ;
+
+  if (dynamic_cast<RooTruthModel*>(_model)) {
+    // Truth resolution model: use generic context explicitly allowing generation of convolution variable
+    RooArgSet forceDirect(*convVar()) ;
+    return new RooGenContext(*this,vars,prototype,verbose,&forceDirect) ;
+  } else if (numAddDep>0) {
+    // Any resolution model with more dependents than the convolution variable
+    return new RooGenContext(*this,vars,prototype,verbose) ;
+  } else {
+    // Any other resolution model: use specialized generator context
+    return new RooConvGenContext(*this,vars,prototype,verbose) ;
+  }
 }
 
 

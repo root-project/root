@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.9 2001/10/11 01:28:49 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.10 2001/10/13 21:53:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -105,7 +105,7 @@ void RooAbsCollection::safeDeleteList()
 
       // Check if arg depends on remainder of list      
       if (!arg->dependsOn(*this,arg)) {
-	// Otherwise leave it our and delete it
+	// Otherwise leave it our and delete it	
 	remove(*arg) ;
 	delete arg ;
 	working = kTRUE ;
@@ -235,7 +235,7 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent) {
   }
   _ownCont= kTRUE;
 
-  _list.Add((TObject*)&var);
+  _list.Add((RooAbsArg*)&var);
   return kTRUE;
 }
 
@@ -256,7 +256,7 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent) {
 
   // add a pointer to a clone of this variable to our list (we now own it!)
   RooAbsArg *clone= (RooAbsArg*)var.Clone();
-  if(0 != clone) _list.Add((TObject*)clone);
+  if(0 != clone) _list.Add((RooAbsArg*)clone);
 
   return clone;
 }
@@ -275,7 +275,7 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent) {
   }
 
   // add a pointer to this variable to our list (we don't own it!)
-  _list.Add((TObject*)&var);
+  _list.Add((RooAbsArg*)&var);
   return kTRUE;
 }
 
@@ -361,8 +361,9 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
     return kFALSE;
   }
   // replace var1 with var2
-  _list.AddBefore((TObject*)&var1,(TObject*)&var2);
-  _list.Remove((TObject*)&var1);
+  _list.Replace(&var1,&var2) ;
+//   _list.AddBefore((RooAbsArg*)&var1,(RooAbsArg*)&var2);
+//   _list.Remove((RooAbsArg*)&var1);
   return kTRUE;
 }
 
