@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.33 2002/08/01 15:36:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.34 2002/09/14 20:25:04 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -882,9 +882,16 @@ void TApplication::CreateApplication()
    // Static function used to create a default application environment.
 
    if (!gApplication) {
-      new TApplication("RootApp", 0, 0, 0, 0);
+      char *a = StrDup("RootApp");
+      char *b = StrDup("-b");
+      char *argv[2];
+      Int_t argc = 2;
+      argv[0] = a;
+      argv[1] = b;
+      new TApplication("RootApp", &argc, argv, 0, 0);
       if (gDebug > 0)
          Printf("<TApplication::CreateApplication>: "
                 "created default TApplication");
+      delete [] a; delete [] b;
    }
 }
