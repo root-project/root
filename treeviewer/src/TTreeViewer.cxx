@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.9 2000/12/10 17:44:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.10 2000/12/12 07:25:45 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -255,12 +255,8 @@ ClassImp(TTreeViewer)
 TTreeViewer::TTreeViewer(const char* treeName)
           :TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame)
 {
-  // TTreeViewer default constructor
+   // TTreeViewer default constructor
 
-   if (gROOT->IsBatch()) {
-      fprintf(stderr,"TTreeViewer : cannot run in batch mode\n");
-      gApplication->Terminate(0);
-   }
    fTree = 0;
    BuildInterface();
    SetTreeName(treeName);
@@ -936,7 +932,7 @@ void TTreeViewer::ExecuteDraw()
       fBarH->SetState(kButtonUp);
       TH1 *hist = fTree->GetHistogram();
       if (hist) {
-	 cout << " Graphics option for current histogram changed to " << gopt << endl;
+         cout << " Graphics option for current histogram changed to " << gopt << endl;
          hist->Draw(gopt);
          gPad->Update();
          return;
@@ -1217,7 +1213,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      ExecuteDraw();
                      break;
                   case kSTOP:
-		     if (fCounting)
+                     if (fCounting)
                         gROOT->SetInterrupt(kTRUE); // not working :(
                      break;
                   case kCLOSE:
@@ -1392,8 +1388,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               } else {
                                  if (*itemType & kLTPackType) {
                                     sprintf(msg, "Box : %s", item->GetTrueName());
-				 } else {
-			            if (*itemType & kLTExpressionType) {
+                                 } else {
+                                    if (*itemType & kLTExpressionType) {
                                        // expression clicked
                                        sprintf(msg, "Expression : %s", item->GetTrueName());
                                     } else {
@@ -1459,7 +1455,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         // get item type
                            ULong_t *itemType = (ULong_t *) item->GetUserData();
                            if (!(*itemType & kLTCutType) && !(*itemType & kLTBranchType)
-			        && !(*itemType & kLTPackType)) {
+                               && !(*itemType & kLTPackType)) {
                               if (strlen(item->GetTrueName())) {
                                  fVarDraw = kTRUE;
                                  // draw on double-click
@@ -1522,7 +1518,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
       comm[0] = 0;
       if (strlen(command) > 1999) {
          printf("Command too long : aborting\n");
-	 return;
+         return;
       }
       sprintf(comm, command);
       // print the command to history file
@@ -1673,18 +1669,18 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                spic = gClient->GetPicture("branch_t.xpm");
                branchItem = fLt->AddItem(parent, branch->GetName(), itemType,pic, spic);
                TObjArray *Leaves = branch->GetListOfLeaves();
-	       TLeaf *leaf = 0;
-	       TString leafName;
-	       for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
+               TLeaf *leaf = 0;
+               TString leafName;
+               for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)Leaves->At(lf);
-	          leafName = name;
-	          leafName.Append(".").Append(leaf->GetName());
+                  leafName = name;
+                  leafName.Append(".").Append(leaf->GetName());
                   itemType = new ULong_t(kLTLeafType);
                   pic = gClient->GetPicture("leaf_t.xpm");
-                  spic = gClient->GetPicture("leaf_t.xpm");	    
+                  spic = gClient->GetPicture("leaf_t.xpm");
                   fLt->AddItem(branchItem, leafName.Data(), itemType, pic, spic);
-               } 	    
-	    } else {
+               }
+           } else {
                itemType = new ULong_t(kLTLeafType);
                pic = gClient->GetPicture("leaf_t.xpm");
                spic = gClient->GetPicture("leaf_t.xpm");
@@ -1724,7 +1720,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
             entry->SetUserData(new UInt_t(kLTBranchType));
             fLVContainer->AddThisItem(entry);
             entry->MapWindow();
-	    entry->SetAlias(textEntry->GetString());
+            entry->SetAlias(textEntry->GetString());
          } else {
             if (branch->GetNleaves() > 1) {
                itemType = new ULong_t(kLTBranchType);
@@ -1738,15 +1734,15 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                entry->SetAlias(textEntry->GetString());
 
                TObjArray *Leaves = branch->GetListOfLeaves();
-	       TLeaf *leaf = 0;
-	       TString leafName;
-	       for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
+               TLeaf *leaf = 0;
+               TString leafName;
+               for (Int_t lf=0; lf<Leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)Leaves->At(lf);
-	          leafName = name;
-	          leafName.Append(".").Append(leaf->GetName());
-	          textEntry = new TGString(leafName.Data());
+                  leafName = name;
+                  leafName.Append(".").Append(leaf->GetName());
+                  textEntry = new TGString(leafName.Data());
                   pic = gClient->GetPicture("leaf_t.xpm");
-                  spic = gClient->GetPicture("leaf_t.xpm");	    
+                  spic = gClient->GetPicture("leaf_t.xpm");
                   entry = new TGLVTreeEntry(fLVContainer, pic, spic, textEntry,0,kLVSmallIcons);
                   entry->SetUserData(new UInt_t(kLTDragType | kLTLeafType));
                   fLVContainer->AddThisItem(entry);
@@ -1762,7 +1758,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                entry->SetUserData(new UInt_t(kLTDragType | kLTLeafType));
                fLVContainer->AddThisItem(entry);
                entry->MapWindow();
-	       entry->SetAlias(textEntry->GetString());
+               entry->SetAlias(textEntry->GetString());
             }
          }
       }
