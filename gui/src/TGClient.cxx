@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.41 2004/09/06 16:05:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.42 2004/09/12 10:55:26 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -197,6 +197,32 @@ void TGClient::SetRoot(TGWindow *root)
    // frame (TGMainFrame) can be embedded in another window.
 
    fRoot = root ? root : fDefaultRoot;
+}
+
+//______________________________________________________________________________
+UInt_t TGClient::GetDisplayWidth() const
+{
+   // Get display width.
+
+   Int_t  x, y;
+   UInt_t w, h;
+
+   gVirtualX->GetGeometry(-1, x, y, w, h);
+
+   return w;
+}
+
+//______________________________________________________________________________
+UInt_t TGClient::GetDisplayHeight() const
+{
+   // Get display height.
+
+   Int_t  x, y;
+   UInt_t w, h;
+
+   gVirtualX->GetGeometry(-1, x, y, w, h);
+
+   return h;
 }
 
 //______________________________________________________________________________
@@ -503,7 +529,7 @@ TGWindow *TGClient::GetWindowById(Window_t wid) const
 //______________________________________________________________________________
 TGWindow *TGClient::GetWindowByName(const char *name) const
 {
-   // Find a TGWindow via its name (unique name used in TGWindow::SavePrimitive). 
+   // Find a TGWindow via its name (unique name used in TGWindow::SavePrimitive).
    // If window is not found return 0.
 
    TIter next(fWlist);
@@ -796,15 +822,15 @@ void TGClient::ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //______________________________________________________________________________
-Bool_t TGClient::IsEditDisabled() const 
+Bool_t TGClient::IsEditDisabled() const
 {
-   // returns kTRUE if edit/guibuilding is forbidden 
+   // returns kTRUE if edit/guibuilding is forbidden
 
-   return fDefaultRoot->IsEditDisabled(); 
+   return fDefaultRoot->IsEditDisabled();
 }
 
 //______________________________________________________________________________
-void  TGClient::SetEditDisabled(Bool_t on) 
+void  TGClient::SetEditDisabled(Bool_t on)
 {
    // if on is kTRUE editting/guibuilding is forbidden
 
