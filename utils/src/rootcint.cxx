@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.140 2003/07/29 16:16:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.141 2003/08/02 05:45:02 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3579,7 +3579,7 @@ int main(int argc, char **argv)
          argvv[argcc] = (char *)calloc(strlen(argv[ifl])+1, 1);
          strcpy(argvv[argcc], argv[ifl]); argcc++;
          argvv[argcc++] = "-N";
-         s = strchr(dictname,'.');
+         s = strrchr(dictname,'.');
          argvv[argcc] = (char *)calloc(strlen(dictname), 1);
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
