@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.3 2000/08/20 14:49:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.4 2000/09/14 17:11:06 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -62,6 +62,8 @@
 #define G__PVOID (-1)
 #ifndef WIN32
 extern long G__globalvarpointer;
+#else
+#include "G__ci.h"
 #endif
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.2 2000/06/09 14:56:44 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.3 2000/09/14 17:11:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,7 +59,6 @@
 
 #include <stdlib.h>
 
-#include "G__ci.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -173,6 +172,8 @@ static ReAllocInit realloc_init;
 #define G__PVOID (-1)
 #ifndef WIN32
 extern long G__globalvarpointer;
+#else
+#include "G__ci.h"
 #endif
 #endif
 
