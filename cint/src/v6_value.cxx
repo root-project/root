@@ -221,7 +221,11 @@ G__value p;
     if(G__asm_dbg) fprintf(G__serr,"%3x: TOVALUE\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__TOVALUE;
+#ifndef G__OLDIMPLEMENTATION1401
+    G__inc_cp_asm(2,0);
+#else
     G__inc_cp_asm(1,0);
+#endif
   }
   if(G__no_exec_compile) {
     if(isupper(p.type)) {
@@ -230,16 +234,40 @@ G__value p;
 	result.type = tolower(p.type);
 	result.obj.i = 1;
 	result.ref = p.obj.i;
+#ifndef G__OLDIMPLEMENTATION1401
+	if(G__asm_noverflow) {
+	  switch(p.type) {
+	  case 'B': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_B; break;
+	  case 'C': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_C; break;
+	  case 'R': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_R; break;
+	  case 'S': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_S; break;
+	  case 'H': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_H; break;
+	  case 'I': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I; break;
+	  case 'K': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_K; break;
+	  case 'L': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_L; break;
+	  case 'F': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_F; break;
+	  case 'D': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_D; break;
+	  case 'U': G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_U; break;
+	  default: break;
+	  }
+	}
+#endif
 	return(result);
       case G__PARAP2P:
 	result.obj.i = 1;
 	result.ref = p.obj.i;
 	result.obj.reftype.reftype=G__PARANORMAL;
+#ifndef G__OLDIMPLEMENTATION1401
+	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p;
+#endif
 	return(result);
       case G__PARAP2P2P:
 	result.obj.i = 1;
 	result.ref = p.obj.i;
 	result.obj.reftype.reftype=G__PARAP2P;
+#ifndef G__OLDIMPLEMENTATION1401
+	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p;
+#endif
 	return(result);
 #ifndef G__OLDIMPLEMENTATION707
       case G__PARAREFERENCE:
@@ -248,6 +276,9 @@ G__value p;
 	result.obj.i = 1;
 	result.ref = p.obj.i;
 	--result.obj.reftype.reftype;
+#ifndef G__OLDIMPLEMENTATION1401
+	if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p2;
+#endif
 	return(result);
 #endif
       }
@@ -261,11 +292,17 @@ G__value p;
       result.obj.i = (long)(*(long *)(p.obj.i));
       result.ref = p.obj.i;
       result.obj.reftype.reftype=G__PARANORMAL;
+#ifndef G__OLDIMPLEMENTATION1401
+      if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p;
+#endif
       return(result);
     case G__PARAP2P2P:
       result.obj.i = (long)(*(long *)(p.obj.i));
       result.ref = p.obj.i;
       result.obj.reftype.reftype=G__PARAP2P;
+#ifndef G__OLDIMPLEMENTATION1401
+      if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p;
+#endif
       return(result);
 #ifndef G__OLDIMPLEMENTATION707
     case G__PARANORMAL:
@@ -275,6 +312,9 @@ G__value p;
       result.obj.i = (long)(*(long *)(p.obj.i));
       result.ref = p.obj.i;
       --result.obj.reftype.reftype;
+#ifndef G__OLDIMPLEMENTATION1401
+      if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_p2p2p2;
+#endif
       return(result);
 #endif
     }
@@ -283,36 +323,69 @@ G__value p;
   switch(p.type) {
   case 'B':
     result.obj.i = (long)(*(unsigned char *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_B;
+#endif
     break;
   case 'C':
     result.obj.i = (long)(*(char *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_C;
+#endif
     break;
   case 'R':
     result.obj.i = (long)(*(unsigned short *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_R;
+#endif
     break;
   case 'S':
     result.obj.i = (long)(*(short *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_S;
+#endif
     break;
   case 'H':
     result.obj.i = (long)(*(unsigned int *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_H;
+#endif
     break;
   case 'I':
     result.obj.i = (long)(*(int *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I;
+#endif
     break;
   case 'K':
     result.obj.i = (long)(*(unsigned long *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_K;
+#endif
     break;
   case 'L':
     result.obj.i = (long)(*(long *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_L;
+#endif
     break;
   case 'F':
     result.obj.d = (double)(*(float *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_F;
+#endif
     break;
   case 'D':
     result.obj.d = (double)(*(double *)(p.obj.i));
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_D;
+#endif
     break;
   case 'U':
     result.obj.i = p.obj.i;
+#ifndef G__OLDIMPLEMENTATION1401
+    if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_U;
+#endif
     break;
 #ifndef G__OLDIMPLEMENTATION740
   case 'u': 
@@ -325,7 +398,11 @@ G__value p;
 #ifndef G__OLDIMPLEMENTATION747
 #ifdef G__ASM
       if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION1401
+	G__inc_cp_asm(-2,0);
+#else
 	G__inc_cp_asm(-1,0);
+#endif
 	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
 	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
 	G__inc_cp_asm(2,0);

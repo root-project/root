@@ -687,6 +687,23 @@ void G__resolve_jumptable_bytecode G__P(());
 extern void G__LockCriticalSection G__P(());
 extern void G__UnlockCriticalSection G__P(());
 
+#ifndef G__OLDIMPLEMENTATION1401
+extern void G__asm_tovalue_p2p G__P((G__value *result));
+extern void G__asm_tovalue_p2p2p G__P((G__value *result));
+extern void G__asm_tovalue_p2p2p2 G__P((G__value *result));
+extern void G__asm_tovalue_B G__P((G__value *result));
+extern void G__asm_tovalue_C G__P((G__value *result));
+extern void G__asm_tovalue_R G__P((G__value *result));
+extern void G__asm_tovalue_S G__P((G__value *result));
+extern void G__asm_tovalue_H G__P((G__value *result));
+extern void G__asm_tovalue_I G__P((G__value *result));
+extern void G__asm_tovalue_K G__P((G__value *result));
+extern void G__asm_tovalue_L G__P((G__value *result));
+extern void G__asm_tovalue_F G__P((G__value *result));
+extern void G__asm_tovalue_D G__P((G__value *result));
+extern void G__asm_tovalue_U G__P((G__value *result));
+#endif
+
 #ifdef G__EXCEPTIONWRAPPER
 /*********************************************************************
 * G__ExceptionWrapper

@@ -109,6 +109,183 @@ int *a,*b;
 
 /*************************************************************************
 **************************************************************************
+* TOPVALUE and TOVALUE optimization
+**************************************************************************
+*************************************************************************/
+#ifndef G__OLDIMPLEMENTATION1400
+/******************************************************************
+* G__value G__asm_toXvalue(G__value* p)
+*
+******************************************************************/
+static void G__asm_toXvalue(result)
+G__value* result;
+{
+  if(islower(result->type)) {
+    result->type = toupper(result->type);
+    result->obj.reftype.reftype=G__PARANORMAL;
+  }
+  else if(G__PARANORMAL==result->obj.reftype.reftype) {
+    result->obj.reftype.reftype=G__PARAP2P;
+  }
+  else {
+    ++result->obj.reftype.reftype;
+  }
+  if(result->ref) result->obj.i = result->ref;
+  result->ref = 0;
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1401
+typedef void (*G__p2f_tovalue) G__P((G__value*));
+/******************************************************************
+* void G__asm_tovalue_p2p(G__value* p)
+******************************************************************/
+void G__asm_tovalue_p2p(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(long *)(result->obj.i));
+  result->obj.reftype.reftype=G__PARANORMAL;
+}
+
+/******************************************************************
+* void G__asm_tovalue_p2p2p(G__value* p)
+******************************************************************/
+void G__asm_tovalue_p2p2p(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(long *)(result->obj.i));
+  result->obj.reftype.reftype=G__PARAP2P;
+}
+
+/******************************************************************
+* void G__asm_tovalue_p2p2p2(G__value* p)
+******************************************************************/
+void G__asm_tovalue_p2p2p2(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(long *)(result->obj.i));
+  --result->obj.reftype.reftype;
+}
+
+/******************************************************************
+* void G__asm_tovalue_B(G__value* p)
+******************************************************************/
+void G__asm_tovalue_B(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(unsigned char *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_C(G__value* p)
+******************************************************************/
+void G__asm_tovalue_C(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(char *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_R(G__value* p)
+******************************************************************/
+void G__asm_tovalue_R(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(unsigned short *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_S(G__value* p)
+******************************************************************/
+void G__asm_tovalue_S(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(short *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_H(G__value* p)
+******************************************************************/
+void G__asm_tovalue_H(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(unsigned int *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_I(G__value* p)
+******************************************************************/
+void G__asm_tovalue_I(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(int *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_K(G__value* p)
+******************************************************************/
+void G__asm_tovalue_K(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(unsigned long *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_L(G__value* p)
+******************************************************************/
+void G__asm_tovalue_L(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.i = (long)(*(long *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_F(G__value* p)
+******************************************************************/
+void G__asm_tovalue_F(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.d = (double)(*(float *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_D(G__value* p)
+******************************************************************/
+void G__asm_tovalue_D(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.d = (double)(*(double *)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_U(G__value* p)
+******************************************************************/
+void G__asm_tovalue_U(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  /* result->obj.i = result->obj.i; */
+  result->type = tolower(result->type);
+}
+
+#endif
+
+
+/*************************************************************************
+**************************************************************************
 * Optimization level 1 runtime function
 **************************************************************************
 *************************************************************************/
@@ -925,6 +1102,8 @@ long localmem;
 			     ,pc,sp ,G__int(G__asm_stack[sp-1]));
 #endif
       G__letint(&G__asm_stack[sp-1],'i',G__int(G__asm_stack[sp-1])?1:0);
+      G__asm_stack[sp-1].tagnum = -1;
+      G__asm_stack[sp-1].typenum = -1;
       ++pc;
 #ifdef G__ASM_DBG
       break;
@@ -2097,14 +2276,23 @@ long localmem;
     case G__TOVALUE:
       /***************************************
       * 0 TOVALUE:
+      * (1 p2f)   (1401)
       * sp-1           ->
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) fprintf(G__serr,"%3x,%d: TOVALUE\n",pc,sp);
 #endif
+#ifndef G__OLDIMPLEMENTATION1401
+      {
+	G__p2f_tovalue p2f_tovalue = (G__p2f_tovalue)G__asm_inst[pc+1];
+	(*p2f_tovalue)(&G__asm_stack[sp-1]);
+	pc+=2;
+      }
+#else
       G__asm_stack[sp-1]=G__tovalue(G__asm_stack[sp-1]);
       ++pc;
+#endif
 #ifdef G__ASM_DBG
       break;
 #else
@@ -2224,7 +2412,11 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) fprintf(G__serr,"%3x,%d: TOPVALUE",pc,sp);
 #endif
+#ifndef G__OLDIMPLEMENTATION1400
+      G__asm_toXvalue(&G__asm_stack[sp-1]);
+#else
       G__asm_stack[sp-1]=G__toXvalue(G__asm_stack[sp-1],'P');
+#endif
 #ifdef G__ASM_DBG
       if(G__asm_dbg) fprintf(G__serr," %x\n",G__asm_stack[sp-1].obj.i);
 #endif
@@ -8709,7 +8901,11 @@ int *start;
       if(G__asm_dbg) fprintf(G__serr,"%3lx: TOVALUE\n",pc);
 #endif
       /* no optimization */
+#ifndef G__OLDIMPLEMENTATION1401
+      pc+=2;
+#else
       ++pc;
+#endif
       break;
 
 #ifndef G__OLDIMPLEMENTATION523
@@ -9849,7 +10045,11 @@ int isthrow;
       if(0==isthrow) {
 	fprintf(fout,"%3x: TOVALUE\n",pc);
       }
+#ifndef G__OLDIMPLEMENTATION1401
+      pc+=2;
+#else
       ++pc;
+#endif
       break;
 
 #ifndef G__OLDIMPLEMENTATION523

@@ -683,12 +683,12 @@ int lenbuf;
 	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
             if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
-            vstack[sp-1].obj.i = 1;                                   \
+            vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
 	  }                                                           \
 	  if(G__asm_noverflow) {                                      \
 	    if(G__asm_dbg) {                                          \
-	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
+	      fprintf(G__serr,"%3x: BOOL\n",G__asm_cp);               \
 	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp+1);          \
 	      fprintf(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+2); \
 	    }                                                         \
@@ -781,6 +781,44 @@ int lenbuf;
 
 #else /* G__ASM_DBG */
 
+#ifndef G__OLDIMPLEMENTATION1391
+
+#define G__SUSPEND_ANDOPR                                             \
+        if('u'!=vstack[sp-1].type) {                                  \
+	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
+	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+            G__no_exec_compile = 1;                                   \
+            vtmp_and = vstack[sp-1];                                  \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
+	    ppointer_and[pp_and] = G__asm_cp+2;                       \
+	    G__inc_cp_asm(3,0);                                       \
+	  }                                                           \
+	  ++pp_and;                                                   \
+        }
+
+#define G__SUSPEND_OROPR                                              \
+        if('u'!=vstack[sp-1].type) {                                  \
+	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
+	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+            G__no_exec_compile = 1;                                   \
+            vstack[sp-1] = G__one;                                    \
+            vtmp_or = vstack[sp-1];                                   \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    G__asm_inst[G__asm_cp]=G__BOOL;                           \
+	    G__asm_inst[G__asm_cp+1]=G__PUSHCPY;                      \
+	    G__asm_inst[G__asm_cp+2]=G__CND1JMP;                      \
+	    ppointer_or[pp_or] = G__asm_cp+3;                         \
+	    G__inc_cp_asm(4,0);                                       \
+	  }                                                           \
+	  ++pp_or;                                                    \
+        }
+
+#else /* 1391 */
+
 #define G__SUSPEND_ANDOPR                                             \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
 	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
@@ -808,6 +846,8 @@ int lenbuf;
 	    G__inc_cp_asm(3,0);                                       \
 	  }                                                           \
 	  ++pp_or
+
+#endif /* 1391 */
 
 #define G__RESTORE_NOEXEC_ANDOPR                                      \
   if(pp_and) {                                                        \
