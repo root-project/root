@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.95 2002/08/13 21:17:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.96 2002/08/15 14:18:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -943,9 +943,12 @@ void THistPainter::Paint(Option_t *option)
 //    o = 1;  number of overflows printed
 //    i = 1;  integral of bins printed
 //
-// When trailing digits is left out, they are assumed to be 0.
 // For example: gStyle->SetOptStat(11);
 // displays only the name of histogram and the number of entries.
+// For example: gStyle->SetOptStat(1101); 
+// displays the name of histogram, mean value and RMS.
+// WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+//          be taken as an octal number !!
 //
 // With the option "same", the statistic box is not redrawn.
 // With the option "sames", the statistic box is drawn. If it hiddes

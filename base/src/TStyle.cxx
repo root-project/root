@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.19 2002/05/18 08:43:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.20 2002/07/30 18:26:05 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -804,7 +804,8 @@ void TStyle::SetOptFit(Int_t mode)
 //    p = 1;  print Probability
 //  Example: gStyle->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
-
+// see also SetOptStat below.
+   
    fOptFit = mode;
 }
 
@@ -823,6 +824,9 @@ void TStyle::SetOptStat(Int_t mode)
 //    i = 1;  integral of bins printed
 //  Example: gStyle->SetOptStat(11);
 //           print only name of histogram and number of entries.
+//           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
+//  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+//          be taken as an octal number !!
 //
    fOptStat = mode;
 }
