@@ -22,6 +22,10 @@ N: Guy Barrand
 E: barrand@lal.in2p3.fr
 D: contribution to GUI classes
 
+N: Bertrand Bellenot
+E: Bertrand.Bellenot@alcan.com
+D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB.
+
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
