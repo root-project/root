@@ -93,7 +93,7 @@ void InfoReadBuffer(int siz=10) {
 #if ROOT_VERSION_CODE<= 199169
       info->ReadBuffer(b, (char*)(&obj),-1);
 #else
-      info->ReadBufferAux(b, &pointer,-1, 1, 0, 0);
+      info->ReadBuffer(b, pointer,-1, 1, 0, 0);
 #endif
    }
 
@@ -121,12 +121,12 @@ void InfoReadBufferMix(int siz=10) {
    b.SetReadMode();
    
    for(int i=0; i<siz; ++i) {
-      if (i % 1000000 == 0 ) b.Reset();
+      b.Reset();
       // cl->Streamer(&obj,b);
 #if ROOT_VERSION_CODE<= 199169
       info->ReadBuffer(b, (char*)(&obj),-1);
 #else
-      info->ReadBufferAux(b, &pointer,-1, 1, 0, 0);
+      info->ReadBuffer(b, (char*)(&obj),-1, 1, 0, 0);
 #endif
    }
 
