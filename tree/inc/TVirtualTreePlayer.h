@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.15 2003/01/10 14:46:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.16 2003/01/15 18:43:45 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -43,7 +43,6 @@ public:
     virtual ~TVirtualTreePlayer() { }
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                             ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual void           DrawMap(const char *branch, Option_t *option) = 0;
     virtual Int_t          DrawSelect(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption

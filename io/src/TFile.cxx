@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.80 2003/01/12 16:09:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.81 2003/01/16 18:49:11 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -609,7 +609,7 @@ void TFile::DrawMap(const char *keys, Option_t *option)
 // Draw map of objects in this file
 
    TPluginHandler *h;
-   if ((h = gROOT->GetPluginManager()->FindHandler("TFileMap"))) {
+   if ((h = gROOT->GetPluginManager()->FindHandler("TFileDrawMap"))) {
       if (h->LoadPlugin() == -1)
          return;
       h->ExecPlugin(3, this, keys, option);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFileMap.h,v 1.1 2003/01/15 18:48:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.h,v 1.1 2003/01/16 18:45:34 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTreeFileMap
-#define ROOT_TTreeFileMap
+#ifndef ROOT_TFileDrawMap
+#define ROOT_TFileDrawMap
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTreeFileMap                                                         //
+// TFileDrawMap                                                         //
 //                                                                      //
-// Draw a 2-d map -f the branches of a Tree in its file                 //
+// Draw a 2-d map of the objects in a file                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -25,31 +25,40 @@
 #include "TNamed.h"
 #endif
 
-class TTree;
 class TH1;
+class TFile;
+class TDirectory;
+class TBox;
 
-class TTreeFileMap : public TNamed {
+class TFileDrawMap : public TNamed {
 
 protected:
-    TTree         *fTree;           //!  Pointer to current Tree
+    TFile         *fFile;           //pointer to the file
     TH1           *fFrame;          //histogram used to draw the map frame
-    TString        fBranches;       //list of branches 
+    TString        fKeys;           //list of keys
     TString        fOption;         //drawing options
     Int_t          fXsize;          //size in bytes of X axis
     Int_t          fYsize;          //size in K/Mbytes of Y axis
            
+    virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char *info) const;
+    virtual void     PaintBox(TBox &box, Seek_t bseek, Int_t nbytes);
+    virtual void     PaintDir(TDirectory *dir, const char *keys);
+    virtual TObject *GetObject(); 
+       
 public:
-    TTreeFileMap();
-    TTreeFileMap(TTree *tree, const char *branches, Option_t *option);
-    virtual ~TTreeFileMap();
+    TFileDrawMap();
+    TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
+    virtual ~TFileDrawMap();
 
     virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
+    virtual void  DrawObject(); // *MENU*
+    virtual void  DumpObject(); // *MENU*
     virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual char *GetObjectInfo(Int_t px, Int_t py) const;
+    virtual void  InspectObject(); // *MENU*
     virtual void  Paint(Option_t *option);
-    virtual void  ShowEntry(); // *MENU*
     
-    ClassDef(TTreeFileMap,1)  //Draw a 2-d map -f the branches of a Tree in its file
+    ClassDef(TFileDrawMap,1)  //Draw a 2-d map of the objects in a file
 };
 
 #endif

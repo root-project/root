@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.43 2003/01/10 14:45:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.44 2003/01/15 18:43:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -165,7 +165,6 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual void      DrawMap(const char *branch="*", Option_t *option=""); // MENU*
     virtual void      DropBuffers(Int_t nbytes);
     virtual Int_t     Fill();
     virtual TBranch  *FindBranch(const char *name);
