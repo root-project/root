@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.21 2003/04/04 10:21:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.22 2003/05/01 17:51:42 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -267,6 +267,7 @@ Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
+   if (set || varexp || selection || option || nentries || firstentry) { }
    MayNotUse("DrawSelect");
    return -1;
 }
@@ -380,6 +381,7 @@ Int_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
                                      const char *selection, Option_t *option,
                                      Long64_t nentries, Long64_t firstentry)
 {
+   if (set || varexp || selection || option || nentries || firstentry) { }
    Info("DrawSelect","Not implemented");
    return 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.3 2003/05/05 20:58:24 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.4 2003/05/05 21:36:13 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //BEGIN_HTML
@@ -212,7 +212,8 @@ Double_t TFumili::Chisquare(Int_t npar, Double_t *params)
 
 
 //______________________________________________________________________________
-void TFumili::Clear(Option_t *opt){
+void TFumili::Clear(Option_t *)
+{
   //
   // Resets all parameter names, values and errors to zero
   // 
@@ -872,7 +873,8 @@ Int_t TFumili::Minimize()
 }
 
 //______________________________________________________________________________
-Double_t TFumili::EvalTFN(Double_t *df,Double_t*X){
+Double_t TFumili::EvalTFN(Double_t * /*df*/, Double_t *X)
+{
   // Evaluate theoretical function
   // df: array of partial derivatives
   // X:  vector of theoretical function argument

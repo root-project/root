@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.3 2003/04/04 10:20:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.4 2003/04/11 16:39:12 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -240,7 +240,7 @@ void TProofProgressDialog::DoClose()
 }
 
 //______________________________________________________________________________
-void TProofProgressDialog::DoKeep(Bool_t on)
+void TProofProgressDialog::DoKeep(Bool_t)
 {
    // Handle keep toggle button
 

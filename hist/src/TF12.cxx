@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.19 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.1 2003/04/05 16:53:03 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -119,7 +119,7 @@ TF1 *TF12::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TF12::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
+Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -159,7 +159,7 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 
 
 //______________________________________________________________________________
-void TF12::SavePrimitive(ofstream &out, Option_t *option)
+void TF12::SavePrimitive(ofstream & /*out*/, Option_t * /*option*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

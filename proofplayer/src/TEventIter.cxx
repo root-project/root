@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.9 2003/04/04 10:21:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.10 2003/05/01 17:51:42 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TEventIter::~TEventIter()
 
 
 //______________________________________________________________________________
-void TEventIter::StopProcess(Bool_t abort)
+void TEventIter::StopProcess(Bool_t /*abort*/)
 {
    fStop = kTRUE;
 }

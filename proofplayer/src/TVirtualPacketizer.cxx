@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.4 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.5 2003/05/01 17:51:42 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -123,7 +123,7 @@ TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 
 
 //______________________________________________________________________________
-void TVirtualPacketizer::StopProcess(Bool_t abort)
+void TVirtualPacketizer::StopProcess(Bool_t /*abort*/)
 {
    fStop = kTRUE;
 }
