@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.8 2002/10/25 01:23:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.9 2002/11/18 23:03:40 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -144,10 +144,10 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
          host = url.GetHost();
       }
 
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
+      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
 
       if ( node == 0 ) {
-         node = new TFileNode( url.GetHost() );
+         node = new TFileNode( host );
          fFileNodes->Add( node );
       }
 
@@ -180,6 +180,8 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       TSlaveStat *slstat = new TSlaveStat(slave);
       fSlaveStats->Add( slave, slstat );
       slstat->SetFileNode((TFileNode*) fFileNodes->FindObject(slstat->GetName()));
+      fMaxPerfIdx = slave->GetPerfIdx() > fMaxPerfIdx ?
+         slave->GetPerfIdx() : fMaxPerfIdx;
    }
 
    // Check existence of file/dir/tree an get number of entries
@@ -370,9 +372,10 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       }
 
       // Map non URL filenames to dummy host
-
       TString host;
-      if ( !url.IsValid() || !strncmp(url.GetProtocol(),"root", 4) == 0 ) {
+      if ( !url.IsValid() ||
+          (strncmp(url.GetProtocol(),"root", 4) &&
+           strncmp(url.GetProtocol(),"rfio", 4)) ) {
          host = "no-host";
       } else {
          host = url.GetHost();
@@ -411,6 +414,11 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       slstat->SetFileNode((TFileNode*) fFileNodes->FindObject(slstat->GetName()));
       slstat->fCurFile = 0;
    }
+
+
+   // Heuristic for starting packet size
+   fPacketSize = fTotalEntries / (20 * fSlaveStats->GetSize());
+   PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %d", fPacketSize);
 
    fProgress = new TTimer;
    fProgress->SetObject(this);
@@ -540,8 +548,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
    TDSetElement *base = file->fElement;
    Int_t last = base->GetFirst() + base->GetNum();
    Int_t first;
-   //Int_t num = 1000;  // target packet size TODO: variable packet size
-   Int_t num = 4000;  // target packet size TODO: variable packet size
+   Int_t num = fPacketSize*(Float_t)slstat->fSlave->GetPerfIdx()/fMaxPerfIdx;
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;

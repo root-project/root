@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.25 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.26 2002/10/03 18:01:51 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -231,6 +231,9 @@ public:
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return GetNumberOfActiveSlaves() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsParallel() const { return GetParallel() > 1 ? kTRUE : kFALSE; }
+
+   void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
+   void        Feedback(TList *objs); //*SIGNAL*
 
    ClassDef(TProof,0)  //PROOF control class
 };

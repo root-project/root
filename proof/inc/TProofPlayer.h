@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.8 2002/10/25 01:23:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.9 2002/11/15 20:02:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -79,6 +79,7 @@ public:
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TSlave *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); //*SIGNAL*
+   virtual void      Feedback(TList *objs); //*SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
    void              UpdateAutoBin(const char *name,

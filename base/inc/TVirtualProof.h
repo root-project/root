@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.1 2002/09/16 10:57:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.2 2002/09/19 13:59:48 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
 
 typedef long Long64_t;
 
@@ -33,7 +36,7 @@ class TDSet;
 class TEventList;
 
 
-class TVirtualProof : public TObject {
+class TVirtualProof : public TObject, public TQObject {
 
 protected:
    TVirtualProof() { }
@@ -88,6 +91,9 @@ public:
    virtual Bool_t      IsMaster() const = 0;
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
+
+   virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
+   virtual void        Feedback(TList *objs) = 0; //*SIGNAL*
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };

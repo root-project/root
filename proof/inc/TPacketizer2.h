@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.2 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.3 2002/10/25 01:23:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -53,6 +53,9 @@ private:
    TObject *fActiveNext;      // cursor in fActive
    TMap    *fSlaveStats;      // slave status, keyed by correspondig TSlave
    TTimer  *fProgress;        // progress updates timer
+
+   Long64_t fPacketSize;      // global base packet size
+   Int_t    fMaxPerfIdx;      // maximum of our slaves' performance index
 
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate

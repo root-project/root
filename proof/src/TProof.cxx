@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.33 2002/11/15 20:02:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.34 2002/11/18 23:03:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -965,6 +965,7 @@ Int_t TProof::Collect(TMonitor *mon)
             {
                PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
                TList *out = (TList *) mess->ReadObject(TList::Class());
+               out->SetOwner();
                fPlayer->StoreOutput(out); // Adopts the list
             }
             break;
@@ -973,6 +974,7 @@ Int_t TProof::Collect(TMonitor *mon)
             {
                PDB(kGlobal,2) Info("Collect","Got kPROOF_FEEDBACK");
                TList *out = (TList *) mess->ReadObject(TList::Class());
+               out->SetOwner();
                sl = FindSlave(s);
                fPlayer->StoreFeedback(sl, out); // Adopts the list
             }
@@ -1919,5 +1921,35 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TProof::Progress(Long64_t total, Long64_t processed)
+{
+   // Get query progress information. Connect a slot to this signal
+   // to track progress.
+
+   PDB(kGlobal,1)
+      Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
+
+   Long_t parm[2];
+   parm[0] = total;
+   parm[1] = processed;
+   Emit("Progress(Long64_t,Long64_t)", parm);
+}
+
+//______________________________________________________________________________
+void TProof::Feedback(TList *objs)
+{
+   // Get list of feedback objects. Connect a slot to this signal
+   // to monitor the feedback object.
+
+   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
+   PDB(kFeedback,1) {
+     Info("Feedback","%d Objects", objs->GetSize());
+      objs->ls();
+   }
+
+   Emit("Feedback(TList *objs)", (Long_t) objs);
 }
 

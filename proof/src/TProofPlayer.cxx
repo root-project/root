@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.14 2002/11/15 20:02:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.15 2002/11/18 23:03:40 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -140,6 +140,23 @@ void TProofPlayer::Progress(Long64_t total, Long64_t processed)
    parm[0] = total;
    parm[1] = processed;
    Emit("Progress(Long64_t,Long64_t)", parm);
+
+   gProof->Progress(total,processed);
+}
+
+
+//______________________________________________________________________________
+void TProofPlayer::Feedback(TList *objs)
+{
+   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
+   PDB(kFeedback,1) {
+      Info("Feedback","%d Objects", objs->GetSize());
+      objs->ls();
+   }
+
+   Emit("Feedback(TList *objs)", (Long_t) objs);
+
+   gProof->Feedback(objs);
 }
 
 
@@ -229,6 +246,7 @@ void TProofPlayer::SetupFeedback()
    MayNotUse("SetupFeedback");
 }
 
+
 //______________________________________________________________________________
 void TProofPlayer::StopFeedback()
 {
@@ -269,6 +287,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
    }
    delete fFeedbackLists;
 }
+
 
 //______________________________________________________________________________
 Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
@@ -391,6 +410,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    }
 
    TIter next(out);
+   out->SetOwner(kFALSE);  // take ownership of the contents
 
    if (fOutputLists == 0) {
       PDB(kOutput,2) Info("StoreOutput","Create fOutputLists");
@@ -413,10 +433,10 @@ void TProofPlayerRemote::StoreOutput(TList *out)
       list->Add( obj );
    }
 
-   out->SetOwner(kFALSE);  // Needed??
    delete out;
    PDB(kOutput,1) Info("StoreOutput","Leave");
 }
+
 
 //______________________________________________________________________________
 TList *TProofPlayerRemote::MergeFeedback()
@@ -469,9 +489,9 @@ TList *TProofPlayerRemote::MergeFeedback()
          cf.SetArg((Long_t)list);
          cf.Exec(obj);
       } else {
-         // No Merge interface, return individual objects
+         // No Merge interface, return copy of individual objects
          while ( (obj = list->First()) ) {
-            fb->Add(obj);
+            fb->Add(obj->Clone());
             list->Remove(obj);
          }
       }
@@ -484,31 +504,40 @@ TList *TProofPlayerRemote::MergeFeedback()
    return fb;
 }
 
+
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
 {
-   PDB(kOutput,1) Info("StoreFeedback","Enter");
+   PDB(kFeedback,1) Info("StoreFeedback","Enter");
 
    if ( out == 0 ) {
-      PDB(kOutput,1) Info("StoreFeedback","Leave (empty)");
+      PDB(kFeedback,1) Info("StoreFeedback","Leave (empty)");
       return;
    }
 
-   TIter next(out);
+   if ( !gProof->IsMaster() ) {
+      // in client
+      Feedback(out);
+      delete out;
+      return;
+   }
 
    if (fFeedbackLists == 0) {
-      PDB(kOutput,2) Info("StoreFeedback","Create fFeedbackLists");
+      PDB(kFeedback,2) Info("StoreFeedback","Create fFeedbackLists");
       fFeedbackLists = new TList;
       fFeedbackLists->SetOwner();
    }
 
+   TIter next(out);
+   out->SetOwner(kFALSE);  // take ownership of the contents
+
    TObject *obj;
    while( (obj = next()) ) {
-      PDB(kOutput,2) Info("StoreFeedback","Find '%s'", obj->GetName() );
+      PDB(kFeedback,2) Info("StoreFeedback","Find '%s'", obj->GetName() );
 
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
-         PDB(kOutput,2) Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
+         PDB(kFeedback,2) Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
          map = new TMap;
          map->SetName( obj->GetName() );
          // TODO: needed? allowed? map->SetOwner();
@@ -519,9 +548,8 @@ void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
       map->Add(slave, obj);
    }
 
-   out->SetOwner(kFALSE);  // Needed??
    delete out;
-   PDB(kOutput,1) Info("StoreFeedback","Leave");
+   PDB(kFeedback,1) Info("StoreFeedback","Leave");
 }
 
 //______________________________________________________________________________
@@ -630,7 +658,9 @@ void TProofPlayerSlave::SetupFeedback()
    fFeedbackTimer->Start(500,kFALSE);
 
    fFeedback = fb;
+
 }
+
 
 //______________________________________________________________________________
 void TProofPlayerSlave::StopFeedback()
@@ -643,6 +673,7 @@ void TProofPlayerSlave::StopFeedback()
    delete fFeedbackTimer;
    fFeedback = 0;
 }
+
 
 //______________________________________________________________________________
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *timer)
