@@ -31,14 +31,20 @@ MODULES       = build cint utils base cont meta net zip clib matrix new \
                 hist tree graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg
 
-ifneq ($(ARCH),win32)
-MODULES      += unix x11 x3d rootx rootd proofd
-SYSTEMO       = $(UNIXO)
-SYSTEMDO      = $(UNIXDO)
-else
+ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
+else
+ifeq ($(ARCH),win32gdk)
+MODULES      += winnt win32gdk gl
+SYSTEMO       = $(WINNTO)
+SYSTEMDO      = $(WINNTDO)
+else
+MODULES      += unix x11 x3d rootx rootd proofd
+SYSTEMO       = $(UNIXO)
+SYSTEMDO      = $(UNIXDO)
+endif
 endif
 ifneq ($(TTFINCDIR),)
 ifneq ($(TTFLIB),)
@@ -90,8 +96,9 @@ MODULES      += srputils
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
-                venus star mysql pgsql sapdb srputils x3d rootx rootd proofd
+MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
+                pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
+                rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -101,7 +108,7 @@ MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 LPATH         = lib
 
-ifneq ($(ARCH),win32)
+ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
@@ -146,7 +153,7 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
 MAKECOMPDATA  = build/win/compiledata.sh

@@ -115,6 +115,11 @@ else
          echo "Invalid architecture. Try $0 --help"
          exit 1
       fi
+      if [ "$arch" = "win32" -o "$arch" = "win32gdk" ]; then
+         platform="win32"
+      else
+         platform=$arch
+      fi
       ;;
    esac
 fi
@@ -253,7 +258,7 @@ fi
 # Mandetory test, must succeed
 # Check for Xpm library
 #
-if [ "$arch" != "win32" ]; then
+if [ "$platform" != "win32" ]; then
     echo $ac_n "Checking for libXpm ... $ac_c"
     if [ "x$xpmlibdir" != "x" ]; then
         libdirs=$xpmlibdir
@@ -305,7 +310,7 @@ fi
 if [ "$arch" = "linux" -a "x$enable_thread" = "x" ]; then
    enable_thread="yes"
 fi
-if [ "x$enable_thread" = "xyes" -a "$arch" != "win32" ]; then
+if [ "x$enable_thread" = "xyes" -a "$platform" != "win32" ]; then
     echo $ac_n "Checking for libpthread ... $ac_c"
     if [ "x$threadlibdir" != "x" ]; then
         libdirs=$threadlibdir
@@ -356,7 +361,7 @@ fi
 #
 # (see freetype.org)
 #
-if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
+if [ "x$enable_ttf" != "xno" -a "$platform" != "win32" ]; then
     # Check for FreeType TTF include, library and fonts
     echo $ac_n "Checking for freetype.h ... $ac_c"
     if [ "x$ttfincdir" != "x" ]; then
@@ -471,7 +476,7 @@ fi
 #
 # (see mesa3dt.org)
 #
-if [ "x$enable_opengl" != "xno" -a "$arch" != "win32" ]; then
+if [ "x$enable_opengl" != "xno" -a "$platform" != "win32" ]; then
     # Check for Mesa OpenGL compatible include and library
     echo $ac_n "Checking for GL/gl.h ... $ac_c"
     if [ "x$openglincdir" != "x" ]; then
@@ -582,7 +587,7 @@ fi
 #
 # On win32 we always have OpenGL available (is this true?)
 #
-if [ "$arch" = "win32" ]; then
+if [ "$platform" = "win32" ]; then
    enable_opengl="yes"
    openglincdir="include"
 fi
@@ -664,7 +669,7 @@ if [ "x$enable_mysql" != "xno" ]; then
         unset mysqllibdir
         enable_mysql="no"
     else
-        if [ "$arch" = "win32" ];then
+        if [ "$platform" = "win32" ];then
             mysqllib=${mysqllibdir}/${mysqllib}
             unset mysqllibdir
         elif [ "x$enable_shared" = "xno" -o \
@@ -758,7 +763,7 @@ if [ "x$enable_pgsql" != "xno" ]; then
         unset pgsqllibdir
         enable_pgsql="no"
     else
-        if [ "$arch" = "win32" ];then
+        if [ "$platform" = "win32" ];then
             pgsqllib=${pgsqllibdir}/${pgsqllib}
             unset pgsqllibdir
         elif [ "x$enable_shared" = "xno" -o \
@@ -858,7 +863,7 @@ if [ "x$enable_sapdb" != "xno" ]; then
         unset sapdblibdir
         enable_sapdb="no"
     else
-        if [ "$arch" = "win32" ];then
+        if [ "$platform" = "win32" ];then
             sapdblib="${sapdblibdir}/${sapdblib} ${sapdblibdir}/libsqlrte.lib"
             unset sapdblibdir
         elif [ "x$enable_shared" = "xno" -o \
@@ -919,7 +924,7 @@ if [ "x$enable_cern" != "xno" ]; then
         unset cernlibdir;
         unset cernlib
     else
-        if [ "$arch" = "win32" ]; then
+        if [ "$platform" = "win32" ]; then
             cernlib="${cernlibdir}/packlib.lib ${cernlibdir}/kernlib.lib"
             unset cernlibdir
         elif [ "x$enable_shared" = "xno" ]; then
@@ -976,7 +981,7 @@ if [ "x$enable_pythia" != "xno" ]; then
         unset pythialibdir
         enable_pythia=no
     else
-        if [ "$arch" = "win32" ]; then
+        if [ "$platform" = "win32" ]; then
             pythialib=${pythialibdir}/${pythialib}
             unset pythialibdir
         elif [ "x$enable_shared" = "xno" ]; then
@@ -1033,7 +1038,7 @@ if [ "x$enable_pythia6" != "xno" ]; then
         unset pythia6libdir
         enable_pythia6=no
     else
-        if [ "$arch" = "win32" ]; then
+        if [ "$platform" = "win32" ]; then
             pythia6lib=${pythia6libdir}/${pythia6lib}
             unset pythia6libdir
         elif [ "x$enable_shared" = "xno" ]; then
@@ -1089,7 +1094,7 @@ if [ "x$enable_venus" != "xno" ]; then
         unset venuslibdir
         enable_venus=no
     else
-        if [ "$arch" = "win32" ]; then
+        if [ "$platform" = "win32" ]; then
             venuslib=${venuslibdir}/${venuslib}
             unset venuslibdir
         elif [ "x$enable_shared" = "xno" ]; then
@@ -1144,7 +1149,7 @@ if [ "x$enable_rfio" != "xno" ]; then
         unset shiftlibdir
         unset shiftlib
     else
-        if [ "$arch" = "win32" ]; then
+        if [ "$platform" = "win32" ]; then
             shiftlib=${shiftlibdir}/${shiftlib}
             unset shiftlibdir
         elif [ "x$enable_shared" = "xno" ]; then
@@ -1288,7 +1293,7 @@ fi
 #
 # First win32 does not support -L in ldflags, so remove @ldflags@.
 #
-if [ "$arch" = "win32" ]; then
+if [ "$platform" = "win32" ]; then
     sed -e "s|@ldflags@||"        \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -1482,6 +1487,7 @@ fi
 sed -e "s|@libdir@|$libdir|"               \
     -e "s|@macrodir@|$macrodir|"           \
     -e "s|@bindir@|$bindir|"               \
+    -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$ttffontdir|"       \
     -e "s|@iconpath@|$iconpath|"           \
    < rootrc.tmp > $ROOTRCOUT
@@ -1511,7 +1517,7 @@ echo "done"
 # (only if CVS directory does not exist, otherwise cvs will already
 # have made the conversion).
 #
-if [ "$arch" = "win32" ] && [ ! -d CVS ]; then
+if [ "$platform" = "win32" ] && [ ! -d CVS ]; then
    echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
    for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
             test/Makefile* test/README etc/system.rootrc
@@ -1529,7 +1535,7 @@ fi
 #
 echo ""
 if [ "x$enable_$ttf" = "xno" -o "x$enable_opengl" = "xno" ]; then
-    if [ "x$enable_$ttf" = "xno" -a "$arch" != "win32" ]; then
+    if [ "x$enable_$ttf" = "xno" -a "$platform" != "win32" ]; then
         echo "To build the ROOT TrueType font add-on library see README/INSTALL."
     fi
     if [ "x$enable_opengl" = "xno" ]; then
