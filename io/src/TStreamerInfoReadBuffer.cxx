@@ -143,7 +143,7 @@ Int_t TStreamerInfo__ReadBufferSkipImp(TBuffer &b, const T &arr, Int_t i, Int_t 
                                        ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
                                        TClass *fClass, Int_t * /*fOffset*/, Int_t * /*fNewType*/,
                                        Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
-                                       TStreamerInfo::CompInfo * /*fComp*/,
+                                       TStreamerInfo::CompInfo * fComp,
                                        Version_t &fOldVersion)
 #else
 template <class T>
