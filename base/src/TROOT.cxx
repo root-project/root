@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.77 2002/08/07 11:13:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.78 2002/09/15 10:16:44 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -111,9 +111,6 @@
 #elif defined(R__VMS)
 #include "TVmsSystem.h"
 #endif
-
-
-//*-*x18.6 macros/layout_root
 
 
 //-------- Names of next three routines are a small homage to CMZ --------------
@@ -575,25 +572,22 @@ TObject *TROOT::FindObject(const TObject *) const
 //______________________________________________________________________________
 TObject *TROOT::FindObject(const char *name) const
 {
-//*-*-*-*-*Returns address of a ROOT object if it exists*-*-*-*-*-*-*-*-*-*
-//*-*      =============================================
-//*-*
-//*-*  This function looks in the following order in the ROOT lists:
-//*-*     - List of files
-//*-*     - List of memory mapped files
-//*-*     - List of functions
-//*-*     - List of geometries
-//*-*     - List of canvases
-//*-*     - List of styles
-//*-*     - List of specials
-//*-*     - List of materials in current geometry
-//*-*     - List of shapes in current geometry
-//*-*     - List of matrices in current geometry
-//*-*     - List of Nodes in current geometry
-//*-*     - Current Directory in memory
-//*-*     - Current Directory on file
-//*-*-
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Returns address of a ROOT object if it exists
+   //
+   // This function looks in the following order in the ROOT lists:
+   //     - List of files
+   //     - List of memory mapped files
+   //     - List of functions
+   //     - List of geometries
+   //     - List of canvases
+   //     - List of styles
+   //     - List of specials
+   //     - List of materials in current geometry
+   //     - List of shapes in current geometry
+   //     - List of matrices in current geometry
+   //     - List of Nodes in current geometry
+   //     - Current Directory in memory
+   //     - Current Directory on file
 
    TObject *temp = 0;
 
@@ -623,25 +617,22 @@ TObject *TROOT::FindObject(const char *name) const
 //______________________________________________________________________________
 TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 {
-// Returns address and folder of a ROOT object if it exists
-//
-//
-//*-*  This function looks in the following order in the ROOT lists:
-//*-*     - List of files
-//*-*     - List of memory mapped files
-//*-*     - List of functions
-//*-*     - List of geometries
-//*-*     - List of canvases
-//*-*     - List of styles
-//*-*     - List of specials
-//*-*     - List of materials in current geometry
-//*-*     - List of shapes in current geometry
-//*-*     - List of matrices in current geometry
-//*-*     - List of Nodes in current geometry
-//*-*     - Current Directory in memory
-//*-*     - Current Directory on file
-//*-*-
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Returns address and folder of a ROOT object if it exists
+   //
+   // This function looks in the following order in the ROOT lists:
+   //     - List of files
+   //     - List of memory mapped files
+   //     - List of functions
+   //     - List of geometries
+   //     - List of canvases
+   //     - List of styles
+   //     - List of specials
+   //     - List of materials in current geometry
+   //     - List of shapes in current geometry
+   //     - List of matrices in current geometry
+   //     - List of Nodes in current geometry
+   //     - Current Directory in memory
+   //     - Current Directory on file
 
    TObject *temp = 0;
    where = 0;
@@ -713,7 +704,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 //______________________________________________________________________________
 TObject *TROOT::FindObjectAny(const char *name) const
 {
-// return a pointer to the first object with name starting at //root
+   // Return a pointer to the first object with name starting at //root.
 
    return fRootFolder->FindObjectAny(name);
 }
@@ -721,15 +712,14 @@ TObject *TROOT::FindObjectAny(const char *name) const
 //______________________________________________________________________________
 const char *TROOT::FindObjectClassName(const char *name) const
 {
-//*-*-*-*-*Returns class name of a ROOT object including CINT globals*-*
-//*-*      ==========================================================
+   // Returns class name of a ROOT object including CINT globals.
 
-//*-* Search first in the list of "standard" objects
-   TObject *obj = gROOT->FindObject(name);
+   // Search first in the list of "standard" objects
+   TObject *obj = FindObject(name);
    if (obj) return obj->ClassName();
 
-//*-* Is it a global variable?
-   TGlobal *g = gROOT->GetGlobal(name);
+   // Is it a global variable?
+   TGlobal *g = GetGlobal(name);
    if (g) return g->GetTypeName();
 
    return 0;
@@ -751,8 +741,7 @@ const char *TROOT::FindObjectPathName(const TObject *obj) const
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
-//*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      =================================
+   // Return pointer to class with name.
 
    if (!name || !strlen(name)) return 0;
    if (!GetListOfClasses())    return 0;
@@ -763,7 +752,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
    } else {
-      TDataType *objType = gROOT->GetType(name, load);
+      TDataType *objType = GetType(name, load);
       if (objType) {
          const char *typdfName = objType->GetTypeName();
          if (typdfName && strcmp(typdfName, name)) {
@@ -803,8 +792,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
 {
-//*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      =================================
+   // Return pointer to class with name.
 
    if (!GetListOfClasses())    return 0;
 
@@ -817,7 +805,7 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
    } else {
      // Note we might need support for typedefs and simple types!
 
-     //      TDataType *objType = gROOT->GetType(name, load);
+     //      TDataType *objType = GetType(name, load);
      //if (objType) {
      //    const char *typdfName = objType->GetTypeName();
      //    if (typdfName && strcmp(typdfName, name)) {
@@ -848,9 +836,9 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
 //______________________________________________________________________________
 TColor *TROOT::GetColor(Int_t color) const
 {
-//*-*-*-*-*-*-*-*Return address of color with index color*-*-*-*-*-*-*-*-*
-//*-*            ========================================
-   TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
+   // Return address of color with index color.
+
+   TObjArray *lcolors = (TObjArray*) GetListOfColors();
    if (color < 0 || color >= lcolors->GetSize()) return 0;
    TColor *col = (TColor*)lcolors->At(color);
    if (col && col->GetNumber() == color) return col;
@@ -864,18 +852,16 @@ TColor *TROOT::GetColor(Int_t color) const
 //______________________________________________________________________________
 VoidFuncPtr_t TROOT::GetMakeDefCanvas() const
 {
-//*-*-*-*-*-*-*-*Return default canvas function*-*-*-*-*-*-*-*-*
-//*-*            ==============================
+   // Return default canvas function.
 
    return fgMakeDefCanvas;
 }
 
 
 //______________________________________________________________________________
-TDataType *TROOT::GetType(const char *name, Bool_t load)
+TDataType *TROOT::GetType(const char *name, Bool_t load) const
 {
-//*-*-*-*-*Return pointer to type with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      =================================
+   // Return pointer to type with name.
 
    const char *tname = name + strspn(name," ");
    if (!strncmp(tname,"virtual",7)) {
@@ -889,16 +875,17 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
 
    // First try without loading.  We can do that because nothing is
    // ever removed from the list of types. (See TCint::UpdateListOfTypes).
-   TDataType* type = (TDataType*)GetListOfTypes(kFALSE)->FindObject(name);
-   if (type || !load) { return type; }
-   else { return (TDataType*)GetListOfTypes(load)->FindObject(name); }
+   TDataType* type = (TDataType*)gROOT->GetListOfTypes(kFALSE)->FindObject(name);
+   if (type || !load)
+      return type;
+   else
+      return (TDataType*)gROOT->GetListOfTypes(load)->FindObject(name);
 }
 
 //______________________________________________________________________________
 TFile *TROOT::GetFile(const char *name) const
 {
-//*-*-*-*-*Return pointer to file with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      ================================
+   // Return pointer to file with name.
 
    return (TFile*)GetListOfFiles()->FindObject(name);
 }
@@ -906,8 +893,7 @@ TFile *TROOT::GetFile(const char *name) const
 //______________________________________________________________________________
 TStyle *TROOT::GetStyle(const char *name) const
 {
-//*-*-*-*-*Return pointer to style with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      =================================
+   // Return pointer to style with name
 
    return (TStyle*)GetListOfStyles()->FindObject(name);
 }
@@ -915,21 +901,20 @@ TStyle *TROOT::GetStyle(const char *name) const
 //______________________________________________________________________________
 TObject *TROOT::GetFunction(const char *name) const
 {
-//*-*-*-*-*Return pointer to function with name*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      ===================================
+   // Return pointer to function with name.
 
    TObject *f1 = fFunctions->FindObject(name);
    if (f1) return f1;
 
    //The hist utility manager is required (a plugin)
-   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+   TVirtualUtilHist *util = (TVirtualUtilHist*)GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
    if (!util) {
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
-          if (h->LoadPlugin() == -1)
+      if ((h = GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
+         if (h->LoadPlugin() == -1)
             return 0;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+         h->ExecPlugin(0);
+         util = (TVirtualUtilHist*)GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
       }
    }
    util->InitStandardFunctions();
@@ -938,16 +923,16 @@ TObject *TROOT::GetFunction(const char *name) const
 }
 
 //______________________________________________________________________________
-TGlobal *TROOT::GetGlobal(const char *name, Bool_t load)
+TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 {
    // Return pointer to global variable by name. If load is true force
    // reading of all currently defined globals from CINT (more expensive).
 
-   return (TGlobal *)GetListOfGlobals(load)->FindObject(name);
+   return (TGlobal *)gROOT->GetListOfGlobals(load)->FindObject(name);
 }
 
 //______________________________________________________________________________
-TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load)
+TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
 {
    // Return pointer to global variable with address addr. If load is true
    // force reading of all currently defined globals from CINT (more
@@ -1034,8 +1019,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
 //______________________________________________________________________________
 TObject *TROOT::GetGeometry(const char *name) const
 {
-//*-*-*-*-*Return pointer to Geometry with name*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*      ===================================
+   // Return pointer to Geometry with name
 
    return GetListOfGeometries()->FindObject(name);
 }
@@ -1289,12 +1273,10 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
 //______________________________________________________________________________
 void TROOT::ls(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*To list all objects of the application*-*-*-*-*-*
-//*-*                      ======================================
-//*-*  Loop on all objects created in the ROOT linked lists
-//*-*  objects may be files and windows or any other object directly
-//*-*  attached to the ROOT linked list.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // To list all objects of the application.
+   // Loop on all objects created in the ROOT linked lists.
+   // Objects may be files and windows or any other object directly
+   // attached to the ROOT linked list.
 
 //   TObject::SetDirLevel();
 //   GetList()->ForEach(TObject,ls)(option);
@@ -1480,10 +1462,15 @@ void TROOT::Proof(const char *cluster)
    // the gProof global. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
-   if (gROOT->LoadClass("TProof","Proof")) return;
-   if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return;
+   TPluginHandler *h;
+   if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
+      h->LoadPlugin();
 
-   ProcessLine(Form("new TProof(\"%s\");", cluster));
+   if ((h = GetPluginManager()->FindHandler("TProof"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(1, cluster);
+   }
 }
 
 //______________________________________________________________________________
@@ -1559,7 +1546,7 @@ void TROOT::SetCutClassName(const char *name)
       Error("SetCutClassName","Invalid class name");
       return;
    }
-   TClass *cl = gROOT->GetClass(name);
+   TClass *cl = GetClass(name);
    if (!cl) {
       Error("SetCutClassName","Unknown class:%s",name);
       return;

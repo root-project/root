@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.28 2002/07/19 11:42:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -170,13 +170,13 @@ public:
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
-   TDataType        *GetType(const char *name, Bool_t load = kFALSE);
+   TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { return fFile; }
    TFile            *GetFile(const char *name) const;
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
-   TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE);
-   TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE);
+   TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE) const;
+   TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE) const;
    TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
    TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
