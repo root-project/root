@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.74 2004/06/22 15:36:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.75 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -953,6 +953,44 @@ Bool_t TBranch::IsFolder() const
 
    if (fNleaves > 1) return kTRUE;
    else              return kFALSE;
+}
+
+//______________________________________________________________________________
+void TBranch::KeepCircular(Long64_t maxEntries)
+{
+   // keep a maximum of fMaxEntries in memory
+   
+   Int_t dentries = (Int_t)(fEntries - maxEntries);
+   Int_t nbaskets = fBaskets.GetEntriesFast();
+   Int_t i, ndrop = -1;
+   TBasket *basket;
+   for (i=0;i<nbaskets;i++) {
+      fBasketEntry[i] -= dentries;
+      if (fBasketEntry[i] < 0) {
+         ndrop++;
+         basket = (TBasket*)fBaskets.UncheckedAt(i);
+         basket->MoveEntries(-fBasketEntry[i]);
+         if (!i) fBasketEntry[i] = 0;
+      }      
+   }
+   if (ndrop > 0) {
+      for (i=0;i<ndrop;i++) {
+         fBaskets.RemoveAt(i);
+      }
+      fBaskets.Compress();
+      nbaskets -= ndrop;
+      fBasketEntry[0] = 0;
+      for (i=1;i<nbaskets;i++) {
+         basket = (TBasket*)fBaskets.UncheckedAt(i-1);
+         fBasketEntry[i] = fBasketEntry[i-1] + basket->GetNevBuf();
+      }
+      fMaxBaskets = fBaskets.GetEntriesFast();
+      fWriteBasket -= ndrop;
+      fReadBasket = 0;
+      fReadEntry = -1;
+   }
+   fEntries     = maxEntries;
+   fEntryNumber = maxEntries;
 }
 
 //______________________________________________________________________________

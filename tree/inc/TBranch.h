@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.21 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.22 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -144,6 +144,7 @@ public:
     TBranch          *GetSubBranch(const TBranch *br) const;
     Bool_t            IsAutoDelete() const;
     Bool_t            IsFolder() const;
+    virtual void      KeepCircular(Long64_t maxEntries);
     virtual void      Print(Option_t *option="") const;
     virtual void      ReadBasket(TBuffer &b);
     virtual void      ReadLeaves(TBuffer &b);

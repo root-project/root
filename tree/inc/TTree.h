@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.68 2004/07/20 09:40:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.69 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -93,6 +93,7 @@ protected:
     Int_t          fTimerInterval;     //  Timer interval in milliseconds
     Int_t          fScanField;         //  Number of runs before prompting in Scan
     Int_t          fUpdate;            //  Update frequency for EntryLoop
+    Long64_t       fMaxEntries;        //  Maximum number of entries in case of circular buffers
     Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
     Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
     Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
@@ -126,6 +127,7 @@ protected:
 protected:
     void             AddClone(TTree*);
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
+    virtual void     KeepCircular();
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
 
@@ -281,6 +283,7 @@ public:
     virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
     static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
     virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
+    virtual void         SetCircular(Long64_t maxEntries);
     virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
     virtual void         SetDirectory(TDirectory *dir);
     virtual void         SetEntries(Long64_t n);
@@ -305,7 +308,7 @@ public:
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     void                 UseCurrentStyle();
 
-    ClassDef(TTree,13)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,14)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

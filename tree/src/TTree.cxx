@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.201 2004/07/20 09:40:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.202 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -317,7 +317,8 @@ TTree::TTree(): TNamed()
 //*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
    fScanField      = 25;
-   fMaxEntryLoop   = 1000000000;
+   fMaxEntryLoop   = 100000000000;
+   fMaxEntries     = 100000000000;
    fMaxVirtualSize = 0;
    fDirectory      = 0;
    fEntries        = 0;
@@ -363,7 +364,8 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
 // splitlevel may be used in this case to control the split level.
 
    fScanField      = 25;
-   fMaxEntryLoop   = 1000000000;
+   fMaxEntryLoop   = 100000000000;
+   fMaxEntries     = 100000000000;
    fMaxVirtualSize = 0;
    fDirectory      = gDirectory;
    fEntries        = 0;
@@ -2250,6 +2252,7 @@ Int_t TTree::Fill()
    }
    fEntries++;
 
+   if (fEntries > fMaxEntries) KeepCircular();
    if (fTotBytes-fSavedBytes > fAutoSave) AutoSave();
 
    //check that output file is still below the maximum size.
@@ -3019,6 +3022,22 @@ TList *TTree::GetUserInfo()
 
    if (!fUserInfo) fUserInfo = new TList();
    return fUserInfo;
+}
+
+//______________________________________________________________________________
+void TTree::KeepCircular()
+{
+   // keep a maximum of fMaxEntries in memory
+   
+   Int_t nb = fBranches.GetEntriesFast();
+   Long64_t maxEntries = fMaxEntries - fMaxEntries/10;
+   TBranch *branch;
+   for (Int_t i=0;i<nb;i++)  {
+      branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->KeepCircular(maxEntries);
+   }
+   fEntries = maxEntries;
+   fReadEntry = -1;
 }
 
 //______________________________________________________________________________
@@ -3925,6 +3944,15 @@ void TTree::SetBranchStyle(Int_t style)
   // style = 1 new Bronch
 
    fgBranchStyle = style;
+}
+
+//______________________________________________________________________________
+void TTree::SetCircular(Long64_t maxEntries)
+{
+   // Organize this Tree with circular buffers, keeping in memory
+   // a maximum of maxEntries
+   
+   fMaxEntries = maxEntries;
 }
 
 //______________________________________________________________________________

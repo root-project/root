@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.25 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.26 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -149,6 +149,22 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
    else              offset = fKeylen + entry*fNevBufSize;
    fBufferRef->SetBufferOffset(offset);
    return offset;
+}
+
+//_______________________________________________________________________
+void TBasket::MoveEntries(Int_t dentries)
+{
+   // remove the first dentries of this basket, moving entries at dentries
+   // to the start of the buffer
+   
+   if (dentries >= fNevBuf) return;
+   Int_t bufbegin;
+   if (fEntryOffset) bufbegin = fEntryOffset[dentries];
+   else              bufbegin = GetKeylen() + dentries*fNevBufSize;
+   TBuffer *buf = GetBufferRef();
+   char *buffer = buf->Buffer();
+   memmove(buffer+GetKeylen(),buffer+bufbegin,buf->Length()-bufbegin);
+   fNevBuf -= dentries;
 }
 
 //_______________________________________________________________________

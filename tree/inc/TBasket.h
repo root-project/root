@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.9 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.10 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
             Int_t   GetNevBuf() const {return fNevBuf;}
             Int_t   GetNevBufSize() const {return fNevBufSize;}
             Int_t   GetLast() const {return fLast;}
+    virtual void    MoveEntries(Int_t dentries);
             Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
             Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
 
