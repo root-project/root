@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.13 2003/09/03 06:08:34 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.14 2003/11/19 11:29:00 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -789,7 +789,7 @@ Double_t TFumili::GetParError(Int_t ipar) const
    // return error of parameter ipar
 
    if (ipar<0 || ipar>=fNpar) return 0;
-   else return fA[ipar];
+   else return fParamError[ipar];
 }
 
 //______________________________________________________________________________
@@ -798,7 +798,7 @@ Double_t TFumili::GetParameter(Int_t ipar) const
    // return current value of parameter ipar
 
    if (ipar<0 || ipar>=fNpar) return 0;
-   else return fParamError[ipar];
+   else return fA[ipar];
 }
 
 
@@ -1953,6 +1953,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       f += .5*fsum*fsum;
 
    }
+   delete [] df;
    f1->SetNumberFitPoints(npfits);
 }
 
