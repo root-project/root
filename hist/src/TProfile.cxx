@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.18 2002/01/02 21:45:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.19 2002/01/18 11:38:27 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1002,6 +1002,79 @@ void TProfile::LabelsOption(Option_t *option, Option_t *ax)
    if (errors) delete [] errors;
    if (ent)    delete [] ent;
 }
+   
+//______________________________________________________________________________
+Int_t TProfile::Merge(TCollection *list)
+{
+   //Merge all histograms in the collection in this histogram.
+   //This function computes the min/max for the x axis,
+   //compute a new number of bins, if necessary,
+   //add bin contents, errors and statistics.
+   //The function returns the merged number of entries if the merge is 
+   //successfull, -1 otherwise.
+   //
+   //IMPORTANT remark. The axis x may have different number
+   //of bins and different limits, BUT the largest bin width must be
+   //a multiple of the smallest bin width.
+   
+   if (!list) return 0;
+   TIter next(list);
+   Double_t umin,umax;
+   Int_t nx;
+   Double_t xmin  = fXaxis.GetXmin();
+   Double_t xmax  = fXaxis.GetXmax();
+   Double_t bwix  = fXaxis.GetBinWidth(1);
+   Int_t    nbix  = fXaxis.GetNbins();
+
+   TProfile *h;
+   Int_t nentries=0;
+   Bool_t same = kTRUE;
+   while ((h=(TProfile*)next())) {     
+      if (!h->InheritsFrom(TProfile::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
+         return -1;
+      }
+      //import statistics
+      nentries += (Int_t)h->GetEntries();
+      
+      // find min/max of the axes
+      umin = h->GetXaxis()->GetXmin();
+      umax = h->GetXaxis()->GetXmax();
+      nx   = h->GetXaxis()->GetNbins();
+      if (nx != nbix || umin != xmin || umax != xmax) {
+         same = kFALSE;
+         if (umin < xmin) xmin = umin;  
+         if (umax > xmax) xmax = umax;  
+         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
+      }
+   }
+   
+   //  if different binning compute best binning
+   if (!same) {
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
+      SetBins(nbix,xmin,xmax);
+   }
+   
+   //merge bin contents and errors
+   next.Reset();
+   Int_t ibin, bin;
+   while ((h=(TProfile*)next())) {     
+      nx   = h->GetXaxis()->GetNbins();
+      for (bin=0;bin<=nx+1;bin++) {
+         ibin = fXaxis.FindBin(h->GetBinCenter(bin));
+         fArray[ibin]             += h->GetW()[bin];
+         fSumw2.fArray[ibin]      += h->GetW2()[bin];
+         fBinEntries.fArray[ibin] += h->GetB()[bin];
+      }
+      fEntries += h->GetEntries();
+      fTsumw   += h->fTsumw;
+      fTsumw2  += h->fTsumw2;
+      fTsumwx  += h->fTsumwx;
+      fTsumwx2 += h->fTsumwx2;
+   }
+   
+   return nentries;
+}   
 
 
 //______________________________________________________________________________

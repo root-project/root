@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.27 2002/01/03 18:24:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.28 2002/01/18 11:38:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -220,6 +220,7 @@ public:
     virtual void     LabelsDeflate(Option_t *axis="X");
     virtual void     LabelsInflate(Option_t *axis="X");
     virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
+    virtual Int_t    Merge(TCollection *list);
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.79 2002/01/12 08:57:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.80 2002/01/18 11:38:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3006,6 +3006,112 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    if (cont)   delete [] cont;
    if (errors) delete [] errors;
 }
+   
+//______________________________________________________________________________
+Int_t TH1::Merge(TCollection *list)
+{
+// Merge all histograms in the collection in this histogram.
+// This function computes the min/max for the x axis,
+// compute a new number of bins, if necessary,
+// add bin contents, errors and statistics.
+// The function returns the merged number of entries if the merge is 
+// successfull, -1 otherwise.
+//
+// IMPORTANT remark. The axis x may have different number
+// of bins and different limits, BUT the largest bin width must be
+// a multiple of the smallest bin width.
+// Example:
+/*
+void atest() {
+   TH1F *h1 = new TH1F("h1","h1",110,-110,0);
+   TH1F *h2 = new TH1F("h2","h2",220,0,110);
+   TH1F *h3 = new TH1F("h3","h3",330,-55,55);
+   TRandom r;
+   for (Int_t i=0;i<10000;i++) {
+      h1->Fill(r.Gaus(-55,10));
+      h2->Fill(r.Gaus(55,10));
+      h3->Fill(r.Gaus(0,10));
+   }
+   
+   TList *list = new TList;
+   list->Add(h1);
+   list->Add(h2);
+   list->Add(h3);
+   TH1F *h = (TH1F*)h1->Clone("h");
+   h->Reset();
+   h.Merge(list);
+   h->Draw();
+}
+*/
+//-------------------------------------------------------      
+   if (!list) return 0;
+   TIter next(list);
+   Double_t umin,umax;
+   Int_t nx;
+   Double_t xmin  = fXaxis.GetXmin();
+   Double_t xmax  = fXaxis.GetXmax();
+   Double_t bwix  = fXaxis.GetBinWidth(1);
+   Int_t    nbix  = fXaxis.GetNbins();
+
+   const Int_t kNstat = 4;
+   Stat_t stats[kNstat], totstats[kNstat];
+   TH1 *h;
+   Int_t i, nentries=0;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   Bool_t same = kTRUE;
+   while ((h=(TH1*)next())) {     
+      if (!h->InheritsFrom(TH1::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
+         return -1;
+      }
+      //import statistics
+      h->GetStats(stats);
+      for (i=0;i<kNstat;i++) totstats[i] += stats[i];
+      nentries += (Int_t)h->GetEntries();
+      
+      // find min/max of the axes
+      umin = h->GetXaxis()->GetXmin();
+      umax = h->GetXaxis()->GetXmax();
+      nx   = h->GetXaxis()->GetNbins();
+      if (nx != nbix || umin != xmin || umax != xmax) {
+         same = kFALSE;
+         if (umin < xmin) xmin = umin;  
+         if (umax > xmax) xmax = umax;  
+         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
+      }
+   }
+   
+   //  if different binning compute best binning
+   if (!same) {
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
+      SetBins(nbix,xmin,xmax);
+   }
+   
+   //merge bin contents and errors
+   next.Reset();
+   Int_t ibin, bin, binx, ix;
+   Double_t cu;
+   while ((h=(TH1*)next())) {     
+      nx   = h->GetXaxis()->GetNbins();
+      for (binx=0;binx<=nx+1;binx++) {
+         ix = fXaxis.FindBin(h->GetBinCenter(binx));
+         bin = binx;
+         ibin = ix;
+         cu  = h->GetBinContent(bin);
+         AddBinContent(ibin,cu);
+         if (fSumw2.fN) {
+            Double_t error1 = h->GetBinError(bin);
+            fSumw2.fArray[ibin] += error1*error1;
+         }
+      }
+   }
+   
+   //copy merged stats
+   PutStats(totstats);
+   SetEntries(nentries);
+   
+   return nentries;
+}   
 
 //______________________________________________________________________________
 void TH1::Multiply(TF1 *f1, Double_t c1)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.7 2002/01/02 21:45:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.8 2002/01/18 11:38:27 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1082,8 +1082,97 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    if (errors) delete [] errors;
    if (ent)    delete [] ent;
 }
+   
+//______________________________________________________________________________
+Int_t TProfile2D::Merge(TCollection *list)
+{
+   //Merge all histograms in the collection in this histogram.
+   //This function computes the min/max for the axes,
+   //compute a new number of bins, if necessary,
+   //add bin contents, errors and statistics.
+   //The function returns the merged number of entries if the merge is 
+   //successfull, -1 otherwise.
+   //
+   //IMPORTANT remark. The 2 axis x and y may have different number
+   //of bins and different limits, BUT the largest bin width must be
+   //a multiple of the smallest bin width.
+   
+   if (!list) return 0;
+   TIter next(list);
+   Double_t umin,umax,vmin,vmax;
+   Int_t nx,ny;
+   Double_t xmin  = fXaxis.GetXmin();
+   Double_t xmax  = fXaxis.GetXmax();
+   Double_t ymin  = fYaxis.GetXmin();
+   Double_t ymax  = fYaxis.GetXmax();
+   Double_t bwix  = fXaxis.GetBinWidth(1);
+   Double_t bwiy  = fYaxis.GetBinWidth(1);
+   Int_t    nbix  = fXaxis.GetNbins();
+   Int_t    nbiy  = fYaxis.GetNbins();
 
-
+   TProfile2D *h;
+   Int_t nentries=0;
+   Bool_t same = kTRUE;
+   while ((h=(TProfile2D*)next())) {     
+      if (!h->InheritsFrom(TProfile2D::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
+         return -1;
+      }
+      //import statistics
+      nentries += (Int_t)h->GetEntries();
+      
+      // find min/max of the axes
+      umin = h->GetXaxis()->GetXmin();
+      umax = h->GetXaxis()->GetXmax();
+      vmin = h->GetYaxis()->GetXmin();
+      vmax = h->GetYaxis()->GetXmax();
+      nx   = h->GetXaxis()->GetNbins();
+      ny   = h->GetYaxis()->GetNbins();
+      if (nx != nbix || ny != nbiy ||
+              umin != xmin || umax != xmax || vmin != ymin || vmax != ymax) {
+         same = kFALSE;
+         if (umin < xmin) xmin = umin;  
+         if (umax > xmax) xmax = umax;  
+         if (vmin < ymin) ymin = vmin;  
+         if (vmax > ymax) ymax = vmax;  
+         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
+         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);     
+      }
+   }
+   
+   //  if different binning compute best binning
+   if (!same) {
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
+      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
+      SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
+   }
+   
+   //merge bin contents and errors
+   next.Reset();
+   Int_t ibin, bin, binx, biny, ix, iy;
+   while ((h=(TProfile2D*)next())) {     
+      nx   = h->GetXaxis()->GetNbins();
+      ny   = h->GetYaxis()->GetNbins();
+      for (biny=0;biny<=ny+1;biny++) {
+         iy = fYaxis.FindBin(h->GetBinCenter(biny));
+         for (binx=0;binx<=nx+1;binx++) {
+            ix = fXaxis.FindBin(h->GetBinCenter(binx));
+            bin = binx +(nx+2)*biny;
+            ibin = ix +(nbix+2)*iy;
+            fArray[ibin]             += h->GetW()[bin];
+            fSumw2.fArray[ibin]      += h->GetW2()[bin];
+            fBinEntries.fArray[ibin] += h->GetB()[bin];
+         }
+      }
+      fEntries += h->GetEntries();
+      fTsumw   += h->fTsumw;
+      fTsumw2  += h->fTsumw2;
+      fTsumwx  += h->fTsumwx;
+      fTsumwx2 += h->fTsumwx2;
+   }
+   
+   return nentries;
+}
 
 //______________________________________________________________________________
 void TProfile2D::Multiply(TF1 *, Double_t )
