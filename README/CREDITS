@@ -276,6 +276,10 @@ N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
 
+N: Gene Van Buren
+E: gene@bnl.gov
+D: TF1, TF2, TF3 Moment functions
+
 N: Marco van Leeuwen
 E: mvl@nikhef.nl
 D: THistPainter improvements: Support for log scales with CONT options
