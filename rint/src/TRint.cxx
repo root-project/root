@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.23 2004/01/10 10:52:30 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.24 2004/01/21 22:22:36 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -357,6 +357,8 @@ Bool_t TRint::HandleTermInput()
    if ((line = Getlinem(kOneChar, 0))) {
       if (line[0] == 0 && Gl_eof())
          Terminate(0);
+
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
 
       Gl_histadd(line);
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.42 2004/01/21 12:26:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.43 2004/01/21 12:34:28 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1102,11 +1102,6 @@ TGMainFrame::~TGMainFrame()
 Bool_t TGMainFrame::HandleKey(Event_t *event)
 {
    // Handle keyboard events.
-
-   if (event->fType == kGKeyPress)
-      gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else
-      gVirtualX->SetKeyAutoRepeat(kTRUE);
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
       UInt_t keysym;
