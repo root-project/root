@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.10 2004/10/12 10:37:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.11 2005/02/07 14:34:47 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -480,8 +480,9 @@ void TGraphBentErrors::Paint(Option_t *option)
 //*-*-      define the offset of the error bars due to the symbol size
    s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   tx   = 0.50*s2x;
-   ty   = 0.50*s2y;
+   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
+   tx   = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   ty   =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
