@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.154 2003/11/13 17:08:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.155 2003/11/18 09:40:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1395,7 +1395,8 @@ void THistPainter::Paint(Option_t *option)
    }
    fH->SetMinimum(minsav);
    gCurrentHist = oldhist;
-   delete [] fXbuf; delete [] fYbuf;
+   delete [] fXbuf; fXbuf = 0;
+   delete [] fYbuf; fYbuf = 0;
 
 }
 
