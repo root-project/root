@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.88 2004/10/06 09:14:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.89 2004/10/06 12:50:18 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2221,12 +2221,14 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   const char *fname = gSystem->BaseName(filename);
+   TString ff = filename && strlen(filename) ? filename : "Rootappl.C";
 
-   out.open(filename, ios::out);
+   const char *fname = gSystem->BaseName(ff.Data());
+
+   out.open(ff.Data(), ios::out);
 
    if (!out.good() || !strlen(fname)) {
-       Error("SaveSource", "cannot open file: %s", filename);
+       Error("SaveSource", "cannot open file: %s", ff.Data());
        return;
    }
 
@@ -2262,7 +2264,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete ilist;
    delete bc;
 
-   // writes the macro entry point equal to the filename
+   // writes the macro entry point equal to the fname
    char *sname = new char[strlen(fname)];
 
    Int_t i=0;
@@ -2613,12 +2615,14 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    char quote = '"';
    ofstream out;
-   const char *fname = gSystem->BaseName(filename);
+   TString ff = filename && strlen(filename) ? filename : "Rootdlog.C";
 
-   out.open(filename, ios::out);
+   const char *fname = gSystem->BaseName(ff.Data());
+
+   out.open(ff.Data(), ios::out);
 
    if (!out.good() || !strlen(fname)) {
-       Error("SaveSource", "cannot open file: %s", filename);
+       Error("SaveSource", "cannot open file: %s", ff.Data());
        return;
    }
 
@@ -2654,7 +2658,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    delete ilist;
    delete bc;
 
-   // writes the macro entry point equal to the filename
+   // writes the macro entry point equal to the fname
    char *sname = new char[strlen(fname)];
 
    Int_t i=0;
