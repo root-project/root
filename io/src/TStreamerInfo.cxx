@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.8 2000/11/24 10:28:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.9 2000/11/24 11:40:17 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -515,7 +515,8 @@ void TStreamerInfo::Compile()
       fLength[fNdata] = element->GetArrayLength();
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
-         if (keep>=0 && (element->GetType() < kRegrouped)
+      // try to group consecutive members of the same type
+      if (keep>=0 && (element->GetType() < kRegrouped)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (element->GetType() > 0)
                   && (element->GetArrayDim() == 0)
@@ -878,10 +879,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
    
    //loop on all active members
    for (Int_t i=0;i<fNdata;i++) {
+#ifdef DEBUG
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
          printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName());
       }
+#endif
       switch (fType[i]) {
          // read basic types
          case kChar:              ReadBasicType(Char_t)
