@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.5 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.6 2003/11/13 16:52:07 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -214,8 +214,8 @@ public:
    virtual void          GridPack();
    virtual void          GridPrintPackList();
 
-   void                  Reset();
-   TDSetElement         *Next();
+   virtual void          Reset();
+   virtual TDSetElement *Next();
    TDSetElement         *Current() const { return fCurrent; };
 
    static Long64_t       GetEntries(Bool_t isTree, const char *filename,
