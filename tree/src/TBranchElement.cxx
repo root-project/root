@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.71 2001/12/03 13:32:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.72 2001/12/12 09:48:35 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -52,6 +52,7 @@ TBranchElement::TBranchElement(): TBranch()
    fObject = 0;
    fMaximum = 0;
    fBranchPointer = 0;
+   fNdata = 1;
 }
 
 
@@ -84,6 +85,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchCount2 = 0;
    fObject       = 0;
    fBranchPointer= 0;
+   fNdata        = 1;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    fMaximum      = 0;
