@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.58 2001/08/23 22:12:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.59 2001/09/17 13:37:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -633,14 +633,13 @@ void TH1::Add(TH1 *h1, Double_t c1)
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 //*-*- Add statistics
-   Double_t ac1 = TMath::Abs(c1);
-   fEntries += ac1*h1->GetEntries();
+   fEntries += c1*h1->GetEntries();
    Stat_t s1[10], s2[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = s2[i] = 0;}
    GetStats(s1);
    h1->GetStats(s2);
-   for (i=0;i<10;i++) s1[i] += ac1*s2[i];
+   for (i=0;i<10;i++) s1[i] += c1*s2[i];
    PutStats(s1);
 
 //*-*- Loop on bins (including underflows/overflows)
@@ -712,15 +711,13 @@ void TH1::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
 //*-*- Add statistics
-   Double_t ac1 = TMath::Abs(c1);
-   Double_t ac2 = TMath::Abs(c2);
-   fEntries = ac1*h1->GetEntries() + ac2*h2->GetEntries();
+   fEntries = c1*h1->GetEntries() + c2*h2->GetEntries();
    Stat_t s1[10], s2[10], s3[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
    h1->GetStats(s1);
    h2->GetStats(s2);
-   for (i=0;i<10;i++) s3[i] = ac1*s1[i] +ac2*s2[i];
+   for (i=0;i<10;i++) s3[i] = c1*s1[i] + c2*s2[i];
    PutStats(s3);
 
 //*-*- Loop on bins (including underflows/overflows)
