@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.8 2002/10/25 00:19:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.9 2002/10/25 06:04:53 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -89,8 +89,13 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    char *u0, *u = StrDup(url);
    u0 = u;
 
+   Bool_t isWin32File = kFALSE;
+#ifdef R__WIN32
+   isWin32File = defaultIsFile;
+#endif
+
    char *t, *s2;
-   if ((s = strstr(u, ":/"))) {
+   if ((s = strstr(u, ":/")) && !isWin32File) {
       if (*(s+2) != '/') {
          Error("TUrl", "malformed, URL must contain \"://\"");
          fPort = -1;
