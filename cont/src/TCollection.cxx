@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.5 2000/09/06 14:11:00 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.6 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -359,8 +359,11 @@ TIter::TIter(const TIter &iter)
    // Copy a TIter. This involves allocating a new TIterator of the right
    // sub class and assigning it with the original.
 
-   fIterator = iter.GetCollection()->MakeIterator();
-   fIterator->operator=(*iter.fIterator);
+   if (iter.fIterator) {
+      fIterator = iter.GetCollection()->MakeIterator();
+      fIterator->operator=(*iter.fIterator);
+   } else
+      fIterator = 0;
 }
 
 //______________________________________________________________________________
@@ -370,8 +373,11 @@ TIter &TIter::operator=(const TIter &rhs)
    // of the right sub class and assigning it with the original.
 
    if (this != &rhs) {
-      fIterator = rhs.GetCollection()->MakeIterator();
-      fIterator->operator=(*rhs.fIterator);
+      if (rhs.fIterator) {
+         delete fIterator;
+         fIterator = rhs.GetCollection()->MakeIterator();
+         fIterator->operator=(*rhs.fIterator);
+      }
    }
    return *this;
 }
