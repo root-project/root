@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -284,7 +284,7 @@ void TCollection::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TCollection::Write(const char *name, Int_t option, Int_t bsize)
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
 {
    // Write all objects in this collection. By default all objects in
    // the collection are written individually (each object gets its
@@ -292,9 +292,16 @@ void TCollection::Write(const char *name, Int_t option, Int_t bsize)
    // set option to kSingleKey (i.e. 1).
 
    if ((option & kSingleKey)) {
-      TObject::Write(name, option, bsize);
+      return TObject::Write(name, option, bsize);
    } else {
       this->ForEach(TObject,Write)(name, option, bsize);
+      Int_t nbytes = 0;
+      TIter next(this);
+      TObject *obj;
+      while ((obj = next())) {
+         nbytes += obj->TObject::Write(name, option, bsize);
+      }
+      return nbytes;
    }
 }
 

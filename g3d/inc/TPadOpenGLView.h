@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@ class TPadOpenGLView : public TPadView3D
    Float_t       fStep[3];      // the steps to move object with keyboard interactions
    Bool_t        fResetView;    // Flag whether we need to reset OpenGL view from the TPad::GetView();
    Bool_t        fPerspective;  // Flag to switch between the perspectibe and orthographic projection view
+   Bool_t        fStereoFlag;   // Flag to switch the stereo and normal view
    Double_t      fExtraRotMatrix[16]; // The current GL projection rotation matrix defined via "mouse"
    EDrawMode     fCurrentMode;
 

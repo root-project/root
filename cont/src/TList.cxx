@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.2 2000/06/27 15:09:54 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -308,8 +308,11 @@ TObject *TList::Before(TObject *obj) const
 void TList::Clear(Option_t *option)
 {
    // Remove all objects from the list. Does not delete the objects.
+   // If option="nodelete" then don't delete any heap objects that were
+   // marked with the kCanDelete bit, otherwise these objects will be
+   // deleted.
 
-   Bool_t nodel = !strcmp(option, "nodelete") ? kTRUE : kFALSE;
+   Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    while (fFirst) {
       TObjLink *tlk = fFirst;
@@ -327,21 +330,45 @@ void TList::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TList::Delete(Option_t *)
+void TList::Delete(Option_t *option)
 {
    // Remove all objects from the list AND delete all heap based objects.
+   // If option="slow" then keep list consistent during delete. This allows
+   // recursive list operations during the delete (e.g. during the dtor
+   // of an object in this list one can still access the list to search for
+   // other not yet deleted objects).
 
-   TObjLink *first = fFirst;    //pointer to first entry in linked list
-   fFirst  = fLast = fCache = 0;
-   fSize   = 0;
-   while (first) {
-      TObjLink *tlk = first;
-      first = first->Next();
-      // delete only heap objects
-      if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-         TCollection::GarbageCollect(tlk->GetObject());
+   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-      delete tlk;
+   if (slow) {
+
+      while (fFirst) {
+         TObjLink *tlk = fFirst;
+         fFirst = fFirst->Next();
+         fSize--;
+         // delete only heap objects
+         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
+            TCollection::GarbageCollect(tlk->GetObject());
+
+         delete tlk;
+      }
+      fFirst = fLast = fCache = 0;
+      fSize  = 0;
+
+   } else {
+
+      TObjLink *first = fFirst;    //pointer to first entry in linked list
+      fFirst = fLast = fCache = 0;
+      fSize  = 0;
+      while (first) {
+         TObjLink *tlk = first;
+         first = first->Next();
+         // delete only heap objects
+         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
+            TCollection::GarbageCollect(tlk->GetObject());
+
+         delete tlk;
+      }
    }
 }
 

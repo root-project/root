@@ -1,0 +1,194 @@
+// lib/prec_stl/set
+
+#pragma ifndef PREC_STL_SET
+#pragma define PREC_STL_SET
+#pragma link off global PREC_STL_SET;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// Imported from ANSI/ISO C++ 1997/Nov draft
+// Got some ideas from Scott Snyder, Fermi-lab
+// Modified by Masaharu Goto
+// SGI KCC porting by Philippe Canal, Fermi-lab
+
+#include <utility>
+#include <memory>
+#include <iterator>
+#include <functional>
+
+#if defined(G__GNUC)
+template<class Key,class Compare=less<Key>
+        ,class Allocator=alloc>
+#elif defined(G__HPUX)
+template<class Key,class Compare=less<Key>
+        ,class Allocator=allocator>
+#else
+template<class Key,class Compare=less<Key>
+        ,class Allocator=allocator<Key> >
+#endif
+class set {
+ public:
+  // types:
+  typedef Key                                   key_type;
+  typedef Key                                   value_type;
+  typedef Compare                               key_compare;
+  typedef Compare                               value_compare;
+  typedef Allocator                             allocator_type;
+#if defined(G__GNUC) || defined(G__HPUX)
+  typedef Key*                                  pointer;
+  typedef const Key*                            const_pointer;
+  typedef Key&                                  reference;
+  typedef const Key&                            const_reference;
+  typedef size_t                                size_type;
+  typedef ptrdiff_t                             difference_type;
+#else
+  typedef typename Allocator::pointer           pointer;
+  typedef typename Allocator::const_pointer     const_pointer;
+  typedef typename Allocator::reference         reference;
+  typedef typename Allocator::const_reference   const_reference;
+  typedef typename Allocator::size_type         size_type;
+  typedef typename Allocator::difference_type   difference_type;
+#endif
+
+  class iterator
+#if defined(G__VISUAL)
+	: public _Bidit<Key,difference_type>
+#elif !defined(G__SUNPRO_C)
+  	: public bidirectional_iterator<Key,difference_type>
+#endif
+	{
+   public:
+    iterator() ;
+    iterator(const iterator& x) ;
+#if !defined(G__BORLAND) && !defined(G__KCC)
+    iterator& operator=(const iterator& x) ;
+#endif
+#if defined(G__VISUAL) || defined(G__GNUC)
+    value_type operator*() const;
+#else
+    value_type& operator*() const;
+#endif
+    iterator& operator++();
+    iterator operator++(int a);
+    iterator& operator--();
+    iterator operator--(int a);
+#ifdef G__VISUAL
+    bool operator==(const iterator& x) ;
+    bool operator!=(const iterator& x) ;
+#endif
+#ifdef G__HPUX
+    bool operator==(const iterator& x) ;
+#endif
+  };
+#ifdef G__GNUC
+  friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
+  friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
+#endif
+#ifdef G__HPUX
+  friend bool operator!=(const set::iterator& x,const set::iterator& y)const;
+#endif
+
+  class reverse_iterator
+#if defined(G__VISUAL)
+	: public _Bidit<Key,difference_type>
+#elif !defined(G__SUNPRO_C)
+  	: public bidirectional_iterator<Key,difference_type>
+#endif
+	{
+   public:
+    reverse_iterator(const reverse_iterator& x);
+#if !defined(G__BORLAND) && !defined(G__KCC)
+    reverse_iterator& operator=(const reverse_iterator& x) ;
+#endif
+#if defined(G__VISUAL) || defined(G__GNUC)
+    value_type operator*() const;
+#else
+    value_type& operator*() const;
+#endif
+    reverse_iterator& operator++();
+    reverse_iterator operator++(int a);
+    reverse_iterator& operator--();
+    reverse_iterator operator--(int a);
+   private:
+  };
+  friend bool operator==(const set::reverse_iterator& x
+                        ,const set::reverse_iterator& y) const;
+  friend bool operator!=(const set::reverse_iterator& x
+                        ,const set::reverse_iterator& y) const;
+
+  typedef const iterator const_iterator;
+  typedef const reverse_iterator const_reverse_iterator;
+
+  // _lib.set.cons_ construct/copy/destroy:
+  //set(const Compare& comp=Compare(), const Allocator&=Allocator());
+  set();
+#if 0
+  template <class InputIterator>
+   set(InputIterator first, InputIterator last,
+       const Compare& comp = Compare(), const Allocator& = Allocator());
+#endif
+  set(const set& x);
+  ~set();
+  set& operator= (const set& x);
+  //allocator_type get_allocator() const;
+  // iterators:
+  iterator               begin();
+  iterator               end();
+  reverse_iterator       rbegin();
+  reverse_iterator       rend();
+#ifdef G__CONSTNESSFLAG
+  const_iterator begin(void) const;
+  const_iterator end(void) const;
+  const_reverse_iterator rbegin(void) const;
+  const_reverse_iterator rend(void) const;
+#endif
+
+  // capacity:
+  bool          empty() const;
+  size_type     size() const;
+  size_type     max_size() const;
+  // modifiers:
+  //pair<iterator,bool> insert(const Key& x);
+  iterator            insert(iterator position, const Key& x);
+#if 0
+  template <class InputIterator>
+   void insert(InputIterator first, InputIterator last);
+#endif
+  void      erase(iterator position);
+#if 0
+  size_type erase(const key& x);
+#endif
+  void      erase(iterator first, iterator last);
+  void swap(set<Key,Compare,Allocator>&);
+  void clear();
+  // observers:
+  //key_compare   key_comp() const;
+  //value_compare value_comp() const;
+  // set operations:
+#ifndef G__HPUX
+  iterator  find(const Key& x) const;
+#else
+  iterator  find(const Key& x) ;
+#endif
+  size_type count(const Key& x) const;
+#ifndef G__HPUX
+  iterator  lower_bound(const Key& x) const;
+  iterator  upper_bound(const Key& x) const;
+#else
+  iterator  lower_bound(const Key& x) ;
+  iterator  upper_bound(const Key& x) ;
+#endif
+  //pair<iterator,iterator> equal_range(const Key& x) const;
+
+  friend bool operator==(const set& x, const set& y);
+  friend bool operator< (const set& x, const set& y);
+  friend bool operator!=(const set& x, const set& y);
+  friend bool operator> (const set& x, const set& y);
+  friend bool operator>=(const set& x, const set& y);
+  friend bool operator<=(const set& x, const set& y);
+  // specialized algorithms:
+  //friend void swap(set& x, set& y);
+
+};
+
+#pragma endif

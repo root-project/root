@@ -319,6 +319,15 @@ G__value result3;
 				       ,&store_result,ttt);
     return(store_result);
   }    
+#ifndef G__OLDIMPLEMENTATION1332
+  else if('u'==store_result.type && strcmp(casttype,"bool")==0) {
+    char ttt[G__ONELINE];
+    G__fundamental_conversion_operator(type ,G__defined_tagname("bool",2)
+				       ,-1 ,reftype,isconst
+				       ,&store_result,ttt);
+    return(store_result);
+  }
+#endif
 #endif
 
   if(type=='\0') {

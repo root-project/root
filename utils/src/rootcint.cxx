@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name$:$Id$
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.3 2000/08/11 20:21:55 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -338,11 +338,11 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             if (m.Property() & G__BIT_ISPOINTER)
                fprintf(fp, "         %s = new %s;\n", m.Name(), m.Type()->Name());
             fprintf(fp, "         int R__i, R__n;\n");
-            const char *s = TemplateArg(m).Name();
-            if (!strncmp(s, "const ", 6)) s += 6;
-            fprintf(fp, "         %s R__t;\n", s);
             fprintf(fp, "         R__b >> R__n;\n");
             fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
+            const char *s = TemplateArg(m).Name();
+            if (!strncmp(s, "const ", 6)) s += 6;
+            fprintf(fp, "            %s R__t;\n", s);
             if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
                 (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
                 (TemplateArg(m).Property() & G__BIT_ISENUM)) {
@@ -498,7 +498,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
    // In case of error, or if the size is not specified, GrabIndex returns 0.
 
    int error;
-   char *where;
+   char *where = 0;
 
    const char *index = member.ValidArrayIndex(&error, &where);
    if (index==0 && printError) {
@@ -520,8 +520,13 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
             errorstring = "UNKNOWN ERROR!!!!";
       }
 
-      fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
-              member.MemberOf()->Name(), member.Name(), where, errorstring);
+      if (where==0) {
+         fprintf(stderr,"*** Datamember %s::%s: no size indication!\n",
+                 member.MemberOf()->Name(), member.Name());
+      } else {
+         fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
+                   member.MemberOf()->Name(), member.Name(), where, errorstring);
+      }
    }
    return index;
 }

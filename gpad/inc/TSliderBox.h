@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
 
 public:
    TSliderBox();
-   TSliderBox(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2,
+   TSliderBox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
               Color_t color=18, Short_t bordersize=2 ,Short_t bordermode=-1);
    virtual ~TSliderBox();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);

@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name$:$Id$
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -54,6 +54,8 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, In
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TRFIOFile
    // object. Use IsZombie() to see if the file is accessable.
+   // For a description of the option and other arguments see the TFile ctor.
+   // The preferred interface to this constructor is via TFile::Open().
 
    fOption = option;
    fOffset = 0;
@@ -104,10 +106,10 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, In
    }
    if (update) {
       if (::rfio_access(fname, kFileExists) != 0) {
-         Error("TRFIOFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (::rfio_access(fname, kWritePermission) != 0) {
+      if (update && ::rfio_access(fname, kWritePermission) != 0) {
          Error("TRFIOFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }

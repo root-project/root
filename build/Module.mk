@@ -1,4 +1,4 @@
-# Module.mk for rootx module
+# Module.mk for build module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000

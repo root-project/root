@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -31,6 +31,7 @@ TLeafObject::TLeafObject(): TLeaf()
 //*-*        =================================
    fClass      = 0;
    fObjAddress = 0;
+   fVirtual    = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -44,6 +45,7 @@ TLeafObject::TLeafObject(const char *name, const char *type)
   SetTitle(type);
   fClass      = gROOT->GetClass(type);
   fObjAddress = 0;
+  fVirtual    = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -63,6 +65,11 @@ void TLeafObject::FillBasket(TBuffer &b)
 
    TObject *object  = GetObject();
    if (object) {
+      if (fVirtual) {
+         UChar_t n = strlen(object->ClassName());
+         b << n;
+         b.WriteFastArray(object->ClassName(),n+1);
+      }
       object->Streamer(b);
    } else {
      if (fClass) {
@@ -114,6 +121,13 @@ void TLeafObject::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
+   char classname[128];
+   UChar_t n;
+   if (fVirtual) {
+      b >> n;
+      b.ReadFastArray(classname,n+1);
+      fClass      = gROOT->GetClass(GetTitle());
+   }
    if (fClass) {
       TObject *object;
       if (!fObjAddress) {
@@ -155,12 +169,13 @@ void TLeafObject::Streamer(TBuffer &b)
    // Stream an object of class TLeafObject.
 
    if (b.IsReading()) {
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      Version_t v = b.ReadVersion();
       TLeaf::Streamer(b);
       fObjAddress = 0;
       fClass  = gROOT->GetClass(fTitle.Data());
       if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
-      } else {
+      if (v < 1) fVirtual = kFALSE;
+   } else {
       b.WriteVersion(TLeafObject::IsA());
       TLeaf::Streamer(b);
    }

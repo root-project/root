@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -51,13 +51,13 @@ friend class TSlave;
 
 private:
    TString   fCluster;       //name of cluster, name will be used to find config file
-   TString   fService;       //service we are connected to, either "proofserv" or "proofslave"
-   TString   fMaster;        //name of master server (in case of "proofserv")
+   TString   fMaster;        //name of master server (in case this is a master)
    TString   fVersion;       //proof server major version
    TString   fConfDir;       //directory containing cluster config information
    TString   fConfFile;      //file containing config information
    TString   fUser;          //user under which to run
    TString   fPasswd;        //user password
+   Int_t     fPort;          //port we are connected to (proofd = 1093)
    Int_t     fProtocol;      //protocol level
    Int_t     fLogLevel;      //server debug logging level
    Bool_t    fMasterServ;    //true if we are a master server
@@ -72,7 +72,7 @@ private:
    TTree    *fTree;          //Object being PROOFed
    Int_t     fLimits;        //Used by Limits()
 
-   Int_t     Init(const char *cluster, const char *service, const char *master,
+   Int_t     Init(const char *cluster, Int_t port, const char *master,
                   const char *vers, Int_t loglevel, const char *confdir);
    Int_t     Collect(TMonitor *mon);
    void      ConnectFiles();
@@ -92,20 +92,20 @@ public:
    enum ESlaves { kAll, kActive };
    enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
-   TProof(const char *cluster, const char *master = "pcna49a.cern.ch",
-          const char *vers = kPROOF_Version, const char *service = "proofslave",
+   TProof(const char *cluster, const char *master = "",
+          const char *vers = kPROOF_Version, Int_t port = 1093,
           Int_t loglevel = 1, const char *confdir = "/usr/proof");
    virtual ~TProof();
 
    void    Close(Option_t *option="");
 
    const char *GetClusterName() const { return fCluster.Data(); }
-   const char *GetService() const { return fService.Data(); }
    const char *GetMaster() const { return fMaster.Data(); }
    const char *GetConfDir() const { return fConfDir.Data(); }
    const char *GetConfFile() const { return fConfFile.Data(); }
    const char *GetUser() const { return fUser.Data(); }
    const char *GetVersion() const { return fVersion.Data(); }
+   Int_t       GetPort() const { return fPort; }
    Int_t       GetProtocol() const { return fProtocol; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    void        SetLogLevel(Int_t level);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -42,12 +42,12 @@ protected:
 
 public:
         TPaveText();
-        TPaveText(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2, Option_t *option="br");
+        TPaveText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
         TPaveText(const TPaveText &pavetext);
         virtual ~TPaveText();
-        virtual TBox    *AddBox(Float_t x1, Float_t y1, Float_t x2, Float_t y2);
-        virtual TLine   *AddLine(Float_t x1=0, Float_t y1=0, Float_t x2=0, Float_t y2=0);
-        virtual TText   *AddText(Float_t x1, Float_t y1, const char *label);
+        virtual TBox    *AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
+        virtual TLine   *AddLine(Double_t x1=0, Double_t y1=0, Double_t x2=0, Double_t y2=0);
+        virtual TText   *AddText(Double_t x1, Double_t y1, const char *label);
         virtual TText   *AddText(const char *label);
         virtual void     Clear(Option_t *option="");  // *MENU*
                 void     Copy(TObject &pavetext);
@@ -60,7 +60,7 @@ public:
         virtual TText   *GetLineWith(const char *text);
         virtual TList   *GetListOfLines() {return fLines;}
               Float_t    GetMargin() {return fMargin;}
-        virtual TObject *GetObject(Float_t &ymouse, Float_t &yobj);
+        virtual TObject *GetObject(Double_t &ymouse, Double_t &yobj);
         virtual Int_t    GetSize();
         virtual void     InsertLine(); // *MENU*
         virtual void     InsertText(const char *label); // *MENU*
@@ -70,7 +70,7 @@ public:
         virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
         virtual void     SaveLines(ofstream &out, const char *name);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetAllWith(const char *text, Option_t *option, Float_t value); // *MENU*
+        virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
         virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*
         virtual void     SetMargin(Float_t margin=0.05) {fMargin=margin;} // *MENU*
 

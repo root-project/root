@@ -20,6 +20,7 @@ CINTCXXFLAGS  = -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL $(EXTRA_CXXFLAGS) \
 CINTCFLAGS    = -Ae -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO \
                 -D__STDCPP__ $(EXTRA_CFLAGS)
+CPPPREP       = /opt/langtools/lbin/cpp.ansi -Z -D__STDCPP_ -E -C
 
 # Linker:
 LD            = aCC
@@ -39,3 +40,6 @@ F77FLAGS      = -K +ppu
 F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/contrib/X11R6/lib -lXext -lXmu -lXi -lX11

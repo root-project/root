@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name$:$Id$ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.3 2000/07/06 16:47:54 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -50,12 +50,19 @@
 #pragma link C++ class TGFileInfo;
 #pragma link C++ class TGStatusBar;
 #pragma link C++ class TGToolTip;
-#pragma link C++ class TGTextFrame;
-#pragma link C++ class TGTextView;
 #pragma link C++ class TGToolBar;
 #pragma link C++ class TGListTreeItem;
 #pragma link C++ class TGListTree;
 #pragma link C++ class TGHorizontal3DLine;
 #pragma link C++ class TGText;
+#pragma link C++ class TGTextLine;
+#pragma link C++ class TGView;
+#pragma link C++ class TGViewFrame;
+#pragma link C++ class TGTextView;
+#pragma link C++ class TGTextEdit;
+#pragma link C++ class TGSearchDialog;
+#pragma link C++ class TGPrintDialog;
+#pragma link C++ class TGGotoDialog;
+#pragma link C++ class TGSearchType;
 
 #endif

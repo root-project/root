@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.2 2000/07/03 18:45:01 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -365,6 +365,8 @@ void TGWin32::Bell(Int_t percent)
 //______________________________________________________________________________
  void         TGWin32::ChangeWindowAttributes(Window_t, SetWindowAttributes_t *) { }
 //______________________________________________________________________________
+ void         TGWin32::ChangeProperty(Window_t, Atom_t, Atom_t, UChar_t *, Int_t) { }
+//______________________________________________________________________________
  void TGWin32::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
   SafeCallW32(id)
@@ -472,7 +474,9 @@ void TGWin32::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 //______________________________________________________________________________
  void         TGWin32::SetInputFocus(Window_t) { }
 //______________________________________________________________________________
- void         TGWin32::ConvertPrimarySelection(Window_t, Time_t) { }
+ void         TGWin32::SetPrimarySelectionOwner(Window_t) { }
+//______________________________________________________________________________
+ void         TGWin32::ConvertPrimarySelection(Window_t, Atom_t, Time_t) { }
 //______________________________________________________________________________
  void         TGWin32::LookupString(Event_t *, char *, Int_t, UInt_t &keysym) { keysym = 0; }
 //______________________________________________________________________________

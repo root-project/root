@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.3 2000/07/29 10:54:23 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -537,7 +537,7 @@ ULong_t TObject::Hash()
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const char *classname)
+Bool_t TObject::InheritsFrom(const char *classname) const
 {
    // Returns kTRUE if object inherits from class "classname".
 
@@ -545,7 +545,7 @@ Bool_t TObject::InheritsFrom(const char *classname)
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const TClass *cl)
+Bool_t TObject::InheritsFrom(const TClass *cl) const
 {
    // Returns kTRUE if object inherits from TClass cl.
 
@@ -656,7 +656,7 @@ void TObject::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-void TObject::Read(const char *name)
+Int_t TObject::Read(const char *name)
 {
    // Read contents of object with specified name from the current directory.
    // First the key with the given name is searched in the current directory,
@@ -664,10 +664,10 @@ void TObject::Read(const char *name)
    // The object must have been created before via the default constructor.
    // See TObject::Write().
 
-   if (!gFile) { Error("Read","No file open"); return; }
+   if (!gFile) { Error("Read","No file open"); return 0; }
    TKey *key = (TKey*)gDirectory->GetListOfKeys()->FindObject(name);
-   if (!key)   { Error("Read","Key not found"); return; }
-   key->Read(this);
+   if (!key)   { Error("Read","Key not found"); return 0; }
+   return key->Read(this);
 }
 
 //______________________________________________________________________________
@@ -747,7 +747,7 @@ void TObject::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-void TObject::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
 {
    // Write this object to the current directory
    // The data structure corresponding to this object is serialized.
@@ -790,18 +790,18 @@ void TObject::Write(const char *name, Int_t option, Int_t bufsize)
 
    if (!gFile) {
       Error("Write","No file open");
-      return;
+      return 0;
    }
    if (!gFile->IsWritable()) {
       Error("Write","File %s is not writable", gFile->GetName());
-      return;
+      return 0;
    }
 
    // Special case for directories. Directory key already written
    if (IsA() == TDirectory::Class()) {
       TDirectory *dir = (TDirectory*)this;
       dir->Write();
-      return;
+      return 0;
    }
    TKey *key;
    Int_t bsize = bufsize;
@@ -834,10 +834,10 @@ void TObject::Write(const char *name, Int_t option, Int_t bufsize)
    if (!key->GetSeekKey()) {
       gDirectory->GetListOfKeys()->Remove(key);
       delete key;
-      return;
+      return 0;
    }
    gFile->SumBuffer(key->GetObjlen());
-   key->WriteFile(0);
+   return key->WriteFile(0);
 }
 
 //______________________________________________________________________________
@@ -990,7 +990,7 @@ void TObject::SetDtorOnly(void *obj)
 void TObject::operator delete(void *ptr)
 {
    if ((Long_t) ptr != fgDtorOnly)
-      ::operator delete(ptr);
+      TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
 }
@@ -1001,6 +1001,6 @@ void TObject::operator delete(void *ptr, void *vp)
 {
    // Only called by placement new when throwing an exception.
 
-   if (ptr && vp) { }
+   TStorage::ObjectDealloc(ptr, vp);
 }
 #endif

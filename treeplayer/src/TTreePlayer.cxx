@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.17 2000/08/11 20:39:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -253,6 +253,8 @@
 #include "Foption.h"
 #include "TTreeResult.h"
 #include "TTreeRow.h"
+#include "TPrincipal.h"
+#include "Api.h"
 
 R__EXTERN Foption_t Foption;
 
@@ -274,7 +276,6 @@ TTreePlayer::TTreePlayer()
    fVar4           = 0;
    fSelect         = 0;
    fDraw           = 0;
-   fSelector       = 0;
    fPacketGen      = 0;
    fPacketSize     = 100;
    fHistogram      = 0;
@@ -340,7 +341,7 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
-      if (fSelect->GetMultiplicity() == 1) fMultiplicity = fSelect;
+      if (fSelect->GetMultiplicity() >= 1) fMultiplicity = fSelect;
       if (fSelect->GetMultiplicity() == -1) force = 4;
    }
 //*-*- if varexp is empty, take first column by default
@@ -358,19 +359,19 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
       if (!fVar1->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar1->GetMultiplicity() == 1) fMultiplicity = fVar1;
+      if (!fMultiplicity && fVar1->GetMultiplicity() >= 1) fMultiplicity = fVar1;
       if (!force && fVar1->GetMultiplicity() == -1) force = 1;
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
       if (!fVar2->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar2->GetMultiplicity() == 1) fMultiplicity = fVar2;
+      if (!fMultiplicity && fVar2->GetMultiplicity() >= 1) fMultiplicity = fVar2;
       if (!force && fVar2->GetMultiplicity() == -1) force = 2;
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
       if (!fVar3->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar3->GetMultiplicity()  == 1) fMultiplicity = fVar3;
+      if (!fMultiplicity && fVar3->GetMultiplicity()  >= 1) fMultiplicity = fVar3;
       if (!force && fVar3->GetMultiplicity() == -1) force = 3;
    }
    if (force) fTree->SetBit(TTree::kForceRead);
@@ -456,7 +457,7 @@ void TTreePlayer::CreatePacketGenerator(Int_t nentries, Stat_t firstEntry)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -496,6 +497,79 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //  nentries is the number of entries to process (default is all)
 //  first is the first entry to process (default is 0)
 //
+//     Drawing expressions using arrays and array elements
+//     ===================================================
+// Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
+// or a TClonesArray. 
+// In a TTree::Draw expression you can now access fMatrix using the following 
+// syntaxes:
+// 
+//   String passed    What is used for each entry of the tree
+// 
+//   "fMatrix"       the 9 elements of fMatrix
+//   "fMatrix[][]"   the 9 elements of fMatrix
+//   "fMatrix[2][2]" only the elements fMatrix[2][2]
+//   "fMatrix[1]"    the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[1][]"  the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
+//   "fMatrix[][0]"  the 3 elements fMatrix[0][0], fMatrix[1][0] and fMatrix[2][0]
+// 
+//   "fEvent.fMatrix...." same as "fMatrix..." (unless there is more than one leaf named fMatrix!).
+// 
+// In summary, if a specific index is not specified for a dimension, TTree::Draw
+// will loop through all the indices along this dimension.  Leaving off the
+// last (right most) dimension of specifying then with the two characters '[]' 
+// is equivalent.  For variable size arrays (and TClonesArray) the range
+// of the first dimension is recalculated for each entry of the tree.
+// 
+// TTree::Draw also now properly handling operations involving 2 or more arrays.
+// 
+// Let assume a second matrix fResults[5][2], here are a sample of some 
+// of the possible combinations, the number of elements they produce and
+// the loop used:
+//  
+//  expression                       element(s)  Loop
+// 
+//  "fMatrix[2][1] - fResults[5][2]"   one     no loop
+//  "fMatrix[2][]  - fResults[5][2]"   three   on 2nd dim fMatrix
+//  "fMatrix[2][]  - fResults[5][]"    two     on both 2nd dimensions
+//  "fMatrix[][2]  - fResults[][1]"    three   on both 1st dimensions
+//  "fMatrix[][2]  - fResults[][]"     six     on both 1st and 2nd dimensions of
+//                                             fResults
+//  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of 
+//                                             fResults (at the same time)
+//  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim 
+//  
+// 
+// In summary, TTree::Draw loops through all un-specified dimensions.  To
+// figure out the range of each loop, we match each unspecified dimension 
+// from left to right (ignoring ALL dimensions for which an index has been 
+// specified), in the equivalent loop matched dimensions use the same index 
+// and are restricted to the smallest range (of only the matched dimensions).
+// When involving variable arrays, the range can of course be different
+// for each entry of the tree.
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
+// 
+//    for (Int_t i0; i < min(3,2); i++) {
+//       use the value of (fMatrix[i0][2] - fMatrix[3][i0])
+//    }
+// 
+// So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < 2; i1++) { 
+//          use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
+//       }
+//    }
+// 
+// So the loop equivalent to "fMatrix[][] - fResults[][]" is:
+// 
+//    for (Int_t i0; i < min(3,5); i++) {
+//       for (Int_t i1; i1 < min(3,2); i1++) { 
+//          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
+//       }
+//    }
+// 
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
@@ -599,7 +673,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //       - type the command  "TTreeViewer TV(treeName)"
 //       - execute statement "tree->StartViewer();"
 //
-   if (fTree->GetEntries() == 0) return;
+   if (fTree->GetEntries() == 0) return 0;
    TString  opt;
    char *hdefault = (char *)"htemp";
    char *varexp;
@@ -658,7 +732,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //*-*- Decode varexp and selection
 
    CompileVariables(varexp, selection);
-   if (!fVar1 && !elist) return;
+   if (!fVar1 && !elist) return -1;
 
 //*-*- In case oldh1 exists, check dimensionality
    Int_t nsel = strlen(selection);
@@ -688,7 +762,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //*-*- Create a default canvas if none exists
    fDraw = 0;
    if (!gPad && !gProofServ && !opt.Contains("goff") && fDimension > 0) {
-      if (!gROOT->GetMakeDefCanvas()) return;
+      if (!gROOT->GetMakeDefCanvas()) return -1;
       (gROOT->GetMakeDefCanvas())();
    }
 
@@ -745,7 +819,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
          gProof->SendObject(h1);
          if (!hkeep) delete h1;
          char *mess = new char[strlen(varexp0)+strlen(selection)+strlen(option)+128];
-         sprintf(mess, "%s %d %d", GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
+         sprintf(mess, "%s %d %d", fTree->GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
          gProof->Broadcast(mess, kPROOF_TREEDRAW);
          sprintf(mess,"%s->Draw(\"%s\",\"%s\",\"%s\",%d,%d)", fTree->GetName(), varexp0,
                  selection, option, nentries, firstentry);
@@ -901,8 +975,8 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
                 fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
              } else {
                 TView *view = gPad->GetView();
-                Float_t *rmin = view->GetRmin();
-                Float_t *rmax = view->GetRmax();
+                Double_t *rmin = view->GetRmin();
+                Double_t *rmax = view->GetRmax();
                 fNbins[2] = 20;
                 fVmin[2]  = rmin[0];
                 fVmax[2]  = rmax[0];
@@ -956,6 +1030,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
       fTree->SetEstimate(oldEstimate);
    }
    if (hkeep) delete [] varexp;
+   return fSelectedRows;
 }
 
 //______________________________________________________________________________
@@ -998,12 +1073,13 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       timer = new TProcessEventTimer(interval);
 
    npoints = 0;
-   if (!fV1 && fVar1)   fV1 = new Float_t[fTree->GetEstimate()];
-   if (!fV2 && fVar2)   fV2 = new Float_t[fTree->GetEstimate()];
-   if (!fV3 && fVar3)   fV3 = new Float_t[fTree->GetEstimate()];
+   if (!fV1 && fVar1)   fV1 = new Double_t[fTree->GetEstimate()];
+   if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
+   if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
-   Int_t force = TestBit(TTree::kForceRead);
+   Int_t force = fTree->TestBit(TTree::kForceRead);
    if (!fMultiplicity || !fDimension) {
+      Bool_t available = kTRUE;
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -1011,27 +1087,29 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (gROOT->IsInterrupted()) break;
          fTree->LoadTree(entryNumber);
          if (fSelect) {
-            if (force) fSelect->GetNdata();
+            if (force) { available = (fSelect->GetNdata()>0); };
             fW[fNfill] = fSelect->EvalInstance(0);
             if (!fW[fNfill]) continue;
          } else fW[fNfill] = 1;
          if (fVar1) {
-            if (force) fVar1->GetNdata();
+            if (force) { available = (fVar1->GetNdata()>0); };
             fV1[fNfill] = fVar1->EvalInstance(0);
          }
          if (fVar2) {
-            if (force) fVar2->GetNdata();
+            if (force) { available = (fVar2->GetNdata()>0); };
             fV2[fNfill] = fVar2->EvalInstance(0);
             if (fVar3) {
-               if (force) fVar3->GetNdata();
+               if (force) { available = (fVar3->GetNdata()>0); };
                fV3[fNfill] = fVar3->EvalInstance(0);
             }
          }
-         fNfill++;
-         if (fNfill >= fTree->GetEstimate()) {
-            TakeAction(fNfill,npoints,action,obj,option);
-            fNfill = 0;
-         }
+         if (available) {
+            fNfill++;
+            if (fNfill >= fTree->GetEstimate()) {
+               TakeAction(fNfill,npoints,action,obj,option);
+               fNfill = 0;
+            }
+         } else available = kTRUE;
       }
 
       // nentries == -1 when all entries have been processed by proofserver
@@ -1167,17 +1245,17 @@ void TTreePlayer::EstimateLimits(Int_t, Int_t nentries, Int_t firstentry)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax)
+void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax)
 {
 //*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
 
    static TGaxis gaxis_tree;
-   Float_t binlow,binhigh,binwidth;
+   Double_t binlow,binhigh,binwidth;
    Int_t n;
-   Float_t dx = 0.1*(xmax-xmin);
-   Float_t umin = xmin - dx;
-   Float_t umax = xmax + dx;
+   Double_t dx = 0.1*(xmax-xmin);
+   Double_t umin = xmin - dx;
+   Double_t umax = xmax + dx;
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
@@ -1195,7 +1273,7 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Flo
 }
 
 //______________________________________________________________________________
-void TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -1218,13 +1296,14 @@ void TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selec
    if (option) sprintf(opt,"%sgoff",option);
    else        strcpy(opt,"goff");
 
-   DrawSelect(varexp,selection,opt,nentries,firstentry);
+   Int_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
    delete [] opt;
 
    if (fHistogram) {
       fHistogram->Fit(formula,option,goption);
    }
+   return nsel;
 }
 
 //______________________________________________________________________________
@@ -1259,43 +1338,16 @@ void TTreePlayer::GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry,
 }
 
 //______________________________________________________________________________
-TSelector *TTreePlayer::GetSelector()
-{
-//*-*-*-*-*-*Return current selector or create default selector
-//*-*        ==================================================
-
-   if (fSelector) return fSelector;
-   fSelector = new TSelector("selector.C","The default macro selector");
-   fSelector->Init(fTree);
-   return fSelector;
-}
-
-//______________________________________________________________________________
 void TTreePlayer::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Loop on nentries of this tree starting at firstentry
 //*-*              ===================================================
 
-   GetSelector();
-
-//*-* Do not process more than fMaxEntryLoop entries
-   if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
-   Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry = (Int_t)fTree->GetEntries() -1;
-   }
-
-   fSelector->Start(option);
-
-   for (Int_t entry = firstentry;entry<=lastentry;entry++) {
-      fSelector->Execute(fTree, entry);
-   }
-
-   fSelector->Finish(option);
+   Warning("Loop","Obsolete function");
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::MakeClass(const char *classname)
+Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 {
 //====>
 //*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
@@ -1303,6 +1355,9 @@ Int_t TTreePlayer::MakeClass(const char *classname)
 //
 //   The following files are produced: classname.h and classname.C
 //   if classname is NULL, classname will be nameoftree.
+//
+//   When the option "selector" is specified, the function generates the
+//   selector class described in TTree::MakeSelector.
 //
 //   The generated code in classname.h includes the following:
 //      - Identification of the original Tree and Input file name
@@ -1331,7 +1386,10 @@ Int_t TTreePlayer::MakeClass(const char *classname)
 //
 //====>
 
-// Connect output files
+   TString opt = option;
+   opt.ToLower();
+   
+   // Connect output files
    char *thead = new char[256];
 
    if (!classname) classname = fTree->GetName();
@@ -1374,10 +1432,11 @@ Int_t TTreePlayer::MakeClass(const char *classname)
    fprintf(fp,"\n");
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
-
+   if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
+      
 // First loop on all leaves to generate dimension declarations
    Int_t len, lenb,l;
-   char blen[64];
+   char blen[128];
    char *bname;
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
@@ -1394,10 +1453,16 @@ Int_t TTreePlayer::MakeClass(const char *classname)
 
 // second loop on all leaves to generate type declarations
    fprintf(fp,"\n");
-   fprintf(fp,"class %s {\n",classname);
-   fprintf(fp,"   public :\n");
-   fprintf(fp,"   TTree          *fTree;    //pointer to the analyzed TTree or TChain\n");
-   fprintf(fp,"   Int_t           fCurrent; //current Tree number in a TChain\n");
+   if (opt.Contains("selector")) {
+      fprintf(fp,"class %s : public TSelector {\n",classname);
+      fprintf(fp,"   public :\n");
+      fprintf(fp,"   TTree          *fChain;   //pointer to the analyzed TTree or TChain\n");
+   } else {
+      fprintf(fp,"class %s {\n",classname);
+      fprintf(fp,"   public :\n");
+      fprintf(fp,"   TTree          *fChain;   //pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   Int_t           fCurrent; //current Tree number in a TChain\n");
+   }
    fprintf(fp,"//Declaration of leaves types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
@@ -1501,83 +1566,103 @@ Int_t TTreePlayer::MakeClass(const char *classname)
    }
 
 // generate class member functions prototypes
-   fprintf(fp,"\n");
-   fprintf(fp,"   %s(TTree *tree=0);\n",classname);
-   fprintf(fp,"   ~%s();\n",classname);
-   fprintf(fp,"   Int_t Cut(Int_t entry);\n");
-   fprintf(fp,"   Int_t GetEntry(Int_t entry);\n");
-   fprintf(fp,"   Int_t LoadTree(Int_t entry);\n");
-   fprintf(fp,"   void  Init(TTree *tree);\n");
-   fprintf(fp,"   void  Loop();\n");
-   fprintf(fp,"   void  Notify();\n");
-   fprintf(fp,"   void  Show(Int_t entry = -1);\n");
-   fprintf(fp,"};\n");
-   fprintf(fp,"\n");
-   fprintf(fp,"#endif\n");
-   fprintf(fp,"\n");
-
+   if (opt.Contains("selector")) {
+      fprintf(fp,"\n");
+      fprintf(fp,"   %s(TTree *tree=0) {;}\n",classname) ;
+      fprintf(fp,"   ~%s() {;}\n",classname);
+      fprintf(fp,"   void    Begin(TTree *tree);\n");
+      fprintf(fp,"   void    Init(TTree *tree);\n");
+      fprintf(fp,"   Bool_t  Notify();\n");
+      fprintf(fp,"   Bool_t  ProcessCut(Int_t entry);\n");
+      fprintf(fp,"   void    ProcessFill(Int_t entry);\n");
+      fprintf(fp,"   void    Terminate();\n");
+      fprintf(fp,"};\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"\n");
+   } else {
+      fprintf(fp,"\n");
+      fprintf(fp,"   %s(TTree *tree=0);\n",classname);
+      fprintf(fp,"   ~%s();\n",classname);
+      fprintf(fp,"   Int_t  Cut(Int_t entry);\n");
+      fprintf(fp,"   Int_t  GetEntry(Int_t entry);\n");
+      fprintf(fp,"   Int_t  LoadTree(Int_t entry);\n");
+      fprintf(fp,"   void   Init(TTree *tree);\n");
+      fprintf(fp,"   void   Loop();\n");
+      fprintf(fp,"   Bool_t Notify();\n");
+      fprintf(fp,"   void   Show(Int_t entry = -1);\n");
+      fprintf(fp,"};\n");
+      fprintf(fp,"\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"\n");
+   }
 // generate code for class constructor
    fprintf(fp,"#ifdef %s_cxx\n",classname);
-   fprintf(fp,"%s::%s(TTree *tree)\n",classname,classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
-   fprintf(fp,"// used to generate this class and read the Tree.\n");
-   fprintf(fp,"   if (tree == 0) {\n");
-   fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
-   fprintf(fp,"      if (!f) {\n");
-   fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
-   if (gDirectory != gFile) {
-     fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"%s::%s(TTree *tree)\n",classname,classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
+      fprintf(fp,"// used to generate this class and read the Tree.\n");
+      fprintf(fp,"   if (tree == 0) {\n");
+      fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
+      fprintf(fp,"      if (!f) {\n");
+      fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
+      if (gDirectory != gFile) {
+        fprintf(fp,"         f->cd(\"%s\");\n",gDirectory->GetPath());
+      }
+      fprintf(fp,"      }\n");
+      fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
+      fprintf(fp,"   }\n");
+      fprintf(fp,"   Init(tree);\n");
+      fprintf(fp,"}\n");
+      fprintf(fp,"\n");
    }
-   fprintf(fp,"      }\n");
-   fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
-   fprintf(fp,"   }\n");
-   fprintf(fp,"   Init(tree);\n");
-   fprintf(fp,"}\n");
-   fprintf(fp,"\n");
 
 // generate code for class destructor()
-   fprintf(fp,"%s::~%s()\n",classname,classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"   if (!fTree) return;\n");
-   fprintf(fp,"   delete fTree->GetCurrentFile();\n");
-   fprintf(fp,"}\n");
-   fprintf(fp,"\n");
-
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"%s::~%s()\n",classname,classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"   if (!fChain) return;\n");
+      fprintf(fp,"   delete fChain->GetCurrentFile();\n");
+      fprintf(fp,"}\n");
+      fprintf(fp,"\n");
+   }
 // generate code for class member function GetEntry()
-   fprintf(fp,"Int_t %s::GetEntry(Int_t entry)\n",classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"// Read contents of entry.\n");
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"Int_t %s::GetEntry(Int_t entry)\n",classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"// Read contents of entry.\n");
 
-   fprintf(fp,"   if (!fTree) return 0;\n");
-   fprintf(fp,"   return fTree->GetEntry(entry);\n");
-   fprintf(fp,"}\n");
-
+      fprintf(fp,"   if (!fChain) return 0;\n");
+      fprintf(fp,"   return fChain->GetEntry(entry);\n");
+      fprintf(fp,"}\n");
+   }
 // generate code for class member function LoadTree()
-   fprintf(fp,"Int_t %s::LoadTree(Int_t entry)\n",classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"// Set the environment to read one entry\n");
-   fprintf(fp,"   if (!fTree) return -5;\n");
-   fprintf(fp,"   Int_t centry = fTree->LoadTree(entry);\n");
-   fprintf(fp,"   if (centry < 0) return centry;\n");
-   fprintf(fp,"   if (fTree->IsA() != TChain::Class()) return centry;\n");
-   fprintf(fp,"   TChain *chain = (TChain*)fTree;\n");
-   fprintf(fp,"   if (chain->GetTreeNumber() != fCurrent) {\n");
-   fprintf(fp,"      fCurrent = chain->GetTreeNumber();\n");
-   fprintf(fp,"      Notify();\n");
-   fprintf(fp,"   }\n");
-   fprintf(fp,"   return centry;\n");
-   fprintf(fp,"}\n");
-   fprintf(fp,"\n");
-
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"Int_t %s::LoadTree(Int_t entry)\n",classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"// Set the environment to read one entry\n");
+      fprintf(fp,"   if (!fChain) return -5;\n");
+      fprintf(fp,"   Int_t centry = fChain->LoadTree(entry);\n");
+      fprintf(fp,"   if (centry < 0) return centry;\n");
+      fprintf(fp,"   if (fChain->IsA() != TChain::Class()) return centry;\n");
+      fprintf(fp,"   TChain *chain = (TChain*)fChain;\n");
+      fprintf(fp,"   if (chain->GetTreeNumber() != fCurrent) {\n");
+      fprintf(fp,"      fCurrent = chain->GetTreeNumber();\n");
+      fprintf(fp,"      Notify();\n");
+      fprintf(fp,"   }\n");
+      fprintf(fp,"   return centry;\n");
+      fprintf(fp,"}\n");
+      fprintf(fp,"\n");
+   }
 
 // generate code for class member function Init(), first pass = get branch pointer
    fprintf(fp,"void %s::Init(TTree *tree)\n",classname);
    fprintf(fp,"{\n");
    fprintf(fp,"//   Set branch addresses\n");
    fprintf(fp,"   if (tree == 0) return;\n");
-   fprintf(fp,"   fTree    = tree;\n");
-   fprintf(fp,"   fCurrent = -1;\n");
+   fprintf(fp,"   fChain    = tree;\n");
+   if (!opt.Contains("selector")) fprintf(fp,"   fCurrent = -1;\n");
    fprintf(fp,"\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
@@ -1609,7 +1694,7 @@ Int_t TTreePlayer::MakeClass(const char *classname)
       head = headOK;
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
-            fprintf(fp,"%sfTree->SetBranchAddress(\"%s\",(void*)-1);\n",head,branch->GetName());
+            fprintf(fp,"%sfChain->SetBranchAddress(\"%s\",(void*)-1);\n",head,branch->GetName());
             continue;
          }
          leafobj = (TLeafObject*)leaf;
@@ -1617,16 +1702,16 @@ Int_t TTreePlayer::MakeClass(const char *classname)
          strcpy(branchname,branch->GetName());
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
-      if (len > 1) fprintf(fp,"%sfTree->SetBranchAddress(\"%s\",%s);\n",head,branch->GetName(),branchname);
-      else         fprintf(fp,"%sfTree->SetBranchAddress(\"%s\",&%s);\n",head,branch->GetName(),branchname);
+      if (len > 1) fprintf(fp,"%sfChain->SetBranchAddress(\"%s\",%s);\n",head,branch->GetName(),branchname);
+      else         fprintf(fp,"%sfChain->SetBranchAddress(\"%s\",&%s);\n",head,branch->GetName(),branchname);
    }
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
 // generate code for class member function Notify()
-   fprintf(fp,"void %s::Notify()\n",classname);
+   fprintf(fp,"Bool_t %s::Notify()\n",classname);
    fprintf(fp,"{\n");
-   fprintf(fp,"//   called by LoadTree when loading a new file\n");
+   fprintf(fp,"//   called when loading a new file\n");
    fprintf(fp,"//   get branch pointers\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
@@ -1642,76 +1727,151 @@ Int_t TTreePlayer::MakeClass(const char *classname)
       head = headOK;
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
-            fprintf(fp,"%sb_%s = fTree->GetBranch(\"%s\");\n",head,branchname,branch->GetName());
+            fprintf(fp,"%sb_%s = fChain->GetBranch(\"%s\");\n",head,branchname,branch->GetName());
             continue;
          }
          leafobj = (TLeafObject*)leaf;
          if (!leafobj->GetClass()) head = headcom;
          strcpy(branchname,branch->GetName());
       }
-      fprintf(fp,"%sb_%s = fTree->GetBranch(\"%s\");\n",head,branchname,branch->GetName());
+      fprintf(fp,"%sb_%s = fChain->GetBranch(\"%s\");\n",head,branchname,branch->GetName());
    }
+   fprintf(fp,"   return kTRUE;\n");
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
 // generate code for class member function Show()
-   fprintf(fp,"void %s::Show(Int_t entry)\n",classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"// Print contents of entry.\n");
-   fprintf(fp,"// If entry is not specified, print current entry\n");
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"void %s::Show(Int_t entry)\n",classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"// Print contents of entry.\n");
+      fprintf(fp,"// If entry is not specified, print current entry\n");
 
-   fprintf(fp,"   if (!fTree) return;\n");
-   fprintf(fp,"   fTree->Show(entry);\n");
-   fprintf(fp,"}\n");
-
+      fprintf(fp,"   if (!fChain) return;\n");
+      fprintf(fp,"   fChain->Show(entry);\n");
+      fprintf(fp,"}\n");
+   }
 // generate code for class member function Cut()
-   fprintf(fp,"Int_t %s::Cut(Int_t entry)\n",classname);
-   fprintf(fp,"{\n");
-   fprintf(fp,"// This function may be called from Loop.\n");
-   fprintf(fp,"// returns  1 if entry is accepted.\n");
-   fprintf(fp,"// returns -1 otherwise.\n");
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"Int_t %s::Cut(Int_t entry)\n",classname);
+      fprintf(fp,"{\n");
+      fprintf(fp,"// This function may be called from Loop.\n");
+      fprintf(fp,"// returns  1 if entry is accepted.\n");
+      fprintf(fp,"// returns -1 otherwise.\n");
 
-   fprintf(fp,"   return 1;\n");
-   fprintf(fp,"}\n");
+      fprintf(fp,"   return 1;\n");
+      fprintf(fp,"}\n");
+   }
    fprintf(fp,"#endif // #ifdef %s_cxx\n",classname);
    fprintf(fp,"\n");
 
 //======================Generate classname.C=====================
-// generate code for class member function Loop()
-   fprintf(fpc,"#define %s_cxx\n",classname);
-   fprintf(fpc,"#include \"%s\"\n",thead);
-   fprintf(fpc,"#include \"%s\"\n","TH2.h");
-   fprintf(fpc,"#include \"%s\"\n","TStyle.h");
-   fprintf(fpc,"#include \"%s\"\n","TCanvas.h");
-   fprintf(fpc,"\n");
-   fprintf(fpc,"void %s::Loop()\n",classname);
-   fprintf(fpc,"{\n");
-   fprintf(fpc,"//   In a Root session, you can do:\n");
-   fprintf(fpc,"//      Root > .L %s.C\n",classname);
-   fprintf(fpc,"//      Root > %s t\n",classname);
-   fprintf(fpc,"//      Root > t.GetEntry(12); // Fill t data members with entry number 12\n");
-   fprintf(fpc,"//      Root > t.Show();       // Show values of entry 12\n");
-   fprintf(fpc,"//      Root > t.Show(16);     // Read and show values of entry 16\n");
-   fprintf(fpc,"//      Root > t.Loop();       // Loop on all entries\n");
-   fprintf(fpc,"//\n");
-   fprintf(fpc,"\n//     This is the loop skeleton\n");
-   fprintf(fpc,"//       To read only selected branches, Insert statements like:\n");
-   fprintf(fpc,"// METHOD1:\n");
-   fprintf(fpc,"//    fTree->SetBranchStatus(\"*\",0);  // disable all branches\n");
-   fprintf(fpc,"//    fTree->SetBranchStatus(\"branchname\",1);  // activate branchname\n");
-   fprintf(fpc,"// METHOD2: replace line\n");
-   fprintf(fpc,"//    fTree->GetEntry(i);  // read all branches\n");
-   fprintf(fpc,"//by  b_branchname->GetEntry(i); //read only this branch\n");
-   fprintf(fpc,"   if (fTree == 0) return;\n");
-   fprintf(fpc,"\n   Int_t nentries = Int_t(fTree->GetEntries());\n");
-   fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
-   fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
-   fprintf(fpc,"      Int_t ientry = LoadTree(jentry); //in case of a TChain, ientry is the entry number in the current file\n");
-   fprintf(fpc,"      nb = fTree->GetEntry(jentry);   nbytes += nb;\n");
-   fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
-   fprintf(fpc,"   }\n");
-   fprintf(fpc,"}\n");
-
+   if (!opt.Contains("selector")) {
+      // generate code for class member function Loop()
+      fprintf(fpc,"#define %s_cxx\n",classname);
+      fprintf(fpc,"#include \"%s\"\n",thead);
+      fprintf(fpc,"#include \"%s\"\n","TH2.h");
+      fprintf(fpc,"#include \"%s\"\n","TStyle.h");
+      fprintf(fpc,"#include \"%s\"\n","TCanvas.h");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Loop()\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"//   In a Root session, you can do:\n");
+      fprintf(fpc,"//      Root > .L %s.C\n",classname);
+      fprintf(fpc,"//      Root > %s t\n",classname);
+      fprintf(fpc,"//      Root > t.GetEntry(12); // Fill t data members with entry number 12\n");
+      fprintf(fpc,"//      Root > t.Show();       // Show values of entry 12\n");
+      fprintf(fpc,"//      Root > t.Show(16);     // Read and show values of entry 16\n");
+      fprintf(fpc,"//      Root > t.Loop();       // Loop on all entries\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"\n//     This is the loop skeleton\n");
+      fprintf(fpc,"//       To read only selected branches, Insert statements like:\n");
+      fprintf(fpc,"// METHOD1:\n");
+      fprintf(fpc,"//    fChain->SetBranchStatus(\"*\",0);  // disable all branches\n");
+      fprintf(fpc,"//    fChain->SetBranchStatus(\"branchname\",1);  // activate branchname\n");
+      fprintf(fpc,"// METHOD2: replace line\n");
+      fprintf(fpc,"//    fChain->GetEntry(i);  // read all branches\n");
+      fprintf(fpc,"//by  b_branchname->GetEntry(i); //read only this branch\n");
+      fprintf(fpc,"   if (fChain == 0) return;\n");
+      fprintf(fpc,"\n   Int_t nentries = Int_t(fChain->GetEntries());\n");
+      fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
+      fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
+      fprintf(fpc,"      Int_t ientry = LoadTree(jentry); //in case of a TChain, ientry is the entry number in the current file\n");
+      fprintf(fpc,"      nb = fChain->GetEntry(jentry);   nbytes += nb;\n");
+      fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
+      fprintf(fpc,"   }\n");
+      fprintf(fpc,"}\n");
+   }
+   if (opt.Contains("selector")) {
+      // generate usage comments and list of includes
+      fprintf(fpc,"#define %s_cxx\n",classname);
+      fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",classname);
+      fprintf(fpc,"// by the Root utility TTree::MakeSelector.\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"// This class is derived from the Root class TSelector.\n");
+      fprintf(fpc,"// The following members functions are called by the TTree::Process functions.\n");
+      fprintf(fpc,"//    Begin:       called everytime a loop on the tree starts.\n");
+      fprintf(fpc,"//                 a convenient place to create your histograms.\n");
+      fprintf(fpc,"//    Notify():    This function is called at the first entry of a new Tree\n");
+      fprintf(fpc,"//                 in a chain.\n");
+      fprintf(fpc,"//    ProcessCut:  called at the beginning of each entry to return a flag\n");
+      fprintf(fpc,"//                 true if the entry must be analyzed.\n");
+      fprintf(fpc,"//    ProcessFill: called in the entry loop for all entries accepted \n");
+      fprintf(fpc,"//                 by Select.\n"); 
+      fprintf(fpc,"//    Terminate:   called at the end of a loop on a TTree.\n");
+      fprintf(fpc,"//                 a convenient place to draw/fit your histograms.\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"//   To use this file, try the following session on your Tree T\n");
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"// Root > T.Process(\"%s.C\")\n",classname);
+      fprintf(fpc,"// Root > T.Process(\"%s.C,\"some options\"\")\n",classname);
+      fprintf(fpc,"// Root > T.Process(\"%s.C+\")\n",classname);
+      fprintf(fpc,"//\n");
+      fprintf(fpc,"#include \"%s\"\n",thead);
+      fprintf(fpc,"#include \"%s\"\n","TH2.h");
+      fprintf(fpc,"#include \"%s\"\n","TStyle.h");
+      fprintf(fpc,"#include \"%s\"\n","TCanvas.h");
+      fprintf(fpc,"\n");
+      // generate code for class member function Begin
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Begin(TTree *tree)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"// function called before starting the event loop\n");
+      fprintf(fpc,"// initialize the tree branches\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   Init(tree);\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   TString option = GetOption();\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function ProcessCut
+      fprintf(fpc,"\n");
+      fprintf(fpc,"Bool_t %s::ProcessCut(Int_t entry)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"// Selection function\n");
+      fprintf(fpc,"// Read only the necessary branches to select entries.\n");
+      fprintf(fpc,"// return as soon as a bad entry is detected.\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   return kTRUE;\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function ProcessFill
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::ProcessFill(Int_t entry)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"// function called for selected entries only\n");
+      fprintf(fpc,"// read branches not processed in ProcessCut and fill histograms\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function Terminate
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::Terminate()\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"// function called at the end of the event loop\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+   }   
    printf("Files: %s and %s generated from Tree: %s\n",thead,tcimp,fTree->GetName());
    delete [] leafStatus;
    delete [] thead;
@@ -1743,12 +1903,12 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 //
 //   To use this function:
 //      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeCode("anal.C");
+//      - T->MakeCode("user.C");
 //    where T is the name of the Tree in file myfile.root
-//    and anal.C the name of the file created by this function.
+//    and user.C the name of the file created by this function.
 //
-//   NOTE: Since the implementation of this function, a new and better
-//         function TTreePlayer::MakeClass has been developped.
+//   NOTE: Since the implementation of this function, new and better
+//         function TTree::MakeClass and TTree::MakeSelector have been developped.
 //
 //          Author: Rene Brun
 //====>
@@ -1941,7 +2101,241 @@ void TTreePlayer::MakeIndex(TString &varexp, Int_t *index)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
+TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
+//*-*              ====================================================
+// 
+//   Create an instance of TPrincipal
+//   Fill it with the selected variables
+//   if option "n" is specified, the TPrincipal object is filled with
+//                 normalized variables.
+//   If option "p" is specified, compute the principal components
+//   If option "p" and "d" print results of analysis
+//   If option "p" and "h" generate standard histograms
+//   If option "p" and "c" generate code of conversion functions
+//   return a pointer to the TPrincipal object. It is the user responsability
+//   to delete this object.
+//   The option default value is "np"
+//
+//   see TTreePlayer::DrawSelect for explanation of the other parameters.
+   
+   TTreeFormula *select, **var;
+   TString *cnames;
+   TString onerow;
+   TString opt = option;
+   opt.ToLower();
+   TPrincipal *principal = 0;
+   Int_t entry,entryNumber,i,nch;
+   Int_t *index = 0;
+   Int_t ncols = 8;   // by default first 8 columns are printed only
+   TObjArray *leaves = fTree->GetListOfLeaves();
+   Int_t nleaves = leaves->GetEntriesFast();
+   if (nleaves < ncols) ncols = nleaves;
+   nch = varexp ? strlen(varexp) : 0;
+   Int_t lastentry = firstentry + nentries -1;
+   if (lastentry > fTree->GetEntries()-1) {
+      lastentry  = (Int_t)fTree->GetEntries() -1;
+      nentries   = lastentry - firstentry + 1;
+   }
+
+//*-*- Compile selection expression if there is one
+   select = 0;
+   if (strlen(selection)) {
+      select = new TTreeFormula("Selection",selection,fTree);
+      if (!select) return principal;
+      if (!select->GetNdim()) { delete select; return principal; }
+   }
+//*-*- if varexp is empty, take first 8 columns by default
+   int allvar = 0;
+   if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
+   if (nch == 0 || allvar) {
+      cnames = new TString[ncols];
+      for (i=0;i<ncols;i++) {
+         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+      }
+//*-*- otherwise select only the specified columns
+   } else {
+      ncols = 1;
+      onerow = varexp;
+      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
+      cnames = new TString[ncols];
+      index  = new Int_t[ncols+1];
+      MakeIndex(onerow,index);
+      for (i=0;i<ncols;i++) {
+         cnames[i] = GetNameByIndex(onerow,index,i);
+      }
+   }
+   var = new TTreeFormula* [ncols];
+   Double_t *xvars = new Double_t[ncols];
+   
+//*-*- Create the TreeFormula objects corresponding to each column
+   for (i=0;i<ncols;i++) {
+      var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
+   }
+
+   //*-* Build the TPrincipal object
+   if (opt.Contains("n")) principal = new TPrincipal(ncols, "n");
+   else                   principal = new TPrincipal(ncols);
+      
+//*-*- loop on all selected entries
+   fSelectedRows = 0;
+   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      entryNumber = fTree->GetEntryNumber(entry);
+      if (entryNumber < 0) break;
+      fTree->LoadTree(entryNumber);
+      if (select) {
+         select->GetNdata();
+         if (select->EvalInstance(0) == 0) continue;
+      }
+      onerow = Form("* %8d ",entryNumber);
+      for (i=0;i<ncols;i++) {
+         xvars[i] = var[i]->EvalInstance(0);
+      }
+      principal->AddRow(xvars);
+   }
+
+//*-* some actions with principal ?
+   if (opt.Contains("p")) {
+        principal->MakePrincipals(); // Do the actual analysis
+        if (opt.Contains("d")) principal->Print();
+        if (opt.Contains("h")) principal->MakeHistograms();
+        if (opt.Contains("c")) principal->MakeCode();
+   }
+   
+//*-*- delete temporary objects
+   delete select;
+   for (i=0;i<ncols;i++) {
+      delete var[i];
+   }
+   delete [] var;
+   delete [] cnames;
+   delete [] index;
+   delete [] xvars;
+   
+   return principal;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
+//*-*              ================================================
+//
+//   The code in filename is loaded (interpreted or compiled , see below)
+//   filename must contain a valid class implementation derived from TSelector.
+//   where TSelector has the following member functions:
+//
+//     void TSelector::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TSelector::Notify(). This function is called at the first entry
+//          of a new file in a chain.
+//   
+//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//
+//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//
+//     void TSelector::Terminate(). This function is called at the end of
+//          the loop on all events. 
+//
+//   if filename is of the form file.C, the file will be interpreted.
+//   if filename is of the form file.C++, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be deleted at the end of the function.
+//   if filename is of the form file.C+, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be kept at the end of the function. At next call, if file.C
+//      is older than file.o and file.so, the file.C is not compiled, only
+//      file.so is loaded.
+
+
+   //Get a pointer to the TSelector object
+   static TSelector *selector = 0;
+   delete selector; //delete previous selector if any
+   selector = TSelector::GetSelector(filename);
+   if (!selector) return -1;
+   
+   Int_t nsel = Process(selector,option,nentries,firstentry);
+   return nsel;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
+//*-*              ================================================
+//
+//   The TSelector class has the following member functions:
+//
+//     void TSelector::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TSelector::Notify(). This function is called at the first entry
+//          of a new file in a chain.
+//   
+//     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//
+//     void TSelector::ProcessFill(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//
+//     void TSelector::Terminate(). This function is called at the end of
+//          the loop on all events. 
+//
+//  If the Tree (Chain) has an associated EventList, the loop is on the nentries
+//  of the EventList, starting at firstentry, otherwise the loop is on the 
+//  specified Tree entries.   
+
+   selector->SetOption(option);
+   
+   selector->Begin(fTree); //<===call user initialisation function
+
+   //Create a timer to get control in the entry loop(s)
+   TProcessEventTimer *timer = 0;
+   Int_t interval = fTree->GetTimerInterval();
+   if (!gROOT->IsBatch() && !gProofServ && interval)
+      timer = new TProcessEventTimer(interval);
+   
+   //loop on entries (elist or all entries)
+   Int_t treeNumber = -1;
+   Long_t entry, entryNumber;
+   fSelectedRows = 0;
+   Int_t nent = Int_t(fTree->GetEntries());
+   TEventList *elist = fTree->GetEventList();
+   if (elist) nent = elist->GetN();
+   Int_t lastentry = firstentry + nentries -1;
+   if (lastentry > nent) {
+      lastentry  = nent -1;
+      nentries   = lastentry - firstentry + 1;
+   }
+   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      if (timer && timer->ProcessEvents()) break;
+      if (gROOT->IsInterrupted()) break;
+      if (elist) entryNumber = fTree->LoadTree(elist->GetEntry(entry));
+      else       entryNumber = fTree->LoadTree(entry);
+      if (fTree->GetTreeNumber() != treeNumber) {
+         treeNumber = fTree->GetTreeNumber();
+         selector->Notify();
+      }
+      if (selector->ProcessCut (entryNumber))
+          selector->ProcessFill(entryNumber); //<==call user analysis function
+   }
+   selector->Terminate();  //<==call user termination function
+      
+   return fSelectedRows;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
                        Int_t nentries, Int_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
@@ -1968,8 +2362,8 @@ void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    select = 0;
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
-      if (!select) return;
-      if (!select->GetNdim()) { delete select; return; }
+      if (!select) return -1;
+      if (!select->GetNdim()) { delete select; return -1; }
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -2056,6 +2450,7 @@ void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    delete [] var;
    delete [] cnames;
    delete [] index;
+   return fSelectedRows;
 }
 
 //______________________________________________________________________________
@@ -2178,26 +2573,6 @@ void TTreePlayer::SetPacketSize(Int_t size)
 }
 
 //_______________________________________________________________________
-void TTreePlayer::SetSelector(TSelector *selector)
-{
-//*-*-*-*-*-*-*-*-*Set current selector to user selector*-*-*-*-*-*-*-*
-//*-*              =====================================
-//
-   fSelector = selector;
-   if (selector) selector->Init(fTree);
-}
-
-//_______________________________________________________________________
-void TTreePlayer::SetSelector(const char *macroname)
-{
-//*-*-*-*-*-*-*-*-*Set current selector to macroname*-*-*-*-*-*-*-*
-//*-*              =================================
-//
-   fSelector = new TSelector(macroname);
-   if (fSelector) fSelector->Init(fTree);
-}
-
-//_______________________________________________________________________
 void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 {
 //*-*-*-*-*-*-*-*-*Start the TTreeViewer on this TTree*-*-*-*-*-*-*-*-*-*
@@ -2235,11 +2610,11 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);
@@ -2295,7 +2670,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 //*-*        ===========================================
 
   Int_t i;
-  Float_t rmin[3],rmax[3];
+  Double_t rmin[3],rmax[3];
   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
 //__________________________1-D histogram_______________________
@@ -2380,11 +2755,11 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      pm->SetMarkerSize(fTree->GetMarkerSize());
      Float_t *x = pm->GetX();
      Float_t *y = pm->GetY();
-     Float_t u, v;
-     Float_t umin = gPad->GetUxmin();
-     Float_t umax = gPad->GetUxmax();
-     Float_t vmin = gPad->GetUymin();
-     Float_t vmax = gPad->GetUymax();
+     Double_t u, v;
+     Double_t umin = gPad->GetUxmin();
+     Double_t umax = gPad->GetUxmax();
+     Double_t vmin = gPad->GetUymin();
+     Double_t vmax = gPad->GetUymax();
 
      for (i=0;i<nfill;i++) {
         u = gPad->XtoPad(fV2[i]);

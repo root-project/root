@@ -1,8 +1,5 @@
-//*CMZ :  2.24/05 11/05/2000  18.13.39  by  Fons Rademakers
-//*CMZ :  2.21/02 14/01/99  17.50.27  by  Fons Rademakers
-//*CMZ :  2.00/00 17/02/98  11.46.12  by  Fons Rademakers
-//*CMZ :  1.03/09 10/12/97  11.58.49  by  Fons Rademakers
-//*-- Author :    Fons Rademakers   14/11/97
+// @(#)root/test:$Name$:$Id$
+// Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

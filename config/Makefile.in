@@ -1,6 +1,8 @@
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
+USECONFIG      := @useconfig@
+
 EXTRA_CFLAGS   := -Iinclude @cflags
 EXTRA_CXXFLAGS := -Iinclude @cflags
 EXTRA_LDFLAGS  := @ldflags@
@@ -24,7 +26,8 @@ TTFLIBDIR      := @ttflibdir@
 TTFFONTDIR     := @ttffontdir@
 TTFINCDIR      := @ttfincdir@
 
-OPENGLLIBDIR   := @opengllibdir@
+OPENGLULIB     := @openglulib@
+OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
 MYSQLINCDIR    := @mysqlincdir@
@@ -35,6 +38,10 @@ THREAD         := @thread@
 RFIO           := @rfio@
 SRPDIR         := @srpdir@
 AFSDIR         := @afsdir@
+
+PYTHIA         := @pythialib@
+PYTHIA6        := @pythia6lib@
+VENUS          := @venuslib@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

@@ -21,7 +21,7 @@ UNIXH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNIXS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 UNIXO        := $(UNIXS:.cxx=.o)
 
-UNIXDEP      := $(UNIXO:.o=.d)
+UNIXDEP      := $(UNIXO:.o=.d) $(UNIXDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(UNIXH))

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -111,8 +111,8 @@ public:
    const char   *GetStreamerInfo();
    Int_t         Compare(TObject *obj);
    ULong_t       Hash() { return fName.Hash(); }
-   Bool_t        InheritsFrom(const char *cl);
-   Bool_t        InheritsFrom(const TClass *cl);
+   Bool_t        InheritsFrom(const char *cl) const;
+   Bool_t        InheritsFrom(const TClass *cl) const;
    Bool_t        IsFolder() {return kTRUE;}
    void         *New();
    void          Destructor(void *obj, Bool_t dtorOnly = kFALSE);

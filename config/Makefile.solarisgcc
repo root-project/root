@@ -24,7 +24,7 @@ CINTCFLAGS    = -fPIC -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -G
+SOFLAGS       = -shared
 SOEXT         = so
 
 # System libraries:

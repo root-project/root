@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.4 2000/07/12 15:20:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -600,6 +600,8 @@ void TCanvas::Draw(Option_t *)
       Paint();
       return;
    }
+   if (fWindowWidth  == 0) fWindowWidth  = 800;
+   if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
    fCanvasImp->ShowMenuBar(fMenuBar);
@@ -614,6 +616,7 @@ void TCanvas::Draw(Option_t *)
 void TCanvas::DrawClone(Option_t *option)
 {
    // Draw a clone of this canvas
+   // A new canvas is created that is a clone of this canvas
 
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
@@ -628,6 +631,47 @@ void TCanvas::DrawClone(Option_t *option)
    newCanvas->SetName(cdef);
 
    newCanvas->Draw(option);
+}
+
+
+//______________________________________________________________________________
+void TCanvas::DrawClonePad()
+{
+   // Draw a clone of this canvas into the current pad
+   // In an interactive session, select the destination/current pad
+   // with the middle mouse button, then point to the canvas area to select
+   // the canvas context menu item DrawClonePad.
+   // Note that the original canvas may have subpads.
+
+  TPad *padsav = (TPad*)gPad;
+  TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  this->cd();
+  TObject *obj, *clone;
+  //copy pad attributes
+  pad->Range(fX1,fY1,fX2,fY2);
+  pad->SetTickx(GetTickx());
+  pad->SetTicky(GetTicky());
+  pad->SetGridx(GetGridx());
+  pad->SetGridy(GetGridy());
+  pad->SetLogx(GetLogx());
+  pad->SetLogy(GetLogy());
+  pad->SetLogz(GetLogz());
+  pad->SetBorderSize(GetBorderSize());
+  pad->SetBorderMode(GetBorderMode());
+  TAttLine::Copy((TAttLine&)*pad);
+  TAttFill::Copy((TAttFill&)*pad);
+  TAttPad::Copy((TAttPad&)*pad);
+  
+  //copy primitives
+  TIter next(GetListOfPrimitives());
+  while ((obj=next())) {
+     gROOT->SetSelectedPad(pad);
+     clone = obj->Clone();
+     pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
+  }
+  pad->Modified();
+  pad->Update();
+  padsav->cd();
 }
 
 
@@ -1195,30 +1239,30 @@ void TCanvas::Resize(Option_t *)
    if (fXsizeUser && fYsizeUser) {
       UInt_t nwh = fCh;
       UInt_t nww = fCw;
-      Float_t rxy = fXsizeUser/fYsizeUser;
+      Double_t rxy = fXsizeUser/fYsizeUser;
       if (rxy < 1) {
-         UInt_t twh = UInt_t(Float_t(fCw)/rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)/rxy);
          if (twh > fCh)
-            nww = UInt_t(Float_t(fCh)*rxy);
+            nww = UInt_t(Double_t(fCh)*rxy);
          else
             nwh = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)/rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)/rxy);
          }
       } else {
-         UInt_t twh = UInt_t(Float_t(fCw)*rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)*rxy);
          if (twh > fCh)
-            nwh = UInt_t(Float_t(fCw)/rxy);
+            nwh = UInt_t(Double_t(fCw)/rxy);
          else
             nww = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)*rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)*rxy);
          }
       }
       fCw = nww;
@@ -1227,11 +1271,11 @@ void TCanvas::Resize(Option_t *)
 
    if (fCw < fCh) {
       fYsizeReal = kDefaultCanvasSize;
-      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+      fXsizeReal = fYsizeReal*Double_t(fCw)/Double_t(fCh);
    }
    else {
       fXsizeReal = kDefaultCanvasSize;
-      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+      fYsizeReal = fXsizeReal*Double_t(fCh)/Double_t(fCw);
    }
 
 //*-*- Loop on all pads to recompute conversion coefficients
@@ -1486,6 +1530,8 @@ void TCanvas::Streamer(TBuffer &b)
       UInt_t h = fWindowHeight;
       b << GetWindowTopX();
       b << GetWindowTopY();
+      fWindowWidth  = w;
+      fWindowHeight = h;
       b << w;
       b << h;
       b << fCw;

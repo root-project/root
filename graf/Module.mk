@@ -26,7 +26,7 @@ GRAFH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GRAFS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GRAFO        := $(GRAFS:.cxx=.o)
 
-GRAFDEP      := $(GRAFO:.o=.d)
+GRAFDEP      := $(GRAFO:.o=.d) $(GRAFDO:.o=.d)
 
 GRAFLIB      := $(LPATH)/libGraf.$(SOEXT)
 
@@ -41,7 +41,7 @@ INCLUDEFILES += $(GRAFDEP)
 include/%.h:    $(GRAFDIRI)/%.h
 		cp $< $@
 
-$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MAINLIBS) $(HISTLIB)
+$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MAINLIBS) $(GRAFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ "$(GRAFO) $(GRAFDO)" \
 		   "$(GRAFLIBEXTRA)"

@@ -1,8 +1,5 @@
-//*CMZ :  2.23/03 12/09/99  17.33.22  by  Fons Rademakers
-//*CMZ :  2.22/06 16/06/99  20.57.04  by  Rene Brun
-//*CMZ :  2.22/05 14/06/99  10.59.10  by  Rene Brun
-//*CMZ :  2.21/08 18/03/99  10.26.14  by  Rene Brun
-//*-- Author :    Rene Brun   22/08/95
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   22/08/95
 
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Minuit standard test program-*-*-*-*-*-*-*-*-*

@@ -11,12 +11,15 @@
 *      into a ROOT macro (C++ file).
 *
 *  To use this conversion program (in $ROOTSYS/bin),
-*        g2root [-f <map_names>] <geant_rzfile> <macro_name>
+*        g2root [-f <map_names>] <geant_rzfile> <macro_name> [lrecl]
 *  run g2root without parameters to see the usage info.
 *
 *  for example
 *        g2root na49.geom na49.C
 *  will convert the GEANT RZ file na49.geom into a ROOT macro na49.C
+*
+*  The default value for lrecl is 1024. The parameter lrecl must be specified
+*  if the record length of the Zebra file is greater than 1024.
 *
 *  You can use <map_names> file to rename generated TNode's.
 *  See an example of that file in the commented section below.
@@ -90,19 +93,21 @@
 *
 **********************************************************************
 
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       character *80 gname
       character *80 fname
       character *8 chtop
-      integer npar
+      character *8 crecl
+      integer npar, lrecl
 
       call hlimit(nwpaw)
 
       npar = iargc()
       if (npar.eq.0) then
-         print *, 'Invoke g2root [-f map_name] geant_name macro_name'
+         print *, 
+     +       'Invoke g2root [-f map_name] geant_name macro_name [lrecl]'
          go to 90
       endif
       narg = 1
@@ -130,18 +135,24 @@
       endif
       if (npar.ge.1) then
          call getarg(narg,fname)
+         narg = narg + 1
       else
          idot=index(gname,'.')
          fname = gname(1:idot-1)//'.C'
       endif
 
-      call rzopen(1,chtop,gname,'W',1024,istat)
+      lrecl = 1024
+      if (npar.ge.2) then
+         call getarg(narg,crecl)
+         read (crecl,'(I6)') lrecl
+      endif
+      call rzopen(1,chtop,gname,'W',lrecl,istat)
       if (istat.ne.0) then
          print *,'Cannot open file'
          go to 90
       endif
       call rzfile(1,chtop,' ')
-**      call rzldir(' ',' ')
+      call rzldir(' ',' ')
 
       call g2rin
 
@@ -171,7 +182,7 @@
 **********************************************************************
 *
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -262,7 +273,7 @@ C
          ncn=lenocc(matname)
          call toint(imat,astring,nc)
          nm=abs(nmixt)
-*-*             Case of a simple matrial
+*-*             Case of a simple material
          if (nm.le.1)then
             call toreals(3,q(jma+6),creals,ncr)
             if(q(jma+6).lt.1.and.q(jma+7).lt.1)then
@@ -355,6 +366,27 @@ C
             if(cname(i:i).eq.'/')cname(i:i)='h'
             if(cname(i:i).eq.'.')cname(i:i)='d'
             if(cname(i:i).eq.'''')cname(i:i)='q'
+            if(cname(i:i).eq.';')cname(i:i)='s'
+            if(cname(i:i).eq.':')cname(i:i)='c'
+            if(cname(i:i).eq.',')cname(i:i)='v'
+            if(cname(i:i).eq.'<')cname(i:i)='l'
+            if(cname(i:i).eq.'>')cname(i:i)='g'
+            if(cname(i:i).eq.'!')cname(i:i)='e'
+            if(cname(i:i).eq.'@')cname(i:i)='a'
+            if(cname(i:i).eq.'#')cname(i:i)='d'
+            if(cname(i:i).eq.'$')cname(i:i)='d'
+            if(cname(i:i).eq.'%')cname(i:i)='p'
+            if(cname(i:i).eq.'^')cname(i:i)='e'
+            if(cname(i:i).eq.'&')cname(i:i)='a'
+            if(cname(i:i).eq.'(')cname(i:i)='l'
+            if(cname(i:i).eq.')')cname(i:i)='g'
+            if(cname(i:i).eq.'[')cname(i:i)='l'
+            if(cname(i:i).eq.']')cname(i:i)='g'
+            if(cname(i:i).eq.'{')cname(i:i)='l'
+            if(cname(i:i).eq.'}')cname(i:i)='g'
+            if(cname(i:i).eq.'=')cname(i:i)='e'
+            if(cname(i:i).eq.'~')cname(i:i)='t'
+            if(cname(i:i).eq.'|')cname(i:i)='b'
   32     continue
          call uctoh(cname,iq(jvolum+ivo),4,4)
   50  continue
@@ -385,7 +417,7 @@ C----------------------------------------------
 *_______________________________________________________________________
       subroutine volume(cname,qjv)
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -552,7 +584,7 @@ C
 *
 *             Process one node (volume with contents)
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)
@@ -1006,7 +1038,7 @@ C.    *                                                                *
 C.    ******************************************************************
 C.
 *KEEP,HCBOOK.
-      parameter (nwpaw=1000000)
+      parameter (nwpaw=2000000)
       common/pawc/paw(nwpaw)
 
       INTEGER   IQ(2), LQ(8000)

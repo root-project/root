@@ -73,8 +73,8 @@ rm -f $INCLT/iosenum.*
 
 # make a sorted list of all files in the assmebly area
 find /tmp/cint -type f -print | sort | sed -e "s@/tmp/@@" > $NEWF
-find $INC $INCL $LIB $MAIN $SRC $STL $TOOL -type f ! -name *.d \
-     ! -name *.o -print | sort > $OLDF
+find $INC $INCL $LIB $MAIN $SRC $STL $TOOL -path '*/CVS' -prune -o \
+     -type f ! -name *.d ! -name *.o -print | sort > $OLDF
 
 comm -23 $OLDF $NEWF > $REMOVED
 comm -13 $OLDF $NEWF > $ADDED
@@ -86,7 +86,6 @@ echo "Removed files (remove from CVS):"
 cat $REMOVED
 
 # move new files in place
-rm -rf $INC $INCL $LIB $MAIN $SRC $STL $TOOL
 tar cf - -C $ASM inc include lib main src stl tool | (cd $DST; tar xf -)
 
 # cleanup

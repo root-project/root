@@ -735,6 +735,12 @@ void G__resolve_jumptable_bytecode()
 int G__istypename(temp)
 char *temp;
 {
+#ifndef G__PHILIPPE19
+  if(strncmp(temp,"class ",6)==0) temp += 6;
+  else if(strncmp(temp,"struct ",7)==0) temp += 7;
+  else if(strncmp(temp,"enum ",5)==0) temp += 5;
+  if(strchr(temp,'(') || strchr(temp,')') || strchr(temp,'|')) return(0);
+#endif
   /* char *p; */
   /* char buf[G__MAXNAME*2]; */
   if('\0'==temp[0]) return(0);
@@ -1141,6 +1147,27 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   isparam=0;
   cin=G__fgetname_template(paraname,"<*&,)=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(cin)) {
+    /* There was an argument and the parsing was stopped by a white
+    * space rather than on of ",)*&<=", it is possible that 
+    * we have a namespace followed by '::' in which case we have
+    * to grab more before stopping! */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(cin) ) {
+      cin = G__fgetname(more,"<*&,)=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
   if(paraname[0]) {
     if(strcmp("void",paraname)==0) {
@@ -1163,6 +1190,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	break;
       }
     }
+#ifndef G__PHILIPPE27
+    else if (strcmp("register",paraname)==0) {
+      G__p_ifunc->ansi[func_now]=1;
+      isvoid=0;
+    }
+#endif
     else if(G__istypename(paraname) || strchr(paraname,'[')) {
       G__p_ifunc->ansi[func_now]=1;
       isvoid=0;
@@ -1288,6 +1321,18 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #ifndef G__PHILIPPE0
     /* Key the class comment off of Dictionary rather than ClassDef
      * because ClassDef is removed by a preprocessor */
+#ifndef G__OLDIMPLEMENTATION1360
+    if(G__fons_comment && G__def_struct_member &&
+       (strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+#ifndef G__OLDIMPLEMENTATION1298
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+#endif
+       )) {
+      G__fsetcomment(&G__struct.comment[G__tagdefining]);
+    }
+#else
     if(G__fons_comment && G__def_struct_member &&
        (strncmp(G__p_ifunc->funcname[func_now],"Dictionary",10)==0 
 	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary(",11)==0
@@ -1298,6 +1343,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
        )) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
     }
+#endif
 #endif
   }
 
@@ -1781,6 +1827,27 @@ int func_now;
 
     /* read typename */
     c=G__fgetname_template(paraname,",)&*[(=");
+#ifndef G__PHILIPPE8
+  if (strlen(paraname) && isspace(c)) {
+    /* There was an argument and the parsing was stopped by a white
+    * space rather than on of ",)*&<=", it is possible that 
+    * we have a namespace followed by '::' in which case we have
+    * to grab more before stopping! */
+    int namespace_tagnum;
+    char more[G__LONGLINE];
+    
+    namespace_tagnum = G__defined_tagname(paraname,2);
+    while ( ( ( (namespace_tagnum!=-1)
+                && (G__struct.type[namespace_tagnum]=='n') )
+              || (strcmp("std",paraname)==0)
+              || (paraname[strlen(paraname)-1]==':') )
+            && isspace(c) ) {
+      c = G__fgetname(more,",)&*[(=");
+      strcat(paraname,more);
+      namespace_tagnum = G__defined_tagname(paraname,2);
+    }
+  }
+#endif           
 
     /* check const and unsigned keyword */
     if(strcmp(paraname,"...")==0) {
@@ -1892,6 +1959,9 @@ int func_now;
       else {
 	tagnum=G__newtype.tagnum[typenum];
 	type=G__newtype.type[typenum];
+#ifndef G__OLDIMPLEMENTATION1329
+	pointlevel += G__newtype.nindex[typenum];
+#endif
       }
     }
 
@@ -2072,7 +2142,16 @@ int func_now;
 	G__prerun=0;
 	G__decl=1;
       }
+#ifndef G__OLDIMPLEMENTATION1354
+      {
+	struct G__ifunc_table *store_pifunc = G__p_ifunc;
+	G__p_ifunc = &G__ifunc;
+	*ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+	G__p_ifunc = store_pifunc;
+      }
+#else
       *ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+#endif
       G__prerun=store_prerun;
       G__decl=store_decl;
 #else
@@ -3083,6 +3162,7 @@ struct G__funclist *body;
 * G__rate_inheritance()
 ***********************************************************************/
 unsigned int G__rate_inheritance(basetagnum,derivedtagnum)
+int basetagnum,derivedtagnum;
 {
   struct G__inheritance *derived;
   int i,n;
@@ -3190,6 +3270,11 @@ int recursive;
 	    -1!=formal_tagnum&&'e'==G__struct.type[formal_tagnum]) {
       funclist->p_rate[i] = G__EXACTMATCH;
     }
+#ifndef G__OLDIMPLEMENTATION1319
+    else if(isupper(formal_type)&&'i'==param_type&&0==libp->para[i].obj.i) {
+      funclist->p_rate[i] = G__STDCONVMATCH;
+    }
+#endif
     
     /* promotion */
     if(G__NOMATCH==funclist->p_rate[i]) {
@@ -3422,8 +3507,9 @@ int recursive;
 	else if('C'==param_type) {
 	  if(p_ifunc->pentry[ifn]->filenum>=0) 
 	    funclist->p_rate[i] = G__STDCONVMATCH-G__C2P2FCONVMATCH;
-	  else
-	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;
+	  else {
+	    funclist->p_rate[i] = G__STDCONVMATCH+G__C2P2FCONVMATCH;/*???*/
+	  }
 	}
 	
 #else
@@ -3523,11 +3609,26 @@ int recursive;
 	G__incsetup_memfunc(param_tagnum);
 	ifunc2 = G__struct.memfunc[param_tagnum];
 	para.paran = 0;
+#ifndef G__OLDIMPLEMENTATION1316
+	sprintf(funcname2,"operator %s"
+		,G__type2string(formal_type,formal_tagnum,-1,0,0));
+#else
 	sprintf(funcname2,"operator %s"
 		,G__type2string(param_type,param_tagnum,-1,0,0));
+#endif
 	G__hash(funcname2,hash2,ifn2);
 	ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
 				   ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+#ifndef G__OLDIMPLEMENTATION1316
+	if(!ifunc2) {
+	  sprintf(funcname2,"operator %s"
+		  ,G__type2string(formal_type,formal_tagnum,-1,0,1));
+	  G__hash(funcname2,hash2,ifn2);
+	  ifunc2 = G__struct.memfunc[param_tagnum];
+	  ifunc2 = G__overload_match(funcname2,&para,hash2,ifunc2
+				     ,G__TRYMEMFUNC,G__PUBLIC,&ifn2,1);
+	}
+#endif
 	if(ifunc2 && -1!=ifn2) 
 	  funclist->p_rate[i] = G__USRCONVMATCH;
       }
@@ -3541,10 +3642,17 @@ int recursive;
     else
       funclist->rate += funclist->p_rate[i];
   }
-#ifndef G__OLDIMPLEMENTATION1260
-  if(G__NOMATCH!=funclist->rate && ((0==G__isconst && p_ifunc->isconst[ifn])
-     || (G__isconst && 0==p_ifunc->isconst[ifn]))
-     )
+#ifndef G__OLDIMPLEMENTATION1359
+  if(G__NOMATCH!=funclist->rate && 
+     ((0==G__isconst && (p_ifunc->isconst[ifn]&G__CONSTFUNC))
+      || (G__isconst && 0==(p_ifunc->isconst[ifn]&G__CONSTFUNC)))
+      )
+    funclist->rate += G__CVCONVMATCH;
+#else
+  if(G__NOMATCH!=funclist->rate && 
+     ((0==G__isconst && p_ifunc->isconst[ifn])
+      || (G__isconst && 0==p_ifunc->isconst[ifn]))
+      )
     funclist->rate += G__CVCONVMATCH;
 #endif
 }
@@ -3552,7 +3660,7 @@ int recursive;
 /***********************************************************************
 * int G__convert_param(libp,p_ifunc,ifn,i)
 **********************************************************************/
-void G__convert_param(libp,p_ifunc,ifn,pmatch)
+int G__convert_param(libp,p_ifunc,ifn,pmatch)
 struct G__param *libp;
 struct G__ifunc_table *p_ifunc; 
 int ifn;
@@ -3681,6 +3789,9 @@ struct G__funclist *pmatch;
 	  }
 	  else {
 #ifndef G__OLDIMPLEMENTATION1018
+#ifndef G__OLDIMPLEMENTATION1341
+	    G__pop_tempobject();
+#endif
 	    sprintf(conv,"operator %s()",G__fulltagname(formal_tagnum,1));
 	    G__store_struct_offset = param->obj.i;
 	    G__tagnum = param->tagnum;
@@ -3710,13 +3821,34 @@ struct G__funclist *pmatch;
 	    }
 	  }
 	  else {
+#ifndef G__OLDIMPLEMENTATION1341
+	    G__pop_tempobject();
+#endif
 	    if(G__asm_noverflow) G__inc_cp_asm(-3,0);
 	    sprintf(conv,"operator %s()",G__fulltagname(formal_tagnum,1));
 	    G__store_struct_offset = param->obj.i;
 	    G__tagnum = param->tagnum;
+#ifndef G__OLDIMPLEMENTATION1341
+#ifdef G__ASM
+	    if(G__asm_noverflow) {
+	      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	      G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+		fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+		fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	      }
+#endif
+	    }
+#endif
+#endif /* 1341 */
 	    reg=G__getfunction(conv,&match,G__TRYMEMFUNC);
 	    if(!match) {
 	      if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION1341
+		G__inc_cp_asm(-2,0);
+#endif
 		if(rewindflag) {
 		  G__asm_inst[G__asm_cp-2]=G__REWINDSTACK; 
 		  G__asm_inst[G__asm_cp-1] = rewind_arg;
@@ -3727,6 +3859,17 @@ struct G__funclist *pmatch;
 #endif
 	      }
 	    }
+#ifndef G__OLDIMPLEMENTATION1341
+#ifdef G__ASM
+	    else if(G__asm_noverflow) {
+	      G__asm_inst[G__asm_cp] = G__POPSTROS;
+	      G__inc_cp_asm(1,0);
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+#endif
+	    }
+#endif
+#endif
 	  }
 #else /* ON1018 */
 #ifdef G__ASM
@@ -4120,9 +4263,19 @@ struct G__funclist *pmatch;
 	}
 	break;
       }
+#ifndef G__OLDIMPLEMENTATION1365
+    case 'Q':
+      if('C'==param_type && p_ifunc->pentry[ifn]->filenum<0) {
+	G__genericerror("Limitation: Precompiled function can not get pointer to interpreted function as argument");
+	return(-1);
+      }
+#endif
     }
     
   }
+#ifndef G__OLDIMPLEMENTATION1365
+  return(0);
+#endif
 }
 
 /***********************************************************************
@@ -4365,12 +4518,21 @@ int recursive;
 	  G__funclist_delete(funclist);
 	  return(p_ifunc);
 	}
+#ifndef G__OLDIMPLEMENTATION1367
+	if(-1!=p_ifunc->tagnum && memfunc_flag==G__TRYNORMAL &&
+	   strcmp(G__struct.name[p_ifunc->tagnum],funcname)==0) {
+	  continue;
+	}
+#endif
 	funclist = G__funclist_add(funclist,p_ifunc,ifn);
 	if(p_ifunc->para_nu[ifn]<libp->paran ||
 	   (p_ifunc->para_nu[ifn]>libp->paran&&
 	    !p_ifunc->para_default[ifn][libp->paran])
 #ifdef G__OLDIMPLEMENTATION1260_YET
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
+#endif
+#ifndef G__OLDIMPLEMENTATION1315
+	   || (recursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	  funclist->rate = G__NOMATCH;
@@ -4428,7 +4590,11 @@ int recursive;
     return((struct G__ifunc_table*)NULL);
   }
 
-  if(ambiguous && G__EXACTMATCH!=bestmatch) {
+  if(ambiguous && G__EXACTMATCH!=bestmatch 
+#ifndef G__OLDIMPLEMENTATION1363
+     && !recursive
+#endif
+     ) {
     /* error, ambiguous overloading resolution */
     fprintf(G__serr,"Error: Ambiguous overload resolution (%x,%d)"
 	    ,bestmatch,ambiguous+1);
@@ -4459,7 +4625,12 @@ int recursive;
   }
 
   /* convert parameter */
+#ifndef G__OLDIMPLEMENTATION1365
+  if(G__convert_param(libp,p_ifunc,*pifn,match))
+    return((struct G__ifunc_table*)0);
+#else
   G__convert_param(libp,p_ifunc,*pifn,match);
+#endif
 
   G__funclist_delete(funclist);
   return(p_ifunc);
@@ -4561,6 +4732,9 @@ int memfunc_flag;
 #endif
 #ifndef G__OLDIMPLEMENTATION1312
   int specialflag=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1357
+  G__value *store_p_tempobject=0;
 #endif
 
 #ifdef G__NEWINHERIT
@@ -4940,9 +5114,19 @@ int memfunc_flag;
        -1!=G__struct.parent_tagnum[libp->para[0].tagnum]) {
       p_ifunc =
 	G__struct.memfunc[G__struct.parent_tagnum[libp->para[0].tagnum]];
+#ifndef G__OLDIMPLEMENTATION1330
+      switch(G__struct.type[p_ifunc->tagnum]) {
+      case 's':
+      case 'c':
+	store_p_ifunc=p_ifunc;
+	specialflag = 1;
+	goto next_base;
+      }
+#else
       store_p_ifunc=p_ifunc;
       specialflag = 1;
       goto next_base;
+#endif
     }
 #endif
 
@@ -5480,10 +5664,17 @@ asm_ifunc_start:   /* loop compilation execution label */
    * create temp object buffer
    **********************************************/
   if(p_ifunc->type[ifn]=='u' && p_ifunc->reftype[ifn]==G__PARANORMAL
-     && G__CPPLINK!=G__struct.iscpplink[p_ifunc->p_tagtable[ifn]]) {
+     && G__CPPLINK!=G__struct.iscpplink[p_ifunc->p_tagtable[ifn]]
+#ifndef G__OLDIMPLEMENTATION1332
+     && 'e'!=G__struct.type[p_ifunc->p_tagtable[ifn]]
+#endif
+     ) {
     /* create temp object buffer */
     
     G__alloc_tempobject(p_ifunc->p_tagtable[ifn] ,p_ifunc->p_typetable[ifn]);
+#ifndef G__OLDIMPLEMENTATION1357
+    store_p_tempobject = &G__p_tempbuf->obj;
+#endif
     
     if(G__dispsource) {
 #ifndef G__FONS31
@@ -5750,7 +5941,11 @@ asm_ifunc_start:   /* loop compilation execution label */
        *  type func(type paraname=default,...)
        ****************************************/
       else {
-	if(p_ifunc->para_default[ifn][ipara]) {
+	if(
+#ifndef G__OLDIMPLEMENTATION1324
+	   p_ifunc->para_nu[ifn]>ipara && 
+#endif
+	   p_ifunc->para_default[ifn][ipara]) {
 	  if(p_ifunc->para_default[ifn][ipara]->type==G__DEFAULT_FUNCCALL) {
 	    G__ASSERT(p_ifunc->para_default[ifn][ipara]->ref);
 	    *p_ifunc->para_default[ifn][ipara] =
@@ -5881,8 +6076,9 @@ asm_ifunc_start:   /* loop compilation execution label */
     *result7 = G__interactivereturnvalue;
     G__interactivereturnvalue = G__null;
   }
-  
+
   G__templevel--;
+
 #ifdef G__ASM_DBG
   if(G__istrace>1) {
     if(G__istrace>G__templevel) {
@@ -5977,6 +6173,11 @@ asm_ifunc_start:   /* loop compilation execution label */
 	
 	/* don't call copy constructor if returning reference type */
 	if(G__PARANORMAL!=p_ifunc->reftype[ifn]) break;
+#ifndef G__OLDIMPLEMENTATION1332
+	if('e'==G__struct.type[p_ifunc->p_tagtable[ifn]]) {
+	  break;
+	}
+#endif
 	
 #ifndef G__OLDIMPLEMENTATION1274
 	if(result7->type=='u' || (result7->type=='i'&& -1!=result7->tagnum)){
@@ -6020,7 +6221,14 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 	if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	  /* interpreted class */
+#ifndef G__OLDIMPLEMENTATION1357
+	  if(store_p_tempobject) 
+	    G__store_struct_offset = store_p_tempobject->obj.i;
+	  else 
+	    G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#else
 	  G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#endif
 	  if(G__dispsource) {
 	    fprintf(G__serr
 	    ,"\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s"
@@ -6074,9 +6282,20 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1274
 	  long offset=0;
 	  if(result7->tagnum == p_ifunc->p_tagtable[ifn]) {
+#ifndef G__OLDIMPLEMENTATION1357
+	    if(store_p_tempobject) 
+	      memcpy((void*)store_p_tempobject->obj.i
+		     ,(void*)(result7->obj.i)
+		     ,(size_t)G__struct.size[result7->tagnum]);
+	    else 
+	      memcpy((void*)G__p_tempbuf->obj.obj.i
+		     ,(void*)(result7->obj.i)
+		     ,(size_t)G__struct.size[result7->tagnum]);
+#else
 	    memcpy((void*)G__p_tempbuf->obj.obj.i
 		   ,(void*)(result7->obj.i)
 		   ,(size_t)G__struct.size[result7->tagnum]);
+#endif
 	  }
 	  else if(-1!=(offset=G__ispublicbase(p_ifunc->p_tagtable[ifn]
 					      ,result7->tagnum
@@ -6087,7 +6306,14 @@ asm_ifunc_start:   /* loop compilation execution label */
 		    ,result7->obj.i+offset);
 	    if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	      /* interpreted class */
+#ifndef G__OLDIMPLEMENTATION1357
+	      if(store_p_tempobject) 
+		G__store_struct_offset=store_p_tempobject->obj.i;
+	      else 
+		G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#else
 	      G__store_struct_offset=G__p_tempbuf->obj.obj.i;
+#endif
 	      G__getfunction(temp,&itemp,G__TRYCONSTRUCTOR);
 	    }
 	    else {
@@ -6104,7 +6330,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
 	}
 	
+#ifndef G__OLDIMPLEMENTATION1357
+	if(store_p_tempobject) *result7 = *store_p_tempobject;
+	else                   *result7 = G__p_tempbuf->obj;
+#else
 	*result7 = G__p_tempbuf->obj;
+#endif
 	
       }
       else {
@@ -6189,7 +6420,6 @@ asm_ifunc_start:   /* loop compilation execution label */
     result7->tagnum  = p_ifunc->p_tagtable[ifn];
     result7->typenum = p_ifunc->p_typetable[ifn];
   }
-  
   
   /**************************************************************
    * reset no exec flag
@@ -6362,6 +6592,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 
   G__exec_memberfunc=store_exec_memberfunc;
   G__security = store_security;
+
 
   return(1);
 }

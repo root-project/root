@@ -1,0 +1,67 @@
+// include/_iostream
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+	{return(std::endl(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+	{return(std::ends(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+	{return(std::flush(ostr));}
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+	{return(std::ws(istr));}
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+	{return(std::WS(istr));}
+
+std::istream& operator>>(std::istream& istr,std::G__CINT_HEX& i) {
+  istr.unsetf(ios::dec);
+  istr.unsetf(ios::oct);
+  istr.setf(ios::hex);
+  return(istr);
+}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_DEC& i) {
+  ostr.unsetf(ios::hex);
+  ostr.unsetf(ios::oct);
+  ostr.setf(ios::dec);
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_DEC& i) {
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::oct);
+  istr.setf(ios::dec);
+  return(istr);
+}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_OCT& i) {
+  ostr.unsetf(ios::hex);
+  ostr.unsetf(ios::dec);
+  ostr.setf(ios::oct);
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_OCT& i) {
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::dec);
+  istr.setf(ios::oct);
+  return(istr);
+}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(ostr);
+}
+std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(istr);
+}
+
+// Value evaluation
+//template<class T> int G__ateval(const T* x) {return(0);}
+template<class T> int G__ateval(const T& x) {return(0);}
+int G__ateval(const char* x) {return(0);}
+int G__ateval(const void* x) {return(0);}
+int G__ateval(const double x) {return(0);}
+int G__ateval(const float x) {return(0);}
+int G__ateval(const char x) {return(0);}
+int G__ateval(const short x) {return(0);}
+int G__ateval(const int x) {return(0);}
+int G__ateval(const long x) {return(0);}
+int G__ateval(const unsigned char x) {return(0);}
+int G__ateval(const unsigned short x) {return(0);}
+int G__ateval(const unsigned int x) {return(0);}
+int G__ateval(const unsigned long x) {return(0);}

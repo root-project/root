@@ -39,7 +39,7 @@ int tagnum;
   env->store_exec_memberfunc = G__exec_memberfunc;
   if(p) {
     G__store_struct_offset = (long)p;
-    G__tagnum = G__tagnum;
+    /* G__tagnum = G__tagnum; */ /* I think this is intentional */
     G__memberfunc_tagnum = tagnum;
     G__exec_memberfunc = 1;
   }
@@ -234,10 +234,18 @@ struct G__ifunc_table *ifunc;
 * G__cppstub_genfunc()
 *
 **************************************************************************/
+#ifndef G__OLDIMPLEMENTATION1336
+void G__cppstub_genfunc(fp,tagnum,ifn,ifunc,flag)
+FILE *fp;
+int tagnum,ifn;
+struct G__ifunc_table *ifunc;
+int flag;
+#else
 static void G__cppstub_genfunc(fp,tagnum,ifn,ifunc)
 FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
+#endif
 {
   int k;
   char pformat[G__ONELINE];
@@ -246,7 +254,11 @@ struct G__ifunc_table *ifunc;
   /*******************************************************************
   * Function header
   *******************************************************************/
-  if(-1==tagnum) {
+  if(-1==tagnum
+#ifndef G__OLDIMPLEMENTATION1336
+     || flag
+#endif
+     ) {
     fprintf(fp,"%s %s(\n"
 	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
 			    ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
@@ -422,7 +434,11 @@ FILE *fp;
 	      G__cppstub_gendestructor(fp,i,j,ifunc);
 	    }
 	    else {
+#ifndef G__OLDIMPLEMENTATION1336
+	      G__cppstub_genfunc(fp,i,j,ifunc,0);
+#else
 	      G__cppstub_genfunc(fp,i,j,ifunc);
+#endif
 	    }
 	  } /* if(access) */
 	} /* for(j) */
@@ -455,7 +471,11 @@ FILE *fp;
       if((G__CPPSTUB==ifunc->globalcomp[j]||G__CSTUB==ifunc->globalcomp[j])&& 
 	 ifunc->hash[j]) {
 	
+#ifndef G__OLDIMPLEMENTATION1336
+	G__cppstub_genfunc(fp,-1,j,ifunc,0);
+#else
 	G__cppstub_genfunc(fp,-1,j,ifunc);
+#endif
 
       } /* if(access) */
     } /* for(j) */

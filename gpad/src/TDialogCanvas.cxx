@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -105,7 +105,7 @@ void TDialogCanvas::BuildStandardButtons()
 }
 
 //______________________________________________________________________________
-void TDialogCanvas::Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
 //*-*                  =======================================

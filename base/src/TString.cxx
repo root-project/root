@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1127,8 +1127,11 @@ static char *Format(const char* format, va_list ap)
 
    vsprintf(buf, format, ap);
    int l = strlen(buf);
-   if (l > fld_size)
+   if (l > fld_size) {
+      buf[50] = 0;
+      fprintf(stderr, "Fatal in <Format>: buf = %s...\n", buf);
       Fatal("Format", "buffer overflow");
+   }
    bfree = buf+l+1;
    return buf;
 }

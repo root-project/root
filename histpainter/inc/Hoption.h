@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name$:$Id$ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -53,6 +53,7 @@ typedef struct Hoption_t {
    int Zscale;      // "Z"   to display the Z scale (color palette)
    int FrontBox;    // " = 0 to suppress the front box
    int BackBox;     // " = 0 to suppress the back box
+   int List;        // " = 1 to generate the TObjArray "contours"
 //*-*
 //*-*   the following structure members are set to 1 if the corresponding option
 //*-*   in the current style is selected.

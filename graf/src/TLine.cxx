@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TLine::TLine(): TObject(), TAttLine()
 
 }
 //______________________________________________________________________________
-TLine::TLine(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
+TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       :TObject(), TAttLine()
 {
 //*-*-*-*-*-*-*-*-*-*-*Line normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -79,15 +79,15 @@ Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*                  ===========================================
 
    if (!TestBit(kLineNDC)) return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
-   Float_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
-   Float_t y1 = gPad->GetY1() + fY1*(gPad->GetY2()-gPad->GetY1());
-   Float_t x2 = gPad->GetX1() + fX2*(gPad->GetX2()-gPad->GetX1());
-   Float_t y2 = gPad->GetY1() + fY2*(gPad->GetY2()-gPad->GetY1());
+   Double_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
+   Double_t y1 = gPad->GetY1() + fY1*(gPad->GetY2()-gPad->GetY1());
+   Double_t x2 = gPad->GetX1() + fX2*(gPad->GetX2()-gPad->GetX1());
+   Double_t y2 = gPad->GetY1() + fY2*(gPad->GetY2()-gPad->GetY1());
    return DistancetoLine(px,py,x1,y1,x2,y2);
 }
 
 //______________________________________________________________________________
-TLine *TLine::DrawLine(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
+TLine *TLine::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -99,7 +99,7 @@ TLine *TLine::DrawLine(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
 }
 
 //______________________________________________________________________________
-TLine *TLine::DrawLineNDC(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
+TLine *TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates in NDC*-*-*-*-*-*-*
 //*-*                  ==========================================
@@ -126,7 +126,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Bool_t P1, P2, L;
-   Float_t dpx,dpy,xp1,yp1;
+   Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
 
 
@@ -276,7 +276,7 @@ void TLine::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TLine::PaintLine(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2)
+void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this line with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
@@ -286,7 +286,7 @@ void TLine::PaintLine(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2)
 }
 
 //______________________________________________________________________________
-void TLine::PaintLineNDC(Coord_t u1, Coord_t v1, Coord_t u2, Coord_t v2)
+void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
 //*-*-*-*-*-*-*-*Draw this line with new coordinates in NDC*-*-*-*-*-*-*-*-*-*
 //*-*            ==========================================
@@ -323,4 +323,36 @@ void TLine::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"line",1,1,1);
 
    out<<"   line->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TLine::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TLine.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion();
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x1,y1,x2,y2;
+         R__b >> x1; fX1 = x1;
+         R__b >> y1; fY1 = y1;
+         R__b >> x2; fX2 = x2;
+         R__b >> y2; fY2 = y2;
+      } else {
+         R__b >> fX1;
+         R__b >> fY1;
+         R__b >> fX2;
+         R__b >> fY2;
+      }
+   } else {
+      R__b.WriteVersion(TLine::IsA());
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      R__b << fX1;
+      R__b << fY1;
+      R__b << fX2;
+      R__b << fY2;
+   }
 }

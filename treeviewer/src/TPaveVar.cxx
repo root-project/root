@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name$:$Id$
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   08/12/98
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -38,7 +38,7 @@ TPaveVar::TPaveVar(): TPaveLabel()
 }
 
 //______________________________________________________________________________
-TPaveVar::TPaveVar(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, const char *label, TTreeViewer *viewer)
+TPaveVar::TPaveVar(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, TTreeViewer *viewer)
            :TPaveLabel(x1,y1,x2,y2,label,"br")
 {
 //*-*-*-*-*-*-*-*-*-*-*PaveVar normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -279,10 +279,10 @@ again:
 
       // In case pave coordinates have been modified, recompute NDC coordinates
       {
-         Float_t dpx  = gPad->GetX2() - gPad->GetX1();
-         Float_t dpy  = gPad->GetY2() - gPad->GetY1();
-         Float_t xp1  = gPad->GetX1();
-         Float_t yp1  = gPad->GetY1();
+         Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+         Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+         Double_t xp1  = gPad->GetX1();
+         Double_t yp1  = gPad->GetY1();
          fX1NDC = (fX1-xp1)/dpx;
          fY1NDC = (fY1-yp1)/dpy;
          fX2NDC = (fX2-xp1)/dpx;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -500,11 +500,13 @@ void TStyle::SetNdivisions(Int_t n, Option_t *axis)
 //           nndi=2 --> 2 divisions, one tick mark in the middle
 //                      of the axis.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetNdivisions(n);
-   if (ax == 2) fYaxis.SetNdivisions(n);
-   if (ax == 3) fZaxis.SetNdivisions(n);
+   TString opt = axis;
+   opt.ToLower();
+   if (opt.Contains("x")) fXaxis.SetNdivisions(n);
+   if (opt.Contains("y")) fYaxis.SetNdivisions(n);
+   if (opt.Contains("z")) fZaxis.SetNdivisions(n);
 }
 
 //______________________________________________________________________________
@@ -512,11 +514,14 @@ void TStyle::SetAxisColor(Color_t color, Option_t *axis)
 {
 // Set color to draw the axis line and tick marks.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetAxisColor(color);
-   if (ax == 2) fYaxis.SetAxisColor(color);
-   if (ax == 3) fZaxis.SetAxisColor(color);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetAxisColor(color);
+   if (opt.Contains("y")) fYaxis.SetAxisColor(color);
+   if (opt.Contains("z")) fZaxis.SetAxisColor(color);
 }
 
 //______________________________________________________________________________
@@ -537,11 +542,14 @@ void TStyle::SetLabelColor(Color_t color, Option_t *axis)
 {
 // Set axis labels color.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelColor(color);
-   if (ax == 2) fYaxis.SetLabelColor(color);
-   if (ax == 3) fZaxis.SetLabelColor(color);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelColor(color);
+   if (opt.Contains("y")) fYaxis.SetLabelColor(color);
+   if (opt.Contains("z")) fZaxis.SetLabelColor(color);
 }
 
 //______________________________________________________________________________
@@ -554,11 +562,14 @@ void TStyle::SetLabelFont(Style_t font, Option_t *axis)
 //             precision = 2 scalable and rotatable hardware fonts
 // The default font number is 62.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelFont(font);
-   if (ax == 2) fYaxis.SetLabelFont(font);
-   if (ax == 3) fZaxis.SetLabelFont(font);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelFont(font);
+   if (opt.Contains("y")) fYaxis.SetLabelFont(font);
+   if (opt.Contains("z")) fZaxis.SetLabelFont(font);
 }
 
 //______________________________________________________________________________
@@ -567,11 +578,14 @@ void TStyle::SetLabelOffset(Float_t offset, Option_t *axis)
 // Set offset between axis and axis labels.
 // The offset is expressed as a percent of the pad height.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelOffset(offset);
-   if (ax == 2) fYaxis.SetLabelOffset(offset);
-   if (ax == 3) fZaxis.SetLabelOffset(offset);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelOffset(offset);
+   if (opt.Contains("y")) fYaxis.SetLabelOffset(offset);
+   if (opt.Contains("z")) fZaxis.SetLabelOffset(offset);
 }
 
 //______________________________________________________________________________
@@ -579,11 +593,14 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 {
 // Set size of axis labels. The size is expressed as a percent of the pad height.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelSize(size);
-   if (ax == 2) fYaxis.SetLabelSize(size);
-   if (ax == 3) fZaxis.SetLabelSize(size);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelSize(size);
+   if (opt.Contains("y")) fYaxis.SetLabelSize(size);
+   if (opt.Contains("z")) fZaxis.SetLabelSize(size);
 }
 
 
@@ -729,11 +746,14 @@ void TStyle::SetTickLength(Float_t length, Option_t *axis)
 {
 // set the tick marks length for an axis.
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTickLength(length);
-   if (ax == 2) fYaxis.SetTickLength(length);
-   if (ax == 3) fZaxis.SetTickLength(length);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTickLength(length);
+   if (opt.Contains("y")) fYaxis.SetTickLength(length);
+   if (opt.Contains("z")) fZaxis.SetTickLength(length);
 }
 
 //______________________________________________________________________________
@@ -746,11 +766,14 @@ void TStyle::SetTitleOffset(Float_t offset, Option_t *axis)
 // offset = 0.8 means: the distance will be 0.8*(default distance)
 //
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTitleOffset(offset);
-   if (ax == 2) fYaxis.SetTitleOffset(offset);
-   if (ax == 3) fZaxis.SetTitleOffset(offset);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTitleOffset(offset);
+   if (opt.Contains("y")) fYaxis.SetTitleOffset(offset);
+   if (opt.Contains("z")) fZaxis.SetTitleOffset(offset);
 }
 
 //______________________________________________________________________________
@@ -759,11 +782,14 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 // Set the axis title size.
 //
 // axis specifies which axis ("x","y","z"), default = "x"
+// if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTitleSize(size);
-   if (ax == 2) fYaxis.SetTitleSize(size);
-   if (ax == 3) fZaxis.SetTitleSize(size);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTitleSize(size);
+   if (opt.Contains("y")) fYaxis.SetTitleSize(size);
+   if (opt.Contains("z")) fZaxis.SetTitleSize(size);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -31,13 +31,13 @@
 class TPave : public TBox {
 
 protected:
-        Float_t      fX1NDC;         //X1 point in NDC coordinates
-        Float_t      fY1NDC;         //Y1 point in NDC coordinates
-        Float_t      fX2NDC;         //X2 point in NDC coordinates
-        Float_t      fY2NDC;         //Y2 point in NDC coordinates
+        Double_t     fX1NDC;         //X1 point in NDC coordinates
+        Double_t     fY1NDC;         //Y1 point in NDC coordinates
+        Double_t     fX2NDC;         //X2 point in NDC coordinates
+        Double_t     fY2NDC;         //Y2 point in NDC coordinates
         Int_t        fBorderSize;    //window box bordersize in pixels
         Int_t        fInit;          //(=0 if transformation to NDC not yet done)
-        Float_t      fCornerRadius;  //Corner radius in case of option arc
+        Double_t     fCornerRadius;  //Corner radius in case of option arc
         TString      fOption;        //Pave style
         TString      fName;          //Pave name
 
@@ -48,42 +48,42 @@ public:
         };
 
         TPave();
-        TPave(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2,
+        TPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
               Int_t bordersize=4 ,Option_t *option="br");
         TPave(const TPave &pave);
         virtual ~TPave();
                 void  Copy(TObject &pave);
         virtual void  ConvertNDCtoPad();
         virtual void  Draw(Option_t *option="");
-        virtual void  DrawPave(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2,
+        virtual void  DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Int_t bordersize=4 ,Option_t *option="br");
         virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
           Int_t       GetBorderSize() { return fBorderSize;}
-          Float_t     GetCornerRadius() {return fCornerRadius;}
+          Double_t    GetCornerRadius() {return fCornerRadius;}
           Option_t   *GetName() const {return fName.Data();}
           Option_t   *GetOption() const {return fOption.Data();}
-          Float_t     GetX1NDC() {return fX1NDC;}
-          Float_t     GetX2NDC() {return fX2NDC;}
-          Float_t     GetY1NDC() {return fY1NDC;}
-          Float_t     GetY2NDC() {return fY2NDC;}
+          Double_t    GetX1NDC() {return fX1NDC;}
+          Double_t    GetX2NDC() {return fX2NDC;}
+          Double_t    GetY1NDC() {return fY1NDC;}
+          Double_t    GetY2NDC() {return fY2NDC;}
         virtual void  ls(Option_t *option="");
         virtual void  Paint(Option_t *option="");
-        virtual void  PaintPave(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2,
+        virtual void  PaintPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Int_t bordersize=4 ,Option_t *option="br");
-        virtual void  PaintPaveArc(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2,
+        virtual void  PaintPaveArc(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Int_t bordersize=4 ,Option_t *option="br");
         virtual void  Print(Option_t *option="");
         virtual void  SavePrimitive(ofstream &out, Option_t *option);
         virtual void  SetBorderSize(Int_t bordersize=4) {fBorderSize = bordersize;} // *MENU*
-        virtual void  SetCornerRadius(Float_t rad = 0.2) {fCornerRadius = rad;} // *MENU*
+        virtual void  SetCornerRadius(Double_t rad = 0.2) {fCornerRadius = rad;} // *MENU*
         virtual void  SetName(const char *name="") {fName = name;} // *MENU*
         virtual void  SetOption(Option_t *option="br") {fOption = option;}
-        virtual void  SetX1NDC(Coord_t x1) {fX1NDC=x1;}
-        virtual void  SetX2NDC(Coord_t x2) {fX2NDC=x2;}
-        virtual void  SetY1NDC(Coord_t y1) {fY1NDC=y1;}
-        virtual void  SetY2NDC(Coord_t y2) {fY2NDC=y2;}
+        virtual void  SetX1NDC(Double_t x1) {fX1NDC=x1;}
+        virtual void  SetX2NDC(Double_t x2) {fX2NDC=x2;}
+        virtual void  SetY1NDC(Double_t y1) {fY1NDC=y1;}
+        virtual void  SetY2NDC(Double_t y2) {fY2NDC=y2;}
 
-        ClassDef(TPave,1)  //Pave. A box with shadowing
+        ClassDef(TPave,2)  //Pave. A box with shadowing
 };
 
 #endif

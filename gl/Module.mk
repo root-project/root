@@ -38,11 +38,7 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-ifeq ($(ARCH),win32)
-$(GLLIB):       $(GLO) $(MAINLIBS) $(G3DLIB) $(WIN32LIB)
-else
-$(GLLIB):       $(GLO) $(MAINLIBS)
-endif
+$(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" "$(GLLIBEXTRA)"
 

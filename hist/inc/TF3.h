@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -30,18 +30,18 @@
 class TF3 : public TF2 {
 
 protected:
-   Float_t   fZmin;        //Lower bound for the range in z
-   Float_t   fZmax;        //Upper bound for the range in z
+   Double_t  fZmin;        //Lower bound for the range in z
+   Double_t  fZmax;        //Upper bound for the range in z
    Int_t     fNpz;         //Number of points along z used for the graphical representation
 
 public:
    TF3();
-   TF3(const char *name, const char *formula, Float_t xmin=0, Float_t xmax=1, Float_t ymin=0,
-       Float_t ymax=1, Float_t zmin=0, Float_t zmax=1);
-   TF3(const char *name, void *fcn, Float_t xmin=0, Float_t xmax=1, Float_t ymin=0,
-       Float_t ymax=1, Float_t zmin=0, Float_t zmax=1, Int_t npar=0);
-   TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Float_t xmin=0, Float_t xmax=1, Float_t ymin=0,
-       Float_t ymax=1, Float_t zmin=0, Float_t zmax=1, Int_t npar=0);
+   TF3(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1);
+   TF3(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
+   TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
 
    TF3(const TF3 &f3);
    virtual   ~TF3();
@@ -50,31 +50,31 @@ public:
    virtual void     Draw(Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
           Int_t     GetNpz() {return fNpz;}
-   virtual void     GetRandom3(Float_t &xrandom, Float_t &yrandom, Float_t &zrandom);
-   virtual void     GetRange(Float_t &xmin, Float_t &xmax);
-   virtual void     GetRange(Float_t &xmin, Float_t &ymin, Float_t &xmax, Float_t &ymax);
-   virtual void     GetRange(Float_t &xmin, Float_t &ymin, Float_t &zmin, Float_t &xmax, Float_t &ymax, Float_t &zmax);
-   virtual Float_t  GetZmin() {return fZmin;}
-   virtual Float_t  GetZmax() {return fZmax;}
+   virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);
+   virtual void     GetRange(Double_t &xmin, Double_t &xmax);
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
+   virtual Double_t GetZmin() {return fZmin;}
+   virtual Double_t GetZmax() {return fZmax;}
    virtual Double_t Integral(Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return TF1::Integral(ax,bx,ay,by,epsilon);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual void     Paint(Option_t *option="");
    virtual void     SetNpz(Int_t npz=30);
-   virtual void     SetRange(Float_t xmin, Float_t xmax);
-   virtual void     SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax);
-   virtual void     SetRange(Float_t xmin, Float_t ymin, Float_t zmin, Float_t xmax, Float_t ymax, Float_t zmax); // *MENU*
+   virtual void     SetRange(Double_t xmin, Double_t xmax);
+   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
+   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax); // *MENU*
 
-   ClassDef(TF3,1)  //The Parametric 3-D function
+   ClassDef(TF3,2)  //The Parametric 3-D function
 };
 
-inline void TF3::GetRange(Float_t &xmin, Float_t &xmax)
+inline void TF3::GetRange(Double_t &xmin, Double_t &xmax)
    { TF2::GetRange(xmin, xmax); }
-inline void TF3::GetRange(Float_t &xmin, Float_t &ymin, Float_t &xmax, Float_t &ymax)
+inline void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
    { TF2::GetRange(xmin, ymin, xmax, ymax); }
-inline void TF3::SetRange(Float_t xmin, Float_t xmax)
+inline void TF3::SetRange(Double_t xmin, Double_t xmax)
    { TF2::SetRange(xmin, xmax); }
-inline void TF3::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax)
+inline void TF3::SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    { TF2::SetRange(xmin, ymin, xmax, ymax); }
 
 #endif

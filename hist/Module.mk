@@ -21,7 +21,7 @@ HISTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTO        := $(HISTS:.cxx=.o)
 
-HISTDEP      := $(HISTO:.o=.d)
+HISTDEP      := $(HISTO:.o=.d) $(HISTDO:.o=.d)
 
 HISTLIB      := $(LPATH)/libHist.$(SOEXT)
 
@@ -36,7 +36,7 @@ INCLUDEFILES += $(HISTDEP)
 include/%.h:    $(HISTDIRI)/%.h
 		cp $< $@
 
-$(HISTLIB):     $(HISTO) $(HISTDO) $(MAINLIBS)
+$(HISTLIB):     $(HISTO) $(HISTDO) $(MAINLIBS) $(HISTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHist.$(SOEXT) $@ "$(HISTO) $(HISTDO)" \
 		   "$(HISTLIBEXTRA)"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.8 2000/08/18 15:45:20 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -267,6 +267,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gPad           = 0;
    gRandom        = new TRandom;
 
+   //set name of graphical cut class for the graphics editor
+   //cannot call SetCutClassName at this point because the TClass of TCutG 
+   //is not yet build
+   fCutClassName = "TCutG";
+   
    // Create a default MessageHandler
    new TMessageHandler((TClass*)0);
 
@@ -331,7 +336,7 @@ TROOT::~TROOT()
       if (!fVersionInt) return;
 
       // ATTENTION!!! Order is important!
-
+      
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #ifdef WIN32
 //  Under Windows, one has to restore the color palettes created by individual canvases
@@ -339,7 +344,7 @@ TROOT::~TROOT()
 #endif
       fFiles->Delete();       SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
-      fMappedFiles->Delete();                           // and mapped files
+      fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
@@ -359,15 +364,16 @@ TROOT::~TROOT()
 //      SafeDelete(fGlobalFunctions);
 //      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 
-      // Problem deleting the interpreter. Want's to delete objects already
-      // deleted in the dtor's above. Crash.
-      //SafeDelete(fInterpreter);
-
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
 
       // Cleanup system class
       delete gSystem;
+
+      // Problem deleting the interpreter. Want's to delete objects already
+      // deleted in the dtor's above. Crash.
+      // It should only close the files and NOT delete.
+      SafeDelete(fInterpreter);
 
       // Prints memory stats
       TStorage::PrintStatistics();
@@ -920,7 +926,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
       // special case for ROOT classes Txxx
       char *lib, *path;
 #ifdef WIN32
-      lib = Form("lib%s", libname);
+      lib = Form("lib%s", libname);       // used to be Root_%s
 #else
       lib = Form("lib%s", libname);
 #endif
@@ -1114,6 +1120,30 @@ void TROOT::SaveContext()
 
    if (fInterpreter)
       fInterpreter->SaveGlobalsContext();
+}
+
+//______________________________________________________________________________
+void TROOT::SetCutClassName(const char *name)
+{
+   // Set the default graphical cut class name for the graphics editor
+   // By default the graphics editor creates an instance of a class TCutG.
+   // This function may be called to specify a different class that MUST
+   // derive from TCutG
+   
+   if (!name) {
+      Error("SetCutClassName","Invalid class name");
+      return;
+   }
+   TClass *cl = gROOT->GetClass(name);
+   if (!cl) {
+      Error("SetCutClassName","Unknown class:%s",name);
+      return;
+   }
+   if (!cl->InheritsFrom("TCutG")) {
+      Error("SetCutClassName","Class:%s does not derive from TCutG",name);
+      return;
+   }
+   fCutClassName = name;
 }
 
 //______________________________________________________________________________

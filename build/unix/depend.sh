@@ -4,11 +4,14 @@
 # more dependencies on one line. It may even speed up rmkdepend
 # (picking 3000 somewhat arbitrarily).
 
+trap "rm -f $1.tmp $1.tmp.bak; exit 1" 1 2 3 15
+
 touch $1.tmp
 
 bin/rmkdepend -f$1.tmp -Y -w 3000 -- $2 -- $3 > /dev/null 2>&1
 depstat=$?
 if [ $depstat -ne 0 ]; then
+   rm -f $1.tmp $1.tmp.bak
    exit $depstat
 fi
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -286,7 +286,7 @@ public:
    virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
-   virtual void            CloseConnection(int sock);
+   virtual void            CloseConnection(int sock, Bool_t force = kFALSE);
    virtual int             RecvRaw(int sock, void *buffer, int length, int flag);
    virtual int             SendRaw(int sock, const void *buffer, int length, int flag);
    virtual int             RecvBuf(int sock, void *buffer, int length);

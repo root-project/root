@@ -322,7 +322,7 @@ int G__iscastexpr_body(ebuf,lenbuf)
 char *ebuf;
 int lenbuf;
 {
-  char temp[G__ONELINE];
+  char temp[G__LONGLINE];
   strcpy(temp,ebuf+1);
   temp[lenbuf-2]=0;
   return (G__istypename(temp));
@@ -386,6 +386,7 @@ int lenbuf;
     ebuf[lenbuf] = '\0';                                               \
     vstack[sp++] = G__getitem(ebuf);                                   \
     lenbuf=0;                                                          \
+    iscastexpr = 0; /* ON1342 */                                       \
   }                                                                    \
   /* process unary operator */                                         \
   while(up && sp>=1) {                                                 \
@@ -424,6 +425,7 @@ int lenbuf;
   ebuf[lenbuf] = '\0';                                                 \
   vstack[sp++] = G__getitem(ebuf);                                     \
   lenbuf=0;                                                            \
+  iscastexpr = 0; /* ON1342 */                                         \
   /* process unary operator */                                         \
   while(up && sp>=1) {                                                 \
     --up;                                                              \
@@ -448,6 +450,7 @@ int lenbuf;
   /* set operator */                                                   \
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
+
 
 /******************************************************************
 * G__exec_unaopr()
@@ -499,6 +502,11 @@ int lenbuf;
         if('='==expression[ig1+2] && 'v'==G__var_type) {              \
           /* *a++=expr */                                             \
           G__var_type='p';                                            \
+          ebuf[lenbuf++]=c;                                           \
+          ebuf[lenbuf++]=c;                                           \
+          ++ig1;                                                      \
+        }                                                             \
+        else if(iscastexpr) { /* added ON1342 */                      \
           ebuf[lenbuf++]=c;                                           \
           ebuf[lenbuf++]=c;                                           \
           ++ig1;                                                      \
@@ -626,6 +634,148 @@ int lenbuf;
 
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1340
+/******************************************************************
+* && || operator handling
+*
+******************************************************************/
+#ifdef G__ASM_DBG
+
+#define G__SUSPEND_ANDOPR                                             \
+	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
+	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            G__no_exec_compile = 1;                                   \
+            vtmp_and = vstack[sp-1];                                  \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    if(G__asm_dbg) {                                          \
+	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
+	      fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp+1); \
+	    }                                                         \
+	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
+	    ppointer_and[pp_and] = G__asm_cp+2;                       \
+	    G__inc_cp_asm(3,0);                                       \
+	  }                                                           \
+	  ++pp_and
+
+#define G__SUSPEND_OROPR                                              \
+	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
+	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+            if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set\n"); \
+            G__no_exec_compile = 1;                                   \
+            vtmp_or = vstack[sp-1];                                   \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    if(G__asm_dbg) {                                          \
+	      fprintf(G__serr,"%3x: PUSHCPY\n",G__asm_cp);            \
+	      fprintf(G__serr,"%3x: CND1JMP assigned later\n",G__asm_cp+1); \
+	    }                                                         \
+	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+	    G__asm_inst[G__asm_cp+1]=G__CND1JMP;                      \
+	    ppointer_or[pp_or] = G__asm_cp+2;                         \
+	    G__inc_cp_asm(3,0);                                       \
+	  }                                                           \
+	  ++pp_or
+
+#define G__RESTORE_NOEXEC_ANDOPR                                      \
+  if(pp_and) {                                                        \
+    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset %d\n"\
+                     ,store_no_exec_compile_and[0]);                  \
+    if(!store_no_exec_compile_and[0]&&G__no_exec_compile)             \
+      vstack[sp-1] = vtmp_and;                                        \
+    G__no_exec_compile = store_no_exec_compile_and[0];                \
+  }
+
+#define G__RESTORE_ANDOPR                                             \
+  if(G__asm_noverflow) {                                              \
+    while(pp_and) {                                                   \
+      if(G__asm_dbg)                                                  \
+          fprintf(G__serr,"     CNDJMP assigned %x\n",G__asm_cp);     \
+      G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp;                \
+    }                                                                 \
+  }
+
+#define G__RESTORE_NOEXEC_OROPR                                       \
+  if(pp_or) {                                                         \
+    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset %d\n"\
+                     ,store_no_exec_compile_or[0]);                   \
+    if(!store_no_exec_compile_or[0]&&G__no_exec_compile)              \
+      vstack[sp-1] = vtmp_or;                                         \
+    G__no_exec_compile = store_no_exec_compile_or[0];                 \
+  }
+
+#define G__RESTORE_OROPR                                              \
+  if(G__asm_noverflow) {                                              \
+    while(pp_or) {                                                    \
+      if(G__asm_dbg)                                                  \
+          fprintf(G__serr,"     CND1JMP assigned %x\n",G__asm_cp);    \
+      G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp;                  \
+    }                                                                 \
+  }
+
+#else /* G__ASM_DBG */
+
+#define G__SUSPEND_ANDOPR                                             \
+	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
+	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+            G__no_exec_compile = 1;                                   \
+            vtmp_and = vstack[sp-1];                                  \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+	    G__asm_inst[G__asm_cp+1]=G__CNDJMP;                       \
+	    ppointer_and[pp_and] = G__asm_cp+2;                       \
+	    G__inc_cp_asm(3,0);                                       \
+	  }                                                           \
+	  ++pp_and
+
+#define G__SUSPEND_OROPR                                              \
+	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
+	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+            G__no_exec_compile = 1;                                   \
+            vtmp_or = vstack[sp-1];                                   \
+	  }                                                           \
+	  if(G__asm_noverflow) {                                      \
+	    G__asm_inst[G__asm_cp]=G__PUSHCPY;                        \
+	    G__asm_inst[G__asm_cp+1]=G__CND1JMP;                      \
+	    ppointer_or[pp_or] = G__asm_cp+2;                         \
+	    G__inc_cp_asm(3,0);                                       \
+	  }                                                           \
+	  ++pp_or
+
+#define G__RESTORE_NOEXEC_ANDOPR                                      \
+  if(pp_and) {                                                        \
+    if(!store_no_exec_compile_and[0]&&G__no_exec_compile)             \
+      vstack[sp-1] = vtmp_and;                                        \
+    G__no_exec_compile = store_no_exec_compile_and[0];                \
+  }
+
+#define G__RESTORE_ANDOPR                                             \
+  if(G__asm_noverflow) {                                              \
+    while(pp_and) {                                                   \
+      G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp;                \
+    }                                                                 \
+  }
+
+#define G__RESTORE_NOEXEC_OROPR                                       \
+  if(pp_or) {                                                         \
+    if(!store_no_exec_compile_or[0]&&G__no_exec_compile)              \
+      vstack[sp-1] = vtmp_or;                                         \
+    G__no_exec_compile = store_no_exec_compile_or[0];                 \
+  }
+
+#define G__RESTORE_OROPR                                              \
+  if(G__asm_noverflow) {                                              \
+    while(pp_or) {                                                    \
+      G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp;                  \
+    }                                                                 \
+  }
+
+#endif /* G__ASM_DBG */
+
+#endif /* ON1340 */
 
 /******************************************************************
 * G__value G__getexpr(expression)
@@ -658,10 +808,21 @@ char *expression;
   int nest=0; /* parenthesis nesting state variable */
   int single_quote=0,double_quote=0; /* quotation flags */
 
+#ifndef G__PHILIPPE19
+  int iscastexpr = 0; /* whether this expression start with a cast */
+#endif
+
   G__value defined;
   int store_var_type = G__var_type;
   int explicitdtor = 0;
   int inew=0; /* ON994 */
+#ifndef G__OLDIMPLEMENTATION1340
+  int pp_and = 0, pp_or = 0;
+  int ppointer_and[G__STACKDEPTH], ppointer_or[G__STACKDEPTH];
+  int store_no_exec_compile_and[G__STACKDEPTH];
+  int store_no_exec_compile_or[G__STACKDEPTH];
+  G__value vtmp_and,vtmp_or;
+#endif
 
   /******************************************************************
   * return null for no expression
@@ -730,6 +891,12 @@ char *expression;
 	ebuf[lenbuf++]=c;
 #ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
+#endif
+#ifndef G__PHILIPPE19
+        if (!iscastexpr && '('==ebuf[0]) {
+          ebuf[lenbuf] = '\0';
+          iscastexpr = G__iscastexpr(ebuf);
+        }
 #endif
       }
       else ebuf[lenbuf++]=c;
@@ -933,6 +1100,9 @@ char *expression;
 	  /* a&&b */
 	  ++ig1;
 	  G__exec_binopr('A',G__PREC_LOGICAND);
+#ifndef G__OLDIMPLEMENTATION1340
+	  G__SUSPEND_ANDOPR;
+#endif /* 1340 */
 	}
 	else if('='==expression[ig1+1]) {
 	  /* a&=b */
@@ -976,7 +1146,14 @@ char *expression;
 	if(c==expression[ig1+1]) {
 	  /* a||b */
 	  ++ig1;
+#ifndef G__OLDIMPLEMENTATION1340
+#endif
 	  G__exec_binopr('O',G__PREC_LOGICOR);
+#ifndef G__OLDIMPLEMENTATION1340
+          G__RESTORE_NOEXEC_ANDOPR
+          G__RESTORE_ANDOPR
+	  G__SUSPEND_OROPR;
+#endif
 	}
 	else if('='==expression[ig1+1]) {
 	  /* a|=b */
@@ -1047,7 +1224,16 @@ char *expression;
   /******************************************************************
   * Evaluate operators in stack
   ******************************************************************/
+#ifndef G__OLDIMPLEMENTATION1340
+#endif
   G__exec_evalall;
+
+#ifndef G__OLDIMPLEMENTATION1340
+  G__RESTORE_NOEXEC_ANDOPR
+  G__RESTORE_NOEXEC_OROPR
+  G__RESTORE_ANDOPR
+  G__RESTORE_OROPR
+#endif
 
   return(vstack[0]);
 }
@@ -1559,6 +1745,9 @@ char *item;
   default:
     store_var_typeB = G__var_type;
     known=0;
+#ifndef G__OLDIMPLEMENTATION1342
+    G__var_type = 'p';
+#endif
     /* variable */
     result3=G__getvariable(item,&known,&G__global,G__p_local);
     /* function */
@@ -1900,6 +2089,20 @@ int newoperator,oldoperator;
 }
 
 
+#ifndef G__OLDIMPLEMENTATION1340
+/***********************************************************************
+* int *G__test(char *expression2)
+***********************************************************************/
+int G__test(expression2)
+char *expression2;
+{
+  G__value result;
+  result=G__getexpr(expression2);
+  if('u'==result.type) return(G__iosrdstate(&result));
+  return(G__int(result));
+}
+
+#else /* 1340 */
 /***********************************************************************/
 /* int *G__test(char *expression2)                                     */
 /*                                                                     */
@@ -2344,7 +2547,9 @@ char *expression2;
     /***************************
      * no operator
      ***************************/
+#ifdef G__OLDIMPLEMENTATION1338
     if(lbuf[0]!='(' || lbuf[lenbuf2-1]!=')') {
+#endif
       /***************************
        * if(variable)
        ***************************/
@@ -2358,6 +2563,7 @@ char *expression2;
 #endif
       if(G__double(lresult)!=0) return(1);
       else return(0);
+#ifdef G__OLDIMPLEMENTATION1338
     }
     else {
       /***************************
@@ -2368,6 +2574,7 @@ char *expression2;
       lbuf[ig12-1]='\0';
       return(G__test(lbuf));
     }
+#endif
     /* break; */
     
 #ifdef G__OLDIMPLEMENTATION767
@@ -2413,6 +2620,7 @@ char *expression2;
   return(0);
 
 }
+#endif /* 1340 */
 
 
 

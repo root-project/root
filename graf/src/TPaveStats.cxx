@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -56,7 +56,7 @@ TPaveStats::TPaveStats(): TPaveText()
 }
 
 //______________________________________________________________________________
-TPaveStats::TPaveStats(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Option_t *option)
+TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
 //*-*-*-*-*-*-*-*-*-*-*pavetext normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*

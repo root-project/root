@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.12 2000/08/10 07:01:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -80,36 +80,37 @@ class TTreeFormula;
 class TPolyMarker;
 class TEventList;
 class TSQLResult;
+class TSelector;
+class TPrincipal;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
+    Stat_t        fEntries;           //Number of entries
+    Stat_t        fTotBytes;          //Total number of bytes in all branches before compression
+    Stat_t        fZipBytes;          //Total number of bytes in all branches after compression
+    Stat_t        fSavedBytes;        //Number of autosaved bytes
     Int_t         fScanField;         //Number of runs before prompting in Scan
     Int_t         fUpdate;            //Update frequency for EntryLoop
     Int_t         fMaxEntryLoop;      //Maximum number of entries to process
     Int_t         fMaxVirtualSize;    //Maximum total size of buffers kept in memory
     Int_t         fAutoSave;          //Autosave tree when fAutoSave bytes produced
-    Stat_t        fEntries;           //Number of entries
-    Stat_t        fTotBytes;          //Total number of bytes in all branches before compression
-    Stat_t        fZipBytes;          //Total number of bytes in all branches after compression
-    Stat_t        fSavedBytes;        //Number of autosaved bytes
     Int_t         fChainOffset;       //Offset of 1st entry of this Tree in a TChain
     Int_t         fReadEntry;         //Number of the entry being processed
     Int_t         fTotalBuffers;      //Total number of bytes in branch buffers
     Int_t         fEstimate;          //Number of entries to estimate histogram limits
-    Int_t         fDimension;         //Dimension of the current expression
     Int_t         fPacketSize;        //Number of entries in one packet for parallel root
-    TDirectory    *fDirectory;        //Pointer to directory holding this tree
+    Int_t         fNfill;             //Local for EntryLoop
+    Int_t         fTimerInterval;     //Timer interval in milliseconds
+    TDirectory   *fDirectory;         //Pointer to directory holding this tree
     TObjArray     fBranches;          //List of Branches
     TObjArray     fLeaves;            //Direct pointers to individual branch leaves
-    TEventList    *fEventList;        //Pointer to event selection list (if one)
-    Int_t          fNfill;            //Local for EntryLoop
-    Int_t          fTimerInterval;    //Timer interval in milliseconds
-    TArrayD        fIndexValues;      //Sorted index values
-    TArrayI        fIndex;            //Index of sorted values
-    TList         *fStreamerInfoList; //list of StreamerInfo for all TBranchObjects
+    TEventList   *fEventList;         //Pointer to event selection list (if one)
+    TArrayD       fIndexValues;       //Sorted index values
+    TArrayI       fIndex;             //Index of sorted values
+    TList        *fStreamerInfoList;  //list of StreamerInfo for all TBranchObjects
     TVirtualTreePlayer *fPlayer;      //Pointer to current Tree player
-
+    
 protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
     virtual void     MakeIndex(TString &varexp, Int_t *index);
@@ -139,16 +140,17 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Delete(Option_t *option=""); // *MENU*
     virtual void      Draw(Option_t *opt);
-    virtual void      Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Draw(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      DropBuffers(Int_t nbytes);
     virtual Int_t     Fill();
-    virtual void      Fit(const char *formula ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
+    virtual Int_t     Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
+    virtual Int_t     GetChainEntryNumber(Int_t entry) {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }
     TFile            *GetCurrentFile();
     TList            *GetStreamerInfoList() {return fStreamerInfoList;}
@@ -168,8 +170,8 @@ public:
     virtual TObjArray       *GetListOfBranches()  {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()    {return &fLeaves;}
     virtual Int_t     GetMaxEntryLoop() {return fMaxEntryLoop;}
-    virtual Float_t   GetMaximum(const char *columname);
-    virtual Float_t   GetMinimum(const char *columname);
+    virtual Double_t  GetMaximum(const char *columname);
+    virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetMaxVirtualSize() {return fMaxVirtualSize;}
     virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
     TVirtualTreePlayer  *GetPlayer();
@@ -182,13 +184,14 @@ public:
     virtual Int_t     GetTimerInterval() {return fTimerInterval;}
     virtual TTree    *GetTree() {return this;}
     virtual Int_t     GetUpdate() {return fUpdate;}
+    virtual Int_t     GetTreeNumber() {return 0;}
     TTreeFormula     *GetVar1() {return GetPlayer()->GetVar1();}
     TTreeFormula     *GetVar2() {return GetPlayer()->GetVar2();}
     TTreeFormula     *GetVar3() {return GetPlayer()->GetVar3();}
     TTreeFormula     *GetVar4() {return GetPlayer()->GetVar4();}
-    virtual Float_t  *GetV1()   {return GetPlayer()->GetV1();}
-    virtual Float_t  *GetV2()   {return GetPlayer()->GetV2();}
-    virtual Float_t  *GetV3()   {return GetPlayer()->GetV3();}
+    virtual Double_t *GetV1()   {return GetPlayer()->GetV1();}
+    virtual Double_t *GetV2()   {return GetPlayer()->GetV2();}
+    virtual Double_t *GetV3()   {return GetPlayer()->GetV3();}
     virtual Double_t *GetW()    {return GetPlayer()->GetW();}
     virtual Stat_t    GetTotBytes() {return fTotBytes;}
     virtual Stat_t    GetZipBytes() {return fZipBytes;}
@@ -196,18 +199,23 @@ public:
     Bool_t            IsFolder() {return kTRUE;}
     virtual Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     MakeClass(const char *classname=0);
+    virtual Int_t     MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
+    virtual Int_t     MakeSelector(const char *selector=0);
     Bool_t            MemoryFull(Int_t nbytes);
-    virtual void      Print(Option_t *option=""); // *MENU*
-    virtual void      Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
+    TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Reset(Option_t *option="");
-    virtual void      Scan(const char *varexp="", const char *selection="", Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual void      Print(Option_t *option=""); // *MENU*
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      SetAutoSave(Int_t autosave=10000000) {fAutoSave=autosave;}
+    virtual void      Reset(Option_t *option="");
+    virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
+                       ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual void      SetAutoSave(Int_t autos=10000000) {fAutoSave=autos;}
     virtual void      SetBasketSize(const char *bname,Int_t buffsize=16000);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
@@ -224,6 +232,9 @@ public:
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(Int_t ww=520, Int_t wh=400); // *MENU*
+    virtual void      UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" 
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
+    void              UseCurrentStyle();
 
     ClassDef(TTree,4)  //Tree descriptor (the main ROOT I/O class)
 };

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 class TSeqCollection : public TCollection {
 
 protected:
-   Bool_t            fSorted;
+   Bool_t            fSorted;    // true if collection has been sorted
 
    TSeqCollection() { }
    TSeqCollection(TObject *parent) : TCollection(parent) { }
@@ -56,8 +56,9 @@ public:
    virtual TObject  *First() const = 0;
    virtual TObject  *Last() const = 0;
    Int_t             LastIndex() const { return GetSize() - 1; }
-   virtual Int_t     IndexOf(TObject *obj) const; // returns -1 if not found
-   Bool_t            IsSorted() { return fSorted; }
+   virtual Int_t     IndexOf(TObject *obj) const;
+   Bool_t            IsSorted() const { return fSorted; }
+   void              UnSort() { fSorted = kFALSE; }
 
    static Int_t      ObjCompare(TObject *a, TObject *b);
    static void       QSort(TObject **a, Int_t first, Int_t last);

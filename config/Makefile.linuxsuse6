@@ -13,11 +13,11 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+CXXFLAGS      = -pipe -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
@@ -28,7 +28,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -rdynamic
-XLIBS         = ../lib/libXpm.a -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -lncurses -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
@@ -37,4 +37,5 @@ F77           = g77
 F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c
 
-
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

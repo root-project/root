@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.57 2000/01/12 18:07:22 fine Exp $"
+    "$Id: TDataSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
@@ -770,7 +770,7 @@ void TDataSet::Sort()
 }
 
 //______________________________________________________________________________
-void TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
+Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
 {
  //
  // To Write object first we should temporary break the
@@ -779,8 +779,9 @@ void TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
  //
   TDataSet *saveParent = fParent; // GetParent();
   fParent = 0;
-  TObject::Write(name,option, bufsize);
+  Int_t nbytes = TObject::Write(name,option, bufsize);
   fParent = saveParent;
+  return nbytes;
 }
 
 

@@ -21,7 +21,7 @@ POSTSCRIPTH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 POSTSCRIPTS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 POSTSCRIPTO  := $(POSTSCRIPTS:.cxx=.o)
 
-POSTSCRIPTDEP := $(POSTSCRIPTO:.o=.d)
+POSTSCRIPTDEP := $(POSTSCRIPTO:.o=.d) $(POSTSCRIPTDO:.o=.d)
 
 POSTSCRIPTLIB := $(LPATH)/libPostscript.$(SOEXT)
 

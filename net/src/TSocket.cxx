@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.3 2000/08/21 10:37:30 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -175,12 +175,17 @@ TSocket::TSocket(const TSocket &s)
 }
 
 //______________________________________________________________________________
-void TSocket::Close(Option_t *)
+void TSocket::Close(Option_t *option)
 {
-   // Close the socket. Also called via the dtor.
+   // Close the socket. If option is "force", calls shutdown(id,2) to
+   // shut down the connection. This will close the connection also
+   // for the parent of this process. Also called via the dtor (without
+   // option "force", call explicitely Close("force") if this is desired).
+
+   Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
    if (fSocket != -1) {
-      gSystem->CloseConnection(fSocket);
+      gSystem->CloseConnection(fSocket, force);
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;
@@ -344,7 +349,7 @@ Int_t TSocket::Recv(char *str, Int_t max)
 Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
 {
    // Receive a character string message of maximum max length. Returns in
-   // kind the message type. Returns length of received string (can be 0 if
+   // kind the message type. Returns length of received string+4 (can be 0 if
    // other side of connection is closed) or -1 in case of error or -4 in
    // case a non-blocking socket would block (i.e. there is nothing to be read).
 
@@ -363,7 +368,7 @@ Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
    }
    delete mess;
 
-   return n - sizeof(Int_t);   // number of bytes read - TMessage::What()
+   return n;   // number of bytes read (len of str + sizeof(kind)
 }
 
 //______________________________________________________________________________
@@ -389,8 +394,8 @@ Int_t TSocket::Recv(TMessage *&mess)
    }
    len = net2host(len);  //from network to host byte order
 
-   char *buf = new char[len];
-   if ((n = gSystem->RecvRaw(fSocket, buf, len, 0)) <= 0) {
+   char *buf = new char[len+sizeof(UInt_t)];
+   if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
       delete [] buf;
       mess = 0;
       return n;
@@ -399,7 +404,7 @@ Int_t TSocket::Recv(TMessage *&mess)
    fBytesRecv  += n + sizeof(UInt_t);
    fgBytesRecv += n + sizeof(UInt_t);
 
-   mess = new TMessage(buf, len);
+   mess = new TMessage(buf, len+sizeof(UInt_t));
 
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };

@@ -439,6 +439,10 @@ int G__autoload_stdheader = 1;
 int G__ignore_stdnamespace = 1;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1349
+int G__decl_obj=0;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

@@ -21,7 +21,7 @@ RFIOH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RFIOS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 RFIOO        := $(RFIOS:.cxx=.o)
 
-RFIODEP      := $(RFIOO:.o=.d)
+RFIODEP      := $(RFIOO:.o=.d) $(RFIODO:.o=.d)
 
 RFIOLIB      := $(LPATH)/libRFIO.$(SOEXT)
 

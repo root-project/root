@@ -6,11 +6,10 @@
    c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
 
    c1->SetFillColor(42);
-   c1->SetGridx();
-   c1->SetGridy();
+   c1->SetGrid();
 
    const Int_t n = 20;
-   Float_t x[n], y[n];
+   Double_t x[n], y[n];
    for (Int_t i=0;i<n;i++) {
      x[i] = i*0.1;
      y[i] = 10*sin(x[i]+0.2);

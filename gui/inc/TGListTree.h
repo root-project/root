@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -154,6 +154,8 @@ public:
                            const TGPicture *closed = 0);
    void  RenameItem(TGListTreeItem *item, const char *string);
    Int_t DeleteItem(TGListTreeItem *item);
+   void  OpenItem(TGListTreeItem *item);
+   void  CloseItem(TGListTreeItem *item);
    Int_t RecursiveDeleteItem(TGListTreeItem *item, void *userData);
    Int_t DeleteChildren(TGListTreeItem *item);
    Int_t Reparent(TGListTreeItem *item, TGListTreeItem *newparent);

@@ -42,7 +42,26 @@ char *new_name;
   int cin;
   int store_def_struct_member,store_tagdefining;
 
+#ifndef G__PHILIPPE12
+  cin=G__fgetvarname(new_name,"&,;=():}");
+  if (cin=='&') {
+#ifndef G__OLDIMPLEMENTATION1353
+    if(0==strcmp(new_name,"operator")) {
+      new_name[8] = cin;
+      cin=G__fgetvarname(new_name+9,",;=():}");
+    }
+    else {
+      strcat(new_name,"&");
+      cin = ' ';
+    }
+#else
+    strcat(new_name,"&");
+    cin = ' ';
+#endif
+  }
+#else
   cin=G__fgetvarname(new_name,",;=():}");
+#endif
 
 
   /*********************************************************
@@ -87,6 +106,11 @@ char *new_name;
     else if(strcmp(new_name,"&")==0 || strcmp(new_name,"*")==0) {
       cin=G__fgetvarname(new_name+1,",;=():");
     }
+#ifndef G__PHILIPPE11
+    else if(strcmp(new_name,"&*")==0 || strcmp(new_name,"*&")==0) {
+      cin=G__fgetvarname(new_name+2,",;=():");
+    } 
+#endif
 
     if(strcmp(new_name,"double")==0) {
       cin=G__fgetvarname(new_name,",;=():");
@@ -231,6 +255,13 @@ char *new_name;
 	G__reftype=G__PARAREFERENCE;
 	G__constvar |= G__PCONSTVAR;
       }
+#ifndef G__PHILIPPE22
+      else if(strcmp(new_name,"*const&")==0) {
+	cin=G__fgetvarname(new_name+1,",;=():");
+	G__constvar |= G__PCONSTVAR;
+	G__reftype=G__PARAREFERENCE;
+      }
+#endif
 #ifndef G__OLDIMPLEMENTATION1216
       else if(strcmp(new_name,"volatile")==0) {
 	cin=G__fgetvarname(new_name,",;=():");
@@ -253,6 +284,9 @@ char *new_name;
 #endif
       if(strcmp(new_name,"operator")==0 ||
 	 strcmp(new_name,"*operator")==0||
+#ifndef G__PHILIPPE11
+	 strcmp(new_name,"*&operator")==0||
+#endif
 	 strcmp(new_name,"&operator")==0) {
 	/* read real name */
 	cin=G__fgetstream(temp1,"(");
@@ -369,6 +403,23 @@ char *new_name;
     }
     return(cin);
   }
+#ifndef G__PHILIPPE11
+  else if((strncmp(new_name,"&*operator",10)==0 ||
+	   strncmp(new_name,"*&operator",10)==0) &&
+	  (G__isoperator(new_name[10]) || '\0'==new_name[10])) {
+    if('='==cin) {
+      fseek(G__ifile.fp,-1,SEEK_CUR);
+      if(G__dispsource) G__disp_mask=1;
+      cin=G__fgetstream(new_name+strlen(new_name),"(");
+    }
+    else if('('==cin && '\0'==new_name[10]) {
+      cin=G__fignorestream(")");
+      cin=G__fignorestream("(");
+      strcpy(new_name+10,"()");
+    }
+    return(cin);
+  }  
+#endif
 
   return(cin);
 
@@ -645,6 +696,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
     G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+    G__globalvarpointer = G__PVOID;
+#endif
     return; /* long long handling */
   }
 #endif
@@ -911,6 +965,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
 
@@ -1007,6 +1064,27 @@ int tagnum,typenum;      /* overrides global variables */
 	  store_line = G__ifile.line_number;
 	  if(G__dispsource) G__disp_mask=1000;
 	  cin = G__fgetname(temp,",)*&<=");
+#ifndef G__PHILIPPE8
+          if (strlen(temp) && isspace(cin)) {
+            /* There was an argument and the parsing was stopped by a white
+             * space rather than on of ",)*&<=", it is possible that 
+             * we have a namespace followed by '::' in which case we have
+             * to grab more before stopping! */
+            int namespace_tagnum;
+            char more[G__LONGLINE];
+   
+            namespace_tagnum = G__defined_tagname(temp,2);
+            while ( ( ( (namespace_tagnum!=-1)
+                        && (G__struct.type[namespace_tagnum]=='n') )
+                      || (strcmp("std",temp)==0)
+                      || (temp[strlen(temp)-1]==':') )
+                    && isspace(cin) ) {
+              cin = G__fgetname(more,",)*&<=");
+              strcat(temp,more);
+              namespace_tagnum = G__defined_tagname(temp,2);
+            }
+          }
+#endif         
 	  fsetpos(G__ifile.fp,&store_fpos);
 	  if(G__dispsource) G__disp_mask=1;
 	  G__ifile.line_number = store_line;
@@ -1041,6 +1119,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -1129,6 +1210,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1161,6 +1245,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -1286,6 +1373,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  return;
 	}
 	
@@ -1345,6 +1435,28 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 	do {
 	  G__def_tagnum = G__defined_tagname(new_name+i,0) ;
+#ifndef G__PHILIPPE9
+          /* protect against a non defined tagname */
+          if (G__def_tagnum<0) {
+            /* Hopefully restore all values! */
+            G__decl=store_decl;
+            G__constvar=0;
+            G__tagnum = store_tagnum;
+            G__typenum = store_typenum;
+            G__reftype=G__PARANORMAL;
+            G__static_alloc=store_static_alloc2;
+#ifndef G__OLDIMPLEMENTATION1119
+            G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+            G__globalvarpointer = G__PVOID;
+#endif
+#ifndef G__PHILIPPE23
+	    G__def_struct_member = store_def_struct_member;
+#endif
+            return;
+          }
+#endif /* G__PHILIPPE9 */
 	  G__tagdefining  = G__def_tagnum;
 	  cin = G__fgetstream(new_name+i,"(=;:");
 	} while(':'==cin && EOF!=(cin=G__fgetc())) ;
@@ -1374,6 +1486,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__OLDIMPLEMENTATION1306
 	case ';':
 #endif
+          /* PHILIPPE17: the following is fixed in 1306! */
 	  /* static class object member must call constructor 
 	   * TO BE IMPLEMENTED */
 #ifndef G__OLDIMPLEMENtATION1296
@@ -1446,6 +1559,9 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }
@@ -1743,6 +1859,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
+#endif
 	      return;
 	    }
 	  }
@@ -1764,8 +1883,14 @@ int tagnum,typenum;      /* overrides global variables */
 	if(G__CPPLINK!=G__struct.iscpplink[tagnum]) {
 	  /* allocate memory area for constructed object by interpreter */
 	  G__var_type = var_type;
+#ifndef G__OLDIMPLEMENTATION1349
+	  G__decl_obj=1;
+#endif
 	  G__store_struct_offset=G__int(G__letvariable(new_name,reg,&G__global
 						       ,G__p_local));
+#ifndef G__OLDIMPLEMENTATION1349
+	  G__decl_obj=0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1073
 	  if(0==G__store_struct_offset &&
 	     G__asm_wholefunction && G__asm_noverflow) {
@@ -1789,6 +1914,9 @@ int tagnum,typenum;      /* overrides global variables */
 	  G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
 #endif
 	  return;
 	}
@@ -1890,7 +2018,11 @@ int tagnum,typenum;      /* overrides global variables */
 		G__var_type = var_type;
 #ifndef G__OLDIMPLEMENTATION1137
 #ifndef G__OLDIMPLEMENTATION1251
-		if(known&& (G__globalvarpointer||G__asm_noverflow)) {
+		if((known && (G__globalvarpointer||G__asm_noverflow))
+#ifndef G__OLDIMPLEMENTATION1325
+		   || G__NOLINK != G__globalcomp 
+#endif
+		   ) {
 #else
 		if(G__globalvarpointer) {
 #endif
@@ -1963,6 +2095,9 @@ int tagnum,typenum;      /* overrides global variables */
 	      G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	      G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	      G__globalvarpointer = G__PVOID;
 #endif
 	      return;
 	    }
@@ -2062,6 +2197,9 @@ int tagnum,typenum;      /* overrides global variables */
 		G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
 #endif
 		return;
 	      }
@@ -2206,6 +2344,12 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 		G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+		G__globalvarpointer = G__PVOID;
+#endif
+#ifndef G__PHILIPPE21
+		G__prerun = store_prerun;
+#endif
 		return;
 	      }
 	    }
@@ -2259,6 +2403,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
 	  G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+	  G__globalvarpointer = G__PVOID;
+#endif
 	  return;
 	}
 	/* insert array initialization */
@@ -2275,6 +2422,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	    G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	    G__globalvarpointer = G__PVOID;
 #endif
 	    return;
 	  }
@@ -2327,6 +2477,9 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
+#endif
       return;
     }
     else if('}'==cin) {
@@ -2340,6 +2493,9 @@ int tagnum,typenum;      /* overrides global variables */
       G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
       G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+      G__globalvarpointer = G__PVOID;
 #endif
       return;
     }
@@ -2361,6 +2517,9 @@ int tagnum,typenum;      /* overrides global variables */
 	G__static_alloc=store_static_alloc2;
 #ifndef G__OLDIMPLEMENTATION1119
 	G__dynconst=0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1322
+	G__globalvarpointer = G__PVOID;
 #endif
 	return;
       }
@@ -2509,7 +2668,18 @@ char *new_name;
   
   /* getting size */
   if(islower(var->type[ig15])) {
+#ifndef G__OLDIMPLEMENTATION1329
+    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+      char store_var_type = G__var_type;
+      size=G__Lsizeof(G__newtype.name[buf.typenum]);
+      G__var_type = store_var_type;
+    }
+    else {
+      size=G__sizeof(&buf);
+    }
+#else
     size=G__sizeof(&buf);
+#endif
   }
   else {
     buf.type='L'; /* pointer assignement handled as long */
@@ -2606,10 +2776,23 @@ char *new_name;
   /**********************************************************
    * initialize remaining object to 0
    **********************************************************/
+#ifndef G__OLDIMPLEMENTATION1329
+  {
+    int initnum = var->varlabel[ig15][1];
+    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+      initnum /= size;
+    }
+    for(i=pinc+1;i<=initnum;i++) {
+      buf.obj.i=var->p[ig15]+size*i;
+      G__letvalue(&buf,G__null);
+    }
+  }
+#else
   for(i=pinc+1;i<=var->varlabel[ig15][1];i++) {
     buf.obj.i=var->p[ig15]+size*i;
     G__letvalue(&buf,G__null);
   }
+#endif
   
   /**********************************************************
    * read upto next , or ;

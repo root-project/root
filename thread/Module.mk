@@ -21,7 +21,7 @@ THREADH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 THREADS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 THREADO      := $(THREADS:.cxx=.o)
 
-THREADDEP    := $(THREADO:.o=.d)
+THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 
 THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 

@@ -21,6 +21,7 @@ CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:
 LD            = $(CXX)
@@ -29,8 +30,15 @@ SOFLAGS       = -G
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen -L/usr/ucblib -lucb
+SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen
 XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
+# Fortran:
+F77           = /opt/SUNWspro/bin/f77
+F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
+
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
 

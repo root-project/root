@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.1.1.2 2000/05/25 15:02:53 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-// $Id: TDataSet.h,v 1.41 2000/01/12 18:07:23 fine Exp $
+// $Id: TDataSet.h,v 1.1.1.2 2000/05/25 15:02:53 fisyak Exp $
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet
 
@@ -156,8 +156,8 @@ class TDataSet : public TNamed
             void         Mark(UInt_t flag,EBitOpt reset=kSet);
     virtual void         Update();                            // Update dataset
     virtual void         Update(TDataSet *set,UInt_t opt=0);// Update this dataset with the new one
-    virtual void         Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0);
-    ClassDef(TDataSet,1)
+    virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0);
+    ClassDef(TDataSet,1) // The base class to create the hierarchical data structures
 };
 
 inline void        TDataSet::Add(TDataSet *dataset){ AddLast(dataset); }

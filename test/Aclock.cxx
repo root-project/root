@@ -1,7 +1,5 @@
-//*CMZ :  2.24/01 06/03/2000  09.33.10  by  Rene Brun
-//*CMZ :  2.23/11 03/01/2000  10.12.05  by  Rene Brun
-//*CMZ :  2.00/12 04/10/98  18.09.49  by  Fons Rademakers
-//*-- Author :    Valeriy Onuchin & Fons Rademakers   04/10/98
+// @(#)root/test:$Name$:$Id$
+// Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
 //  ROOT implementation of the X11 xclock.

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.7 2000/06/30 13:32:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -87,7 +87,7 @@ void TAxis::CenterTitle(Bool_t center)
 }
 
 //______________________________________________________________________________
-const char *TAxis::ChooseTimeFormat(Float_t axislength)
+const char *TAxis::ChooseTimeFormat(Double_t axislength)
 {
 // Choose a reasonable time format from the coordinates in the active pad
 // and the number of divisions in this axis
@@ -97,8 +97,8 @@ const char *TAxis::ChooseTimeFormat(Float_t axislength)
    const char *formatstr;
    Int_t reasformat = 0;
    Int_t ndiv,nx1,nx2,N;
-   Float_t awidth;
-   Float_t length;
+   Double_t awidth;
+   Double_t length;
 
    if (!axislength) {
       length = gPad->GetUxmax() - gPad->GetUxmin();
@@ -110,7 +110,7 @@ const char *TAxis::ChooseTimeFormat(Float_t axislength)
    if (ndiv > 1000) {
       nx2   = ndiv/100;
       nx1   = TMath::Max(1, ndiv%100);
-      ndiv = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsWNDC());
+      ndiv = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsWNDC());
    }
    ndiv = TMath::Abs(ndiv);
    N = ndiv - (ndiv/100)*100;
@@ -219,15 +219,15 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    TView *view = gPad->GetView();
    static Int_t axisNumber;
-   static Float_t ratio1, ratio2;
+   static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
    Int_t bin1, bin2, first, last;
-   Float_t temp, xmin,xmax;
+   Double_t temp, xmin,xmax;
 
    switch (event) {
 
    case kButton1Down:
-      axisNumber = 0;
+      axisNumber = 1;
       if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
       if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
       if (!axisNumber) return;
@@ -317,7 +317,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             bin1 = FindFixBin(xmin);
             bin2 = FindFixBin(xmax);
             if (axisNumber == 1) SetRange(bin1,bin2);
-            if (axisNumber == 2) {
+            if (axisNumber == 2 && hobj) {
                if (hobj->GetDimension() == 1) {
                   hobj->SetMinimum(xmin);
                   hobj->SetMaximum(xmax);
@@ -495,6 +495,18 @@ void TAxis::GetLabel(char *)
 
 }
 
+//___________________________________________________________________________
+void TAxis::RotateTitle(Bool_t rotate)
+{
+//    rotate title by 180 degrees
+//    by default the title is drawn right adjusted.
+//    if rotate is TRUE, the title is left adjusted at the end of the axis
+//    and rotated by 180 degrees
+
+   if (rotate) SetBit(kRotateTitle);
+   else        ResetBit(kRotateTitle);
+}
+
 //______________________________________________________________________________
 void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
 {
@@ -509,6 +521,32 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fTitle   = "";
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
+   TAttAxis::ResetAttAxis(name);
+   fTimeDisplay = 0;
+   SetTimeFormat();
+}
+
+//______________________________________________________________________________
+void TAxis::Set(Int_t nbins, Float_t *xbins)
+{
+//*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*              ==================================
+   Int_t bin;
+   fNbins  = nbins;
+   fXbins.Set(fNbins+1);
+   for (bin=0; bin<= fNbins; bin++)
+      fXbins.fArray[bin] = xbins[bin];
+   for (bin=1; bin<= fNbins; bin++)
+      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+         Error("TAxis::Set", "bins must be in increasing order");
+   fXmin      = fXbins.fArray[0];
+   fXmax      = fXbins.fArray[fNbins];
+   fFirst     = 0;
+   fLast      = 0;
+   fXlabels   = 0;
+   fTitle     = "";
+   char name[64];
+   sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
@@ -534,7 +572,7 @@ void TAxis::Set(Int_t nbins, Axis_t *xbins)
    fXlabels   = 0;
    fTitle     = "";
    char name[64];
-   sprintf(name,"%s%s",GetName(),"x");
+   sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
@@ -570,9 +608,9 @@ void TAxis::SetRange(Int_t first, Int_t last)
 //          Set the viewing range for the axis from bin first to last
 
    if (last == 0) last = fNbins;
-   if (last < first) return;
    if (last > fNbins) last = fNbins;
-   if (first < 1) first = 1;
+   if (last  < first) first = 1;
+   if (first < 1)     first = 1;
    if (first == 1 && last == fNbins) {
       SetBit(kAxisRange,0);
       fFirst = 0;
@@ -620,9 +658,20 @@ void TAxis::Streamer(TBuffer &R__b)
       TNamed::Streamer(R__b);
       TAttAxis::Streamer(R__b);
       R__b >> fNbins;
-      R__b >> fXmin;
-      R__b >> fXmax;
-      fXbins.Streamer(R__b);
+      if (R__v < 5) {
+         Float_t xmin,xmax;
+         R__b >> xmin; fXmin = xmin;
+         R__b >> xmax; fXmax = xmax;
+         Float_t *xbins = 0;
+         Int_t n = R__b.ReadArray(xbins);
+         fXbins.Set(n);
+         for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];
+         delete [] xbins;         
+      } else {
+         R__b >> fXmin;
+         R__b >> fXmax;
+         fXbins.Streamer(R__b);
+      }
       if (R__v > 2) {
          R__b >> fFirst;
          R__b >> fLast;

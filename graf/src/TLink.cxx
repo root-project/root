@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TLink::TLink() : TText()
 }
 
 //______________________________________________________________________________
-TLink::TLink(Float_t x, Float_t y, void *pointer)
+TLink::TLink(Double_t x, Double_t y, void *pointer)
            : TText(x, y, "")
 {
 //*-*-*-*-*-*-*-*-*-*Constructor to define a link object*-*-*-*-*-*-*-*

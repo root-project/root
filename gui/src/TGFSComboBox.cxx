@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ static struct lbc_t gLbc[] = {
 #else
   { ROOTPREFIX,    ROOTPREFIX,              "root_t.xpm",          5000, 1, 0 },
 #endif
-  { NULL,          NULL,                    NULL,                  6000, 0, 0 }
+  { 0,             0,                       0,                     6000, 0, 0 }
 };
 
 

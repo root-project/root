@@ -1,6 +1,6 @@
-//*CMZ :  2.00/10 27/07/98  17.55.15  by  Fons Rademakers
-//*CMZ :  0.90/11 10/01/97  11.38.56  by  Rene Brun
-//*-- Author :    Rene Brun   10/01/97
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   10/01/97
+
 {
 //  This macro loads the shared library libEvent.so provided in $ROOTSYS/test.
 //  Before executing this macro, we assume that:

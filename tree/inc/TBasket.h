@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -44,7 +44,7 @@ protected:
     Int_t       fLast;            //Pointer to last used byte in basket
     Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
     char        *fZipBuffer;      //Basket compressed buffer (if compression)
-    char        *fDisplacement;   //![fNevBuf] Displacement of entries in fBuffer(TKey)
+    Int_t       *fDisplacement;   //![fNevBuf] Displacement of entries in fBuffer(TKey)
     Int_t       *fEntryOffset;    //[fNevBuf] Offset of entries in fBuffer(TKey)
     TBranch     *fBranch;         //Pointer to the basket support branch
 
@@ -57,7 +57,7 @@ public:
     virtual Int_t   DropBuffers();
     TBranch        *GetBranch() {return fBranch;}
             Int_t   GetBufferSize() {return fBufferSize;}
-            char   *GetDisplacement() {return fDisplacement;}
+            Int_t  *GetDisplacement() {return fDisplacement;}
             Int_t  *GetEntryOffset() {return fEntryOffset;}
     virtual Int_t   GetEntryPointer(Int_t Entry);
             char   *GetZipBuffer() {return fZipBuffer;}
@@ -70,7 +70,8 @@ public:
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
     virtual void    SetReadMode();
     virtual void    SetWriteMode();
-    virtual void    Update(Int_t newlast, Int_t disp = -1);
+    inline  void    Update(Int_t newlast) { Update(newlast,newlast); }; 
+    virtual void    Update(Int_t newlast, Int_t skipped);
     virtual Int_t   WriteBuffer();
 
     ClassDef(TBasket,2)  //the TBranch buffers

@@ -1,4 +1,4 @@
-/* @(#)root/thread:$Name$:$Id$ */
+/* @(#)root/thread:$Name:  $:$Id: PosixThreadInc.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -37,7 +37,9 @@
 #elif defined(R__HPUX)
 #define PthreadDraftVersion 4
 #else
+#if !defined(R__KCC)
 #warning PthreadDraftVersion not specified
+#endif
 #endif
 
 

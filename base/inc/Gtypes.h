@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Gtypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -30,7 +30,7 @@ typedef short     Marker_t;      //Marker number
 typedef short     Width_t;       //Line width
 typedef short     Color_t;       //Color number
 typedef short     SCoord_t;      //Screen coordinates
-typedef float     Coord_t;       //Pad world coordinates
+typedef double    Coord_t;       //Pad world coordinates
 typedef float     Angle_t;       //Graphics angle
 typedef float     Size_t;        //Attribute size
 
