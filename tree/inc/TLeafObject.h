@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.5 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.6 2001/01/23 14:40:27 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
     TMethodCall    *GetMethodCall(const char *name);
     TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
     const char     *GetTypeName() const ;
+    Bool_t          IsOnTerminalBranch() const    { return kFALSE; }
     Bool_t          IsVirtual() const {return fVirtual;}
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.2 2000/11/21 20:50:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.3 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -35,7 +35,8 @@ TLeaf::TLeaf(): TNamed()
 //*-*-*-*-*-*Default constructor for Leaf*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================
    fLen        = 0;
-   fBranch     = 0;
+   //fBranch     = 0;
+   fBranch     = gBranch;
    fLeafCount  = 0;
    fNdata      = 0;
    fOffset     = 0;
@@ -63,6 +64,7 @@ TLeaf::TLeaf(const char *name, const char *)
       *bracket = 0;
       SetName(newname);
    }
+   fBranch     = gBranch;
 }
 
 //______________________________________________________________________________
@@ -237,7 +239,6 @@ void TLeaf::Streamer(TBuffer &b)
          b.CheckByteCount(R__s, R__c, TLeaf::IsA());
          //====end of old versions
       }
-      fBranch = gBranch;
       if (fLen == 0) fLen = 1;
       ResetBit(kNewValue);
       SetAddress();
