@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.81 2004/04/20 21:21:42 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.82 2004/04/21 10:13:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -611,7 +611,7 @@ Bool_t TWinNTSystem::Init()
 #endif
 
    if (::GetVersion() < 0x80000000) { // Windows NT/2000/XP
-      fActUser = 0;
+      fActUser = -1;
       fNbGroups = fNbUsers = 0;
       GetNbGroups();
 
@@ -2277,8 +2277,8 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       fPasswords[memberIdx].pw_passwd = strdup("");
       fGroups[groupIdx].gr_mem[i] = strdup(szAnsiMemberName);
 
-      if(!stricmp(fPasswords[memberIdx].pw_name, act_name))
-         fActUser = memberIdx;
+      if(fActUser == -1 && !stricmp(fPasswords[memberIdx].pw_name,act_name))
+                      fActUser = memberIdx;
 
 
       TCHAR szUserName[255]=TEXT("");
@@ -2322,7 +2322,8 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       memberIdx++;
       MemberInfo++;
    }
-
+   if(fActUser == -1)  fActUser = 0; 
+   
    if (Data)
       NetApiBufferFree(Data);
 
