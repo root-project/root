@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.67 2001/04/28 07:47:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.68 2001/05/07 12:33:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1866,7 +1866,7 @@ Stat_t TTree::GetEntriesFriend() const
    if (!fFriends) return 0;
    TFriendElement *fr = (TFriendElement*)fFriends->At(0);
    if (!fr) return 0;
-   return fr->GetTree()->GetEntries();
+   return fr->GetTree()->GetEntriesFriend();
 }
 
 //______________________________________________________________________________
