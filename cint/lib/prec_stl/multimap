@@ -31,6 +31,9 @@ template<class Key,class T,class Compare=std::less<Key>
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
 
+#elif defined (G__VISUAL) && (G__MSC_VER>=1300)
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<pair<const Key, T> > >
 
 #elif defined(G__GNUC) && !defined(G__KCC)
 #if (G__GNUC_MINOR>=95)
