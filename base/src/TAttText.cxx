@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.15 2003/03/20 22:33:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.16 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TVirtualPadEditor.h"
+#include "TColor.h"
 
 ClassImp(TAttText)
 
@@ -292,7 +293,11 @@ void TAttText::SaveTextAttributes(ofstream &out, const char *name, Int_t alidef,
       out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<endl;
    }
    if (fTextColor != coldef) {
-      out<<"   "<<name<<"->SetTextColor("<<fTextColor<<");"<<endl;
+      if (fTextColor > 228) {
+         TColor::SaveColor(out, fTextColor);
+         out<<"   "<<name<<"->SetTextColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<"->SetTextColor("<<fTextColor<<");"<<endl;
    }
    if (fTextFont != fondef) {
       out<<"   "<<name<<"->SetTextFont("<<fTextFont<<");"<<endl;

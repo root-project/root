@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.7 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.8 2003/02/21 15:08:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TAttAxis.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
+#include "TColor.h"
 
 ClassImp(TAttAxis)
 
@@ -90,10 +91,18 @@ void TAttAxis::SaveAttributes(ofstream &out, const char *name, const char *subna
       out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<endl;
    }
    if (fAxisColor != 1) {
-      out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<endl;
+      if (fAxisColor > 228) {
+         TColor::SaveColor(out, fAxisColor);
+         out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<endl;
    }
    if (fLabelColor != 1) {
-      out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<endl;
+      if (fLabelColor > 228) {
+         TColor::SaveColor(out, fLabelColor);
+         out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<endl;
    }
    if (fLabelFont != 62) {
       out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<endl;
@@ -114,7 +123,11 @@ void TAttAxis::SaveAttributes(ofstream &out, const char *name, const char *subna
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<endl;
    }
    if (fTitleColor != 1) {
-      out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<endl;
+      if (fTitleColor > 228) {
+         TColor::SaveColor(out, fTitleColor);
+         out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<endl;
    }
    if (fTitleFont != 62) {
       out<<"   "<<name<<subname<<"->SetTitleFont("<<fTitleFont<<");"<<endl;

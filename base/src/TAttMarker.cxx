@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.7 2002/09/14 11:12:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.8 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TVirtualPadEditor.h"
+#include "TColor.h"
 
 ClassImp(TAttMarker)
 
@@ -152,7 +153,11 @@ void TAttMarker::SaveMarkerAttributes(ofstream &out, const char *name, Int_t col
     // Save line attributes as C++ statement(s) on output stream out
 
    if (fMarkerColor != coldef) {
-      out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<endl;
+      if (fMarkerColor > 228) {
+         TColor::SaveColor(out, fMarkerColor);
+         out<<"   "<<name<<"->SetMarkerColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<endl;
    }
    if (fMarkerStyle != stydef) {
       out<<"   "<<name<<"->SetMarkerStyle("<<fMarkerStyle<<");"<<endl;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.7 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -76,6 +76,7 @@ public:
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
+
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);
    static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b)
@@ -94,6 +95,7 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
+   static void    SaveColor(ofstream &out, Int_t ci);
 
    ClassDef(TColor,1)  //Color defined by RGB or HLS
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.18 2004/05/30 15:39:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.19 2004/06/14 16:16:37 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -567,4 +567,24 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
    Int_t r, g, b;
    Pixel2RGB(pixel, r, g, b);
    return Form("#%02x%02x%02x", r, g, b);
+}
+
+//______________________________________________________________________________
+void TColor::SaveColor(ofstream &out, Int_t ci)
+{
+    // Save a color with index > 228 as a C++ statement(s) on output stream out.
+   
+   char quote = '"';
+   
+   ULong_t pixel = Number2Pixel(ci);
+   const char *cname = TColor::PixelAsHexString(pixel);
+
+   if (gROOT->ClassSaved(TColor::Class())) {
+       out << endl;
+   } else {
+      out << endl;
+      out << "   Int_t ci;   // for color index setting" << endl;
+   }
+
+   out<<"   ci = TColor::GetColor("<<quote<<cname<<quote<<");"<<endl;
 }

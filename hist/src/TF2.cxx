@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.26 2003/11/27 11:45:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.27 2004/08/16 09:31:13 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "Riostream.h"
+#include "TColor.h"
 
 
 ClassImp(TF2)
@@ -619,13 +620,21 @@ void TF2::SavePrimitive(ofstream &out, Option_t *option)
    }
 
    if (GetFillColor() != 0) {
-      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+      if (GetFillColor() > 228) {
+         TColor::SaveColor(out, GetFillColor());
+         out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
       out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
    }
    if (GetMarkerColor() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
+      if (GetMarkerColor() > 228) {
+         TColor::SaveColor(out, GetMarkerColor());
+         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
    }
    if (GetMarkerStyle() != 1) {
       out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<endl;
@@ -634,7 +643,11 @@ void TF2::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<endl;
    }
    if (GetLineColor() != 1) {
-      out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+      if (GetLineColor() > 228) {
+         TColor::SaveColor(out, GetLineColor());
+         out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (GetLineWidth() != 4) {
       out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<endl;

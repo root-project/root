@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.93 2004/09/03 17:08:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.94 2004/09/03 17:14:55 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
 #include "TBrowser.h"
+#include "TColor.h"
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
@@ -2403,13 +2404,21 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->SetBit(TF1::kNotDraw);"<<endl;
    }
    if (GetFillColor() != 0) {
-      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+      if (GetFillColor() > 228) {
+         TColor::SaveColor(out, GetFillColor());
+         out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
       out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
    }
    if (GetMarkerColor() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
+      if (GetMarkerColor() > 228) {
+         TColor::SaveColor(out, GetMarkerColor());
+         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
    }
    if (GetMarkerStyle() != 1) {
       out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<endl;
@@ -2418,7 +2427,11 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<endl;
    }
    if (GetLineColor() != 1) {
-      out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+      if (GetLineColor() > 228) {
+         TColor::SaveColor(out, GetLineColor());
+         out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (GetLineWidth() != 4) {
       out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<endl;

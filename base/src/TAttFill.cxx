@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.6 2002/09/14 11:12:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.7 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TVirtualPadEditor.h"
+#include "TColor.h"
 
 ClassImp(TAttFill)
 
@@ -122,7 +123,11 @@ void TAttFill::SaveFillAttributes(ofstream &out, const char *name, Int_t coldef,
     // Save fill attributes as C++ statement(s) on output stream out
 
    if (fFillColor != coldef) {
-      out<<"   "<<name<<"->SetFillColor("<<fFillColor<<");"<<endl;
+      if (fFillColor > 228) {
+         TColor::SaveColor(out, fFillColor);
+         out<<"   "<<name<<"->SetFillColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<"->SetFillColor("<<fFillColor<<");"<<endl;
    }
    if (fFillStyle != stydef) {
       out<<"   "<<name<<"->SetFillStyle("<<fFillStyle<<");"<<endl;

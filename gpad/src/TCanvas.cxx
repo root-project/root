@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.76 2004/08/25 15:34:00 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.77 2004/09/03 11:11:04 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TControlBar.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
-
+#include "TColor.h"
 #include "TVirtualPadEditor.h"
 
 
@@ -1411,7 +1411,11 @@ void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
    }
    if (GetHighLightColor() != 5) {
-      out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
+      if (GetHighLightColor() > 228) {
+         TColor::SaveColor(out, GetHighLightColor());
+         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
 
    // Now recursively scan all pads of this canvas
@@ -1513,7 +1517,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
    }
    if (GetHighLightColor() != 5) {
-      out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
+      if (GetHighLightColor() > 228) {
+         TColor::SaveColor(out, GetHighLightColor());
+         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
+      } else 
+         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
 
 

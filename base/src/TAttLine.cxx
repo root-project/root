@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.7 2002/09/14 11:12:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.8 2004/02/18 20:13:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TVirtualPadEditor.h"
+#include "TColor.h"
 
 
 ClassImp(TAttLine)
@@ -174,7 +175,11 @@ void TAttLine::SaveLineAttributes(ofstream &out, const char *name, Int_t coldef,
     // Save line attributes as C++ statement(s) on output stream out
 
    if (fLineColor != coldef) {
-      out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
+      if (fLineColor > 228) {
+         TColor::SaveColor(out, fLineColor);
+         out<<"   "<<name<<"->SetLineColor(ci);" << endl;
+      } else 
+         out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
    }
    if (fLineStyle != stydef) {
       out<<"   "<<name<<"->SetLineStyle("<<fLineStyle<<");"<<endl;

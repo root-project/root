@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.17 2002/08/05 21:12:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.18 2002/10/28 15:38:32 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TMath.h"
 #include "TLatex.h"
 #include "TError.h"
+#include "TColor.h"
 
 ClassImp(TPaveText)
 
@@ -675,7 +676,11 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
          out<<"line = "<<name<<"->AddLine("
             <<linel->GetX1()<<","<<linel->GetY1()<<","<<linel->GetX2()<<","<<linel->GetY2()<<");"<<endl;
          if (linel->GetLineColor() != 1) {
-            out<<"   line->SetLineColor("<<linel->GetLineColor()<<");"<<endl;
+            if (linel->GetLineColor() > 228) {
+               TColor::SaveColor(out, linel->GetLineColor());
+               out<<"   line->SetLineColor(ci);" << endl;
+            } else 
+               out<<"   line->SetLineColor("<<linel->GetLineColor()<<");"<<endl;
          }
          if (linel->GetLineStyle() != 1) {
             out<<"   line->SetLineStyle("<<linel->GetLineStyle()<<");"<<endl;
@@ -696,13 +701,21 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
          out<<"box = "<<name<<"->AddBox("
             <<lineb->GetX1()<<","<<lineb->GetY1()<<","<<lineb->GetX2()<<","<<lineb->GetY2()<<");"<<endl;
          if (lineb->GetFillColor() != 18) {
-            out<<"   box->SetFillColor("<<lineb->GetFillColor()<<");"<<endl;
+            if (lineb->GetFillColor() > 228) {
+               TColor::SaveColor(out, lineb->GetFillColor());
+               out<<"   box->SetFillColor(ci);" << endl;
+            } else 
+               out<<"   box->SetFillColor("<<lineb->GetFillColor()<<");"<<endl;
          }
          if (lineb->GetFillStyle() != 1001) {
             out<<"   box->SetFillStyle("<<lineb->GetFillStyle()<<");"<<endl;
          }
          if (lineb->GetLineColor() != 1) {
-            out<<"   box->SetLineColor("<<lineb->GetLineColor()<<");"<<endl;
+            if (lineb->GetLineColor() > 228) {
+               TColor::SaveColor(out, lineb->GetLineColor());
+               out<<"   box->SetLineColor(ci);" << endl;
+            } else 
+               out<<"   box->SetLineColor("<<lineb->GetLineColor()<<");"<<endl;
          }
          if (lineb->GetLineStyle() != 1) {
             out<<"   box->SetLineStyle("<<lineb->GetLineStyle()<<");"<<endl;
@@ -730,7 +743,11 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
                <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<endl;
          }
          if (linet->GetTextColor()) {
-            out<<"   text->SetTextColor("<<linet->GetTextColor()<<");"<<endl;
+            if (linet->GetTextColor() > 228) {
+               TColor::SaveColor(out, linet->GetTextColor());
+               out<<"   text->SetTextColor(ci);" << endl;
+            } else 
+               out<<"   text->SetTextColor("<<linet->GetTextColor()<<");"<<endl;
          }
          if (linet->GetTextFont()) {
             out<<"   text->SetTextFont("<<linet->GetTextFont()<<");"<<endl;
@@ -763,7 +780,11 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
                <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<endl;
          }
          if (latex->GetTextColor()) {
-            out<<"   text->SetTextColor("<<latex->GetTextColor()<<");"<<endl;
+            if (latex->GetTextColor() > 228) {
+               TColor::SaveColor(out, latex->GetTextColor());
+               out<<"   text->SetTextColor(ci);" << endl;
+            } else 
+               out<<"   text->SetTextColor("<<latex->GetTextColor()<<");"<<endl;
          }
          if (latex->GetTextFont()) {
             out<<"   text->SetTextFont("<<latex->GetTextFont()<<");"<<endl;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.75 2004/08/23 15:01:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.76 2004/08/23 15:09:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TObjString.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
+#include "TColor.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 const Int_t kHori = BIT(9); //defined in TPad
@@ -1863,10 +1864,18 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
    }
 
    if (fLabelColor != 1) {
-      out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
+      if (fLabelColor > 228) {
+         TColor::SaveColor(out, fLabelColor);
+         out<<"   gaxis->SetLabelColor(ci);" << endl;
+      } else 
+         out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
    }
    if (fLineColor != 1) {
-      out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
+      if (fLineColor > 228) {
+         TColor::SaveColor(out, fLineColor);
+         out<<"   gaxis->SetLineColor(ci);" << endl;
+      } else 
+         out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (fLineStyle != 1) {
       out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;
