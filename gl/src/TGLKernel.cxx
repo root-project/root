@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.15 2004/08/10 20:25:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.16 2004/08/16 10:00:45 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1320,9 +1320,9 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
 {
    if(!fQuad && (fQuad = gluNewQuadric()))
    {
-      gluQuadricOrientation(fQuad, GLU_OUTSIDE);
-      gluQuadricDrawStyle(fQuad, GLU_FILL);
-      gluQuadricNormals(fQuad, GLU_FLAT);
+      gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
+      gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
+      gluQuadricNormals(fQuad,     (GLenum)GLU_FLAT);
    }
 
    Int_t stacks = 6, slices = 6;
