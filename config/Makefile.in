@@ -1,6 +1,8 @@
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
+USECONFIG      := @useconfig@
+
 EXTRA_CFLAGS   := -Iinclude @cflags
 EXTRA_CXXFLAGS := -Iinclude @cflags
 EXTRA_LDFLAGS  := @ldflags@

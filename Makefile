@@ -295,7 +295,9 @@ html: $(ROOTEXE) changelog
 	@$(MAKEHTML)
 
 install:
-	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	@(if [ -d $(BINDIR) ]; then \
+	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	fi; \
 	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`; \
 	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
 		echo "Everything already installed..."; \
@@ -308,6 +310,7 @@ install:
 		echo "Installing libraries in $(LIBDIR)"; \
 		$(INSTALLDIR) $(LIBDIR); \
 		chmod u+w $(LIBDIR)/*; \
+		echo "[possible error from chmod is ok]"; \
 		$(INSTALL) $(ALLLIBS) $(LIBDIR); \
 		$(INSTALL) $(CINTLIB) $(LIBDIR); \
 		echo "Installing headers in $(INCDIR)"; \
@@ -318,8 +321,27 @@ install:
 		echo "Installing $(MAKEINFO) in $(CINTINCDIR)"; \
 		$(INSTALLDIR) $(CINTINCDIR); \
 		$(INSTALLDATA) $(MAKEINFO) $(CINTINCDIR); \
-		echo "Installing cint/include lib and stl in $(CINTINCDIR)"; \
+		echo "Installing cint/include cint/lib and cint/stl in $(CINTINCDIR)"; \
 		$(INSTALLDATA) cint/include cint/lib cint/stl $(CINTINCDIR); \
+		echo "Installing icons in $(ICONPATH)"; \
+		$(INSTALLDIR) $(ICONPATH); \
+		$(INSTALLDATA) icons/*.xpm $(ICONPATH); \
+		echo "Installing tutorials in $(TUTDIR)"; \
+		$(INSTALLDIR) $(TUTDIR); \
+		$(INSTALLDATA) tutorials/* $(TUTDIR); \
+		echo "Installing tests in $(TESTDIR)"; \
+		$(INSTALLDIR) $(TESTDIR); \
+		$(INSTALLDATA) test/* $(TESTDIR); \
+		echo "Installing system.rootrc in $(ETCDIR)"; \
+		$(INSTALLDIR) $(ETCDIR); \
+		$(INSTALLDATA) system.rootrc $(ETCDIR); \
+		if [ "$(USECONFIG)" = "TRUE" ]; then \
+		   echo "Installing root.mimes in $(ETCDIR)"; \
+		   $(INSTALLDATA) icons/root.mimes $(ETCDIR); \
+		else \
+		   echo "Installing root.mimes in $(ICONPATH)"; \
+		   $(INSTALLDATA) icons/root.mimes $(ICONPATH); \
+		fi \
 	fi)
 
 showbuild:

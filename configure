@@ -87,6 +87,9 @@ else
    esac
 fi
 
+trap "rm -f Makefile.tmp config.tmp root-config.tmp TMakefile.tmp rootrc.tmp; \
+      exit 1" 1 2 3 15
+
 cp -f $MAKEIN Makefile.tmp
 cp -f $CONFIN config.tmp
 cp -f $RCONFIN root-config.tmp
@@ -538,7 +541,8 @@ if [ -n "$haveconfig" ] ; then
     if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
     if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
 
-    sed -e "s|@cflags|-DHAVE_CONFIG|"                  \
+    sed -e "s|@useconfig@|TRUE|"                       \
+        -e "s|@cflags|-DHAVE_CONFIG|"                  \
         -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -576,8 +580,9 @@ else
     if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
     if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
 
-    sed -e "s|@cflags||" \
-        -e "s|@ldflags@||" \
+    sed -e "s|@useconfig@|FALSE|" \
+        -e "s|@cflags||"          \
+        -e "s|@ldflags@||"        \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 fi
