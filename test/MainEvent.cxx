@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.23 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.24 2002/08/17 21:39:33 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@
 //  is serialized in one single buffer.
 //  if split = -2 the event is split using the old TBranchObject mechanism
 //  if split = -1 the event is streamed using the old TBranchObject mechanism
-//  if split > 0  the event is split ising the new TBranchElement mechanism.
+//  if split > 0  the event is split using the new TBranchElement mechanism.
 //
 //  if comp = 0 no compression at all.
 //  if comp = 1 event is compressed.
