@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.5 2000/12/26 14:24:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.6 2001/02/16 16:05:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -347,8 +347,9 @@ void TAttText::SetTextSizePixels(Int_t npixels)
    if (fTextFont%10 > 2) {
       fTextSize = Float_t(npixels);
    } else {
-      if (!gPad) return;
-      Float_t dy = gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(npixels);
-      fTextSize = dy/(gPad->GetY2() - gPad->GetY1());
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (!pad) return;
+      Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
+      fTextSize = dy/(pad->GetY2() - pad->GetY1());
    }
 }
