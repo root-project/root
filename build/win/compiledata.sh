@@ -42,7 +42,7 @@ echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then 
    echo "#define  MAKESHAREDLIB \"cl -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
 else
-   echo "#defined MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
+   echo "#define  MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
 
 if [ "$CUSTOMEXE" = "" ]; then 
