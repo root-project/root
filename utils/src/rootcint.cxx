@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.69 2002/05/27 18:13:14 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.70 2002/05/30 15:10:52 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1685,7 +1685,8 @@ void WritePointersSTL(G__ClassInfo &cl)
    char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion( cl);
-   if (version <= 0) return;
+   if (version == 0) return;
+   if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) return;
 
    G__DataMemberInfo m(cl);
 
@@ -1885,7 +1886,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion(cl);
    int clflag = 1;
-   if (version <= 0 || cl.RootFlag() == 0) clflag = 0;
+   if (version == 0 || cl.RootFlag() == 0) clflag = 0;
+   if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) clflag = 0;
 
    while (m.Next()) {
 
@@ -2095,6 +2097,8 @@ void WriteClassCode(G__ClassInfo &cl) {
             fprintf(stderr, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
       } else {
          fprintf(stderr, "Class %s: Streamer() not declared\n", cl.Fullname());
+
+         if (cl.RootFlag() & G__USEBYTECOUNT) WritePointersSTL(cl);
       }
       if (cl.HasMethod("ShowMembers")) {
          WriteShowMembers(cl);
@@ -2816,7 +2820,12 @@ int main(int argc, char **argv)
                WriteInputOperator(cl);
 #endif
             } else {
-               has_input_error |= CheckInputOperator(cl);
+               int version = GetClassVersion(cl);
+               if (version!=0) {
+                  // Only Check for input operator is the object is I/O has
+                  // been requested.
+                  has_input_error |= CheckInputOperator(cl);
+               }
             }
          }
       }
