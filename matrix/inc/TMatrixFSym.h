@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.10 2004/05/12 18:24:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.11 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -67,8 +67,8 @@ public:
   virtual       Int_t   *GetRowIndexArray()       { return 0; }
   virtual const Int_t   *GetColIndexArray() const { return 0; }
   virtual       Int_t   *GetColIndexArray()       { return 0; }
-  virtual       void     SetRowIndexArray(Int_t */*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
-  virtual       void     SetColIndexArray(Int_t */*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
+  virtual       void     SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void     SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); fNelems = 0; }
 
