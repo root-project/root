@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.117 2002/01/26 22:12:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.118 2002/01/29 07:49:18 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -467,8 +467,10 @@ void TStreamerInfo::BuildOld()
          if (strcmp(element->GetTypeName(),dm->GetFullTypeName())) {
             if (element->IsOldFormat(dm->GetFullTypeName())) continue;
             if (dt) {
-               element->SetNewType(dt->GetType());
-               printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+               if (element->GetType() != dt->GetType()) {
+                  element->SetNewType(dt->GetType());
+                  printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+               }
             } else {
                element->SetNewType(-2);
                printf("Cannot convert %s from type:%s to type:%s, skip element\n",
@@ -921,7 +923,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
-      //next statement reuired in case a class and one of its parent class
+      //next statement required in case a class and one of its parent class
       //have data members with the same name
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
       
