@@ -25,7 +25,7 @@ $ROOT -b <<makedoc
     gSystem.Load("libEGPythia");
     gSystem.Load("libEGPythia6");
     gSystem.Load("libEGVenus");
-//    gSystem.Load("libSTAR");
+//    gSystem.Load("libTable");
 //    gSystem.Load("test/libEvent.so");
     THtml html;
     html.MakeAll();

@@ -98,8 +98,8 @@ endif
 ifneq ($(FVENUSLIB),)
 MODULES      += venus
 endif
-ifneq ($(STAR),)
-MODULES      += star
+ifneq ($(TABLE),)
+MODULES      += table
 endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
@@ -113,7 +113,7 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
-                pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
+                pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
                 rootd proofd dcache hbook alien
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
@@ -589,7 +589,7 @@ showbuild:
 	@echo "FPYTHIALIBDIR      = $(FPYTHIALIBDIR)"
 	@echo "FPYTHIA6LIBDIR     = $(FPYTHIA6LIBDIR)"
 	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
-	@echo "STAR               = $(STAR)"
+	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"

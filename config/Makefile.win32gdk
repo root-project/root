@@ -90,8 +90,8 @@ PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib \
                       $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
 VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
-STARLIBDEP          = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-STARLIBEXTRA        = lib/libTree.lib lib/libGpad.lib \
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
 GLLIBDEP            = $(G3DLIB) $(WIN32GDKLIB) $(GUILIB) $(GDKDLLS) $(GDKLIBS)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32gdk.lib lib/libGui.lib \

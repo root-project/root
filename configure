@@ -37,7 +37,7 @@ enable_shadowpw=
 enable_shared=yes
 enable_soversion=no
 enable_srp=yes
-enable_star=no
+enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_exceptions=yes
 enable_ttf=yes
@@ -47,7 +47,7 @@ show_pkglist=no
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
-         enable_srp enable_star enable_thread enable_ttf enable_venus \
+         enable_srp enable_table enable_thread enable_ttf enable_venus \
          enable_krb5 enable_exceptions enable_openiv enable_alien"
 
 
@@ -293,7 +293,7 @@ confhelp() {
     echo "   shared          Use shared 3rd party libraries if possible"
     echo "   rpath           Set library path on executables"
     echo "   thread          Thread support"
-    echo "   star            Build STAR contrib library"
+    echo "   table           Build libTable contrib library"
     echo "   ttf             True Type Font support, requires libtff"
     echo "   opengl          OpenGL support, requires libGL and libGLU"
     echo "   openiv          OpenInventor support, requires libInventor and libInventorXt"
@@ -1227,13 +1227,13 @@ echo $enable_shadowpw
 
 ######################################################################
 #
-### echo %%% STAR Library - Contributed library
+### echo %%% Table Library - Contributed library
 #
-if test "x$enable_star" = "xyes" || test ! "x$STAR" = "x"; then
-    enable_star="1"
-    echo "Building libStar ... yes"
+if test "x$enable_table" = "xyes" || test ! "x$TABLE" = "x"; then
+    enable_table="1"
+    echo "Building libTable ... yes"
 else
-    enable_star=""
+    enable_table=""
 fi
 
 
@@ -1254,7 +1254,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pgsql" = "xyes" && pkglist="$pkglist root-pgsql"
     test "x$enable_sapdb" = "xyes" && pkglist="$pkglist root-sapdb"
     test "x$enable_pythia" = "xyes" && test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-pythia"
-    test "x$enable_star" = "x1" && pkglist="$pkglist root-star"
+    test "x$enable_table" = "x1" && pkglist="$pkglist root-table"
     test "x$enable_rfio" = "xyes" && pkglist="$pkglist root-shift"
     test "x$enable_srputil" = "xyes" && pkglist="$pkglist root-srp"
 
@@ -1414,7 +1414,7 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@srcdir@|$srcdir|"                \
     -e "s|@xpmlibdir@|$xpmlibdir|"          \
     -e "s|@xpmlib@|$xpmlib|"                \
-    -e "s|@enable_star@|$enable_star|"      \
+    -e "s|@enable_table@|$enable_table|"    \
     -e "s|@enable_thread@|$enable_thread|"  \
     -e "s|@threadlibdir@|$threadlibdir|"    \
     -e "s|@threadlib@|$threadlib|"          \

@@ -103,7 +103,7 @@ SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
-STAR           := @enable_star@
+TABLE          := @enable_table@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
