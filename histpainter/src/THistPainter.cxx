@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.85 2002/07/03 20:25:04 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.86 2002/07/05 12:31:38 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1831,7 +1831,7 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
-   fH->SetFillStyle(1);
+   fH->SetFillStyle(1001);
    fH->TAttFill::Modify();
 
 //                  Initialize the levels on the Z axis
