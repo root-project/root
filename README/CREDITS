@@ -238,6 +238,10 @@ N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
 
+N: Marco van Leeuwen
+E: mvl@nikhef.nl
+D: THistPainter improvements: Support for log scales with CONT options
+
 N: Brett Viren
 E: bv@bnl.gov
 D: contributed the GUI TGTableLayout manager and the Viewer example program
