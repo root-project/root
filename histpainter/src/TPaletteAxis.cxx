@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.6 2003/01/13 13:53:55 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.7 2003/01/13 16:57:36 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -282,9 +282,32 @@ void TPaletteAxis::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TPaletteAxis::SavePrimitive(ofstream &, Option_t *)
+void TPaletteAxis::SavePrimitive(ofstream &out, Option_t *)
 {
    // Save primitive as a C++ statement(s) on output stream out.
+
+   //char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TPaletteAxis::Class())) {
+       out<<"   ";
+   } else {
+       out<<"   "<<ClassName()<<" *";
+   }
+   if (fOption.Contains("NDC")) {
+      out<<"palette = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
+      <<","<<fH->GetName()<<");"<<endl;
+   } else {
+      out<<"palette = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
+      <<","<<fH->GetName()<<");"<<endl;
+   }
+   out<<"palette->SetLabelColor(" <<fAxis.GetLabelColor()<<");"<<endl;
+   out<<"palette->SetLabelFont("  <<fAxis.GetLabelFont()<<");"<<endl;
+   out<<"palette->SetLabelOffset("<<fAxis.GetLabelOffset()<<");"<<endl;
+   out<<"palette->SetLabelSize("  <<fAxis.GetLabelSize()<<");"<<endl;
+   out<<"palette->SetTitleOffset("<<fAxis.GetTitleOffset()<<");"<<endl;
+   out<<"palette->SetTitleSize("  <<fAxis.GetTitleSize()<<");"<<endl;
+   SaveFillAttributes(out,"palette",-1,-1);
+   SaveLineAttributes(out,"palette",1,1,1);
 }
 
 //______________________________________________________________________________
