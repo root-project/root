@@ -1505,44 +1505,34 @@ fi
 #
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
-    if test "x$platform" = "xwin32"; then
+    check_header "Python.h" "$pythonincdir" \
+        $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
+        $PYTHONDIR/include /usr/include/python2.3 /usr/include/python2.2 \
+        /usr/local/include/python2.3 /usr/local/include/python2.2 \
+        /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3 \
+        C:/Python23/include C:/Python22/include
+    pythoninc=$found_hdr
+    pythonincdir=$found_dir
 
-        check_header "Python.h" "$pythonincdir" \
-            $PYTHONDIR/include C:/Python23/include C:/Python22/include
-        pythoninc=$found_hdr
-        pythonincdir=$found_dir
-
-        check_library "python23" "$enable_shared" "$pythonlibdir" \
-            $PYTHONDIR/libs C:/Python23/libs C:/Python22/libs
-        pythonlib=$found_lib
-        pythonlibdir=$found_dir
-        pythonlibflags="-nodefaultlib:python23"
-
-    else
-        check_header "Python.h" "$pythonincdir" \
-            $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
-            $PYTHONDIR/include /usr/include/python2.3 /usr/include/python2.2 \
-            /usr/local/include/python2.3 /usr/local/include/python2.2 \
-            /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3
-        pythoninc=$found_hdr
-        pythonincdir=$found_dir
-
-        check_library "libpython2.3 libpython2.2 Python" "$enable_shared" \
-            "$pythonlibdir" $PYTHONDIR/lib/python2.3/config \
-            $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib \
-            /usr/lib/python2.3/config /usr/lib/python2.2/config \
-            /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config \
-            /System/Library/Frameworks/Python.framework/Versions/2.3
-        pythonlib=$found_lib
-        pythonlibdir=$found_dir
-
-    fi
+    check_library "libpython2.3 libpython2.2 python23 Python" \
+        "$enable_shared" "$pythonlibdir" $PYTHONDIR/lib/python2.3/config \
+        $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib $PYTHONDIR/libs \
+        /usr/lib/python2.3/config /usr/lib/python2.2/config \
+        /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config \
+        /System/Library/Frameworks/Python.framework/Versions/2.3 \
+        C:/Python23/libs C:/Python22/libs
+    pythonlib=$found_lib
+    pythonlibdir=$found_dir
 
     if test "x$pythonincdir" = "x" || test "x$pythonlib" = "x"; then
         enable_python="no"
     else
         # Python support requires the explicitlink option
         enable_explicitlink="yes"
+        pythonlibflags=
+        case $platform in
+            win32) pythonlibflags="-nodefaultlib:python23" ;;
+        esac
     fi
 fi
 
@@ -1568,6 +1558,10 @@ if test ! "x$enable_xml" = "xno" ; then
 
     if test "x$xmlincdir" = "x" || test "x$xmllib" = "x"; then
         enable_xml="no"
+    else
+        case $platform in
+            linux*|win32gcc) xmllib="$xmllib -lpthread" ;;
+        esac
     fi
 fi
 
