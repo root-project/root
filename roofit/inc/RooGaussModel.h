@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooGaussModel.rdl,v 1.1 2001/06/09 05:14:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,6 +14,7 @@
 
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooComplex.hh"
 
 class RooGaussModel : public RooResolutionModel {
 public:
@@ -38,10 +39,12 @@ public:
 protected:
   virtual Double_t evaluate(const RooDataSet* dset) const ;
 
+  RooComplex evalCerf(Double_t swt, Double_t u, Double_t c) const ;
+
   RooRealProxy mean ;
   RooRealProxy sigma ;
 
-  ClassDef(RooGaussModel,1) // Abstract Resolution Model
+  ClassDef(RooGaussModel,1) // Gaussian Resolution Model
 };
 
 #endif

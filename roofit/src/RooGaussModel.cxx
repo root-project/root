@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooGaussModel.cc,v 1.1 2001/06/09 05:14:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,7 +14,9 @@
 // 
 
 #include <iostream.h>
+#include <complex.h>
 #include "RooFitModels/RooGaussModel.hh"
+#include "RooFitCore/RooMath.hh"
 
 ClassImp(RooGaussModel) 
 ;
@@ -58,32 +60,42 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 
 Double_t RooGaussModel::evaluate(const RooDataSet* dset) const 
-{
-  switch(_basisCode) {
-  case noBasis:  
-    {
-      Double_t xprime = (x-mean)/sigma ;
-      return exp(-0.5*xprime*xprime) ;
-    }
-  case expBasisPlus: 
-  case expBasisMinus: 
-    {
-      Double_t sign = (_basisCode==expBasisPlus)?-1:1 ;
-
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t xprime = sign*(x-mean)/tau ;
-      Double_t c = sigma/sqrt(2*tau) ;
-      Double_t result = 0.25*tau * exp(xprime+c*c) * erfc(xprime/(2*c)+c) ;
-
-      //cout << "RooGaussModel::evaluate_expBasis result(x=" << x << ") : " << result << endl ;
-      return result ;
-    }
-
-  case sinBasisPlus: return 0 ;
-  case sinBasisMinus: return 0 ;
-  case cosBasisPlus: return 0 ;
-  case cosBasisMinus: return 0 ;
+{  
+  // Special case: no convolution
+  if (_basisCode==noBasis) {
+    Double_t xprime = (x-mean)/sigma ;
+    return exp(-0.5*xprime*xprime) ;
   }
+
+  // Precalculate intermediate quantities  
+  Double_t sign = (_basisCode==expBasisPlus||_basisCode==sinBasisPlus||_basisCode==cosBasisPlus)?-1:1 ;
+  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  Double_t xprime = sign*(x-mean)/tau ;
+  Double_t c = sigma/(sqrt(2)*tau) ; 
+  Double_t u = xprime/(2*c) ;
+
+  Double_t result ;
+  switch(_basisCode) {
+  case expBasisPlus: 
+  case expBasisMinus: {
+    result = 0.25/tau * exp(xprime+c*c) * erfc(u+c) ;
+    break ;
+  }
+      
+  case sinBasisPlus: 
+  case sinBasisMinus: {
+    Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+    result = 0.25/tau * evalCerf(swt,u,c).im() ;
+  }
+
+  case cosBasisPlus: 
+  case cosBasisMinus: {
+    Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+    result = 0.25/tau * evalCerf(swt,u,c).re() ;
+  }
+  }
+
+  return result ;
 }
 
 
@@ -109,7 +121,9 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   case sinBasisMinus:
   case cosBasisPlus:
   case cosBasisMinus:
-    return 0 ;
+    if (matchArgs(allVars,analVars,convVar())) {
+      return 1 ;
+    }
     break ;
   }
   
@@ -128,34 +142,77 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 
   // Code must be 0 or 1
   assert(code==1) ;
+  
+  // Unconvoluted function integral
+  if (_basisCode==noBasis) {
+    Double_t xscale = root2*sigma;
+    return rootPiBy2*sigma*(erf((x.max()-mean)/xscale)-erf((x.min()-mean)/xscale));
+  }
 
-  switch(_basisCode) {
-  case noBasis:  
-    {      
-      Double_t xscale = root2*sigma;
-      return rootPiBy2*sigma*(erf((x.max()-mean)/xscale)-erf((x.min()-mean)/xscale));
-    }
+  // Calculate intermediate variables
+  Double_t sign = (_basisCode==expBasisPlus)?-1:1 ;
+  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  Double_t c = sigma/(sqrt(2)*tau) ; 
+  Double_t xpmin = sign*(x.min()-mean)/tau ;
+  Double_t xpmax = sign*(x.max()-mean)/tau ;
 
-  case expBasisPlus: 
-  case expBasisMinus:
-    {
-      Double_t sign = (_basisCode==expBasisPlus)?-1:1 ;
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t c = sigma/sqrt(2*tau) ; 
-      Double_t xpmin = sign*(x.min()-mean)/tau ;
-      Double_t xpmax = sign*(x.max()-mean)/tau ;
+  // EXP basis function integrals
+  if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {   
+    Double_t result = sign * 0.25 * exp(c*c) * ( erf(xpmax/(2*c)) - erf(xpmin/(2*c)) 
+						 + exp(xpmax)*erfc(xpmax/(2*c)+c)
+						 - exp(xpmin)*erfc(xpmin/(2*c)+c) ) ;     
+    return result ;
+  }
 
-      Double_t result = sign * 0.25 * exp(c*c) * ( erf(xpmax/(2*c)) - erf(xpmin/(2*c)) 
-                                                  + exp(xpmax)*erfc(xpmax/(2*c)+c)
-                                                  - exp(xpmin)*erfc(xpmin/(2*c)+c) ) ;     
-      return result ;
-    }
+  // Calculate additional intermediate results for oscillating terms
+  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+  Double_t umin = xpmin/(2*c) ;
+  Double_t umax = xpmax/(2*c) ;
 
+  // SIN basis function integrals
+  if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {    
+    RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
+    Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() + erf(umax) - erf(umin) ) ;
+    return result ;
+  }
 
-  case sinBasisPlus: return 1 ;
-  case sinBasisMinus: return 1 ;
-  case cosBasisPlus: return 1 ;
-  case cosBasisMinus: return 1 ;
+  // COS basis function integrals
+  if (_basisCode==cosBasisPlus||_basisCode==cosBasisMinus) {
+    RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
+    Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.re() + swt*evalDif.im() + erf(umax) - erf(umin) ) ;
+    return result ;
   }
 
 }
+
+
+
+
+
+RooComplex RooGaussModel::evalCerf(Double_t swt, Double_t u, Double_t c) const
+//                                 sign*omg_tau, xprime/(2*c), c
+{
+// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of
+// numerical instabilities
+
+  static Double_t rootpi= sqrt(atan2(0,-1));
+  RooComplex z(swt*c,u+c);
+
+  if(z.im() > -4) {
+    // ComplexErrFunc actually evaluates the CERNLIB CWERF which
+    // is exp(-z*z)*erfc(-i z)
+    return RooMath::ComplexErrFunc(z)*exp(-u*u);
+  }
+  else {
+    // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
+    // to explicitly cancel the divergent exp(y*y) behaviour of
+    // CWERF for z = x + i y with large negative y
+    RooComplex zc(u+c,-swt*c);
+    RooComplex zsq= z*z;
+    RooComplex v= -zsq - u*u;
+    return v.exp()*(-zsq.exp()/(zc*rootpi) + 1)*2;
+  }
+}
+
+
+
