@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.166 2004/03/19 14:45:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.167 2004/03/23 18:05:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1972,7 +1972,7 @@ void THistPainter::PaintColorLevels(Option_t *)
          xstep = fXaxis->GetBinWidth(i);
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
-         if (z == 0) continue; // do not draw the empty bins
+         if (z == 0 && zmin >= 0) continue; // don't draw the empty bins for histograms with positive content
          if (Hoption.Logz) {
             if (z > 0) z = TMath::Log10(z);
             else       z = zmin;
@@ -2016,7 +2016,7 @@ void THistPainter::PaintColorLevels(Option_t *)
          }
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
-         if (z >= zmax) theColor = ncolors-1;
+         if (theColor > ncolors-1) theColor = ncolors-1;
          fH->SetFillColor(gStyle->GetColorPalette(theColor));
          fH->TAttFill::Modify();
          gPad->PaintBox(xlow, ylow, xup, yup);
