@@ -18,7 +18,7 @@ TTree* modulo() {
    tree->Fill();
 
    tree->Scan("signedInt:signedInt%235");
-   tree->Scan("unsignedInt:unsignedInt%235");
+   tree->Scan("unsignedInt:unsignedInt%235","","colsize=15");
    tree->Scan("(signedInt/unsignedInt):(signedInt/unsignedInt)%10");
    return tree;
 }
