@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.7 2004/08/10 19:22:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.8 2004/08/10 20:25:22 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -557,10 +557,10 @@ void TViewerOpenGL::UpdateScene(Option_t *)
       TGLPrimitive * add_obj = 0;
       switch(buff->fType)
       {
-      case buff->kLINE:
+      case TBuffer3D::kLINE:
          add_obj = new TGLPolyLine(*buff);
 	 break;
-      case buff->kMARKER:
+      case TBuffer3D::kMARKER:
          break;
       default:
          add_obj = new TGLFaceSet(*buff);
