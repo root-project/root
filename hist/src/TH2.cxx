@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.19 2001/08/08 07:17:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.20 2001/10/10 20:57:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -182,6 +182,115 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Stat_t z= (w > 0 ? w : -w);
+   fTsumw   += z;
+   fTsumw2  += z*z;
+   fTsumwx  += z*x;
+   fTsumwx2 += z*x*x;
+   fTsumwy  += z*y;
+   fTsumwy2 += z*y*y;
+   fTsumwxy += z*x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH2::Fill(const char *namex, const char *namey, Stat_t w)
+{
+// Increment cell defined by namex,namey by a weight w
+//
+// if x or/and y is less than the low-edge of the corresponding axis first bin,
+//   the Underflow cell is incremented.
+// if x or/and y is greater than the upper edge of corresponding axis last bin,
+//   the Overflow cell is incremented.
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y.
+//
+
+   Int_t binx, biny, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(namey);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t x = fXaxis.GetBinCenter(binx);
+   Axis_t y = fYaxis.GetBinCenter(biny);
+   Stat_t z= (w > 0 ? w : -w);
+   fTsumw   += z;
+   fTsumw2  += z*z;
+   fTsumwx  += z*x;
+   fTsumwx2 += z*x*x;
+   fTsumwy  += z*y;
+   fTsumwy2 += z*y*y;
+   fTsumwxy += z*x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH2::Fill(const char *namex, Axis_t y, Stat_t w)
+{
+// Increment cell defined by namex,y by a weight w
+//
+// if x or/and y is less than the low-edge of the corresponding axis first bin,
+//   the Underflow cell is incremented.
+// if x or/and y is greater than the upper edge of corresponding axis last bin,
+//   the Overflow cell is incremented.
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y.
+//
+
+   Int_t binx, biny, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(y);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t x = fXaxis.GetBinCenter(binx);
+   Stat_t z= (w > 0 ? w : -w);
+   fTsumw   += z;
+   fTsumw2  += z*z;
+   fTsumwx  += z*x;
+   fTsumwx2 += z*x*x;
+   fTsumwy  += z*y;
+   fTsumwy2 += z*y*y;
+   fTsumwxy += z*x*y;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH2::Fill(Axis_t x, const char *namey, Stat_t w)
+{
+// Increment cell defined by x,namey by a weight w
+//
+// if x or/and y is less than the low-edge of the corresponding axis first bin,
+//   the Underflow cell is incremented.
+// if x or/and y is greater than the upper edge of corresponding axis last bin,
+//   the Overflow cell is incremented.
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y.
+//
+
+   Int_t binx, biny, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(x);
+   biny = fYaxis.FindBin(namey);
+   bin  = biny*(fXaxis.GetNbins()+2) + binx;
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   Axis_t y = fYaxis.GetBinCenter(biny);
    Stat_t z= (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.12 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.13 2001/08/08 07:20:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -52,8 +52,12 @@ public:
    virtual ~TH2();
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;} //MayNotUse
+           Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y);
    virtual Int_t   Fill(Axis_t x, Axis_t y, Stat_t w);
+   virtual Int_t   Fill(Axis_t x, const char *namey, Stat_t w);
+   virtual Int_t   Fill(const char *namex, Axis_t y, Stat_t w);
+   virtual Int_t   Fill(const char *namex, const char *namey, Stat_t w);
    virtual void    FillN(Int_t, const Axis_t *, const Double_t *, Int_t) {;} //MayNotUse
    virtual void    FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Double_t *w, Int_t stride=1);
    virtual void    FillRandom(const char *fname, Int_t ntimes=5000);
@@ -110,7 +114,7 @@ public:
                                  {fArray[bin] = Char_t (content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
-   virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
            TH2C&   operator=(const TH2C &h1);
    friend  TH2C    operator*(Float_t c1, TH2C &h1);
    friend  TH2C    operator*(TH2C &h1, Float_t c1) {return operator*(c1,h1);}
@@ -153,7 +157,7 @@ public:
                                  {fArray[bin] = Short_t (content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
-   virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
            TH2S&   operator=(const TH2S &h1);
    friend  TH2S    operator*(Float_t c1, TH2S &h1);
    friend  TH2S    operator*(TH2S &h1, Float_t c1) {return operator*(c1,h1);}
@@ -198,7 +202,7 @@ public:
                                  {fArray[bin] = Float_t (content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
-   virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
            TH2F&   operator=(const TH2F &h1);
    friend  TH2F    operator*(Float_t c1, TH2F &h1);
    friend  TH2F    operator*(TH2F &h1, Float_t c1);
@@ -243,7 +247,7 @@ public:
                                  {fArray[bin] = Double_t (content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
-   virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
            TH2D&   operator=(const TH2D &h1);
    friend  TH2D    operator*(Float_t c1, TH2D &h1);
    friend  TH2D    operator*(TH2D &h1, Float_t c1) {return operator*(c1,h1);}
