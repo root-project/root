@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.97 2003/07/21 17:38:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.98 2003/07/22 16:10:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1008,7 +1008,7 @@ void TFile::Map()
       frombuf(buffer, &nwhc);
       int i;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[nwhc] = '\0';
+      classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
       if (idcur == fSeekFree) strcpy(classname,"FreeSegments");
       if (idcur == fSeekInfo) strcpy(classname,"StreamerInfo");
       if (idcur == fSeekKeys) strcpy(classname,"KeysList");
