@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.109 2004/11/20 18:08:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.110 2004/12/15 16:04:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1314,6 +1314,25 @@ void TSystem::Closelog()
 }
 
 //---- Dynamic Loading ---------------------------------------------------------
+
+//______________________________________________________________________________
+const char* TSystem::GetDynamicPath()
+{
+   // Return the dynamic path (used to find shared libraries).
+
+   AbstractMethod("GetDynamicPath");
+   return 0;
+}
+
+//______________________________________________________________________________
+void TSystem::SetDynamicPath(const char *)
+{
+   // Set the dynamic path to a new value.
+   // If the value of 'path' is zero, the dynamic path is reset to its
+   // default value.
+
+   AbstractMethod("SetDynamicPath");
+}
 
 //______________________________________________________________________________
 int TSystem::Load(const char *module, const char *entry, Bool_t system)

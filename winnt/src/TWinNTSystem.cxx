@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.108 2004/12/15 16:04:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.109 2004/12/15 16:56:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -352,13 +352,21 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
 }
 
 //______________________________________________________________________________
-static const char *GetDynamicPath()
+static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 {
    // Get shared library search path.
 
    static const char *dynpath = 0;
 
-   if (dynpath == 0) {
+   if ((reset || newpath) && dynpath) {
+      delete [] dynpath;
+      dynpath = 0;
+   }
+   if (newpath) {
+
+      dynpath = StrDup(newpath);
+
+   } else if (dynpath == 0) {
       dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       if (dynpath == 0) {
          dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
@@ -2104,7 +2112,7 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
       char *tmp = gSystem->ExpandPathName(search);
       TString exsearch(tmp);
       delete [] tmp;
- 
+
       // Need to use Windows delimiters
       Int_t lastDelim = -1;
       for(int i=0; i<exsearch.Length(); ++i) {
@@ -2872,6 +2880,28 @@ void TWinNTSystem::Abort(int)
 }
 
 //---- dynamic loading and linking ---------------------------------------------
+
+//______________________________________________________________________________
+const char* TWinNTSystem::GetDynamicPath()
+{
+   // Return the dynamic path (used to find shared libraries).
+
+   return DynamicPath(0, kFALSE);
+}
+
+//______________________________________________________________________________
+void TWinNTSystem::SetDynamicPath(const char *path)
+{
+   // Set the dynamic path to a new value.
+   // If the value of 'path' is zero, the dynamic path is reset to its
+   // default value.
+
+   if (!path)
+      DynamicPath(0, kTRUE);
+   else
+      DynamicPath(path);
+}
+
 //______________________________________________________________________________
 char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
 {
@@ -3290,7 +3320,7 @@ void TWinNTSystem::Sleep(UInt_t milliSec)
 //______________________________________________________________________________
 Int_t TWinNTSystem::Select(TList *act, Long_t to)
 {
-   // Select on file descriptors. The timeout to is in millisec.   
+   // Select on file descriptors. The timeout to is in millisec.
    Int_t rc = -4;
 
    TFdSet rd, wr;
@@ -3326,7 +3356,7 @@ Int_t TWinNTSystem::Select(TList *act, Long_t to)
 Int_t TWinNTSystem::Select(TFileHandler *h, Long_t to)
 {
    // Select on the file descriptor related to file handler h.
-   // The timeout to is in millisec.   
+   // The timeout to is in millisec.
    Int_t rc = -4;
 
    TFdSet rd, wr;

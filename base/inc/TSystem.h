@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.45 2004/10/15 16:55:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.46 2004/12/15 16:04:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -355,6 +355,8 @@ public:
    virtual void            Closelog();
 
    //---- Dynamic Loading
+   virtual const char     *GetDynamicPath();
+   virtual void            SetDynamicPath(const char *pathname);
    virtual char           *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
    virtual Func_t          DynFindSymbol(const char *module, const char *entry);
    virtual int             Load(const char *module, const char *entry = "", Bool_t system = kFALSE);

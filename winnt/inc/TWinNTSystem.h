@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.33 2004/10/15 17:15:44 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.34 2004/12/15 16:04:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -188,6 +188,8 @@ public:
    const char       *UnixPathName(const char *unixpathname);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
    //---- Dynamic Loading --------------------------------------
+   const char      *GetDynamicPath();
+   void             SetDynamicPath(const char *lib);
    char             *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
    const char       *GetLibraries(const char *regexp = "",
                                   const char *option = "",

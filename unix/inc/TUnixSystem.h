@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.21 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.22 2004/12/15 16:04:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -67,7 +67,6 @@ protected:
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
-   static const char  *GetDynamicPath();
    static void        *FindDynLib(const char *lib);
    static int          UnixDynLoad(const char *lib);
    static Func_t       UnixDynFindSymbol(const char *lib, const char *entry);
@@ -177,6 +176,8 @@ public:
    void              Closelog();
 
    //---- Dynamic Loading --------------------------------------
+   const char       *GetDynamicPath();
+   void              SetDynamicPath(const char *lib);
    Func_t            DynFindSymbol(const char *module, const char *entry);
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE);
    void              Unload(const char *module);

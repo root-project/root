@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.114 2004/12/08 13:58:13 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.115 2004/12/15 16:04:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3617,13 +3617,17 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 //---- Dynamic Loading ---------------------------------------------------------
 
 //______________________________________________________________________________
-const char *TUnixSystem::GetDynamicPath()
+static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 {
    // Get shared library search path. Static utility function.
 
    static TString dynpath;
+   static Bool_t initialized = kFALSE;
 
-   if (dynpath.IsNull()) {
+   if (newpath) {
+      dynpath = newpath;
+   } else if (reset || !initialized) {
+      initialized = kTRUE;
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       if (rdynpath.IsNull()) {
 #ifdef ROOTLIBDIR
@@ -3662,6 +3666,27 @@ const char *TUnixSystem::GetDynamicPath()
 #endif
    }
    return dynpath;
+}
+
+//______________________________________________________________________________
+const char *TUnixSystem::GetDynamicPath()
+{
+   // Return the dynamic path (used to find shared libraries).
+
+   return DynamicPath(0, kFALSE);
+}
+
+//______________________________________________________________________________
+void TUnixSystem::SetDynamicPath(const char *path)
+{
+   // Set the dynamic path to a new value.
+   // If the value of 'path' is zero, the dynamic path is reset to its
+   // default value.
+
+   if (!path)
+      DynamicPath(0, kTRUE);
+   else
+      DynamicPath(path);
 }
 
 //______________________________________________________________________________
