@@ -1,7 +1,11 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.9 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.10 2000/10/20 15:51:20 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
+// To run it do: make guitest; guitest
+// Another version with identical functionality but using the new signals
+// and slots communication mechanism can be found in $ROOTSYS/tutorials.
+// That version can be run entirely in the interpreter.
 
 #include <stdlib.h>
 
@@ -291,12 +295,15 @@ private:
    TGShutter       *fShutter;
    TGLayoutHints   *fLayout;
    const TGPicture *fDefaultPic;
+   TList           *fTrash;
 
 public:
    TestShutter(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
    ~TestShutter();
 
    void AddShutterItem(const char *name, shutterData_t data[]);
+   virtual void CloseWindow();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 };
 
 
@@ -513,7 +520,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    AddFrame(fStatusFrame, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
             0, 0, 1, 0));
 
-   SetWindowName("WinTest");
+   SetWindowName("GuiTest");
 
    MapSubwindows();
 
@@ -1428,6 +1435,8 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    fDefaultPic = fClient->GetPicture("folder_s.xpm");
    fShutter = new TGShutter(this, kSunkenFrame);
 
+   fTrash = new TList;
+
    AddShutterItem("Histograms", histo_data);
    AddShutterItem("Functions", function_data);
    AddShutterItem("Trees", tree_data);
@@ -1463,9 +1472,11 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 
    TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
                                         5, 5, 5, 0);
+   fTrash->Add(l);
 
    item = new TGShutterItem(fShutter, new TGHotString(name), id++);
    container = (TGCompositeFrame *) item->GetContainer();
+   fTrash->Add(item);
 
    for (int i=0; data[i].pixmap_name != 0; i++) {
       buttonpic = fClient->GetPicture(data[i].pixmap_name);
@@ -1476,6 +1487,7 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
       }
 
       button = new TGPictureButton(container, buttonpic, data[i].id);
+      fTrash->Add(button);
       container->AddFrame(button, l);
       button->Associate(this);
       button->SetToolTipText(data[i].tip_text);
@@ -1489,7 +1501,21 @@ TestShutter::~TestShutter()
 {
    delete fLayout;
    delete fShutter;
-   // add other items to be deleted
+   fTrash->Delete();
+   delete fTrash;
+}
+
+void TestShutter::CloseWindow()
+{
+   delete this;
+}
+
+Bool_t TestShutter::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+{
+   // Process messages sent to this dialog.
+
+   printf("Shutter button %d\n", (Int_t)parm1);
+   return kTRUE;
 }
 
 TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
