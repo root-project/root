@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.4 2001/06/25 09:16:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.5 2001/12/03 12:38:24 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -302,6 +302,9 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
     defined(R__USESTHROW)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
+#   ifdef R__SOLARIS_CC50
+       extern "C" { int finite(double); }
+#   endif
 #else
 // don't want to include complete <math.h>
 extern "C" {
@@ -323,7 +326,6 @@ extern "C" {
    extern int    finite(double);
    extern int    isnan(double);
 }
-#endif
 
 inline Double_t TMath::Sin(Double_t x)
    { return sin(x); }
