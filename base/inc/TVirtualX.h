@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.13 2002/08/17 16:29:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.14 2002/09/13 01:36:21 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -287,7 +287,7 @@ public:
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
    virtual char       **ListFonts(char *fontname, Int_t max, Int_t &count);
    virtual void         FreeFontNames(char **fontlist);
-   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad);
+   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    virtual void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
    virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
@@ -480,7 +480,7 @@ inline Bool_t       TVirtualX::EqualRegion(Region_t, Region_t) { return kFALSE; 
 inline void         TVirtualX::GetRegionBox(Region_t, Rectangle_t *) { }
 inline char       **TVirtualX::ListFonts(char *fontname, Int_t max, Int_t &count) { return 0; }
 inline void         TVirtualX::FreeFontNames(char **fontlist) { }
-inline Drawable_t   TVirtualX::CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad) { return 0; }
+inline Drawable_t   TVirtualX::CreateImage(UInt_t width, UInt_t height) { return 0; }
 inline void         TVirtualX::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height) { }
 inline void         TVirtualX::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel) { }
 inline void         TVirtualX::PutImage(Drawable_t id, GContext_t gc, Drawable_t img,

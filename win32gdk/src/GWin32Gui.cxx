@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.6 2002/09/13 01:36:21 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.7 2002/09/13 07:21:11 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -2769,7 +2769,7 @@ void TGWin32::FreeFontNames(char **fontlist)
 }
 
 //______________________________________________________________________________
-Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height, Int_t /*bitmap_pad*/)
+Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height)
 {
     return (Drawable_t) gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(),
                                       width, height);

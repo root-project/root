@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.15 2002/08/17 16:29:30 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.16 2002/09/13 01:36:21 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -376,7 +376,7 @@ public:
    void         GetRegionBox(Region_t reg, Rectangle_t *);
    char       **ListFonts(char *fontname, Int_t max, Int_t &count);
    void         FreeFontNames(char **fontlist);
-   Drawable_t   CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad);
+   Drawable_t   CreateImage(UInt_t width, UInt_t height);
    void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
    void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,

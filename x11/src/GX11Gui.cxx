@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.23 2002/02/25 18:06:24 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.24 2002/09/13 01:36:22 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2394,15 +2394,24 @@ void TGX11::FreeFontNames(char **fontlist)
 }
 
 //______________________________________________________________________________
-Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height, Int_t bitmap_pad)
+Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
 {
    // Create a client-side XImage. Returns handle to XImage.
+
+   Int_t bitmap_pad;
+
+   if (fDepth <= 8)
+      bitmap_pad = 8;
+   else if (fDepth <= 16)
+      bitmap_pad = 16;
+   else
+      bitmap_pad = 32;
 
    XImage *xim = XCreateImage(fDisplay, fVisual, fDepth, ZPixmap,
                               0, 0, width, height, bitmap_pad, 0);
 
    // use calloc since Xlib will use free() in XDestroyImage
-   xim->data = (char *) calloc(1, xim->bytes_per_line * xim->height);
+   xim->data = (char *) calloc(xim->bytes_per_line * xim->height, 1);
 
    return (Drawable_t) xim;
 }
