@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.52 2001/05/28 12:40:36 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.53 2001/07/05 20:17:28 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -282,11 +282,11 @@ TClass::TClass(const char *name, Version_t cversion,
 
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
-   if ( oldcl && oldcl->TestBit(kLoading) ) {
-     // Do not recreate a class while it is already being created!
-     return;
+   if (oldcl && oldcl->TestBit(kLoading)) {
+      // Do not recreate a class while it is already being created!
+      return;
    }
-   
+
    if (oldcl) gROOT->GetListOfClasses()->Remove(oldcl);
 
    SetBit(kLoading);
@@ -302,8 +302,8 @@ TClass::TClass(const char *name, Version_t cversion,
          gInterpreter->InitializeDictionaries();
          gInterpreter->SetClassInfo(this);
          if (IsZombie()) {
-           gROOT->GetListOfClasses()->Remove(this);
-           return;
+            gROOT->GetListOfClasses()->Remove(this);
+            return;
          }
       }
       if (!fClassInfo)
