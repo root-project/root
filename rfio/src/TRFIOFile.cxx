@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.13 2001/02/09 18:19:18 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.14 2001/02/16 10:59:32 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -29,7 +29,9 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include <sys/stat.h>
+#ifndef R__WIN32
 #include <unistd.h>
+#endif
 
 extern "C" {
    int   rfio_open(char *filepath, int flags, int mode);
@@ -43,10 +45,28 @@ extern "C" {
    int   rfio_fstat(int s, struct stat *statbuf);
    void  rfio_perror(const char *msg);
    char *rfio_serror();
+#ifdef R__WIN32
+   int  *C__serrno(void);
+   int  *C__rfio_errno (void);
+#endif
 };
+
+#ifdef R__WIN32
+
+// Thread safe rfio_errno. Note, C__rfio_errno is defined in Cglobals.c rather
+// than rfio/error.c.
+#define rfio_errno (*C__rfio_errno())
+
+// Thread safe serrno. Note, C__serrno is defined in Cglobals.c rather
+// rather than serror.c.
+#define serrno (*C__serrno())
+
+#else
 
 extern int rfio_errno;
 extern int serrno;
+
+#endif
 
 
 ClassImp(TRFIOFile)
