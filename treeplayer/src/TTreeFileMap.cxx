@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFileMap.cxx,v 1.117 2003/01/11 14:21:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFileMap.cxx,v 1.1 2003/01/15 18:48:16 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 ClassImp(TTreeFileMap)
 
 //______________________________________________________________________________
-TTreeFileMap::TTreeFileMap()
+TTreeFileMap::TTreeFileMap() : TNamed()
 {
 // Default TreeFileMap constructor
 
@@ -46,6 +46,7 @@ TTreeFileMap::TTreeFileMap()
 
 //______________________________________________________________________________
 TTreeFileMap::TTreeFileMap(TTree *tree, const char *branches, Option_t *option)
+             :TNamed("TTreeFileMap","")
 {
 // TreeFileMap normal constructor
 
@@ -97,7 +98,10 @@ Int_t TTreeFileMap::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t pxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t pymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t pymax = gPad->YtoAbsPixel(gPad->GetUymax());
-   if (px > pxmin && px < pxmax && py > pymax && py < pymin) return 0;
+   if (px > pxmin && px < pxmax && py > pymax && py < pymin) {
+      SetName(GetObjectInfo(px,py));
+      return 0;
+   }
    return fFrame->DistancetoPrimitive(px,py);
 }
 
@@ -139,7 +143,7 @@ char *TTreeFileMap::GetObjectInfo(Int_t px, Int_t py) const
          if (pbyte >= bseek && pbyte < bseek+nbytes) {
             entry = entry0;
             if (!offsets) entry += (pbyte-bseek)/len;
-            sprintf(info,"(byte=%d, branch=%s, basket=%d, entry=%d)",pbyte,branch->GetName(),i,entry);
+            sprintf(info,"%s/%s, basket=%d, entry=%d",fTree->GetName(),branch->GetName(),i,entry);
             return info;            
          }
       }
@@ -216,13 +220,7 @@ void TTreeFileMap::Paint(Option_t *)
          }
       }
    }
-   gPad->RedrawAxis();
-}
-
-//______________________________________________________________________________
-void TTreeFileMap::SavePrimitive(ofstream &out, Option_t *)
-{
-    // Save primitive as a C++ statement(s) on output stream out
+   fFrame->Draw("sameaxis");
 }
 
 //______________________________________________________________________________
@@ -230,6 +228,7 @@ void TTreeFileMap::ShowEntry()
 {
     // Show entry corresponding at the mouse position
 
+/*
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
    Double_t x = gPad->AbsPixeltoX(px);
@@ -258,22 +257,10 @@ void TTreeFileMap::ShowEntry()
          }
       }
    }
-}
-
-//______________________________________________________________________________
-void TTreeFileMap::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TTreeFileMap.
-
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 0) {
-         TTreeFileMap::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-
-   } else {
-      TTreeFileMap::Class()->WriteBuffer(R__b,this);
-   }
+*/
+   char *centry = strstr(GetName(),"entry=");
+   if (!centry) return;
+   Int_t entry = 0;
+   sscanf(centry+6,"%d",&entry);
+   fTree->Show(entry);
 }

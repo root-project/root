@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFileMap.h,v 1.22 2003/01/10 14:51:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFileMap.h,v 1.1 2003/01/15 18:48:16 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 class TTree;
 class TH1;
 
-class TTreeFileMap : public TObject {
+class TTreeFileMap : public TNamed {
 
 protected:
     TTree         *fTree;           //!  Pointer to current Tree
@@ -47,7 +47,6 @@ public:
     virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual char *GetObjectInfo(Int_t px, Int_t py) const;
     virtual void  Paint(Option_t *option);
-    virtual void  SavePrimitive(ofstream &out, Option_t *option);
     virtual void  ShowEntry(); // *MENU*
     
     ClassDef(TTreeFileMap,1)  //Draw a 2-d map -f the branches of a Tree in its file
