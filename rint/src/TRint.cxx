@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.38 2004/07/16 22:29:07 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.39 2004/08/06 05:46:32 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -135,6 +135,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
+
+   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+   ProcessLine("#define ROOT_Rtypes 0", kTRUE);
+   ProcessLine("#define ROOT_TError 0", kTRUE);
+   ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
    gROOT->LoadClass("TMinuit",     "Minuit");

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.75 2004/07/15 23:57:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.76 2004/07/16 22:29:07 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -300,6 +300,11 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
+
+   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+   ProcessLine("#define ROOT_Rtypes 0", kTRUE);
+   ProcessLine("#define ROOT_TError 0", kTRUE);
+   ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
    gROOT->LoadClass("TMinuit",     "Minuit");
