@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2001/03/09 16:59:56 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.5 2001/05/29 20:55:28 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -61,7 +61,7 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumePosition *nodePosition)
      while ( (nextView = (TVolumeView *)next(mode)) ){
        mode = kContinue;
        if (nextView->IsMarked()) {
-         TVolumePosition *position = next[int(0)];
+         TVolumePosition *position =next[0];
          if (!position->GetNode()) {
              Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
          }
@@ -99,7 +99,7 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumeView *topNode)
        mode = kContinue;
       // Skip till  "top Node" found
       if (topNode != nextView) continue;
-      TVolumePosition *position = next[int(0)];
+      TVolumePosition *position = next[0];
       if (!position->GetNode()) {
          Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
       }
@@ -148,7 +148,7 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,const Char_t *nodeName1,const Cha
         }
       }
       if (!found) continue;
-      TVolumePosition *position = next[int(0)];
+      TVolumePosition *position = next[0];
       if (!position->GetNode()) {
          Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
       }
@@ -198,7 +198,7 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,const TVolumeView *node1,const TV
         }
       }
       if (!found) continue;
-      TVolumePosition *position = next[int(0)];
+      TVolumePosition *position = next[0];
       if (!position->GetNode()) {
          Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
       }
@@ -545,7 +545,7 @@ Int_t TVolumeView::GetGlobalRange(const TVolumeView *rootNode,Float_t *globalMin
     // Find itself.
     while ( (nextView = (TVolumeView *)next(mode)) && nextView != this ){}
     if (nextView == this) {
-      TVolumePosition *position = next[int(0)];
+      TVolumePosition *position = next[0];
       if (!position->GetNode()) {
           Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
       }
@@ -621,7 +621,7 @@ TVolumePosition  *TVolumeView::Local2Master(const Char_t *localName, const Char_
   if (masterName && masterName[0]) masterNode = (TVolumeView *)Find(masterName);
   if (masterNode) {
     TVolumeViewIter transform(masterNode,0);
-    if (transform(localName)) position = transform[int(0)];
+    if (transform(localName)) position = transform[0];
   }
   return position;
 }
@@ -635,7 +635,7 @@ TVolumePosition *TVolumeView::Local2Master(const TVolumeView *localNode,const TV
     TVolumeViewIter transform((TVolumeView *)masterNode,0);
     TVolumeView *nextNode = 0;
     while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode);
-    if (nextNode) position = transform[Int_t(0)];
+    if (nextNode) position = transform[0];
   }
   return position;
 }
