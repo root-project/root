@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.3 2002/12/02 18:50:01 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.4 2002/12/03 11:20:10 rdm Exp $ */
 /* Author: */
 
 /* Demangler for GNU C++
@@ -1356,7 +1356,7 @@ demangle_prefix (work, mangled, declp)
       success = 1;
 
       /* ARM template? */
-      demangle_arm_pt (work, mangled, strlen (*mangled), declp);
+      demangle_arm_pt (work, mangled, (int)strlen (*mangled), declp);
     }
   else if (*(scan + 2) != '\0')
     {
