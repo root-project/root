@@ -1,6 +1,7 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.4 2003/12/30 13:16:50 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.5 2004/04/29 17:05:39 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
+// Updated: Tgiran Mkrtchyan 28/06/2004
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +36,7 @@
 #endif
 
 #include <sys/stat.h>
+
 
 class TDCacheFile : public TFile {
 
@@ -83,10 +85,10 @@ public:
    static const char *GetDcapVersion();
    static TString GetDcapPath(const char *path);
 
-   static Bool_t EnableSSL();
 
    ClassDef(TDCacheFile,1)  //A ROOT file that reads/writes via a dCache server
 };
+
 
 class TDCacheSystem : public TSystem {
 

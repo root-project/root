@@ -1,6 +1,8 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.17 2004/04/29 17:05:39 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.18 2004/05/07 16:27:31 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
+// Modified: Tigran Mkrtchyan 29/06/2004
+
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,8 +38,8 @@
 #include <unistd.h>
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-            defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-	                defined(R__MACOSX) || defined(R__HURD)
+    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
+    defined(R__MACOSX) || defined(R__HURD)
 #define HAS_DIRENT
 #endif
 #endif
@@ -100,8 +102,8 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       char *tname;
       if ((tname = gSystem->ExpandPathName(path))) {
          stmp = tname;
-	 stmp2 = DCAP_PREFIX;
-	 stmp2 += tname;
+         stmp2 = DCAP_PREFIX;
+         stmp2 += tname;
          delete [] tname;
          fname = stmp.Data();
          fnameWithPrefix = stmp2.Data();
@@ -312,18 +314,6 @@ const char *TDCacheFile::GetDcapVersion()
    return getDcapVersion();
 }
 
-//______________________________________________________________________________
-Bool_t TDCacheFile::EnableSSL()
-{
-   // Enable SSL file access.
-
-#ifdef DCAP_USE_SSL
-   dc_enableSSL();
-   return kTRUE;
-#else
-   return kFALSE;
-#endif
-}
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
@@ -418,13 +408,22 @@ Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TDCacheFile::SysSync(Int_t)
+Int_t TDCacheFile::SysSync(Int_t fd)
 {
    // Interface to system sync. All arguments like in POSIX fsync.
    // dCache always keep it's files sync'ed, so there's no need to
    // sync() them manually.
 
-   return 0;
+   Int_t rc;
+   dc_errno = 0;
+
+   rc = dc_fsync(fd);
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -527,38 +526,76 @@ TDCacheSystem::TDCacheSystem() : TSystem("-DCache", "DCache Helper System")
 }
 
 //______________________________________________________________________________
-int TDCacheSystem::MakeDirectory(const char *name)
+int TDCacheSystem::MakeDirectory(const char *path)
 {
-   // The dCache Library does not yet have a mkdir function.
+   // Create a directory.
 
-   Error("MakeDirectory", "not supported, cannot create %s", name);
-   return -1;
+   Int_t rc;
+   dc_errno = 0;
+   TString pathString = TDCacheFile::GetDcapPath(path);
+   path = pathString.Data();
+
+   rc = dc_mkdir(path, 0755);
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
+
+   return rc;
 }
 
 //______________________________________________________________________________
-void *TDCacheSystem::OpenDirectory(const char *name)
+void *TDCacheSystem::OpenDirectory(const char *path)
 {
-   // The dCache Library does not yet have a opendir function.
+   // Open a directory.
 
-   Error("OpenDirectory", "not supported, cannot open directory %s", name);
-   return 0;
+   dc_errno = 0;
+   TString pathString = TDCacheFile::GetDcapPath(path);
+
+   path = pathString.Data();
+
+   fDirp = dc_opendir(path);
+   if (fDirp == 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
+
+   return fDirp;
 }
 
 //______________________________________________________________________________
-void TDCacheSystem::FreeDirectory(void * /*dirp*/)
+void TDCacheSystem::FreeDirectory(void * dirp)
 {
-   // The dCache Library does not yet have a closedir function.
+   // Close a directory.
 
-   Error("FreeDirectory", "not supported, cannot close directory");
+   Int_t rc;
+   dc_errno = 0;
+
+   rc = dc_closedir((DIR *)dirp);
+   if (rc < 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
+
+   fDirp = 0;
+   return;
 }
 
 //______________________________________________________________________________
-const char *TDCacheSystem::GetDirEntry(void * /*dirp1*/)
+const char *TDCacheSystem::GetDirEntry(void * dirp)
 {
-   // The dCache Library does not yet have a readdir function.
+   // Get a directory entry.
 
-   Error("GetDirEntry", "not supported, cannot get directory entry");
-   return 0;
+   struct dirent *ent;
+   dc_errno = 0;
+
+   ent = dc_readdir((DIR *)dirp);
+   if (ent == 0) {
+      if (dc_errno != 0)
+         gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
+
+   return ent == NULL ? NULL : ent->d_name;
 }
 
 //______________________________________________________________________________
@@ -568,32 +605,10 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
 
-   // The dCache Library does not yet have an access function, use dc_stat()
-
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
 
-   struct stat statbuf;
-
-   if (path != 0 && dc_stat(path, &statbuf) >= 0) {
-      switch (mode) {
-         case kReadPermission:
-            if (statbuf.st_mode | S_IRUSR) return kFALSE;
-            break;
-         case kWritePermission:
-            if (statbuf.st_mode | S_IWUSR) return kFALSE;
-            break;
-         case kExecutePermission:
-            if (statbuf.st_mode | S_IXUSR) return kFALSE;
-	    break;
-         default:
-            return kFALSE;
-      }
-      return kTRUE;
-   }
-
-   fLastErrorString = GetError();
-   return kTRUE;
+   return dc_access(path, mode);
 }
 
 //______________________________________________________________________________
