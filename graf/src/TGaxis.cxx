@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.5 2000/08/25 13:10:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.6 2000/09/01 07:02:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1114,8 +1114,8 @@ L110:
                   IF2++;
                }
                CODED = &CHCODED[0];
-               if (IF1 > 15) IF1=15;
-               if (IF2 > 15) IF2=15;
+               if (IF1 > 14) IF1=14;
+               if (IF2 > 14) IF2=14;
                if (IF2) sprintf(CODED,"%%%d.%df",IF1,IF2);
                else     sprintf(CODED,"%%%d.%df",IF1+1,1);
             }
@@ -1136,6 +1136,7 @@ L110:
 
                if (!OptionText && !OptionTime) {
                   sprintf(LABEL,&CHCODED[0],Wlabel);
+                  LABEL[28] = 0;
                   Wlabel += DWlabel;
 
                   LabelsLimits(LABEL,first,last);  //Eliminate blanks
