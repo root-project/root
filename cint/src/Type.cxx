@@ -23,7 +23,12 @@
 #include "common.h"
 
 #ifndef G__OLDIMPLEMENTATION1586
-static char G__buf[G__ONELINE];
+/* This length should match or exceed the length in G__type2string */
+#ifndef G__OLDIMPLEMENTATION711
+  static char G__buf[G__LONGLINE];
+#else
+  static char G__buf[G__MAXNAME*2];
+#endif
 #endif
 
 /*********************************************************************

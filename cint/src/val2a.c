@@ -921,7 +921,14 @@ int type,tagnum,typenum,reftype,isconst;
     strcat(stringbuf,"&");
   }
 #endif
-
+  
+  if (strlen(stringbuf)>=sizeof(stringbuf)) {
+      G__fprinterr(G__serr,
+         "Error in G__type2sting: string length (%d) greater than buffer length (%d)!",
+         strlen(stringbuf),
+         sizeof(stringbuf));
+      G__genericerror((char*)NULL);  
+  }
   return(stringbuf);
 }
 
