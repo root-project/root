@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.17 2001/05/29 19:10:04 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.18 2001/06/29 19:28:50 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.18  2001/06/29 19:28:50  brun
+// Some fixes by Valery
+//
 // Revision 1.17  2001/05/29 19:10:04  brun
 // // New methods:
 // // ------------
@@ -1385,7 +1388,7 @@ Bool_t TTable::IsFolder() const {
 #   define finite _finite
 # endif
 #else
-extern "C" {int finite( double x );}
+//extern "C" {int finite( double x );}
 #endif
 
 //______________________________________________________________________________
