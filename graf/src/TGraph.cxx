@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.110 2003/09/12 08:03:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.111 2003/09/27 17:48:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1330,8 +1330,13 @@ TH1F *TGraph::GetHistogram() const
   if (fHistogram) return fHistogram;
   Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
   Double_t uxmin, uxmax;
-  rwxmin = rwxmax = fX[0];
-  rwymin = rwymax = fY[0];
+  if (fNpoints <= 0) {
+     rwxmin = rwxmax = 0;
+     rwymin = rwymax = 0;
+  } else {
+     rwxmin = rwxmax = fX[0];
+     rwymin = rwymax = fY[0];
+  }
   for (Int_t i=1;i<fNpoints;i++) {
      if (fX[i] < rwxmin) rwxmin = fX[i];
      if (fX[i] > rwxmax) rwxmax = fX[i];
