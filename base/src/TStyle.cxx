@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.31 2003/06/06 16:38:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.32 2003/11/21 07:39:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -195,9 +195,9 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetLabelSize(0.05,"Y");
       SetLabelSize(0.05,"Z");
       SetLabelOffset(0.01,"Y");
-      SetLabelColor(kBlue,"X");
-      SetLabelColor(kBlue,"Y");
-      SetLabelColor(kBlue,"Z");
+      SetLabelColor(kBlack,"X");
+      SetLabelColor(kBlack,"Y");
+      SetLabelColor(kBlack,"Z");
       SetTitleSize(0.06,"X");
       SetTitleSize(0.06,"Y");
       SetTitleSize(0.06,"Z");
