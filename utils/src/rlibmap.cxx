@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.11 2004/05/14 16:35:44 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.12 2004/05/17 17:40:00 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -218,6 +218,12 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                   cls[len--] = '\0';
                //no space between tmpl arguments allowed
                cls = Compress(cls);
+
+               // don't include "vector<string>" and "std::pair<" classes
+               if (!strncmp(cls, "vector<string>", 14) ||
+                   !strncmp(cls, "std::pair<", 10))
+                  continue;
+
                // replace "::" by "@@" since TEnv uses ":" as delimeter
                char *s = cls;
                while (*s) {
