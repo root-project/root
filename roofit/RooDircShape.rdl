@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- * File: $Id: RooDircShape.rdl,v 1.1 2002/04/30 18:33:19 zhanglei Exp $
+ * File: $Id: RooDircShape.rdl,v 1.2 2002/05/03 22:53:36 zhanglei Exp $
  * Authors:
  *   Lei Zhang, University of Colorado, zhanglei@slac.stanford.edu
  * History:
@@ -34,12 +34,13 @@ public:
   RooDircShape(const RooDircShape& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooDircShape(*this,newname); }  
   virtual ~RooDircShape();
+
+  virtual void formParams(Double_t *srcParamsPtr);
   
 protected:
   
   // Function evaluation
   virtual Double_t evaluate() const ;
-  virtual void formParams(Double_t *srcParamsPtr);
   virtual void formParams(TString shapefile);
   virtual void formParams(const RooDircShape &other);
   
