@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.3 2001/11/28 15:58:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.4 2002/04/04 17:32:14 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -147,8 +147,8 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
    // calling object, call the method directly
    if (object) {
       if (method) {
-         SetMethod( method );
-         SetCalledObject( object );
+         SetMethod(method);
+         SetCalledObject(object);
 
          if ((method->GetListOfMethodArgs()->First()
                             && menuitem->GetSelfObjectPos() < 0 ) ||
@@ -262,7 +262,7 @@ Char_t *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 }
 
 //______________________________________________________________________________
-Char_t *TContextMenu::CreateDialogTitle( TObject *object, TFunction *method )
+Char_t *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
 {
    // Create title for dialog box retrieving argument values.
 
@@ -301,7 +301,7 @@ Char_t *TContextMenu::CreatePopupTitle(TObject *object)
 }
 
 //______________________________________________________________________________
-void TContextMenu::Execute( TObject *object, TFunction *method, const Char_t *params )
+void TContextMenu::Execute(TObject *object, TFunction *method, const Char_t *params)
 {
    // Execute method with specified arguments for specified object.
 
@@ -341,7 +341,7 @@ void TContextMenu::Execute( TObject *object, TFunction *method, const Char_t *pa
 }
 
 //______________________________________________________________________________
-void TContextMenu::Execute( TObject *object, TMethod *method, TObjArray *params )
+void TContextMenu::Execute(TObject *object, TMethod *method, TObjArray *params)
 {
    // Execute method with specified arguments for specified object.
 
@@ -372,7 +372,7 @@ void TContextMenu::Execute( TObject *object, TMethod *method, TObjArray *params 
 }
 
 //______________________________________________________________________________
-void TContextMenu::Popup( Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtualPad *p )
+void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtualPad *p)
 {
    // Popup context menu at given location in canvas c and pad p for selected
    // object.
@@ -386,7 +386,7 @@ void TContextMenu::Popup( Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtu
 }
 
 //______________________________________________________________________________
-void TContextMenu::Popup( Int_t x, Int_t y, TObject *obj, TBrowser *b)
+void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TBrowser *b)
 {
    // Popup context menu at given location in browser b for selected object.
 
