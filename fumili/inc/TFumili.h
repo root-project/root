@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.3 2003/08/08 17:28:29 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.4 2004/07/28 08:02:04 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////
@@ -105,6 +105,7 @@ public:
   virtual Double_t GetSumLog(Int_t );
   Double_t*        GetZ() const { return fZ;}
   void             InvertZ(Int_t); 
+  virtual Bool_t   IsFixed(Int_t ipar) const;
   Int_t            Minimize(); 
   virtual void     PrintResults(Int_t k,Double_t p) const;
   virtual void     ReleaseParameter(Int_t ipar); 

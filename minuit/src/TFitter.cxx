@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.22 2004/08/18 08:40:46 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.23 2004/10/04 16:04:53 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -163,7 +163,7 @@ Double_t TFitter::GetParameter(Int_t ipar) const
 }
    
 //______________________________________________________________________________
-Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
+Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
    // return current values for a parameter
    //   ipar     : parameter number
@@ -172,7 +172,8 @@ Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &v
    //   verr     : initial error for this parameter
    //   vlow     : lower value for the parameter
    //   vhigh    : upper value for the parameter
-
+   //  WARNING! parname must be suitably dimensionned in the calling function.
+   
    Int_t ierr = 0;
    TString pname;
    fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
@@ -215,6 +216,19 @@ Double_t TFitter::GetSumLog(Int_t n)
    if (fSumLog) return fSumLog[n];
    return 0;
 }
+
+
+//______________________________________________________________________________
+Bool_t TFitter::IsFixed(Int_t ipar) const
+{
+   //return kTRUE if parameter ipar is fixed, kFALSE othersise)
+   
+   for (Int_t i=0;i<fMinuit->fNpfix;i++) {
+      if (fMinuit->fNexofi[i] == ipar) return kTRUE;
+   }
+   return kFALSE;
+}
+
 
 //______________________________________________________________________________
 void  TFitter::PrintResults(Int_t level, Double_t amin) const

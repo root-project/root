@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.6 2003/08/08 17:28:29 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.7 2004/07/28 08:02:04 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -50,6 +50,7 @@ private:
    virtual Int_t      GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
    virtual Int_t      GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
    virtual Double_t   GetSumLog(Int_t i);
+   virtual Bool_t     IsFixed(Int_t ipar) const;
    virtual void       PrintResults(Int_t level, Double_t amin) const;
    virtual void       ReleaseParameter(Int_t ipar);
    virtual void       SetFCN(void *fcn);

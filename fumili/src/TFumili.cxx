@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.16 2004/02/06 14:32:28 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.17 2004/07/28 08:02:04 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -825,7 +825,8 @@ Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &ver
   // verr:     parameter error
   // vlow:     lower limit
   // vhigh:    upper limit
-  //
+  // WARNING! parname must be suitably dimensionned in the calling function.
+
   if (ipar<0 || ipar>=fNpar) {
     value = 0;
     verr  = 0;
@@ -1023,6 +1024,20 @@ void TFumili::InvertZ(Int_t n)
 }
 
 
+
+
+//______________________________________________________________________________
+Bool_t TFumili::IsFixed(Int_t ipar) const
+{
+   //return kTRUE if parameter ipar is fixed, kFALSE othersise)
+   
+   if(ipar < 0 || ipar >= fNpar) {
+      Warning("IsFixed","Illegal parameter number :%d",ipar);
+      return kFALSE;
+   }
+   if (fPL0[ipar] < 0) return kTRUE;
+   else                return kFALSE;
+}
 
 
 //______________________________________________________________________________

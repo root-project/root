@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.43 2004/05/05 13:11:23 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.44 2004/07/07 15:03:44 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -800,7 +800,7 @@ Int_t TMinuit::FixParameter( Int_t parNo)
 // fix a parameter
 
      Int_t err;
-     Double_t tmp = parNo+1; //set internal Minuit nuumbering
+     Double_t tmp = parNo+1; //set internal Minuit numbering
 
      mnexcm( "FIX", &tmp,  1,  err );
 

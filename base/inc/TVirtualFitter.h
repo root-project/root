@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.8 2003/11/24 14:11:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.9 2004/07/28 08:02:04 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -79,6 +79,7 @@ public:
    virtual Int_t     GetYlast()  const {return fYlast;}
    virtual Int_t     GetZfirst() const {return fZfirst;}
    virtual Int_t     GetZlast()  const {return fZlast;}
+   virtual Bool_t    IsFixed(Int_t ipar) const = 0;
    virtual void      PrintResults(Int_t level, Double_t amin) const = 0;
    virtual void      ReleaseParameter(Int_t ipar) = 0;
    virtual void      SetFCN(void *fcn);
