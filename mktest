@@ -4,14 +4,13 @@
 printERROR() { echo "Error: $@." >&2 ; exit 1; }
 
 PARENT_DIR=${1%/*}
-echo $PARENT_DIR
+#echo $PARENT_DIR
 
-count="'wc -m $1'"
 r=`echo $1 | grep '/'`
-echo $r
+#echo $r
 
 	if [ "$r" == "$1" ]; then 
-	#	#printERROR "the source $1 is not dir, or does not exist"
+		#printERROR "the source $1 is not dir, or does not exist"
 		if [ ! -d "$PARENT_DIR" ] ; then
 		mktest $PARENT_DIR
 		fi
