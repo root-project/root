@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.8 2000/08/08 16:07:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.9 2000/10/12 13:25:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -228,9 +228,9 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
       axisNumber = 1;
-      if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
+      //if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
       if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
-      if (!axisNumber) return;
+      //if (!axisNumber) return;
       if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio1);
       } else {
