@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.16 2000/12/19 17:49:54 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.17 2000/12/19 18:04:37 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -111,6 +111,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+// Protocol changes:
+// 2 -> 3: added handling of kROOTD_FSTAT message.
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -215,7 +218,7 @@ int     gAuth              = 0;
 int     gAnon              = 0;
 int     gFd                = -1;
 int     gWritable          = 0;
-int     gProtocol          = 2;       // increase when protocol changes
+int     gProtocol          = 3;       // increase when protocol changes
 double  gBytesRead         = 0;
 double  gBytesWritten      = 0;
 char    gUser[64]          = { 0 };
@@ -648,6 +651,37 @@ void RootdFlush()
 void RootdStat()
 {
 
+}
+
+//______________________________________________________________________________
+void RootdFstat()
+{
+   // Return file stat information in same format as TSystem::GetPathInfo().
+
+   char msg[128];
+   long id, size, flags, modtime;
+   struct stat statbuf;
+
+   if (RootdIsOpen() && fstat(gFd, &statbuf) >= 0) {
+#if defined(__KCC) && defined(linux)
+      id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
+#else
+      id = (statbuf.st_dev << 24) + statbuf.st_ino;
+#endif
+      size = statbuf.st_size;
+      modtime = statbuf.st_mtime;
+      flags = 0;
+      if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+         flags |= 1;
+      if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+         flags |= 2;
+      if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+          (statbuf.st_mode & S_IFMT) != S_IFDIR)
+         flags |= 4;
+      sprintf(msg, "%ld %ld %ld %ld", id, size, flags, modtime);
+   } else
+      sprintf(msg, "-1 -1 -1 -1");
+   NetSend(msg, kROOTD_FSTAT);
 }
 
 //______________________________________________________________________________
@@ -1239,6 +1273,9 @@ void RootdLoop()
          case kROOTD_CLOSE:
             RootdClose();
             return;
+         case kROOTD_FSTAT:
+            RootdFstat();
+            break;
          case kROOTD_STAT:
             RootdStat();
             break;
