@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.14 2001/02/16 10:59:32 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.15 2001/09/27 17:57:25 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -72,7 +72,7 @@ extern int serrno;
 ClassImp(TRFIOFile)
 
 //______________________________________________________________________________
-TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle,
+TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {

@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.4 2001/01/23 19:04:12 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.5 2001/01/23 19:16:31 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -48,7 +48,8 @@ private:
    Int_t  SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
 
 public:
-   TRFIOFile(const char *url, Option_t *option="", const Text_t *ftitle="", Int_t compress=1);
+   TRFIOFile(const char *url, Option_t *option="",
+             const char *ftitle="", Int_t compress=1);
    ~TRFIOFile();
 
    Bool_t  ReadBuffer(char *buf, Int_t len);
