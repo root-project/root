@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.2 2000/06/13 12:28:49 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "TVirtualX.h"
 #include "TROOT.h"
 #include "TList.h"
+#include "TFile.h"
 
 ClassImp(TView)
 
@@ -1380,4 +1381,87 @@ void TView::MoveViewCommand(Char_t option, Int_t count)
        default:
            break;
   }
+}
+
+//______________________________________________________________________________
+void TView::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TView.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion();
+      //unfortunately we forgot to increment the TView version number
+      //when the class was upgraded to double precision.
+      //we are force to use the file version number to recognize old files.
+      if (gFile->GetVersion() < 22500) { //old version in single precision
+         TObject::Streamer(R__b);
+         TAttLine::Streamer(R__b);
+         Float_t single, sa[12];
+         Int_t i;
+         R__b >> fSystem;
+         R__b >> single; fLatitude = single;
+         R__b >> single; fLongitude = single;
+         R__b >> single; fPsi = single;
+         R__b.ReadStaticArray(sa);   for (i=0;i<12;i++) fTN[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<12;i++) fTB[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fRmax[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fRmin[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<12;i++) fTnorm[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<12;i++) fTback[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fX1[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fX2[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fY1[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fY2[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fZ1[i] = sa[i];
+         R__b.ReadStaticArray(sa);   for (i=0;i<3;i++)  fZ2[i] = sa[i];
+         R__b >> fOutline;
+         R__b >> fDefaultOutline;
+         R__b >> fAutoRange;
+      } else {
+         TObject::Streamer(R__b);
+         TAttLine::Streamer(R__b);
+         R__b >> fLatitude;
+         R__b >> fLongitude;
+         R__b >> fPsi;
+         R__b.ReadStaticArray(fTN);
+         R__b.ReadStaticArray(fTB);
+         R__b.ReadStaticArray(fRmax);
+         R__b.ReadStaticArray(fRmin);
+         R__b.ReadStaticArray(fTnorm);
+         R__b.ReadStaticArray(fTback);
+         R__b.ReadStaticArray(fX1);
+         R__b.ReadStaticArray(fX2);
+         R__b.ReadStaticArray(fY1);
+         R__b.ReadStaticArray(fY2);
+         R__b.ReadStaticArray(fZ1);
+         R__b.ReadStaticArray(fZ2);
+         R__b >> fSystem;
+         R__b >> fOutline;
+         R__b >> fDefaultOutline;
+         R__b >> fAutoRange;
+      }
+   } else {
+      R__b.WriteVersion(TView::IsA());
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      R__b << fLatitude;
+      R__b << fLongitude;
+      R__b << fPsi;
+      R__b.WriteArray(fTN, 12);
+      R__b.WriteArray(fTB, 12);
+      R__b.WriteArray(fRmax, 3);
+      R__b.WriteArray(fRmin, 3);
+      R__b.WriteArray(fTnorm, 12);
+      R__b.WriteArray(fTback, 12);
+      R__b.WriteArray(fX1, 3);
+      R__b.WriteArray(fX2, 3);
+      R__b.WriteArray(fY1, 3);
+      R__b.WriteArray(fY2, 3);
+      R__b.WriteArray(fZ1, 3);
+      R__b.WriteArray(fZ2, 3);
+      R__b << fSystem;
+      R__b << fOutline;
+      R__b << fDefaultOutline;
+      R__b << fAutoRange;
+   }
 }
