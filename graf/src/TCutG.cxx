@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.11 2002/03/15 22:11:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.12 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -75,7 +75,6 @@ TCutG::TCutG() : TGraph()
 
    fObjectX  = 0;
    fObjectY  = 0;
-   gROOT->GetListOfSpecials()->Add(this);
 }
 
 //______________________________________________________________________________
