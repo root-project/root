@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.133 2004/03/09 16:51:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.134 2004/03/09 17:08:35 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -844,7 +844,7 @@ void TBranchElement::BuildTitle(const char *name)
       TBranchElement *bre = (TBranchElement*)fBranches.At(i);
       Assert(fType==3 || fType==4 );
       bre->SetType(fType*10+1);
-      bre->fCollProxy = fCollProxy;
+      bre->fCollProxy = GetCollectionProxy();
       bre->BuildTitle(name);
       const char *fin = strrchr(bre->GetTitle(),'.');
       if (fin == 0) continue;
@@ -943,7 +943,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
      if (!fObject) {
         b << 0;
      } else {
-        fCollProxy->SetProxy(fObject);
+        GetCollectionProxy()->SetProxy(fObject);
         Int_t n = fCollProxy->Size();
         if (n > fMaximum) fMaximum = n;
         b << n;
@@ -952,7 +952,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
 
      //char **ppointer = (char**)fAddress;
      if (!fObject) 	return;
-     fCollProxy->SetProxy(fObject); // NOTE: this wont work if a pointer to vector is split!
+     GetCollectionProxy()->SetProxy(fObject); // NOTE: this wont work if a pointer to vector is split!
      Int_t n = fCollProxy->Size();
      fInfo->WriteBufferSTL(b,fCollProxy,n,fID,fOffset);
 
@@ -1794,7 +1794,11 @@ void TBranchElement::SetAddress(void *add)
          //SetBit(kDeleteObject);
          fObject = (char*)GetCollectionProxy()->New();
          fAddress = (char*)&fObject;
+      } else {
+         GetCollectionProxy(); // initialize fCollProxy
       }
+   } else if (fType==41) {
+      GetCollectionProxy(); // initialize fCollProxy
    }
 
    if (gDebug > 0 ) {
