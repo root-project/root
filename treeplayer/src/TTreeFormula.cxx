@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.90 2002/04/04 17:28:52 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.91 2002/04/22 19:02:33 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1221,6 +1221,7 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
    // This method is used internally to decode the dimensions of the variables
 
    if (info) {
+      fManager->EnableMultiVarDims();
       if (fIndexes[code][info->fDim]<0) {
          info->fVirtDim = virt_dim;
          fManager->AddVarDims(virt_dim); // if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
@@ -1614,7 +1615,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             sprintf(scratch,"%s.%s",first,work);
             sprintf(scratch2,"%s.%s.%s",first,second,work);
 
-            
+
 
             // First look for the current 'word' in the list of
             // leaf of the
