@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.198 2004/08/11 13:08:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.199 2004/08/17 08:31:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3923,7 +3923,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       if (oldErrors) hnew->SetBinError(bin+1,TMath::Sqrt(binError));
       oldbin += ngroup;
    }
-   fEntries = entries; //was modified by SetBinContent
+   hnew->SetEntries(entries); //was modified by SetBinContent
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
