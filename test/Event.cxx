@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.6 2000/07/12 16:42:40 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.7 2000/09/29 07:47:49 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ Event::~Event()
    if (fH == fgHist) fgHist = 0;
    delete fH;
    fH = 0;
-   delete fClosestDistance;
+   delete [] fClosestDistance;
 }
 
 //______________________________________________________________________________
