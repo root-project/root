@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.h,v 1.13 2001/09/30 07:48:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.1 2001/10/01 06:48:35 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -1121,7 +1121,6 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
    } else { // 2 : constant 
 	   return y[i] * (1-f) + y[j] * f;
    }
-   return 0;
 }
 
 
@@ -1163,7 +1162,7 @@ void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
 }
 
 //----------------------------------------------------------------------//
-void TGraphSmooth::Rank(Int_t n, Double_t *a, Int_t *index, Int_t *rank, Bool_t down=kTRUE)
+void TGraphSmooth::Rank(Int_t n, Double_t *a, Int_t *index, Int_t *rank, Bool_t down)
 {
 //   static function
    if (n <= 0) return;
