@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.24 2003/06/12 05:34:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.25 2003/06/27 11:02:33 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -192,21 +192,29 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    PDB(kLoop,1) Info("Process","Call Begin(0)");
 
-   fSelector->Begin( 0 );  // Init is called explicitly from GetNextEvent()
+   if (gProof != 0 && !gProof->IsMaster()) {
+      fSelector->Begin(0);
+   }
+   fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
 
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
+   Bool_t useFillCut = fSelector->Version() == 0;
    Long64_t entry;
    while ((entry = fEvIter->GetNextEvent()) >= 0) {
 
       PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
 
-      Bool_t stop = fSelector->Process(entry);
-      if (stop) {}  // remove unused warning
+      if(useFillCut) {
+         if(fSelector->ProcessCut(entry)) {
+            fSelector->ProcessFill(entry);
+         }
+      } else {
+         fSelector->Process(entry);
+      }
 
       gSystem->DispatchOneEvent(kTRUE);
-
       if (gROOT->IsInterrupted()) break;
    }
 
@@ -217,7 +225,10 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Finalize
    PDB(kLoop,1) Info("Process","Call Terminate");
 
-   fSelector->Terminate();
+   fSelector->SlaveTerminate();
+   if (gProof != 0 && !gProof->IsMaster()) {
+      fSelector->Terminate();
+   }
 
    fOutput = fSelector->GetOutputList();
 
@@ -343,7 +354,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TString fn(gSystem->BaseName(selector_file));
 
    TDSet *set = dset;
-   if ( fProof->IsMaster() ) {
+   if (fProof->IsMaster()) {
 
       PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
@@ -356,6 +367,12 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if ( !fPacketizer->IsValid() ) {
          return -1;
       }
+   } else {
+      delete fSelector;
+      fSelector = TSelector::GetSelector(selector_file);
+      if (fSelector == 0) return -1;
+      fSelector->SetInputList(fInput);
+      fSelector->Begin(0);
    }
 
    SetupFeedback();
@@ -374,6 +391,15 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
+
+   if (!fProof->IsMaster()) {
+      TIter next(fOutput);
+      TList *output = fSelector->GetOutputList();
+      while(TObject* obj = next()) {
+         output->Add(obj);
+      }
+      fSelector->Terminate();
+   }
 
    return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.7 2003/04/02 06:24:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.8 2003/06/30 10:07:32 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -33,13 +33,16 @@ class TSelectorCint : public TSelector {
 
 private:
    void SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* fname,
-                     const char* argtype);
+                     const char* argtype, Bool_t required = kTRUE);
 
 protected:
    G__ClassInfo  *fClass;        //!
+   G__CallFunc   *fFuncVersion;  //!
    G__CallFunc   *fFuncInit;     //!
    G__CallFunc   *fFuncBegin;    //!
+   G__CallFunc   *fFuncSlBegin;  //!
    G__CallFunc   *fFuncNotif;    //!
+   G__CallFunc   *fFuncSlTerm;   //!
    G__CallFunc   *fFuncTerm;     //!
    G__CallFunc   *fFuncCut;      //!
    G__CallFunc   *fFuncFill;     //!
@@ -54,8 +57,10 @@ public:
    TSelectorCint();
    virtual            ~TSelectorCint();
    virtual void        Build(TSelector *iselector, G__ClassInfo *cl);
+   virtual int         Version();
    virtual void        Init(TTree *);
    virtual void        Begin(TTree *tree);
+   virtual void        SlaveBegin(TTree *);
    virtual Bool_t      Notify();
    virtual Bool_t      ProcessCut(Int_t entry);
    virtual void        ProcessFill(Int_t entry);
@@ -64,6 +69,7 @@ public:
    virtual void        SetObject(TObject *obj);
    virtual void        SetInputList(TList *input);
    virtual TList      *GetOutputList() const;
+   virtual void        SlaveTerminate();
    virtual void        Terminate();
 
    ClassDef(TSelectorCint,0)  //A utility class for tree and object processing (interpreted version)

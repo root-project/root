@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.134 2003/09/12 12:37:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.135 2003/09/15 08:10:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -283,7 +283,7 @@ TTreePlayer::TTreePlayer()
    fSelectedRows   = 0;
    fDimension      = 0;
    fHistogram      = 0;
-   fFormulaList    = new TList(); 
+   fFormulaList    = new TList();
    fFormulaList->SetOwner(kTRUE);
    fSelector       = new TSelectorDraw();
    fInput          = new TList();
@@ -319,7 +319,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    //
    // IMPORTANT: The copied tree stays connected with this tree until this tree
    //            is deleted.  In particular, any changes in branch addresses
-   //            in this tree are forwarded to the clone trees.  Any changes 
+   //            in this tree are forwarded to the clone trees.  Any changes
    //            made to the branch addresses of the copied trees are over-ridden
    //            anytime this tree changes its branch addresses.
    //            Once this tree is deleted, all the addresses of the copied tree
@@ -1158,7 +1158,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0) { }\n",classname) ;
       fprintf(fp,"   ~%s() { }\n",classname);
+      fprintf(fp,"   Int_t   Version() {return 1;}\n");
       fprintf(fp,"   void    Begin(TTree *tree);\n");
+      fprintf(fp,"   void    SlaveBegin(TTree *tree);\n");
       fprintf(fp,"   void    Init(TTree *tree);\n");
       fprintf(fp,"   Bool_t  Notify();\n");
       fprintf(fp,"   Bool_t  Process(Int_t entry);\n");
@@ -1168,6 +1170,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
       fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
       fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
+      fprintf(fp,"   void    SlaveTerminate();\n");
       fprintf(fp,"   void    Terminate();\n");
       fprintf(fp,"   ClassDef(%s,0);\n",classname);
       fprintf(fp,"};\n");
@@ -1507,6 +1510,19 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::Begin(TTree *tree)\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // Function called before starting the event loop.\n");
+      fprintf(fpc,"   // When running with PROOF Begin() is only called in the client.\n");
+      fprintf(fpc,"   // Initialize the tree branches.\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   TString option = GetOption();\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function SlaveBegin
+      fprintf(fpc,"\n");
+      fprintf(fpc,"void %s::SlaveBegin(TTree *tree)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // Function called before starting the event loop.\n");
+      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called in each slave\n");
       fprintf(fpc,"   // Initialize the tree branches.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   Init(tree);\n");
@@ -1522,35 +1538,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // to process an event. It is the user's responsability to read\n");
       fprintf(fpc,"   // the corresponding entry in memory (may be just a partial read).\n");
       fprintf(fpc,"   // Once the entry is in memory one can apply a selection and if the\n");
-      fprintf(fpc,"   // event is selected histograms can be filled. Processing stops\n");
-      fprintf(fpc,"   // when this function returns kFALSE. This function combines the\n");
-      fprintf(fpc,"   // next two functions in one, avoiding to have to maintain state\n");
-      fprintf(fpc,"   // in the class to communicate between these two funtions.\n");
-      fprintf(fpc,"   // You should not implement ProcessCut and ProcessFill if you write\n");
-      fprintf(fpc,"   // this function. This method is used by PROOF.\n");
+      fprintf(fpc,"   // event is selected histograms can be filled.\n");
+      fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
-      // generate code for class member function ProcessCut
+      // generate code for class member function SlaveTerminate
       fprintf(fpc,"\n");
-      fprintf(fpc,"Bool_t %s::ProcessCut(Int_t entry)\n",classname);
+      fprintf(fpc,"void %s::SlaveTerminate()\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Selection function.\n");
-      fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
-      fprintf(fpc,"   // Read only the necessary branches to select entries.\n");
-      fprintf(fpc,"   // Return kFALSE as soon as a bad entry is detected.\n");
-      fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"   return kTRUE;\n");
-      fprintf(fpc,"}\n");
-      // generate code for class member function ProcessFill
-      fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::ProcessFill(Int_t entry)\n",classname);
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Function called for selected entries only.\n");
-      fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
-      fprintf(fpc,"   // Read branches not processed in ProcessCut() and fill histograms.\n");
-      fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
+      fprintf(fpc,"   // Function called at the end of the event loop in each PROOF slave.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
@@ -1559,6 +1556,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::Terminate()\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // Function called at the end of the event loop.\n");
+      fprintf(fpc,"   // When running with PROOF Terminate() is only called in the client.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
@@ -2016,7 +2014,8 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 
    selector->SetOption(option);
 
-   selector->Begin(fTree);  //<===call user initialisation function
+   selector->Begin(fTree);       //<===call user initialisation function
+   selector->SlaveBegin(fTree);  //<===call user initialisation function
    selector->Notify();
 
    if (selector->GetStatus()!=-1) {
@@ -2030,6 +2029,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
       //loop on entries (elist or all entries)
       Long_t entry, entryNumber, localEntry;
 
+      Bool_t useCutFill = selector->Version() == 0;
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -2037,12 +2037,17 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
          if (gROOT->IsInterrupted()) break;
          localEntry = fTree->LoadTree(entryNumber);
          if (localEntry < 0) break;
-         if (selector->ProcessCut(localEntry))
-            selector->ProcessFill(localEntry); //<==call user analysis function
+         if(useCutFill) {
+            if (selector->ProcessCut(localEntry))
+               selector->ProcessFill(localEntry); //<==call user analysis function
+         } else {
+            selector->Process(localEntry);
+         }
       }
       delete timer;
 
-      selector->Terminate();  //<==call user termination function
+      selector->SlaveTerminate();   //<==call user termination function
+      selector->Terminate();        //<==call user termination function
    }
 
 
@@ -2540,7 +2545,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
    }
 
-  // Set error criterion 
+  // Set error criterion
   //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
   arglist[0] = 1;
   tFitter->ExecuteCommand("SET ERR",arglist,1);

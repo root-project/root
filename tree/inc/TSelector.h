@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.14 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.15 2003/06/30 10:07:32 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -44,8 +44,10 @@ protected:
 public:
    TSelector();
    virtual            ~TSelector();
+   virtual int         Version() { return 0; }
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
+   virtual void        SlaveBegin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
    virtual const char *GetOption() const { return fOption; }
    virtual Int_t       GetStatus() const { return fStatus; }
@@ -57,6 +59,7 @@ public:
    virtual void        SetInputList(TList *input) { fInput = input; }
    virtual void        SetStatus(Int_t status) { fStatus = status; }
    virtual TList      *GetOutputList() const { return fOutput; }
+   virtual void        SlaveTerminate() { }
    virtual void        Terminate() { }
 
    static  TSelector  *GetSelector(const char *filename);
