@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.27 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.28 2003/01/14 00:07:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,7 @@ public:
   Double_t evaluate() const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
@@ -44,8 +44,16 @@ public:
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
+  virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
+  virtual void initGenerator(Int_t code) ;
+  virtual void generateEvent(Int_t code);  
+  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
+
 protected:
 
+  TList* factorizeProduct(const RooArgSet& normSet) const ;
+  const char* makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset) const ;
+  
   Double_t calculate(const RooArgList* partIntList, const RooArgSet* normSet) const ;
   RooArgList* getPartIntList(const RooArgSet* nset, const RooArgSet* iset, Int_t& code) const ;
   
@@ -58,12 +66,15 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
-  mutable RooAICRegistry _codeReg ; // Registry of component analytical integration codes
+  mutable RooAICRegistry _genCode ; // Registry of composite direct generator codes
 
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   TIterator* _pdfIter ;    //! Iterator of PDF list
   Int_t _extendedIndex ;   //  Index of extended PDF (if any) 
+
+  void useDefaultGen(Bool_t flag=kTRUE) { _useDefaultGen = flag ; }
+  Bool_t _useDefaultGen ; // Use default or distributed event generator
 
 private:
 

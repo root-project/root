@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.53 2003/01/14 00:07:48 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.54 2003/04/14 21:55:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -667,8 +667,11 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
     if (_coefCache[i]) {
       snormVal = snormSet ? ((RooAbsReal*) _snormList->at(i))->getVal() : 1.0 ;
+
+      // WVE swap this?
       Double_t val = pdf->analyticalIntegralWN(subCode[i],normSet) ;
       if (pdf->isSelectedComp()) {
+
 	value += val*_coefCache[i]/snormVal ;
 	if (_verboseEval<0) {
 // 	  cout << "RAP::aI: value += " << val << " * " << _coefCache[i] << " / " << snormVal << endl ;

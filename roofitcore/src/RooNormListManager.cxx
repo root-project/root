@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNormListManager.cc,v 1.3 2002/09/05 04:33:45 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -63,7 +63,19 @@ RooNormListManager::RooNormListManager(const RooNormListManager& other)
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    
     _nsetCache[i].initialize(other._nsetCache[i]) ;
-    _normList[i] = (RooArgList*) other._normList[i]->Clone() ;
+    if (other._normList[i]->isOwning()) {
+
+      _normList[i] = new RooArgList ;
+      TIterator* iter = other._normList[i]->createIterator() ;
+      RooAbsArg* arg ;
+      while(arg=(RooAbsArg*)iter->Next()) {
+	_normList[i]->addOwned(*(RooAbsArg*)arg->Clone()) ;
+      }
+      delete iter ;
+
+    } else {
+      _normList[i] = (RooArgList*) other._normList[i]->Clone() ;
+    }
   }
 
   for (i=other._size ; i<_maxSize ; i++) {    

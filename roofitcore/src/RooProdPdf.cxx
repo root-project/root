@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.33 2003/01/14 00:07:54 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.34 2003/04/18 05:19:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,7 @@
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooProdGenContext.hh"
+#include "RooFitCore/RooGenProdProj.hh"
 
 ClassImp(RooProdPdf)
 ;
@@ -43,9 +44,10 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _cutOff(cutOff),
-  _codeReg(10),
+  _genCode(10),
   _extendedIndex(-1),
-  _partListMgr(10)
+  _partListMgr(10),
+  _useDefaultGen(kFALSE)
 {
   // Dummy constructor
 }
@@ -57,9 +59,10 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _cutOff(cutOff),
-  _codeReg(10),
+  _genCode(10),
   _extendedIndex(-1),
-  _partListMgr(10)
+  _partListMgr(10),
+  _useDefaultGen(kFALSE)
 {
   // Constructor with 2 PDFs (most frequent use case).
   // 
@@ -103,9 +106,10 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _cutOff(cutOff),
-  _codeReg(10),
+  _genCode(10),
   _extendedIndex(-1),
-  _partListMgr(10)
+  _partListMgr(10),
+  _useDefaultGen(kFALSE)
 {
   // Constructor from a list of PDFs
   // 
@@ -156,9 +160,10 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
   _cutOff(other._cutOff),
-  _codeReg(other._codeReg),
+  _genCode(other._genCode),
   _extendedIndex(other._extendedIndex),
-  _partListMgr(other._partListMgr)
+  _partListMgr(other._partListMgr),
+  _useDefaultGen(other._useDefaultGen) 
 {
   // Copy constructor
 }
@@ -210,6 +215,73 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooArgSet* n
 }
 
 
+
+TList* RooProdPdf::factorizeProduct(const RooArgSet& normSet) const 
+{
+  // Factorize product in irreducible terms for given choice of integration/normalization
+
+//   cout << "RooProdPdf::factorizeProduct(" << GetName() << ")" << endl ;
+//   cout << "   normSet  = " ; normSet.Print("1") ;
+ 
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+
+  // Setup lists for factorization terms and their dependents
+  TList* list = new TList ;
+  TList dlist ;
+  RooArgSet* term ;
+  RooArgSet* termDeps ;
+  TIterator* lIter = list->MakeIterator() ;
+  TIterator* ldIter = dlist.MakeIterator() ;
+
+  // Loop over the PDFs
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    lIter->Reset() ;
+    ldIter->Reset() ;
+
+    // Check if this PDF has dependents overlapping with one of the existing terms
+    Bool_t done(kFALSE) ;
+    while(term=(RooArgSet*)lIter->Next()) {      
+      termDeps=(RooArgSet*)ldIter->Next() ;
+
+      if (pdf->dependsOn(*termDeps)) {
+	term->add(*pdf) ;
+	RooArgSet* deps = pdf->getDependents(normSet) ;
+	termDeps->add(*deps,kFALSE) ;
+	delete deps ;
+	done = kTRUE ;
+      }
+    }
+
+    // If not, create a new term
+    if (!done) {
+      term = new RooArgSet ;
+      termDeps = new RooArgSet ;
+      term->add(*pdf) ;
+      RooArgSet* deps = pdf->getDependents(normSet) ;
+      termDeps->add(*deps,kFALSE) ;
+      delete deps ;
+      list->Add(term) ;
+      dlist.Add(termDeps) ;
+    }
+  }
+
+  lIter->Reset() ;
+//   cout << "list of terms:" << endl ;
+//   while(term=(RooArgSet*)lIter->Next()) {
+//     term->Print("1") ;
+//   }
+
+  delete lIter ;
+  delete ldIter ;
+  dlist.Delete() ;
+
+  return list ;
+}
+
+
+
+
 RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, Int_t& code) const
 {
   // Check if this configuration was created before
@@ -219,44 +291,78 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
     return partIntList ;
   }
 
-  // Create the partial integral set for this request
-  _pdfIter->Reset() ;
-  partIntList = new RooArgList("partIntList") ;
-  RooAbsPdf* pdf ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-    
-    // Check if all dependents of this PDF component appear in the normalization set
-    Bool_t fact(kFALSE) ;
-    RooArgSet *pdfDepList = pdf->getDependents(nset) ;
-    if (pdfDepList->getSize()>0) {
-      fact=kTRUE ;
-      TIterator* depIter = pdfDepList->createIterator() ;
-      RooAbsArg* dep ;
-      while(dep=(RooAbsArg*)depIter->Next()) {
-	if (!iset || !iset->find(dep->GetName())) {
-	  fact=kFALSE ;
-	}
-      }
-      delete depIter ;
-    }
-    // fact=true -> all integrated pdf dependents are in normalization set
+  // Factorize the product in irreducible terms for this nset
+  TList* terms = factorizeProduct(nset?(*nset):RooArgSet()) ;
 
-    if (fact) {
-      // This product term factorizes, no partial integral needs to be created
-    } else if (nset && pdfDepList->getSize()==0) {
-    } else {
-      if (iset && iset->getSize()>0) {
-	RooArgSet* iSet = pdf->getDependents(iset) ;
-	RooAbsReal* partInt = pdf->createIntegral(*iSet,*pdfDepList) ;
+  // Iterate over the irreducible terms to create normalized projection integrals for them
+  TIterator* tIter = terms->MakeIterator() ;
+  partIntList = new RooArgList("partIntList") ;
+  RooArgSet* term ;
+  
+  while(term=(RooArgSet*)tIter->Next()) {
+
+    RooArgSet termNSet, termISet ;
+
+    // Make the list of dependents and integrated dependents for this term
+    TIterator* pIter = term->createIterator() ;
+    RooAbsPdf* pdf ;
+    while(pdf=(RooAbsPdf*)pIter->Next()) {
+      if (nset) {
+	RooArgSet* tmp = pdf->getDependents(*nset) ;
+	termNSet.add(*tmp) ;
+	delete tmp ;
+      }
+      if (iset) {
+	RooArgSet* tmp = pdf->getDependents(*iset) ;
+	termISet.add(*tmp) ;
+	delete tmp ;
+      }
+    }
+    delete pIter ;
+
+    // Check if all observbales of this term are integrated. If so the term cancels
+    if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize()) {
+      // Term factorizes
+      continue ;
+    }
+
+    if (nset && termNSet.getSize()==0) {
+      // Term needs no integration
+      continue ;
+    }
+
+    if (iset && iset->getSize()>0) {
+      if (term->getSize()==1) {
+	// Single term needs normalized integration
+
+	pIter = term->createIterator() ;
+	pdf = (RooAbsPdf*) pIter->Next() ;
+	delete pIter ;
+
+	RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet) ;
 	partInt->setOperMode(operMode()) ;
 	partIntList->addOwned(*partInt) ;
-	delete iSet ;
+	continue ;
+
       } else {
-	partIntList->add(*pdf) ;
-      }
+	// Composite term needs normalized integration
+
+	const char* name = makeRGPPName("PROJ_",*term,termISet,termNSet) ;
+	RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
+	partInt->setOperMode(operMode()) ;
+	partIntList->addOwned(*partInt) ;
+	continue ;
+
+      }      
     }
 
-    delete pdfDepList ;
+    // Add pdfs in term straight    
+    pIter = term->createIterator() ;
+    while(pdf=(RooAbsPdf*)pIter->Next()) {
+      partIntList->add(*pdf) ;
+    }
+    delete pIter ;
+
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -268,6 +374,75 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
 //   partIntList->Print("1") ;
 
   return partIntList ;
+}
+
+
+
+
+
+const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset) const
+{
+  // Make an appropriate name for a RooGenProdProj object in getPartIntList() 
+
+  static TString pname ;
+  pname = pfx ;
+
+  TIterator* pIter = term.createIterator() ;
+  
+  // Encode component names
+  Bool_t first(kTRUE) ;
+  RooAbsPdf* pdf ;
+  while(pdf=(RooAbsPdf*)pIter->Next()) {
+    if (first) {
+      first = kFALSE ;
+    } else {
+      pname.Append("_X_") ;
+    }
+    pname.Append(pdf->GetName()) ;
+  }
+  delete pIter ;
+
+  if (iset.getSize()>0) {
+    pname.Append("_Int[") ;
+    TIterator* iter = iset.createIterator() ;
+    RooAbsArg* arg ;
+    Bool_t first(kTRUE) ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	pname.Append(",") ;
+      }
+      pname.Append(arg->GetName()) ;
+    }
+    delete iter ;
+    pname.Append("]") ;
+  }
+
+  if (nset.getSize()>0) {
+    pname.Append("_Norm[") ;
+    Bool_t first(kTRUE); 
+    TIterator* iter  = nset.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	pname.Append(",") ;
+      }
+      pname.Append(arg->GetName()) ;
+    }
+    delete iter ;
+    pname.Append("]") ;
+  }
+
+  return pname.Data() ;
+}
+
+
+Bool_t RooProdPdf::forceAnalyticalInt(const RooAbsArg& dep) const 
+{
+  return kTRUE ;
 }
 
 
@@ -288,7 +463,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   // individual integration codes into a single integration code valid for RooProdPdf.
 
   if (_forceNumInt) return 0 ;
-  
+
   // Declare that we can analytically integrate all requested observables
   analVars.add(allVars) ;
 
@@ -298,6 +473,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   
   return code+1 ;
 }
+
 
 
 
@@ -312,7 +488,10 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
 
   // Partial integration scenarios
   RooArgList* partIntList = _partListMgr.getNormListByIndex(code-1) ;
-  return calculate(partIntList,normSet) ;
+  Double_t val = calculate(partIntList,normSet) ;
+  
+  //cout << "RPP::aIWN(" << GetName() << ") value = " << val << endl ;
+  return val ;
 }
 
 
@@ -320,6 +499,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
 Bool_t RooProdPdf::checkDependents(const RooArgSet* nset) const 
 {
   // Check that none of the PDFs have overlapping dependents
+  return kFALSE ;
   
   Bool_t ret(kFALSE) ;
   
@@ -361,7 +541,82 @@ Double_t RooProdPdf::expectedEvents() const
 
 RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
 {
+  if (_useDefaultGen) return RooAbsPdf::genContext(vars,prototype,verbose) ;
   return new RooProdGenContext(*this,vars,prototype,verbose) ;
+}
+
+
+
+Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+{
+  if (!_useDefaultGen) return 0 ;
+
+
+  // Find the subset directVars that only depend on a single PDF in the product
+  RooArgSet directSafe ;
+  TIterator* dIter = directVars.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)dIter->Next()) {
+    if (isDirectGenSafe(*arg)) directSafe.add(*arg) ;
+  }
+  delete dIter ;
+
+
+  // Now find direct integrator for relevant components ;
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  Int_t code[64], n(0) ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    RooArgSet pdfDirect ;
+    code[n] = pdf->getGenerator(directSafe,pdfDirect,staticInitOK) ;
+    if (code[n]!=0) {
+      generateVars.add(pdfDirect) ;
+    }
+    n++ ;
+  }
+
+
+  if (generateVars.getSize()>0) {
+    Int_t masterCode = _genCode.store(code,n) ;
+    return masterCode+1 ;    
+  } else {
+    return 0 ;
+  }
+}
+
+
+void RooProdPdf::initGenerator(Int_t code)
+{
+  if (!_useDefaultGen) return ;
+
+  const Int_t* codeList = _genCode.retrieve(code-1) ;
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  Int_t i(0) ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    if (codeList[i]!=0) {
+      pdf->initGenerator(codeList[i]) ;
+    }
+    i++ ;
+  }
+}
+
+
+void RooProdPdf::generateEvent(Int_t code)
+{  
+  if (!_useDefaultGen) return ;
+
+  const Int_t* codeList = _genCode.retrieve(code-1) ;
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  Int_t i(0) ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    if (codeList[i]!=0) {
+      pdf->generateEvent(codeList[i]) ;
+    }
+    i++ ;
+  }
+
 }
 
 
@@ -392,7 +647,7 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
 
   Int_t i ;
   for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _partListMgr.getNormListByIndex(i) ;
+    RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
 
     // Only redirect owned lists in recursive mode
     if (!isRecursive || !plist->isOwning()) continue ;
@@ -405,4 +660,29 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
     delete iter ;
   }
   return ret ;
+}
+
+
+
+Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const 
+{
+  // Only override base class behaviour if default generator method is enabled
+  if (!_useDefaultGen) return RooAbsPdf::isDirectGenSafe(arg) ;
+
+  // Argument may appear in only one PDF component
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf, *thePdf(0) ;  
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+
+    if (pdf->dependsOn(arg)) {
+      // Found PDF depending on arg
+
+      // If multiple PDFs depend on arg directGen is not safe
+      if (thePdf) return kFALSE ;
+
+      thePdf = pdf ;
+    }
+  }
+  // Forward call to relevant component PDF
+  return thePdf?(thePdf->isDirectGenSafe(arg)):kFALSE ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.78 2003/01/14 00:07:45 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.79 2003/04/09 01:33:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -837,6 +837,11 @@ void RooAbsPdf::generateEvent(Int_t code) {
 Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const 
 {
   // Check if PDF depends via more than route on given arg
+
+  // Arg must be direct server of self
+  if (!findServer(arg.GetName())) return kFALSE ;
+
+  // There must be no other dependency routes
   TIterator* sIter = serverIterator() ;
   const RooAbsArg *server = 0;
   while(server=(const RooAbsArg*)sIter->Next()) {

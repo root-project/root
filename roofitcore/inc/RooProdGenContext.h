@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.rdl,v 1.6 2002/09/05 04:33:49 verkerke Exp $
+ *    File: $Id: RooProdGenContext.rdl,v 1.7 2002/09/09 21:43:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,8 @@ public:
 		Bool_t _verbose= kFALSE);
   virtual ~RooProdGenContext();
 
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+
 protected:
 
   virtual void initGenerator(const RooArgSet &theEvent);
@@ -55,6 +57,7 @@ protected:
   const RooProdPdf *_pdf ;       //  Original PDF
   TList _gcList ;                //  List of component generator contexts
   TIterator* _gcIter ;           //! Iterator over gcList
+  RooArgSet _ownedMultiProds ;   //  Owned auxilary multi-term product PDFs
 
   ClassDef(RooProdGenContext,0) // Context for generating a dataset from a PDF
 };

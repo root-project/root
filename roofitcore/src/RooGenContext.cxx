@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.33 2002/09/05 04:33:28 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.34 2002/10/25 21:13:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,6 +48,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // of this dataset can be changed between calls to generate() as long as the
   // expected columns to be copied to the generated dataset are present.
 
+//   cout << "RooGenContext::ctor(" << model.GetName() << ")" << endl ;
+
   // Clone the model and all nodes that it depends on so that this context
   // is independent of any existing objects.
   RooArgSet nodes(model,model.GetName());
@@ -89,26 +91,21 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       _uniformVars.add(*tmp);
     }
     else {
+
       // does the model depend on this variable directly, ie, like "x" in
-      // f(x) or f(x,g(x,y)) or even f(x,x) ?
-      RooAbsArg *direct= _pdfClone->findServer(arg->GetName());
-      if(direct) {
-
-	if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
-	  if (!_pdfClone->isDirectGenSafe(*arg)) direct=0 ;
-	}
-
-	if(direct) {
-	  _directVars.add(*arg);
-	}
-	else {
-	  _otherVars.add(*arg);
+      // f(x) or f(x,g(x,y)) or even f(x,x) ?      
+      const RooAbsArg *direct= arg ;
+      if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
+	if (!_pdfClone->isDirectGenSafe(*arg)) {
+	  direct=0 ;
 	}
       }
-      else {
-	// does the model depend indirectly on this variable through an lvalue chain?
-	
-	// otherwise, this variable will have to be generated with accept/reject
+      
+      // does the model depend indirectly on this variable through an lvalue chain?	
+      // otherwise, this variable will have to be generated with accept/reject
+      if(direct) {
+	_directVars.add(*arg);
+      } else {
 	_otherVars.add(*arg);
       }
     }
@@ -148,6 +145,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   if (_protoVars.getSize()==0) {
 
     // No prototype variables
+    _pdfClone->getVal(&vars) ; // WVE debug
     _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
 
   } else {
