@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.63 2001/04/17 16:43:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.64 2001/04/20 17:56:51 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -320,6 +320,7 @@ TTree::TTree(): TNamed()
    fDebugMin       = 0;
    fDebugMax       = 9999999;
    fFriends        = 0;
+   fMakeClass      = 0;
 }
 
 //______________________________________________________________________________
@@ -354,6 +355,7 @@ TTree::TTree(const char *name,const char *title, Int_t maxvirtualsize)
    fDebugMin       = 0;
    fDebugMax       = 9999999;
    fFriends        = 0;
+   fMakeClass      = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -2654,13 +2656,13 @@ void TTree::Show(Int_t entry)
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
       TBranch *branch = leaf->GetBranch();
       if (branch->TestBit(kDoNotProcess)) continue;
-      if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
       Int_t len = leaf->GetLen();
       if (len <= 0) continue;
-      if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
-      if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
       len = TMath::Min(len,10);
       if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(len); continue;}
+      if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
+      if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
+      if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);
