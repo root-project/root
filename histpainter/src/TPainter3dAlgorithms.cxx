@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.8 2003/01/20 10:25:58 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.9 2003/05/08 14:41:48 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3562,7 +3562,6 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
     static Int_t ixadd[4] = { 0,1,1,0 };
     static Int_t iyadd[4] = { 0,0,1,1 };
 
-    const Double_t kHMAX = 1.05;
     Double_t rinrad = gStyle->GetLegoInnerR();
     Double_t dangle = 10; //Delta angle for Rapidity option
     Double_t xval1l, xval2l, yval1l, yval2l;
@@ -3634,16 +3633,10 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
         t[i] = f[i * 3 + 3];
     }
 
-//*-*-          LOGZ is required...
+//*-*-          Define the position of the colored contours for SURF3
 
     if (Hoption.Surf == 23) {
-	for (i = 1; i <= 4; ++i) {
-	    if (Hoption.Logz && Hparam.zmax > 0) {
-		f[i * 3 + 3] = TMath::Log10(kHMAX*Hparam.zmax);
-	    } else {
-		f[i * 3 + 3] = kHMAX*Hparam.zmax;
-	    }
-	}
+       for (i = 1; i <= 4; ++i) f[i * 3 + 3] = fRmax[2];
     }
 
     if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
