@@ -213,7 +213,11 @@ $(TESTBITS):    $(TESTBITSO)
 		@echo "$@ done"
 
 $(QPRANDOM):    $(QPRANDOMO)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+ifeq ($(ARCH),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(GUITEST):     $(GUITESTO)
