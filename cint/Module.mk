@@ -240,7 +240,7 @@ $(CINTDIRS)/loadfile_tmp.d: $(CINTDIRS)/loadfile.c $(RMKDEP)
 	$(MAKEDEP) $@ "$(CFLAGS)" $(CINTDIRS)/loadfile_tmp.c > $@
 	@rm -f $(CINTDIRS)/loadfile_tmp.c
 
-ifeq ($(CC),icc)
+ifeq ($(ICC_MAJOR),6)
 $(CINTDIRS)/struct.o: $(CINTDIRS)/struct.c
 	$(CC) $(NOOPT) $(CINTCFLAGS) -o $@ -c $<
 endif
