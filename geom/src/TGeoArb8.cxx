@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.34 2004/04/26 13:06:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.35 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -491,6 +491,7 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
 Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from inside point to surface of the arb8
+#ifdef OLDALGORITHM
    Int_t i;
    Double_t dist[6];
    dist[0]=dist[1]=TGeoShape::Big();
@@ -506,6 +507,72 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
    Double_t distmin = dist[0];
    for (i=1;i<6;i++) if (dist[i] < distmin) distmin = dist[i];
    return distmin;
+#else
+// compute distance to plane ipl :
+// ipl=0 : points 0,4,1,5
+// ipl=1 : points 1,5,2,6
+// ipl=2 : points 2,6,3,7
+// ipl=3 : points 3,7,0,4
+   Double_t distmin;
+   if (dir[2]<0) {
+      distmin=(-fDz-point[2])/dir[2];
+   } else {
+      if (dir[2]>0) distmin =(fDz-point[2])/dir[2];
+      else          distmin = TGeoShape::Big();
+   }      
+   Double_t dz2 =0.5/fDz;
+   Double_t xa,xb,xc,xd;
+   Double_t ya,yb,yc,yd;
+   for (Int_t ipl=0;ipl<4;ipl++) {
+      Int_t j = (ipl+1)%4;
+      xa=fXY[ipl][0];
+      ya=fXY[ipl][1];
+      xb=fXY[ipl+4][0];
+      yb=fXY[ipl+4][1];
+      xc=fXY[j][0];
+      yc=fXY[j][1];
+      xd=fXY[4+j][0];
+      yd=fXY[4+j][1];
+      Double_t tx1 =dz2*(xb-xa);
+      Double_t ty1 =dz2*(yb-ya);
+      Double_t tx2 =dz2*(xd-xc);
+      Double_t ty2 =dz2*(yd-yc);
+      Double_t dzp =fDz+point[2];
+      Double_t xs1 =xa+tx1*dzp;
+      Double_t ys1 =ya+ty1*dzp;
+      Double_t xs2 =xc+tx2*dzp;
+      Double_t ys2 =yc+ty2*dzp;
+      Double_t dxs =xs2-xs1;
+      Double_t dys =ys2-ys1;
+      Double_t dtx =tx2-tx1;
+      Double_t dty =ty2-ty1;
+      Double_t a=(dtx*dir[1]-dty*dir[0]+(tx1*ty2-tx2*ty1)*dir[2])*dir[2];
+      Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
+              +tx1*ys2-tx2*ys1)*dir[2];
+      Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
+      Double_t s=TGeoShape::Big();
+      if (TMath::Abs(a)<1E-10) {           
+         if (b==0) continue;
+         s=-c/b;
+         if (s>0 && s < distmin) distmin =s;
+         continue;
+      }      
+      b=0.5*b/a;
+      c=c/a;
+      Double_t d=b*b-c;
+      if (d>=0) {
+         Double_t sqd = TMath::Sqrt(d);
+         s=-b-sqd;
+         if (s>0) {
+            if (s < distmin) distmin = s;
+         } else {
+            s=-b+sqd;
+            if (s>0 && s < distmin) distmin =s;
+         }
+      }
+   }
+   return distmin;
+#endif
 }   
 
 //_____________________________________________________________________________
