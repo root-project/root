@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.2 2000/10/04 16:07:05 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
 
    TArrayI();
    TArrayI(Int_t n);
-   TArrayI(Int_t n, const Int_t *array);
+   TArrayI(Int_t n, Int_t *array);
    TArrayI(const TArrayI &array);
    TArrayI    &operator=(const TArrayI &rhs);
    virtual    ~TArrayI();
@@ -46,7 +46,7 @@ public:
    Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void       Reset(Int_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void       Set(Int_t n);
-   void       Set(Int_t n, const Int_t *array);
+   void       Set(Int_t n, Int_t *array);
    Int_t     &operator[](Int_t i);
 
    ClassDef(TArrayI,1)  //Array of ints

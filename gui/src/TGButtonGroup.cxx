@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.8 2001/11/01 11:43:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.4 2000/10/22 19:28:58 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -49,10 +49,6 @@
 //    // map all buttons                                                //
 //    bg->Show();                                                       //
 //                                                                      //
-// NOTE: there is no need to call AddFrame() since the buttons are      //
-// automatically added with a default layout hint to their parent,      //
-// i.e. the buttongroup. To override the default layout hints use the   //
-// SetLayoutHints() method.                                             //
 //                                                                      //
 //  ButtonGroup Signals:                                                //
 //                                                                      //
@@ -83,7 +79,6 @@
 #include "TGButton.h"
 #include "TClass.h"
 #include "TGLayout.h"
-#include "TList.h"
 
 
 ClassImpQ(TGButtonGroup)
@@ -285,7 +280,7 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    register TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
-      if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
+      if ((Int_t)fMapOfButtons->GetValue(item) == id) break;   // found
    }
 
    return item;
@@ -299,7 +294,7 @@ Int_t TGButtonGroup::GetId(TGButton *button) const
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(button);
    if (a)
-      return (Int_t)Long_t(a->Value());
+      return (Int_t) a->Value();
    else
       return -1;
 }
@@ -332,7 +327,7 @@ void TGButtonGroup::ButtonPressed()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t) a->Value();
       Pressed(id);
    }
 }
@@ -347,7 +342,7 @@ void TGButtonGroup::ButtonReleased()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t) a->Value();
       Released(id);
    }
 }
@@ -362,7 +357,7 @@ void TGButtonGroup::ButtonClicked()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t) a->Value();
       Clicked(id);
    }
 }
@@ -445,8 +440,7 @@ void TGButtonGroup::SetTitle(const char *title)
 //______________________________________________________________________________
 void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
 {
-   // Set layout hints for the specified button or if button=0 for all
-   // buttons.
+   // Set layout hints.
 
    TGFrameElement *el;
    TIter next(fList);

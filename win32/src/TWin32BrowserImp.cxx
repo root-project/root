@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.cxx,v 1.2 2001/05/23 16:41:25 brun Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine(fine@vxcern.cern.ch)   21/10/96
 
 /*************************************************************************
@@ -205,16 +205,6 @@ void TWin32BrowserImp::ExecThreadCB(TWin32SendClass *command){
   // FlashWindow(parentwindow,TRUE):
 #endif
 }
-
-//______________________________________________________________________________
-void TWin32BrowserImp::BrowseObj(TObject *obj)
-{
-  if (obj) {
-    TBrowser *b = Browser();
-    if (b) obj->Browse(b);
-  }
-}
-
 //______________________________________________________________________________
 void TWin32BrowserImp::Iconify(){ ; }
 
@@ -623,24 +613,4 @@ void TWin32BrowserImp::DetailsCB(TWin32BrowserImp *obj, TVirtualMenuItem *item)
 void TWin32BrowserImp::RefreshCB(TWin32BrowserImp *obj, TVirtualMenuItem *item)
 {
 }
-    
-// Default actions
- 
-#define defAction { return DefWindowProc(hwnd,uMsg, wParam, lParam); }
- 
-LRESULT APIENTRY TWin32BrowserImp::OnActivate         (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnCommandForControl(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnEraseBkgnd       (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnGetMinMaxInfo    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnMouseActivate    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnPaletteChanged   (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnSetFocus         (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnKillFocus        (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnSizing           (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnExitSizeMove     (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
- 
-LRESULT APIENTRY TWin32BrowserImp::OnChar             (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-LRESULT APIENTRY TWin32BrowserImp::OnKeyDown          (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) defAction
-  
-
 

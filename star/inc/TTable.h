@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.13 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.4 2001/01/22 12:59:34 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -28,22 +28,17 @@
 #include "Ttypes.h"
 #include "TDataSet.h"
 #include "tableDescriptor.h"
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 #ifndef __CINT__
 #  include <string.h>
-#  include <assert.h>
+#include <fstream.h>
+#include <assert.h>
 #endif
 
 enum ETableBits {
-    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table
-		                          // As result of the Update() method for example
+    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table                                 // As result of the Update() method for example
 };
 class TTableDescriptor;
 class TH1;
@@ -51,14 +46,12 @@ class TH1;
 class TTable : public TDataSet {
    friend class TDataSet;
    friend class St_XDFFile;
-protected:
-   Long_t     fSize;       // Size of the one element (row) of the table
+private:
+   Long_t         fSize;       // Size of the one element (row) of the table
 
 protected:
-
    Int_t      fN;           //Number of array elements
    Char_t    *fTable;       // Array of (fN*fSize) longs
-   Long_t     fMaxIndex;    // The used capacity of this array
 
    Bool_t    BoundsOk(const char *where, Int_t at) const;
    Bool_t    OutOfBoundsError(const char *where, Int_t i) const;
@@ -75,15 +68,17 @@ protected:
    void       StreamerHeader(TBuffer &b,Version_t version=3);
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
-   virtual void  SetDescriptorPointer(TTableDescriptor *list);
+   virtual void  SetDescriptorPointer(TTableDescriptor *list) const ;
 
-   void       ReAlloc(Int_t newsize);
+   Long_t     fMaxIndex;   // The used capacity of this array
+
+   void      ReAlloc(Int_t newsize);
 
 public:
 
    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
                           ,kULong, kUShort, kUChar, kChar };
-   static const char *fgTypeName[kChar+1];
+   static const char *fgTypeName[kChar+1]; 
    TTable(const Text_t *name=0, Int_t size=0);
    TTable(const Text_t *name, Int_t n,Int_t size);
    TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);
@@ -101,7 +96,6 @@ public:
    virtual     void       Browse(TBrowser *b);
    virtual     void       CopySet(TTable &array);
                Int_t      CopyRows(const TTable *srcTable,Long_t srcRow=0, Long_t dstRow=0, Long_t nRows=0, Bool_t expand=kFALSE);
-   virtual     void       DeleteRows(Long_t indx,UInt_t nRows=1);
    virtual     void       Draw(Option_t *opt);
    virtual     TH1       *Draw(TCut varexp, TCut selection, Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
@@ -120,7 +114,6 @@ public:
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
    virtual     Long_t     HasData() const { return 1; }
-   virtual     Long_t     InsertRows(const void *rows, Long_t indx, UInt_t nRows=1);
    virtual     Bool_t     IsFolder() const;
                Int_t      NaN();
    static      TTable    *New(const Char_t *name, const Char_t *type, void *array, UInt_t size);
@@ -169,7 +162,7 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
-   ClassDef(TTable,4)  // vector of the C structures
+   ClassDef(TTable,3)  // Array of the C structures
 };
 
 //________________________________________________________________________

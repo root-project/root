@@ -94,7 +94,7 @@ int fentry;
     G__tmpnam(prepname);
     fpout = fopen(prepname,"wb");
     if(!fpout) {
-      G__fprinterr(G__serr,"cannot open tmp file %s",prepname);
+      fprintf(G__serr,"cannot open tmp file %s",prepname);
       G__genericerror((char*)NULL);
       prepname[0] = 0;
       return;
@@ -227,7 +227,7 @@ int G__include_file()
       G__kindofheader=G__USERHEADER;
     }
     else {
-      G__fprinterr(G__serr,"Error: cannot expand #include %s",filename);
+      fprintf(G__serr,"Error: cannot expand #include %s",filename);
       G__genericerror(NULL);
 #ifndef G__OLDIMPLEMENTATION1261
       if('#'==c) G__fignoreline();
@@ -279,18 +279,14 @@ char *item;
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
-  char line[G__LARGEBUF];
-  char argbuf[G__LARGEBUF];
+  char line[G__LONGLINE*2];
+  char argbuf[G__LONGLINE*2];
   char *arg[G__MAXARG];
   int argn;
   char *p;
   static char buf[G__ONELINE];
 
   buf[0]='\0';
-
-#ifdef G__NOMAKEINFO
-  return("");
-#endif
 
 #ifndef G__OLDIMPLEMENTATION466
   /****************************************************************
@@ -316,12 +312,12 @@ char *item;
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
   if(!fp) {
-    G__fprinterr(G__serr,"Error: cannot open %s\n",makeinfo);
-    G__fprinterr(G__serr,
+    fprintf(G__serr,"Error: cannot open %s\n",makeinfo);
+    fprintf(G__serr,
      "!!! There are examples of MAKEINFO files under %s/platform/ !!!\n"
 	    ,G__cintsysdir);
-    G__fprinterr(G__serr,
-	    "Please refer to these examples and create for your platform\n");
+    fprintf(G__serr
+	    ,"Please refer to these examples and create for your platform\n");
     return(buf);
   }
 
@@ -338,7 +334,7 @@ char *item;
 	return(buf);
       }
       else {
-	G__fprinterr(G__serr,"MAKEINFO syntax error\n");
+	fprintf(G__serr,"MAKEINFO syntax error\n");
       }
     }
   }
@@ -405,7 +401,7 @@ int G__getcintsysdir()
 #else
 #ifndef G__OLDIMPLEMENTATION1314
 #ifdef G__WIN32
-      HMODULE hmodule=0;
+      HMODULE hmodule;
       if(GetModuleFileName(hmodule,G__cintsysdir,G__MAXFILENAME)) {
         char *p = G__strrstr(G__cintsysdir,G__psep);
         if(p) *p = 0;
@@ -420,11 +416,11 @@ int G__getcintsysdir()
 #endif
 #endif
 #if defined(G__ROOT)
-      G__fprinterr(G__serr,"Warning: environment variable ROOTSYS is not set. Standard include files ignored\n");
+      fprintf(G__serr,"Warning: environment variable ROOTSYS is not set. Standard include files ignored\n");
 #elif defined(G__WILDC)
-      G__fprinterr(G__serr,"Warning: environment variable WILDCDIR is not set. Standard include files ignored\n");
+      fprintf(G__serr,"Warning: environment variable WILDCDIR is not set. Standard include files ignored\n");
 #else
-      G__fprinterr(G__serr,"Warning: environment variable CINTSYSDIR is not set. Standard include files ignored\n");
+      fprintf(G__serr,"Warning: environment variable CINTSYSDIR is not set. Standard include files ignored\n");
 #endif
       G__cintsysdir[0]='\0';
       return(EXIT_FAILURE);
@@ -452,7 +448,7 @@ int ifn;
   while(ifunc) {
     for(i1=0;i1<ifunc->allifunc;i1++) {
       if( 0!=ifunc->busy[i1] && ifunc->pentry[i1]->filenum>=ifn ) {
-	G__fprinterr(G__serr,"Function %s() busy. loaded after \"%s\"\n"
+	fprintf(G__serr,"Function %s() busy. loaded after \"%s\"\n"
 		,ifunc->funcname[i1],G__srcfile[ifn].filename);
 	flag++;
       }
@@ -471,7 +467,7 @@ int ifn;
     while(ifunc) {
       for(i1=0;i1<ifunc->allifunc;i1++) {
 	if(0!=ifunc->busy[i1]&&ifunc->pentry[i1]->filenum>=ifn) {
-	  G__fprinterr(G__serr,"Function %s() busy. loaded after\"%s\"\n"
+	  fprintf(G__serr,"Function %s() busy. loaded after\"%s\"\n"
 		  ,ifunc->funcname[i1],G__srcfile[ifn].filename);
 	  flag++;
 	}
@@ -682,7 +678,7 @@ char *filename;
   }
 
   if(flag==0) {
-    G__fprinterr(G__serr,"Error: G__unloadfile() File \"%s\" not loaded ",filename);
+    fprintf(G__serr,"Error: G__unloadfile() File \"%s\" not loaded ",filename);
     G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
@@ -700,8 +696,8 @@ char *filename;
   * if function in unloaded files are busy, cancel unloading
   *********************************************************************/
   if(G__isfilebusy(ifn)) {
-    G__fprinterr(G__serr,
-  "Error: G__unloadfile() Can not unload \"%s\", file busy " ,filename);
+    fprintf(G__serr
+  ,"Error: G__unloadfile() Can not unload \"%s\", file busy " ,filename);
     G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
@@ -721,7 +717,7 @@ char *filename;
 #endif
 
   if(G__debug) {
-    G__fprinterr(G__serr,"File=%s unloaded\n",filename);
+    fprintf(G__serr,"File=%s unloaded\n",filename);
   }
 
 #ifndef G__OLDIMPLEMENTATION1345
@@ -795,7 +791,7 @@ char *filename;
 
 
   if(badflag) {
-    G__fprinterr(G__serr,"Error: Bad source file(binary) %s",filename);
+    fprintf(G__serr,"Error: Bad source file(binary) %s",filename);
     G__genericerror((char*)NULL);
     G__return=G__RETURN_EXIT1;
 #ifndef G__OLDIMPLEMENTATION1480
@@ -805,9 +801,9 @@ char *filename;
   }
 #ifndef G__OLDIMPLEMENTATION1217
   else if(unnamedmacro) {
-    G__fprinterr(G__serr,"Error: Bad source file(unnamed macro) %s",filename);
+    fprintf(G__serr,"Error: Bad source file(unnamed macro) %s",filename);
     G__genericerror((char*)NULL);
-    G__fprinterr(G__serr,"  unnamed macro has to be executed by 'x' command\n");
+    fprintf(G__serr,"  unnamed macro has to be executed by 'x' command\n");
     G__return=G__RETURN_EXIT1;
 #ifndef G__OLDIMPLEMENTATION1480
     G__lang = store_lang;
@@ -965,9 +961,6 @@ char *filenamein;
 #if defined(R__FBSD)
   char soext[]=SOEXT;
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-  char hdrprop = G__NONCINTHDR;
-#endif
   char filename[G__ONELINE];
   strcpy(filename,filenamein);
 
@@ -1032,7 +1025,7 @@ char *filenamein;
   * if so, restore G__ifile reset G__eof and return.
   ******************************************************************/
   if(G__nfile==G__MAXFILE) {
-    G__fprinterr(G__serr,"Limitation: Sorry, can not load any more files\n");
+    fprintf(G__serr,"Limitation: Sorry, can not load any more files\n");
     G__ifile = store_file ;
     G__eof = 0;
     G__step=store_step;
@@ -1070,7 +1063,7 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	fprintf(G__serr ,"Warning: File \"%s\" already loaded\n",filename);
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1229,12 +1222,8 @@ char *filenamein;
 	{
 	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
 	  while(sysdir) {
-	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
+	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0)
 	      G__globalcomp=G__NOLINK;
-#ifndef G__OLDIMPLEMENTATION1536
-	      hdrprop = G__CINTHDR;
-#endif
-	    }
 	    sysdir = sysdir->prev;
 	  }
 	}
@@ -1260,9 +1249,6 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1284,9 +1270,6 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1329,9 +1312,6 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1353,9 +1333,6 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
-#endif
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1398,44 +1375,41 @@ char *filenamein;
        /**********************************************
        * try $ROOTSYS[include]
        **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-	/*  sprintf(G__ifile.name,getenv("ROOTSYS"));
-	    sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-	/*G__globalcomp=G__store_globalcomp;*/
-      }
-      if(G__ifile.fp) break;
-      
+   if('\0'!=G__cintsysdir[0]) {
+/*   sprintf(G__ifile.name,getenv("ROOTSYS"));
+     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+     sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
+
+     G__ifile.fp = fopen(G__ifile.name,"r");
+     /*G__globalcomp=G__store_globalcomp;*/
+   }
+   if(G__ifile.fp) break;
+
        /**********************************************
        * try $ROOTSYS[cint.include]
        **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-	/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
-	     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-	sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
-	
-	G__ifile.fp = fopen(G__ifile.name,"r");
-#ifndef G__OLDIMPLEMENTATION1536
-	hdrprop = G__CINTHDR;
-#endif
-	G__globalcomp=G__NOLINK;
+   if('\0'!=G__cintsysdir[0]) {
+/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
+     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+     sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
+
+     G__ifile.fp = fopen(G__ifile.name,"r");
+     G__globalcomp=G__NOLINK;
       }
-      if(G__ifile.fp) break;
-      
+   if(G__ifile.fp) break;
+
        /**********************************************
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
-      sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
-      printf("Trying to open %s\n",G__ifile.name,"r");
-      
-      G__ifile.fp = fopen(G__ifile.name,"r");
-      G__globalcomp=G__store_globalcomp;
-      
-      if(G__ifile.fp) break;
-      
+   sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
+   printf("Trying to open %s\n",G__ifile.name,"r");
+
+   G__ifile.fp = fopen(G__ifile.name,"r");
+   G__globalcomp=G__store_globalcomp;
+
+   if(G__ifile.fp) break;
+
 #endif  /*G__VMS*/
 
       /**********************************************
@@ -1531,11 +1505,11 @@ char *filenamein;
     G__globalcomp=G__store_globalcomp;
 #ifndef G__OLDIMPLEMENTATION782
     if(0==G__ispragmainclude) {
-      G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
+      fprintf(G__serr,"Error: cannot open file \"%s\" ", filename);
       G__genericerror((char*)NULL);
     }
 #else
-    G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
+    fprintf(G__serr,"Error: cannot open file \"%s\" ", filename);
     G__genericerror((char*)NULL);
 #endif
     G__iscpp=store_iscpp;
@@ -1592,10 +1566,6 @@ char *filenamein;
       fentry=null_entry;
     }
 
-#ifndef G__OLDIMPLEMENTATION1536
-    G__srcfile[fentry].hdrprop = hdrprop;
-#endif
-
 #ifdef G__SECURITY
     store_security = G__security;
     G__srcfile[fentry].security = G__security;
@@ -1631,22 +1601,17 @@ char *filenamein;
   }
 
   if(G__debugtrace) {
-    G__fprinterr(G__serr,"LOADING file=%s:%s:%s\n",filename,G__ifile.name,prepname);
+    fprintf(G__serr,"LOADING file=%s:%s:%s\n",filename,G__ifile.name,prepname);
   }
   if(G__debug) {
-    G__fprinterr(G__serr,"%-5d",G__ifile.line_number);
+    fprintf(G__serr,"%-5d",G__ifile.line_number);
   }
 
   store_prerun=G__prerun;
   store_p_local=G__p_local;
 #ifndef G__OLDIMPLEMENTATION616
   if(0==G__def_struct_member||-1==G__tagdefining||
-     ('n'!=G__struct.type[G__tagdefining]
-#ifndef G__OLDIMPLEMENTATION1608
-      && 'c'!=G__struct.type[G__tagdefining]
-      && 's'!=G__struct.type[G__tagdefining]
-#endif
-     )) {
+     'n'!=G__struct.type[G__tagdefining]) {
     G__p_local=NULL;
   }
 #else
@@ -1756,10 +1721,8 @@ char *filenamein;
    ******************************************************/
   if(G__NOLINK!=G__globalcomp && G__srcfile[fentry].fp) {
     if(!G__macroORtemplateINfile) {
-#ifdef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(G__srcfile[fentry].fp);
-#endif
 #ifndef G__PHILIPPE0
       /* After closing the file let's make sure than all reference to
 	 the file pointer are reset. When a preprocessor is used, we
@@ -1770,15 +1733,7 @@ char *filenamein;
 	  G__srcfile[i1].fp = (FILE*)NULL;
 	}
       }
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(tmpfp);
-#endif
 #else
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(G__srcfile[fentry].fp);
-#endif
       G__srcfile[fentry].fp = (FILE*)NULL;
 #endif
     }
@@ -1865,7 +1820,7 @@ char *outname,*inname;
 int cppflag;
 char *macros,*undeflist,*ppopt,*includepath;
 {
-  char temp[G__LARGEBUF];
+  char temp[G__LONGLINE*2];
   /* char *envcpp; */
   char tmpfile[G__MAXFILENAME];
   int tmplen;
@@ -2102,7 +2057,7 @@ char *macros,*undeflist,*ppopt,*includepath;
     }
 #endif
     if(G__debugtrace||G__steptrace||G__step||G__asm_dbg)
-      G__fprinterr(G__serr," %s\n",temp);
+      fprintf(G__serr," %s\n",temp);
     system(temp);
 
     if(tmplen) remove(tmpfile);
@@ -2180,13 +2135,13 @@ int G__setTMPDIR(badname)
 char *badname;
 {
 #ifndef G__TMPFILE
-  G__fprinterr(G__serr,"CAUTION: tmpfile %s can't open\n",badname);
+  fprintf(G__serr,"CAUTION: tmpfile %s can't open\n",badname);
   return(0);
 #else
   char *p;
-  G__fprinterr(G__serr,"CINT CAUTION: tmpfile %s can't open\n",badname);
-  G__fprinterr(G__serr,"Input another temp directory or '*' to give up\n");
-  G__fprinterr(G__serr,"(Setting CINTTMPDIR environment variable avoids this interrupt)\n");
+  fprintf(G__serr,"CINT CAUTION: tmpfile %s can't open\n",badname);
+  fprintf(G__serr,"Input another temp directory or '*' to give up\n");
+  fprintf(G__serr,"(Setting CINTTMPDIR environment variable avoids this interrupt)\n");
   strcpy(G__tmpdir,G__input("Input TMPDIR > "));
   p = strchr(G__tmpdir,'\r');
   if(p) *p = '\0';
@@ -2201,6 +2156,7 @@ char *badname;
   }
 #endif
 }
+
 
 /**************************************************************************
 * G__tmpnam()
@@ -2258,12 +2214,10 @@ void G__openmfp()
 int G__closemfp()
 {
 #ifndef G__TMPFILE
-  if(G__mfp) return(fclose(G__mfp));
-  else return(0);
+  return(fclose(G__mfp));
 #else
-  if(G__mfp) fclose(G__mfp);
-  if(G__mfpname[0]) return(remove(G__mfpname));
-  else return(0);
+  fclose(G__mfp);
+  return(remove(G__mfpname));
 #endif
 }
 

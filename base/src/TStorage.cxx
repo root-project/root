@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.7 2001/09/25 16:18:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.5 2000/09/14 17:41:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 
 #include <stdlib.h>
 
-#include "TROOT.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -152,7 +151,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
 
-   if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+   if (fgReAllocHook && fgHasCustomNewDelete)
       return (*fgReAllocHook)(ovp, size);
 
    static const char *where = "TStorage::ReAlloc";
@@ -179,7 +178,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
 
-   if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+   if (fgReAllocCHook && fgHasCustomNewDelete)
       return (*fgReAllocCHook)(ovp, size, oldsize);
 
    static const char *where = "TStorage::ReAlloc";
@@ -203,66 +202,6 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    } else
       memcpy(vp, ovp, size);
    ::operator delete(ovp);
-   return vp;
-}
-
-//______________________________________________________________________________
-char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
-{
-   // Reallocate (i.e. resize) array of chars. Size and oldsize are
-   // in number of chars.
-
-   static const char *where = "TStorage::ReAllocChar";
-
-   char *vp;
-   if (ovp == 0) {
-     vp = new char[size];
-     if (vp == 0)
-        Fatal(where, spaceErr);
-     return vp;
-   }
-   if (oldsize == size)
-      return ovp;
-
-   vp = new char[size];
-   if (vp == 0)
-      Fatal(where, spaceErr);
-   if (size > oldsize) {
-      memcpy(vp, ovp, oldsize);
-      memset((char*)vp+oldsize, 0, size-oldsize);
-   } else
-      memcpy(vp, ovp, size);
-   delete [] ovp;
-   return vp;
-}
-
-//______________________________________________________________________________
-Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
-{
-   // Reallocate (i.e. resize) array of integers. Size and oldsize are
-   // number of integers (not number of bytes).
-
-   static const char *where = "TStorage::ReAllocInt";
-
-   Int_t *vp;
-   if (ovp == 0) {
-     vp = new Int_t[size];
-     if (vp == 0)
-        Fatal(where, spaceErr);
-     return vp;
-   }
-   if (oldsize == size)
-      return ovp;
-
-   vp = new Int_t[size];
-   if (vp == 0)
-      Fatal(where, spaceErr);
-   if (size > oldsize) {
-      memcpy(vp, ovp, oldsize*sizeof(Int_t));
-      memset((Int_t*)vp+oldsize, 0, (size-oldsize)*sizeof(Int_t));
-   } else
-      memcpy(vp, ovp, size*sizeof(Int_t));
-   delete [] ovp;
    return vp;
 }
 

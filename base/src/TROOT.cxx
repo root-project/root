@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.65 2002/01/27 16:49:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.23 2000/12/15 18:10:27 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -45,7 +45,10 @@
 //
 //---------------------Example of a main program--------------------------------
 //
+//       #include "TROOT.h"
 //       #include "TRint.h"
+//
+//       TROOT root("Rint", "The ROOT Interactive Interface");
 //
 //       int main(int argc, char **argv)
 //       {
@@ -64,9 +67,8 @@
 #endif
 
 #include <string.h>
-#include <stdlib.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -95,8 +97,6 @@
 #include "TVirtualGL.h"
 #include "TFolder.h"
 #include "TQObject.h"
-#include "TProcessID.h"
-#include "TPluginManager.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -156,22 +156,6 @@ static Int_t ITIMQQ()
 //------------------------------------------------------------------------------
 
 
-//______________________________________________________________________________
-static void CleanUpROOTAtExit()
-{
-   // Clean up at program termination before global objects go out of scope.
-
-   if (gROOT) {
-      if (gROOT->GetListOfFiles())
-         gROOT->GetListOfFiles()->Delete();
-      if (gROOT->GetListOfSockets())
-         gROOT->GetListOfSockets()->Delete();
-      if (gROOT->GetListOfMappedFiles())
-         gROOT->GetListOfMappedFiles()->Delete("slow");
-   }
-}
-
-
 TROOT      *gROOT;         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
 
@@ -183,13 +167,7 @@ Int_t       gDebug;
 
 Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
-Bool_t        TROOT::fgMemCheck = kFALSE;
-TString       TROOT::fgMacroPath;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
-
-
-// This local static object initializes the ROOT system
-static TROOT root("root", "The ROOT of EVERYTHING");
 
 
 ClassImp(TROOT)
@@ -222,7 +200,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // (e.g. the graphics system is initialized via such a function).
 
    if (fgRootInit) {
-      //Warning("TROOT", "only one instance of TROOT allowed");
+      Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
 
@@ -244,7 +222,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
 
-   // Add the root include directory to list searched by default by
+   // Add the root include directory to list search by default by
    // the interpreter (should this be here or somewhere else?)
 #ifndef ROOTINCDIR
    TString include = gSystem->Getenv("ROOTSYS");
@@ -260,14 +238,13 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fVersionInt  = IVERSQ();
    fVersionDate = IDATQQ();
    fVersionTime = ITIMQQ();
-   fTimer       = 0;
    fApplication = 0;
-   fClasses     = new THashList(800,3);
+   fClasses     = new THashList(300,2);
    fColors      = new TObjArray(1000);
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
-   fList        = new THashList(1000,3);
+   fList        = new TList;
    fFiles       = new TList;
    fMappedFiles = new TList;
    fSockets     = new TList;
@@ -280,33 +257,27 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
-   fStreamerInfo= new TObjArray(100);
+   fStreamerInfo    = new TObjArray(100);
    fMessageHandlers = new TList;
-
-   fPluginManager = new TPluginManager;
-   fPluginManager->LoadHandlersFromEnv(gEnv);
-
-   TProcessID::AddProcessID();
 
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
-   fRootFolder->AddFolder("Classes",   "List of Active Classes",fClasses);
-   fRootFolder->AddFolder("Colors",    "List of Active Colors",fColors);
+   fRootFolder->AddFolder("Classes",   "List of active classes",fClasses);
+   fRootFolder->AddFolder("Colors",    "List of active colors",fColors);
    fRootFolder->AddFolder("MapFiles",  "List of MapFiles",fMappedFiles);
-   fRootFolder->AddFolder("Sockets",   "List of Socket Connections",fSockets);
+   fRootFolder->AddFolder("Sockets",   "List of Socket connections",fSockets);
    fRootFolder->AddFolder("Canvases",  "List of Canvases",fCanvases);
    fRootFolder->AddFolder("Styles",    "List of Styles",fStyles);
    fRootFolder->AddFolder("Functions", "List of Functions",fFunctions);
    fRootFolder->AddFolder("Tasks",     "List of Tasks",fTasks);
    fRootFolder->AddFolder("Geometries","List of Geometries",fGeometries);
    fRootFolder->AddFolder("Browsers",  "List of Browsers",fBrowsers);
-   fRootFolder->AddFolder("Specials",  "List of Special Objects",fSpecials);
+   fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
-   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
-   fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
-   fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
-   fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
+   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove collections",fCleanups);
+   fRootFolder->AddFolder("StreamerInfo","List of active StreamerInfo classes",fStreamerInfo);
+   fRootFolder->AddFolder("ROOT Files","List of connected root files",fFiles);
 
    // by default, add the list of tasks, canvases and browsers in the Cleanups list
    fCleanups->Add(fCanvases);
@@ -323,7 +294,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fEditorMode    = 0;
    fDefCanvasName = "c1";
    fEditHistograms= kFALSE;
-   fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
+   fLineIsProcessing  = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
    gRandom        = new TRandom;
@@ -337,9 +308,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    new TMessageHandler((TClass*)0);
 
    // Create some styles
-   gStyle = 0;
    TStyle::BuildStyles();
-   SetStyle("Default");
 
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
@@ -375,8 +344,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
-   atexit(CleanUpROOTAtExit);
-
    fgRootInit = kTRUE;
 }
 
@@ -401,10 +368,9 @@ TROOT::~TROOT()
 //  Under Windows, one has to restore the color palettes created by individual canvases
       fCanvases->Delete();    SafeDelete(fCanvases);    // first close canvases
 #endif
-      fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
+      fFiles->Delete();       SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
-      TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
@@ -522,7 +488,7 @@ TObject *TROOT::FindObject(const char *name) const
    if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp = canvas->FindObject(name);
+         temp   = canvas->FindObject(name);
          if (!temp && canvas != gPad) temp  = gPad->FindObject(name);
       }
    }
@@ -663,23 +629,21 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
 
-   if (!name || !strlen(name)) return 0;
-   if (!GetListOfClasses())    return 0;
+   if (!GetListOfClasses()) return 0;
 
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
    if (cl) {
-      if (cl->IsLoaded()) return cl;
+      if (cl->GetImplFileLine() >= 0) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
-      load = kTRUE;
-   } else {
-      TDataType *objType = gROOT->GetType(name, load);
-      if (objType) {
-         const char *typdfName = objType->GetTypeName();
-         if (typdfName && strcmp(typdfName, name)) {
-            cl = GetClass(typdfName, load);
-            return cl;
-         }
-      }
+      load = 1;
+   }
+   TDataType *objType = gROOT->GetType(name,load);
+   if (objType) {
+     const Char_t *typdfName = objType->GetTypeName();
+     if (typdfName && strcmp(typdfName,name)) {
+       cl = GetClass(typdfName,load);
+       return cl;
+     }
    }
 
    if (!load) return 0;
@@ -689,23 +653,6 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       (dict)();
       return GetClass(name);
    }
-   if (cl) return cl;
-
-   // Reject STL containers and string.
-   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (!strcmp(name, "string")||!strcmp(name,full_string_name)) return 0;
-   if (strstr(name, "vector<")   || strstr(name, "list<") ||
-       strstr(name, "set<")      || strstr(name, "map<")  ||
-       strstr(name, "deque<")    || strstr(name, "multimap<") ||
-       strstr(name, "multiset<") || strstr(name, "::" ))
-      return 0;   //reject STL containers
-
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(name)) {
-      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
-      if (!ncl->IsZombie()) return ncl;
-      delete ncl;
-   }
    return 0;
 }
 
@@ -714,11 +661,9 @@ TColor *TROOT::GetColor(Int_t color) const
 {
 //*-*-*-*-*-*-*-*Return address of color with index color*-*-*-*-*-*-*-*-*
 //*-*            ========================================
-   TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
-   if (color < 0 || color >= lcolors->GetSize()) return 0;
-   TColor *col = (TColor*)lcolors->At(color);
+   TColor *col = (TColor*)gROOT->GetListOfColors()->At(color);
    if (col && col->GetNumber() == color) return col;
-   TIter   next(lcolors);
+   TIter   next(gROOT->GetListOfColors());
    while ((col = (TColor *) next()))
       if (col->GetNumber() == color) return col;
 
@@ -751,11 +696,16 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
    size_t nch = strlen(tname);
    while (tname[nch-1] == ' ') nch--;
 
-   // First try without loading.  We can do that because nothing is
-   // ever removed from the list of types. (See TCint::UpdateListOfTypes).
-   TDataType* type = (TDataType*)GetListOfTypes(kFALSE)->FindObject(name);
-   if (type || !load) { return type; }
-   else { return (TDataType*)GetListOfTypes(load)->FindObject(name); }
+   TDataType *idcur;
+   TIter      next(GetListOfTypes(load));
+   while ((idcur = (TDataType *) next())) {
+     if (strlen(idcur->GetName()) != nch) continue;
+     if (strstr(tname, idcur->GetName()) == tname) {
+        return idcur;
+     }
+   }
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1017,10 +967,7 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char *expandedfname)
 
   TClass *cla = GetClass(className);
   if ( cla ) {
-    if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
-    const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
-    if(!decfile) return 0;
-    result = strcmp( decfile,fname ) == 0;
+    result = strcmp( gSystem->BaseName(cla->GetDeclFileName()),fname ) == 0;
   }
   return result;
 }
@@ -1058,8 +1005,6 @@ void TROOT::InitSystem()
       if (msize != -1 || mcnt != -1)
          TStorage::EnableStatistics(msize, mcnt);
 
-      fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
-
       TObject::SetObjectStat(gEnv->GetValue("Root.ObjectStat", 0));
    }
 }
@@ -1079,52 +1024,34 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-Int_t TROOT::LoadClass(const char *classname, const char *libname,
-                       Bool_t check)
+Int_t TROOT::LoadClass(const char *classname, const char *libname)
 {
    // Check if class "classname" is known to the interpreter. If
-   // not it will load library "libname". If the library name does
-   // not start with "lib", "lib" will be prepended and a search will
-   // be made in the DynamicPath (see .rootrc). If not found a search
-   // will be made on libname (without "lib" prepended) and if not found
-   // a direct try of libname will be made (in case it contained an
-   // absolute path.
-   // If check is true it will only check if libname exists and is
-   // readable.
-   // Returns 0 on successful loading and -1 in case libname does not
-   // exist or in case of error.
+   // not it will load library "libname". Returns 0 on successful loading
+   // and -1 in case libname does not exist or in case of error.
 
    if (TClassTable::GetDict(classname)) return 0;
 
-   Int_t err = -1;
+   Int_t err;
 
-   char *path;
-   char *lib = 0;
-   if (strncmp(libname, "lib", 3))
+   if (classname[0] != 'T')
+      err = gSystem->Load(libname, 0, kTRUE);
+   else {
+      // special case for ROOT classes Txxx
+      char *lib, *path;
+#ifdef WIN32
+      lib = Form("lib%s", libname);       // used to be Root_%s
+#else
       lib = Form("lib%s", libname);
-   if (lib && (path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else
+#endif
+      if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
          err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else if ((path = gSystem->DynamicPathName(libname, kTRUE))) {
-      if (check)
-         err = 0;
-      else
-         err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else {
-      if (check) {
-         if (!gSystem->AccessPathName(libname, kReadPermission))
-            err = 0;
-         else
-            err = -1;
+         delete [] path;
       } else
          err = gSystem->Load(libname, 0, kTRUE);
    }
 
-   if (err == 0 && !check)
+   if (err == 0)
       GetListOfTypes(kTRUE);
 
    if (err == -1)
@@ -1155,82 +1082,39 @@ void TROOT::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TROOT::LoadMacro(const char *filename, int *error)
+void TROOT::LoadMacro(const char *filename)
 {
    // Load a macro in the interpreter's memory. Equivalent to the command line
-   // command ".L filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
+   // command ".L filename".
 
    if (fInterpreter) {
-      char *fn1 = Strip(filename);
-      // remove the possible ACLiC + or ++
-      char *fn2 = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
-      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
-      if (!mac) {
-         Error("LoadMacro", "macro %s not found in path %s", fn1, GetMacroPath());
-         if (error)
-            *error = TInterpreter::kFatal;
-      } else {
-         if (fn2) {
-            *fn2 = '+';
-            char *mac1 = new char [strlen(mac) + 3];
-            strcpy(mac1, mac);
-            strcat(mac1, fn2);
-            delete [] mac;
-            mac = mac1;
-         }
-         fInterpreter->LoadMacro(mac, (TInterpreter::EErrorCode*)error);
-      }
-      delete [] fn1;
+      char *fn  = Strip(filename);
+      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      if (!mac)
+         Error("LoadMacro", "macro %s not found in path %s", fn, GetMacroPath());
+      else
+         fInterpreter->LoadMacro(mac);
+      delete [] fn;
       delete [] mac;
    }
 }
 
 //______________________________________________________________________________
-Int_t TROOT::Macro(const char *filename, int *error)
+Int_t TROOT::Macro(const char *filename)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
-   // command ".x filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++][(args)].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
+   // command ".x filename".
 
    Int_t result = 0;
 
    if (fInterpreter) {
-      char *fn1 = Strip(filename);
-      // remove the possible arguments
-      char *arg = strchr(fn1, '(');
-      if (arg) *arg = '\0';
-      // and the possible ACLiC + or ++
-      char *fn2  = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
-      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
-      if (!mac) {
-         Error("Macro", "macro %s not found in path %s", fn1, GetMacroPath());
-         if (error)
-            *error = TInterpreter::kFatal;
-      } else {
-         if (fn2) *fn2 = '+';
-         if (arg) {
-            *arg = '(';
-            if (!fn2)
-               fn2 = arg;
-         }
-         if (fn2) {
-            char *mac1 = new char [strlen(mac) + strlen(fn2) + 1];
-            strcpy(mac1, mac);
-            strcat(mac1, fn2);
-            delete [] mac;
-            mac = mac1;
-         }
-         result = fInterpreter->ExecuteMacro(mac,
-                                             (TInterpreter::EErrorCode*)error);
-      }
-      delete [] fn1;
+      char *fn  = Strip(filename);
+      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      if (!mac)
+         Error("Macro", "macro %s not found in path %s", fn, GetMacroPath());
+      else
+         result = fInterpreter->ExecuteMacro(mac);
+      delete [] fn;
       delete [] mac;
 
       if (gPad) gPad->Update();
@@ -1252,16 +1136,13 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, Int_t *error)
+void TROOT::ProcessLine(const char *line)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
    // it to the CINT interpreter thread. For explicit synchrounous processing
    // use ProcessLineSync(). On non-Win32 platforms there is not difference
    // between ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.  In
-   // particular, error will equal to TInterpreter::kProcessing until the
-   // CINT interpreted thread has finished executing the line.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1272,54 +1153,35 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kFALSE, error);
+   fApplication->ProcessLine(line);
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, Int_t *error)
+void TROOT::ProcessLineSync(const char *line)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
    // only return when the CINT interpreter thread has finished executing
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
 
-   if (!fApplication) {
-      // circular Form() buffer will be re-used in CreateApplication() (too
-      // many calls to Form()), so we need to save "line"
-      char *sline = StrDup(line);
+   if (!fApplication)
       TApplication::CreateApplication();
-      line = Form("%s", sline);
-      delete [] sline;
-   }
 
-   fApplication->ProcessLine(line, kTRUE, error);
+   fApplication->ProcessLine(line, kTRUE);
 }
 
 //______________________________________________________________________________
-Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
+Long_t TROOT::ProcessLineFast(const char *line)
 {
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
    // In all other cases use TROOT::ProcessLine().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
-
-   if (!fApplication) {
-      // circular Form() buffer will be re-used in CreateApplication() (too
-      // many calls to Form()), so we need to save "line"
-      char *sline = StrDup(line);
-      TApplication::CreateApplication();
-      line = Form("%s", sline);
-      delete [] sline;
-   }
 
    Long_t result = 0;
 
-   if (fInterpreter) {
-      TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
-      result = fInterpreter->Calc(line, code);
-   }
+   if (fInterpreter)
+      result = fInterpreter->Calc(line);
 
    return result;
 }
@@ -1329,8 +1191,8 @@ void TROOT::Proof(const char *cluster)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
-   // the gProof global. Creating a new TProof object will reset
-   // the gProof global. For more on PROOF see the TProof ctor.
+   // the gProof global. Creating a new TProof object will delete
+   // the current one. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
    if (gROOT->LoadClass("TProof","Proof")) return;
@@ -1458,39 +1320,30 @@ const char *TROOT::GetMacroPath()
 {
    // Get macro search path. Static utility function.
 
-   if (fgMacroPath.Length() == 0) {
-      fgMacroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
-      if (fgMacroPath.Length() == 0)
+   static const char *macropath = 0;
+
+   if (macropath == 0) {
+      macropath = gEnv->GetValue("Root.MacroPath", (char*)0);
+      if (macropath == 0)
 #if !defined (__VMS ) && !defined(WIN32)
    #ifdef ROOTMACRODIR
-         fgMacroPath = ".:" ROOTMACRODIR;
+         macropath = ".:" ROOTMACRODIR;
    #else
-         fgMacroPath = TString(".:") + gRootDir + "/macros";
+         macropath = StrDup(Form(".:%s/macros", gRootDir));
    #endif
 #elif !defined(__VMS)
    #ifdef ROOTMACRODIR
-         fgMacroPath = ".;" ROOTMACRODIR;
+         macropath = ".;" ROOTMACRODIR;
    #else
-         fgMacroPath = TString(".;") + gRootDir + "/macros";
+         macropath = StrDup(Form(".;%s/macros", gRootDir));
    #endif
 #else
-         fgMacroPath = TString(gRootDir) + "MACROS]";
+/*        if (strrchr(gRootDir,']'))
+             *strrchr(gRootDir,']') = '.'; */
+         macropath = StrDup(Form("%sTUTORIALS]",gRootDir));
 #endif
    }
-
-   return fgMacroPath;
-}
-
-//______________________________________________________________________________
-void TROOT::SetMacroPath(const char *newpath)
-{
-   // Set or extend the macro search path. Static utility function.
-   // If newpath=0 or "" reset to value specified in the rootrc file.
-
-   if (!newpath || !*newpath)
-      fgMacroPath = "";
-   else
-      fgMacroPath = newpath;
+   return macropath;
 }
 
 //______________________________________________________________________________
@@ -1508,15 +1361,9 @@ void TROOT::IndentLevel()
 }
 
 //______________________________________________________________________________
-Bool_t TROOT::Initialized()
+Bool_t  TROOT::Initialized()
 {
    return fgRootInit;
-}
-
-//______________________________________________________________________________
-Bool_t TROOT::MemCheck()
-{
-   return fgMemCheck;
 }
 
 //______________________________________________________________________________

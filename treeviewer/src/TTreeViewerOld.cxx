@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.2 2000/11/23 10:02:56 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.1 2000/11/22 17:58:38 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -179,7 +179,6 @@ void TTreeViewer::BuildInterface()
 //*-*              =================================
 
    // Clear viewer is buttons already drawn
-   fEditable = kTRUE;
    delete fDraw;
    delete fScan;
    delete fBreak;
@@ -357,7 +356,6 @@ void TTreeViewer::BuildInterface()
          y -= dy; if (y < 0.3) break;
       }
    }
-   fEditable = kFALSE;
    cd();
    Update();
 }
@@ -642,6 +640,7 @@ void TTreeViewer::SetTreeName(const char *treename)
    sprintf(&name[13],"%s : %s",fTree->GetName(),fTree->GetTitle());
    SetTitle(name);
    delete [] name;
+   fEditable = kFALSE;
 
    BuildInterface();
 }

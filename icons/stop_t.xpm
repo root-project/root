@@ -6,7 +6,7 @@ static char*stop_t[]={
 ". c None",
 "c c #ffffff",
 "b c #ff0000",
-"................",
+".....##...#.....",
 "...##########...",
 ".#aaaaaaaaaaaa##",
 "#abbbbbbbbbbbba#",
@@ -20,5 +20,5 @@ static char*stop_t[]={
 "abbbbbbbbbbbbbba",
 "#abbbbbbbbbbbba#",
 "..aaaaaaaaaaaa##",
-"....###aa######.",
-"......#aa......."};
+"....###aa#######",
+"......#aa#######"};

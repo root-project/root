@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.6 2001/02/26 02:46:05 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -49,13 +49,9 @@ protected:
                                   Long_t timeout);
    static void         UnixSignal(ESignals sig, SigHandler_t h);
    static const char  *UnixSigname(ESignals sig);
-   static void         UnixResetSignal(ESignals sig);
    static void         UnixResetSignals();
-   static void         UnixIgnoreSignal(ESignals sig, Bool_t ignore);
    static int          UnixFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
-                                  Long_t *blocks, Long_t *bfree);
    static int          UnixTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          UnixUnixConnect(int port);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
@@ -97,10 +93,9 @@ public:
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
-   void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
-   void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
+   void              IgnoreInterrupt(Bool_t ignore = kTRUE);
 
    //---- Time & Date ------------------------------------------
    TTime             Now();
@@ -141,10 +136,8 @@ public:
    int               Link(const char *from, const char *to);
    int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);
-   int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
+   int               GetPathInfo(const char *path, Long_t *id,Long_t *size,
                                  Long_t *flags, Long_t *modtime);
-   int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
-                               Long_t *blocks, Long_t *bfree);
    int               Umask(Int_t mask);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 

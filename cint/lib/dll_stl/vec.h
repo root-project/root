@@ -32,6 +32,5 @@ using namespace std;
 #pragma link C++ class vector<string>;
 #endif
 
-
 #endif
 

@@ -1,4 +1,4 @@
-/* @(#)root/rootd:$Name:  $:$Id: rootdp.h,v 1.4 2001/02/22 09:43:25 rdm Exp $ */
+/* @(#)root/rootd:$Name:  $:$Id: rootdp.h,v 1.2 2001/01/26 16:44:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,10 +48,8 @@ void  ErrorInit(const char *ident);
 void  ErrorInfo(const char *va_(fmt), ...);
 void  ErrorSys(ERootdErrors code, const char *va_(fmt), ...);
 void  ErrorFatal(ERootdErrors code, const char *va_(fmt), ...);
-void  Error(ERootdErrors code, const char *va_(fmt), ...);
 int   GetErrno();
 void  ResetErrno();
-void  Perror(char *buf);
 
 void  NetInit(const char *service, int port, int tcpwindowsize);
 int   NetOpen(int inetdflag);

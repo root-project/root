@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.14 2001/05/18 15:57:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.10 2001/01/29 09:18:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -107,7 +107,7 @@ void TLeafF::PrintValue(Int_t l) const
 // Prints leaf value
 
    Float_t *value = (Float_t *)GetValuePointer();
-   printf("%g",value[l]);
+   printf("%f",value[l]);
 }
 
 //______________________________________________________________________________
@@ -116,7 +116,7 @@ void TLeafF::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   if (!fLeafCount && fNdata == 1) {
+   if (fNdata == 1) {
       b >> fValue[0];
    }else {
       if (fLeafCount) {
@@ -125,7 +125,6 @@ void TLeafF::ReadBasket(TBuffer &b)
             printf("ERROR leaf:%s, len=%d and max=%d\n",GetName(),len,fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
          }
-         fNdata = len*fLen;
          b.ReadFastArray(fValue,len*fLen);
       } else {
          b.ReadFastArray(fValue,fLen);
@@ -169,8 +168,7 @@ void TLeafF::SetAddress(void *add)
    if (add) {
       if (TestBit(kIndirectAddress)) {
          fPointer = (Float_t**) add;
-         Int_t ncountmax = fLen;
-         if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
+         Int_t ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if (ncountmax > fNdata || *fPointer == 0) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
@@ -182,6 +180,5 @@ void TLeafF::SetAddress(void *add)
       }
    } else {
       fValue = new Float_t[fNdata];
-      fValue[0] = 0;
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.13 2001/03/29 10:51:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.11 2000/12/13 16:05:18 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -191,16 +191,6 @@ TObject *TCollection::FindObject(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-const char *TCollection::GetName() const
-{
-  // Return name of this collection.
-  // if no name, return the collection class name.
-   
-   if (fName.Length() > 0) return fName.Data();
-   return ClassName();
-}
-   
-//______________________________________________________________________________
 Int_t TCollection::GrowBy(Int_t delta) const
 {
   // Increase the collection's capacity by delta slots.
@@ -230,14 +220,11 @@ void TCollection::ls(Option_t *option) const
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   char *star = 0;
-   if (option) star = (char*)strchr(option,'*');
+   Int_t nch = strlen(option);
 
    while ((object = next())) {
-      if (star) {
-         TString s = object->GetName();
-         if (strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
-      }
+      TString s = object->GetName();
+      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
       object->ls(option);
    }
 }

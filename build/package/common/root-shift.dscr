@@ -1,4 +1,0 @@
-short: ROOT client to access SHIFT managed data tapes
-long:
-Using this package, it's possible to access file managed by the SHIFT
-tape archive system, as used on CERN.

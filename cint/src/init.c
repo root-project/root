@@ -7,7 +7,7 @@
  * Description:
  *  Entry functions
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -545,7 +545,7 @@ char *optlist;
 	}
 	++p;
       }
-      G__fprinterr(G__serr,"Error: Unknown option %s\n",argv[optind]);
+      fprintf(G__serr,"Error: Unknown option %s\n",argv[optind]);
       ++optind;
       return(0);
     }
@@ -627,12 +627,6 @@ char *argv[] ;
 #ifdef G__NEWINHERIT
   G__ifunc.tagnum = -1;
 #endif
-#ifndef G__OLDIMPLEMENTATION1543
-  {
-    int ix;
-    for(ix=0;ix<G__MAXIFUNC;ix++) G__ifunc.funcname[ix] = (char*)NULL;
-  }
-#endif
   G__p_ifunc = &G__ifunc ;
 
 
@@ -658,8 +652,7 @@ char *argv[] ;
     G__Xdumpreadline[ii]=0;
   }
 
-  if(argv[0]) sprintf(G__nam,"%s",argv[0]); /* get command name */
-  else        strcpy(G__nam,"cint");
+  sprintf(G__nam,"%s",argv[0]); /* get command name */
 
   /*************************************************************
    * Set stderr,stdin,stdout,NULL pointer values to global
@@ -706,6 +699,7 @@ char *argv[] ;
   G__prerun=0;
   G__setdebugcond();
 
+
   /*************************************************************
    * Get command name
    *************************************************************/
@@ -726,15 +720,9 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gikl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
-
-#ifndef G__OLDIMPLEMENTATION1525
-    case 'j':
-      G__multithreadlibcint = atoi(optarg);
-      break;
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1480
     case 'm':
@@ -774,12 +762,6 @@ char *argv[] ;
 
     case 'M':
       G__is_operator_newdelete = (int)G__int(G__calc_internal((optarg)));
-#ifndef G__OLDIMPLEMENTATION1513
-      if(G__NOT_USING_2ARG_NEW&G__is_operator_newdelete) {
-	G__fprinterr(G__serr,"!!!-M option may not be needed any more. A new scheme has been implemented.\n");
-	G__fprinterr(G__serr,"!!!Refer to $CINTSYSDIR/doc/makecint.txt for the detail.\n");
-      }
-#endif
       break;
 
     case 'V': /* Create precompiled private member dictionary */
@@ -801,15 +783,11 @@ char *argv[] ;
 
     case 'x':
       if(xfileflag) {
-	G__fprinterr(G__serr,"Error: only one -x option is allowed\n");
+	fprintf(G__serr,"Error: only one -x option is allowed\n");
 	G__exit(EXIT_FAILURE);
       }
       else {
-#ifndef G__OLDIMPLEMENATTION1564
-	G__tmpnam(G__xfile);
-#else
 	tmpnam(G__xfile);
-#endif
 	G__ifile.fp=fopen(G__xfile,"w");
 	fprintf(G__ifile.fp,"%s\n",optarg);
 	fclose(G__ifile.fp);
@@ -851,14 +829,14 @@ char *argv[] ;
     case 'n': /* customize G__cpplink file name
 	       *   G__cppXXX?.C , G__cXXX.c */
       if(linkflag) {
-        G__fprinterr(G__serr,"Warning: option -n[linkname] must be given prior to -c[linklevel]\n");
+        fprintf(G__serr,"Warning: option -n[linkname] must be given prior to -c[linklevel]\n");
       }
       linkfilename = optarg;
       break;
 
     case 'N': /* customize DLL identification name */
       if(linkflag) {
-        G__fprinterr(G__serr,"Warning: option -N[DLL_Name] must be given prior to -c[linklevel]\n");
+        fprintf(G__serr,"Warning: option -N[DLL_Name] must be given prior to -c[linklevel]\n");
       }
       dllid = optarg;
       break;
@@ -900,7 +878,7 @@ char *argv[] ;
       break;
 #else
     case 'l': /* error message for dynamic link option */
-      G__fprinterr(G__serr,"Error: %s is not compiled with dynamic link capability\n",argv[0]);
+      fprintf(G__serr,"Error: %s is not compiled with dynamic link capability\n",argv[0]);
       break;
 #endif
     case 'p': /* use preprocessor */
@@ -954,11 +932,11 @@ char *argv[] ;
       G__dumpreadline[0]=fopen(optarg,"r");
       if(G__dumpreadline[0]) {
 	G__Xdumpreadline[0]=1;
-	G__fprinterr(G__serr," -X : readline dumpfile %s executed\n",
+	fprintf(G__serr," -X : readline dumpfile %s executed\n",
 		optarg);
       }
       else {
-	G__fprinterr(G__serr,
+	fprintf(G__serr,
 		"Readline dumpfile %s can not open\n"
 		,optarg);
 	return(EXIT_FAILURE);
@@ -966,18 +944,18 @@ char *argv[] ;
       break;
     case 'd': /* dump file */
 #ifdef G__DUMPFILE
-      G__fprinterr(G__serr," -d : dump function call history to %s\n",
+      fprintf(G__serr," -d : dump function call history to %s\n",
 	      optarg);
       if(strcmp(optarg+strlen(optarg)-2,".c")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".C")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".h")==0 ||
 	 strcmp(optarg+strlen(optarg)-2,".H")==0) {
-	G__fprinterr(G__serr,"-d %s : Improper history dump file name\n"
+	fprintf(G__serr,"-d %s : Improper history dump file name\n"
 		,optarg);
       }
       else sprintf(dumpfile,"%s",optarg);
 #else
-      G__fprinterr(G__serr,
+      fprintf(G__serr,
 	      " -d : func call dump not supported now\n");
 #endif
       break;
@@ -1019,12 +997,12 @@ char *argv[] ;
       G__set_globalcomp(optarg,linkfilename,dllid);
       break;
     case 's': /* step into mode */
-      G__fprinterr(G__serr," -s : Step into function/loop mode\n");
+      fprintf(G__serr," -s : Step into function/loop mode\n");
       G__steptrace = 1;
       break;
     case 'S': /* step over mode */
       G__stepover=3;
-      G__fprinterr(G__serr," -S : Step over function/loop mode\n");
+      fprintf(G__serr," -S : Step over function/loop mode\n");
       stepfrommain = 1;
       break;
     case 'b': /* break line */
@@ -1036,12 +1014,12 @@ char *argv[] ;
     case 'a': /* assertion */
       strcpy(G__assertion,optarg);
 #ifdef G__OLDIMPLEMENTATION418
-      G__fprinterr(G__serr," -a : break at assertion %s\n" ,G__assertion);
+      fprintf(G__serr," -a : break at assertion %s\n" ,G__assertion);
 #endif
       break;
     case 'T': /* trace of input file */
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(G__serr," -T : trace from pre-run\n");
+      fprintf(G__serr," -T : trace from pre-run\n");
       G__debugtrace=G__istrace=G__debug = 1;
       G__setdebugcond();
       break;
@@ -1049,12 +1027,12 @@ char *argv[] ;
       G__serr = fopen(optarg,"w");
     case 't': /* trace of input file */
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(G__serr," -t : trace execution\n");
+      fprintf(G__serr," -t : trace execution\n");
       G__istrace=G__debugtrace = 1;
       break;
     case 'R': /* displays input file at the break point*/
       /* sprintf(monitorfile,"%s",optarg); */
-      G__fprinterr(G__serr," -d : display at break point mode\n");
+      fprintf(G__serr," -d : display at break point mode\n");
       G__breakdisp = 1;
       break;
     case 'r': /* revision */
@@ -1092,9 +1070,6 @@ char *argv[] ;
       G__more(G__sout,"  -G [tracedmp] : dump exec trace into file\n");
       G__more(G__sout,"  -i : interactively return undefined symbol value\n");
       G__more(G__sout,"  -I [includepath] : set include file search path\n");
-#ifndef G__OLDIMPLEMENTATION1525
-      G__more(G__sout,"* -j [0|1]: Create multi-thread safe DLL(experimental)\n");
-#endif
       /* G__more(G__sout,"  -k : function key on\n"); */
       G__more(G__sout,"  -K : C mode\n");
 #ifdef G__SHAREDLIB
@@ -1259,7 +1234,7 @@ char *argv[] ;
 
 #ifndef G__OLDIMPLEMENTATION1162
   if(G__security_error) {
-    G__fprinterr(G__serr,"Warning: Error occured during reading source files\n");
+    fprintf(G__serr,"Warning: Error occured during reading source files\n");
   }
 #endif
 
@@ -1276,7 +1251,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION996
     if(G__security_error) {
 #ifndef G__OLDIMPLEMENTATION1162
-      G__fprinterr(G__serr,"Warning: Error occured during dictionary source generation\n");
+      fprintf(G__serr,"Warning: Error occured during dictionary source generation\n");
 #endif
 #ifndef G__OLDIMPLEMENTATION1197
       G__cleardictfile(-1);
@@ -1298,7 +1273,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION996
     if(G__security_error) {
 #ifndef G__OLDIMPLEMENTATION1162
-      G__fprinterr(G__serr,"Warning: Error occured during dictionary source generation\n");
+      fprintf(G__serr,"Warning: Error occured during dictionary source generation\n");
 #endif
 #ifndef G__OLDIMPLEMENTATION1197
       G__cleardictfile(-1);
@@ -1323,7 +1298,7 @@ char *argv[] ;
 #endif
 
   optind--;
-  if(G__debugtrace!=0) G__fprinterr(G__serr,"PRE-RUN END\n");
+  if(G__debugtrace!=0) fprintf(G__serr,"PRE-RUN END\n");
 
   /*************************************************************
    * set debug conditon after prerun
@@ -1406,7 +1381,7 @@ char *argv[] ;
     /********************************
      * Call main(argc,argv)
      ********************************/
-    if(G__breaksignal) G__fprinterr(G__serr,"\nCALL main()\n");
+    if(G__breaksignal) fprintf(G__serr,"\nCALL main()\n");
     sprintf(temp,"main");
     para.paran=2;
 #ifndef G__OLDIMPLEMENTATION834
@@ -1428,7 +1403,7 @@ char *argv[] ;
     /********************************
      * Call main(argc,argv)
      ********************************/
-    if(G__breaksignal) G__fprinterr(G__serr,"\nCALL main()\n");
+    if(G__breaksignal) fprintf(G__serr,"\nCALL main()\n");
     result=G__calc_internal(temp);
 #endif /* ON575 */
 
@@ -1446,7 +1421,7 @@ char *argv[] ;
 #endif
       G__break=0;
       G__setdebugcond();
-      G__fprinterr(G__serr,"!!! return from main() function\n");
+      fprintf(G__serr,"!!! return from main() function\n");
       G__pause();
     }
     if(G__stepover) {
@@ -1531,10 +1506,6 @@ char *argv[] ;
 int G__init_globals()
 {
   int i;
-#ifndef G__OLDIMPLEMENTATION1599
-  if (G__init) return(1);
-  G__init = 1;
-#endif
   /* G__p_ifunc = &G__ifunc ; */
 
   G__exec_memberfunc = 0;
@@ -1757,12 +1728,6 @@ int G__init_globals()
   G__global.prev_local = (struct G__var_array *)NULL;
   G__global.prev_filenum = -1;
   G__global.tagnum = -1;
-#ifndef G__OLDIMPLEMENTATION1543
-  {
-    int ix;
-    for(ix=0;ix<G__MEMDEPTH;ix++) G__global.varnamebuf[ix] = (char*)NULL;
-  }
-#endif
   G__cpp_aryconstruct=0;
   G__cppconstruct=0;
 
@@ -1865,11 +1830,6 @@ int G__init_globals()
   G__definedtemplateclass.isforwarddecl=0;
   G__definedtemplateclass.instantiatedtagnum=(struct G__IntList*)NULL;
 #endif
-#ifndef G__OLDIMPLEMENTATION1587
-  G__definedtemplateclass.specialization=(struct G__Definedtemplateclass*)NULL;
-  G__definedtemplateclass.spec_arg=(struct G__Templatearg*)NULL;
-#endif
-
 #ifdef G__TEMPLATEFUNC
   G__definedtemplatefunc.next = (struct G__Definetemplatefunc *)NULL;
   G__definedtemplatefunc.def_para = (struct G__Templatearg*)NULL;
@@ -1969,10 +1929,6 @@ int G__init_globals()
   G__ispermanentsl=0;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1593
-  G__boolflag=0;
-#endif
-
   return(0);
 }
 
@@ -1989,136 +1945,130 @@ void G__platformMacro()
   /***********************************************************************
    * operating system
    ***********************************************************************/
-#if defined(__linux__)  /* Linux */
+#if defined(__linux__)
   sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
 #elif defined(__linux) 
   sprintf(temp,"G__LINUX=%ld",(long)__linux); G__add_macro(temp);
 #elif defined(linux)
   sprintf(temp,"G__LINUX=%ld",(long)linux); G__add_macro(temp);
 #endif
-#ifdef __FreeBSD__   /* FreeBSD */
+#ifdef __FreeBSD__
   sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
 #endif
-#ifdef __hpux        /* HP-UX */
+#ifdef __hpux
   sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
 #endif
-#ifdef __sun         /* SunOS and Solaris */
+#ifdef __sun
   sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
 #endif
-#ifdef _WIN32        /* Windows 32bit */
+#ifdef _WIN32
   sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
 #endif
-#ifdef _WINDOWS_     /* Windows */
+#ifdef _WINDOWS_
   sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
 #endif
-#ifdef __VMS         /* DEC/Compac VMS */
+#ifdef __VMS
   sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
 #endif
-#ifdef _AIX          /* IBM AIX */
+#ifdef _AIX
   sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
 #endif
-#ifdef __sgi         /* SGI IRIX */
+#ifdef __sgi
   sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
 #endif
-#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux) /* DEC/Compac Alpha-OSF operating system */
+#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
 #endif
   /***********************************************************************
    * compiler and library
    ***********************************************************************/
-#ifdef G__CYGWIN /* Cygwin */
-  sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
-#endif
-#ifdef __GNUC__  /* gcc/g++  GNU C/C++ compiler major version */
+#ifdef __GNUC__
   sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
 #endif
-#ifdef __GNUC_MINOR__  /* gcc/g++ minor version */
+#ifdef __GNUC_MINOR__
   sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__add_macro(temp);
 #endif
-#ifdef __GLIBC__   /* GNU C library major version */
+#ifdef __GLIBC__
   sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__add_macro(temp);
 #endif
-#ifdef __GLIBC_MINOR__  /* GNU C library minor version */
+#ifdef __GLIBC_MINOR__
   sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__add_macro(temp);
 #endif
-#ifdef __HP_aCC     /* HP aCC C++ compiler */
+#ifdef __HP_aCC
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
 #endif
-#ifdef __SUNPRO_CC  /* Sun C++ compiler */
+#ifdef __SUNPRO_CC
   sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
 #endif
-#ifdef __SUNPRO_C   /* Sun C compiler */
+#ifdef __SUNPRO_C
   sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__add_macro(temp);
 #endif
-#ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
+#ifdef G__VISUAL
   sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
 #endif
-#ifdef _MSC_VER     /* Microsoft Visual C++ version */
+#ifdef _MSC_VER
   sprintf(temp,"G__MSC_VER=%ld",(long)_MSC_VER); G__add_macro(temp);
 #endif
-#ifdef __SC__       /* Symantec C/C++ compiler */
+#ifdef __SC__
   sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__add_macro(temp);
 #endif
-#ifdef __BORLANDC__ /* Borland C/C++ compiler */
+#ifdef __BORLANDC__
   sprintf(temp,"G__BORLAND=%ld",(long)__BORLANDC__); G__add_macro(temp);
 #endif
-#ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
+#ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
-#ifdef __KCC        /* KCC  C++ compiler */
+#ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
   /***********************************************************************
    * micro processor
    ***********************************************************************/
-#ifdef __hppa__ /* HP-PA , Hewlett Packard Precision Architecture */
+#ifdef __hppa__
   sprintf(temp,"G__hppa=%ld",(long)__hppa__); G__add_macro(temp);
 #endif
-#ifdef __i386__ /* Intel 386,486,586 */
+#ifdef __i386__
   sprintf(temp,"G__i386=%ld",(long)__i386__); G__add_macro(temp);
 #endif
-#ifdef __i860__ /* Intel 860 */
+#ifdef __i860__
   sprintf(temp,"G__i860=%ld",(long)__i860__); G__add_macro(temp);
 #endif
-#ifdef __i960__ /* Intel 960 */
+#ifdef __i960__
   sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
 #endif
-#ifdef __m88k__ /* Motorola 88000 */
+#ifdef __m88k__
   sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);
 #endif
-#ifdef __m68k__ /* Motorola 68000 */
+#ifdef __m68k__
   sprintf(temp,"G__m68k=%ld",(long)__m68k__); G__add_macro(temp);
 #endif
-#ifdef __ppc__  /* Motorola Power-PC */
-  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
-#endif
-#ifdef __mips__ /* MIPS architecture */
+#ifdef __mips__
   sprintf(temp,"G__mips=%ld",(long)__mips__); G__add_macro(temp);
 #endif
-#ifdef __alpha__ /* DEC/Compac Alpha */
+#ifdef __alpha__
   sprintf(temp,"G__alpha=%ld",(long)__alpha__); G__add_macro(temp);
 #endif
-#if defined(__sparc) /* Sun Microsystems SPARC architecture */
+#if defined(__sparc)
   sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
   sprintf(temp,"G__sparc=%ld",(long)__sparc); G__add_macro(temp);
 #elif  defined(__sparc__)
   sprintf(temp,"G__SPARC=%ld",(long)__sparc__); G__add_macro(temp);
   sprintf(temp,"G__sparc=%ld",(long)__sparc__); G__add_macro(temp);
 #endif
-#ifdef __arc__  /* ARC architecture */
+#ifdef __ppc__
+  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
+#endif
+#ifdef __arc__
   sprintf(temp,"G__arc=%ld",(long)__arc__); G__add_macro(temp);
 #endif
 #ifdef __M32R__
   sprintf(temp,"G__m32r=%ld",(long)__M32R__); G__add_macro(temp);
 #endif
-#ifdef __sh__   /* Hitachi SH micro-controller */
+#ifdef __sh__
   sprintf(temp,"G__sh=%ld",(long)__SH__); G__add_macro(temp);
 #endif
-#ifdef __arm__  /* ARM , Advanced Risk Machines */
+#ifdef __arm__
   sprintf(temp,"G__arm=%ld",(long)__arm__); G__add_macro(temp);
-#endif
-#ifdef __s390__ /* IBM S390 */
-  sprintf(temp,"G__s390=%ld",(long)__s390__); G__add_macro(temp);
 #endif
   /***********************************************************************
    * application environment
@@ -2189,21 +2139,13 @@ void G__set_stdio()
 #endif
   G__definemacro=0;
 
-#ifndef G__OLDIMPLEMENTATION1604
-  /* G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("TRUE=1"); */
-  /* G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("FALSE=0"); */
-  G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("true=1");
-  G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("false=0");
-  G__constvar = 0;
-#endif
-
 #ifdef G__DUMPFILE
   G__globalvarpointer = (long)(&G__dumpfile);
   G__var_type='E';
   G__getexpr("G__dumpfile=0");
 #endif
-  G__globalvarpointer = G__PVOID;
 
+  G__globalvarpointer = G__PVOID;
   G__var_type = 'p';
   G__tagnum = -1;
   G__typenum = -1;
@@ -2255,8 +2197,8 @@ int G__cintrevision(fp)
 FILE *fp;
 {
   fprintf(fp,"\n");
-  fprintf(fp,"cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
-  fprintf(fp,"   Copyright(c) : 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
+  fprintf(fp,"cint : C/C++ interpreter\n");
+  fprintf(fp,"   Copyright(c) : 1995~2001 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   fprintf(fp,"   revision     : %s by M.Goto\n\n",G__cint_version());
 
 #ifdef G__DEBUG

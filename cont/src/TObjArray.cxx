@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.12 2001/07/12 17:29:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.4 2000/10/31 11:18:45 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -73,7 +73,7 @@ TObjArray::~TObjArray()
    if (IsOwner())
       Delete();
 
-   ::operator delete(fCont);
+   delete [] fCont;
    fCont = 0;
    fSize = 0;
 }
@@ -206,6 +206,16 @@ TObject *TObjArray::After(TObject *obj) const
 }
 
 //______________________________________________________________________________
+TObject *TObjArray::At(Int_t i) const
+{
+   // Return the object at position i. Returns 0 if i is out of bounds.
+
+   if (BoundsOk("At", i))
+      return fCont[i-fLowerBound];
+   return 0;
+}
+
+//______________________________________________________________________________
 TObject *TObjArray::Before(TObject *obj) const
 {
    // Return the object before obj. Returns 0 if obj is first object.
@@ -319,7 +329,7 @@ void TObjArray::Streamer(TBuffer &b)
       R__c = b.WriteVersion(TObjArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
-      nobjects = GetLast()+1;
+      nobjects = GetSize();
       b << nobjects;
       b << fLowerBound;
 
@@ -396,15 +406,6 @@ Int_t TObjArray::GetLast() const
 }
 
 //______________________________________________________________________________
-TObject **TObjArray::GetObjectRef(TObject *obj) const
-{
-   // Return address of pointer obj.
-
-   Int_t index = IndexOf(obj);
-   return &fCont[index];
-}
-
-//______________________________________________________________________________
 Int_t TObjArray::IndexOf(const TObject *obj) const
 {
    // obj != 0 Return index of object in array.
@@ -412,6 +413,7 @@ Int_t TObjArray::IndexOf(const TObject *obj) const
    //
    // obj == 0 Return the index of the first empty slot.
    //          Returns lowerBound-1 in case array doesn't contain any empty slot.
+
 
    Int_t i;
    if (obj) {
@@ -433,14 +435,14 @@ void TObjArray::Init(Int_t s, Int_t lowerBound)
    // Initialize a TObjArray.
 
    if (fCont && fSize != s) {
-      ::operator delete(fCont);
+      delete [] fCont;
       fCont = 0;
    }
 
    fSize = s;
 
    if (!fCont)
-      fCont = (TObject**) ::operator new(fSize*sizeof(TObject*)); //new TObject* [fSize];
+      fCont = new TObject* [fSize];
    memset(fCont, 0, fSize*sizeof(TObject*));
    fLowerBound = lowerBound;
    fLast = -1;
@@ -479,7 +481,7 @@ TObject *TObjArray::RemoveAt(Int_t idx)
       fCont[i] = 0;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+         do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
       Changed();
    }
    return obj;
@@ -500,7 +502,7 @@ TObject *TObjArray::Remove(TObject *obj)
    fCont[idx] = 0;
    // recalculate array size
    if (idx == fLast)
-      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+      do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
    Changed();
    return ob;
 }
@@ -511,12 +513,9 @@ void TObjArray::SetLast(Int_t last)
    // Set index of last object in array, effectively truncating the
    // array. Use carefully since whenever last position has to be
    // recalculated, e.g. after a Remove() or Sort() it will be reset
-   // to the last non-empty slot. If last is -2 this will force the
-   // recalculation of the last used slot.
+   // to the last non-empty slot.
 
-   if (last == -2)
-      fLast = -2;
-   else if (BoundsOk("SetLast", last))
+   if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
 }
 

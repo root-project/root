@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplicationImp.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
-#include "TString.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
 class TGWin32Command;
@@ -30,29 +30,28 @@ class TGWin32Command;
 
 class TApplicationImp {
 
-protected:
-   TString   fApplicationName;    // application name
-
 public:
    TApplicationImp() { }
-   TApplicationImp(const char *appClassName, int *argc, char **argv);
+   TApplicationImp(const char *appClassName, int *argc, char **argv,
+                   void *options, int numOptions);
    virtual ~TApplicationImp() { }
 
-   virtual const char *ApplicationName() const { return fApplicationName.Data(); }
-   virtual void        Show() { }
-   virtual void        Hide() { }
-   virtual void        Iconify() { }
-   virtual Bool_t      IsCmdThread() { return kTRUE; } // by default (for UNIX) ROOT is a single thread application
-   virtual void        Init() { }
-   virtual void        Open() { }
-   virtual void        Raise() { }
-   virtual void        Lower() { }
-   virtual Int_t       ExecCommand(TGWin32Command *code, Bool_t synch);
+   virtual char   *ApplicationName() const { return 0; }
+   virtual void    Show() { }
+   virtual void    Hide() { }
+   virtual void    Iconify() { }
+   virtual Bool_t  IsCmdThread() { return kTRUE; } // by default (for UNIX) ROOT is a single thread application
+   virtual void    Init() { }
+   virtual void    Open() { }
+   virtual void    Raise() { }
+   virtual void    Lower() { }
+   virtual Int_t   ExecCommand(TGWin32Command *code, Bool_t synch);
 
-   ClassDef(TApplicationImp,0)  //ABC describing application protocol
+   ClassDef(TApplicationImp,0)  //ABC describing application implementation protocol
 };
 
-inline TApplicationImp::TApplicationImp(const char *, int *, char **) { }
+inline TApplicationImp::TApplicationImp(const char *, int *, char **,
+                                        void *, int) { }
 inline Int_t TApplicationImp::ExecCommand(TGWin32Command *, Bool_t) { return 0; }
 
 #endif

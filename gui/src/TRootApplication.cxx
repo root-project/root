@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.3 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -30,10 +30,10 @@ ClassImp(TRootApplication)
 
 //______________________________________________________________________________
 TRootApplication::TRootApplication(const char *appClassName,
-                                   Int_t *argc, char **argv)
+                                   Int_t *argc, char **argv, void *, Int_t)
 {
-   fApplicationName = appClassName;
-   fDisplay         = 0;
+   fAppClassName  = StrDup(appClassName);
+   fDisplay       = 0;
 
    GetOptions(argc, argv);
 
@@ -49,6 +49,7 @@ TRootApplication::~TRootApplication()
 {
    // Delete ROOT application environment.
 
+   delete fAppClassName;
    delete fDisplay;
    delete fClient;
 }

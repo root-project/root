@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.4 2000/11/10 02:28:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.3 2000/10/27 16:30:34 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -110,7 +110,7 @@ Bool_t TTimer::Notify()
 
    Timeout();       // emit Timeout() signal
    if (fObject) fObject->HandleTimer(this);
-   if (fCommand && fCommand.Length() > 0)
+   if (fCommand && strlen(fCommand))
       gROOT->ProcessLine(fCommand);
 
    Reset();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.2 2000/06/13 10:38:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -260,17 +260,6 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    Double_t relerr  = 0;
    Double_t result = IntegralMultiple(3,a,b,epsilon,relerr);
    return result;
-}
-
-//______________________________________________________________________________
-Bool_t TF3::IsInside(const Double_t *x) const
-{
-// Return kTRUE is the point is inside the function range
-   
-   if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
-   if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
-   if (x[2] < fZmin || x[2] > fZmax) return kFALSE;
-   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -95,7 +95,7 @@ char *expression;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: SETGVP\n",G__asm_cp);
 #endif
     }
 #endif
@@ -153,7 +153,7 @@ char *expression;
 #ifdef G__ASM_IFUNC
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n"
+      if(G__asm_dbg) fprintf(G__serr,"%3x: LD %d from %x\n"
 			     ,G__asm_cp,1 ,G__asm_dt);
 #endif
       G__asm_inst[G__asm_cp]=G__LD;
@@ -201,7 +201,7 @@ char *expression;
   
   size = G__Lsizeof(type);
   if(size == -1) {
-    G__fprinterr(G__serr,"Error: type %s not defined FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Error: type %s not defined FILE:%s LINE:%d\n"
 	    ,type,G__ifile.name,G__ifile.line_number);
     return(G__null);
   }
@@ -221,7 +221,7 @@ char *expression;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -284,9 +284,6 @@ char *expression;
       else if(strcmp(type,"unsignedlong")==0) var_type='l';
       else if(strcmp(type,"size_t")==0) var_type='l';
       else if(strcmp(type,"time_t")==0) var_type='l';
-#ifndef G__OLDIMPLEMENTATION1604
-      else if(strcmp(type,"bool")==0) var_type='g';
-#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION683
@@ -304,12 +301,12 @@ char *expression;
       }
       else {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"Cancel LD 1\n");
+	if(G__asm_dbg) fprintf(G__serr,"Cancel LD 1\n");
 #endif
       }
     }
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -345,7 +342,7 @@ char *expression;
       }
     }
     if(pointer==(long)NULL && 0==G__no_exec_compile) {
-      G__fprinterr(G__serr,"Error: memory allocation for %s %s size=%d pinc=%d FILE:%s LINE:%d\n"
+      fprintf(G__serr ,"Error: memory allocation for %s %s size=%d pinc=%d FILE:%s LINE:%d\n"
 	      ,type,expression,size,pinc,G__ifile.name,G__ifile.line_number);
       G__tagnum=store_tagnum;
       G__typenum=store_typenum;
@@ -356,7 +353,7 @@ char *expression;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: NEWALLOC %d %d\n"
+      if(G__asm_dbg) fprintf(G__serr,"%3x: NEWALLOC %d %d\n"
 			     ,G__asm_cp,size,pinc);
 #endif
       G__asm_inst[G__asm_cp] = G__NEWALLOC;
@@ -373,7 +370,7 @@ char *expression;
 #endif
       G__inc_cp_asm(3,0);
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SET_NEWALLOC\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: SET_NEWALLOC\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__SET_NEWALLOC;
       G__asm_inst[G__asm_cp+1] = G__tagnum;
@@ -389,7 +386,7 @@ char *expression;
    ******************************************************/
   if(var_type=='u') {
     if(G__dispsource) {
-      G__fprinterr(G__serr,"\n!!!Calling constructor 0x%lx.%s for new %s"
+      fprintf(G__serr,"\n!!!Calling constructor 0x%lx.%s for new %s"
 	      ,G__store_struct_offset,type,type);
     }
     
@@ -397,16 +394,13 @@ char *expression;
       /* This is a pre-compiled class */
       long store_globalvarpointer = G__globalvarpointer;
       if(memarena) G__globalvarpointer = memarena;
-#ifndef G__OLDIMPLEMENTATION1508
-      else G__globalvarpointer = G__PVOID;
-#endif
       if(arrayindex) {
 	G__cpp_aryconstruct=pinc;
 #ifndef G__OLDIMPLEMENTATION1437
 #ifdef G__ASM
 	if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
 #endif
 	  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
 	  G__asm_inst[G__asm_cp+1]= 1;
@@ -420,7 +414,7 @@ char *expression;
 #ifdef G__ASM
       if(arrayindex && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
 	G__asm_inst[G__asm_cp+1] = 1;
@@ -442,7 +436,7 @@ char *expression;
 	G__asm_inst[G__asm_cp+1] = store_globalvarpointer;
 	G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETGVP\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: SETGVP\n",G__asm_cp);
 #endif
       }
 #endif
@@ -451,7 +445,7 @@ char *expression;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
 	G__inc_cp_asm(1,0);
@@ -465,7 +459,7 @@ char *expression;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__ADDALLOCTABLE;
 	    G__inc_cp_asm(1,0);
@@ -518,21 +512,14 @@ char *expression;
 	    /* construct = "TYPE" , bp = "ARG" */
 	    buf = G__getexpr(bp);
 	    /* G__ASSERT(-1!=buf.tagnum); */
+#ifndef G__OLDIMPLEMENTATION843
 	    G__abortbytecode(); /* Disable bytecode */
-	    if(-1!=buf.tagnum && 0==G__no_exec_compile) {
-#ifndef G__OLDIMPLEMENTATION1614
-	      if(buf.tagnum != G__tagnum) {
-		G__fprinterr(G__serr
-			     ,"Error: Illegal initialization of %s("
-			     ,G__fulltagname(G__tagnum,1));
-		G__fprinterr(G__serr,"%s)",G__fulltagname(buf.tagnum,1));
-		G__genericerror((char*)NULL);
-		return(G__null);
-	      }
+	    if(-1!=buf.tagnum && 0==G__no_exec_compile) 
+#else
+	    if(-1!=buf.tagnum) 
 #endif
 	      memcpy((void*)G__store_struct_offset,(void*)buf.obj.i
 		     ,G__struct.size[buf.tagnum]);
-	    }
 	  }
 #endif
 	  break;
@@ -548,7 +535,7 @@ char *expression;
 	if(G__asm_noverflow) {
 	  if(pinc>1) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
 #endif
 	    G__asm_inst[G__asm_cp] = G__ADDSTROS;
 	    G__asm_inst[G__asm_cp+1] = size;
@@ -564,7 +551,7 @@ char *expression;
       if(G__asm_noverflow) {
 	if(pinc>1) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp
 				 ,-size*pinc);
 #endif
 	  G__asm_inst[G__asm_cp] = G__ADDSTROS;
@@ -572,7 +559,7 @@ char *expression;
 	  G__inc_cp_asm(2,0);
 	}
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SET_NEWALLOC\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: SET_NEWALLOC\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__SET_NEWALLOC;
 	G__asm_inst[G__asm_cp+1] = G__tagnum;
@@ -631,7 +618,7 @@ char *expression;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LETNEWVAL\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: LETNEWVAL\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__LETNEWVAL;
       G__inc_cp_asm(1,0);
@@ -669,7 +656,7 @@ char *expression;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
     G__inc_cp_asm(1,0);
@@ -687,7 +674,7 @@ char *expression;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: ADDALLOCTABLE\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDALLOCTABLE;
       G__inc_cp_asm(1,0);
@@ -730,7 +717,7 @@ char *indexlist;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: OP2 *\n" ,G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: OP2 *\n" ,G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__OP2;
       G__asm_inst[G__asm_cp+1]=(long)'*';
@@ -777,7 +764,7 @@ int isarray;
 
   buf=G__getitem(expression);
   if(islower(buf.type)) {
-    G__fprinterr(G__serr,"Error: %s cannot delete",expression);
+    fprintf(G__serr,"Error: %s cannot delete",expression);
     G__genericerror((char*)NULL);
     return;
   }
@@ -792,7 +779,7 @@ int isarray;
 #else
   else if(0==buf.obj.i && 0==G__no_exec_compile && 
 	  G__ASM_FUNC_NOP==G__asm_wholefunction) {
-    G__fprinterr(G__serr,"Error: %s==NULL cannot delete",expression);
+    fprintf(G__serr,"Error: %s==NULL cannot delete",expression);
     G__genericerror((char*)NULL);
     return;
   }
@@ -806,7 +793,7 @@ int isarray;
 #ifdef G__ASM
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: DELALLOCTABLE\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: DELALLOCTABLE\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__DELALLOCTABLE;
       G__inc_cp_asm(1,0);
@@ -829,7 +816,7 @@ int isarray;
     
     sprintf(destruct,"~%s()",G__struct.name[G__tagnum]);
     if(G__dispsource) {
-      G__fprinterr(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s"
+      fprintf(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s"
 	      ,G__store_struct_offset ,destruct ,expression);
     }
     done=0;
@@ -855,15 +842,15 @@ int isarray;
       G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
       }
 #endif
 #ifndef G__OLDIMPLEMENTATION1437
       if(isarray) {
 	G__asm_inst[G__asm_cp] = G__GETARYINDEX;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: GETARYINDEX\n",G__asm_cp-2);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: GETARYINDEX\n",G__asm_cp-2);
 #endif
 	G__inc_cp_asm(1,0);
 #endif
@@ -887,8 +874,8 @@ int isarray;
 	G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	  fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	  fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
 	}
 #endif
       }
@@ -902,7 +889,7 @@ int isarray;
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__POPSTROS;
 	G__inc_cp_asm(1,0);
@@ -935,7 +922,7 @@ int isarray;
 #endif /* ON597 */
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: ADDSTROS %d\n",G__asm_cp,size);
 #endif
 	    G__asm_inst[G__asm_cp] = G__ADDSTROS;
 	    G__asm_inst[G__asm_cp+1] = (long)size;
@@ -954,7 +941,7 @@ int isarray;
 #ifdef G__SECURITY
     if(G__security&G__SECURE_GARBAGECOLLECTION &&G__asm_noverflow&&0==done) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: BASEDESTRUCT\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: BASEDESTRUCT\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__BASEDESTRUCT;
       G__asm_inst[G__asm_cp+1] = G__tagnum;
@@ -975,7 +962,7 @@ int isarray;
 	G__asm_inst[G__asm_cp] = G__RESETARYINDEX;
 	G__asm_inst[G__asm_cp+1] = 0;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n",G__asm_cp-2);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: RESETARYINDEX\n",G__asm_cp-2);
 #endif
 	G__inc_cp_asm(2,0);
       }
@@ -983,14 +970,14 @@ int isarray;
       if(G__CPPLINK!=G__struct.iscpplink[G__tagnum]) {
 	/* if interpreted class, free memory */
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
 #endif
 	G__asm_inst[G__asm_cp] = G__DELETEFREE;
 	G__asm_inst[G__asm_cp+1] = isarray? 1 : 0;
 	G__inc_cp_asm(2,0);
       }
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp+1);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp+1);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1,0);
@@ -1013,18 +1000,18 @@ int isarray;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
-      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+      fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+      fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
     }
 #endif
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: DELETEFREE\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__DELETEFREE;
     G__asm_inst[G__asm_cp+1] = 0;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__POPSTROS;
     G__inc_cp_asm(1,0);
@@ -1122,7 +1109,7 @@ long point;
   }
   
   if(flag==0) {
-    G__fprinterr(G__serr,"Error: delete[] on wrong object 0x%lx FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Error: delete[] on wrong object 0x%lx FILE:%s LINE:%d\n"
 	    ,point,G__ifile.name,G__ifile.line_number);
     return(0);
   }

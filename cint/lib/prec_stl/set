@@ -21,10 +21,7 @@
 #include <iterator>
 #include <functional>
 
-#if defined(G__ANSIISOLIB)
-template<class Key,class Compare=less<Key>
-        ,class Allocator=allocator<Key> >
-#elif defined(G__GNUC) && !defined(G__KCC)
+#if defined(G__GNUC)
 template<class Key,class Compare=less<Key>
         ,class Allocator=alloc>
 #elif defined(G__HPUX)
@@ -42,7 +39,7 @@ class set {
   typedef Compare                               key_compare;
   typedef Compare                               value_compare;
   typedef Allocator                             allocator_type;
-#if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
+#if defined(G__GNUC) || defined(G__HPUX)
   typedef Key*                                  pointer;
   typedef const Key*                            const_pointer;
   typedef Key&                                  reference;
@@ -71,7 +68,7 @@ class set {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     iterator& operator=(const iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -88,7 +85,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC)
+#ifdef G__GNUC
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
@@ -108,7 +105,7 @@ class set {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -196,35 +193,6 @@ class set {
   friend bool operator<=(const set& x, const set& y);
   // specialized algorithms:
   //friend void swap(set& x, set& y);
-
-
-#ifndef G__NOALGORITHM
-  // Generic algorithm
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__BORLAND)
-
-  friend set::iterator 
-    find(set::iterator first,set::iterator last,const Key& value);
-  friend set::iterator
-    search(set::iterator first1,set::iterator last1,
-           set::iterator first2,set::iterator last2);
-
-#elif defined(G__VISUAL)
-
-  friend void reverse(set::iterator first,set::iterator last);
-
-  friend set::iterator 
-    find(set::iterator first,set::iterator last,const Key& value);
-  friend set::iterator
-    search(set::iterator first1,set::iterator last1,
-           set::iterator first2,set::iterator last2);
-  friend set::iterator
-    copy(set::iterator first,set::iterator last,
-         set::iterator result);
-  friend void
-    fill(set::iterator first,set::iterator last,const Key& value);
-
-#endif // G__GNUC || G__BORLAND
-#endif // G__NOALGORITHM
 
 };
 

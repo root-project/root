@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.14 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.5 2000/12/19 14:30:43 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -35,34 +35,27 @@
 #include "TRefCnt.h"
 #endif
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
 #ifdef R__MWERKS
 #   ifdef Length
 #      undef Length
 #   endif
 #endif
 
-class TRegexp;
-class TString;
-class TSubString;
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_istream;
+template <class charT, class traits> class basic_ostream;
+typedef basic_istream<char, ios_traits<char> > istream;
+typedef basic_ostream<char, ios_traits<char> > ostream;
+#else
+class istream;
+class ostream;
+#endif
 
-TString operator+(const TString& s1, const TString& s2);
-TString operator+(const TString& s,  const char *cs);
-TString operator+(const char *cs, const TString& s);
-TString operator+(const TString& s, char c);
-TString operator+(const TString& s, Long_t i);
-TString operator+(const TString& s, ULong_t i);
-TString operator+(char c, const TString& s);
-TString operator+(Long_t i, const TString& s);
-TString operator+(ULong_t i, const TString& s);
-Bool_t  operator==(const TString& s1, const TString& s2);
-Bool_t  operator==(const TString& s1, const char *s2);
-Bool_t  operator==(const TSubString& s1, const TSubString& s2);
-Bool_t  operator==(const TSubString& s1, const TString& s2);
-Bool_t  operator==(const TSubString& s1, const char *s2);
+class TRegexp;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -116,10 +109,6 @@ class TSubString {
 friend class TStringLong;
 friend class TString;
 
-friend Bool_t operator==(const TSubString& s1, const TSubString& s2);
-friend Bool_t operator==(const TSubString& s1, const TString& s2);
-friend Bool_t operator==(const TSubString& s1, const char *s2);
-
 private:
    TString      *fStr;           // Referenced string
    Ssiz_t        fBegin;         // Index of starting character
@@ -127,6 +116,10 @@ private:
 
    // NB: the only constructor is private
    TSubString(const TString& s, Ssiz_t start, Ssiz_t len);
+
+   friend Bool_t operator==(const TSubString& s1, const TSubString& s2);
+   friend Bool_t operator==(const TSubString& s1, const TString& s2);
+   friend Bool_t operator==(const TSubString& s1, const char *s2);
 
 protected:
    void          SubStringError(Ssiz_t, Ssiz_t, Ssiz_t) const;
@@ -222,11 +215,6 @@ public:
    virtual void     ReadBuffer(char *&buffer);
    virtual Int_t    Sizeof() const;
 
-   static TString  *ReadString(TBuffer &b, const TClass *clReq);
-   static void      WriteString(TBuffer &b, const TString *a);
-
-   friend TBuffer &operator<<(TBuffer &b, const TString *obj);
-
    // Type conversion
    operator const char*() const { return fData; }
 
@@ -244,8 +232,6 @@ public:
    TString&    operator+=(UInt_t i);
    TString&    operator+=(Long_t i);
    TString&    operator+=(ULong_t i);
-   TString&    operator+=(Float_t f);
-   TString&    operator+=(Double_t f);
 
    // Indexing operators
    char&         operator[](Ssiz_t i);         // Indexing with bounds checking
@@ -351,7 +337,6 @@ TString ToLower(const TString&);    // Return lower-case version of argument
 TString ToUpper(const TString&);    // Return upper-case version of argument
 inline  unsigned Hash(const TString& s) { return s.Hash(); }
 inline  unsigned Hash(const TString *s) { return s->Hash(); }
-        unsigned Hash(const char *s);
 
 extern char *Form(const char *fmt, ...);     // format in circular buffer
 extern void  Printf(const char *fmt, ...);   // format and print
@@ -422,12 +407,6 @@ inline TString& TString::operator+=(Int_t i)
 
 inline TString& TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
-
-inline TString& TString::operator+=(Double_t f)
-{ return operator+=(Form("%9.9g", f)); }
-
-inline TString& TString::operator+=(Float_t f)
-{ return operator+=((Double_t) f); }
 
 inline Bool_t TString::BeginsWith(const char* s, ECaseCompare cmp) const
 { return Index(s, strlen(s), (Ssiz_t)0, cmp) == 0; }

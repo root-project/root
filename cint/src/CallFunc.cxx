@@ -81,12 +81,6 @@ void G__CallFunc::Init()
 {
   pfunc = (G__InterfaceMethod)NULL;
   para.paran = 0;
-#ifndef G__OLDIMPLEMENTATION1547
-  result = G__null;
-#ifdef G__ASM_WHOLEFUNC
-  bytecode = (struct G__bytecodefunc*)NULL;
-#endif
-#endif
 }
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFunc(G__InterfaceMethod f)
@@ -102,7 +96,7 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
   else {
     pfunc = (G__InterfaceMethod)NULL;
 #ifndef G__ROOT
-    G__fprinterr(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
+    fprintf(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
 #endif
   }
   para.paran=0;
@@ -135,7 +129,7 @@ void G__CallFunc::SetArgArray(long *p)
     para.paran=n;
   }
   else {
-    G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
+    fprintf(G__serr,"Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
   }
 }
 #endif
@@ -269,9 +263,6 @@ void G__CallFunc::Exec(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -298,9 +289,6 @@ long G__CallFunc::ExecInt(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -325,9 +313,6 @@ double G__CallFunc::ExecDouble(void *pobject)
   // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
@@ -364,21 +349,5 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
   }
   return(ret);
 }
-///////////////////////////////////////////////////////////////////////////
-#ifndef G__OLDIMPLEMENTATION1591
-void G__CallFunc::SetFuncType() {
-  if(method.IsValid()) {
-    struct G__ifunc_table *ifunc = method.ifunc();
-    int ifn = method.Index();
-    result.type = ifunc->type[ifn];
-    result.tagnum = ifunc->p_tagtable[ifn];
-    result.typenum = ifunc->p_typetable[ifn];
-    result.isconst = ifunc->isconst[ifn];
-    if('d'!=result.type&&'f'!=result.type) {
-      result.obj.reftype.reftype = ifunc->reftype[ifn];
-    }
-  }
-}
-#endif
 ///////////////////////////////////////////////////////////////////////////
 

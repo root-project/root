@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.4 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayS::TArrayS(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayS::TArrayS(Int_t n, const Short_t *array)
+TArrayS::TArrayS(Int_t n, Short_t *array)
 {
    // Create TArrayS object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayS::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayS::Set(Int_t n, const Short_t *array)
+void TArrayS::Set(Int_t n, Short_t *array)
 {
    // Set size of this array to n shorts and set the contents.
 
@@ -147,10 +147,7 @@ void TArrayS::Streamer(TBuffer &b)
    // Stream a TArrayS object.
 
    if (b.IsReading()) {
-      Int_t n;
-      b >> n;
-      Set(n);
-      b.ReadFastArray(fArray,n);
+      fN = b.ReadArray(fArray);
    } else {
       b.WriteArray(fArray, fN);
    }

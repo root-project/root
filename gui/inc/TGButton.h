@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.5 2000/10/22 19:28:57 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -66,8 +66,6 @@ class TGWidget;
 class TGHotString;
 class TGPicture;
 class TGToolTip;
-class TGClient;
-class TGButtonGroup;
 
 
 class TGButton : public TGFrame, public TGWidget {
@@ -89,13 +87,13 @@ protected:
    virtual void   SetToggleButton(Bool_t) { }
 
    static TGGC fgHibckgndGC;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC fgDefaultGC;
 
 public:
-   static const TGGC   &GetDefaultGC();
-   static const TGGC   &GetHibckgndGC();
-
-   TGButton(const TGWindow *p, Int_t id, GContext_t norm = GetDefaultGC()(),
+   TGButton(const TGWindow *p, Int_t id, GContext_t norm = fgDefaultGC(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGButton();
 
@@ -118,10 +116,13 @@ public:
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
 
-   virtual void Pressed()  { Emit("Pressed()"); }   //*SIGNAL*
-   virtual void Released() { Emit("Released()"); }  //*SIGNAL*
-   virtual void Clicked()  { Emit("Clicked()"); }   //*SIGNAL*
-   virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  //*SIGNAL*
+   void Pressed()  { Emit("Pressed()"); }   //*SIGNAL*
+   void Released() { Emit("Released()"); }  //*SIGNAL*
+   void Clicked()  { Emit("Clicked()"); }   //*SIGNAL*
+   void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  //*SIGNAL*
+
+   static const TGGC   &GetDefaultGC();
+   static const TGGC   &GetHibckgndGC();
 
    ClassDef(TGButton,0)  // Button widget abstract base class
 };
@@ -143,19 +144,17 @@ protected:
    virtual void DoRedraw();
 
 public:
-   static FontStruct_t GetDefaultFontStruct();
-
    TGTextButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                GContext_t norm = GetDefaultGC()(),
-                FontStruct_t font = GetDefaultFontStruct(),
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    TGTextButton(const TGWindow *p, const char *s, Int_t id = -1,
-                GContext_t norm = GetDefaultGC()(),
-                FontStruct_t font = GetDefaultFontStruct(),
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    TGTextButton(const TGWindow *p, const char *s, const char *cmd,
-                Int_t id = -1, GContext_t norm = GetDefaultGC()(),
-                FontStruct_t font = GetDefaultFontStruct(),
+                Int_t id = -1, GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
                 UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGTextButton();
 
@@ -168,6 +167,8 @@ public:
    void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
    void               SetText(TGHotString *new_label);
    void               SetText(const TString &new_label);
+
+   static FontStruct_t GetDefaultFontStruct();
 
    ClassDef(TGTextButton,0)  // A text button widget
 };
@@ -182,10 +183,10 @@ protected:
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,
-                   GContext_t norm = GetDefaultGC()(),
+                   GContext_t norm = fgDefaultGC(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
-                   Int_t id = -1, GContext_t norm = GetDefaultGC()(),
+                   Int_t id = -1, GContext_t norm = fgDefaultGC(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
    void SetPicture(const TGPicture *new_pic);
@@ -209,23 +210,23 @@ protected:
    virtual void DoRedraw();
 
    static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC          fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGCheckButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGCheckButton();
 
@@ -237,6 +238,9 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual void   SetState(EButtonState state) { PSetState(fPrevState = state); }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
@@ -260,23 +264,23 @@ protected:
 
    static Pixmap_t      fgR1, fgR2, fgR3, fgR4, fgR5, fgR6;
    static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC          fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    TGRadioButton(const TGWindow *p, const char *s, const char *cmd, Int_t id = -1,
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t option = 0);
    virtual ~TGRadioButton();
 
@@ -289,6 +293,9 @@ public:
    virtual void SetState(EButtonState state) { PSetState(fPrevState = state); }
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGRadioButton,0)  // A radio button widget
 };

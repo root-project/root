@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.6 2001/08/23 22:11:48 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.2 2000/11/21 20:10:42 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -10,14 +10,8 @@
 ClassImp(TParticle)
 
 //______________________________________________________________________________
-TParticle::TParticle() :
-  fPdgCode(0), fStatusCode(0), fWeight(0),fCalcMass(0), fPx(0), fPy(0),
-  fPz(0), fE(0), fVx(0), fVy(0), fVz(0), fVt(0), fPolarTheta(0), fPolarPhi(0)
+TParticle::TParticle()
 {
-  fMother[0]   = 0;
-  fMother[1]   = 0;
-  fDaughter[0] = 0;
-  fDaughter[1] = 0;
   fParticlePDG = 0;
 }
 
@@ -41,9 +35,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
-     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
-     else         fCalcMass = -TMath::Sqrt(-a2);
+     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
   }
 }
 
@@ -67,9 +59,7 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
-     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
-     else         fCalcMass = -TMath::Sqrt(-a2);
+     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
   }
 }
 
@@ -78,7 +68,25 @@ TParticle::TParticle(const TParticle &p)
 {
     // copy constructor
 
-   *this = p;
+  fPdgCode     = p.fPdgCode;
+  fStatusCode  = p.fStatusCode;
+  fMother[0]   = p.fMother[0];
+  fMother[1]   = p.fMother[1];
+  fDaughter[0] = p.fDaughter[0];
+  fDaughter[1] = p.fDaughter[1];
+  fWeight      = p.fWeight;
+  fCalcMass    = p.fCalcMass;
+  fPx          = p.fPx;
+  fPy          = p.fPy;
+  fPz          = p.fPz;
+  fE           = p.fE;
+  fVx          = p.fVx;
+  fVy          = p.fVy;
+  fVz          = p.fVz;
+  fVt          = p.fVt;
+  fPolarTheta  = p.fPolarTheta;
+  fPolarPhi    = p.fPolarPhi;
+  fParticlePDG = p.fParticlePDG;
 }
 
 //______________________________________________________________________________
@@ -216,10 +224,10 @@ void TParticle::Print(Option_t *) const
 //
 //  Print the internals of the primary vertex particle
 //
-   //TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
+   TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
    Printf("TParticle: %-13s  p: %8f %8f %8f Vertex: %8e %8e %8e %5d %5d %s",
           GetName(),Px(),Py(),Pz(),Vx(),Vy(),Vz(),
-          fMother[0],fMother[1]);
+          fMother[0],fMother[1],pdg->Type());
 }
 
 //______________________________________________________________________________

@@ -7,7 +7,7 @@
  * Description:
  *  Getting object size 
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -55,7 +55,7 @@ G__value *object;
     case G__PARAP2P2P:
       break;
     default:
-      G__fprinterr(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
+      fprintf(G__serr,"Internal error: G__sizeof() illegal reftype ID %d\n"
 	     ,object->obj.reftype.reftype);
       break;
     }
@@ -119,7 +119,7 @@ char *memname;
     var=var->next;
   }
 
-  G__fprinterr(G__serr,"Error: member %s not found in %s ",memname,tagname);
+  fprintf(G__serr,"Error: member %s not found in %s ",memname,tagname);
   G__genericerror((char*)NULL);
   return(-1);
 }
@@ -188,9 +188,6 @@ char *typename;
       break;
     case 'h':
     case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g':
-#endif
       result = sizeof(int);
       break;
     case 'r':
@@ -249,18 +246,9 @@ char *typename;
   if((strcmp(typename,"float")==0)||
      (strcmp(typename,"float")==0))
     return(sizeof(float));
-  if((strcmp(typename,"double")==0)
-#ifdef G__OLDIMPLEMENTATION1533
-     ||(strcmp(typename,"longdouble")==0)
-#endif
-     )
+  if((strcmp(typename,"double")==0)||
+     (strcmp(typename,"longdouble")==0))
     return(sizeof(double));
-#ifndef G__OLDIMPLEMENTATION1533
-  if(strcmp(typename,"longdouble")==0) {
-    int tagnum = G__defined_tagname("G__longdouble",2);
-    return(G__struct.size[tagnum]);
-  }
-#endif
   if(strcmp(typename,"void")==0)
 #ifndef G__OLDIMPLEMENTATION930
     return(sizeof(void*));
@@ -419,9 +407,6 @@ char *typenamein;
 	break;
       case 'h':
       case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-      case 'g':
-#endif
 	size = G__INTALLOC;
 	break;
       case 'k':
@@ -1192,9 +1177,6 @@ int objsize;
     break;
   case 'h':
   case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
     *(int*)(p) = (int)G__int(*pval);
     break;
   case 'k':

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.5 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.2 2000/11/21 16:01:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -24,8 +24,16 @@
 #ifndef ROOT_Gtypes
 #include "Gtypes.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
 #endif
 
 
@@ -60,7 +68,7 @@ public:
         virtual Style_t  GetTitleFont()   const {return fTitleFont;}
         virtual void     ResetAttAxis(Option_t *option="");
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
-        virtual void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
+        virtual void     SetNdivisions(Int_t n=510);           // *MENU*
         virtual void     SetAxisColor(Color_t color=1);        // *MENU*
         virtual void     SetLabelColor(Color_t color=1);       // *MENU*
         virtual void     SetLabelFont(Style_t font=62);        // *MENU*

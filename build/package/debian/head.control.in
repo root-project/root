@@ -1,6 +1,0 @@
-Source: root
-Section: math
-Priority: optional
-Build-Depends: libxpm4-dev @build-depends@ 
-Maintainer: Christian Holm <cholm@nbi.dk>
-Standards-Version: 3.0.1

@@ -1,23 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.1.1.2 2001/01/22 12:59:37 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
+// $Id: TObjectSet.cxx,v 1.1.1.2 2001/01/22 12:59:37 fisyak Exp $
 // $Log: TObjectSet.cxx,v $
-// Revision 1.4  2001/05/14 06:44:09  brun
-// Previous update of STAR classes from Valery was wrong.
-//
-// Revision 1.4  2001/03/24 21:26:00  fine
-// New method TDataSet::Intstance has been introduced
-//
-// Revision 1.3  2001/03/02 00:45:03  fine
-// TTable::SavePrimitive bug fixed
-//
-// Revision 1.1.1.3  2001/02/07 13:11:28  fisyak
-// *** empty log message ***
-//
-// Revision 1.3  2001/02/07 08:18:15  brun
-//
-// New version of the STAR classes compiling with no warnings.
-//
 // Revision 1.1.1.2  2001/01/22 12:59:37  fisyak
 // *** empty log message ***
 //
@@ -71,23 +55,7 @@ TObjectSet::TObjectSet(TObject *obj,Bool_t makeOwner) : TDataSet("unknown","TObj
 //_____________________________________________________________________________
 TObjectSet::~TObjectSet()
 {
-  if (fObj && IsOwner()) delete fObj;
-  fObj = 0;
-}
-
-//______________________________________________________________________________
-TObject *TObjectSet::AddObject(TObject *obj,Bool_t makeOwner)
-{
-  // Aliase for SetObject method
- return SetObject(obj,makeOwner);
-}
-
-//______________________________________________________________________________
-void TObjectSet::Browse(TBrowser *b)
-{
-  // Browse this dataset (called by TBrowser).
-   if (b && fObj) b->Add(fObj);
-  TDataSet::Browse(b);
+// Attn.: virtual  TObject::Delete will be called via virtual dtor of TDataSet
 }
 
 //_____________________________________________________________________________
@@ -98,27 +66,15 @@ void TObjectSet::Delete(Option_t *opt)
    fObj = 0;
    TDataSet::Delete();
 }
-//______________________________________________________________________________
-Bool_t TObjectSet::DoOwner(Bool_t done)
-{
- // Set / Reset the ownerships and returns the previous
- // status of the ownerships.
 
-  Bool_t own = IsOwner();
-  if (own != done) {
-    if (done) SetBit(kIsOwner);
-    else ResetBit(kIsOwner);
-  }
-  return own;
-}
 //______________________________________________________________________________
-TDataSet *TObjectSet::Instance() const
-{ 
- // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes 
- // derived from TDataSet (to support TDataSetIter::Mkdir for example)
- return instance();
+void TObjectSet::Browse(TBrowser *b)
+{
+  // Browse this dataset (called by TBrowser).
+   if (b && fObj) b->Add(fObj);
+  TDataSet::Browse(b);
 }
+
 //______________________________________________________________________________
 TObject *TObjectSet::SetObject(TObject *obj,Bool_t makeOwner)
 {
@@ -132,4 +88,25 @@ TObject *TObjectSet::SetObject(TObject *obj,Bool_t makeOwner)
    fObj = obj;
    DoOwner(makeOwner);
    return oldObject;
+}
+
+//______________________________________________________________________________
+TObject *TObjectSet::AddObject(TObject *obj,Bool_t makeOwner)
+{
+  // Aliase for SetObject method
+ return SetObject(obj,makeOwner);
+}
+
+//______________________________________________________________________________
+Bool_t TObjectSet::DoOwner(Bool_t done)
+{
+ // Set / Reset the ownerships and returns the previous
+ // status of the ownerships.
+
+  Bool_t own = IsOwner();
+  if (own != done) {
+    if (done) SetBit(kIsOwner);
+    else ResetBit(kIsOwner);
+  }
+  return own;
 }

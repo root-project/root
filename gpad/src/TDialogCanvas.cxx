@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.6 2001/08/08 15:23:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.3 2000/11/21 20:21:18 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -43,18 +43,7 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, UInt_t ww, UIn
 //*-*                    ========================
 
    SetFillColor(36);
-   fRefObject = 0;
-   fRefPad    = 0;
-}
-
-//_____________________________________________________________________________
-TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh)
-             : TCanvas(name,title,wtopx,wtopy,-ww,wh)
-{
-//*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
-
-   SetFillColor(36);
+   fEditable  = kFALSE;
    fRefObject = 0;
    fRefPad    = 0;
 }
@@ -72,7 +61,6 @@ void TDialogCanvas::Apply(const char *action)
 //*-*-*-*-*-*-*-*-*Called when the APPLY button is executed*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
 
-   if (!fRefPad) return;
    SetCursor(kWatch);
 
    TIter next(fPrimitives);
@@ -88,9 +76,7 @@ void TDialogCanvas::Apply(const char *action)
       }
    }
    fRefObject = refobj;
-   if (!gROOT->GetSelectedPad()) return;
-   gROOT->GetSelectedPad()->Modified();
-   gROOT->GetSelectedPad()->Update();
+
 }
 
 //______________________________________________________________________________

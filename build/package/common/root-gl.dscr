@@ -1,5 +1,0 @@
-short: OpenGL support for 3D rendering in ROOT
-long:
-This package provides an interface OpenGL for 3D rendering of
-geometries and so on. It's used extensively by the BRAHMS and STAR
-collaborations at Brookhaven National Laboratory for event displays. 

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with GCC 2.95.2 compiler
 
 PLATFORM      = sgi

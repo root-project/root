@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.2 2000/11/21 12:26:37 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TROOT.h"
 #include "TProofServ.h"
 
+TROOT root("Proofserv","The PROOF Server");
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -39,5 +40,5 @@ int main(int argc, char **argv)
 
    delete theApp;
 
-   return 0;
+   return(0);
 }

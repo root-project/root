@@ -293,7 +293,7 @@ const char* G__DataMemberInfo::FileName() {
     return((char*)NULL);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return((char*)NULL);
 #endif
@@ -315,7 +315,7 @@ int G__DataMemberInfo::LineNumber() {
     return(-1);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return(-1);
 #endif

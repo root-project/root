@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.34 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.16 2001/01/26 17:11:25 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -40,10 +40,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
-    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || defined(R__AIX) || \
+    defined(R__LINUX) || defined(R__SOLARIS) || defined(R__ALPHA) || \
+    defined(R__HIUX) || defined(R__FBSD)
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -51,37 +50,19 @@
 #if defined(ULTRIX) || defined(R__SUN)
 #   include <sgtty.h>
 #endif
-#if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
-    defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
+#if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || defined(R__SGI) || \
+    defined(R__HIUX) || defined(R__FBSD) || defined(R__LYNXOS)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(__alpha)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
 #   include <dlfcn.h>
 #endif
-#if defined(R__ALPHA)
-#   include <sys/mount.h>
-#   ifndef R__TRUE64
-    extern "C" int statfs(const char *file, struct statfs *buffer);
-#   endif
-#elif defined(R__MACOSX)
-#   include <sys/mount.h>
-    extern "C" int statfs(const char *file, struct statfs *buffer);
-#elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
-#   include <sys/vfs.h>
-#elif defined(R__FBSD)
-#   include <sys/param.h>
-#   include <sys/mount.h>
-#else
-#   include <sys/statfs.h>
-#endif
-
 #include <syslog.h>
 #include <sys/stat.h>
 #include <setjmp.h>
@@ -111,7 +92,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #if defined(R__SGI)
-#   include <net/soioctl.h>
+#include <net/soioctl.h>
 #endif
 #if defined(R__SOLARIS)
 #   include <sys/systeminfo.h>
@@ -154,8 +135,7 @@ extern "C" {
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
 #endif
-#if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX)
+#if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || defined(R__LYNXOS)
 #   define UTMP_NO_ADDR
 #endif
 
@@ -321,7 +301,7 @@ const char *TUnixSystem::GetError()
 
    Int_t err = GetErrno();
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
-    defined(R__FBSD) || defined(R__HURD)
+    defined(R__FBSD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
@@ -416,24 +396,38 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
+void TUnixSystem::IgnoreInterrupt(Bool_t ignore)
 {
-   // If reset is true reset the signal handler for the specified signal
-   // to the default handler, else restore previous behaviour.
+   // Ignore the interrupt signal if ignore == kTRUE else restore previous
+   // behaviour. Typically call ignore interrupt before writing to disk.
 
-   if (reset)
-      UnixResetSignal(sig);
-   else
-      UnixSignal(sig, SigHandler);
-}
+   static Bool_t ignoreInt = kFALSE;
+   static struct sigaction oldsigact;
 
-//______________________________________________________________________________
-void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
-{
-   // If ignore is true ignore the specified signal, else restore previous
-   // behaviour.
-
-   UnixIgnoreSignal(sig, ignore);
+   if (ignore != ignoreInt) {
+      ignoreInt = ignore;
+      if (ignore) {
+         struct sigaction sigact;
+#if defined(R__SUN)
+         sigact.sa_handler = (void (*)())SIG_IGN;
+#elif defined(R__SOLARIS)
+         sigact.sa_handler = (void (*)(int))SIG_IGN;
+#else
+         sigact.sa_handler = SIG_IGN;
+#endif
+         sigemptyset(&sigact.sa_mask);
+#if defined(SA_INTERRUPT)       // SunOS
+         sigact.sa_flags = SA_INTERRUPT;
+#else
+         sigact.sa_flags = 0;
+#endif
+         if (sigaction(SIGINT, &sigact, &oldsigact) < 0)
+            ::SysError("TUnixSystem::IgnoreInterrupt", "sigaction");
+      } else {
+         if (sigaction(SIGINT, &oldsigact, 0) < 0)
+            ::SysError("TUnixSystem::IgnoreInterrupt", "sigaction");
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -768,7 +762,6 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::access(path, mode) == 0)
       return kFALSE;
@@ -792,29 +785,13 @@ int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 1 set executable, bit 2 set directory,
+   //                       bit 3 set regular file
    // Modtime is modification time.
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    return UnixFilestat(path, id,  size, flags, modtime);
-}
-
-//______________________________________________________________________________
-int TUnixSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
-                           Long_t *blocks, Long_t *bfree)
-{
-   // Get info about a file system: id, bsize, bfree, blocks.
-   // Id      is file system type (machine dependend, see statfs())
-   // Bsize   is block size of file system
-   // Blocks  is total number of blocks in file system
-   // Bfree   is number of free blocks in file system
-   // The function returns 0 in case of success and 1 if the file system could
-   // not be stat'ed.
-
-   return UnixFSstat(path, id,  bsize, blocks, bfree);
 }
 
 //______________________________________________________________________________
@@ -842,8 +819,7 @@ int TUnixSystem::Symlink(const char *from, const char *to)
 //______________________________________________________________________________
 int TUnixSystem::Unlink(const char *name)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
-   // -1 in case of failure.
+   // Unlink, i.e. remove, a file or directory.
 
    struct stat finfo;
 
@@ -1030,7 +1006,7 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    char name[kMAXPATHLEN], file[kMAXPATHLEN];
    const char *ptr;
@@ -1281,7 +1257,9 @@ void TUnixSystem::Unload(const char *module)
 #ifdef NOCINT
    UnixDynUnload(module);
 #else
-   if (module) { TSystem::Unload(module); }
+   if (module) { }
+   // should call CINT unload file here, but does not work for sl's yet.
+   Warning("Unload", "CINT does not support unloading shared libs");
 #endif
 }
 
@@ -1516,7 +1494,7 @@ char *TUnixSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -1538,14 +1516,20 @@ int TUnixSystem::ConnectService(const char *servername, int port,
 //______________________________________________________________________________
 int TUnixSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
+   // Open a connection to a service on a server. Try 3 times with an
+   // interval of 1 second.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   return ConnectService(server, port, tcpwindowsize);
+   for (int i = 0; i < 3; i++) {
+      int fd = ConnectService(server, port, tcpwindowsize);
+      if (fd >= 0)
+         return fd;
+      sleep(1);
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -1705,7 +1689,7 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
 {
    // Send exactly length bytes from buffer. Use opt to send out-of-band
    // data (see TSocket). Returns the number of bytes sent or -1 in case of
-   // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // error.
 
    int flag;
 
@@ -1726,10 +1710,9 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
    }
 
    int n;
-   if ((n = UnixSend(sock, buf, length, flag)) <= 0) {
-      if (n == -1 && GetErrno() != EINTR)
-         Error("SendRaw", "cannot send buffer");
-      return n;
+   if ((n = UnixSend(sock, buf, length, flag)) < 0) {
+      Error("SendRaw", "cannot send buffer");
+      return -1;
    }
    return n;
 }
@@ -1931,7 +1914,6 @@ static struct signal_map {
    { SIGUSR2,  0, 0, "user-defined signal 2" }
 };
 
-
 //______________________________________________________________________________
 static void sighandler(int sig)
 {
@@ -1959,62 +1941,25 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #if defined(R__SUN)
       sigact.sa_handler = (void (*)())sighandler;
 #elif defined(R__SOLARIS)
-      sigact.sa_handler = sighandler;
+      sigact.sa_handler = (void (*)(int))sighandler;
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
 #  if defined(R__SGI64)
-      sigact.sa_handler = sighandler;
+       sigact.sa_handler = (void (*)(int))sighandler;
 #   else
-      sigact.sa_handler = (void (*)(...))sighandler;
+       sigact.sa_handler = (void (*)(...))sighandler;
 #  endif
 #else
       sigact.sa_handler = sighandler;
 #endif
       sigemptyset(&sigact.sa_mask);
-      sigact.sa_flags = 0;
 #if defined(SA_INTERRUPT)       // SunOS
-      sigact.sa_flags |= SA_INTERRUPT;
-#endif
-#if defined(SA_RESTART)
-      sigact.sa_flags |= SA_RESTART;
+      sigact.sa_flags = SA_INTERRUPT;
+#else
+      sigact.sa_flags = 0;
 #endif
       if (sigaction(gSignalMap[sig].code, &sigact,
                     gSignalMap[sig].oldhandler) < 0)
          ::SysError("TUnixSystem::UnixSignal", "sigaction");
-   }
-}
-
-//______________________________________________________________________________
-void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
-{
-   // If ignore is true ignore the specified signal, else restore previous
-   // behaviour.
-
-   static Bool_t ignoreSig[kMAXSIGNALS] = { kFALSE };
-   static struct sigaction oldsigact[kMAXSIGNALS];
-
-   if (ignore != ignoreSig[sig]) {
-      ignoreSig[sig] = ignore;
-      if (ignore) {
-         struct sigaction sigact;
-#if defined(R__SUN)
-         sigact.sa_handler = (void (*)())SIG_IGN;
-#elif defined(R__SOLARIS)
-         sigact.sa_handler = (void (*)(int))SIG_IGN;
-#else
-         sigact.sa_handler = SIG_IGN;
-#endif
-         sigemptyset(&sigact.sa_mask);
-#if defined(SA_INTERRUPT)       // SunOS
-         sigact.sa_flags = SA_INTERRUPT;
-#else
-         sigact.sa_flags = 0;
-#endif
-         if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
-      } else {
-         if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
-      }
    }
 }
 
@@ -2024,20 +1969,6 @@ const char *TUnixSystem::UnixSigname(ESignals sig)
    // Return the signal name associated with a signal.
 
    return gSignalMap[sig].signame;
-}
-
-//______________________________________________________________________________
-void TUnixSystem::UnixResetSignal(ESignals sig)
-{
-   // Restore old signal handler for specified signal.
-
-   if (gSignalMap[sig].oldhandler) {
-      // restore old signal handler
-      sigaction(gSignalMap[sig].code, gSignalMap[sig].oldhandler, 0);
-      delete gSignalMap[sig].oldhandler;
-      gSignalMap[sig].oldhandler = 0;
-      gSignalMap[sig].handler    = 0;
-   }
 }
 
 //______________________________________________________________________________
@@ -2213,10 +2144,9 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
    // Returns the next directory entry.
 
    DIR *dirp = (DIR*)dirp1;
-#if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
-    defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+#if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || defined(R__HPUX) || \
+    defined(R__LINUX) || defined(R__SOLARIS) || defined(R__ALPHA) || \
+    defined(R__HIUX) || defined(R__FBSD)
    struct dirent *dp;
 #else
    struct direct *dp;
@@ -2243,9 +2173,8 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 0 set executable, bit 1 set directory,
+   //                       bit 2 set regular file
    // Modtime is modification time.
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
@@ -2279,37 +2208,6 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
 }
 
 //______________________________________________________________________________
-int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
-                            Long_t *blocks, Long_t *bfree)
-{
-   // Get info about a file system: id, bsize, bfree, blocks.
-   // Id      is file system type (machine dependend, see statfs())
-   // Bsize   is block size of file system
-   // Blocks  is total number of blocks in file system
-   // Bfree   is number of free blocks in file system
-   // The function returns 0 in case of success and 1 if the file system could
-   // not be stat'ed.
-
-   struct statfs statfsbuf;
-#if defined(R__SGI) || (defined(R__SOLARIS) && !defined(R__LINUX))
-   if (statfs(path, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-      *id = statfsbuf.f_fstyp;
-      *bsize = statfsbuf.f_bsize;
-      *blocks = statfsbuf.f_blocks;
-      *bfree = statfsbuf.f_bfree;
- #else
-   if (statfs((char*)path, &statfsbuf) == 0) {
-      *id = statfsbuf.f_type;
-      *bsize = statfsbuf.f_bsize;
-      *blocks = statfsbuf.f_blocks;
-      *bfree = statfsbuf.f_bavail;
-#endif
-      return 0;
-   }
-   return 1;
-}
-
-//______________________________________________________________________________
 int TUnixSystem::UnixWaitchild()
 {
    // Wait till child is finished.
@@ -2333,7 +2231,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2420,7 +2318,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2563,8 +2461,7 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
 int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
-   // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // otherwise number of sent bytes.
 
    if (sock < 0) return -1;
 
@@ -2579,15 +2476,8 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 
    for (n = 0; n < length; n += nsent) {
       if ((nsent = send(sock, buf+n, length-n, flag)) <= 0) {
-         if (nsent == 0)
-            break;
-         if (GetErrno() == EWOULDBLOCK)
-            return -4;
-         else {
-            if (GetErrno() != EINTR)
-               ::SysError("TUnixSystem::UnixSend", "send");
-            return -1;
-         }
+         ::SysError("TUnixSystem::UnixSend", "send");
+         return nsent;
       }
       if (once)
          return nsent;

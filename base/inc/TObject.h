@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.16 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.8 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,12 +36,20 @@
 #ifndef ROOT_TStorage
 #include "TStorage.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 #ifdef WIN32
 #undef RemoveDirectory
+#endif
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
 #endif
 
 class TList;
@@ -60,9 +68,7 @@ enum EObjBits {
    kCanDelete        = BIT(0),   // if object in a list can be deleted
    kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
    kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
-   kIsReferenced     = BIT(4),   // if object is referenced by a TRef or TRefArray
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
-   kNoContextMenu    = BIT(8),   // if object does not want context menu
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
 };
 
@@ -104,17 +110,17 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
-   virtual TObject    *Clone(const char *newname="") const;
+   virtual TObject    *Clone() const;
    virtual Int_t       Compare(const TObject *obj) const;
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option="");
    virtual void        DrawClass() const; // *MENU*
-   virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
+   virtual void        DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, int* error=0);
-   virtual void        Execute(TMethod *method, TObjArray *params, int* error=0);
+   virtual void        Execute(const char *method,  const char *params);
+   virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
@@ -161,7 +167,6 @@ public:
    void     SetBit(UInt_t f) { fBits |= f & kBitMask; }
    void     ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
    Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
-   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling

@@ -1,140 +1,128 @@
-/*
+//  example of macro to add two histogram files containing the same histograms
+//  (in a directory structure) or ntuples/trees.
+//  Histograms are added in memory as well as profile histograms.
+//  ntuples and trees are merged.
+//  The resulting histograms are saved into a new file.
+//  original implementation : Rene Brun
+//  extensions by Dirk Geppert to support files with sub-directories
 
-  This macro will add histograms from a list of root files and write them
-  to a target root file. The target file is newly created and must not be
-  identical to one of the source files.
+//______________________________________________________________________
+// give the list of files below. Last file must be a NULL string
+const char *cfiles[] = {
+  "file1.root",
+  "file2.root",
+  ""};
+const char *outfile="file.root";
+//______________________________________________________________________
 
-  Syntax:
+TFile   *fnew;
+TList   *flist;
+TFile   *afile, *file1;
 
-  hist_add targetfile source1 source2 ...
+TH1     *h1, *h2;
+TTree   *t1, *t2;
+TObject *obj;
+TKey    *key;
 
-  Author: Sven A. Schmidt, sven.schmidt@cern.ch
-  Date:   13.2.2001
+void AddRecursive(TDirectory *root,TDirectory* node);
+//______________________________________________________________________
+//
+//
+//
+//______________________________________________________________________
+void hadd() {
 
-  This code is based on the hadd.C example by Rene Brun and Dirk Geppert,
-  which had a problem with directories more than one level deep.
-  (see macro hadd_old.C for this previous implementation).
-  
-  I have tested this macro on rootfiles with one and two dimensional 
-  histograms, and two levels of subdirectories. Feel free to send comments 
-  or bug reports to me.
+  // create the result file
+  fnew = new TFile(outfile,"RECREATE");
 
- */
+  //create a support list for the input files
+  flist = new TList();
 
-
-#include "TFile.h"
-#include "TH1.h"
-#include "TTree.h"
-#include "TKey.h"
-#include <string.h>
-#include <iostream.h>
-
-TList *FileList;
-TFile *Target;
-
-void MergeRootfile( TDirectory *target, TList *sourcelist );
-
-
-int main( int argc, char **argv ) {
-
-  FileList = new TList();
-
-  if ( argc < 4 ) {
-    cout << "Usage: " << argv[0] << " <target> <source1> <source2> ...\n";
-    cout << "supply at least two source files for this to make sense... ;-)\n";
-    exit( -1 );
+  //open all input files and insert them in the list of files
+  Int_t nfiles = 0;
+  while (strlen(cfiles[nfiles])) {
+    afile = new TFile(cfiles[nfiles]);
+    flist->Add(afile);
+    nfiles++;
   }
 
-  cout << "Target file: " << argv[1] << endl;
-  Target = TFile::Open( argv[1], "RECREATE" );
+  //Get a pointer to the first file
+  afile = file1 = (TFile*)flist->First();
 
-  for ( int i = 2; i < argc; i++ ) {
-    cout << "Source file " << i-1 << ": " << argv[i] << endl;
-    FileList->Add( TFile::Open( argv[i] ) );
-  }
+  AddRecursive(fnew,file1);
 
-  MergeRootfile( Target, FileList );
-
+  //fnew->ls();
+  fnew->Write();
+  fnew->Close();
+  delete fnew;
+  flist->Delete();
+  delete flist;
 }
 
+//______________________________________________________________________
+//
+//
+//
+//______________________________________________________________________
+void AddRecursive(TDirectory *root,TDirectory* node) {
 
+  static TDirectory *dact;
 
-// Merge all files from sourcelist into the target directory.
-// The directory level (depth) is determined by the target directory's
-// current level
-void MergeRootfile( TDirectory *target, TList *sourcelist ) {
+  TDirectory *dirsav;
 
-  //  cout << "Target path: " << target->GetPath() << endl;
-  TString path( (char*)strstr( target->GetPath(), ":" ) );
-  path.Remove( 0, 2 );
+  //We create an iterator to loop on all objects(keys) of first file
+  TIter nextkey(node->GetListOfKeys());
+  while (key = (TKey*)nextkey()) {
+    node->cd();
+    obj = key->ReadObj();
+    if (obj->IsA()->InheritsFrom("TTree")) { //case of a TTree or TNtuple
+      t1 = (TTree*)obj;
+      // this part still to be implemented
+      // use TChain::Merge instead
+    } elseif(obj->IsA()->InheritsFrom("TH1")) { //case of TH1 or TProfile
+      h1 = (TH1*)obj;
+      afile = (TFile*)flist->After(file1);
+      while (afile) { //loop on all files starting at second file
+        char* base=strstr(root->GetPath(),":"); base+=2;
+        //printf("base=%s\n",base);
 
-  TFile *first_source = (TFile*)sourcelist->First();
-  first_source->cd( path );
-  TDirectory *current_sourcedir = gDirectory;
-
-  // loop over all keys in this directory
-  TIter nextkey( current_sourcedir->GetListOfKeys() );
-  while ( TKey *key = (TKey*)nextkey() ) {
-
-    // read object from first source file
-    first_source->cd( path );
-    TObject *obj = key->ReadObj();
-
-    if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
-      // descendant of TH1 -> merge it
-
-      //      cout << "Merging histogram " << obj->GetName() << endl;
-      TH1 *h1 = (TH1*)obj;
-
-      // loop over all source files and add the content of the
-      // correspondant histogram to the one pointed to by "h1"
-      TFile *nextsource = (TFile*)sourcelist->After( first_source );
-      while ( nextsource ) {
-        
-        // make sure we are at the correct directory level by cd'ing to path
-        nextsource->cd( path );
-        TH1 *h2 = (TH1*)gDirectory->Get( h1->GetName() );
-        if ( h2 ) {
-          h1->Add( h2 );
-          delete h2; // don't know if this is necessary, i.e. if 
-                     // h2 is created by the call to gDirectory above.
+        dirsav=gDirectory;
+        afile->cd(base);
+        h2 = (TH1*)gDirectory->Get(h1->GetName());
+        dirsav->cd();
+        if (h2) { // here we should check that we can add
+          //printf("adding histo %s to %s\n",h2->GetName(),h1->GetName());
+          h1->Add(h2);
+          delete h2;
         }
-
-        nextsource = (TFile*)sourcelist->After( nextsource );
+        afile = (TFile*)flist->After(afile);
       }
-
-    } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
-      // it's a subdirectory
-
-      cout << "Found subdirectory " << obj->GetName() << endl;
-
-      // create a new subdir of same name and title in the target file
-      target->cd();
-      TDirectory *newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
-
-      // newdir is now the starting point of another round of merging
-      // newdir still knows its depth within the target file via
-      // GetPath(), so we can still figure out where we are in the recursion
-      MergeRootfile( newdir, sourcelist );
-
-    } else {
-      // object is of no type that we know or can handle
-      cout << "Unknown object type, name: " 
-           << obj->GetName() << " title: " << obj->GetTitle() << endl;
+    } elseif(obj->IsA()->InheritsFrom("TDirectory")) { //case of TDirectory
+      // recursion
+      // printf("Found TDirectory name=%s title=%s\n",
+      //     obj->GetName(),obj->GetTitle());
+      root->cd();
+      dact=root->mkdir(obj->GetName(),obj->GetTitle());
+      dact->cd();
+      TObject *objsave = obj;
+      TKey    *keysave = key;      
+      AddRecursive(dact,(TDirectory*)obj);
+      obj = objsave;
+      key = keysave;
+    } else { //another object
+      printf("anotherobjname=%s, title=%s\n",obj->GetName(),obj->GetTitle());
     }
 
-    // now write the merged histogram (which is "in" obj) to the target file
-    // note that this will just store obj in the current directory level,
-    // which is not persistent until the complete directory itself is stored
-    // by "target->Write()" below
-    if ( obj ) {
-      target->cd();
-      obj->Write( key->GetName() );
+    // write node object, modified or not into fnew
+    if (obj) {
+      root->cd();
+      obj->Write(key->GetName());
+      delete obj;
+      obj=NULL;
     }
-
-  } // while ( ( TKey *key = (TKey*)nextkey() ) )
-
-  // save modifications to target file
-  target->Write();
-
+  }
+  root->cd();
 }
+
+
+

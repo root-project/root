@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.3 2001/05/10 14:31:48 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -34,7 +34,6 @@ class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
 class TGStatusBar;
-class TRootContainer;
 
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
@@ -62,6 +61,8 @@ private:
 
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
+   UInt_t               fCwidth;     // width of canvas container
+   UInt_t               fCheight;    // height of canvas container
    Int_t                fButton;     // currently pressed button
 
    void     CreateCanvas(const char *name);
@@ -79,7 +80,6 @@ public:
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootCanvas();
 
-   void     Close();
    void     ForceUpdate() { Layout(); }
    void     FitCanvas();
    void     GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.9 2002/01/05 17:15:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.5 2000/09/08 07:40:59 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -23,9 +23,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 #ifndef ROOT_TDatime
 #include "TDatime.h"
@@ -80,18 +77,13 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        FillBuffer(char *&buffer);
-   virtual TKey       *FindKey(const char *keyname) const;
-   virtual TKey       *FindKeyAny(const char *keyname) const;
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
-   virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
-   TDatime            &GetCreationDate() {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
-   virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
+   virtual TKey       *GetKey(const char *name, const Short_t cycle=9999);
    TList              *GetList() const { return fList; }
    TList              *GetListOfKeys() const { return fKeys; }
-   TDatime            &GetModificationDate() {return fDatimeM;}
    TObject            *GetMother() const { return fMother; }
    virtual Int_t       GetNkeys() const {return fKeys->GetSize();}
    virtual Seek_t      GetSeekDir() const { return fSeekDir; }

@@ -11,13 +11,10 @@ void pclient(int niter = 100, int bsize = 500000, int nsocks = 5)
    // "localhost" in the TPSocket ctor below to the desried hostname.
 
    // Open connection to server
-   TPSocket *sock = new TPSocket("192.168.1.2", 9090, nsocks);
-   //TPSocket *sock = new TPSocket("pcroot2", 9090, nsocks);
+   TPSocket *sock = new TPSocket("localhost", 9090, nsocks, 256000);
 
    char *buf = new char[bsize];
    memset(buf, 65, bsize);
-
-   sock->Send(niter, bsize);
 
    // send dat to server
    for (int i = 0; i < niter; i++) {

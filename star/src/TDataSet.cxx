@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.11 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1.1.4 2001/01/22 12:59:36 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,9 +19,9 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.11 2002/01/23 17:52:51 rdm Exp $"
+    "$Id: TDataSet.cxx,v 1.1.1.4 2001/01/22 12:59:36 fisyak Exp $"
 };
-#include "Riostream.h"
+#include <iostream.h>
 #include "TSystem.h"
 #include "TDataSetIter.h"
 #include "TDataSet.h"
@@ -302,7 +302,7 @@ void TDataSet::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TObject *TDataSet::Clone(const char*) const {
+TObject *TDataSet::Clone() const {
    return new TDataSet(*this);
 }
 
@@ -444,14 +444,6 @@ void TDataSet::ls(Int_t depth) const
     TROOT::DecreaseDirLevel();
   }
 }
-//______________________________________________________________________________
-TDataSet *TDataSet::Instance() const
-{
- // apply the class default ctor to instantiate a new object of the same kind.
- // This is a base method to be overriden by the classes
- // derived from TDataSet (to support TDataSetIter::Mkdir for example)
- return instance();
-}
 
 //______________________________________________________________________________
 Bool_t TDataSet::IsThisDir(const Char_t *dirname,int len,int ignorecase) const
@@ -514,7 +506,7 @@ void TDataSet::PrintContents(Option_t *opt) const {
   // This is to allow to sepoarate navigation and the custom invormation
   // in the derived classes (see; TTable::PrintContents for example
   if (opt) { /* no used */ }
-  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
 }
 
 //______________________________________________________________________________
@@ -729,8 +721,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
       while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
         // if the "new" set does contain the dataset
         // with the same name as ours update it too
-        // (We do not update itself (oldset == newset)
-        if ( (oldset != newset) && oldset->IsThisDir(newname) ) {
+        if (oldset->IsThisDir(newname)) {
            oldset->Update(newset);
            found = kTRUE;
         }

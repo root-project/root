@@ -64,8 +64,8 @@ fpos_t *position;
 G__sunos_nosupport(funcname)
 char *funcname;
 {
-	G__fprinterr(
-		"Limitation: %s() not supported for SunOS\n",funcname);
+	fprintf(G__serr
+		,"Limitation: %s() not supported for SunOS\n",funcname);
 }	
 
 /************************************************************************

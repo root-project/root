@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name$:$Id$ */
 /* Author: */
 
 /* Demangler for GNU C++
@@ -362,7 +362,7 @@ cplus_demangle_opname (opname, result, options)
 		      strcat (result, optable[i].out);
 		      ret = 1;
 		      break;
-		    }
+		    }		
 		}
 	    }
 	}
@@ -635,7 +635,7 @@ demangle_signature (work, mangled, declp)
 	      }
 	    oldmangled = NULL;
 	    break;
-
+	
 	  case 'S':
 	    /* Static member function */
 	    if (oldmangled == NULL)
@@ -655,7 +655,7 @@ demangle_signature (work, mangled, declp)
 	    (*mangled)++;
 	    work -> const_type = 1;
 	    break;
-
+	
 	  case '0': case '1': case '2': case '3': case '4':
 	  case '5': case '6': case '7': case '8': case '9':
 	    if (oldmangled == NULL)
@@ -673,7 +673,7 @@ demangle_signature (work, mangled, declp)
 	      }
 	    oldmangled = NULL;
 	    break;
-
+	
 	  case 'F':
 	    /* Function */
 	    /* ARM style demangling includes a specific 'F' character after
@@ -696,7 +696,7 @@ demangle_signature (work, mangled, declp)
 	      }
 	    success = demangle_args (work, mangled, declp);
 	    break;
-
+	
 	  case 't':
 	    /* G++ Template */
 	    string_init(&trawname);
@@ -833,10 +833,12 @@ demangle_template (work, mangled, tname, trawname)
   int success = 0;
   int done;
   const char *old_p;
+  const char *start;
   int symbol_len;
   string temp;
 
   (*mangled)++;
+  start = *mangled;
   /* get template name */
   if ((r = consume_count (mangled)) == 0 || strlen (*mangled) < r)
     {
@@ -900,7 +902,7 @@ demangle_template (work, mangled, tname, trawname)
 	  string_append (tname, "=");
 */
 	  while (*old_p && !done)
-	    {
+	    {	
 	      switch (*old_p)
 		{
 		  case 'P':
@@ -955,7 +957,7 @@ demangle_template (work, mangled, tname, trawname)
 		  string_appendn (tname, "-", 1);
 		  (*mangled)++;
 		}
-	      while (isdigit (**mangled))
+	      while (isdigit (**mangled))	
 		{
 		  string_appendn (tname, *mangled, 1);
 		  (*mangled)++;
@@ -989,7 +991,7 @@ demangle_template (work, mangled, tname, trawname)
 		  string_appendn (tname, "-", 1);
 		  (*mangled)++;
 		}
-	      while (isdigit (**mangled))
+	      while (isdigit (**mangled))	
 		{
 		  string_appendn (tname, *mangled, 1);
 		  (*mangled)++;
@@ -998,7 +1000,7 @@ demangle_template (work, mangled, tname, trawname)
 		{
 		  string_appendn (tname, ".", 1);
 		  (*mangled)++;
-		  while (isdigit (**mangled))
+		  while (isdigit (**mangled))	
 		    {
 		      string_appendn (tname, *mangled, 1);
 		      (*mangled)++;
@@ -1008,7 +1010,7 @@ demangle_template (work, mangled, tname, trawname)
 		{
 		  string_appendn (tname, "e", 1);
 		  (*mangled)++;
-		  while (isdigit (**mangled))
+		  while (isdigit (**mangled))	
 		    {
 		      string_appendn (tname, *mangled, 1);
 		      (*mangled)++;
@@ -1220,7 +1222,7 @@ DESCRIPTION
 	the mangled name.  Upon exit, it should point to the first character
 	of the signature if demangling was successful, or to the first
 	unconsumed character if demangling of the prefix was unsuccessful.
-
+	
 	Returns 1 on success, 0 otherwise.
  */
 
@@ -1732,7 +1734,7 @@ demangle_qualified (work, mangled, result, isfuncname, append)
 	  if (!success) break;
 	}
       else
-        {
+        {	
 	  namelength = consume_count (mangled);
       	  if (strlen (*mangled) < namelength)
 	    {
@@ -2355,7 +2357,7 @@ demangle_args (work, mangled, declp)
       if ((**mangled == 'N') || (**mangled == 'T'))
 	{
 	  temptype = *(*mangled)++;
-
+	
 	  if (temptype == 'N')
 	    {
 	      if (!get_count (mangled, &r))
@@ -2599,7 +2601,7 @@ demangle_function_name (work, mangled, declp, scan)
 		      string_append (declp, "operator");
 		      string_append (declp, optable[i].out);
 		      break;
-		    }
+		    }		
 		}
 	    }
 	}
@@ -2894,7 +2896,7 @@ main (argc, argv)
 	    {
 	      int skip_first = strip_underscore && i > 1 && mbuffer[0] == '_';
 	      mbuffer[i] = 0;
-
+	
 	      result = cplus_demangle (mbuffer+skip_first,
 				       DMGL_PARAMS | DMGL_ANSI);
 	      if (result)

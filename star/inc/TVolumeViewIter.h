@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.h,v 1.2 2001/05/29 20:55:28 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.h,v 1.1.1.1 2000/11/27 22:57:14 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 /*************************************************************************
@@ -34,7 +34,7 @@ public:
      virtual void            Reset(TDataSet *l=0,Int_t depth=0);
 
      virtual TDataSet       *operator[](const Char_t *path);
-     TVolumePosition        *operator[](Int_t level);
+     TVolumePosition        *operator[](Int_t level) const ;
 
      TVolumePosition        *UpdateTempMatrix(TVolumePosition *curPosition);
      void                    ResetPosition(Int_t level=0, TVolumePosition *newPosition=0);

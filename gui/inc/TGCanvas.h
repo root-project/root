@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.4 2000/10/11 16:12:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
 public:
    TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kChildFrame,
-              ULong_t back = GetDefaultFrameBackground());
+              ULong_t back = fgDefaultFrameBackground);
 
    TGFrame *GetContainer() const { return fContainer; }
    void SetContainer(TGFrame *f);
@@ -74,7 +74,7 @@ public:
 
    TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
             UInt_t options = kSunkenFrame | kDoubleBorder,
-            ULong_t back = GetDefaultFrameBackground());
+            ULong_t back = fgDefaultFrameBackground);
    virtual ~TGCanvas();
 
    TGFrame      *GetContainer() const { return fVport->GetContainer(); }

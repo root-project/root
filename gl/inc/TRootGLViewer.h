@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.3 2001/04/11 17:28:08 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -31,22 +31,15 @@
 #ifndef GL_RootGLU
 #include "TRootGLU.h"
 #endif
-
-#ifdef GDK_WIN32
-#ifndef GL_RootWGL
-#include "TRootWGL.h"
-#endif
-#else
 #ifndef GL_RootGLX
 #include "TRootGLX.h"
-#endif
 #endif
 
 class TGCanvas;
 class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
-class TGLContainer;
+
 
 class TRootGLViewer : public TGMainFrame, public TGLViewerImp {
 
@@ -63,15 +56,10 @@ private:
    TGLayoutHints  *fMenuBarHelpLayout;  // layout hint for help menu in menubar
    TGLayoutHints  *fCanvasLayout;       // layout for canvas widget
 
-#ifndef GDK_WIN32
    Display        *fDpy;        // X Display
    XVisualInfo    *fVisInfo;    // X visual info
    GLXContext      fCtx;        // GLx context
    Window          fGLWin;      // GLx window
-#else
-   HGLRC           fCtx;        // GL context
-   GdkWindow      *fGLWin;      // GL window
-#endif
    Int_t           fButton;     // Currently pressed button
 
    void     CreateViewer(const char *name);

@@ -173,7 +173,7 @@ struct G__breakcontinue_list *pbreakcontinue;
       G__asm_inst[G__pbreakcontinue->destination] = continue_dest;
     }
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"  assigned %x %d JMP %lx  break,continue\n"
+    if(G__asm_dbg) fprintf(G__serr,"  assigned %lx %ld JMP %lx  break,continue\n"
 			   ,G__pbreakcontinue->destination
 			   ,G__pbreakcontinue->breakcontinue
 			   ,G__asm_inst[G__pbreakcontinue->destination]);
@@ -206,7 +206,7 @@ char *statement;
     G__mparen=1;
     G__exec_statement();
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile reset\n");
+    if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset\n");
 #endif
     G__no_exec=0;
     G__breaksignal=store_breaksignal;
@@ -307,7 +307,7 @@ int G__ignore_catch()
     fseek(G__ifile.fp,-1,SEEK_CUR);
     fgetpos(G__ifile.fp,&fpos1);
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CATCH\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"%3x: CATCH\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__CATCH;
     G__asm_inst[G__asm_cp+1]=G__ifile.filenum;
@@ -358,7 +358,7 @@ char* statement;
   if(G__asm_noverflow) {
 #ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"bytecode compile aborted by throw statement");
+      fprintf(G__serr,"bytecode compile aborted by throw statement");
       G__printlinenum();
     }
 #endif
@@ -375,7 +375,7 @@ char* statement;
 #ifndef G__OLDIMPLEMENTATION1270
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: THROW\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr ,"%3x: THROW\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__THROW;
       G__inc_cp_asm(1,0);
@@ -419,7 +419,7 @@ int G__free_exceptionbuffer()
     else G__globalvarpointer = G__PVOID;
     sprintf(destruct,"~%s()",G__fulltagname(G__tagnum,1));
     if(G__dispsource) {
-      G__fprinterr(G__serr,"!!!Destructing exception buffer %s",destruct);
+      fprintf(G__serr,"!!!Destructing exception buffer %s",destruct);
       G__printlinenum();
     }
     G__getfunction(destruct,&dmy ,G__TRYDESTRUCTOR);
@@ -498,19 +498,6 @@ G__value *presult;
 #endif
     *presult=G__getexpr(statement);
   }
-#ifndef G__OLDIMPLEMENTATION1515
-  else if(*pc=='(') {
-    int len = strlen(statement);
-    statement[len++] = *pc;
-    *pc = G__fgetstream_newtemplate(statement+len,")");
-    len = strlen(statement);
-    statement[len++] = *pc;
-#ifdef G__ASM
-    if(G__asm_noverflow) G__asm_clear();
-#endif
-    *presult=G__getexpr(statement);
-  }
-#endif
   /* macro function without ';' at the end */
   else {
     if(G__breaksignal&& G__beforelargestep(statement,piout,plargestep)>1) {
@@ -518,7 +505,7 @@ G__value *presult;
     }
     *presult=G__execfuncmacro(statement,piout);
     if(0==(*piout))  {
-      G__fprinterr(G__serr,"Warning: %s Missing ';'",statement );
+      fprintf(G__serr ,"Warning: %s Missing ';'",statement );
       G__printlinenum();
     }
     fseek(G__ifile.fp,-1,SEEK_CUR);
@@ -594,11 +581,6 @@ char *statement;
 #ifndef G__OLDIMPLEMENTATION410
   if(strcmp(statement,"#line")==0) {
     G__setline(statement,c,&iout);
-#ifndef G__OLDIMPLEMENTATION1592
-    /* restore statement[0] as we found it because the
-       callers might look at it! */
-    statement[0]='#';
-#endif
     return(1);
   }
 #endif
@@ -835,28 +817,6 @@ int *piout,*pspaceflag,mparen;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1584
-/***********************************************************************
-* G__toLowerString
-***********************************************************************/
-void G__toUniquePath(s)
-char *s;
-{
-  int i=0,j=0;
-  char *d;
-  if(!s) return;
-  d = (char*)malloc(strlen(s)+1);
-  while(s[i]) {
-    d[j] = tolower(s[i]);
-    if(i && '\\'==s[i] && '\\'==s[i-1]) { /* do nothing */ }
-    else { ++j; }
-    ++i;
-  }
-  d[j] = 0;
-  strcpy(s,d);
-  free((void*)d);
-}
-#endif
 
 /***********************************************************************
 * G__setline()
@@ -904,13 +864,6 @@ int *piout;
 	  sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
 	  len=strlen(sysinclude);
 	  lenstl=strlen(sysstl);
-#ifndef G__OLDIMPLEMENTATION1584
-#ifdef G__WIN32
-	  G__toUniquePath(sysinclude);
-	  G__toUniquePath(sysstl);
-	  G__toUniquePath(statement);
-#endif
-#endif
 	  if(strncmp(sysinclude,statement+1,(size_t)len)==0||
 	     strncmp(sysstl,statement+1,(size_t)lenstl)==0) {
 	    G__globalcomp=G__NOLINK;
@@ -997,13 +950,9 @@ int *piout;
 	    G__ifile.filenum = null_entry;
 	  }
 	  else {
-#ifndef G__OLDIMPLEMENTATION1601
-	    if(G__nfile==G__gettempfilenum()+1) {
-#else
 	    if(G__nfile==G__MAXFILE) {
-#endif
-	      G__fprinterr(G__serr,
-		  "Limitation: Sorry, can not create any more file entry\n");
+	      fprintf(G__serr
+		  ,"Limitation: Sorry, can not create any more file entry\n");
 	    }
 	    else {
 	      G__srcfile[G__nfile].hash=hash;
@@ -1079,9 +1028,6 @@ int *piout;
 int G__skip_comment()
 {
   char statement[5];
-#ifndef G__OLDIMPLEMENTATION1616
-  int c;
-#endif
   statement[0]=G__fgetc();
   statement[1]=G__fgetc();
   statement[2]='\0';
@@ -1097,22 +1043,12 @@ int G__skip_comment()
 #else
     statement[0]=statement[1];
 #endif
-#ifndef G__OLDIMPLEMENTATION1616
-    if(EOF==(c=G__fgetc())) {
-      G__genericerror("Error: unexpected /* ...EOF");
-      if(G__key!=0) system("key .cint_key -l execute");
-      G__eof=2;
-      return(EOF);
-    }
-    statement[1] = c;
-#else
     if(EOF==(statement[1]=G__fgetc())) {
       G__genericerror("Error: unexpected /* ...EOF");
       if(G__key!=0) system("key .cint_key -l execute");
       G__eof=2;
       return(EOF);
     }
-#endif
   }
   return(0);
 }
@@ -1328,10 +1264,10 @@ int elifskip;
 	)&&
        ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
-      G__fprinterr(G__serr, "# conditional interpretation, SKIPPED");
-      G__fprinterr(G__serr,"\n%-5d",G__ifile.line_number-1);
-      G__fprinterr(G__serr,"%s",arg[0]);
-      G__fprinterr(G__serr,"\n%-5d",G__ifile.line_number);
+      fprintf(G__serr, "# conditional interpretation, SKIPPED");
+      fprintf(G__serr,"\n%-5d",G__ifile.line_number-1);
+      fprintf(G__serr,"%s",arg[0]);
+      fprintf(G__serr,"\n%-5d",G__ifile.line_number);
     }
   }
 }
@@ -1559,7 +1495,7 @@ G__value G__exec_do()
     asm_start_pc = G__asm_cp;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Loop compile start");
+      fprintf(G__serr,"Loop compile start");
       G__printlinenum();
     }
 #endif
@@ -1596,9 +1532,7 @@ G__value G__exec_do()
   if(result.type==G__block_break.type) {
     switch(result.obj.i) {
     case G__BLOCK_BREAK:
-#ifdef G__OLDIMPLEMENTATION1625 /* Don't know why following line is here */
-      G__fignorestream(";"); 
-#endif
+      G__fignorestream(";");
       if(result.ref==G__block_goto.ref) {
 	/* free breakcontinue buffer */
 	if(allocflag) G__free_breakcontinue_list(store_pbreakcontinue);
@@ -1614,7 +1548,7 @@ G__value G__exec_do()
     case G__BLOCK_CONTINUE:
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set(%d)\n"
+	if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set(%d)\n"
 			       ,G__no_exec_compile);
 #endif
 	/* At this point, G__no_exec_compile must be 1 but not sure */
@@ -1623,7 +1557,7 @@ G__value G__exec_do()
 	G__mparen=1;
 	G__exec_statement();
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile reset\n");
+	if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset\n");
 #endif
 	G__no_exec_compile=store_no_exec_compile;
       }
@@ -1637,7 +1571,7 @@ G__value G__exec_do()
   /* G__fignorestream("("); */
   G__fgetstream(condition,"(");
   if(strcmp(condition,"while")!=0) {
-    G__fprinterr(G__serr,"Syntax error: do{}%s(); Should be do{}while(); FILE:%s LINE:%d\n"
+    fprintf(G__serr,"Syntax error: do{}%s(); Should be do{}while(); FILE:%s LINE:%d\n"
 	    ,condition
 	    ,G__ifile.name
 	    ,G__ifile.line_number);
@@ -1676,7 +1610,7 @@ G__value G__exec_do()
      * CNDJMP
      ****************************/
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CNDJMP\n" ,G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"%3x: CNDJMP\n" ,G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__CNDJMP;
     G__asm_inst[G__asm_cp+1]=G__asm_cp+4;
@@ -1685,7 +1619,7 @@ G__value G__exec_do()
      * JMP 0
      ****************************/
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMP %x\n",G__asm_cp,asm_start_pc);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: JMP %x\n",G__asm_cp,asm_start_pc);
 #endif
     G__asm_inst[G__asm_cp]=G__JMP;
     G__asm_inst[G__asm_cp+1]=asm_start_pc;
@@ -1730,7 +1664,7 @@ G__value G__exec_do()
 #endif
       G__ifile.line_number=store_line_number;
       fsetpos(G__ifile.fp,&store_fpos);
-      if(G__debug) G__fprinterr(G__serr,"\n%-5d",G__ifile.line_number);
+      if(G__debug) fprintf(G__serr,"\n%-5d",G__ifile.line_number);
       G__no_exec=0;
       G__mparen=0;
       result=G__exec_statement();
@@ -1772,7 +1706,7 @@ G__value G__exec_do()
   G__disp_mask=10000;
   G__fignorestream(";");
   G__disp_mask=0;
-  if(G__debug) G__fprinterr(G__serr,";");
+  if(G__debug) fprintf(G__serr,";");
   
 #ifdef G__ASM
   G__asm_noverflow = asm_exec && store_asm_noverflow;
@@ -1808,7 +1742,7 @@ char *statement;
     if((G__debug||G__break||G__step)&&
        ((G__prerun!=0)||(G__no_exec==0))&&
        (G__disp_mask==0)){
-      G__fprinterr(G__serr,"}\n");
+      fprintf(G__serr,"}\n");
     }
   }
 
@@ -1833,7 +1767,7 @@ char *statement;
 
   if(G__no_exec_compile) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RTN_FUNC\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"%3x: RTN_FUNC\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__RTN_FUNC;
     if(statement[0]) G__asm_inst[G__asm_cp+1] = 1;
@@ -1845,26 +1779,6 @@ char *statement;
     G__return=G__RETURN_NORMAL;
   }
   return(buf);
-}
-
-/***********************************************************************
- * G__display_tempobject()
- ***********************************************************************/
-void G__display_tempobject(action) 
-char* action;
-{
-  struct G__tempobject_list *ptempbuf = G__p_tempbuf;
-  G__fprinterr(G__serr,"\n%s ",action);
-  while(ptempbuf) {
-    G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level
-	    ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
-			    ,ptempbuf->obj.typenum
-			    ,ptempbuf->obj.obj.reftype.reftype
-			    ,ptempbuf->obj.isconst)
-	    ,(void*)ptempbuf->obj.obj.i);
-    ptempbuf = ptempbuf->prev;
-  }
-  G__fprinterr(G__serr,"\n");
 }
 
 /***********************************************************************
@@ -1881,15 +1795,7 @@ void G__free_tempobject()
   int store_tagnum;
   int iout=0;
   int store_return;
-#ifndef G__OLDIMPLEMENTATION1596
-   /* The only 2 potential risks of making this a static are
-    * - a destructor indirectly provokes a call to G__free_tempobject
-    * - multi-thread application (but the rest of CINT is not 
-    *   multi-threadable anyway). */
-  static char statement[G__ONELINE];
-#else
   char statement[G__ONELINE];
-#endif
   struct G__tempobject_list *store_p_tempbuf;
 
 #ifndef G__OLDIMPLEMENTATION1164
@@ -1900,10 +1806,6 @@ void G__free_tempobject()
      ) return;
 #endif
 
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("freetemp");
-#endif
-
   /*****************************************************
    * free temp object buffer
    *****************************************************/
@@ -1912,8 +1814,13 @@ void G__free_tempobject()
 
 #ifdef G__DEBUG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"free_tempobject(%d)=0x%lx\n"
+#ifndef G__FONS31
+      fprintf(G__serr,"free_tempobject(%d)=0x%lx\n"
 	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
+#else
+      fprintf(G__serr,"free_tempobject(%d)=0x%x\n"
+	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);
+#endif
     }
 #endif
     
@@ -1931,7 +1838,7 @@ void G__free_tempobject()
 #endif
        ) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETTEMP\n" ,G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr ,"%3x: SETTEMP\n" ,G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__SETTEMP;
       G__inc_cp_asm(1,0);
@@ -1944,26 +1851,24 @@ void G__free_tempobject()
     store_return=G__return;
     G__return=G__RETURN_NON;
     
-#ifndef G__OLDIMPLEMENTATION1516
-    if(0==G__p_tempbuf->no_exec
-#ifndef G__OLDIMPLEMENTATION1626
-       || 1==G__no_exec_compile
+    if(G__dispsource) {
+#ifndef G__FONS31
+      fprintf(G__serr
+	      ,"!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
+	      ,G__struct.name[G__tagnum]
+	      ,G__p_tempbuf->obj.obj.i
+	      ,G__p_tempbuf->level,G__templevel);
+#else
+      fprintf(G__serr
+	      ,"!!!Destroy temp object (%s)0x%x createlevel=%d destroylevel=%d\n"
+	      ,G__struct.name[G__tagnum]
+	      ,G__p_tempbuf->obj.obj.i
+	      ,G__p_tempbuf->level,G__templevel);
 #endif
-       ) {
-#endif
-      if(G__dispsource) {
-	G__fprinterr(G__serr,
-		     "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
-		     ,G__struct.name[G__tagnum]
-		     ,G__p_tempbuf->obj.obj.i
-		     ,G__p_tempbuf->level,G__templevel);
-      }
-      
-      sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
-      G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
-#ifndef G__OLDIMPLEMENTATION1516
     }
-#endif
+    
+    sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
+    G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -1978,7 +1883,7 @@ void G__free_tempobject()
 #endif
        ) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: FREETEMP\n" ,G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr ,"%3x: FREETEMP\n" ,G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp] = G__FREETEMP;
       G__inc_cp_asm(1,0);
@@ -1994,13 +1899,14 @@ void G__free_tempobject()
       G__p_tempbuf = store_p_tempbuf;
       if(G__dispsource) {
 	if(G__p_tempbuf->obj.obj.i==0) {
-	  G__fprinterr(G__serr,"!!!No more temp object\n");
+	  fprintf(G__serr
+		  ,"!!!No more temp object\n");
 	}
       }
     }
     else {
       if(G__dispsource) {
-	G__fprinterr(G__serr,"!!!no more temp object\n");
+	fprintf(G__serr,"!!!no more temp object\n");
       }
     }
   }
@@ -2028,9 +1934,6 @@ char *string;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = 0;
-#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc(strlen(string)+1);
@@ -2042,8 +1945,13 @@ char *string;
 
 #ifdef G__DEBUG
   if(G__asm_dbg)
-    G__fprinterr(G__serr,"alloc_tempstring(%s)=0x%lx\n",string
+#ifndef G__FONS31
+    fprintf(G__serr,"alloc_tempstring(%s)=0x%lx\n",string
 	    ,G__p_tempbuf->obj.obj.i);
+#else
+    fprintf(G__serr,"alloc_tempstring(%s)=0x%x\n",string
+	    ,G__p_tempbuf->obj.obj.i);
+#endif
 #endif
 
   return(G__p_tempbuf->obj);
@@ -2078,9 +1986,6 @@ int tagnum,typenum;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
@@ -2091,12 +1996,14 @@ int tagnum,typenum;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-    G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
+#ifndef G__FONS31
+    fprintf(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
 	    G__p_tempbuf->obj.obj.i);
-  }
+#else
+    fprintf(G__serr,"alloc_tempobject(%d,%d)=0x%x\n",tagnum,typenum,
+	    G__p_tempbuf->obj.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("alloctemp");
+  }
 #endif
 }
 
@@ -2115,7 +2022,7 @@ G__value reg;
 {
   struct G__tempobject_list *store_p_tempbuf;
 
-  /* G__ASSERT( 'u'==reg.type || '\0'==reg.type ); */
+  G__ASSERT( 'u'==reg.type || '\0'==reg.type );
 
 #ifndef G__OLDIMPLEMENTATION1164
   if(G__xrefflag) return;
@@ -2124,10 +2031,10 @@ G__value reg;
 #ifdef G__NEVER
   if('u'!=reg.type) {
 #ifndef G__FONS31
-    G__fprinterr(G__serr,"%d %d %d %ld\n"
+    fprintf(G__serr,"%d %d %d %ld\n"
 	    ,reg.type,reg.tagnum,reg.typenum,reg.obj.i);
 #else
-    G__fprinterr(G__serr,"%d %d %d %d\n",reg.type,reg.tagnum,reg.typenum,reg.obj.i);
+    fprintf(G__serr,"%d %d %d %d\n",reg.type,reg.tagnum,reg.typenum,reg.obj.i);
 #endif
   }
 #endif
@@ -2140,20 +2047,18 @@ G__value reg;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 1;
-#ifndef G__OLDIMPLEMENTATION1516
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-#endif
 
   /* copy pointer to created class object */
   G__p_tempbuf->obj = reg;
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-    G__fprinterr(G__serr,"store_tempobject(%d)=0x%lx\n",reg.tagnum,reg.obj.i);
-  }
+#ifndef G__FONS31
+    fprintf(G__serr,"store_tempobject(%d)=0x%lx\n",reg.tagnum,reg.obj.i);
+#else
+    fprintf(G__serr,"store_tempobject(%d)=0x%x\n",reg.tagnum,reg.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("storetemp");
+  }
 #endif
 }
 
@@ -2174,12 +2079,14 @@ int G__pop_tempobject()
 
 #ifdef G__DEBUG
   if(G__asm_dbg) {
-    G__fprinterr(G__serr,"pop_tempobject(%d)=0x%lx\n"
+#ifndef G__FONS31
+    fprintf(G__serr,"pop_tempobject(%d)=0x%lx\n"
 	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
-  }
+#else
+    fprintf(G__serr,"pop_tempobject(%d)=0x%x\n"
+	    ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
 #endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("poptemp");
+  }
 #endif
 
   store_p_tempbuf = G__p_tempbuf->prev;
@@ -2207,7 +2114,7 @@ int breakcontinue;
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMP assigned later\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr,"%3x: JMP assigned later\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp] = G__JMP;
     G__store_breakcontinue_list(G__asm_cp+1,breakcontinue);
@@ -2261,7 +2168,7 @@ G__value G__exec_switch()
 #ifdef G__ASM
 #ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg&&G__asm_noverflow) {
-      G__fprinterr(G__serr,"bytecode compile aborted by switch statement");
+      fprintf(G__serr,"bytecode compile aborted by switch statement");
       G__printlinenum();
     }
 #endif
@@ -2311,7 +2218,7 @@ G__value G__exec_switch()
    }
    if(G__prevcase) G__asm_inst[G__prevcase] = G__asm_cp;
 #ifdef G__ASM_DBG
-   if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
+   if(G__asm_dbg) fprintf(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
 #endif
     G__prevcase = store_prevcase;
     return(result);
@@ -2411,7 +2318,7 @@ G__value G__exec_if()
 #endif
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__CNDJMP;
       asm_jumppointer = G__asm_cp+1;
@@ -2435,8 +2342,8 @@ G__value G__exec_if()
     if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
-	G__fprinterr(G__serr,"     G__no_exec_compile set(G__exec_if:1) %d\n"
+	fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
+	fprintf(G__serr,"     G__no_exec_compile set(G__exec_if:1) %d\n"
 		,store_no_exec_compile);
       }
 #endif
@@ -2454,8 +2361,8 @@ G__value G__exec_if()
     /* if(G__return!=G__RETURN_NON)return(result); */
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:1) %d\n"
-		,store_no_exec_compile,G__asm_noverflow);
+	fprintf(G__serr,"     G__no_exec_compile %d(G__exec_if:1)\n"
+		,store_no_exec_compile);
 #endif
     G__no_exec_compile=store_no_exec_compile;
     G__no_exec=0;
@@ -2464,12 +2371,12 @@ G__value G__exec_if()
   
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMP assigned later\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"%3x: JMP assigned later\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__JMP;
     G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"     CNDJMP assigned %x\n",G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"     CNDJMP assigned %x\n",G__asm_cp);
 #endif
     G__asm_inst[asm_jumppointer] = G__asm_cp;
     asm_jumppointer = G__asm_cp-1; /* to skip else clause */
@@ -2554,8 +2461,8 @@ G__value G__exec_if()
       if(G__asm_noverflow) {
 	G__no_exec_compile=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,
-			   "     G__no_exec_compile set(G__exec_if:2) %d\n"
+	if(G__asm_dbg) fprintf(G__serr
+			   ,"     G__no_exec_compile set(G__exec_if:2) %d\n"
 			       ,store_no_exec_compile);
 #endif
       }
@@ -2566,8 +2473,7 @@ G__value G__exec_if()
       G__no_exec_compile=store_no_exec_compile;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) 
-	G__fprinterr(G__serr,"     G__no_exec_compile %d(G__exec_if:2) %d\n"
-		     ,store_no_exec_compile,G__asm_noverflow);
+	fprintf(G__serr,"     G__no_exec_compile %d(G__exec_if:2)\n",store_no_exec_compile);
 #endif
       G__no_exec=0;
     }
@@ -2586,7 +2492,7 @@ G__value G__exec_if()
 
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"   %x: JMP assigned %x\n",asm_jumppointer-1,G__asm_cp);
+    if(G__asm_dbg) fprintf(G__serr ,"     JMP assigned %x\n",G__asm_cp);
 #endif
     G__asm_inst[asm_jumppointer] = G__asm_cp;
 #ifndef G__OLDIMPLEMENTATION599
@@ -2654,7 +2560,7 @@ char **foraction;
     asm_start_pc = G__asm_cp;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Loop compile start");
+      fprintf(G__serr,"Loop compile start");
       G__printlinenum();
     }
 #endif
@@ -2703,7 +2609,7 @@ char **foraction;
        * condition compile successful
        ****************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: CNDJMP assigned later\n",G__asm_cp);
 #endif
       G__asm_inst[G__asm_cp]=G__CNDJMP;
       asm_jumppointer = G__asm_cp+1;
@@ -2747,7 +2653,7 @@ char **foraction;
       case G__BLOCK_CONTINUE:
 	if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set(%d)\n"
+	  if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile set(%d)\n"
 				 ,G__no_exec_compile);
 #endif
 	  /* At this point, G__no_exec_compile must be 1 but not sure */
@@ -2755,7 +2661,7 @@ char **foraction;
 	  G__mparen=1;
 	  G__exec_statement();
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile reset\n");
+	  if(G__asm_dbg) fprintf(G__serr,"    G__no_exec_compile reset\n");
 #endif
 	  G__no_exec_compile=0;
 	}
@@ -2780,7 +2686,7 @@ char **foraction;
        * JMP
        **************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMP %x\n",G__asm_cp,asm_start_pc);
+      if(G__asm_dbg) fprintf(G__serr,"%3x: JMP %x\n",G__asm_cp,asm_start_pc);
 #endif
       G__asm_inst[G__asm_cp]=G__JMP;
       G__asm_inst[G__asm_cp+1]=asm_start_pc;
@@ -2804,7 +2710,7 @@ char **foraction;
 
 #ifndef G__OLDIMPLEMENTATION756
       if(G__asm_dbg) {
-        G__fprinterr(G__serr,"Bytecode loop compilation successful");
+        fprintf(G__serr,"Bytecode loop compilation successful");
         G__printlinenum();
       }
 #endif
@@ -2825,7 +2731,7 @@ char **foraction;
       G__asm_noverflow=0;
 #ifndef G__OLDIMPLEMENTATION756
       if(G__asm_dbg && 0==dispstat) {
-        G__fprinterr(G__serr,"Bytecode loop compilation failed");
+        fprintf(G__serr,"Bytecode loop compilation failed");
         G__printlinenum();
         dispstat = 1;
       }
@@ -2923,7 +2829,7 @@ G__value G__exec_for()
     c=G__fgetstream(p,"),");
 #ifndef G__OLDIMPLEMENTATIONF1086
     if(G__return>G__RETURN_NORMAL) {
-      G__fprinterr(G__serr,"Error: for statement syntax error. ';' needed\n");
+      fprintf(G__serr,"Error: for statement syntax error. ';' needed\n");
       return(G__null);
     }
 #endif
@@ -3075,10 +2981,6 @@ G__value G__exec_statement()
   int add_fake_space = 0;
   int fake_space = 0;
 #endif
-#ifndef G__PHILIPPE33
-  int discard_space = 0;
-  int discarded_space = 0;
-#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -3098,9 +3000,6 @@ G__value G__exec_statement()
     } else 
 #endif
       c=G__fgetc();
-#ifndef G__PHILIPPE33
-    discard_space = 0;
-#endif
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3121,9 +3020,6 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
       }
       else {
-#ifndef G__PHILIPPE33
-        if (!fake_space) discard_space = 1;
-#endif
 	if(spaceflag==1) {
 	  statement[iout] = '\0' ;
 	  /* search keyword */
@@ -3179,18 +3075,18 @@ G__value G__exec_statement()
                 if(G__asm_noverflow) {
                   if(G__prevcase) {
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMP (assigned later)\n" ,G__asm_cp);
+                    if(G__asm_dbg) fprintf(G__serr ,"%3x: JMP (assigned later)\n" ,G__asm_cp);
 #endif
                     G__asm_inst[G__asm_cp]=G__JMP;
                     jmp1=G__asm_cp+1;
                     G__inc_cp_asm(2,0);
                     G__asm_inst[G__prevcase] = G__asm_cp;
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
+                    if(G__asm_dbg) fprintf(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
 #endif
                   }
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PUSHCPY\n" ,G__asm_cp);
+                  if(G__asm_dbg) fprintf(G__serr ,"%3x: PUSHCPY\n" ,G__asm_cp);
 #endif
                   G__asm_inst[G__asm_cp]=G__PUSHCPY;
                   G__inc_cp_asm(1,0);
@@ -3199,13 +3095,13 @@ G__value G__exec_statement()
 		  result=G__getexpr(casepara);
 		  G__no_exec=store_no_execXX;
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: OP2_OPTIMIZED ==\n",G__asm_cp);
+                  if(G__asm_dbg) fprintf(G__serr ,"%3x: OP2_OPTIMIZED ==\n",G__asm_cp);
 #endif
                   G__asm_inst[G__asm_cp]=G__OP2_OPTIMIZED;
                   G__asm_inst[G__asm_cp+1]=(long)G__CMP2_equal;
                   G__inc_cp_asm(2,0);
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CNDJMP (assigned later)\n",G__asm_cp);
+                  if(G__asm_dbg) fprintf(G__serr ,"%3x: CNDJMP (assigned later)\n",G__asm_cp);
 #endif
                   G__asm_inst[G__asm_cp]=G__CNDJMP;
                   G__prevcase = G__asm_cp+1;
@@ -3213,7 +3109,7 @@ G__value G__exec_statement()
                   if(jmp1) {
                     G__asm_inst[jmp1]=G__asm_cp;
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: JMP %x assigned\n" ,jmp1-1,G__asm_cp);
+                    if(G__asm_dbg) fprintf(G__serr ,"   %3x: JMP %x assigned\n" ,jmp1-1,G__asm_cp);
 #endif
                   }
                 }
@@ -3267,7 +3163,7 @@ G__value G__exec_statement()
                   if(G__prevcase) {
                     G__asm_inst[G__prevcase] = G__asm_cp;
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
+                    if(G__asm_dbg) fprintf(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
 #endif
                     G__prevcase=0;
                   }
@@ -3316,7 +3212,7 @@ G__value G__exec_statement()
                   if(G__prevcase) {
                     G__asm_inst[G__prevcase] = G__asm_cp;
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
+                    if(G__asm_dbg) fprintf(G__serr,"   %3x: CNDJMP %x assigned\n",G__prevcase-1,G__asm_cp);
 #endif
                     G__prevcase=0;
                   }
@@ -3386,15 +3282,7 @@ G__value G__exec_statement()
 	    break;
 	  case 3:
 	    if(strcmp(statement,"int")==0) {
-#if 0
 	      G__DEFVAR('i');
-#else
-	      G__var_type='i' + G__unsigned;
-	      G__define_var(-1,-1);          
-	      spaceflag = -1;                
-	      iout=0;                      
-	      if(mparen==0) return(G__null);
-#endif
 	      break;
 	    }
 #ifndef G__OLDIMPLEMENTATION698
@@ -3454,12 +3342,6 @@ G__value G__exec_statement()
 	      G__DEFVAR('y');
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool")==0) {
-	      G__DEFVAR('g');
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"int*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('I');
@@ -3510,7 +3392,7 @@ G__value G__exec_statement()
 #endif
 #ifndef G__OLDIMPLEMENTATION841
 		if(G__asm_dbg&&G__asm_noverflow) {
-		  G__fprinterr(G__serr,"bytecode compile aborted by goto statement");
+		  fprintf(G__serr,"bytecode compile aborted by goto statement");
 		  G__printlinenum();
 		}
 #endif
@@ -3558,12 +3440,6 @@ G__value G__exec_statement()
 	      G__DEFREFVAR('c');
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool&")==0) {
-	      G__DEFREFVAR('g');
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"FILE*")==0) {
 	      G__typepdecl=1;
 	      G__DEFVAR('E');
@@ -3576,14 +3452,6 @@ G__value G__exec_statement()
 	      G__typepdecl=0;
 	      break;
 	    }
-#ifndef G__OLDIMPLEMENTATION1604
-	    if(strcmp(statement,"bool*")==0) {
-	      G__typepdecl=1;
-	      G__DEFVAR('G');
-	      G__typepdecl=0;
-	      break;
-	    }
-#endif
 	    if(strcmp(statement,"long&")==0) {
 	      G__DEFREFVAR('l');
 	      break;
@@ -4128,13 +3996,6 @@ G__value G__exec_statement()
 	    iout=0;
 	    spaceflag=0;
 	  }
-#ifndef G__OLDIMPLEMENTATION1544
-	  if(strcmp(statement,"throw(")==0) {
-            c=G__fignorestream(")");
-	    iout=0;
-	    spaceflag=0;
-	  }
-#endif
 	  break;
 	  
 	case 4:
@@ -4529,15 +4390,6 @@ G__value G__exec_statement()
       
     default:
       /* G__CHECK(G__SECURE_BUFFER_SIZE,iout==G__LONGLINE,return(G__null)); */
-#ifndef G__PHILIPPE33
-       /* Make sure that the delimiters that have not been treated
-        * in the switch statement do drop the discarded_space */
-      if (c!='[' && c!=']' && discarded_space && iout) {
-	/* since the character following a discarded space is NOT a
-	   separator, we have to keep the space */
-	statement[iout++] = ' ';
-      }
-#endif
       statement[iout++] = c ;
       spaceflag |= 1;
 #ifdef G__MULTIBYTE
@@ -4549,9 +4401,6 @@ G__value G__exec_statement()
 #endif
       break;
     } /* end of switch */
-#ifndef G__PHILIPPE33
-    discarded_space = discard_space;
-#endif
   } /* end of infinite loop */
   
 }
@@ -4689,7 +4538,7 @@ char *pvar_type;
     fsetpos(G__ifile.fp,&pos);
     if(G__dispsource) G__disp_mask=0;
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Note: pointer to function exists");
+      fprintf(G__serr,"Note: pointer to function exists");
       G__printlinenum();
     }
     if(line2) {
@@ -4786,26 +4635,6 @@ int *pmparen;
   return(0);
 }
 
-#ifndef G__OLDIMPLEMENTATION1596
-void G__settemplevel(val)
-int val; 
-{
-   G__templevel += val;
-}
-
-void G__clearstack() 
-{
-   int store_command_eval = G__command_eval;
-   ++G__templevel;
-   G__command_eval = 0;
-
-   G__free_tempobject();
-
-   G__command_eval = store_command_eval;
-   --G__templevel;
-}
-#endif
-   
 
 
 /*

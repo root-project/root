@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.8 2001/04/27 17:29:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -37,8 +37,6 @@ protected:
     Bool_t       fVirtual;        // Support for Virtuality
     
 public:
-    enum { kWarn = BIT(12) };
-
     TLeafObject();
     TLeafObject(const char *name, const char *type);
     virtual ~TLeafObject();
@@ -48,9 +46,7 @@ public:
     TMethodCall    *GetMethodCall(const char *name);
     TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
     const char     *GetTypeName() const ;
-    Bool_t          IsOnTerminalBranch() const    { return kFALSE; }
     Bool_t          IsVirtual() const {return fVirtual;}
-    virtual Bool_t  Notify();
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    SetAddress(void *add=0);

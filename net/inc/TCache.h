@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.3 2001/01/16 17:23:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.2 2001/01/15 23:49:11 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -46,7 +46,6 @@
 #endif
 
 class TSortedList;
-class TFile;
 
 
 class TCache : public TObject {

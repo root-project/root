@@ -66,7 +66,7 @@ char *args;
     if(strcmp(paddpragma->name,comname)==0) {
       p2f = (void (*)())paddpragma->p2f;
       if(p2f) (*p2f)(args);
-      else    G__fprinterr(G__serr,"p2f null\n");
+      else    fprintf(G__serr,"p2f null\n");
       return(0);
     }
     paddpragma=paddpragma->next;
@@ -131,64 +131,6 @@ static int G__addpreprocessfile()
 
 #ifndef G__OLDIMPLEMENTATION849
 extern int G__rootCcomment; /* used and defined in sizeof.c */
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1581
-/**************************************************************************
-* G__do_not_include
-**************************************************************************/
-static void G__do_not_include()
-{
-  int c;
-  char fnameorig[G__ONELINE];
-  char *fname;
-  int len;
-  int hash;
-  int i;
-
-  /* if(!G__IsInMacro()) return; */
-
-  /* Get the key string for preprocessed header file group */
-  c=G__fgetstream(fnameorig,";\n\r");
-
-  switch(fnameorig[0]) {
-  case '\'':
-  case '"':
-  case '<':
-    fname = fnameorig+1;
-    break;
-  default:
-    fname = fnameorig;
-    break;
-  }
-  len = strlen(fname);
-  if(len) {
-    switch(fname[len-1]) {
-    case '\'':
-    case '"':
-    case '>':
-      fname[len-1] = 0;
-      break;
-    }
-  }
-
-  G__hash(fname,hash,i);
-
-  for(i=0;i<G__nfile;i++) {
-    if((hash==G__srcfile[i].hash&&strcmp(G__srcfile[i].filename,fname)==0)){
-      return;
-    }
-  }
-
-  G__srcfile[G__nfile].hash = hash;
-  G__srcfile[G__nfile].filename = (char*)malloc(strlen(fname)+1);
-  strcpy(G__srcfile[G__nfile].filename,fname);
-  G__srcfile[G__nfile].included_from = -1;
-
-  ++G__nfile;
-
-  return;
-}
 #endif
 
 /**************************************************************************
@@ -301,12 +243,12 @@ int G__pragma()
   }
   else if(strcmp(command,"bytecode")==0) {
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
+      fprintf(G__serr,"Warning: #pragma bytecode obsoleted");
       G__printlinenum();
     }
 #ifdef G__DEBUG
     else {
-      G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
+      fprintf(G__serr,"Warning: #pragma bytecode obsoleted");
       G__printlinenum();
     }
 #endif
@@ -336,12 +278,6 @@ int G__pragma()
   else if(strcmp(command,"extra_include")==0) {
     G__specify_extra_include();
     c='\n';
-  }
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1581
-  else if(strcmp(command,"do_not_include")==0) {
-    G__do_not_include();
   }
 #endif
 
@@ -388,7 +324,7 @@ int G__pragma()
 
   else if(strcmp(command,"message")==0) {
     c=G__fgetline(command);
-    G__fprinterr(G__serr,"%s\n",command);
+    fprintf(G__serr,"%s\n",command);
   }
 
   else if(strcmp(command,"eval")==0) {
@@ -420,7 +356,7 @@ int G__pragma()
 #ifndef G__OLDIMPLEMENTATION1434
 	if(G__setautoccnames()) {
 	  G__compilemode = 0;
-	  G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	  fprintf(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
 	  G__printlinenum();
 	  return(1);
 	}
@@ -430,7 +366,7 @@ int G__pragma()
 	G__fpautocc=fopen(G__autocc_c,"w");
 #ifndef G__OLDIMPLEMENTATION1434
 	if((FILE*)NULL==G__fpautocc) {
-	  G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	  fprintf(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
 	  G__printlinenum();
 	  G__compilemode = 0;
 	  return(1);
@@ -494,9 +430,9 @@ G__UINT32 category;
     }
 
 #ifndef G__FONS31
-    G__fprinterr(G__serr,"cint: Security mode 0x%lx:0x%lx ",G__security,category);
+    fprintf(G__serr,"cint: Security mode 0x%lx:0x%lx ",G__security,category);
 #else
-    G__fprinterr(G__serr,"cint: Security mode 0x%x:0x%x ",G__security,category);
+    fprintf(G__serr,"cint: Security mode 0x%x:0x%x ",G__security,category);
 #endif
 #ifndef G__OLDIMPLEMENTATION575
     if(category&G__SECURE_POINTER_TYPE) {
@@ -653,7 +589,7 @@ int G__autocc()
 
   /* Compile shared library if updated */
   if(G__isautoccupdate()) {
-    G__fprinterr(G__serr,"Compiling #pragma compile ...\n");
+    fprintf(G__serr ,"Compiling #pragma compile ...\n");
     ansi[0]='\0';
     if(G__cpp)  sprintf(cpp,"-p");
     else        cpp[0]='\0';
@@ -673,35 +609,35 @@ int G__autocc()
     sprintf(temp ,"makecint -mk G__autocc.mak %s %s %s %s -dl %s -c %s"
 	    ,ansi,cpp,G__allincludepath,G__macros,G__autocc_sl,G__autocc_c);
 #endif
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 
 #if defined(G__SYMANTEC)
     sprintf(temp,"smake -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 #elif defined(G__BORLAND)
     sprintf(temp,"make.exe -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 #elif defined(G__VISUAL)
     sprintf(temp,"nmake /f %s CFG=\"%s - Win32 Release\""
 	    ,G__autocc_mak,G__autocc_h);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
     fp = fopen(G__autocc_sl,"r");
     if(fp) {
       fclose(fp);
       sprintf(temp,"del %s",G__autocc_sl);
-      if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+      if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
       system(temp);
     }
     sprintf(temp,"move Release\\%s %s",G__autocc_sl,G__autocc_sl);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 #else
     sprintf(temp,"make -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 #endif
 
@@ -709,7 +645,7 @@ int G__autocc()
 #ifdef G__OLDIMPLEMENTATION486
     sprintf(temp,"mv %s %s.bk",G__autocc_c,G__autocc_c);
     system(temp);
-    G__fprinterr(G__serr,"#pragma endcompile\n");
+    fprintf(G__serr ,"#pragma endcompile\n");
 #endif
   }
   /* load automatically compiled shard library */
@@ -811,8 +747,8 @@ char *string;
       len = strlen(string)-1;
       level = string[len] - '0';
       if(level>3) {
-	G__fprinterr(G__serr,
-		"Warning: Security level%d only experimental, High risk\n"
+	fprintf(G__serr
+		,"Warning: Security level%d only experimental, High risk\n"
 		,level);
       }
       switch(level) {
@@ -824,7 +760,7 @@ char *string;
       case 5: code = G__SECURE_LEVEL5; break;
       case 6: code = G__SECURE_LEVEL6; break;
       default:
-	G__fprinterr(G__serr,"Error: Unknown seciruty code %s",string);
+	fprintf(G__serr,"Error: Unknown seciruty code %s",string);
 	G__genericerror((char*)NULL);
 	code = G__security;
 	break;
@@ -832,7 +768,7 @@ char *string;
     }
   }
   else {
-    G__fprinterr(G__serr,"Error: Unknown seciruty code");
+    fprintf(G__serr,"Error: Unknown seciruty code");
     G__genericerror((char*)NULL);
     code = G__security;
   }
@@ -847,12 +783,12 @@ char *string;
 #else 
   if(G__security&G__SECURE_NO_CHANGE) {
 #endif
-    G__fprinterr(G__serr,"Warning: security level locked, can't change");
+    fprintf(G__serr,"Warning: security level locked, can't change");
     G__printlinenum();
     code = G__security;
   }
   else if(G__security&G__SECURE_NO_RELAX) {
-    G__fprinterr(G__serr,"Warning: security level locked, can't relax");
+    fprintf(G__serr,"Warning: security level locked, can't relax");
     G__printlinenum();
     code |= G__security;
   }
@@ -866,7 +802,7 @@ char *string;
 #else
     if(G__srcfile[G__ifile.filenum].security&G__SECURE_NO_CHANGE) {
 #endif
-      G__fprinterr(G__serr,"Warning: security level locked, can't change");
+      fprintf(G__serr,"Warning: security level locked, can't change");
       G__printlinenum();
     }
     else {

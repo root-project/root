@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux (Debian) with glibc and egcs
 # Changes for Debian 2.0:
 # libncurses does not exist, remove -lncurses

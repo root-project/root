@@ -1,6 +1,0 @@
-Package: root-daemon
-Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: root-bin (= ${Source-Version}), libroot-dev (= ${Source-Version})
-Description: @short@
-@long@

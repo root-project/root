@@ -1,6 +1,5 @@
 #ifndef G__MAP_H
 #pragma include_noerr <map.dll>
-#pragma include_noerr <map2.dll>
 #endif
 
 #ifdef __MAKECINT__

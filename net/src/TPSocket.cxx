@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.5 2001/02/08 16:09:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.4 2001/02/03 14:36:31 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -244,7 +244,6 @@ Int_t TPSocket::Send(const TMessage &mess)
    // that were sent and -1 in case of error. In case the TMessage::What
    // has been or'ed with kMESS_ACK, the call will only return after having
    // received an acknowledgement, making the sending process synchronous.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
 
    if (!fSockets)
       return TSocket::Send(mess);  // only the case when called via Init()
@@ -258,12 +257,12 @@ Int_t TPSocket::Send(const TMessage &mess)
 
    Int_t nsent, ulen = (Int_t) sizeof(UInt_t);
    // send length
-   if ((nsent = SendRaw(mess.Buffer(), ulen, kDefault)) <= 0)
-      return nsent;
+   if ((nsent = SendRaw(mess.Buffer(), ulen, kDefault)) < 0)
+      return -1;
 
    // send buffer (this might go in parallel)
-   if ((nsent = SendRaw(mess.Buffer()+ulen, mess.Length()-ulen, kDefault)) <= 0)
-      return nsent;
+   if ((nsent = SendRaw(mess.Buffer()+ulen, mess.Length()-ulen, kDefault)) < 0)
+      return -1;
 
    // If acknowledgement is desired, wait for it
    if (mess.What() & kMESS_ACK) {
@@ -322,14 +321,9 @@ Int_t TPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
          if (s == fSockets[is]) {
             if (fWriteBytesLeft[is] > 0) {
                Int_t nsent;
-again:
                if ((nsent = fSockets[is]->SendRaw(fWritePtr[is],
                                                   fWriteBytesLeft[is],
-                                                  sendopt)) <= 0) {
-                  if (nsent == -4) {
-                     // got EAGAIN/EWOULDBLOCK error, keep trying...
-                     goto again;
-                  }
+                                                  sendopt)) < 0) {
                   fWriteMonitor->DeActivateAll();
                   return -1;
                }

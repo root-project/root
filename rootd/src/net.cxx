@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.13 2001/06/22 16:10:19 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.11 2001/02/06 19:12:35 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -37,9 +37,6 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
 #include "rootdp.h"
 
@@ -59,9 +56,6 @@ static int                tcp_srv_sock;
 static struct sockaddr_in tcp_srv_addr;
 static struct sockaddr_in tcp_cli_addr;
 
-extern "C" {
-   static void SigPipe(int);
-}
 
 //______________________________________________________________________________
 static void SigPipe(int)

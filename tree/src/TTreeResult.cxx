@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeResult.cxx,v 1.2 2001/09/24 00:42:18 rdm Exp $
+// @(#)root/tree:$Name$:$Id$
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -28,18 +28,6 @@
 
 
 ClassImp(TTreeResult)
-
-//______________________________________________________________________________
-TTreeResult::TTreeResult()
-{
-   // Create a query result object.
-
-   fColumnCount = 0;
-   fRowCount    = 0;
-   fFields      = 0;
-   fResult      = 0;
-   fNextRow     = 0;
-}
 
 //______________________________________________________________________________
 TTreeResult::TTreeResult(Int_t nfields)
@@ -72,7 +60,6 @@ void TTreeResult::Close(Option_t *)
    if (!fResult)
       return;
 
-   fResult->Delete();
    delete fResult;
    fResult   = 0;
    fRowCount = 0;
@@ -121,8 +108,7 @@ const char *TTreeResult::GetFieldName(Int_t field)
 TSQLRow *TTreeResult::Next()
 {
    // Get next query result row. The returned object must be
-   // deleted by the user and becomes invalid when the result set is
-   // closed or deleted.
+   // deleted by the user.
 
    if (!fResult) {
       Error("Next", "result set closed");

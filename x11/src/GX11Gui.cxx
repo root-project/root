@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.19 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.11 2000/10/19 17:26:48 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -106,23 +106,6 @@ static KeySymbolMap_t gKeyMap[] = {
    { XK_KP_Space,        kKey_Space },              // numeric keypad
    { XK_KP_Tab,          kKey_Tab },
    { XK_KP_Enter,        kKey_Enter },
-   { XK_KP_F1,           kKey_F1 },
-   { XK_KP_F2,           kKey_F2 },
-   { XK_KP_F3,           kKey_F3 },
-   { XK_KP_F4,           kKey_F4 },
-   { XK_KP_Home,         kKey_Home },
-   { XK_KP_Left,         kKey_Left },
-   { XK_KP_Up,           kKey_Up },
-   { XK_KP_Right,        kKey_Right },
-   { XK_KP_Down,         kKey_Down },
-   { XK_KP_Prior,        kKey_Prior },
-   { XK_KP_Page_Up,      kKey_PageUp },
-   { XK_KP_Next,         kKey_Next },
-   { XK_KP_Page_Down,    kKey_PageDown },
-   { XK_KP_End,          kKey_End },
-   { XK_KP_Begin,        kKey_Home },
-   { XK_KP_Insert,       kKey_Insert },
-   { XK_KP_Delete,       kKey_Delete },
    { XK_KP_Equal,        kKey_Equal },
    { XK_KP_Multiply,     kKey_Asterisk },
    { XK_KP_Add,          kKey_Plus },
@@ -294,7 +277,7 @@ void TGX11::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
                              UInt_t w, UInt_t h, UInt_t border,
                              Int_t depth, UInt_t clss,
-                             void *visual, SetWindowAttributes_t *attr, UInt_t)
+                             void *visual, SetWindowAttributes_t *attr)
 {
    // Return handle to newly created X window.
 
@@ -744,7 +727,6 @@ void TGX11::CloseDisplay()
    // Close connection to display server.
 
    XCloseDisplay(fDisplay);
-   fDisplay = 0;
 }
 
 //______________________________________________________________________________
@@ -823,7 +805,7 @@ void TGX11::DeleteFont(FontStruct_t fs)
 {
    // Explicitely delete font structure obtained with LoadQueryFont().
 
-   if (fDisplay) XFreeFont(fDisplay, (XFontStruct *) fs);
+   XFreeFont(fDisplay, (XFontStruct *) fs);
 }
 
 //______________________________________________________________________________
@@ -884,10 +866,7 @@ void TGX11::DeleteGC(GContext_t gc)
 {
    // Explicitely delete a graphics context.
 
-   // Protection against deletion of global TGGC objects, which are
-   // destructed after fDisplay has been closed.
-   if (fDisplay)
-      XFreeGC(fDisplay, (GC) gc);
+   XFreeGC(fDisplay, (GC) gc);
 }
 
 //______________________________________________________________________________
@@ -943,7 +922,7 @@ void TGX11::DeletePixmap(Pixmap_t pmap)
 {
    // Explicitely delete pixmap resource.
 
-   if (fDisplay) XFreePixmap(fDisplay, (Pixmap) pmap);
+   XFreePixmap(fDisplay, (Pixmap) pmap);
 }
 
 //______________________________________________________________________________
@@ -1187,13 +1166,10 @@ Bool_t TGX11::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 
    MapColorStruct(&color, xc);
 
-   color.fPixel = 0;
-   if (AllocColor((Colormap)cmap, &xc)) {
-      color.fPixel = xc.pixel;
-      return kTRUE;
-   }
+   int status = XAllocColor(fDisplay, (Colormap)cmap, &xc);
+   color.fPixel = xc.pixel;
 
-   return kFALSE;
+   return status != 0 ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1207,11 +1183,7 @@ void TGX11::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 
    xc.pixel = color.fPixel;
 
-   // still very slight dark shift ??
-   //QueryColors((Colormap)cmap, &xc, 1);
-   //printf("1 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
    XQueryColor(fDisplay, (Colormap)cmap, &xc);
-   //printf("2 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
 
    color.fRed   = xc.red;
    color.fGreen = xc.green;
@@ -1947,18 +1919,6 @@ void TGX11::SelectInput(Window_t id, UInt_t evmask)
    MapEventMask(evmask, xevmask);
 
    XSelectInput(fDisplay, (Window) id, xevmask);
-}
-
-//______________________________________________________________________________
-Window_t TGX11::GetInputFocus()
-{
-   // Returns the window id of the window having the input focus.
-
-   Window focus;
-   int    return_to;
-
-   XGetInputFocus(fDisplay, &focus, &return_to);
-   return (Window_t) focus;
 }
 
 //______________________________________________________________________________

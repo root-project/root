@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.8 2001/11/16 02:37:41 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.3 2000/09/14 17:11:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,7 +59,6 @@
 
 #include <stdlib.h>
 
-#include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -178,25 +177,13 @@ extern long G__globalvarpointer;
 #endif
 #endif
 
-#ifdef R__THROWNEWDELETE
-#define R__THROW_BAD  throw(std::bad_alloc)
-#define R__THROW_NULL throw()
-#else
-#define R__THROW_BAD
-#define R__THROW_NULL
-#endif
-
-static const char *spaceErr = "storage exhausted (failed to allocate %ld bytes)";
+static const char *spaceErr = "storage exhausted";
 static int newInit = 0;
 
 //______________________________________________________________________________
-void *operator new(size_t size) R__THROW_BAD
+void *operator new(size_t size)
 {
    // Custom new() operator.
-
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size);
 
    static const char *where = "operator new";
 
@@ -226,14 +213,14 @@ void *operator new(size_t size) R__THROW_BAD
    else
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, spaceErr);
    StoreSizeMagic(vp, size, where);
    return ExtStart(vp);
 }
 
-#ifndef R__PLACEMENTINLINE
+#ifndef R__KCC
 //______________________________________________________________________________
-void *operator new(size_t size, void *vp) R__THROW_NULL
+void *operator new(size_t size, void *vp)
 {
    // Custom new() operator with placement argument.
 
@@ -255,17 +242,13 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 #endif
 #endif
    if (vp == 0) {
-      // use memory checker
-      if (TROOT::MemCheck())
-         return TMemHashTable::AddPointer(size);
-
       register void *vp;
       if (gMmallocDesc)
          vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
       else
          vp = ::calloc(RealSize(size), sizeof(char));
       if (vp == 0)
-         Fatal(where, spaceErr, RealSize(size));
+         Fatal(where, spaceErr);
       StoreSizeMagic(vp, size, where);
       return ExtStart(vp);
    }
@@ -274,15 +257,9 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 #endif
 
 //______________________________________________________________________________
-void operator delete(void *ptr) R__THROW_NULL
+void operator delete(void *ptr)
 {
    // Custom delete() operator.
-
-   // use memory checker
-   if (TROOT::MemCheck()) {
-      TMemHashTable::FreePointer(ptr);
-      return;
-   }
 
    static const char *where = "operator delete";
 
@@ -315,27 +292,23 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
-#ifdef R__VECNEWDELETE
+#if defined(R__VECNEWDELETE)
 //______________________________________________________________________________
-void *operator new[](size_t size) R__THROW_BAD
+void *operator new[](size_t size)
 {
-   // Custom vector new operator.
-
    return ::operator new(size);
 }
 
-#ifndef R__PLACEMENTINLINE
+#ifndef R__KCC
 //______________________________________________________________________________
-void *operator new[](size_t size, void *vp) R__THROW_NULL
+void *operator new[](size_t size, void *vp)
 {
-   // Custom vector new() operator with placement argument.
-
    return ::operator new(size, vp);
 }
 #endif
 
 //______________________________________________________________________________
-void operator delete[](void *ptr) R__THROW_NULL
+void operator delete[](void *ptr)
 {
    ::operator delete(ptr);
 }
@@ -346,14 +319,10 @@ void *CustomReAlloc1(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
 
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
    static const char *where = "CustomReAlloc1";
 
    if (ovp == 0)
-      return ::operator new(size);
+      return new char[size];
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
@@ -368,7 +337,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, spaceErr);
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 
@@ -382,14 +351,10 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
 
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
    static const char *where = "CustomReAlloc2";
 
    if (ovp == 0)
-      return ::operator new(size);
+      return new char[size];
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
@@ -408,7 +373,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr, RealSize(size));
+      Fatal(where, spaceErr);
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 

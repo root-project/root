@@ -11,7 +11,7 @@ ABSTRACT:
      $ sh setup 
 
    HP-UX10.2/11.0 - aCC : RogueWave STL implementation 1997
-     $ sh setup 
+     $ sh setuphp 
 
    SGI IRIX6 - KCC : RogueWave STL implementation
      $ sh setup
@@ -35,9 +35,7 @@ ABSTRACT:
     stl/multiset.dll
     stl/stack.dll
     stl/queue.dll
-    stl/valarray.dll  (VC++5.0/6.0, BC++5.3, ARM/Linux only)
-    stl/exception.dll
-    stl/stdexcept.dll
+    stl/valarray.dll  (VC++5.0, BC++5.3 only)
 
 
 FILES:
@@ -47,6 +45,7 @@ FILES:
 
   README.txt  : this file
   setup       : setup shell script for Linux egcs
+  setuphp     : setup shell script for HP-UX aCC
   setup.bat   : setup batch script for VC++5.0
   setupbc.bat : setup batch script for BC++5.3
   str.h       : string precompiled library
@@ -60,6 +59,4 @@ FILES:
   stk.h       : stack precompiled library
   que.h       : queue precompiled library
   vary.h      : valarray precompiled library (VC++5.0 and BC++5.3 only)
-  eh.h        : exception precompiled library
-  se.h        : stdexcept precompiled library
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.9 2001/05/31 08:56:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.4 2001/01/18 09:59:03 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -25,9 +25,6 @@
 #ifndef ROOT_TLeaf
 #include "TLeaf.h"
 #endif
-#ifndef ROOT_TBranchElement
-#include "TBranchElement.h"
-#endif
 
 class TMethodCall;
 
@@ -43,17 +40,10 @@ public:
     TLeafElement(const char *name, Int_t id, Int_t type);
     virtual ~TLeafElement();
 
-    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
     TMethodCall     *GetMethodCall(const char *name);
-    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
-    virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
-    virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
-    virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
-    virtual Double_t GetValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetValue(i, j, kTRUE);}
-    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
-    virtual Bool_t   IsOnTerminalBranch() const;
-    virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
-    virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}
+    virtual Double_t GetValue(Int_t i=0) const;
+    virtual void    *GetValuePointer() const { return fAbsAddress; }
+    virtual void     PrintValue(Int_t i=0) const;
     
     ClassDef(TLeafElement,1)  //A TLeaf for a general object derived from TObject.
 };

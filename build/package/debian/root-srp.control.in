@@ -1,5 +1,0 @@
-Package: root-srp
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: @short@
-@long@

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.4 2000/11/21 20:23:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
@@ -115,9 +116,8 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- Are we inside the box?
 //*-*  ======================
-   if (GetFillStyle()) {
-      if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) return 0;
-      else return 9999;
+   if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) {
+      if (GetFillStyle()) return 0;  //*-* if box is filled
    }
 
 //*-*- Are we on the edges?
@@ -439,26 +439,26 @@ again:
 
       if (px1 < 0 ) break;
       if (PA) {
-         fX1 = gPad->AbsPixeltoX(pxold);
+         fX1 = gPad->AbsPixeltoX(px);
          fY1 = gPad->AbsPixeltoY(pyt);
          fX2 = gPad->AbsPixeltoX(pxt);
-         fY2 = gPad->AbsPixeltoY(pyold);
+         fY2 = gPad->AbsPixeltoY(py);
       }
       if (PB) {
          fX1 = gPad->AbsPixeltoX(pxl);
          fY1 = gPad->AbsPixeltoY(pyt);
-         fX2 = gPad->AbsPixeltoX(pxold);
-         fY2 = gPad->AbsPixeltoY(pyold);
+         fX2 = gPad->AbsPixeltoX(px);
+         fY2 = gPad->AbsPixeltoY(py);
       }
       if (PC) {
          fX1 = gPad->AbsPixeltoX(pxl);
-         fY1 = gPad->AbsPixeltoY(pyold);
-         fX2 = gPad->AbsPixeltoX(pxold);
+         fY1 = gPad->AbsPixeltoY(py);
+         fX2 = gPad->AbsPixeltoX(px);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
       if (PD) {
-         fX1 = gPad->AbsPixeltoX(pxold);
-         fY1 = gPad->AbsPixeltoY(pyold);
+         fX1 = gPad->AbsPixeltoX(px);
+         fY1 = gPad->AbsPixeltoY(py);
          fX2 = gPad->AbsPixeltoX(pxt);
          fY2 = gPad->AbsPixeltoY(pyl);
       }
@@ -548,7 +548,7 @@ void TBox::Print(Option_t *) const
 //*-*-*-*-*-*-*-*-*-*-*Dump this box with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
    if (GetLineStyle() != 1) printf(" Style=%d",GetLineStyle());
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());
@@ -620,7 +620,7 @@ void TBox::Streamer(TBuffer &R__b)
       R__b >> y2; fY2 = y2;
       R__b.CheckByteCount(R__s, R__c, TBox::IsA());
       //====end of old versions
-
+      
    } else {
       TBox::Class()->WriteBuffer(R__b,this);
    }

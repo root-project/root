@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.8 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.7 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -286,9 +286,6 @@ Int_t TSocket::Send(const TMessage &mess)
    // that were sent and -1 in case of error. In case the TMessage::What
    // has been or'ed with kMESS_ACK, the call will only return after having
    // received an acknowledgement, making the sending process synchronous.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-
-   TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
    if (mess.IsReading()) {
@@ -298,8 +295,8 @@ Int_t TSocket::Send(const TMessage &mess)
 
    Int_t nsent;
    mess.SetLength();   //write length in first word of buffer
-   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(), 0)) <= 0)
-      return nsent;
+   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(), 0)) < 0)
+      return -1;
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
@@ -340,16 +337,13 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Using option kOob one can send
    // OOB data. Returns the number of bytes sent or -1 in case of error.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-
-   TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
 
    Int_t nsent;
 
-   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0)
-      return nsent;
+   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) < 0)
+      return -1;
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;

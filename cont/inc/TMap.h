@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.8 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.5 2000/12/13 16:05:18 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -28,10 +28,9 @@
 #ifndef ROOT_TCollection
 #include "TCollection.h"
 #endif
-#ifndef ROOT_THashTable
-#include "THashTable.h"
-#endif
 
+
+class THashTable;
 class THashTableIter;
 class TMapIter;
 class TBrowser;
@@ -57,7 +56,6 @@ public:
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
    TObject          *FindObject(const TObject *key) const;
-   TObject         **GetObjectRef(TObject *obj) const {return fTable->GetObjectRef(obj);}
    TObject          *GetValue(TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
@@ -83,7 +81,7 @@ private:
 
 public:
    TAssoc(TObject *key, TObject *value) : fKey(key), fValue(value) { }
-   TAssoc(const TAssoc &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
+   TAssoc(const TAssoc &a) : fKey(a.fKey), fValue(a.fValue) { }
    virtual               ~TAssoc() { }
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);

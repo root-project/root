@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.6 2001/06/05 13:13:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.4 2000/11/21 20:15:52 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -526,6 +526,7 @@ void TGeometry::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TGeometry::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
       } else {
          //====process old versions before automatic schema evolution
          TNamed::Streamer(b);
@@ -569,6 +570,10 @@ void TGeometry::Streamer(TBuffer &b)
          i++;
       }
 
+//*-*- If geometry already exists, delete old version
+      TGeometry *oldgeom = (TGeometry*)gROOT->GetGeometry(GetName());
+      delete oldgeom;
+
       gROOT->GetListOfGeometries()->Add(this);
 
       fCurrentNode = (TNode*)GetListOfNodes()->First();
@@ -600,7 +605,7 @@ void TGeometry::UpdateMatrix(TNode *node)
    Int_t saveGeomLevel = fGeomLevel;
    //Update matrices in the hierarchy
    for (fGeomLevel=1;i<=saveGeomLevel;fGeomLevel++) {
-      node = nodes[i-1];
+      node = nodes[i-i];
       UpdateTempMatrix(node->GetX(),node->GetY(),node->GetZ(),node->GetMatrix());
    }
 }

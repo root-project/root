@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.5 2001/02/26 19:09:48 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: netpar.cxx,v 1.3 2001/02/07 11:50:49 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -41,9 +41,6 @@
 #         define R__GLIBC
 #      endif
 #   endif
-#endif
-#ifdef __MACH__
-#   define R__GLIBC
 #endif
 
 #include "rootdp.h"
@@ -112,12 +109,8 @@ int NetParSend(const void *buf, int len)
       for (i = 0; i < nsock; i++) {
          if (FD_ISSET(gPSockFd[i], &writeReady)) {
             if (gWriteBytesLeft[i] > 0) {
-               int ilen;
-again:
-               ilen = send(gPSockFd[i], gWritePtr[i], gWriteBytesLeft[i], 0);
+               int ilen = send(gPSockFd[i], gWritePtr[i], gWriteBytesLeft[i], 0);
                if (ilen < 0) {
-                  if (GetErrno() == EAGAIN)
-                     goto again;
                   ErrorInfo("NetParSend: error sending for socket %d (%d)",
                             i, gPSockFd[i]);
                   return -1;

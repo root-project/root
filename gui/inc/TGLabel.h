@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -49,30 +49,32 @@ protected:
    virtual void DoRedraw();
 
    static FontStruct_t   fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC           fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGLabel(const TGWindow *p, TGString *text,
-           GContext_t norm = GetDefaultGC()(),
-           FontStruct_t font = GetDefaultFontStruct(),
+           GContext_t norm = fgDefaultGC(),
+           FontStruct_t font = fgDefaultFontStruct,
            UInt_t options = kChildFrame,
-           ULong_t back = GetDefaultFrameBackground());
+           ULong_t back = fgDefaultFrameBackground);
    TGLabel(const TGWindow *p, const char *text,
-           GContext_t norm = GetDefaultGC()(),
-           FontStruct_t font = GetDefaultFontStruct(),
+           GContext_t norm = fgDefaultGC(),
+           FontStruct_t font = fgDefaultFontStruct,
            UInt_t options = kChildFrame,
-           ULong_t back = GetDefaultFrameBackground());
+           ULong_t back = fgDefaultFrameBackground);
    virtual ~TGLabel();
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
    const TGString *GetText() const { return fText; }
    void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
-   void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode) { fTMode = tmode; }
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGLabel,0)  // A label GUI element
 };

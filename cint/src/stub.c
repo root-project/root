@@ -213,7 +213,7 @@ FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
 {
-  G__fprinterr(G__serr,"Limitation: Can not make STUB constructor, class %s\n"
+  fprintf(G__serr,"Limitation: Can not make STUB constructor, class %s\n"
 	  ,G__fulltagname(tagnum,1));
 }
 
@@ -226,7 +226,7 @@ FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
 {
-  G__fprinterr(G__serr,"Limitation: Can not make STUB destructor, class %s\n"
+  fprintf(G__serr,"Limitation: Can not make STUB destructor, class %s\n"
 	  ,G__fulltagname(tagnum,1));
 }
 
@@ -500,8 +500,8 @@ struct G__dictposition *dictpos;
   while(dictpos->var) {
     for(ig15=dictpos->ig15;ig15<dictpos->var->allvar;ig15++) {
       if('p'!=dictpos->var->type[ig15]) {
-	G__fprinterr(G__serr,
-	"Warning: global variable %s specified in stub file. Ignored\n"
+	fprintf(G__serr
+	,"Warning: global variable %s specified in stub file. Ignored\n"
 		,dictpos->var->varnamebuf[ig15]);
       }
     }
@@ -526,7 +526,7 @@ struct G__dictposition *dictpos;
       ifunc=ifunc->next;
     }
 #else
-    G__fprinterr(G__serr,"Warning: class/struct/union %s specified in stub file\n"
+    fprintf(G__serr,"Warning: class/struct/union %s specified in stub file\n"
 	    ,G__struct.name[tagnum]);
 #endif
   }
