@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.2 2000/05/30 06:12:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -65,34 +65,35 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       return;
    }
    if (strcmp(name,"Bold") == 0) {
-     // Author: Art Poskanzer, LBNL, Oct. 1999
+   // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
-      SetFrameLineWidth(2);
+      SetFrameLineWidth(3);
       SetFrameFillColor(10);
       SetPadColor(10);
       SetPadTickX(1);
       SetPadTickY(1);
       SetPadBottomMargin(0.15);
-      SetPadLeftMargin(0.17);
+      SetPadLeftMargin(0.15);
       SetHistLineWidth(3);
       SetHistLineColor(kRed);
-      SetLabelSize(0.04,"X");
-      SetLabelSize(0.04,"Y");
-      SetLabelSize(0.04,"Z");
+      SetFuncWidth(3);
+      SetFuncColor(kGreen);
+      SetLineWidth(3);
+      SetLabelSize(0.05,"X");
+      SetLabelSize(0.05,"Y");
+      SetLabelSize(0.05,"Z");
+      SetLabelOffset(0.01,"Y");
       SetLabelColor(kBlue,"X");
       SetLabelColor(kBlue,"Y");
-      SetLabelColor(kBlue,"Z");
       SetTitleSize(0.06,"X");
       SetTitleSize(0.06,"Y");
       SetTitleSize(0.06,"Z");
+      SetTitleOffset(1.3,"Y");
       SetTitleColor(10);
       SetTitleTextColor(kBlue);
       SetStatColor(10);
-      SetFuncWidth(3);
-      SetFuncColor(kGreen);
-      SetLineWidth(2);
       return;
    }
    if (strcmp(name,"Video") == 0) {
@@ -126,6 +127,41 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetLineWidth(3);
       return;
    }
+   if (strcmp(name,"Pub") == 0) {
+   // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetPalette(8,0);
+      SetCanvasColor(10);
+      SetCanvasBorderMode(0);
+      SetFrameLineWidth(3);
+      SetFrameFillColor(10);
+      SetPadColor(10);
+      SetPadTickX(1);
+      SetPadTickY(1);
+      SetPadBottomMargin(0.15);
+      SetPadLeftMargin(0.15);
+      SetHistLineWidth(3);
+      SetHistLineColor(kRed);
+      SetFuncWidth(3);
+      SetFuncColor(kGreen);
+      SetLineWidth(3);
+      SetLabelSize(0.05,"X");
+      SetLabelSize(0.05,"Y");
+      SetLabelSize(0.05,"Z");
+      SetLabelOffset(0.01,"Y");
+      SetLabelColor(kBlue,"X");
+      SetLabelColor(kBlue,"Y");
+      SetLabelColor(kBlue,"Z");
+      SetTitleSize(0.06,"X");
+      SetTitleSize(0.06,"Y");
+      SetTitleSize(0.06,"Z");
+      SetTitleOffset(1.3,"Y");
+      SetTitleColor(10);
+      SetTitleTextColor(kBlue);
+      return;
+   }
+
 }
 
 //______________________________________________________________________________
@@ -151,9 +187,10 @@ void TStyle::Browse(TBrowser *)
 void TStyle::BuildStyles()
 {
     // create some standard styles
-   new TStyle("Plain","Plain Style (no colors/fill areas)");
-   new TStyle("Bold", "Bold Style");;
-   new TStyle("Video", "Style for video presentation histograms");
+   new TStyle("Plain",  "Plain Style (no colors/fill areas)");
+   new TStyle("Bold",   "Bold Style");;
+   new TStyle("Video",  "Style for video presentation histograms");
+   new TStyle("Pub",    "Style for Publications");
    new TStyle("Default","Default Style");
 }
 
