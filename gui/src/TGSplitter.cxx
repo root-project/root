@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.2 2000/09/07 11:19:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -61,7 +61,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kEnterWindowMask | kLeaveWindowMask);
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
@@ -194,7 +194,7 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kEnterWindowMask | kLeaveWindowMask);
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.3 2000/09/29 13:55:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.4 2000/09/30 11:11:21 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -65,7 +65,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
    wattr.fBorderWidth = 1;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
-   gVirtualX->SelectInput(fId, kStructureNotifyMask);
+   AddInput(kStructureNotifyMask);
 }
 
 //______________________________________________________________________________
@@ -158,8 +158,8 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different
    // items when the mouse crosses.
-   gVirtualX->SelectInput(fListBox->GetContainer()->GetId(), kButtonPressMask |
-                     kButtonReleaseMask | kPointerMotionMask);
+   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
+                                      kPointerMotionMask);
 }
 
 //______________________________________________________________________________

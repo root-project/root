@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.3 2000/09/05 10:56:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.4 2000/09/05 16:13:36 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -178,8 +178,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kExposureMask | kPointerMotionMask |
-                               kEnterWindowMask | kLeaveWindowMask);
+   AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________

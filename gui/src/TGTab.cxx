@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -224,7 +224,7 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
                        kVerticalFrame | kRaisedFrame | kDoubleBorder);
    AddFrame(fContainer, 0);
 
-   gVirtualX->SelectInput(fId, kButtonPressMask);
+   AddInput(kButtonPressMask);
 }
 
 //______________________________________________________________________________

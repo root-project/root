@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.6 2000/07/12 17:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.7 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -76,9 +76,8 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
                          kButtonPressMask | kButtonReleaseMask |
                          kButtonMotionMask, kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kKeyPressMask | kEnterWindowMask |
-                          kLeaveWindowMask | kFocusChangeMask |
-                          kExposureMask | kStructureNotifyMask);
+   AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
+            kFocusChangeMask | kStructureNotifyMask);
 }
 
 

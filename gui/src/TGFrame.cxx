@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.2 2000/08/31 14:20:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -164,7 +164,7 @@ void TGFrame::ChangeOptions(UInt_t options)
 }
 
 //______________________________________________________________________________
-void TGFrame::AddInput(Long_t emask)
+void TGFrame::AddInput(UInt_t emask)
 {
    // Add events specified in the emask to the events the frame should handle.
 
@@ -173,7 +173,7 @@ void TGFrame::AddInput(Long_t emask)
 }
 
 //______________________________________________________________________________
-void TGFrame::RemoveInput(Long_t emask)
+void TGFrame::RemoveInput(UInt_t emask)
 {
    // Remove events specified in emask from the events the frame should handle.
 

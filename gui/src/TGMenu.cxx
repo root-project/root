@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -329,8 +329,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
 
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
-   gVirtualX->SelectInput(fId, kPointerMotionMask | kEnterWindowMask |
-                          kLeaveWindowMask   | kExposureMask);
+   AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________

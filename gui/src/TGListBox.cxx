@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.2 2000/08/31 14:21:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -600,10 +600,10 @@ void TGListBox::InitListBox()
 
    fVScrollbar->Associate(this);
 
-   gVirtualX->SelectInput(fVScrollbar->GetId(), kButtonPressMask |
-                     kButtonReleaseMask | kPointerMotionMask);
-   gVirtualX->SelectInput(fLbc->GetId(), kButtonPressMask |
-                     kButtonReleaseMask /*| kPointerMotionMask */);
+   fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask);
+   fLbc->AddInput(kButtonPressMask | kButtonReleaseMask
+                  /*| kPointerMotionMask */);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.1 2000/09/29 08:54:26 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -65,7 +65,7 @@ void TGShutter::AddItem(TGShutterItem *item)
 }
 
 //______________________________________________________________________________
-Bool_t TGShutter::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
 {
    // Handle shutter messages.
 
@@ -102,7 +102,7 @@ Bool_t TGShutter::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //______________________________________________________________________________
-Bool_t TGShutter::HandleTimer(TTimer *t)
+Bool_t TGShutter::HandleTimer(TTimer *)
 {
    // Shutter item animation.
 

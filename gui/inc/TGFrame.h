@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -122,7 +122,7 @@ protected:
    Int_t    fBorderWidth;   // frame border width
    UInt_t   fOptions;       // frame options
    ULong_t  fBackground;    // frame background color
-   Long_t   fEventMask;     // currenty active event mask
+   UInt_t   fEventMask;     // currenty active event mask
 
    static ULong_t     fgDefaultFrameBackground;
    static ULong_t     fgDefaultSelectedBackground;
@@ -149,9 +149,9 @@ public:
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame() { }
 
-   Long_t GetEventMask() const { return fEventMask; }
-   void   AddInput(Long_t emask);
-   void   RemoveInput(Long_t emask);
+   UInt_t GetEventMask() const { return fEventMask; }
+   void   AddInput(UInt_t emask);
+   void   RemoveInput(UInt_t emask);
 
    virtual Bool_t HandleEvent(Event_t *event);
    virtual Bool_t HandleConfigureNotify(Event_t *event);

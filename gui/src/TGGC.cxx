@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.1 2000/09/29 08:52:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.2 2000/10/02 15:46:49 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -22,16 +22,6 @@
 #include "TVirtualX.h"
 #include "TList.h"
 #include <string.h>
-
-
-#if 0
-class TGGCElement : public TObject, public TRefCnt {
-public:
-   TGGC   *fContext;
-   ~TGGCElement() { delete fContext; }
-   Bool_t  IsEqual(TObject *obj) { return fContext == obj; }
-};
-#endif
 
 
 ClassImp(TGGC)
@@ -125,7 +115,6 @@ void TGGC::UpdateValues(GCValues_t *values)
          default:
          case 0:
             continue;
-            break;
          case kGCFunction:
             fValues.fFunction = values->fFunction;
             break;
@@ -581,7 +570,6 @@ Int_t TGGCPool::MatchGC(TGGC *gc, GCValues_t *values)
          default:
          case 0:
             continue;
-            break;
          case kGCFunction:
             match = (values->fFunction == gcv->fFunction);
             break;

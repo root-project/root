@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kExposureMask | kEnterWindowMask | kLeaveWindowMask);
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________

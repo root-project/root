@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -70,8 +70,8 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kKeyPressMask | kKeyReleaseMask | kExposureMask |
-                     kPointerMotionMask | kStructureNotifyMask | kLeaveWindowMask);
+   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
+            kStructureNotifyMask | kLeaveWindowMask);
 }
 
 

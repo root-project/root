@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.2 2000/09/08 07:41:00 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -158,8 +158,8 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
 
-   gVirtualX->SelectInput(fId, kKeyPressMask | kKeyReleaseMask | kExposureMask |
-                     kPointerMotionMask | kStructureNotifyMask | kLeaveWindowMask);
+   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
+            kStructureNotifyMask | kLeaveWindowMask);
 }
 
 

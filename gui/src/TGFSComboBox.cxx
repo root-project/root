@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.2 2000/07/01 08:41:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -202,8 +202,8 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
                                  kLHintsExpandY, 4, 0, 0, 0));
 
-   gVirtualX->SelectInput(fListBox->GetContainer()->GetId(), kButtonPressMask |
-                     kButtonReleaseMask | kPointerMotionMask);
+   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
+                                      kPointerMotionMask);
 
    //--- first check for the existence of some directories...
 
