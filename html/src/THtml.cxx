@@ -1,4 +1,4 @@
-// @(#)root/html:$Name$:$Id$
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -1150,7 +1150,7 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
 
     // write classFile footer
-    WriteHtmlFooter( out, "", lastUpdate, author, copyright );
+    WriteHtmlFooter( out, "",  lastUpdate, author, copyright );
 
     // free memory
     if( nextLine )     delete [] nextLine;

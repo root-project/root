@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.2 2000/05/19 08:50:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.3 2000/05/29 06:19:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1564,7 +1564,7 @@ void TTree::Scan(const char *varexp, const char *selection, Option_t *option, In
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
       nb++;
       branch->SetBasketSize(buffsize);
    }
@@ -1611,7 +1611,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
       else        branch->SetBit(kDoNotProcess);
