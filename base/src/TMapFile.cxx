@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.7 2001/04/06 14:17:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.8 2002/01/07 16:11:06 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -110,7 +110,7 @@ union semun {
    ushort *array;                // array for GETALL & SETALL
 };
 #endif
-#if defined(R__LINUX) || defined(R__LYNXOS)
+#if defined(R__LINUX) || defined(R__LYNXOS) || defined(R__HURD)
 #  define       SEM_A   0200     // alter permission
 #  define       SEM_R   0400     // read permission
 #endif

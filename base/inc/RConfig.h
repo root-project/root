@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.26 2001/12/07 11:09:45 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.27 2002/01/18 18:46:06 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -185,6 +185,15 @@
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__PPCEGCS
 #   endif
+#endif
+
+#if defined(__MACH__) && defined(__i386__)
+#   define R__HURD
+#   define f2cFortran   /* cfortran.h does not know HURD - sigh */
+#   define R__UNIX
+#   define R__BYTESWAP
+#   define R__GLIBC     /* GNU/Hurd always use GLIBC 2.x :-) */
+#   define NEED_SIGJMP
 #endif
 
 #if defined(__Lynx__) && defined(__powerpc__)

@@ -12,6 +12,7 @@ hpux                 for HP-UX 10.20 CC
 hpuxacc              for HP-UX 10.20 aCC
 hpuxegcs             for HP-UX 10.20 egcs 1.1.x
 hpuxia64acc          for HP-UX 11i v1.5 (IA-64) aCC
+hurddeb              for Debian GNU/Hurd with gcc and glibc
 linux                for Linux egcs 1.1.x, gcc 2.9x, gcc 3.x and glibc
 linuxalphaegcs       for Alpha Linux egcs and glibc
 linuxarm             for ARM Linux egcs and glibc

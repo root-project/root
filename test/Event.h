@@ -16,7 +16,6 @@
 #include "TH1.h"
 #include "TMath.h"
 
-#include <iostream.h>
 
 class TDirectory;
 
@@ -101,7 +100,7 @@ private:
    Float_t        fTemperature;
    Int_t          fMeasures[10];
    Float_t        fMatrix[4][4];
-   Float_t       *fClosestDistance;   //[fNvertex] 
+   Float_t       *fClosestDistance;   //[fNvertex]
    EventHeader    fEvtHdr;
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only
@@ -109,7 +108,7 @@ private:
    TRef           fLastTrack;         //reference pointer to last track
    TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
    TH1F          *fH;                 //->
-      
+
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: error.cxx,v 1.2 2000/12/19 16:18:27 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: error.cxx,v 1.3 2002/01/20 14:23:53 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -67,7 +67,7 @@ static void Perror(char *buf)
 
    int len = strlen(buf);
 #if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
-   defined(_AIX) 
+   defined(_AIX) || defined(__MACH__)
    sprintf(buf+len, " (%s)", strerror(GetErrno()));
 #else
    if (GetErrno() >= 0 && GetErrno() < sys_nerr)

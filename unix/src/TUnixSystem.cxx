@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.31 2001/11/26 15:37:46 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.32 2002/01/20 14:23:53 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX)
+    defined(R__MACOSX) || defined(R__HURD)
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -53,13 +53,13 @@
 #endif
 #if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
     defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX)
+    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) 
+#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
@@ -73,7 +73,7 @@
 #elif defined(R__MACOSX)
 #   include <sys/mount.h>
     extern "C" int statfs(const char *file, struct statfs *buffer);
-#elif defined(R__LINUX) || defined(R__HPUX)
+#elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
 #   include <sys/vfs.h>
 #elif defined(R__FBSD)
 #   include <sys/param.h>
@@ -321,7 +321,7 @@ const char *TUnixSystem::GetError()
 
    Int_t err = GetErrno();
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
-    defined(R__FBSD)
+    defined(R__FBSD) || defined(R__HURD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
@@ -2218,7 +2218,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 #if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
     defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX)
+    defined(R__MACOSX) || defined(R__HURD)
    struct dirent *dp;
 #else
    struct direct *dp;

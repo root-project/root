@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.34 2001/05/08 13:43:55 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.35 2002/01/20 14:23:53 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -174,6 +174,9 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
+#ifdef __MACH__
+#   define R__GLIBC
+#endif
 
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
@@ -183,7 +186,8 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
+    defined(__MACH__)
 #include <grp.h>
 #include <sys/types.h>
 #endif

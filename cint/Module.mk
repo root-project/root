@@ -52,6 +52,9 @@ else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
+ifeq ($(PLATFORM),hurd)
+CINTS2       += $(MODDIRS)/libstrm.cxx
+endif
 ifeq ($(PLATFORM),fbsd)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif

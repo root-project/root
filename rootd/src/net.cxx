@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.12 2001/02/07 11:00:20 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.13 2001/06/22 16:10:19 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -36,6 +36,9 @@
 #         define R__GLIBC
 #      endif
 #   endif
+#endif
+#ifdef __MACH__
+#   define R__GLIBC
 #endif
 
 #include "rootdp.h"

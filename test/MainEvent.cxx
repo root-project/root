@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.19 2001/10/07 20:03:29 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.20 2001/11/19 21:13:45 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@
 //  For each event the event histogram is saved as well as the list
 //  of all tracks.
 //
-//  The two TRefArray contain only references to the original tracks owned by 
+//  The two TRefArray contain only references to the original tracks owned by
 //  the TClonesArray fTracks.
 //
 //  The number of events can be given as the first argument to the program.
@@ -81,6 +81,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <iostream.h>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -125,7 +126,7 @@ int main(int argc, char **argv)
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
    Int_t branchStyle = 1; //new style by default
    if (split < 0) {branchStyle = 0; split = -1-split;}
-   
+
    TFile *hfile;
    TTree *tree;
    Event *event = 0;

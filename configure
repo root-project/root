@@ -535,9 +535,13 @@ fi
 #
 # Check for posix thread library
 #
-if test "$platform" = "linux" && test "x$enable_thread" = "x"; then
-   enable_thread="yes"
-fi
+case $platform in
+linux|linuxdeb)
+    if test "x$enable_thread" = "x"; then
+        enable_thread="yes"
+    fi
+    ;;
+esac
 if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
@@ -614,7 +618,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 	/usr/local/X11R6/include /usr/local/include \
 	/usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
 	/usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/include
+	/opt/Mesa/include /opt/graphics/OpenGL/include
     openglinc=$found_hdr
     openglincdir=$found_dir
 
@@ -622,7 +626,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 	/usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
 	/usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/lib"
+	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux32 /opt/graphics/OpenGL/lib"
 
     keep=$opengllibdir
     check_library "libGL libMesaGL" "$enable_shared" \

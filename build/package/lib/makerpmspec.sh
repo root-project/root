@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id: makerpmspec.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -16,7 +16,7 @@ curdir=`pwd`
 
 ### echo %%% Packages ordered by preference
 pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-star root-shift root-cint root-bin libroot-dev libroot"
-pkgs=`./configure linux --pkglist | sed -n 's,packages: ,,p'`
+pkgs=`./configure linux --pkglist --enable-soversion --enable-star --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
 lvls="preinst postinst prerm postrm"
 
 # ROOT version 
@@ -71,6 +71,16 @@ sed -e "s|@libdir@|${libdir}|" \
 
 #
 # $Log: makerpmspec.sh,v $
+# Revision 1.2  2002/01/20 14:23:52  rdm
+# Mega patch by Christian Holm concerning the configure, build and
+# Debian and RedHat packaging scripts. The configure script has been
+# rationalized (introduction of two shell functions to find package
+# headers and libraries). Extensive update of the INSTALL writeup,
+# including description of all new packages (SapDB, PgSql, etc.).
+# More options to the root-config script. Man page for memprobe.
+# Big overhaul of the Debian and RedHat packaging scripts, supporting
+# the new libraries.
+#
 # Revision 1.1  2001/04/23 14:11:47  rdm
 # part of the debian and redhat build system.
 #

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.20 2001/01/26 16:44:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.21 2002/01/20 14:23:53 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -104,6 +104,9 @@
 #      endif
 #   endif
 #endif
+#ifdef __MACH__
+#   define R__GLIBC
+#endif
 
 #if defined(__FreeBSD__) && (__FreeBSD__ < 4)
 #include <sys/file.h>
@@ -113,7 +116,7 @@
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__MACH__)
 #include <grp.h>
 #include <sys/types.h>
 #endif

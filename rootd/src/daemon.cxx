@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.2 2000/06/16 15:23:01 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.3 2001/04/06 14:17:42 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -33,6 +33,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifndef NOFILE
+#   define NOFILE 0
+#endif
+
 #if defined(__hpux)
 #define USE_SIGCHLD
 #endif
@@ -43,7 +47,8 @@
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
+    defined(__MACH__)
 #define USE_SETSID
 #endif
 

@@ -63,6 +63,16 @@ LDFLAGS       = -O
 SOFLAGS       = -fPIC -shared
 endif
 
+
+ifeq ($(ARCH),hurddeb)
+# GNU/Hurd
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),aix)
 # IBM AIX xlC 4.x
 CXX           = xlC

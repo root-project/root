@@ -44,6 +44,12 @@ hpuxegcs)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
+hurddeb)
+   # Debian GNU/Hurd
+   auxcflags=
+   auxlibs="-lnsl -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
 aix | aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"

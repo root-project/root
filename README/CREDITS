@@ -111,7 +111,7 @@ N: Christian Holm Christensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
-D: debian and redhat packaging scripts
+D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
 
 N: Marian Ivanov
 E: m.ivanov@gsi.de
