@@ -226,7 +226,7 @@ check_library() {
 	        # logical variables and are on our way, otherwise we continue
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
                 for n in ${liblist} ; do
-                    if test -r $n ; then
+                    if test -f $n ; then
                         found_dir=$l
                         found_lib=$j
                         break 4
