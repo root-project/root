@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.7 2001/04/12 08:13:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.8 2001/11/01 11:43:04 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -83,6 +83,7 @@
 #include "TGButton.h"
 #include "TClass.h"
 #include "TGLayout.h"
+#include "TList.h"
 
 
 ClassImpQ(TGButtonGroup)

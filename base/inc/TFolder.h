@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.10 2001/07/06 13:22:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.11 2002/01/04 10:20:05 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -25,14 +25,16 @@
 #include "TNamed.h"
 #endif
 
+class TCollection;
 class TBrowser;
+
 
 class TFolder : public TNamed {
 
 protected:
    TCollection       *fFolders;        //pointer to the list of folders
    Bool_t             fIsOwner;        //true if folder own its contained objects
-   
+
 private:
    TFolder(const TFolder &folder);  //folders cannot be copied
    void operator=(const TFolder &);
@@ -60,7 +62,7 @@ public:
    virtual void        Remove(TObject *obj);
    virtual void        SaveAs(const char *filename=""); // *MENU*
    virtual void        SetOwner(Bool_t owner=kTRUE);
-   
+
    ClassDef(TFolder,1)  //Describe a folder: a list of objects and folders
 };
 

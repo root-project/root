@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.4 2001/10/22 14:26:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.5 2002/01/20 10:22:43 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -27,6 +27,8 @@
 #endif
 
 class TDirectory;
+class TCollection;
+
 
 class TEventList : public TNamed {
 

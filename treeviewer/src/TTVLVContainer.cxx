@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.5 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
+#include "TList.h"
+
 
 ClassImp(TGItemContext)
 

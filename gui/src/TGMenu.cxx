@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.4 2000/10/17 12:34:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.5 2001/11/18 17:25:25 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TTimer.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TList.h"
 
 
 ClassImp(TGMenuBar)

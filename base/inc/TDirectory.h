@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.8 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.9 2002/01/05 17:15:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -23,6 +23,9 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 #ifndef ROOT_TDatime
 #include "TDatime.h"

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.2 2001/12/20 10:19:26 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TGIcon.h"
 #include "TGLabel.h"
 #include "TMath.h"
+#include "TList.h"
 
 
 ClassImp(TGMsgBox)
