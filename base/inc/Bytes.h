@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.5 2001/11/11 15:44:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.6 2001/12/07 21:57:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -45,7 +45,15 @@
 #include "Byteswap.h"
 #endif
 
+#ifdef R__BOOL
 //______________________________________________________________________________
+inline void tobuf(char *&buf, Bool_t x)
+{
+   UChar_t x1 = x;
+   *buf++ = x1;
+}
+#endif
+
 inline void tobuf(char *&buf, UChar_t x)
 {
    *buf++ = x;
@@ -191,6 +199,15 @@ inline void tobuf(char *&buf, Double_t x)
 #endif
    buf += sizeof(Double_t);
 }
+
+#ifdef R__BOOL
+inline void frombuf(char *&buf, Bool_t *x)
+{
+   UChar_t x1;
+   x1 = *buf++;
+   *x = x1;
+}
+#endif
 
 inline void frombuf(char *&buf, UChar_t *x)
 {

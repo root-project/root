@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.9 2002/02/02 13:42:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.10 2002/02/03 16:13:27 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ protected:
    char     *fBufMax;        //End of buffer
    Int_t     fMapCount;      //Number of objects or classes in map
    Int_t     fMapSize;       //Default size of map
-   Int_t     fDisplacement;  //Value to be added to the map offsets   
+   Int_t     fDisplacement;  //Value to be added to the map offsets
    TExMap   *fMap;           //Map containing object,id pairs for reading/ writing
    TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
 
@@ -174,6 +174,9 @@ public:
    void     WriteFastArray(const Float_t  *f, Int_t n);
    void     WriteFastArray(const Double_t *d, Int_t n);
 
+#ifdef R__BOOL
+   TBuffer  &operator>>(Bool_t   &b);
+#endif
    TBuffer  &operator>>(Char_t   &c);
    TBuffer  &operator>>(UChar_t  &c);
    TBuffer  &operator>>(Short_t  &h);
@@ -186,6 +189,9 @@ public:
    TBuffer  &operator>>(Double_t &d);
    TBuffer  &operator>>(Char_t   *c);
 
+#ifdef R__BOOL
+   TBuffer  &operator<<(Bool_t   b);
+#endif
    TBuffer  &operator<<(Char_t   c);
    TBuffer  &operator<<(UChar_t  c);
    TBuffer  &operator<<(Short_t  h);
@@ -211,6 +217,17 @@ public:
 };
 
 //---------------------- TBuffer inlines ---------------------------------------
+
+#ifdef R__BOOL
+//______________________________________________________________________________
+inline TBuffer &TBuffer::operator<<(Bool_t b)
+{
+   if (fBufCur + sizeof(UChar_t) > fBufMax) Expand(2*fBufSize);
+
+   tobuf(fBufCur, b);
+   return *this;
+}
+#endif
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(Char_t c)
@@ -272,6 +289,15 @@ inline TBuffer &TBuffer::operator<<(const Char_t *c)
    WriteString(c);
    return *this;
 }
+
+#ifdef R__BOOL
+//______________________________________________________________________________
+inline TBuffer &TBuffer::operator>>(Bool_t &b)
+{
+   frombuf(fBufCur, &b);
+   return *this;
+}
+#endif
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(Char_t &c)
