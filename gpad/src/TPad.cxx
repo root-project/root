@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.146 2004/10/19 17:13:27 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.147 2004/10/22 07:31:58 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3947,8 +3947,8 @@ void TPad::RedrawAxis(Option_t *option)
    while ((obj = next())) {
       if (obj->InheritsFrom("TH1")) {
          TH1 *hobj = (TH1*)obj;
-         if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
-         else                   hobj->DrawCopy("sameaxis");
+         if (opt.Contains("g")) hobj->Draw("sameaxig");
+         else                   hobj->Draw("sameaxis");
          return;
       }
       if (obj->InheritsFrom("TMultiGraph")) {
