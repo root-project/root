@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.4 2004/12/07 15:34:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.5 2005/02/28 15:42:42 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -128,7 +128,7 @@ public:
                fColorRed[i] = gWebBase[r] << 8;
                fColorGreen[i] = gWebBase[g] << 8;
                fColorBlue[i] = gWebBase[b] << 8;
-               fColorAlpha[i] = 1 << 15;
+               fColorAlpha[i] = 0xffff;
                fCLUT[r][g][b] = i;
                i++;
             }
