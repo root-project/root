@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.12 2001/09/26 13:23:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.13 2001/10/03 20:59:59 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -265,14 +265,22 @@ TGClient::TGClient(const char *dpyName)
    WindowAttributes_t  root_attr;
 
    // Load GUI defaults from .rootrc
+#ifndef GDK_WIN32
    strcpy(norm_font,    gEnv->GetValue("Gui.NormalFont","-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
    strcpy(bold_font,    gEnv->GetValue("Gui.BoldFont", "-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1"));
    strcpy(small_font,   gEnv->GetValue("Gui.SmallFont", "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
    strcpy(prop_font,    gEnv->GetValue("Gui.ProportionalFont", "-adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
+#else
+   strcpy(norm_font,    gEnv->GetValue("Gui.NormalFont","-adobe-Arial-medium-r-normal--12-*-*-*-*-*-iso8859-1"));
+   strcpy(bold_font,    gEnv->GetValue("Gui.BoldFont", "-adobe-Arial-bold-r-normal--12-*-*-*-*-*-iso8859-1"));
+   strcpy(small_font,   gEnv->GetValue("Gui.SmallFont", "-adobe-Arial-medium-r-normal--10-*-*-*-*-*-iso8859-1"));
+   strcpy(prop_font,    gEnv->GetValue("Gui.ProportionalFont", "-adobe-Arial-medium-r-normal--12-*-*-*-*-*-iso8859-1"));
+#endif
    strcpy(backcolor,    gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0"));
    strcpy(forecolor,    gEnv->GetValue("Gui.ForegroundColor", "black"));
    strcpy(selforecolor, gEnv->GetValue("Gui.SelectForegroundColor", "white"));
    strcpy(selbackcolor, gEnv->GetValue("Gui.SelectBackgroundColor", "#000080"));
+#ifndef GDK_WIN32
 #ifndef R__VMS
 # ifdef ROOTICONPATH
    sprintf(icon_path, "%s/icons:%s:.:",
@@ -311,6 +319,14 @@ TGClient::TGClient(const char *dpyName)
       sprintf(mime_file, "%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
 # endif
 #endif
+#else // GDK_WIN32
+   sprintf(icon_path, "%s\\icons", gSystem->Getenv("ROOTSYS"));
+   sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
+   strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
+   if (gSystem->AccessPathName(mime_file, kReadPermission))
+       sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
+#endif // GDK_WIN32
+
    // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
    gSystem->SetDisplay();
 
@@ -334,7 +350,11 @@ TGClient::TGClient(const char *dpyName)
    gROOT_MESSAGE     = gVirtualX->InternAtom("_ROOT_MESSAGE", kFALSE);
 
    TGTextEntry::fgClipboard =
+#ifndef GDK_WIN32
    TGView::fgClipboard = gVirtualX->InternAtom("_ROOT_CLIPBOARD", kFALSE);
+#else
+   TGView::fgClipboard = gVirtualX->InternAtom("CLIPBOARD", kFALSE);
+#endif
 
    // Create an object for the root window, create picture pool, etc...
 
@@ -746,6 +766,10 @@ Bool_t TGClient::ProcessOneEvent()
 
    if (gVirtualX->EventsPending()) {
       gVirtualX->NextEvent(event);
+#ifdef GDK_WIN32
+      if (event.fType == kOtherEvent)
+         return kFALSE;
+#endif      
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
          if (fForceRedraw)

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.9 2001/09/20 17:07:23 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.10 2001/10/01 17:46:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -75,12 +75,16 @@ protected:
    HIMAGELIST fhSmallIconList;  // List of the small icons
    HIMAGELIST fhNormalIconList; // List of the normal icons
 
-   void                CreateIcons();            // Create a list of the icons for Root appl
+   void       CreateIcons();    // Create a list of the icons for ROOT appl
 
-  // static functions providing semi-low level interface to raw WinNT
+   // static functions providing semi-low level interface to raw WinNT
    static const char  *WinNTHomedirectory(const char *user = 0);
    static int          WinNTWaitchild();
+#ifndef GDK_WIN32
    static int          WinNTSetitimer(TTimer *ti);
+#else
+   static int          WinNTSetitimer(Long_t ms);
+#endif
    static int          WinNTSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
@@ -127,7 +131,9 @@ public:
    void              SetShellName(const char *name=0);
 
    //---- EventLoop --------------------------------------------
+#ifndef GDK_WIN32
    Bool_t            ProcessEvents();
+#endif
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
    void              ExitLoop();
    void              InnerLoop();
@@ -199,7 +205,9 @@ public:
    TTime             Now();
    void              AddTimer(TTimer *ti);
    TTimer           *RemoveTimer(TTimer *ti);
-//   void              DispatchTimers();
+#ifdef GDK_WIN32
+   Bool_t            DispatchTimers(Bool_t mode);
+#endif
    Bool_t            DispatchSynchTimers();
    void              Sleep(UInt_t milliSec);
    Double_t          GetRealTime();

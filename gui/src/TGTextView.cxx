@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.10 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.11 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -591,7 +591,9 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
 
    delete [] buffer;
 
+#ifndef GDK_WIN32
    gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
+#endif
 
    return kTRUE;
 }

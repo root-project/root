@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.54 2001/11/04 17:30:32 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.55 2001/11/05 15:06:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1718,11 +1718,15 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 #ifndef WIN32
          CreateNewText(event,px,py,newcode);
 #else
+#ifndef GDK_WIN32
         {
             if (event == kButton1Down) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewText(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py, newcode));
         }
+#else
+         CreateNewText(event,px,py,newcode);
+#endif
 #endif
          break;
       case kLine:
@@ -1756,12 +1760,14 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kPavesText:
       case kDiamond:
 #ifdef WIN32
+#ifndef GDK_WIN32
          if (newcode == kPaveLabel || newcode == kButton) {
             if (event == kButton1Up) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewPave(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py,newcode));
          }
          else
+#endif
 #endif
            CreateNewPave(event,px,py,newcode);
          return;
@@ -2742,6 +2748,28 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                gVirtualX->SetFillColor(1);
                gVirtualX->SetFillStyle(style);
             }
+#else
+#ifdef GDK_WIN32
+            if (style < 3020) {
+               // set solid background color
+               gVirtualX->SetFillStyle(1001);
+               gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
+            }
+
+            if (style > 3100) {
+               char gifname[32];
+               sprintf(gifname,"gif%d",style);
+               TNamed *gifnamed = (TNamed*)gROOT->GetListOfSpecials()->FindObject(gifname);
+               if (gifnamed) gVirtualX->ReadGIF(px1,py2,gifnamed->GetTitle());
+            }
+            if (style > 3020 && style < 3100) {
+               gVirtualX->SetFillStyle(style-10);
+            } else {
+               fcolor = gVirtualX->GetFillColor(); // save fill color
+               gVirtualX->SetFillColor(1);
+               gVirtualX->SetFillStyle(style);
+            }
+#endif
 #endif
             // draw stipples
             gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
@@ -2751,6 +2779,13 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             if (fcolor >= 0) {
                gVirtualX->SetFillColor(fcolor);
             }
+#else
+#ifdef GDK_WIN32
+            // restore fill color
+            if (fcolor >= 0) {
+               gVirtualX->SetFillColor(fcolor);
+            }
+#endif
 #endif
             } else if (style >= 4000 && style <= 4100) {
             // For style >=4000 we make the window transparent.
@@ -4605,7 +4640,14 @@ TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
                                            (Long_t)box,text,(Int_t)delayms));
 #else
+#ifdef GDK_WIN32
+   if (gPad->IsBatch()) return 0;
+   // return new TGToolTip(box, text, delayms);
+   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
+                                           (Long_t)box,text,(Int_t)delayms));
+#else
    return 0;
+#endif
 #endif
 }
 
@@ -4618,6 +4660,11 @@ void TPad::DeleteToolTip(TObject *tip)
    // delete tip;
    if (!tip) return;
    gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
+#else
+#ifdef GDK_WIN32
+   if (!tip) return;
+   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
+#endif
 #endif
 }
 
@@ -4632,6 +4679,13 @@ void TPad::ResetToolTip(TObject *tip)
    // tip->Reset(this);
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
                           (Long_t)tip,(Long_t)this));
+#else
+#ifdef GDK_WIN32
+   if (!tip) return;
+   // tip->Reset(this);
+   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
+                          (Long_t)tip,(Long_t)this));
+#endif
 #endif
 }
 
@@ -4644,6 +4698,12 @@ void TPad::CloseToolTip(TObject *tip)
    if (!tip) return;
    // tip->Hide();
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
+#else
+#ifdef GDK_WIN32
+   if (!tip) return;
+   // tip->Hide();
+   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
+#endif
 #endif
 }
 

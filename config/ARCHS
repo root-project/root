@@ -40,4 +40,5 @@ aixegcs              for AIX 4.x egcs 1.1.x
 lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc
 win32                for Win32 with VC++
+win32gdk             for Win32 with VC++ and gdk based GUI
 win32egcs            for Win32 with egcs (Cygwin)

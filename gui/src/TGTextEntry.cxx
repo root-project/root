@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.12 2001/08/31 17:49:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.13 2001/10/16 17:28:35 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1170,6 +1170,9 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    if (!IsEnabled()) return kTRUE;
 
+#ifdef GDK_WIN32
+   if (event->fType == kGKeyPress) {
+#endif
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
    Int_t unknown = 0;
@@ -1276,7 +1279,9 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    UpdateOffset();
    fClient->NeedRedraw(this);
-
+#ifdef GDK_WIN32
+   }
+#endif
    return kTRUE;
 }
 

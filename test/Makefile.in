@@ -21,6 +21,12 @@ ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 
+ifeq ($(ARCH),win32)
+PLATFORM      = win32
+endif
+ifeq ($(ARCH),win32gdk)
+PLATFORM      = win32
+endif
 
 ifeq ($(ARCH),hpux)
 # HP-UX with CC
@@ -400,7 +406,7 @@ SOFLAGS       = -Wl,-b,-E -nostdlib -nostartfiles
 DllSuf        = sl
 endif
 
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx
@@ -560,7 +566,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $(EVENTO) \
 		   $(OutPutOpt) libEvent.so
 else
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
@@ -657,7 +663,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) Hello.so
 else
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
@@ -688,7 +694,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) Aclock.so
 else
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
@@ -719,8 +725,8 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) Tetris.so
 else
-ifeq ($(ARCH),win32)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+ifeq ($(PLATFORM),win32)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
@@ -731,10 +737,10 @@ endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(LIBS) -p 0 $(TBENCHO)
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(LIBS) -p 0 $(TBENCHO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -749,7 +755,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) TBench.so
 else
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@

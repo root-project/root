@@ -8,6 +8,9 @@
 arch=@architecture@
 libdir=@libdir@
 incdir=@incdir@
+if test "$arch" = "win32gdk"; then
+   arch="win32"
+fi
 if test "$arch" = "win32"; then
    incdir=`cygpath -u $incdir`
    libdir=`cygpath -u $libdir`

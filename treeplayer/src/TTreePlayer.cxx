@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.65 2001/10/29 19:30:33 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.66 2001/11/03 16:55:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2918,7 +2918,12 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 
    gROOT->LoadClass("TTreeViewer","TreeViewer");
 #ifdef R__WIN32
+#ifndef GDK_WIN32
    gROOT->ProcessLine(Form("new TTreeViewer(\"%s\",\"TreeViewer\",%d,%d);",fTree->GetName(),ww,wh));
+#else
+   if (ww || wh) { }   // use unused variables
+   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
+#endif
 #else
    if (ww || wh) { }   // use unused variables
    gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));

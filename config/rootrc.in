@@ -71,10 +71,14 @@ WinNT.*.Root.Html.SourceDir: .;src;include
 #Root.Html.Copyright:        * Copyright
 
 # GUI specific settings
-Gui.NormalFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.BoldFont:          -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.SmallFont:         -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Gui.ProportionalFont:  -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.NormalFont:      -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.BoldFont:        -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Unix.*.Gui.SmallFont:       -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Unix.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.NormalFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.BoldFont:       -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.SmallFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
 Gui.BackgroundColor:        #c0c0c0
 Gui.ForegroundColor:        black
 Gui.SelectForegroundColor:  white
@@ -82,7 +86,7 @@ Gui.SelectBackgroundColor:  #000080
 Gui.IconPath:               $(HOME)/icons:@iconpath@:.
 Gui.MimeTypeFile:           $(HOME)/.root.mimes
 # If above does not exists defaults to this:
-#Gui.MimeTypeFile:           @iconpath@/root.mimes
+#Gui.MimeTypeFile:           @etcdir@/root.mimes
 # Can be either small, big, list, details
 Browser.IconStyle:          small
 # Can be either name, type, size, date

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.36 2001/10/25 07:50:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.37 2001/11/09 20:29:00 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -152,6 +152,7 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
    // This function must be called from the "Command thread only".
 
 #ifdef WIN32
+#ifndef GDK_WIN32
    char *line = (char *)(command->GetData(0));
    Int_t iret = ProcessLine((const char *)line);
    delete [] line;
@@ -159,6 +160,9 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
       ((TWin32SendWaitClass *)command)->Release();
    else
       delete command;
+#else
+   if (command) { }
+#endif
 #else
    if (command) { }
 #endif
@@ -252,11 +256,15 @@ Int_t TCint::ProcessLineAsynch(const char *line)
 #ifndef WIN32
    return ProcessLine(line);
 #else
+#ifndef GDK_WIN32
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
    TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,0,0,0);
    ExecCommandThread(code,kFALSE);
    return 0;
+#else
+   return ProcessLine(line);
+#endif
 #endif
 }
 
@@ -269,11 +277,13 @@ Int_t TCint::ProcessLineSynch(const char *line)
   if (gApplication && gApplication->IsCmdThread())
      return ProcessLine(line);
 #ifdef WIN32
+#ifndef GDK_WIN32
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
    TWin32SendWaitClass code(this,(UInt_t)cmd,0,0,0);
    ExecCommandThread(&code,kFALSE);
    code.Wait();
+#endif
 #endif
    return 0;
 }

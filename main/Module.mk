@@ -18,7 +18,7 @@ ROOTEXEO     := $(ROOTEXES:.cxx=.o)
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
 ROOTEXE      := bin/root.exe
 ROOTNEXE     := bin/rootn.exe
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 ROOTICON     := icons/RootIcon.obj
 endif
 
@@ -34,7 +34,7 @@ H2ROOTS2     := $(MODDIRS)/hntvar2.f
 H2ROOTS3     := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 H2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 H2ROOTDEP    := $(H2ROOTS1:.cxx=.d)
@@ -43,7 +43,7 @@ H2ROOT       := bin/h2root$(EXEEXT)
 ##### g2root #####
 G2ROOTS      := $(MODDIRS)/g2root.f
 G2ROOTO      := $(G2ROOTS:.f=.o)
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 G2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 G2ROOT       := bin/g2root$(EXEEXT)

@@ -101,7 +101,7 @@ icon = rootdb_s.xpm rootdb_t.xpm
 action = TFile *ftmp = new TFile("%s")
 
 [root/tfile]
-pattern = TFile TNetFile TRFIOFile
+pattern = TFile TNetFile TRFIOFile TWebFile
 icon = rootdb_s.xpm rootdb_t.xpm
 action = ->Browse()
 

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.18 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.19 2001/06/27 16:54:25 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -704,7 +704,7 @@ void TTreeViewer::BuildInterface()
    fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder);
    //--- container frame
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
-                        fgWhitePixel);
+                        GetWhitePixel());
    fLt->Associate(this);
    fTreeView->SetContainer(fLt);
 
@@ -718,8 +718,8 @@ void TTreeViewer::BuildInterface()
    fLVContainer->Associate(this);
    fLVContainer->SetListView(fListView);
    fLVContainer->SetViewer(this);
-   fLVContainer->SetBackgroundColor(fgWhitePixel);
-   fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
+   fLVContainer->SetBackgroundColor(GetWhitePixel());
+   fListView->GetViewPort()->SetBackgroundColor(GetWhitePixel());
    fListView->SetContainer(fLVContainer);
    fListView->SetViewMode(kLVList);
 

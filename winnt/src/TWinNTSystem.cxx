@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.22 2001/10/01 17:46:51 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.23 2001/11/26 15:37:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -116,6 +116,67 @@
 
 const char *kProtocolName   = "tcp";
 
+// for testing purpose only !!!
+#ifdef GDK_WIN32
+HANDLE hEvent1;
+HANDLE hThread1,hThread2;
+unsigned thread1ID,thread2ID;
+#endif
+
+
+#ifdef GDK_WIN32
+struct  itimerval {
+   struct  timeval it_interval;
+   struct  timeval it_value;
+};
+
+static UINT   timer_active = 0;
+static struct itimerval itv;
+static DWORD  start_time;
+
+#define ITIMER_REAL     0
+#define ITIMER_VIRTUAL  1
+#define ITIMER_PROF     2
+
+int setitimer (int which, const struct itimerval *value, struct itimerval *oldvalue)
+{
+  UINT elapse;
+
+  if (which != ITIMER_REAL)
+    {
+      return -1;
+    }
+  /* Check if we will wrap */
+  if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000))
+    {
+      return -1;
+    }
+  if (timer_active)
+    {
+      KillTimer (NULL, timer_active);
+      timer_active = 0;
+    }
+  if (oldvalue)
+    *oldvalue = itv;
+  if (value == NULL)
+    {
+      return -1;
+    }
+  itv = *value;
+  elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
+  if (elapse == 0)
+    if (itv.it_value.tv_usec)
+      elapse = 1;
+    else
+      return 0;
+  if (!(timer_active = SetTimer (NULL, 1, elapse, NULL)))
+    {
+      return -1;
+    }
+  start_time = GetTickCount ();
+  return 0;
+}
+#endif
 
 //______________________________________________________________________________
 BOOL ConsoleSigHandler(DWORD sig)
@@ -236,8 +297,26 @@ TWinNTSystem::~TWinNTSystem()
       fhNormalIconList = 0;
    }
 
+#ifdef GDK_WIN32
+   if (hThread1) CloseHandle(hThread1);
+#endif
    CloseHandle(fhTermInputEvent);
 }
+
+#ifdef GDK_WIN32
+unsigned __stdcall HandleConsoleThread(void *pArg )
+{
+    while (1) {
+        if(gROOT->GetApplication()) {
+            WaitForSingleObject(hEvent1, 10);
+            if(gROOT->GetApplication())
+                gROOT->GetApplication()->HandleTermInput();
+        }
+    }
+    _endthreadex( 0 );
+    return 0;
+}
+#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -285,12 +364,20 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
+#ifndef GDK_WIN32
    // The the name of the DLL to be used as a stock of the icon
    SetShellName();
    CreateIcons();
+#endif
 
    // Create Event HANDLE for stand-alone ROOT-based applications
    fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
+
+#ifdef GDK_WIN32
+    hEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
+        &thread1ID );
+#endif
 
    return kFALSE;
 }
@@ -627,6 +714,7 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 }
 
+#ifndef GDK_WIN32
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
 {
@@ -649,6 +737,72 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
      ResetEvent(fhTermInputEvent);
   }
 }
+#else
+
+//______________________________________________________________________________
+void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
+{
+ // Dispatch a single event via Command thread
+
+   while (1) {
+      fReadready  = fReadmask;
+      fWriteready = fWritemask;
+      PulseEvent(hEvent1);
+      if ((gXDisplay) && gXDisplay->Notify()) {
+         if (fReadready.IsSet(gXDisplay->GetFd())) {
+            fReadready.Clr(gXDisplay->GetFd());
+            fNfd--;
+         }
+         if (!pendingOnly) {
+             return;
+         }
+      }
+      // check for file descriptors ready for reading/writing
+      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
+          TFileHandler *fh;
+          TIter next(fFileHandler);
+
+          while (fh = (TFileHandler*) next()) {
+              int fd = fh->GetFd();
+              if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
+                  fReadready.Clr(fd);
+                  if (fh->ReadNotify()) {
+                      return;
+                  }
+              }
+              if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
+                  fWriteready.Clr(fd);
+                  if (fh->WriteNotify()) {
+                      return;
+                  }
+              }
+          }
+      }
+      fNfd = 0;
+      fReadready.Zero();
+      fWriteready.Zero();
+
+      // check synchronous signals
+      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+         if (CheckSignals(kTRUE))
+            if (!pendingOnly) return;
+      fSigcnt = 0;
+      fSignals.Zero();
+
+      // check synchronous timers
+      if (fTimers && fTimers->GetSize() > 0)
+         if (DispatchTimers(kTRUE)) {
+            // prevent timers from blocking file descriptor monitoring
+            Long_t to = NextTimeOut(kTRUE);
+            if (to > kItimerResolution || to == -1)
+               return;
+         }
+
+      if (pendingOnly) return;
+   }
+
+}
+#endif
 
 //______________________________________________________________________________
 void TWinNTSystem::ExitLoop()
@@ -1491,6 +1645,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 //______________________________________________________________________________
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
+#ifndef GDK_WIN32
     if (ti)
     {
         TSystem::AddTimer(ti);
@@ -1502,16 +1657,61 @@ void TWinNTSystem::AddTimer(TTimer *ti)
                 RemoveTimer(ti);
         }
     }
+#else
+   TSystem::AddTimer(ti);
+   if (!fInsideNotify && ti->IsAsync())
+      WinNTSetitimer(NextTimeOut(kFALSE));
+#endif
 }
 //______________________________________________________________________________
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
+#ifndef GDK_WIN32
     if (ti && fWin32Timer ) {
        fWin32Timer->KillTimer(ti);
        return TSystem::RemoveTimer(ti);
     }
     return 0;
+#else
+   TTimer *t = TSystem::RemoveTimer(ti);
+   if (ti->IsAsync())
+      WinNTSetitimer(NextTimeOut(kFALSE));
+   return t;
+#endif
 }
+
+#ifdef GDK_WIN32
+//______________________________________________________________________________
+Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
+{
+   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
+   // timers else a-synchronous timers.
+
+   if (!fTimers) return kFALSE;
+
+   fInsideNotify = kTRUE;
+
+   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TTimer *t;
+   Bool_t  timedout = kFALSE;
+
+   while ((t = (TTimer *) it.Next())) {
+      TTime now = Now();
+      now += TTime(kItimerResolution);
+      if (mode && t->IsSync()) {
+         if (t->CheckTimer(now))
+            timedout = kTRUE;
+      } else if (!mode && t->IsAsync()) {
+         if (t->CheckTimer(now)) {
+            WinNTSetitimer(NextTimeOut(kFALSE));
+            timedout = kTRUE;
+         }
+      }
+   }
+   fInsideNotify = kFALSE;
+   return timedout;
+}
+#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::DispatchSynchTimers()
@@ -2256,23 +2456,31 @@ long TWinNTSystem::WinNTNow()
    return (t.wMinute*60 + t.wSecond) * 1000 + t.wMilliseconds;
 }
 
+#ifndef GDK_WIN32
 //______________________________________________________________________________
 int TWinNTSystem::WinNTSetitimer(TTimer *ti)
 {
    // Set interval timer to time-out in ms milliseconds.
 
-#ifndef WIN32
-   struct itimerval itv;
-   itv.it_interval.tv_sec = itv.it_interval.tv_usec = 0;
-   itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
-   if (ms >= 0) {
-      itv.it_value.tv_sec  = ms / 1000;
-      itv.it_value.tv_usec = (ms % 1000) * 1000;
-   }
-   return setitimer(ITIMER_REAL, &itv, 0);
-#endif
-        return 0;
+   return 0;
 }
+
+#else
+//______________________________________________________________________________
+int TWinNTSystem::WinNTSetitimer(Long_t ms)
+{
+   // Set interval timer to time-out in ms milliseconds.
+
+   struct itimerval itval;
+   itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
+   itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
+   if (ms >= 0) {
+      itval.it_value.tv_sec  = ms / 1000;
+      itval.it_value.tv_usec = (ms % 1000) * 1000;
+   }
+   return setitimer(ITIMER_REAL, &itval, 0);
+}
+#endif
 
 //---- file descriptors --------------------------------------------------------
 
