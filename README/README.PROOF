@@ -18,7 +18,7 @@ To install and use PROOF on a cluster do the following:
 
 2) Add to /etc/inetd.conf the lines:
 
-   proofd stream tcp nowait root /usr/local/root/bin/proofd proofd /usr/local/root
+   proofd stream tcp nowait root /usr/local/root/bin/proofd proofd -i /usr/local/root
    rootd stream tcp nowait root /usr/local/root/bin/rootd rootd -i
 
    Restart inetd or force it to re-read the config file (kill -1 <inetd.pid>).
