@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.4 2000/10/04 16:32:43 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.5 2001/02/06 10:34:20 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -536,9 +536,7 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
                        // Take in account the room the array index will occupy
 
                         Int_t dim = member->GetArrayDim();
-                        Int_t indx = 0;
-                        while (indx < dim ){
-                              indx++;
+                        for (Int_t indx = 0; indx < dim; indx++ ) {
                               len2 += Int_t(TMath::Log10(member->GetMaxIndex(indx))) + 3;
                          }
 
