@@ -10,7 +10,8 @@ include $(ROOTTEST_HOME)/scripts/Event.mk
 
 #.SUFFIXES: .cxx .o .so
 
-LOPT:=-g3
+CXXOPT:=-Z7
+LDOPT:=-debug
 
 #all: bigeventTest
 
@@ -18,6 +19,5 @@ bigeventTest: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO)./Event 10 1 1 1 > Event.write.log
 	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
 
-local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log
-
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(ObjSuf) $(ALL_LIBRARIES)
 

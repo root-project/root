@@ -15,6 +15,8 @@ endif
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
 
+$(EVENTO) : Event.h
+
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)
 		$(CMDECHO) /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^

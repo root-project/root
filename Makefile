@@ -8,7 +8,8 @@ all: tests
 
 test: tests
 
-
+# Seed the path printing  engine
+export CALLDIR:=.
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
