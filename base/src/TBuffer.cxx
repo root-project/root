@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.10 2001/03/09 18:11:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.11 2001/03/21 09:28:01 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -104,7 +104,7 @@ TBuffer::~TBuffer()
 }
 
 //______________________________________________________________________________
-void frombufOld(char *&buf, ULong_t *x)
+void frombufOld(char *&buf, Long_t *x)
 {
 // files written with versions older than 3.00/06 had a non-portable
 // implementation of Long_t/ULong_t. These types should not have been used at all.
@@ -130,9 +130,9 @@ void frombufOld(char *&buf, ULong_t *x)
    sw[3] = buf[0];
 #endif
 #else
-   memcpy(x, buf, sizeof(ULong_t));
+   memcpy(x, buf, sizeof(Long_t));
 #endif
-   buf += sizeof(ULong_t);
+   buf += sizeof(Long_t);
 }
 
 //______________________________________________________________________________
