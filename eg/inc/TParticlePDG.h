@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.4 2003/02/12 07:58:43 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.5 2003/05/19 22:13:29 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
   
   Int_t           PdgCode      () const { return fPdgCode; }
   Double_t        Mass         () const { return fMass; }
-  Double_t        Charge       () const { return fCharge; }
+  Double_t        Charge       () const { return fCharge; } //charge in units of |e|/3
   Double_t        Lifetime     () const { return fLifetime; }
   Double_t        Width        () const { return fWidth; }
   Int_t           Parity       () const { return fParity; }
