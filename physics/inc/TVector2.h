@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -118,7 +118,7 @@ public:
 
 
 				
-  ClassDef(TVector2,2)  // a two dim physics vector
+  ClassDef(TVector2,3)  // a two dim physics vector
 
 };
 
