@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.5 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.6 2003/12/15 08:54:29 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1856,8 +1856,6 @@ Bool_t TRepeatTimer::Notify()
    return kFALSE;
 }
 
-
-
 //______________________________________________________________________________
 TGNumberEntry::TGNumberEntry(const TGWindow *parent,
                              Double_t val, Int_t wdigits, Int_t id,
@@ -1977,6 +1975,8 @@ Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            10000 * (parm1 - 1) + parm2);
                ValueChanged(10000 * (parm1 - 1) + parm2);
             }
+         // Emit a signal needed by pad editor
+         ValueSet(10000 * (parm1 - 1) + parm2);
          }
          break;
       }
@@ -1994,6 +1994,18 @@ void TGNumberEntry::ValueChanged(Long_t val)
    // val / 10000 != 0 indicates button down
 
    Emit("ValueChanged(Long_t)", val);
+}
+
+//______________________________________________________________________________
+void TGNumberEntry::ValueSet(Long_t val)
+{
+   // Emit ValueSet(Long_t) signal. This signal is emitted when the  
+   // number entry value is changed. The val has the following meaning:
+   // val % 100 is the step size
+   // val % 10000 / 100 != 0 indicates log step
+   // val / 10000 != 0 indicates button down
+
+   Emit("ValueSet(Long_t)", val);
 }
 
 //______________________________________________________________________________

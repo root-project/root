@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.2 2004/02/18 22:42:25 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.3 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -31,47 +31,47 @@
 ClassImp(TGedToolBox)
 
 enum {
-   kToolBoxModify,
-   kToolBoxArc,
-   kToolBoxLine,
-   kToolBoxArrow,
-   kToolBoxButton,
-   kToolBoxDiamond,
-   kToolBoxEllipse,
-   kToolBoxPad,
-   kToolBoxPave,
-   kToolBoxPLabel,
-   kToolBoxPText,
-   kToolBoxPsText,
-   kToolBoxGraph,
-   kToolBoxCurlyLine,
-   kToolBoxCurlyArc,
-   kToolBoxLatex,
-   kToolBoxMarker,
-   kToolBoxCutG
+   kToolModify,
+   kToolArc,
+   kToolLine,
+   kToolArrow,
+   kToolButton,
+   kToolDiamond,
+   kToolEllipse,
+   kToolPad,
+   kToolPave,
+   kToolPLabel,
+   kToolPText,
+   kToolPsText,
+   kToolGraph,
+   kToolCurlyLine,
+   kToolCurlyArc,
+   kToolLatex,
+   kToolMarker,
+   kToolCutG
 };
 
 static ToolBarData_t gToolBoxData[] = {
-  // { filename,      tooltip,            staydown,  id,              button}
-   { "pointer.xpm",    "Modify",           kFALSE,    kToolBoxModify,   NULL },
-   { "arc.xpm",        "Arc",              kFALSE,    kToolBoxArc,      NULL },
-   { "line.xpm",       "Line",             kFALSE,    kToolBoxLine,     NULL },
-   { "arrow.xpm",      "Arrow",            kFALSE,    kToolBoxArrow,    NULL },
-   { "button.xpm",     "Button",           kFALSE,    kToolBoxButton,   NULL },
-   { "diamond.xpm",    "Diamond",          kFALSE,    kToolBoxDiamond,  NULL },
-   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolBoxEllipse,  NULL },
-   { "pad.xpm",        "Pad",              kFALSE,    kToolBoxPad,      NULL },
-   { "pave.xpm",       "Pave",             kFALSE,    kToolBoxPave,     NULL },
-   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolBoxPLabel,   NULL },
-   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolBoxPText,    NULL },
-   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolBoxPsText,   NULL },
-   { "graph.xpm",      "Graph",            kFALSE,    kToolBoxGraph,    NULL },
-   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolBoxCurlyLine,NULL },
-   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolBoxCurlyArc, NULL },
-   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolBoxLatex,    NULL },
-   { "marker.xpm",     "Marker",           kFALSE,    kToolBoxMarker,   NULL },
-   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolBoxCutG,     NULL },
-   { 0,                0,                  kFALSE,    0,                NULL }
+  // { filename,      tooltip,            staydown,  id,            button}
+   { "pointer.xpm",    "Modify",           kFALSE,    kToolModify,   NULL },
+   { "arc.xpm",        "Arc",              kFALSE,    kToolArc,      NULL },
+   { "line.xpm",       "Line",             kFALSE,    kToolLine,     NULL },
+   { "arrow.xpm",      "Arrow",            kFALSE,    kToolArrow,    NULL },
+   { "button.xpm",     "Button",           kFALSE,    kToolButton,   NULL },
+   { "diamond.xpm",    "Diamond",          kFALSE,    kToolDiamond,  NULL },
+   { "ellipse.xpm",    "Ellipse",          kFALSE,    kToolEllipse,  NULL },
+   { "pad.xpm",        "Pad",              kFALSE,    kToolPad,      NULL },
+   { "pave.xpm",       "Pave",             kFALSE,    kToolPave,     NULL },
+   { "pavelabel.xpm",  "Pave Label",       kFALSE,    kToolPLabel,   NULL },
+   { "pavetext.xpm",   "Pave Text",        kFALSE,    kToolPText,    NULL },
+   { "pavestext.xpm",  "Paves Text",       kFALSE,    kToolPsText,   NULL },
+   { "graph.xpm",      "Graph",            kFALSE,    kToolGraph,    NULL },
+   { "curlyline.xpm",  "Curly Line",       kFALSE,    kToolCurlyLine,NULL },
+   { "curlyarc.xpm",   "Curly Arc",        kFALSE,    kToolCurlyArc, NULL },
+   { "latex.xpm",      "Text/Latex",       kFALSE,    kToolLatex,    NULL },
+   { "marker.xpm",     "Marker",           kFALSE,    kToolMarker,   NULL },
+   { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,     NULL },
+   { 0,                0,                  kFALSE,    0,             NULL }
 };
                     
 	
@@ -82,7 +82,7 @@ TGedToolBox::TGedToolBox(const TGWindow *p, UInt_t w,
 {
    // Create toolbox widget.
 
-   SetLayoutManager(new TGMatrixLayout(this, 5, 5, 2, 2));
+   SetLayoutManager(new TGMatrixLayout(this, 1, 0, 2, 2));
    CreateButtons(gToolBoxData);
 
 }
@@ -115,58 +115,58 @@ Bool_t TGedToolBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                     
                switch(parm1) {
                  
-                  case kToolBoxModify:
+                  case kToolModify:
                      gROOT->SetEditorMode();
                      break;
-                  case kToolBoxArc:
+                  case kToolArc:
                      gROOT->SetEditorMode("Arc");
                      break;
-                  case kToolBoxLine:
+                  case kToolLine:
                      gROOT->SetEditorMode("Line");
                      break;
-                  case kToolBoxArrow:
+                  case kToolArrow:
                      gROOT->SetEditorMode("Arrow");
                      break;
-                  case kToolBoxButton:
+                  case kToolButton:
                      gROOT->SetEditorMode("Button");
                      break;
-                  case kToolBoxDiamond:
+                  case kToolDiamond:
                      gROOT->SetEditorMode("Diamond");
                      break;
-                  case kToolBoxEllipse:
+                  case kToolEllipse:
                      gROOT->SetEditorMode("Ellipse");
                      break;
-                  case kToolBoxPad:
+                  case kToolPad:
                      gROOT->SetEditorMode("Pad");
                      break;
-                  case kToolBoxPave:
+                  case kToolPave:
                      gROOT->SetEditorMode("Pave");
                      break;
-                  case kToolBoxPLabel:
+                  case kToolPLabel:
                      gROOT->SetEditorMode("PaveLabel");
                      break;
-                  case kToolBoxPText:
+                  case kToolPText:
                      gROOT->SetEditorMode("PaveText");
                      break;
-                  case kToolBoxPsText:
+                  case kToolPsText:
                      gROOT->SetEditorMode("PavesText");
                      break;
-                  case kToolBoxGraph:
+                  case kToolGraph:
                      gROOT->SetEditorMode("PolyLine");
                      break;
-                  case kToolBoxCurlyLine:
+                  case kToolCurlyLine:
                      gROOT->SetEditorMode("CurlyLine");
                      break;
-                  case kToolBoxCurlyArc:
+                  case kToolCurlyArc:
                      gROOT->SetEditorMode("CurlyArc");
                      break;
-                  case kToolBoxLatex:
+                  case kToolLatex:
                      gROOT->SetEditorMode("Text");
                      break;
-                  case kToolBoxMarker:
+                  case kToolMarker:
                      gROOT->SetEditorMode("Marker");
                      break;
-                  case kToolBoxCutG:
+                  case kToolCutG:
                      gROOT->SetEditorMode("CutG");
                      break;
                   default:

@@ -20,6 +20,9 @@
 #pragma link C++ class TGedAttLineFrame;
 #pragma link C++ class TGedAttTextFrame;
 #pragma link C++ class TGedAttMarkerFrame;
+#pragma link C++ class TGedAttAxisFrame;
+#pragma link C++ class TGedAttAxisTitle;
+#pragma link C++ class TGedAttAxisLabel;
 #pragma link C++ class TGedToolBox;
 #pragma link C++ class TGedDrawPanel;
 #pragma link C++ class TGedPropertyFrame;

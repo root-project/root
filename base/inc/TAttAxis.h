@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.6 2002/01/24 11:39:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.7 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -68,7 +68,7 @@ public:
         virtual void     SetLabelSize(Float_t size=0.04);      // *MENU*
         virtual void     SetTickLength(Float_t length=0.03);   // *MENU*
         virtual void     SetTitleOffset(Float_t offset=1);     // *MENU*
-        virtual void     SetTitleSize(Float_t size=.005);      // *MENU*
+        virtual void     SetTitleSize(Float_t size=0.04);      // *MENU*
         virtual void     SetTitleColor(Color_t color=1);       // *MENU*
         virtual void     SetTitleFont(Style_t font=62);        // *MENU*
 

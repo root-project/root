@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.23 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.24 2004/02/27 01:03:58 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -70,6 +70,8 @@ protected:
    Int_t         fEventY;          //!Last Y mouse position in canvas
    Int_t         fCanvasID;        //!Canvas identifier
    TObject      *fSelected;        //!Currently selected object
+   Int_t         fSelectedX;       //!X of selected object 
+   Int_t         fSelectedY;       //!Y of selected object
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
@@ -84,8 +86,8 @@ protected:
    Bool_t        fMenuBar;         //False if no menubar is displayed
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
 
-   Bool_t        fShowToolBar;     //!Show toolbar
-   Bool_t        fShowEditor;      //!Show side frame or old Editor
+   Bool_t        fShowToolBar;     //Show toolbar
+   Bool_t        fShowEditor;      //Show side frame or old Editor
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
@@ -140,6 +142,8 @@ public:
    Color_t           GetHighLightColor() const { return fHighLightColor; }
    TVirtualPad      *GetPadSave() const { return fPadSave; }
    TObject          *GetSelected() const {return fSelected;}
+   Int_t             GetSelectedX() const {return fSelectedX;}
+   Int_t             GetSelectedY() const {return fSelectedY;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
    TVirtualPad      *GetSelectedPad() const { return fSelectedPad; }
    Bool_t            GetShowEventStatus() const { return fShowEventStatus; }
@@ -203,7 +207,7 @@ public:
 
    static void       MakeDefCanvas();
 
-   ClassDef(TCanvas,4)  //Graphics canvas
+   ClassDef(TCanvas,5)  //Graphics canvas
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.58 2004/03/10 16:23:24 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.59 2004/03/12 16:31:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -416,6 +416,8 @@ void TCanvas::Init()
    fDISPLAY         = "$DISPLAY";
    fRetained        = kTRUE;
    fSelected        = 0;
+   fSelectedX       = 0;
+   fSelectedY       = 0;
    fSelectedPad     = 0;
    fPadSave         = 0;
    fEvent           = -1;
@@ -1217,7 +1219,11 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
 
    if ((fEvent == kButton1Down) || (fEvent == kButton2Down) ||
        (fEvent == kButton3Down) || (fEvent == kKeyPress)) {
-      if (fSelected) Selected(fSelectedPad, fSelected, fEvent);  // emit signal
+      if (fSelected) {
+         Selected(fSelectedPad, fSelected, fEvent);  // emit signal
+         fSelectedX = px;
+         fSelectedY = py;
+      }   
    }
    return pad;
 }
@@ -1460,12 +1466,6 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    if (GetShowEventStatus()) {
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
    }
-   if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
-   }
-   if (GetShowEditor()) {
-      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
-   }
    if (GetHighLightColor() != 5) {
       out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
@@ -1475,6 +1475,14 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    cd();
    if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
+//   Write canvas options related to pad editor 
+   out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<endl;
+   if (GetShowToolBar()) {
+      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+   }
+   if (GetShowEditor()) {
+      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
+   }
    if (invalid) SetName(" ");
 
    out <<"}"<<endl;

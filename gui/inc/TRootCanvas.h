@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.9 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.10 2004/02/20 12:32:06 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -48,8 +48,11 @@ private:
    TRootContainer      *fCanvasContainer;    // container in canvas widget
    TGMenuBar           *fMenuBar;            // menubar
    TGPopupMenu         *fFileMenu;           // file menu
+   TGPopupMenu         *fFileSaveMenu;       // save cascade submenu
    TGPopupMenu         *fEditMenu;           // edit menu
+   TGPopupMenu         *fEditClearMenu;      // clear cascade submenu
    TGPopupMenu         *fViewMenu;           // view menu
+   TGPopupMenu         *fViewWithMenu;       // view with... cascade submenu
    TGPopupMenu         *fOptionMenu;         // option menu
    TGPopupMenu         *fInspectMenu;        // inspect menu
    TGPopupMenu         *fClassesMenu;        // classes menu
@@ -70,7 +73,6 @@ private:
    TGLayoutHints       *fMainFrameLayout;    // layout for main frame
    
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
-      
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
@@ -109,11 +111,10 @@ public:
    void     SetWindowTitle(const char *newTitle);
    void     SetCanvasSize(UInt_t w, UInt_t h);
    void     SetStatusText(const char *txt = 0, Int_t partidx = 0);
-
+   
    void     Show() { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE);
    void     ShowStatusBar(Bool_t show = kTRUE);
-
    void     ShowEditor(Bool_t show = kTRUE);
    void     ShowToolBar(Bool_t show = kTRUE);
 

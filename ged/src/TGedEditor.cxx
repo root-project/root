@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.3 2004/02/20 16:30:49 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.4 2004/03/23 15:22:24 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -21,9 +21,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedEditor.h"
-#include "TGedToolBox.h"
 #include "TCanvas.h"
+#include "TGTab.h"
 #include "TGedPropertyFrame.h"
+#include "TGLabel.h"
 
 ClassImp(TGedEditor)
 
@@ -40,17 +41,20 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 
    if (canvas)
       ConnectToCanvas(canvas);
+
+   // to make the height of the global pad editor equal to 
+   // the height of the embedded one
+   Resize(GetWidth(), canvas->GetWh());
 }
 
 //______________________________________________________________________________
 void TGedEditor::Build()
 {
-   fToolBox = new TGedToolBox(this, 110, 20, 0);
-   AddFrame(fToolBox,
-            new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2));
+
    fPropertiesFrame = new TGedPropertyFrame(this);
    AddFrame(fPropertiesFrame,
-             new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2));
+            new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2));
+
 }
 
 //______________________________________________________________________________

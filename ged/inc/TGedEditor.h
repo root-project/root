@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.2 2004/02/20 16:30:49 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -29,15 +29,14 @@
 #endif
 
 class TCanvas;
+class TGTab;
 class TGedAttFrame;
-class TGedToolBox;
 class TGedPropertyFrame;
 
 
 class TGedEditor : public TVirtualPadEditor, public TGMainFrame {
 
 protected:
-   TGedToolBox           *fToolBox;
    TGedPropertyFrame     *fPropertiesFrame;
 
    virtual void Build();

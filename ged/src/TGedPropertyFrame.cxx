@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.4 2004/03/22 16:03:20 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.5 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -58,8 +58,8 @@ TGedPropertyFrame::~TGedPropertyFrame()
 void TGedPropertyFrame::Build()
 {
    TGTab* tab = new TGTab(this, 110, 30);
-
    AddFrame(tab, new TGLayoutHints(kLHintsTop));
+
    TGCompositeFrame *tab1 = tab->AddTab("Style");
 
    fAttFrame[0] = new TGedAttNameFrame(tab1, 1);
@@ -67,9 +67,13 @@ void TGedPropertyFrame::Build()
    fAttFrame[2] = new TGedAttLineFrame(tab1, 3);
    fAttFrame[3] = new TGedAttTextFrame(tab1, 4);
    fAttFrame[4] = new TGedAttMarkerFrame(tab1, 5);
-
-   for (int i = 0; i < 5; i++)
-      tab1->AddFrame(fAttFrame[i], new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2));
+   fAttFrame[5] = new TGedAttAxisFrame(tab1, 6);
+   fAttFrame[6] = new TGedAttAxisTitle(tab1, 7);
+   fAttFrame[7] = new TGedAttAxisLabel(tab1, 8);
+   
+   for (int i = 0; i < kNPropertyFrames; i++)
+      tab1->AddFrame(fAttFrame[i], 
+                      new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 }
 
 //______________________________________________________________________________
@@ -88,7 +92,7 @@ void TGedPropertyFrame::SetModel(TPad* pad, TObject* obj, Int_t event)
 {
    // Slot connected to Selected() signal of TCanvas
 
-   for (int i = 0; i < 5; i++)
+   for (int i = 0; i < kNPropertyFrames; i++)
       fAttFrame[i]->SetModel(pad, obj, event);
 
    fModel = obj;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGedPropertyFrame.h,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedPropertyFrame.h,v 1.2 2004/02/27 01:03:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   15/07/2003
 
 /*************************************************************************
@@ -32,8 +32,11 @@ class TCanvas;
 
 class TGedPropertyFrame : public TGCompositeFrame {
 
+public:
+   enum { kNPropertyFrames = 8 };
+   
 protected:
-   TGedAttFrame  *fAttFrame[5];
+   TGedAttFrame  *fAttFrame[kNPropertyFrames];
    TObject       *fModel;
    TVirtualPad   *fPad;
 

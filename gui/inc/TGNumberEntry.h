@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.2 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.3 2003/11/05 13:08:25 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -246,6 +246,7 @@ public:
    virtual void   Associate(const TGWindow *w);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   ValueChanged(Long_t val);    //*SIGNAL*
+   virtual void   ValueSet(Long_t val);    //*SIGNAL*
 
    TGNumberEntryField *GetNumberEntry() const {
       // Get the number entry field
