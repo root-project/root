@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:$:$Id:$
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.1 2002/08/09 14:12:22 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -25,13 +25,13 @@
 // size of the image but on the size of the pad. Therefore it is very   //
 // easy to resize the image on the screen by resizing the pad.          //
 //                                                                      //
-// Beside reading an image from a file an image can be defined by a     //
+// Besides reading an image from a file an image can be defined by a    //
 // two dimensional array of values. A palette defines the color of      //
 // each value.                                                          //
 //                                                                      //
 // The image can be zoomed by defining a rectangle with the mouse.      //
 // The color palette can be modified with a GUI, just select            //
-// StartPaletteEditor() from the context meny.                          //
+// StartPaletteEditor() from the context menu.                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
