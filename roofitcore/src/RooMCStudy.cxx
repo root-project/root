@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.9 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.10 2002/05/14 18:30:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -293,7 +293,9 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   // Optionally bin dataset before fitting
   RooAbsData* data ;
   if (_binGenData) {    
-    data = new RooDataHist(genSample->GetName(),genSample->GetTitle(),*genSample->get(),*genSample) ;
+    RooArgSet* depList = _fitModel->getDependents(genSample) ;
+    data = new RooDataHist(genSample->GetName(),genSample->GetTitle(),*depList,*genSample) ;
+    delete depList ;
   } else {
     data = genSample ;
   }
