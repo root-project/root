@@ -23,12 +23,13 @@
  */
 
 
+#include <string.h>
+#include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
-#include <string.h>
-#include <iostream.h>
+#include "Riostream.h"
 
 TList *FileList;
 TFile *Target;
@@ -63,8 +64,10 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   TDirectory *current_sourcedir = gDirectory;
 
   // loop over all keys in this directory
+  TChain *globChain = 0;
   TIter nextkey( current_sourcedir->GetListOfKeys() );
-  while ( key = (TKey*)nextkey()) {
+  TKey *key;
+  while ( (key = (TKey*)nextkey())) {
 
     // read object from first source file
     first_source->cd( path );
@@ -98,7 +101,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
       // loop over all source files create a chain of Trees "globChain"
       const char* obj_name= obj->GetName();
 
-      TChain *globChain = new TChain(obj_name);
+      globChain = new TChain(obj_name);
       globChain->Add(first_source->GetName());
       TFile *nextsource = (TFile*)sourcelist->After( first_source );
       //      const char* file_name = nextsource->GetName();

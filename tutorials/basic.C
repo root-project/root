@@ -2,12 +2,12 @@
 //   example of macro to read data from an ascii file and
 //   create a root file with an histogram and an ntuple.
    gROOT->Reset();
-#include <iostream.h>
+#include "Riostream.h"
 
    ifstream in;
 // we assume a file basic.dat in the current directory
 // this file has 3 columns of float data
-   in.open("basic.dat", ios::in);
+   in.open("basic.dat");
 
    Float_t x,y,z;
    Int_t nlines = 0;

@@ -27,7 +27,7 @@
 // 
 //    ./pythiaExample -1
 // 
-// NOTE: To run this example, you must have a version of ROOT 
+// NOTE 1: To run this example, you must have a version of ROOT 
 // compiled with the Pythia6 version enabled and have Pythia6 installed.
 // The statement gSystem->Load("$HOME/pythia6/libPythia6");  (see below)
 // assumes that the directory containing the Pythia6 library
@@ -44,55 +44,35 @@
 //  For Un*x: Any directory mentioned in LD_LIBRARY_PATH 
 //  For Windows: Any directory mentioned in PATH 
 // 
+// NOTE 2: The example can also be run with ACLIC:
+//  root > gSystem->Load("libEG");
+//  root > gSystem->Load("$HOME/pythia6/libPythia6"); //change to your setup
+//  root > gSystem->Load("libEGPythia6");
+//  root > .x pythiaExample.C+
+//
 //
 //____________________________________________________________________ 
 //  
-// $Id: pythiaExample.C,v 1.2 2002/08/20 16:15:19 brun Exp $ 
+// $Id: pythiaExample.C,v 1.3 2002/11/29 15:28:36 brun Exp $ 
 // Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
 // Update: 2002-08-16 16:40:27+0200
 // Copyright: 2002 (C) Christian Holm Christensen
 //
 //
 #ifndef __CINT__
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
-#ifndef ROOT_TPythia6
 #include "TPythia6.h"
-#endif
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
-#endif
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TF1
 #include "TF1.h"
-#endif
-#ifndef ROOT_TStyle
 #include "TStyle.h"
-#endif
-#ifndef ROOT_TLatex
 #include "TLatex.h"
-#endif
-#ifndef ROOT_TCanvas
 #include "TCanvas.h"
-#endif
-#ifndef __CSTDLIB__
+#include "Riostream.h"
 #include <cstdlib>
-#endif
-#ifndef __IOSTREAM__
-#include <iostream>
-#endif
 using namespace std;
 #endif
 
