@@ -45,6 +45,9 @@ include/%.h:    $(ASIMAGEDIRI)/%.h
 
 $(ASTEPLIB):    $(ASTEPLIBA)
 		cp $< $@
+		@(if [ $(ARCH) = "macosx" ]; then \
+			ranlib $@; \
+		fi)
 
 $(ASTEPLIBA):
 		@(if [ ! -r $@ ]; then \

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.1 2002/08/09 14:12:22 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.2 2003/07/05 17:47:33 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -877,7 +877,7 @@ void TASPaletteEditor::UpdateRange()
 
 
 //______________________________________________________________________________
-void TASPaletteEditor::PaintPalette::Paint(Option_t *option)
+void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
    // Actually paint the paletter.
 
@@ -944,7 +944,8 @@ void TASPaletteEditor::LimitLine::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
+                                               Int_t px, Int_t /*py*/)
 {
    static Int_t oldX;
 
