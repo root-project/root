@@ -47,7 +47,7 @@ Int_t       TTF::fgNumGlyphs  = 0;
 char       *TTF::fgFontName[kTTMaxFonts];
 FT_Matrix  *TTF::fgRotMatrix;
 FT_Library  TTF::fgLibrary;
-FT_BBox     TTF::fgVarCBox;
+FT_BBox     TTF::fgCBox;
 FT_Face     TTF::fgFace[kTTMaxFonts];
 FT_CharMap  TTF::fgCharMap[kTTMaxFonts];
 TTGlyph     TTF::fgGlyphs[kMaxGlyphs];
@@ -529,13 +529,6 @@ FT_Matrix *TTF::GetRotMatrix()
 {
     return fgRotMatrix;
 }
-
-//______________________________________________________________________________
-FT_BBox& TTF::fgFuncCBox() 
-{
-   return fgVarCBox;
-}
-
 
 //______________________________________________________________________________
 const FT_BBox &TTF::GetBox()

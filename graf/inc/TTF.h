@@ -68,7 +68,7 @@ private:
    enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };
 
    static Int_t       fgAscent;                // string ascent, used to compute Y alignment
-   static FT_BBox     fgVarCBox;               // string control box
+   static FT_BBox     fgCBox;                  // string control box
    static FT_CharMap  fgCharMap[kTTMaxFonts];  // font character map
    static Int_t       fgCurFontIdx;            // current font index
    static Int_t       fgFontCount;             // number of fonts loaded
@@ -114,11 +114,8 @@ public:
    static void           SetTextSize(Float_t textsize);
    static Bool_t         IsInitialized();
    static void           Version(Int_t &major, Int_t &minor, Int_t &patch);
-   static FT_BBox       &fgFuncCBox();              // string control box
 
    ClassDef(TTF,0)  //Interface to TTF font handling
 };
-
-#define fgCBox fgFuncCBox()
 
 #endif

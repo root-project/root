@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.9 2003/01/22 11:23:05 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.10 2003/01/22 17:53:20 brun Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -300,10 +300,10 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    TTGlyph* glyph = TTF::fgGlyphs;
 
    // compute the size and position of the XImage that will contain the text
-   Int_t Xoff = 0; if (TTF::fgCBox.xMin < 0) Xoff = -TTF::fgCBox.xMin;
-   Int_t Yoff = 0; if (TTF::fgCBox.yMin < 0) Yoff = -TTF::fgCBox.yMin;
-   Int_t w    = TTF::fgCBox.xMax + Xoff;
-   Int_t h    = TTF::fgCBox.yMax + Yoff;
+   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
+   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
+   Int_t w    = TTF::GetBox().xMax + Xoff;
+   Int_t h    = TTF::GetBox().yMax + Yoff;
    Int_t x1   = x-Xoff-fAlign.x;
    Int_t y1   = y+Yoff+fAlign.y-h;
 
