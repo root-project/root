@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.5 2001/01/27 08:50:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.6 2001/11/08 16:12:20 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -559,6 +559,7 @@ void TGCheckButton::Init()
 
    fPrevState =
    fState     = kButtonUp;
+   fHKeycode = 0;
 
    int hotchar, max_ascent, max_descent;
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
@@ -800,6 +801,7 @@ void TGRadioButton::Init()
 
    fPrevState =
    fState     = kButtonUp;
+   fHKeycode  = 0;
 
    fOn  = fClient->GetPicture("rbutton_on.xpm");
    fOff = fClient->GetPicture("rbutton_off.xpm");
