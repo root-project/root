@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixCondition.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixCondition.cxx,v 1.2 2004/10/11 12:34:51 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -70,7 +70,7 @@ Int_t TPosixCondition::Wait()
    // If Wait() is called by multiple threads, a signal may wake up more
    // than one thread. See POSIX threads documentation for details.
 
-   return ERRNO(pthread_cond_wait(&fCond, &fMutex->fMutex));
+   return ERRNO(pthread_cond_wait(&fCond, &(fMutex->fMutex)));
 }
 
 //______________________________________________________________________________
@@ -83,7 +83,7 @@ Int_t TPosixCondition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 
    timespec rqts = { secs, nanoSecs };
 
-   int rc = ERRNO(pthread_cond_timedwait(&fCond, &fMutex->fMutex, &rqts));
+   int rc = ERRNO(pthread_cond_timedwait(&fCond, &(fMutex->fMutex), &rqts));
 
 //#if (PthreadDraftVersion <= 6)
 #if (PthreadDraftVersion == 4)
