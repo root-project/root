@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.4 2000/10/15 01:28:29 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.5 2000/10/30 11:00:40 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -35,6 +35,9 @@
 
 #include "HelpText.h"
 
+#ifdef GDK_WIN32
+#include "gdk/win32/gdkwin32.h"
+#endif
 
 // Canvas menu command ids
 enum ERootGLViewerCommands {
@@ -93,7 +96,12 @@ TGLContainer::TGLContainer(TRootGLViewer *c, Window_t id, const TGWindow *p)
                     kNone, kNone);
 
    gVirtualX->SelectInput(fId, kKeyPressMask | kExposureMask | kPointerMotionMask |
+#ifndef GDK_WIN32
                      kStructureNotifyMask);
+#else
+                     kKeyReleaseMask | kStructureNotifyMask);
+   gVirtualX->SetInputFocus(fId);
+#endif
 }
 
 
@@ -182,7 +190,7 @@ void TRootGLViewer::CreateViewer(const char *name)
    fCanvasWindow = new TGCanvas(this, GetWidth()+4, GetHeight()+4,
                                 kSunkenFrame | kDoubleBorder);
    InitGLWindow();
-   fCanvasContainer = new TGLContainer(this, fGLWin, fCanvasWindow->GetViewPort());
+   fCanvasContainer = new TGLContainer(this, (Window_t)fGLWin, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);
    fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    AddFrame(fCanvasWindow, fCanvasLayout);
@@ -227,9 +235,11 @@ void TRootGLViewer::InitGLWindow()
 {
    // X11 specific code to initialize GL window.
 
+   gVirtualGL->SetTrueColorMode();
+
+#ifndef GDK_WIN32
    fDpy = (Display *) gVirtualX->GetDisplay();
 
-   gVirtualGL->SetTrueColorMode();
    static int dblBuf[] = {
        GLX_DOUBLEBUFFER,
 #ifdef STEREO_GL
@@ -247,32 +257,17 @@ void TRootGLViewer::InitGLWindow()
 
    if (fVisInfo == 0)
       Error("InitGLWindow", "Barf! No good visual");
+#endif
+
+   Window_t wind = fCanvasWindow->GetViewPort()->GetId();
+
+#ifndef GDK_WIN32
+   fGLWin = (Window) gVirtualX->CreateGLWindow(wind, fVisInfo->visual, fVisInfo->depth);
+#else
+   fGLWin = (GdkWindow *)gVirtualX->CreateGLWindow(wind);
+#endif
 
    CreateContext();
-
-   int xval, yval;
-   unsigned int wval, hval, border, depth;
-   Window root, wind = (Window) fCanvasWindow->GetViewPort()->GetId();
-   XGetGeometry(fDpy, wind, &root, &xval, &yval, &wval, &hval, &border, &depth);
-
-   // window attributes
-   ULong_t mask;
-   XSetWindowAttributes attr;
-
-   attr.background_pixel = 0;
-   attr.border_pixel = 0;
-   attr.colormap = XCreateColormap(fDpy, root, fVisInfo->visual, AllocNone);
-   attr.event_mask = NoEventMask;
-   attr.backing_store = Always;
-   attr.bit_gravity = NorthWestGravity;
-   mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask |
-          CWBackingStore | CWBitGravity;
-
-   fGLWin = XCreateWindow(fDpy, wind, xval, yval, wval, hval,
-                          0, fVisInfo->depth, InputOutput,
-                          fVisInfo->visual, mask, &attr);
-
-   XMapWindow(fDpy, fGLWin);
 
    MakeCurrent();
 }
@@ -299,7 +294,11 @@ void TRootGLViewer::CreateContext()
 {
    // Create OpenGL context.
 
+#ifndef GDK_WIN32
    fCtx = glXCreateContext(fDpy, fVisInfo, None, GL_TRUE);
+#else
+   fCtx = wglCreateContext((HDC)gVirtualX->GetWinDC((Window_t)fGLWin));
+#endif
 }
 
 //______________________________________________________________________________
@@ -309,7 +308,11 @@ void TRootGLViewer::DeleteContext()
 
    if (fCtx) {
       MakeCurrent();
+#ifndef GDK_WIN32
       glXDestroyContext(fDpy, fCtx);
+#else
+      wglDeleteContext(fCtx);
+#endif
       fCtx = 0;
    }
 }
@@ -319,14 +322,18 @@ void TRootGLViewer::MakeCurrent()
 {
    // Set this GL context the current one.
 
+#ifndef GDK_WIN32
    glXMakeCurrent(fDpy, fGLWin, fCtx);
+#else
+   wglMakeCurrent((HDC)gVirtualX->GetWinDC((Window_t)fGLWin), fCtx);
+#endif
 }
 
 //______________________________________________________________________________
 void TRootGLViewer::SwapBuffers()
 {
    // Swap two GL buffers.
-
+#ifndef GDK_WIN32
    glXSwapBuffers(fDpy, fGLWin);
    if (!glXIsDirect(fDpy, fCtx)) {
       glFinish();
@@ -336,6 +343,9 @@ void TRootGLViewer::SwapBuffers()
    GLenum error;
    while ((error = glGetError()) != GL_NO_ERROR)
       Error("SwapBuffers", "GL error: %s", gluErrorString(error));
+#else
+   wglSwapLayerBuffers((HDC)gVirtualX->GetWinDC((Window_t)fGLWin), WGL_SWAP_MAIN_PLANE);
+#endif
 }
 
 //______________________________________________________________________________
@@ -422,7 +432,9 @@ Bool_t TRootGLViewer::HandleContainerButton(Event_t *event)
          HandleInput(kButton2Up, x, y);
       if (button == kButton3)
          HandleInput(kButton3Up, x, y);
-
+#ifdef GDK_WIN32
+      gVirtualX->SetInputFocus((Window_t)fGLWin);
+#endif
       fButton = 0;
    }
 
@@ -434,7 +446,7 @@ Bool_t TRootGLViewer::HandleContainerConfigure(Event_t *event)
 {
    // Handle configure (i.e. resize) event.
 
-   XResizeWindow(fDpy, fGLWin, event->fWidth, event->fHeight);
+   gVirtualX->ResizeWindow((Window_t)fGLWin, event->fWidth, event->fHeight);
 
    MakeCurrent();
    glViewport(0, 0, (GLint) event->fWidth, (GLint) event->fHeight);

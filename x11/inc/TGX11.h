@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.16 2002/09/13 01:36:21 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.17 2002/09/14 00:31:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -383,6 +383,9 @@ public:
                          Int_t dx, Int_t dy, Int_t x, Int_t y,
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
+
+   //---- Methods used for OpenGL -----
+   Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
 
    ClassDef(TGX11,0)  //Interface to X11
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.14 2002/09/13 01:36:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.15 2002/09/14 00:31:01 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -295,6 +295,10 @@ public:
                                  UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
 
+   //---- Methods used for OpenGL -----
+   virtual Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
+   virtual ULong_t      GetWinDC(Window_t wind);
+
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 
@@ -478,14 +482,17 @@ inline Bool_t       TVirtualX::EmptyRegion(Region_t) { return kFALSE; }
 inline Bool_t       TVirtualX::PointInRegion(Int_t, Int_t, Region_t) { return kFALSE; }
 inline Bool_t       TVirtualX::EqualRegion(Region_t, Region_t) { return kFALSE; }
 inline void         TVirtualX::GetRegionBox(Region_t, Rectangle_t *) { }
-inline char       **TVirtualX::ListFonts(char *fontname, Int_t max, Int_t &count) { return 0; }
-inline void         TVirtualX::FreeFontNames(char **fontlist) { }
-inline Drawable_t   TVirtualX::CreateImage(UInt_t width, UInt_t height) { return 0; }
-inline void         TVirtualX::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height) { }
-inline void         TVirtualX::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel) { }
-inline void         TVirtualX::PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
-                                        Int_t dx, Int_t dy, Int_t x, Int_t y,
-                                        UInt_t w, UInt_t h) { }
-inline void         TVirtualX::DeleteImage(Drawable_t img) { }
+inline char       **TVirtualX::ListFonts(char *, Int_t, Int_t &) { return 0; }
+inline void         TVirtualX::FreeFontNames(char **) { }
+inline Drawable_t   TVirtualX::CreateImage(UInt_t, UInt_t) { return 0; }
+inline void         TVirtualX::GetImageSize(Drawable_t, UInt_t &, UInt_t &) { }
+inline void         TVirtualX::PutPixel(Drawable_t, Int_t, Int_t, ULong_t) { }
+inline void         TVirtualX::PutImage(Drawable_t, GContext_t, Drawable_t,
+                                        Int_t, Int_t, Int_t, Int_t, UInt_t, UInt_t) { }
+inline void         TVirtualX::DeleteImage(Drawable_t) { }
+
+//---- Methods used for OpenGL -----
+inline Window_t     TVirtualX::CreateGLWindow(Window_t, Visual_t, Int_t) { return 0; }
+inline ULong_t      TVirtualX::GetWinDC(Window_t) { return 0; }
 
 #endif

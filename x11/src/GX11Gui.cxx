@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.24 2002/09/13 01:36:22 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.25 2002/09/14 00:31:02 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2449,4 +2449,36 @@ void TGX11::DeleteImage(Drawable_t img)
    // Destroy XImage img.
 
    XDestroyImage((XImage*) img);
+}
+
+//______________________________________________________________________________
+Window_t TGX11::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
+{
+   // X11 specific code to initialize GL window.
+
+   Int_t  xval, yval;
+   UInt_t wval, hval, border, d;
+   Window root;
+   XGetGeometry(fDisplay, wind, &root, &xval, &yval, &wval, &hval, &border, &d);
+
+   // window attributes
+   ULong_t mask;
+   XSetWindowAttributes attr;
+
+   attr.background_pixel = 0;
+   attr.border_pixel = 0;
+   attr.colormap = XCreateColormap(fDisplay, root, (Visual*) visual, AllocNone);
+   attr.event_mask = NoEventMask;
+   attr.backing_store = Always;
+   attr.bit_gravity = NorthWestGravity;
+   mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask |
+          CWBackingStore | CWBitGravity;
+
+   Window GLWin = XCreateWindow(fDisplay, wind, xval, yval, wval, hval,
+                                0, depth, InputOutput,
+                                (Visual*) visual, mask, &attr);
+
+   XMapWindow(fDisplay, GLWin);
+
+   return (Window_t) GLWin;
 }

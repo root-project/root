@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.7 2002/09/13 07:21:11 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.8 2002/09/14 00:31:01 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -2800,4 +2800,78 @@ void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
 void TGWin32::DeleteImage(Drawable_t img)
 {
     gdk_image_unref((GdkImage*)img);
+}
+
+//______________________________________________________________________________
+Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
+{
+   // GDK specific code to initialize GL window.
+
+   GdkWindow *GLWin;
+   int xval, yval;
+   int wval, hval, dum;
+
+   gdk_window_get_geometry((GdkWindow *)wind, &xval, &yval, &wval, &hval, &dum);
+
+   // window attributes
+   GdkWindowAttr attr;
+   ULong_t mask;
+
+   attr.width = wval;
+   attr.height = hval;
+   attr.x = xval;
+   attr.y = yval;
+   attr.wclass = GDK_INPUT_OUTPUT;
+   attr.event_mask = 0L;
+   attr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
+                      GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
+   attr.colormap = gdk_colormap_get_system();
+   mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP |
+          GDK_WA_WMCLASS | GDK_WA_NOREDIR;
+
+   attr.window_type = GDK_WINDOW_CHILD;
+   GLWin = gdk_window_new((GdkWindow *) wind, &attr, mask);
+   gdk_window_set_events(GLWin,(GdkEventMask)0L);
+   gdk_window_show((GdkWindow *) GLWin);
+
+   static PIXELFORMATDESCRIPTOR pfd =
+      {
+            sizeof(PIXELFORMATDESCRIPTOR),  // size of this pfd
+            1,                              // version number
+            PFD_DRAW_TO_WINDOW |            // support window
+              PFD_SUPPORT_OPENGL |          // support OpenGL
+              PFD_DOUBLEBUFFER,             // double buffered
+            PFD_TYPE_RGBA,                  // RGBA type
+            24,                             // 24-bit color depth
+            0, 0, 0, 0, 0, 0,               // color bits ignored
+            0,                              // no alpha buffer
+            0,                              // shift bit ignored
+            0,                              // no accumulation buffer
+            0, 0, 0, 0,                     // accum bits ignored
+            32,                             // 32-bit z-buffer
+            0,                              // no stencil buffer
+            0,                              // no auxiliary buffer
+            PFD_MAIN_PLANE,                 // main layer
+            0,                              // reserved
+            0, 0, 0                         // layer masks ignored
+      };
+
+   int pixelformat;
+
+   if ( (pixelformat = ChoosePixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID(GLWin)),
+                                         &pfd)) == 0 ) {
+      Error("InitGLWindow", "Barf! ChoosePixelFormat Failed");
+   }
+   if ( (SetPixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID(GLWin)), pixelformat,
+                                    &pfd)) == FALSE ) {
+      Error("InitGLWindow", "Barf! SetPixelFormat Failed");
+   }
+   return (Window_t)GLWin;
+}
+
+//______________________________________________________________________________
+ULong_t TGWin32::GetWinDC(Window_t wind)
+{
+   HDC dc = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)wind));
+   return (ULong_t) dc;
 }
