@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.10 2001/04/20 21:21:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.11 2001/04/23 13:55:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
     virtual const char  *GetParentName() const {return fParentName.Data();}
     virtual Int_t    GetMaximum() const;
     TBranchElement  *GetMother() const;
-            Int_t    GetNdata() const {return fNdata;}
+            Int_t    GetNdata() const;
             Int_t    GetType()  const {return fType;}
             Int_t    GetStreamerType() const {return fStreamerType;}
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
