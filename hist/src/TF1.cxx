@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.68 2003/08/20 07:00:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.69 2003/08/29 07:03:25 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -224,7 +224,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using name an interpreted function*-*-*-*
+//*-*-*-*-*-*-*F1 constructor using name of an interpreted function*-*-*-*
 //*-*          =======================================================
 //*-*
 //*-*  Creates a function of type C between xmin and xmax.
@@ -279,7 +279,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
    if (f1old) delete f1old;
    SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
 
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
@@ -294,6 +293,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
       fNumber = -1;
+      gROOT->GetListOfFunctions()->Add(this);
    } else {
       Printf("Function:%s cannot be compiled",name);
    }
@@ -363,7 +363,6 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
    if (f1old) delete f1old;
    SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
 
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
@@ -379,6 +378,7 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
       fNumber = -1;
+      gROOT->GetListOfFunctions()->Add(this);
    } else {
       Printf("Function:%s cannot be compiled",name);
    }
