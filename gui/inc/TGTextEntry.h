@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.8 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.9 2001/08/15 11:43:03 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -135,6 +135,7 @@ public:
    virtual  void        InsertText(const char *text, Int_t pos);
             Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
             Bool_t      IsEdited() const           { return fEdited; }
+   virtual  void        Layout() { UpdateOffset(); }
             void        MarkWord(Int_t pos);
             Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
             Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.8 2001/01/25 14:01:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.9 2001/08/15 11:43:03 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -332,7 +332,8 @@ void TGTextEntry::Init()
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                         kNone, kNone);
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
@@ -547,8 +548,7 @@ void TGTextEntry::SetAlignment(ETextJustification mode)
 
    if ((mode == kTextRight ||
         mode == kTextCenterX ||
-        mode == kTextLeft) &&
-        (mode != fAlignment)) {
+        mode == kTextLeft)) {
 
       fAlignment = mode;
       UpdateOffset();
@@ -582,8 +582,8 @@ void TGTextEntry::SetText(const char *text)
    fText->Clear();
    fText->AddText(0, text); // new text
 
-   Int_t dif =    fText->GetTextLength() - fMaxLen;
-   if (dif>0) fText->RemoveText(fMaxLen, dif);       // truncate
+   Int_t dif = fText->GetTextLength() - fMaxLen;
+   if (dif > 0) fText->RemoveText(fMaxLen, dif);       // truncate
 
    End(kFALSE);
    if (oldText != GetText()) {
@@ -603,8 +603,8 @@ void TGTextEntry::SetMaxLength(Int_t maxlen)
 
    fMaxLen = maxlen<0 ? 0 : TMath::Min(255,maxlen) ; // safety check for maxlen<0 and maxlen>255
 
-   Int_t dif =    fText->GetTextLength() - fMaxLen;
-   if (dif>0) fText->RemoveText(fMaxLen, dif);    // truncate
+   Int_t dif = fText->GetTextLength() - fMaxLen;
+   if (dif > 0) fText->RemoveText(fMaxLen, dif);    // truncate
 
    SetCursorPosition(0);
    Deselect();
@@ -625,11 +625,11 @@ void TGTextEntry::SetEchoMode(EEchoMode mode)
    //End_Html
    // It is always possible to cut and paste any marked text;  only the widget's own
    // display is affected.
-   // See also GetEchoMode(), GetDisplayText()
+   // See also GetEchoMode(), GetDisplayText().
 
    if (fEchoMode == mode) return;
 
-   Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
    fEchoMode = mode;
    if (GetEchoMode() == kNoEcho) { fCursorX = offset; }
    UpdateOffset();
@@ -642,7 +642,7 @@ TString TGTextEntry::GetMarkedText() const
 {
    // Returns the text marked by the user (e.g. by clicking and
    // dragging), or zero if no text is marked.
-   // See also  HasMarkedText()
+   // See also HasMarkedText().
 
    Int_t minP = MinMark();
    Int_t len = MaxMark() - minP;
@@ -653,11 +653,11 @@ TString TGTextEntry::GetMarkedText() const
 //______________________________________________________________________________
 void TGTextEntry::NewMark(Int_t newPos)
 {
-   // New character mark at position pos
-   // See also SetCursorPosition()
+   // New character mark at position pos.
+   // See also SetCursorPosition().
 
-   TString dt =  GetDisplayText();
-   Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   TString dt = GetDisplayText();
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
    Int_t x = fOffset + offset;
    Int_t len = dt.Length();
 
@@ -679,10 +679,11 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
    // Set the cursor position to newPos.
    // See also NewMark().
 
-   Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
    if (GetEchoMode() == kNoEcho) { fCursorX = offset; return; }
 
-   TString dt =  GetDisplayText();
+   UpdateOffset();
+   TString dt = GetDisplayText();
 
    Int_t x = fOffset + offset;
    Int_t len = dt.Length();
@@ -702,7 +703,7 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
    } else
       fCursorIX = pos;
 
-   fCursorX = x + gVirtualX->TextWidth(fFontStruct, dt.Data() , fCursorIX);
+   fCursorX = x + gVirtualX->TextWidth(fFontStruct, dt.Data(), fCursorIX);
 
    if (!fSelectionOn){
       fStartIX = fCursorIX;
@@ -713,11 +714,11 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
 //______________________________________________________________________________
 void TGTextEntry::MarkWord(Int_t pos)
 {
-   // Marks the word nearest to cursor position
-   // See also HandleDoubleClick()
+   // Marks the word nearest to cursor position.
+   // See also HandleDoubleClick().
 
    Int_t i = pos - 1;
-   while (i >= 0 && isprint(GetText()[i]) && !isspace(GetText()[i]))   i--;
+   while (i >= 0 && isprint(GetText()[i]) && !isspace(GetText()[i])) i--;
    i++;
    Int_t newStartIX = i;
 
@@ -746,8 +747,8 @@ void TGTextEntry::Insert(const char *newText)
       if (t[i] < ' ') t[i] = ' '; // unprintable/linefeed becomes space
    }
 
-   Int_t minP =  MinMark();
-   Int_t maxP =  MaxMark();
+   Int_t minP = MinMark();
+   Int_t maxP = MaxMark();
    Int_t cp = fCursorIX;
 
    if (HasMarkedText()) {
@@ -866,7 +867,7 @@ void TGTextEntry::Del()
 //______________________________________________________________________________
 void TGTextEntry::Remove()
 {
-   // Deletes all characters on the right side of the cursor
+   // Deletes all characters on the right side of the cursor.
    // See also Del() Backspace().
 
    if (fCursorIX < (Int_t)fText->GetTextLength()) {
@@ -946,8 +947,8 @@ void TGTextEntry::End(Bool_t mark)
    // be unmarked if the cursor is moved.
    // See also Home().
 
-   TString dt =  GetDisplayText();
-   Int_t len  =  dt.Length();
+   TString dt = GetDisplayText();
+   Int_t len  = dt.Length();
 
    fOffset = (Int_t)GetWidth() - gVirtualX->TextWidth(fFontStruct, dt.Data(), len);
    if (fOffset > 0) fOffset = 0;
@@ -1017,7 +1018,7 @@ void TGTextEntry::DoRedraw()
    // Draw the text entry widget.
 
    Int_t x, y, max_ascent, max_descent;
-   Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
    TString dt  = GetDisplayText();               // text to be displayed
    Int_t len   = dt.Length();                    // length of displayed text
 
@@ -1030,21 +1031,23 @@ void TGTextEntry::DoRedraw()
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    y = (GetHeight() - (max_ascent + max_descent))/2 ;     // center y
-   x = fOffset +  offset;
+   x = fOffset + offset;
 
    if (fEchoMode == kNoEcho) {
       fSelectionOn = kFALSE;
       fCursorX = offset;
    }
 
-   if ((GetInsertMode() == kInsert) || (fEchoMode == kNoEcho)) {   //  line cursor
+   if ((GetInsertMode() == kInsert) || (fEchoMode == kNoEcho)) {
+      // line cursor
       if (fCursorOn) {
          gVirtualX->DrawLine(fId, fgBlackGC(), fCursorX, 3,
                      fCursorX, max_ascent + max_descent + 3);
       }
       gVirtualX->DrawString(fId, fNormGC, x , y + max_ascent, dt.Data(), len);
 
-   } else {                            // filled rectangle cursor  (not perfect)
+   } else {
+      // filled rectangle (block) cursor
       gVirtualX->DrawString(fId, fNormGC, x , y + max_ascent, dt.Data(), len);
 
       if (fCursorOn) {
@@ -1052,10 +1055,11 @@ void TGTextEntry::DoRedraw()
          Int_t charWidth = ind < 0 ||  fCursorIX > len -1 ? 4 :
                            gVirtualX->TextWidth(fFontStruct, &dt[ind],1);
 
-         Int_t before =  gVirtualX->TextWidth(fFontStruct, dt, fCursorIX) + x;
+         Int_t before = gVirtualX->TextWidth(fFontStruct, dt, fCursorIX) + x;
 
-         gVirtualX->FillRectangle(fId, fSelbackGC , before, y-1 ,
-                             charWidth , max_ascent + max_descent + 1);
+         gVirtualX->FillRectangle(fId, fSelbackGC , before, 3 ,
+                                  charWidth , max_ascent + max_descent + 1);
+
          if (fCursorIX < len)
             gVirtualX->DrawString(fId, fSelGC, before , y + max_ascent, &dt[ind], 1);
       }
@@ -1069,13 +1073,13 @@ void TGTextEntry::DoRedraw()
       ixs = TMath::Min(fStartIX, fEndIX);
       iws = TMath::Abs(fEndIX - fStartIX);
 
-      gVirtualX->FillRectangle(fId, fSelbackGC, xs , y-1, ws,
-                                       max_ascent + max_descent +1);
+      gVirtualX->FillRectangle(fId, fSelbackGC, xs , 3, ws,
+                               max_ascent + max_descent + 1);
 
       gVirtualX->DrawString(fId, fSelGC, xs, y + max_ascent,
-                                       dt.Data()+ixs, iws);
+                            dt.Data()+ixs, iws);
    }
-   if (IsFrameDrawn())   DrawBorder();
+   if (IsFrameDrawn()) DrawBorder();
 }
 
 //______________________________________________________________________________
@@ -1313,6 +1317,22 @@ Bool_t TGTextEntry::HandleCrossing(Event_t *event)
       else
          fTip->Hide();
    }
+
+   // only turn off/on cursor if widget does not have the focus
+   if (gVirtualX->GetInputFocus() != fId) {
+      if (event->fType == kEnterNotify) {
+         fCursorOn = kTRUE;
+         if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
+         fCurBlink->Reset();
+         gSystem->AddTimer(fCurBlink);
+      } else {
+         fCursorOn = kFALSE;
+         // fSelectionOn = kFALSE;        // "netscape location behavior"
+         if (fCurBlink) fCurBlink->Remove();
+      }
+      fClient->NeedRedraw(this);
+   }
+
    return kTRUE;
 }
 
@@ -1321,7 +1341,7 @@ Bool_t TGTextEntry::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in the text entry widget.
 
-   if (!IsEnabled() ||  (GetEchoMode() == kNoEcho)) return kTRUE;
+   if (!IsEnabled() || (GetEchoMode() == kNoEcho)) return kTRUE;
 
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
    Int_t x = fOffset + offset;
@@ -1336,11 +1356,11 @@ Bool_t TGTextEntry::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGTextEntry::HandleDoubleClick(Event_t *event)
 {
-   // Handle  mouse  double click event in the text entry widge
+   // Handle mouse double click event in the text entry widget.
 
    if (!IsEnabled()) return kTRUE;
 
-   Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
    Int_t x = fOffset + offset ;
 
    DoubleClicked();
@@ -1377,7 +1397,7 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
          fCurBlink->Reset();
          gSystem->AddTimer(fCurBlink);
       } else {
-          fCursorOn    = kFALSE;
+          fCursorOn = kFALSE;
           // fSelectionOn = kFALSE;        // "netscape location behavior"
           if (fCurBlink) fCurBlink->Remove();
       }
@@ -1485,11 +1505,12 @@ void TGTextEntry::UpdateOffset()
    TString dt = GetDisplayText();
    Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data() , dt.Length());
    Int_t w = GetWidth();
+   Int_t offset = IsFrameDrawn() ? 6 : 0;
 
    if (textWidth > w) {                          // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
-   else if (fAlignment == kTextRight)   fOffset = w - textWidth;
+   else if (fAlignment == kTextRight)   fOffset = w - textWidth - offset;
    else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
    else if (fAlignment == kTextLeft)    fOffset = 0;
 }
