@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.29 2004/01/31 08:59:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.30 2004/05/13 11:40:37 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -299,6 +299,7 @@ public:
    Bool_t       EndsWith(const char *pat,    ECaseCompare cmp = kExact) const;
    Ssiz_t       First(char c) const          { return Pref()->First(c); }
    Ssiz_t       First(const char *cs) const  { return Pref()->First(cs); }
+   void         Form(const char *fmt, ...);
    unsigned     Hash(ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const char *pat, Ssiz_t i = 0,
                       ECaseCompare cmp = kExact) const;
@@ -429,10 +430,10 @@ inline TString& TString::operator+=(char c)
 { return Append(c); }
 
 inline TString& TString::operator+=(Long_t i)
-{ return operator+=(Form("%ld", i)); }
+{ return operator+=(::Form("%ld", i)); }
 
 inline TString& TString::operator+=(ULong_t i)
-{ return operator+=(Form("%lu", i)); }
+{ return operator+=(::Form("%lu", i)); }
 
 inline TString& TString::operator+=(Short_t i)
 { return operator+=((Long_t) i); }
@@ -447,7 +448,7 @@ inline TString& TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
 
 inline TString& TString::operator+=(Double_t f)
-{ return operator+=(Form("%9.9g", f)); }
+{ return operator+=(::Form("%9.9g", f)); }
 
 inline TString& TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }

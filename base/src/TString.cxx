@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.28 2004/05/14 16:59:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.29 2004/06/02 09:25:13 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1093,7 +1093,7 @@ TString operator+(const TString &s, Long_t i)
 {
    // Add integer to string.
 
-   const char *si = Form("%ld", i);
+   const char *si = ::Form("%ld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1102,7 +1102,7 @@ TString operator+(const TString &s, ULong_t i)
 {
    // Add integer to string.
 
-   const char *si = Form("%lu", i);
+   const char *si = ::Form("%lu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1119,7 +1119,7 @@ TString operator+(Long_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = Form("%ld", i);
+   const char *si = ::Form("%ld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1128,7 +1128,7 @@ TString operator+(ULong_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = Form("%lu", i);
+   const char *si = ::Form("%lu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1445,6 +1445,35 @@ TObjArray *TString::Tokenize(const TString &delim) const
    return arr;
 }
 
+//______________________________________________________________________________
+void TString::Form(const char *va_(fmt), ...)
+{
+   // Formats a string using a printf style format descriptor.
+   // Existing string contents will be overwritten.
+
+   Ssiz_t buflen = 50 * strlen(va_(fmt));    // pick a number, any number
+   Clobber(buflen);
+
+   int n;
+   va_list ap;
+   va_start(ap, va_(fmt));
+again:
+   n = vsnprintf(fData, buflen, va_(fmt), ap);
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
+   if (n == -1 || n >= buflen) {
+      if (n == -1)
+         buflen *= 2;
+      else
+         buflen = n+1;
+      Clobber(buflen);
+      goto again;
+   }
+   va_end(ap);
+
+   Pref()->fNchars = strlen(fData);
+}
+
 //---- Global String Handling Functions ----------------------------------------
 
 static const int cb_size  = 4096;
@@ -1476,6 +1505,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    // total number of characters that would have been written
    if (n == -1 || n >= slowBufferSize) {
       if (n == -1) n = 2 * slowBufferSize;
+      if (n == slowBufferSize) n++;
       return SlowFormat(format, ap, n);
    }
 
