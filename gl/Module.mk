@@ -13,19 +13,19 @@ GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
 GLH          := $(wildcard $(MODDIRI)/*.h)
+ifeq ($(ARCH),win32gdk)
+GLS          := TGdkGLKernel.cxx
+else
 GLS          := TGLKernel.cxx
+endif
 ifeq ($(ARCH),win32)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
-else
-ifeq ($(ARCH),win32gdk)
-GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
 else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
 ifneq ($(OPENIVLIB),)
 GLS          += TRootOIViewer.cxx
 IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
 IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) -lXm -lXt -lXext -lX11 -lm
-endif
 endif
 endif
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.16 2003/01/28 20:07:36 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.17 2003/01/29 16:53:15 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -362,7 +362,7 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
 
    fMaxNumberOfWindows = 10;
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
 
@@ -450,7 +450,7 @@ TGWin32::TGWin32(const TGWin32 &org) : TVirtualX(org)
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open          = org.fWindows[i].open;
       fWindows[i].double_buffer = org.fWindows[i].double_buffer;
@@ -523,7 +523,8 @@ TGWin32::~TGWin32()
    // Destructor.
 
     if (fWindows)
-        ::operator delete(fWindows);
+        TStorage::Dealloc(fWindows);
+
     if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
 
     if (fIDThread) {
@@ -1427,6 +1428,7 @@ void TGWin32::MoveWindow(int wid, int x, int y)
    // wid  : GdkWindow identifier.
    // x    : x new window position
    // y    : y new window position
+
    gTws = &fWindows[wid];
    if (!gTws->open) {
       return;
@@ -1781,6 +1783,7 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 {
    // Open a new pixmap.
    // w,h : Width and height of the pixmap.
+
    EnterCriticalSection(flpCriticalSection);
 
    GdkWindow root;

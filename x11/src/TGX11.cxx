@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.27 2003/01/20 07:25:02 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.28 2003/01/22 11:23:04 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -282,7 +282,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 
    fMaxNumberOfWindows = 10;
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
 
@@ -323,7 +323,7 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open          = org.fWindows[i].open;
       fWindows[i].double_buffer = org.fWindows[i].double_buffer;
@@ -367,7 +367,7 @@ TGX11::~TGX11()
    // Destructor.
 
    delete fXEvent;
-   if (fWindows) ::operator delete(fWindows);
+   if (fWindows) TStorage::Dealloc(fWindows);
 
    if (!fColors) return;
    Long_t     key, value;
@@ -1277,7 +1277,7 @@ again:
    if (wid == fMaxNumberOfWindows) {
       int newsize = fMaxNumberOfWindows + 10;
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                  fMaxNumberOfWindows*sizeof(XWindow_t));
+                                                fMaxNumberOfWindows*sizeof(XWindow_t));
       for (i = fMaxNumberOfWindows; i < newsize; i++)
          fWindows[i].open = 0;
       fMaxNumberOfWindows = newsize;
@@ -1339,7 +1339,7 @@ again:
    if (wid == fMaxNumberOfWindows) {
       int newsize = fMaxNumberOfWindows + 10;
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                  fMaxNumberOfWindows*sizeof(XWindow_t));
+                                                fMaxNumberOfWindows*sizeof(XWindow_t));
       for (int i = fMaxNumberOfWindows; i < newsize; i++)
          fWindows[i].open = 0;
       fMaxNumberOfWindows = newsize;
@@ -1407,7 +1407,7 @@ again:
    if (wid == fMaxNumberOfWindows) {
       int newsize = fMaxNumberOfWindows + 10;
       fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                  fMaxNumberOfWindows*sizeof(XWindow_t));
+                                                fMaxNumberOfWindows*sizeof(XWindow_t));
       for (int i = fMaxNumberOfWindows; i < newsize; i++)
          fWindows[i].open = 0;
       fMaxNumberOfWindows = newsize;

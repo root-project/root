@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.16 2002/10/04 16:06:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.17 2002/12/02 18:50:01 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -298,6 +298,53 @@ public:
    //---- Methods used for OpenGL -----
    virtual Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
    virtual ULong_t      GetWinDC(Window_t wind);
+   virtual ULong_t      wglCreateContext(Window_t wind);
+   virtual void         wglDeleteContext(ULong_t ctx);
+   virtual void         wglMakeCurrent(Window_t wind, ULong_t ctx);
+   virtual void         wglSwapLayerBuffers(Window_t wind, UInt_t mode);
+   virtual void         glViewport(Int_t x0, Int_t y0, Int_t x1, Int_t y1);
+   virtual void         glClearIndex(Float_t fParam);
+   virtual void         glClearColor(Float_t red, Float_t green, Float_t blue, Float_t alpha);
+   virtual void         glDrawBuffer(UInt_t mode);
+   virtual void         glClear(UInt_t mode);
+   virtual void         glDisable(UInt_t mode);
+   virtual void         glEnable(UInt_t mode);
+   virtual void         glFlush();
+   virtual void         glFrontFace(UInt_t mode);
+   virtual void         glNewList(UInt_t list, UInt_t mode);
+   virtual void         glGetBooleanv(UInt_t mode, UChar_t *bRet);
+   virtual void         glGetDoublev(UInt_t mode, Double_t *dRet);
+   virtual void         glGetFloatv(UInt_t mode, Float_t *fRet);
+   virtual void         glGetIntegerv(UInt_t mode, Int_t *iRet);
+   virtual Int_t        glGetError();
+   virtual void         glEndList();
+   virtual void         glBegin(UInt_t mode);
+   virtual void         glEnd();
+   virtual void         glPushMatrix();
+   virtual void         glPopMatrix();
+   virtual void         glRotated(Double_t angle, Double_t x, Double_t y, Double_t z);
+   virtual void         glTranslated(Double_t x, Double_t y, Double_t z);
+   virtual void         glMultMatrixd(const Double_t *matrix);
+   virtual void         glColor3fv(const Float_t *color);
+   virtual void         glVertex3f(Float_t x, Float_t y, Float_t z);
+   virtual void         glVertex3fv(const Float_t *vert);
+   virtual void         glIndexi(Int_t index);
+   virtual void         glPointSize(Float_t size);
+   virtual void         glLineWidth(Float_t width);
+   virtual void         glDeleteLists(UInt_t list, Int_t sizei);
+   virtual UInt_t       glGenLists(UInt_t list);
+   virtual void         glCallList(UInt_t list);
+   virtual void         glMatrixMode(UInt_t mode);
+   virtual void         glLoadIdentity();
+   virtual void         glFrustum(Double_t min_0, Double_t max_0, Double_t min_1,
+                                  Double_t max_1, Double_t dnear, Double_t dfar);
+   virtual void         glOrtho(Double_t min_0, Double_t max_0, Double_t min_1,
+                                Double_t max_1, Double_t dnear, Double_t dfar);
+   virtual void         glCullFace(UInt_t mode);
+   virtual void         glPolygonMode(UInt_t face, UInt_t mode);
+   virtual void         glLoadMatrixd(const Double_t *matrix);
+   virtual void         glShadeModel(UInt_t mode);
+   virtual void         glNormal3fv(const Float_t *norm);
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
@@ -495,5 +542,50 @@ inline void         TVirtualX::DeleteImage(Drawable_t) { }
 //---- Methods used for OpenGL -----
 inline Window_t     TVirtualX::CreateGLWindow(Window_t, Visual_t, Int_t) { return 0; }
 inline ULong_t      TVirtualX::GetWinDC(Window_t) { return 0; }
+inline ULong_t      TVirtualX::wglCreateContext(Window_t) { return 0; }
+inline void         TVirtualX::wglDeleteContext(ULong_t) { }
+inline void         TVirtualX::wglMakeCurrent(Window_t, ULong_t) { }
+inline void         TVirtualX::wglSwapLayerBuffers(Window_t, UInt_t) { }
+inline void         TVirtualX::glViewport(Int_t, Int_t, Int_t, Int_t) { }
+inline void         TVirtualX::glClearIndex(Float_t) { }
+inline void         TVirtualX::glClearColor(Float_t, Float_t, Float_t, Float_t) { }
+inline void         TVirtualX::glDrawBuffer(UInt_t) { }
+inline void         TVirtualX::glClear(UInt_t) { }
+inline void         TVirtualX::glDisable(UInt_t) { }
+inline void         TVirtualX::glEnable(UInt_t) { }
+inline void         TVirtualX::glFlush() { }
+inline void         TVirtualX::glFrontFace(UInt_t) { }
+inline void         TVirtualX::glNewList(UInt_t, UInt_t) { }
+inline void         TVirtualX::glGetBooleanv(UInt_t, UChar_t *) { }
+inline void         TVirtualX::glGetDoublev(UInt_t, Double_t *) { }
+inline void         TVirtualX::glGetFloatv(UInt_t, Float_t *) { }
+inline void         TVirtualX::glGetIntegerv(UInt_t, Int_t *) { }
+inline Int_t        TVirtualX::glGetError() { return 0; }
+inline void         TVirtualX::glEndList() { }
+inline void         TVirtualX::glBegin(UInt_t mode) { }
+inline void         TVirtualX::glEnd() { }
+inline void         TVirtualX::glPushMatrix() { }
+inline void         TVirtualX::glPopMatrix() { }
+inline void         TVirtualX::glRotated(Double_t, Double_t, Double_t, Double_t) { }
+inline void         TVirtualX::glTranslated(Double_t, Double_t, Double_t) { }
+inline void         TVirtualX::glMultMatrixd(const Double_t *) { }
+inline void         TVirtualX::glColor3fv(const Float_t *) { }
+inline void         TVirtualX::glVertex3f(Float_t, Float_t, Float_t) { }
+inline void         TVirtualX::glVertex3fv(const Float_t *) { }
+inline void         TVirtualX::glIndexi(Int_t) { }
+inline void         TVirtualX::glPointSize(Float_t) { }
+inline void         TVirtualX::glLineWidth(Float_t) { }
+inline void         TVirtualX::glDeleteLists(UInt_t, Int_t) { }
+inline UInt_t       TVirtualX::glGenLists(UInt_t) { return 0; }
+inline void         TVirtualX::glCallList(UInt_t) { }
+inline void         TVirtualX::glMatrixMode(UInt_t) { }
+inline void         TVirtualX::glLoadIdentity() { }
+inline void         TVirtualX::glFrustum(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t) { }
+inline void         TVirtualX::glOrtho(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t) { }
+inline void         TVirtualX::glCullFace(UInt_t) { }
+inline void         TVirtualX::glPolygonMode(UInt_t, UInt_t) { }
+inline void         TVirtualX::glLoadMatrixd(const Double_t *) { }
+inline void         TVirtualX::glShadeModel(UInt_t) { }
+inline void         TVirtualX::glNormal3fv(const Float_t *) { }
 
 #endif

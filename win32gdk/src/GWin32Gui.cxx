@@ -3511,7 +3511,7 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    fThreadP.xattr.y = yval;
    fThreadP.xattr.wclass = GDK_INPUT_OUTPUT;
    fThreadP.xattr.event_mask = 0L; //GDK_ALL_EVENTS_MASK;
-   fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | 
+   fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
        GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
    fThreadP.xattr.colormap = cmap;
    mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP | GDK_WA_WMCLASS | GDK_WA_NOREDIR;
@@ -3555,3 +3555,471 @@ ULong_t TGWin32::GetWinDC(Window_t wind)
     LeaveCriticalSection(flpCriticalSection);
     return (ULong_t) fThreadP.pRet;
 }
+
+//______________________________________________________________________________
+ULong_t TGWin32::wglCreateContext(Window_t wind)
+{
+    ULong_t retcode;
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.Drawable = (GdkDrawable *) wind;
+    PostThreadMessage(fIDThread, WIN32_WGL_CREATE_CONTEXT, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    retcode = (ULong_t) fThreadP.pRet;
+    LeaveCriticalSection(flpCriticalSection);
+    return retcode;
+}
+
+//______________________________________________________________________________
+void TGWin32::wglDeleteContext(ULong_t ctx)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) ctx;
+    PostThreadMessage(fIDThread, WIN32_WGL_DELETE_CONTEXT, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::wglMakeCurrent(Window_t wind, ULong_t ctx)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.Drawable = (GdkDrawable *) wind;
+    fThreadP.pParam = (void *) ctx;
+    PostThreadMessage(fIDThread, WIN32_WGL_MAKE_CURRENT, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::wglSwapLayerBuffers(Window_t wind, UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.Drawable = (GdkDrawable *) wind;
+    PostThreadMessage(fIDThread, WIN32_WGL_SWAP_LAYER_BUFFERS, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glViewport(Int_t x0, Int_t y0, Int_t x1, Int_t y1)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_VIEWPORT, MAKEWPARAM(x1,0), MAKELPARAM(y1,0));
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glClearIndex(Float_t fParam)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.fParam = fParam;
+    PostThreadMessage(fIDThread, WIN32_GL_CLEAR_INDEX, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glClearColor(Float_t red, Float_t green, Float_t blue, Float_t alpha)
+{
+    EnterCriticalSection(flpCriticalSection);
+    static Float_t colors[4];
+    colors[0] = red;
+    colors[1] = green;
+    colors[2] = blue;
+    colors[3] = alpha;
+    fThreadP.pParam = (void *) colors;
+    PostThreadMessage(fIDThread, WIN32_GL_CLEAR_COLOR, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glDrawBuffer(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_DRAW_BUFFER, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glClear(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_CLEAR, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+
+//______________________________________________________________________________
+void TGWin32::glDisable(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_DISABLE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glEnable(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_ENABLE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glFlush()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_FLUSH, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glFrontFace(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_FRONT_FACE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glNewList(UInt_t list, UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_NEW_LIST, MAKEWPARAM(list,0), MAKELPARAM(mode,0));
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glGetBooleanv(UInt_t mode, UChar_t *bRet)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) bRet;
+    PostThreadMessage(fIDThread, WIN32_GL_GET_BOOL, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glGetDoublev(UInt_t mode, Double_t *dRet)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) dRet;
+    PostThreadMessage(fIDThread, WIN32_GL_GET_DOUBLE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glGetFloatv(UInt_t mode, Float_t *fRet)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) fRet;
+    PostThreadMessage(fIDThread, WIN32_GL_GET_FLOAT, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glGetIntegerv(UInt_t mode, Int_t *iRet)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) iRet;
+    PostThreadMessage(fIDThread, WIN32_GL_GET_INT, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+Int_t TGWin32::glGetError()
+{
+    Int_t retcode;
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_GET_ERROR, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    retcode = fThreadP.iRet;
+    LeaveCriticalSection(flpCriticalSection);
+    return retcode;
+}
+
+//______________________________________________________________________________
+void TGWin32::glEndList()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_END_LIST, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glBegin(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_BEGIN, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glEnd()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_END, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glPushMatrix()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_PUSH_MATRIX, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glPopMatrix()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_POP_MATRIX, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glRotated(Double_t angle, Double_t x, Double_t y, Double_t z)
+{
+    EnterCriticalSection(flpCriticalSection);
+    static Double_t fparam[4];
+    fparam[0] = angle;
+    fparam[1] = x;
+    fparam[2] = y;
+    fparam[3] = z;
+    fThreadP.pParam = (void *) fparam;
+    PostThreadMessage(fIDThread, WIN32_GL_ROTATED, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glTranslated(Double_t x, Double_t y, Double_t z)
+{
+    EnterCriticalSection(flpCriticalSection);
+    static Double_t fparam[3];
+    fparam[0] = x;
+    fparam[1] = y;
+    fparam[2] = z;
+    fThreadP.pParam = (void *) fparam;
+    PostThreadMessage(fIDThread, WIN32_GL_TRANSLATED, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glMultMatrixd(const Double_t *matrix)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) matrix;
+    PostThreadMessage(fIDThread, WIN32_GL_MULT_MATRIX, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glColor3fv(const Float_t *color)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) color;
+    PostThreadMessage(fIDThread, WIN32_GL_COLOR_3FV, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+void TGWin32::glVertex3f(Float_t x, Float_t y, Float_t z)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.fParam  = x;
+    fThreadP.fParam1 = y;
+    fThreadP.fParam2 = z;
+    PostThreadMessage(fIDThread, WIN32_GL_VERTEX_3F, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glVertex3fv(const Float_t *vert)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) vert;
+    PostThreadMessage(fIDThread, WIN32_GL_VERTEX_3FV, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glIndexi(Int_t index)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_INDEXI, MAKEWPARAM(index,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glPointSize(Float_t size)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.fParam = size;
+    PostThreadMessage(fIDThread, WIN32_GL_POINT_SIZE, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glLineWidth(Float_t width)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.fParam = width;
+    PostThreadMessage(fIDThread, WIN32_GL_LINE_WIDTH, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glDeleteLists(UInt_t list, Int_t sizei)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_DEL_LISTS, MAKEWPARAM(list,0), MAKELPARAM(sizei,0));
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+UInt_t TGWin32::glGenLists(UInt_t list)
+{
+    UInt_t retcode;
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_GEN_LISTS, MAKEWPARAM(list,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    retcode = fThreadP.uiRet;
+    LeaveCriticalSection(flpCriticalSection);
+    return retcode;
+}
+
+//______________________________________________________________________________
+void TGWin32::glCallList(UInt_t list)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_CALL_LIST, MAKEWPARAM(list,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glMatrixMode(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_MATRIX_MODE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glLoadIdentity()
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_LOAD_IDENTITY, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glFrustum(Double_t left,Double_t right,Double_t bottom,Double_t top,Double_t dnear,Double_t dfar)
+{
+    EnterCriticalSection(flpCriticalSection);
+    static Double_t dParam[6];
+    dParam[0] = left;
+    dParam[1] = right;
+    dParam[2] = bottom;
+    dParam[3] = top;
+    dParam[4] = dnear;
+    dParam[5] = dfar;
+    fThreadP.pParam = (void *) dParam;
+    PostThreadMessage(fIDThread, WIN32_GL_FRUSTUM, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glOrtho(Double_t left,Double_t right,Double_t bottom,Double_t top,Double_t dnear,Double_t dfar)
+{
+    EnterCriticalSection(flpCriticalSection);
+    static Double_t dParam[6];
+    dParam[0] = left;
+    dParam[1] = right;
+    dParam[2] = bottom;
+    dParam[3] = top;
+    dParam[4] = dnear;
+    dParam[5] = dfar;
+    fThreadP.pParam = (void *) dParam;
+    PostThreadMessage(fIDThread, WIN32_GL_ORTHO, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glCullFace(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_CULL_FACE, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glPolygonMode(UInt_t face, UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_POLYGON_MODE, MAKEWPARAM(face,0), MAKELPARAM(mode,0));
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glLoadMatrixd(const Double_t *matrix)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) matrix;
+    PostThreadMessage(fIDThread, WIN32_GL_LOAD_MATRIXD, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glShadeModel(UInt_t mode)
+{
+    EnterCriticalSection(flpCriticalSection);
+    PostThreadMessage(fIDThread, WIN32_GL_SHADE_MODEL, MAKEWPARAM(mode,0), 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+
+//______________________________________________________________________________
+void TGWin32::glNormal3fv(const Float_t *norm)
+{
+    EnterCriticalSection(flpCriticalSection);
+    fThreadP.pParam = (void *) norm;
+    PostThreadMessage(fIDThread, WIN32_GL_NORMAL_3FV, 0, 0L);
+    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+    LeaveCriticalSection(flpCriticalSection);
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.6 2002/10/04 16:06:28 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.7 2002/10/04 17:03:25 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -298,7 +298,7 @@ void TRootGLViewer::CreateContext()
 #ifndef GDK_WIN32
    fCtx = glXCreateContext(fDpy, fVisInfo, None, GL_TRUE);
 #else
-   fCtx = wglCreateContext((HDC)gVirtualX->GetWinDC((Window_t)fGLWin));
+   fCtx = (HGLRC)gVirtualX->wglCreateContext((Window_t)fGLWin);
 #endif
 }
 
@@ -312,7 +312,7 @@ void TRootGLViewer::DeleteContext()
 #ifndef GDK_WIN32
       glXDestroyContext(fDpy, fCtx);
 #else
-      wglDeleteContext(fCtx);
+      gVirtualX->wglDeleteContext((ULong_t)fCtx);
 #endif
       fCtx = 0;
    }
@@ -326,7 +326,7 @@ void TRootGLViewer::MakeCurrent()
 #ifndef GDK_WIN32
    glXMakeCurrent(fDpy, fGLWin, fCtx);
 #else
-   wglMakeCurrent((HDC)gVirtualX->GetWinDC((Window_t)fGLWin), fCtx);
+   gVirtualX->wglMakeCurrent((Window_t)fGLWin, (ULong_t)fCtx);
 #endif
 }
 
@@ -345,7 +345,7 @@ void TRootGLViewer::SwapBuffers()
    while ((error = glGetError()) != GL_NO_ERROR)
       Error("SwapBuffers", "GL error: %s", gluErrorString(error));
 #else
-   wglSwapLayerBuffers((HDC)gVirtualX->GetWinDC((Window_t)fGLWin), WGL_SWAP_MAIN_PLANE);
+   gVirtualX->wglSwapLayerBuffers((Window_t)fGLWin, WGL_SWAP_MAIN_PLANE);
 #endif
 }
 
@@ -450,7 +450,11 @@ Bool_t TRootGLViewer::HandleContainerConfigure(Event_t *event)
    gVirtualX->ResizeWindow((Window_t)fGLWin, event->fWidth, event->fHeight);
 
    MakeCurrent();
+#ifndef GDK_WIN32
    glViewport(0, 0, (GLint) event->fWidth, (GLint) event->fHeight);
+#else
+   gVirtualX->glViewport(0, 0, (GLint) event->fWidth, (GLint) event->fHeight);
+#endif
    if (fGLView) fGLView->Size((Int_t) event->fWidth, (Int_t) event->fHeight);
 
    Update();

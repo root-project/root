@@ -3,6 +3,7 @@
 #include <wchar.h>
 #include "TROOT.h"
 #include "TGWin32.h"
+#include "TGLKernel.h"
 #include "gdk/gdkkeysyms.h"
 #include "xatom.h"
 
@@ -120,7 +121,7 @@ void TGWin32::GdkThread( )
     HDC hdc;
     RECT srct;
     HWND dw;
-    
+
     PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
     ReleaseSemaphore(fThreadP.hThrSem, 1, NULL);
     while(!EndLoop) {
@@ -164,12 +165,12 @@ void TGWin32::GdkThread( )
                 break;
             case WIN32_GDK_WIN_COPY_AREA:
                 gdk_window_copy_area((GdkDrawable *) fThreadP.Drawable,
-                        fThreadP.GC, fThreadP.xpos, fThreadP.ypos, 
-                        (GdkDrawable *) fThreadP.pParam, fThreadP.x, 
+                        fThreadP.GC, fThreadP.xpos, fThreadP.ypos,
+                        (GdkDrawable *) fThreadP.pParam, fThreadP.x,
                         fThreadP.y, fThreadP.w, fThreadP.h);
                 break;
             case WIN32_GDK_CMAP_FREE_COLORS:
-                gdk_colormap_free_colors((GdkColormap *) fThreadP.pParam, 
+                gdk_colormap_free_colors((GdkColormap *) fThreadP.pParam,
                     (GdkColor *) fThreadP.pParam2, fThreadP.iParam);
                 break;
             case WIN32_GDK_DRAW_LINES:
@@ -204,7 +205,7 @@ void TGWin32::GdkThread( )
                 fThreadP.h = gdk_screen_height();
                 break;
             case WIN32_GDK_WIN_GEOMETRY:
-                gdk_window_get_geometry(fThreadP.Drawable, &fThreadP.x, &fThreadP.y, 
+                gdk_window_get_geometry(fThreadP.Drawable, &fThreadP.x, &fThreadP.y,
                     &fThreadP.w, &fThreadP.h, &fThreadP.iRet);
                 break;
             case WIN32_GDK_GET_DESK_ORIGIN:
@@ -246,11 +247,11 @@ void TGWin32::GdkThread( )
                 break;
             case WIN32_GDK_GC_NEW_WITH_VAL:
                 if(fThreadP.Drawable == NULL) {
-                    fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) GDK_ROOT_PARENT(), 
+                    fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) GDK_ROOT_PARENT(),
                     &fThreadP.gcvals, (GdkGCValuesMask) fThreadP.iParam);
                 }
                 else {
-                    fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) fThreadP.Drawable, 
+                    fThreadP.pRet = gdk_gc_new_with_values((GdkWindow *) fThreadP.Drawable,
                     &fThreadP.gcvals, (GdkGCValuesMask) fThreadP.iParam);
                 }
                 break;
@@ -262,7 +263,7 @@ void TGWin32::GdkThread( )
             case WIN32_GDK_FONT_LOAD:
                 fThreadP.pRet = gdk_font_load(fThreadP.sParam);
                 break;
- 
+
             case WIN32_GDK_FONTLIST_FREE:
                 gdk_font_list_free((char **)fThreadP.pParam);
                 break;
@@ -279,7 +280,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_CURSOR_NEW_FROM_PIXMAP:
-                fThreadP.pRet = gdk_cursor_new_from_pixmap(fThreadP.Drawable, 
+                fThreadP.pRet = gdk_cursor_new_from_pixmap(fThreadP.Drawable,
                     (GdkDrawable *)fThreadP.pParam, &fore, &back, 0, 0);
                 break;
 
@@ -341,7 +342,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_DRAW_SEGMENTS:
-                gdk_draw_segments(fThreadP.Drawable, fThreadP.GC, 
+                gdk_draw_segments(fThreadP.Drawable, fThreadP.GC,
                     (GdkSegment *)fThreadP.pParam, fThreadP.iParam);
                 break;
 
@@ -350,7 +351,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_IMAGE_GET:
-                fThreadP.pRet = gdk_image_get(fThreadP.Drawable, fThreadP.x, fThreadP.y, 
+                fThreadP.pRet = gdk_image_get(fThreadP.Drawable, fThreadP.x, fThreadP.y,
                                                 fThreadP.w, fThreadP.h);
                 break;
 
@@ -363,7 +364,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_DRAW_IMAGE:
-                gdk_draw_image(fThreadP.Drawable, fThreadP.GC, (GdkImage *)fThreadP.pParam, fThreadP.x, fThreadP.y, 
+                gdk_draw_image(fThreadP.Drawable, fThreadP.GC, (GdkImage *)fThreadP.pParam, fThreadP.x, fThreadP.y,
                                 fThreadP.x1, fThreadP.y1, fThreadP.w, fThreadP.h);
                 break;
 
@@ -378,7 +379,7 @@ void TGWin32::GdkThread( )
             case WIN32_GDK_COLOR_CONTEXT_NEW:
                 fThreadP.pRet = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fThreadP.pParam);
                 break;
-  
+
             case WIN32_GDK_COLOR_CONTEXT_QUERY_COLORS:
                 if(fThreadP.iParam == 1)
                     gdk_color_context_query_color((GdkColorContext *)fThreadP.pParam, &fThreadP.color);
@@ -391,7 +392,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_COLORMAP_ALLOC_COLOR:
-                fThreadP.iRet = gdk_colormap_alloc_color((GdkColormap *)fThreadP.pParam, &fThreadP.color, 
+                fThreadP.iRet = gdk_colormap_alloc_color((GdkColormap *)fThreadP.pParam, &fThreadP.color,
                                     fThreadP.iParam, fThreadP.iParam1);
                 break;
 
@@ -421,7 +422,7 @@ void TGWin32::GdkThread( )
 
 //______________________________________________________________________________
 //
-//              From GWin32GUI.cxx                
+//              From GWin32GUI.cxx
 //______________________________________________________________________________
 
 
@@ -448,17 +449,17 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_WIN_MOVE_RESIZE:
-                gdk_window_move_resize((GdkWindow *) fThreadP.Drawable, fThreadP.x, 
+                gdk_window_move_resize((GdkWindow *) fThreadP.Drawable, fThreadP.x,
                                 fThreadP.y, fThreadP.w, fThreadP.h);
                 break;
 
             case WIN32_GDK_WIN_SET_BACK_PIXMAP:
-                gdk_window_set_back_pixmap((GdkWindow *) fThreadP.Drawable, 
+                gdk_window_set_back_pixmap((GdkWindow *) fThreadP.Drawable,
                                 (GdkPixmap *) fThreadP.pParam, fThreadP.iParam);
                 break;
 
             case WIN32_GDK_WIN_NEW:
-                fThreadP.pRet = gdk_window_new((GdkWindow *) fThreadP.Drawable, &fThreadP.xattr, 
+                fThreadP.pRet = gdk_window_new((GdkWindow *) fThreadP.Drawable, &fThreadP.xattr,
                     fThreadP.lParam);
                 break;
 
@@ -545,7 +546,7 @@ void TGWin32::GdkThread( )
             case WIN32_GDK_PIXMAP_CREATE_FROM_XPM:
                 GdkBitmap *gdk_pixmap_mask;
                 fThreadP.pRet = gdk_pixmap_create_from_xpm((GdkWindow *) fThreadP.Drawable,
-                                   &gdk_pixmap_mask, (GdkColor *)fThreadP.pParam1, 
+                                   &gdk_pixmap_mask, (GdkColor *)fThreadP.pParam1,
                                    fThreadP.sParam);
                 fThreadP.pParam = gdk_pixmap_mask;
                 break;
@@ -580,14 +581,14 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_WIN_SET_COLORMAP:
-                gdk_window_set_colormap((GdkWindow *) fThreadP.Drawable, 
+                gdk_window_set_colormap((GdkWindow *) fThreadP.Drawable,
                     (GdkColormap *) fThreadP.pParam);
                 break;
 
             case WIN32_GDK_PROPERTY_CHANGE:
                 gdk_property_change((GdkWindow *) fThreadP.Drawable, (GdkAtom) fThreadP.ulParam,
-                                   (GdkAtom) fThreadP.ulParam1, fThreadP.iParam, 
-                                   (GdkPropMode)fThreadP.iParam1, (unsigned char *) fThreadP.pParam, 
+                                   (GdkAtom) fThreadP.ulParam1, fThreadP.iParam,
+                                   (GdkPropMode)fThreadP.iParam1, (unsigned char *) fThreadP.pParam,
                                    fThreadP.iParam2);
                 break;
 
@@ -614,7 +615,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_CHECK_TYPED_WIN_EVENT:
-                fThreadP.iRet = gdk_check_typed_window_event((GdkWindow *) fThreadP.Drawable, 
+                fThreadP.iRet = gdk_check_typed_window_event((GdkWindow *) fThreadP.Drawable,
 //                                        fThreadP.iParam, &fThreadP.event);
                                         fThreadP.iParam, (GdkEvent *) fThreadP.pParam);
                 break;
@@ -678,28 +679,28 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_WIN_SET_ICON:
-                gdk_window_set_icon((GdkWindow *) fThreadP.Drawable, NULL, 
+                gdk_window_set_icon((GdkWindow *) fThreadP.Drawable, NULL,
                             (GdkPixmap *) fThreadP.pParam, (GdkPixmap *) fThreadP.pParam);
                 break;
 
             case WIN32_GDK_WIN_SET_FUNCTIONS:
-                gdk_window_set_functions((GdkWindow *) fThreadP.Drawable, 
+                gdk_window_set_functions((GdkWindow *) fThreadP.Drawable,
                             (GdkWMFunction) fThreadP.iParam);
                 break;
 
             case WIN32_GDK_WIN_SET_GEOM_HINTS:
-                gdk_window_set_geometry_hints((GdkWindow *) fThreadP.Drawable, 
+                gdk_window_set_geometry_hints((GdkWindow *) fThreadP.Drawable,
                             (GdkGeometry *)fThreadP.pParam, (GdkWindowHints)fThreadP.iParam);
                 break;
 
             case WIN32_GDK_WIN_SET_TRANSIENT_FOR:
-                gdk_window_set_transient_for((GdkWindow *) fThreadP.Drawable, 
+                gdk_window_set_transient_for((GdkWindow *) fThreadP.Drawable,
                             (GdkWindow *) fThreadP.pParam);
                 break;
 
             case WIN32_GDK_DRAW_TEXT:
-                gdk_draw_text((GdkDrawable *) fThreadP.Drawable, (GdkFont *) fThreadP.pParam, 
-                            (GdkGC *) fThreadP.GC, fThreadP.x, fThreadP.y, 
+                gdk_draw_text((GdkDrawable *) fThreadP.Drawable, (GdkFont *) fThreadP.pParam,
+                            (GdkGC *) fThreadP.GC, fThreadP.x, fThreadP.y,
                             (const gchar *)fThreadP.sParam, fThreadP.iParam);
                 break;
 
@@ -731,13 +732,13 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_SELECTION_OWNER_SET:
-                gdk_selection_owner_set((GdkWindow *) fThreadP.Drawable, 
+                gdk_selection_owner_set((GdkWindow *) fThreadP.Drawable,
                             fThreadP.lParam, GDK_CURRENT_TIME, 0);
                 break;
 
             case WIN32_GDK_SELECTION_CONVERT:
-                gdk_selection_convert((GdkWindow *) fThreadP.Drawable, 
-                            fThreadP.lParam, gdk_atom_intern("GDK_TARGET_STRING", 0), 
+                gdk_selection_convert((GdkWindow *) fThreadP.Drawable,
+                            fThreadP.lParam, gdk_atom_intern("GDK_TARGET_STRING", 0),
                             fThreadP.uiParam);
                 break;
 
@@ -748,7 +749,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_PROP_DELETE:
-                gdk_property_delete((GdkWindow *) fThreadP.Drawable, 
+                gdk_property_delete((GdkWindow *) fThreadP.Drawable,
                     gdk_atom_intern("GDK_SELECTION", FALSE));
                 break;
 
@@ -772,7 +773,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_REGION_POLYGON:
-                fThreadP.pRet = gdk_region_polygon((GdkPoint *)fThreadP.pParam, 
+                fThreadP.pRet = gdk_region_polygon((GdkPoint *)fThreadP.pParam,
                     fThreadP.iParam, fThreadP.iParam1 ? GDK_WINDING_RULE : GDK_EVEN_ODD_RULE);
                 break;
 
@@ -794,7 +795,7 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_REGIONS_XOR:
-                fThreadP.pRet = gdk_regions_xor((GdkRegion *) fThreadP.pParam, 
+                fThreadP.pRet = gdk_regions_xor((GdkRegion *) fThreadP.pParam,
                                                         (GdkRegion *) fThreadP.pParam1);
                 break;
 
@@ -803,12 +804,12 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_REGION_POINT_IN:
-                fThreadP.iRet = gdk_region_point_in((GdkRegion *) fThreadP.pParam, 
+                fThreadP.iRet = gdk_region_point_in((GdkRegion *) fThreadP.pParam,
                                                     fThreadP.x, fThreadP.y);
                 break;
 
             case WIN32_GDK_REGION_EQUAL:
-                fThreadP.iRet = gdk_region_equal((GdkRegion *) fThreadP.pParam, 
+                fThreadP.iRet = gdk_region_equal((GdkRegion *) fThreadP.pParam,
                                                 (GdkRegion *) fThreadP.pParam1);
                 break;
 
@@ -883,7 +884,7 @@ void TGWin32::GdkThread( )
             case WIN32_GDK_FONT_FULLNAME_GET:
                 fThreadP.sRet = gdk_font_full_name_get((GdkFont *)fThreadP.pParam);
                 break;
-   
+
             case WIN32_GDK_GC_SET_TEXT_ALIGN:
                 fThreadP.uiRet = gdk_gc_set_text_align((GdkGC *) fThreadP.GC, fThreadP.uiParam);
                 break;
@@ -896,12 +897,12 @@ void TGWin32::GdkThread( )
                     wctext[i] = btowc((int)fThreadP.sParam[i]);
                 wctext[fThreadP.iParam] = 0;
                 gdk_draw_text_wc((GdkDrawable *) fThreadP.Drawable,
-                          (GdkFont *) fThreadP.pParam, (GdkGC *)fThreadP.GC, 
+                          (GdkFont *) fThreadP.pParam, (GdkGC *)fThreadP.GC,
                           fThreadP.x, fThreadP.y,
                           (const GdkWChar *) wctext, fThreadP.iParam);
                 }
                 break;
-   
+
             case WIN32_GDK_FONT_FULLNAME_FREE:
                 gdk_font_full_name_free(fThreadP.sRet);
                 break;
@@ -944,7 +945,7 @@ void TGWin32::GdkThread( )
 
 //______________________________________________________________________________
 //
-//              For OpenGL                
+//              For OpenGL
 //______________________________________________________________________________
 
             case WIN32_GDK_GET_WIN_DC:
@@ -977,30 +978,254 @@ void TGWin32::GdkThread( )
 	                };
 
                     fThreadP.iRet = 0;
-	                if ( (pixelformat = ChoosePixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)), 
+	                if ( (pixelformat = ChoosePixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)),
                         &pfd)) == 0 )
                         fThreadP.iRet = -1;
-	                if ( (SetPixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)), 
+	                if ( (SetPixelFormat(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)),
                         pixelformat,
                         &pfd)) == FALSE )
                         fThreadP.iRet = -2;
                 }
                 break;
+
+            case WIN32_WGL_CREATE_CONTEXT:
+                fThreadP.pRet = (void *)::wglCreateContext(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)));
+                break;
+
+            case WIN32_WGL_DELETE_CONTEXT:
+                ::wglDeleteContext((HGLRC)fThreadP.pParam);
+                break;
+
+            case WIN32_WGL_MAKE_CURRENT:
+                ::wglMakeCurrent(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)), (HGLRC) fThreadP.pParam);
+                break;
+
+            case WIN32_WGL_SWAP_LAYER_BUFFERS:
+                ::wglSwapLayerBuffers(GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)fThreadP.Drawable)), (UINT) LOWORD(msg.wParam));
+                ::glFinish();
+                break;
+
+            case WIN32_GL_VIEWPORT:
+                ::glViewport(0, 0, (GLint) LOWORD(msg.wParam), (GLint)LOWORD(msg.lParam));
+                break;
+
+
+            case WIN32_GL_CLEAR_INDEX:
+                ::glClearIndex(fThreadP.fParam);
+                break;
+
+            case WIN32_GL_CLEAR_COLOR:
+                {
+                    Float_t *colors = (Float_t *)fThreadP.pParam;
+                    GLclampf red   = colors[0];
+                    GLclampf green = colors[1];
+                    GLclampf blue  = colors[2];
+                    GLclampf alpha = colors[3];
+                    ::glClearColor(red, green, blue, alpha);
+                }
+                break;
+
+            case WIN32_GL_DRAW_BUFFER:
+                ::glDrawBuffer((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_CLEAR:
+                ::glClear((GLbitfield)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_DISABLE:
+                ::glDisable((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_ENABLE:
+                ::glEnable((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_FLUSH:
+                ::glFlush();
+                break;
+
+            case WIN32_GL_FRONT_FACE:
+                ::glFrontFace((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_NEW_LIST:
+                ::glNewList((GLuint)LOWORD(msg.wParam), (GLenum)LOWORD(msg.lParam));
+                break;
+
+            case WIN32_GL_GET_BOOL:
+                ::glGetBooleanv((GLenum)LOWORD(msg.wParam), (GLboolean *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_GET_DOUBLE:
+                ::glGetDoublev((GLenum)LOWORD(msg.wParam), (GLdouble *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_GET_FLOAT:
+                ::glGetFloatv((GLenum)LOWORD(msg.wParam), (GLfloat *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_GET_INT:
+                ::glGetIntegerv((GLenum)LOWORD(msg.wParam), (GLint *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_GET_ERROR:
+                fThreadP.iRet = ::glGetError();
+                break;
+
+            case WIN32_GL_END_LIST:
+                ::glEndList();
+                break;
+
+            case WIN32_GL_BEGIN:
+                ::glBegin((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_END:
+                ::glEnd();
+                break;
+
+            case WIN32_GL_PUSH_MATRIX:
+                ::glPushMatrix();
+                break;
+
+            case WIN32_GL_POP_MATRIX:
+                ::glPopMatrix();
+                break;
+
+            case WIN32_GL_ROTATED:
+                {
+                    Double_t *fparam = (Double_t *)fThreadP.pParam;
+                    Double_t angle = fparam[0];
+                    Double_t x     = fparam[1];
+                    Double_t y     = fparam[2];
+                    Double_t z     = fparam[3];
+                    ::glRotated((GLdouble)angle,(GLdouble)x,(GLdouble)y,(GLdouble)z);
+                }
+                break;
+
+            case WIN32_GL_TRANSLATED:
+                {
+                    Double_t *fparam = (Double_t *)fThreadP.pParam;
+                    Double_t x     = fparam[0];
+                    Double_t y     = fparam[1];
+                    Double_t z     = fparam[2];
+                    ::glTranslated((GLdouble)x,(GLdouble)y,(GLdouble)z);
+                }
+                break;
+
+            case WIN32_GL_MULT_MATRIX:
+                ::glMultMatrixd((const GLdouble *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_COLOR_3FV:
+                ::glColor3fv((const GLfloat *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_VERTEX_3F:
+                ::glVertex3f((GLfloat)fThreadP.fParam,(GLfloat)fThreadP.fParam1,
+                    (GLfloat)fThreadP.fParam2);
+                break;
+
+            case WIN32_GL_VERTEX_3FV:
+                ::glVertex3fv((const GLfloat *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_INDEXI:
+                ::glIndexi((GLint)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_POINT_SIZE:
+                ::glPointSize((GLfloat)fThreadP.fParam);
+                break;
+
+            case WIN32_GL_LINE_WIDTH:
+                ::glLineWidth((GLfloat)fThreadP.fParam);
+                break;
+
+            case WIN32_GL_DEL_LISTS:
+                ::glDeleteLists((GLuint)LOWORD(msg.wParam),(GLsizei)LOWORD(msg.lParam));
+                break;
+
+            case WIN32_GL_GEN_LISTS:
+                fThreadP.uiRet = ::glGenLists((GLsizei)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_CALL_LIST:
+                ::glCallList((GLuint)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_MATRIX_MODE:
+                ::glMatrixMode((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_LOAD_IDENTITY:
+                ::glLoadIdentity();
+                break;
+
+            case WIN32_GL_FRUSTUM:
+                {
+                    Double_t *dparam = (Double_t *)fThreadP.pParam;
+                    Double_t left   = dparam[0];
+                    Double_t right  = dparam[1];
+                    Double_t bottom = dparam[2];
+                    Double_t top    = dparam[3];
+                    Double_t dnear  = dparam[4];
+                    Double_t dfar   = dparam[5];
+                    ::glFrustum((GLdouble)left,(GLdouble)right,(GLdouble)bottom,
+                        (GLdouble)top,(GLdouble)dnear,(GLdouble)dfar);
+                }
+                break;
+
+            case WIN32_GL_ORTHO:
+                {
+                    Double_t *dparam = (Double_t *)fThreadP.pParam;
+                    Double_t left   = dparam[0];
+                    Double_t right  = dparam[1];
+                    Double_t bottom = dparam[2];
+                    Double_t top    = dparam[3];
+                    Double_t dnear  = dparam[4];
+                    Double_t dfar   = dparam[5];
+                    ::glOrtho((GLdouble)left,(GLdouble)right,(GLdouble)bottom,
+                        (GLdouble)top,(GLdouble)dnear,(GLdouble)dfar);
+                }
+                break;
+
+            case WIN32_GL_CULL_FACE:
+                ::glCullFace((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_POLYGON_MODE:
+                ::glPolygonMode((GLenum)LOWORD(msg.wParam), (GLenum)LOWORD(msg.lParam));
+                break;
+
+            case WIN32_GL_LOAD_MATRIXD:
+                ::glLoadMatrixd((const GLdouble *)fThreadP.pParam);
+                break;
+
+            case WIN32_GL_SHADE_MODEL:
+                ::glShadeModel((GLenum)LOWORD(msg.wParam));
+                break;
+
+            case WIN32_GL_NORMAL_3FV:
+                ::glNormal3fv((const GLfloat *)fThreadP.pParam);
+                break;
+
             case WIN32_GDK_VISUAL_GET_BEST:
                 fThreadP.pRet = gdk_visual_get_best();
                 break;
-                
+
             case WIN32_GDK_GET_BEST_DEPTH:
                 fThreadP.iRet = gdk_visual_get_best_depth();
                 break;
-            
+
             case WIN32_GDK_VISUAL_GET_TYPE:
                 fThreadP.iRet = gdk_visual_get_best_type();
                 break;
 
         }
         ReleaseSemaphore(fThreadP.hThrSem, 1, NULL);
-    }    
+    }
     if (erret == -1) {
         erret = GetLastError();
         Error("MsgLoop", "Error in GetMessage");
