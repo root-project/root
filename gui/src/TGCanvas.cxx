@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.30 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.31 2005/01/18 21:07:26 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -783,6 +783,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    Int_t yy = pos.fY + event->fY;
 
    if (event->fType == kButtonPress) {
+      gVirtualX->SetInputFocus(fId);
 
       fXp = pos.fX + event->fX;
       fYp = pos.fY + event->fY;
@@ -1827,13 +1828,14 @@ TGCanvas::~TGCanvas()
 
    delete fHScrollbar;
    delete fVScrollbar;
-   delete fVport;
 
    TGFrame *container = fVport->GetContainer();
 
    if (container->MustCleanup()) {
       delete container;
    }
+
+   delete fVport;
 }
 
 //______________________________________________________________________________

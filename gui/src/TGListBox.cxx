@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.39 2005/01/13 20:03:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.40 2005/01/17 15:33:16 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -640,6 +640,8 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       fClient->NeedRedraw(this);
       return kTRUE;
    }
+
+   gVirtualX->SetInputFocus(fId);
 
    if (fMultiSelect) {
       if (event->fType == kButtonPress) {
