@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.20 2004/01/28 02:41:42 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.21 2004/02/02 15:32:57 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -394,7 +394,7 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
 
       // open the file
       ifstream file1(tmpfilename);
-      if (!file1.is_open()) {
+      if (!file1) {
          Error("TTabCom::GetListOfClasses", "could not open file \"%s\"",
                tmpfilename);
          gSystem->Unlink(tmpfilename);
@@ -513,7 +513,7 @@ const TSeqCol *TTabCom::GetListOfEnvVars()
 
       // open the file
       ifstream file1(tmpfilename);
-      if (!file1.is_open()) {
+      if (!file1) {
          Error("TTabCom::GetListOfEnvVars", "could not open file \"%s\"",
                tmpfilename);
          gSystem->Unlink(tmpfilename);
@@ -837,7 +837,7 @@ TString TTabCom::DetermineClass(const char varName[])
 
    // open the file
    ifstream file1(tmpfile);
-   if (!file1.is_open()) {
+   if (!file1) {
       Error("TTabCom::DetermineClass", "could not open file \"%s\"",
             tmpfile);
       goto cleanup;
@@ -975,7 +975,7 @@ TString TTabCom::GetSysIncludePath(void)
 
    // open the tmp file
    ifstream file1(tmpfilename);
-   if (!file1.is_open()) {                // error
+   if (!file1) {                // error
       Error("TTabCom::GetSysIncludePath", "could not open file \"%s\"",
             tmpfilename);
       gSystem->Unlink(tmpfilename);
