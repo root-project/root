@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.19 2001/10/18 09:17:20 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.20 2001/10/22 08:46:49 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -297,7 +297,7 @@ void TClonesArray::ExpandCreate(Int_t n)
 void TClonesArray::ExpandCreateFast(Int_t n)
 {
    // Expand or shrink the array to n elements and create the clone
-   // objects by caling their default ctor. If n is less than the current size
+   // objects by calling their default ctor. If n is less than the current size
    // the array is shrinked and the allocated space is freed.
    // This routine is typically used to create a clonesarray into which
    // one can directly copy object data without going via the
