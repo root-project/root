@@ -23,7 +23,7 @@
 #include <time.h>
 #include <locale.h>
 #endif
-#if defined(__sgi) && !defined(__GNUC__) && !defined(__KCC)
+#if (defined(__sgi) && !defined(__GNUC__) && !defined(__KCC)) || (defined(__alpha) && !defined(__GNUC__))
 #include <math.h>
 #else
 #include <cmath>
@@ -65,7 +65,7 @@ float tanh (float);
 double abs(double);            // fabs()
 double pow(double, int);
 
-#if !defined(G__SUN)
+#if !defined(G__SUN) && !defined(G__AIX)
 long double abs  (long double);
 long double acos (long double);
 long double asin (long double);

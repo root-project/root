@@ -95,17 +95,37 @@ extern int telldir(DIR* dir);
 #endif /* __MAKECINT__ */
 
 extern struct dirent *readdir(DIR *dir);
+
 #if defined(G__KCC) || defined(__KCC)
 extern void seekdir(DIR* dir,off_t loc);
 #elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
 extern void seekdir( DIR *, off_t );
+
+#elif defined(G__AIX)
+#ifdef _NO_PROTO
+extern	void seekdir();
+#else /* _NO_PROTO */
+extern void seekdir(DIR *, long);
+#endif  
+
 #else
 extern void seekdir(DIR* dir,long loc);
 #endif
+
 #if !defined(G__SUN) && !defined(__sun)
 extern void rewinddir(DIR *dir);
 #endif
+
+#if defined(G__AIX)
+#ifdef _NO_PROTO
+extern	int closedir();
+#else /* _NO_PROTO */
+extern  int closedir(DIR *);
+#endif
+
+#else /* defined(G__AIX) */
 extern int closedir(DIR *dirp);
+#endif
 
 /********************************************************************
  * sys/stat.h , unistd.h
@@ -223,6 +243,7 @@ extern char *get_current_dir_name(void);
 extern pid_t getpgid(pid_t pid);
 #endif
 extern char *getwd(char *buf);
+
 #if defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
 #elif defined(G__FBSD) || defined(__FreeBSD__)
