@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.20 2000/12/02 15:47:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.21 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -763,9 +763,9 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load)
          int ptr = 0;
          if (t[strlen(t)-1] == '*') ptr = 1;
          if (ptr) {
-            if (*(long *)g->GetAddress() == (long)addr) return g;
+            if (*(Long_t *)g->GetAddress() == (Long_t)addr) return g;
          } else {
-            if (g->GetAddress() == addr) return g;
+            if ((Long_t)g->GetAddress() == (Long_t)addr) return g;
          }
       }
    }
