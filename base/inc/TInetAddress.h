@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.7 2004/07/08 17:55:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.8 2004/07/13 16:48:21 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
 
    static const char *GetHostAddress(UInt_t addr);
 
-   ClassDef(TInetAddress,2)  //Represents an Internet Protocol (IP) address
+   ClassDef(TInetAddress,3)  //Represents an Internet Protocol (IP) address
 };
 
 #endif
