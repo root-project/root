@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.9 2001/06/07 10:47:09 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.10 2001/11/26 15:37:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -347,7 +347,7 @@ void TVmsSystem::DispatchSignals(ESignals sig)
    case kSigSegmentationViolation:
    case kSigIllegalInstruction:
    case kSigFloatingException:
-      Printf("\n *** Break *** %s", VmsSigname(sig));
+      Break("TVmsSystem::DispatchSignals", VmsSigname(sig));
       StackTrace();
       if (TROOT::Initialized())
          Throw(sig);
@@ -355,7 +355,7 @@ void TVmsSystem::DispatchSignals(ESignals sig)
       break;
    case kSigSystem:
    case kSigPipe:
-      Printf("\n *** Break *** %s", VmsSigname(sig));
+      Break("TVmsSystem::DispatchSignals", VmsSigname(sig));
       break;
    case kSigWindowChanged:
       Gl_windowchanged();

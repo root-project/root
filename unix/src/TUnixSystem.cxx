@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.41 2002/08/20 10:51:50 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.42 2002/10/25 00:44:54 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -542,7 +542,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigSegmentationViolation:
    case kSigIllegalInstruction:
    case kSigFloatingException:
-      Printf("\n *** Break *** %s", UnixSigname(sig));
+      Break("TUnixSystem::DispatchSignals", UnixSigname(sig));
       StackTrace();
       if (TROOT::Initialized()) {
          if (gException) {
@@ -559,7 +559,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       break;
    case kSigSystem:
    case kSigPipe:
-      Printf("\n *** Break *** %s", UnixSigname(sig));
+      Break("TUnixSystem::DispatchSignals", UnixSigname(sig));
       break;
    case kSigWindowChanged:
       Gl_windowchanged();

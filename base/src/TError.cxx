@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.3 2002/02/15 20:59:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.4 2002/07/08 14:40:11 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -71,15 +71,20 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
       type = "Warning";
    if (level >= kError)
       type = "Error";
+   if (level >= kBreak)
+      type = "\n *** Break ***";
    if (level >= kSysError)
       type = "SysError";
    if (level >= kFatal)
       type = "Fatal";
 
-   if (!location || strlen(location) == 0)
+   if (level >= kBreak && level < kSysError)
+      fprintf(stderr, "%s %s\n", type, msg);
+   else if (!location || strlen(location) == 0)
       fprintf(stderr, "%s: %s\n", type, msg);
    else
       fprintf(stderr, "%s in <%s>: %s\n", type, location, msg);
+
    fflush(stderr);
    if (abort) {
       fprintf(stderr, "aborting\n");
@@ -99,14 +104,23 @@ void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
    // unless the error is of type kFatal, in which case the
    // DefaultErrorHandler() is called which will abort the application.
 
-   static const int buf_size = 2048;
-   char buf[buf_size], *bp;
+   static Int_t buf_size = 2048;
+   static char *buf = 0;
+
+   char *bp;
+
+again:
+   if (!buf)
+      buf = new char[buf_size];
 
    int n = vsnprintf(buf, buf_size, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buf_size) {
-      Warning("ErrorHandler", "Error message string truncated...");
+      buf_size *= 2;
+      delete [] buf;
+      buf = 0;
+      goto again;
    }
    if (level >= kSysError && level < kFatal)
       bp = Form("%s (%s)", buf, gSystem->GetError());
@@ -158,6 +172,17 @@ void SysError(const char *location, const char *va_(fmt), ...)
    va_list ap;
    va_start(ap, va_(fmt));
    ErrorHandler(kSysError, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Break(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function in case an error occured.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   ErrorHandler(kBreak, location, va_(fmt), ap);
    va_end(ap);
 }
 

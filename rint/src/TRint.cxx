@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.15 2002/07/27 13:45:04 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.16 2002/10/29 13:30:00 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TFile.h"
 #include "TMapFile.h"
 #include "TTabCom.h"
+#include "TError.h"
 
 #ifdef R__UNIX
 #include <signal.h>
@@ -75,7 +76,7 @@ Bool_t TInterruptHandler::Notify()
    if (!G__get_security_error())
       G__genericerror("\n *** Break *** keyboard interrupt");
    else {
-      Printf("\n *** Break *** keyboard interrupt");
+      Break("TInterruptHandler::Notify", "keyboard interrupt");
       if (TROOT::Initialized()) {
          Getlinem(kInit, "Root > ");
          gInterpreter->RewindDictionary();
