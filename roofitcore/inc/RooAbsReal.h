@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.44 2001/11/19 07:23:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.45 2001/11/19 18:03:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,6 +62,9 @@ public:
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
   void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
+
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset) const { return createIntegral(iset,&nset) ; }
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0) const ;  
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
