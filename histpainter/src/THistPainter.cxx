@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.147 2003/07/30 18:00:30 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.148 2003/08/05 10:25:30 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4023,7 +4023,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       }
    }
 
-   if (stats) {
+   if (stats && dostat) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
    } else {
@@ -4180,7 +4180,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
          break;
       }
    }
-   if (stats) {
+   if (stats && dostat) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
    } else {
