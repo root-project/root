@@ -62,7 +62,36 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+MyClassOld_cxx.$(DllSuf): MyClass.h MyClassOld.cxx
 
+MyClassVector_cxx.$(DllSuf): MyClass.h MyClassVector.cxx
 
-containerEvolution: containerEvolution.log
+oldfile.root: $(ROOTCORELIBS) MyClassOld_cxx.$(DllSuf) WriteOld.C
+	$(CMDECHO) root.exe -q -b -l WriteOld.C > WriteOld.log
+	
+vectorfile.root: $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) WriteVector.C
+	$(CMDECHO) root.exe -q -b -l WriteVector.C > WriteVector.log
+	
+listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
+	$(CMDECHO) root.exe -q -b -l WriteList.C > WriteList.log
+	
+ReadOld.log: $(ROOTCORELIBS) MyClassOld_cxx.$(DllSuf) ReadOld.C oldfile.root
+	$(CMDECHO) root.exe -q -b -l ReadOld.C > ReadOld.log
+	
+ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C oldfile.root vectorfile.root listfile.root
+	$(CMDECHO) root.exe -q -b -l ReadVector.C > ReadVector.log
+
+ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C oldfile.root vectorfile.root listfile.root
+	$(CMDECHO) root.exe -q -b -l ReadList.C > ReadList.log
+
+ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C oldfile.root
+	$(CMDECHO) root.exe -q -b -l ReadNolib.C > ReadNolib.log 2>&1
+
+containerEvolution.log: $(ROOTCORELIBS) MyClassOld_cxx.$(DllSuf) MyClassVector_cxx.$(DllSuf)
+
+containerEvolution: containerEvolution.log ReadOld.log ReadVector.log ReadList.log ReadNolib.log
+	$(CMDECHO) diff -b -w ReadOld.ref ReadOld.log
+	$(CMDECHO) diff -b -w ReadVector.ref ReadVector.log
+	$(CMDECHO) diff -b -w ReadList.ref ReadList.log
+	$(CMDECHO) diff -b -w ReadNolib.ref ReadNolib.log
 	$(TestDiff)
