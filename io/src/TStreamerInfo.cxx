@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.154 2003/02/17 15:04:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.155 2003/02/19 14:27:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -475,10 +475,14 @@ void TStreamerInfo::BuildOld()
       if (element->IsA() == TStreamerBase::Class()) {
          TStreamerBase *base = (TStreamerBase*)element;
          TClass *baseclass = base->GetClassPointer();
+         if (!baseclass) {
+            Warning("BuildOld","Missing base class: %s skipped",base->GetName());
+            baseclass = new TClass(element->GetName(),1,0,0,0,0);
+            element->Update(0,baseclass);
+         }
          baseclass->BuildRealData();
          Int_t version = base->GetBaseVersion();
          TStreamerInfo *infobase = baseclass->GetStreamerInfo(version);
-         //if (infobase->GetNdata() == 0) infobase->BuildOld();
          if (infobase->GetTypes() == 0) infobase->BuildOld();
          element->Init();
          Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
