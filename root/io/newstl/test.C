@@ -7,10 +7,10 @@ void TestError(const std::string &test, const char *msg);
 
 template <class HolderClass> Bool_t checkHolder() {
    HolderClass *holder = new HolderClass( 0 );
-   Bool_t result = holder->Verify(0,"checkHolder");
+   Bool_t result = holder->Verify(0,"checkHolder",0);
    delete holder;
    holder = new HolderClass( 2 );
-   result &= holder->Verify(2,"checkHolder" );
+   result &= holder->Verify(2,"checkHolder",0);
    return result;
 }
 
@@ -116,11 +116,13 @@ template <class HolderClass> bool verifyBranch(TTree *chain, const char *bname, 
       holder = *add;
    }
    
+   int splitlevel = branch->GetSplitLevel();
+
    switch (type) {
-      case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),bname);
-      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),bname);
-      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),bname);
-      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),bname);
+      case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),bname,splitlevel);
+      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),bname,splitlevel);
+      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),bname,splitlevel);
+      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),bname,splitlevel);
       default: 
          TestError("treeReading",Form("Unknown type %d in verifyBranch",type));
          return false;
@@ -137,7 +139,7 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
 
    holder = dynamic_cast<HolderClass*>( file.Get("holder") );
    if (!holder) result = false;
-   else result &= holder->Verify(0,"Write in dir");
+   else result &= holder->Verify(0,"Write in dir",0);
 
    TTree *chain = dynamic_cast<TTree*>( file.Get("stltree") );
 

@@ -4,27 +4,12 @@
 #include "TObject.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "versions.h"
 #endif
 
 #include <vector>
 
 #include <iostream>
 #include <sstream>
-
-#define VERIFY(X)                                                 \
-  bool Verify##X (Int_t entryNumber, const std::string &testname) \
-  {                                                               \
-     return SetOrVerify##X (entryNumber,false,testname);          \
-  }
-
-void TestError(const std::string &test, const char *msg) {
-   std::cerr << "Error for '" << test << "' : " << msg << "\n";
-}
-void TestError(const std::string &test, const std::string &str) {
-   TestError(test, str.c_str());
-}
-//void TestError(const char *msg);
 
 class Helper {
 public:
@@ -36,28 +21,19 @@ public:
    bool IsEquiv(const Helper &rhs) const { return  val==rhs.val; }
 };
 
-template <class T> void TestError(const std::string &test, const std::vector<T> &orig, const std::vector<T> &copy) {
-   TestError(test,"Containers are not equivalent! See previous errors");
-}
+#include "TestOutput.h"
+#include "versions.h"
 
-template <class T> void TestError(const std::string &test, const T &orig, const T &copy) {
-   std::stringstream s;
-   s << "We wrote: " << orig << " but read " << copy << std::ends;
-   TestError(test, s.str());
-}
+#define VERIFY(X)                                  \
+  bool Verify##X (Int_t entryNumber,               \
+                  const std::string &testname,     \
+                  Int_t splitlevel)                \
+  {                                                \
+     return SetOrVerify##X (entryNumber,false,     \
+                            testname,splitlevel);  \
+  }
 
-void TestError(const std::string &test, const Helper &orig, const Helper &copy) {
-     TestError(test, Form("Helper object wrote %d and read %d\n",
-                          orig.val,copy.val));
-}
-
-void TestError(const std::string &test, const Helper* &orig, const Helper* &copy) {
-   if (orig==0 || copy==0) {
-      TestError(test,Form("For Helper, non-initialized pointer %p %p",orig,copy));
-   } else {
-      TestError(test, *orig, *copy); 
-   }
-}
+//void TestError(const char *msg);
 
 template <class T> void fill(T& filled, UInt_t seed) {
    UInt_t size = seed%10;
@@ -81,6 +57,23 @@ template <class T> void fill(std::vector<T*>& filled, UInt_t seed) {
 
 bool IsEquiv(const std::string &, const Helper &orig, const Helper &copy) { return  orig.IsEquiv(copy); }
 
+template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
+   TClass *cl = gROOT->GetClass(typeid(T));
+   const char* classname = cl?cl->GetName():typeid(T).name();
+
+   if ( (orig==0 && copy) || (orig && copy==0) ) {
+      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,orig,copy));
+      return false;
+   }
+   return IsEquiv(test, *orig, *copy);
+}
+
+bool IsEquiv(const std::string &, float orig, float copy) {
+   float epsilon = 1e-6;
+   float diff = orig-copy;
+   return TMath::Abs( diff/copy ) < epsilon;
+}
+
 template <class T> bool IsEquiv(const std::string &test, const T& orig, const T& copy) {
    TClass *cl = gROOT->GetClass(typeid(T));
    const char* classname = cl?cl->GetName():typeid(T).name();
@@ -100,6 +93,10 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
                               classname,i));
          TestError(test,*iorig,*icopy);
          result = false;
+      } else {
+         //std::string notest("NOT a failure, ");
+         //notest += test;
+         //TestError(notest,*iorig,*icopy);
       }
       i++;
       iorig++;
@@ -108,22 +105,6 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
    return result;
 }
 
-template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
-   TClass *cl = gROOT->GetClass(typeid(T));
-   const char* classname = cl?cl->GetName():typeid(T).name();
-
-   if ( (orig==0 && copy) || (orig && copy==0) ) {
-      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,orig,copy));
-      return false;
-   }
-   return IsEquiv(test, *orig, *copy) && false;
-}
-
-bool IsEquiv(const std::string &, float orig, float copy) {
-   float epsilon = 1e-6;
-   float diff = orig-copy;
-   return TMath::Abs( diff/copy ) < epsilon;
-}
 
 bool IsEquiv(const std::string &, int orig, int copy) {
    return orig==copy;
@@ -177,14 +158,16 @@ class vectorHolder : public TObject {
 
 public:   
 
-   vectorHolder() : TObject(),
-      fScalarPtr(0),
-      fObjectPtr(0)
+   vectorHolder() : TObject()
+      ,fScalarPtr(0)
+      ,fScalarArrVar(0)
+      ,fObjectPtr(0)
       ,fPtrObjectPtr(0)
       {}
 
    explicit vectorHolder(Int_t entry) : TObject()
       ,fScalarPtr(0)
+      ,fScalarArrVar(0)
       ,fObjectPtr(0)
       ,fPtrObjectPtr(0)
       {
@@ -194,6 +177,9 @@ public:
 
    std::vector<int >    *fScalarPtr;
    std::vector<float >   fScalar;
+   std::vector<short >   fScalarArr[2];
+   Int_t                 fScalarArrVarSize;
+   std::vector<char >   *fScalarArrVar; //[fScalarArrVarSize]
    std::vector<Helper >  fObject;
    std::vector<Helper > *fObjectPtr;
    std::vector<Helper* > fPtrObject;
@@ -207,60 +193,73 @@ public:
    nesting_t fNested;  //
 #endif
 
-   bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
       Int_t seed = 3 * (entryNumber+1);
       return SetOrVerify("fScalar",fScalar,seed,entryNumber,reset,testname);
    }
    VERIFY(Scalar);
    
-   bool SetOrVerifyScalarPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyScalarPtr(Int_t entryNumber, bool reset, const std::string &testname, int splitlevel) {
       Int_t seed = 4 * (entryNumber+1);
       return SetOrVerify("fScalarPtr",fScalarPtr,seed,entryNumber,reset,testname);
    }
    VERIFY(ScalarPtr);
 
-   bool SetOrVerifyObject(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyObject(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasSplitVectorObject(gFile,splitlevel)) {
+         return true;
+      }
       UInt_t seed = 2 * (entryNumber+1);
       return SetOrVerify("fObject",fObject,seed,entryNumber,reset,testname);
    }
    VERIFY(Object);
 
-   bool SetOrVerifyObjectPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyObjectPtr(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasSplitVectorObject(gFile,splitlevel)) {
+         return true;
+      }
       UInt_t seed = 3 * (entryNumber+1);
       return SetOrVerify("fObjectPtr",fObjectPtr,seed,entryNumber,reset,testname);
    }
    VERIFY(ObjectPtr);
 
-   bool SetOrVerifyPtrObject(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyPtrObject(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasSplitVectorObject(gFile,splitlevel)) {
+         return true;
+      }
       UInt_t seed = 4 * (entryNumber+1);
       return SetOrVerify("fPtrObject",fPtrObject,seed,entryNumber,reset,testname);
    }
    VERIFY(PtrObject);
 
-   bool SetOrVerifyPtrObjectPtr(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerifyPtrObjectPtr(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasSplitVectorObject(gFile,splitlevel)) {
+         return true;
+      }
       UInt_t seed = 5 * (entryNumber+1);
       return SetOrVerify("fPtrObjectPtr",fPtrObjectPtr,seed,entryNumber,reset,testname);
    }
    VERIFY(PtrObjectPtr);
 
-   bool SetOrVerifyNested(Int_t entryNumber, bool reset, const std::string &testname) {
-      if (gFile && !HasNestedContainer(gFile)) return true;
-
+   bool SetOrVerifyNested(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasNestedContainer(gFile)) {
+         return true;
+      }
       UInt_t seed = 1 * (entryNumber+1);
       return SetOrVerify("fNested",fNested,seed,entryNumber,reset,testname);
    }
    VERIFY(Nested)
 
 protected:
-   bool SetOrVerify(Int_t entryNumber, bool reset, const std::string &testname) {
+   bool SetOrVerify(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
       bool result = true;
-      result &= SetOrVerifyScalar(entryNumber,reset,testname);
-      result &= SetOrVerifyScalarPtr(entryNumber,reset,testname);
-      result &= SetOrVerifyObject(entryNumber,reset,testname);
-      result &= SetOrVerifyObjectPtr(entryNumber,reset,testname);
-      result &= SetOrVerifyPtrObject(entryNumber,reset,testname);
-      result &= SetOrVerifyPtrObjectPtr(entryNumber,reset,testname);
-      result &= SetOrVerifyNested(entryNumber,reset,testname);
+      result &= SetOrVerifyScalar(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyScalarPtr(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyObject(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyObjectPtr(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyPtrObject(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyPtrObjectPtr(entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyNested(entryNumber,reset,testname,splitlevel);
       if (reset) Assert(result);
       return result;
    }
@@ -268,11 +267,11 @@ protected:
 public:
    
    void Reset(Int_t entryNumber) {
-      SetOrVerify(entryNumber, true, "reseting");
+      SetOrVerify(entryNumber, true, "reseting", 0);
    }
    
-   bool Verify(Int_t entryNumber, const std::string &testname) {
-      return SetOrVerify(entryNumber,false,testname);
+   bool Verify(Int_t entryNumber, const std::string &testname, int splitlevel) {
+      return SetOrVerify(entryNumber,false,testname,splitlevel);
    }
 
 #if defined(R__NO_NESTED_CONTAINER)

@@ -11,12 +11,21 @@ include ../../Rules.mk
 
 -include load_C.d
 -include vtest_C.d
-.PHONY: vtest.o load.o
+
+stllibs: load_C.$(DllSuf) vtest_C.$(DllSuf)
+
+load.o:
+	@touch load.o
+
+vtest.o:
+	@touch vtest.o
 
 load_C.$(DllSuf): load.C load.o
-	$(CMDECHO) root.exe -q -l -b build.C\(\"load.C\"\) && touch $?
+	@rm -f $@
+	$(CMDECHO) root.exe -q -l -b build.C\(\"load.C\"\) 
 
 vtest_C.$(DllSuf): vtest.C vtest.o
+	@rm -f $@
 	$(CMDECHO) root.exe -q -l -b build.C\(\"vtest.C\"\)
 
 stlIoTest: load_C.$(DllSuf) vtest_C.$(DllSuf)
