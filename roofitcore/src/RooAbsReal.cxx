@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.79 2002/04/03 23:37:23 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.80 2002/04/12 18:25:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -753,6 +753,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   if (projData && projDataNeededVars && projDataNeededVars->getSize()>0) {
 
     // Disable dirty state propagation in projection
+    
     RooArgSet branchList("branchList") ;
     ((RooAbsReal*)projection)->setOperMode(RooAbsArg::ADirty) ;
     projection->branchNodeServerList(&branchList) ;
@@ -1129,11 +1130,11 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
   assert(other!=0) ;
 
   if (source->getAttribute("FLOAT_TREE_BRANCH")) {
-    Float_t& tmp = (Float_t&) other->_value ;
-    _value = tmp ;
+    _value = *reinterpret_cast<Float_t*>(&other->_value) ;
   } else if (source->getAttribute("INTEGER_TREE_BRANCH")) {
-    Int_t& tmp = (Int_t&) other->_value ;
-    _value = tmp ;
+    _value = *reinterpret_cast<Int_t*>(&other->_value) ;
+  } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
+    _value = *reinterpret_cast<UChar_t*>(&other->_value) ;
   } else {
     _value = other->_value ;
   }
@@ -1160,6 +1161,10 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
+    } else if (!typeName.CompareTo("UChar_t")) {
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
+	   << " will be converted to double precision" << endl ;
+      setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
     } 
 
     t.SetBranchAddress(cleanName,&_value) ;

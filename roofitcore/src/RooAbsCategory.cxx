@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.33 2002/03/07 06:22:18 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.34 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -357,10 +357,10 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
       setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;      
       return ;
     } else if (!typeName.CompareTo("UChar_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Bool_t branch " << GetName() 
-	   << " will be interpreted as category with index values 0 and 1 " << endl ;
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
+	   << " will be interpreted as category index" << endl ;
       t.SetBranchAddress(GetName(),&((Bool_t&)_value._value)) ;
-      setAttribute("BOOL_TREE_BRANCH",kTRUE) ;
+      setAttribute("UCHARIDXONLY_TREE_BRANCH",kTRUE) ;
       return ;
     } 
 
@@ -455,16 +455,17 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
 	   << " is invalid (" << other->_value._value 
 	   << "), value not updated" << endl ;
     }
-  } if (source->getAttribute("BOOL_TREE_BRANCH")) {
+  } if (source->getAttribute("UCHARIDXONLY_TREE_BRANCH")) {
     // Lookup cat state from other-index because label is missing
-    Bool_t& tmp = (Bool_t&) other->_value._value ;
-    const RooCatType* type = lookupType(tmp?1:0) ;
+    Int_t tmp = *reinterpret_cast<UChar_t*>(&(other->_value._value)) ;
+    const RooCatType* type = lookupType(tmp) ;
     if (type) {
       _value = *type ;
     } else {
       cout << "RooAbsCategory::copyCache(" << GetName() 
 	   << ") ERROR: index of source arg " << source->GetName() 
-	   << " is invalid (" << (tmp?1:0) << "), value not updated" << endl ;
+	   << " is invalid (" << tmp
+	   << "), value not updated" << endl ;
     }
   } else {
     _value = other->_value ;
