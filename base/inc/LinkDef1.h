@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.17 2002/09/15 10:16:44 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.18 2002/12/19 07:46:37 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,8 +16,12 @@
 
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
-#pragma link C++ global kMaxInt;
+#pragma link C++ global kMaxUShort;
 #pragma link C++ global kMaxShort;
+#pragma link C++ global kMaxUInt;
+#pragma link C++ global kMaxInt;
+#pragma link C++ global kMaxULong64;
+#pragma link C++ global kMaxLong64;
 #pragma link C++ global kBitsPerByte;
 #pragma link C++ global kNPOS;
 #pragma link C++ global kInfo;
@@ -96,7 +100,7 @@
 
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
-#pragma link C++ typedef ROOT::DelArrFunc_t; 
+#pragma link C++ typedef ROOT::DelArrFunc_t;
 #pragma link C++ typedef ShowMembersFunc_t;
 #pragma link C++ typedef IsAFunc_t;
 #pragma link C++ typedef ROOT::NewFunc_t;
