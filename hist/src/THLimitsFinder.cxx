@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.4 2002/12/02 21:39:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.5 2002/12/06 11:12:30 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,7 +62,7 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
                                   xaxis->TestBit(TAxis::kIsInteger));
    
    h->SetBins(newbins,xmin,xmax);
-   
+ 
    return 0;
 }
 
@@ -323,7 +323,12 @@ LOK:
    Double_t atest = BinWidth*0.0001;
    if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
    if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
-
+   if (BinLow >= BinHigh) {
+      //this case may happen when nbins <=5
+      BinLow = oldBinLow;
+      BinHigh = oldBinHigh;
+      nbins = oldnbins;
+   }
    if (OptionTime && nbins==0) {
       nbins = 2*oldnbins;
       BinHigh = oldBinHigh;
