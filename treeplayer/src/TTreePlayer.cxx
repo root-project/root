@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.26 2000/11/22 16:46:09 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.27 2000/12/10 17:17:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1724,6 +1724,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       if (len > 1) fprintf(fp,"%sfChain->SetBranchAddress(\"%s\",%s);\n",head,branch->GetName(),branchname);
       else         fprintf(fp,"%sfChain->SetBranchAddress(\"%s\",&%s);\n",head,branch->GetName(),branchname);
    }
+   //must call Notify in case of MakeClass
+   if (!opt.Contains("selector")) {
+      fprintf(fp,"   Notify();\n");
+   }
+   
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
