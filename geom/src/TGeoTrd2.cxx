@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.7 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -156,11 +156,11 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (cn>0) {
       snxt = saf[0]/cn;
       norm[0] = norm[1] = 0;
-      norm[2] = -1.;
+      norm[2] = 1.;
    } else {
       snxt = -saf[1]/cn;             
       norm[0] = norm[1] = 0;
-      norm[2] = 1.;
+      norm[2] = -1.;
    }
    // now check X facettes
    cn = -calfx*dir[0]+salfx*dir[2];
@@ -168,9 +168,9 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[2]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = -calfx;
+         norm[0] = calfx;
          norm[1] = 0;
-         norm[2] = salfx;
+         norm[2] = -salfx;
       }
    }
    cn = calfx*dir[0]+salfx*dir[2];
@@ -178,9 +178,9 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[3]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = calfx;
+         norm[0] = -calfx;
          norm[1] = 0;
-         norm[2] = salfx;
+         norm[2] = -salfx;
       }
    }
    // now check Y facettes
@@ -190,8 +190,8 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (s<snxt) {
          snxt = s;
          norm[0] = 0;
-         norm[1] = -calfy;
-         norm[2] = salfy;
+         norm[1] = calfy;
+         norm[2] = -salfy;
       }
    }
    cn = calfy*dir[1]+salfy*dir[2];
@@ -199,8 +199,8 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[5]/cn;
       if (s<snxt) {
          norm[0] = 0;
-         norm[1] = calfy;
-         norm[2] = salfy;
+         norm[1] = -calfy;
+         norm[2] = -salfy;
          return s;
       }
    }
@@ -457,6 +457,7 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Double_t zmin, zmax, dx1n, dx2n, dy1n, dy2n;
@@ -475,6 +476,7 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             printf("   volume was %s\n", voldiv->GetName());
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          for (id=0; id<ndiv; id++) {
@@ -486,11 +488,12 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             dy2n = 0.5*(fDy1*(fDz-zmax)+fDy2*(fDz+zmax))/fDz;
             shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step/2.);
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
+            vmulti->AddVolume(vol);
             opt = "Z";             
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return voldiv;
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return voldiv;

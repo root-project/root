@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.9 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.10 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -129,6 +129,7 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // returns pointer to volume to be divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
    switch (iaxis) {
@@ -167,14 +168,16 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return voldiv;
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+   vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+   vmulti->AddVolume(vol);
    voldiv->SetFinder(finder);
    finder->SetBasicVolume(vol);
    finder->SetDivIndex(voldiv->GetNdaughters());
    for (Int_t ic=0; ic<ndiv; ic++) {
       voldiv->AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
-      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);    
+      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
    }
-   return vol;
+   return vmulti;
 }     
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
@@ -234,35 +237,40 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t newpt[3];
    memcpy(&newpt[0], point, 3*sizeof(Double_t));
    for (Int_t i=0; i<3; i++) newpt[i]-=fOrigin[i];
-   saf[0] = fDX-newpt[0];
-   saf[1] = fDX+newpt[0];
-   saf[2] = fDY-newpt[1];
-   saf[3] = fDY+newpt[1];
-   saf[4] = fDZ-newpt[2];
-   saf[5] = fDZ+newpt[2];
+   saf[0] = fDX+newpt[0];
+   saf[1] = fDX-newpt[0];
+   saf[2] = fDY+newpt[1];
+   saf[3] = fDY-newpt[1];
+   saf[4] = fDZ+newpt[2];
+   saf[5] = fDZ-newpt[2];
    if (iact<3 && safe) {
    // compute safe distance
       *safe = saf[TMath::LocMin(6, &saf[0])];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig; 
+      if (iact==1 && step<*safe) return kBig;
    }
-                                                   // compute distance to surface
-   Double_t s0, s1, s2;
-   s0 = s1 = s2 = kBig;
-   if (dir[0]>0) s0=saf[0]/dir[0];
-   if (dir[0]<0) s0=-saf[1]/dir[0];
-   if (dir[1]>0) s1=saf[2]/dir[1];
-   if (dir[1]<0) s1=-saf[3]/dir[1];
-   if (dir[2]>0) s2=saf[4]/dir[2];
-   if (dir[2]<0) s2=-saf[5]/dir[2];
-   return TMath::Min(s0, TMath::Min(s1,s2));
+   // compute distance to surface
+   Double_t s[3];
+   Int_t i, ipl;
+   for (i=0; i<3; i++) {
+      if (dir[i]!=0) {
+         s[i] = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
+      } else {
+         s[i] = kBig;
+      }
+   }
+   ipl = TMath::LocMin(3, s);
+   Double_t *norm = gGeoManager->GetNormalChecked();
+   memset(norm, 0, 3*sizeof(Double_t));
+   norm[ipl] = (dir[ipl]>0)?-1:1;
+   return s[ipl];
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the box
    Double_t saf[3];
-   Double_t par[3]; 
+   Double_t par[3];
    Double_t newpt[3];
    memcpy(&newpt[0], point, 3*sizeof(Double_t));
    Int_t i;
@@ -272,27 +280,19 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    par[2] = fDZ;
    for (i=0; i<3; i++)
       saf[i] = TMath::Abs(newpt[i])-par[i];
-   if (safe) {
-   // compute minimum distance from point to box
-      *safe = 0.; // means : safety not computed
-      Double_t *cldir = gGeoManager->GetCldirChecked();  
-      for (i=0; i<3; i++) {
-         if (saf[i]>(*safe)) {
-            *safe = saf[i];
-            memset(cldir, 0, 3*sizeof(Double_t));
-            cldir[i] = (newpt[i]<0)?1.:-1.;
-         }    
-      }
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = saf[TMath::LocMax(3, saf)];
       if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
    }
-   if (iact==1 && step<*safe) return kBig; 
    // compute distance from point to box
    Double_t coord, snxt=kBig;
    Int_t ibreak=0;
-   Double_t *norm = gGeoManager->GetNormalChecked();  
+   Double_t *norm = gGeoManager->GetNormalChecked();
    memset(norm, 0, 3*sizeof(Double_t));
    for (i=0; i<3; i++) {
-      if (saf[i]<0) continue;
+      if (saf[i]<=0) continue;
       if (newpt[i]*dir[i] >= 0) continue;
       snxt = saf[i]/TMath::Abs(dir[i]);
       ibreak = 0;
@@ -303,13 +303,13 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
             ibreak=1;
             break;
          }
-      }      
+      }
       if (!ibreak) {
          norm[i] = (newpt<0)?-1:1;
          return snxt;
       }
-   }      
-   return kBig;       
+   }
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoBBox::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
@@ -324,9 +324,9 @@ void TGeoBBox::GetBoundingCylinder(Double_t *param) const
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = 0.;                  // Rmin
-   param[1] = fDX*fDX+fDY*fDY;     // Rmax   
+   param[1] = fDX*fDX+fDY*fDY;     // Rmax
    param[2] = 0.;                  // Phi1
-   param[3] = 360.;                // Phi2 
+   param[3] = 360.;                // Phi2
 }
 //-----------------------------------------------------------------------------
 TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother) const

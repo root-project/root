@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.13 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.14 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -644,6 +644,7 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    if (iaxis!=3) {
@@ -656,6 +657,7 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    voldiv->SetFinder(finder);
    finder->SetDivIndex(voldiv->GetNdaughters());
    opt = "Z";
+   vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
    Double_t txz = ((TGeoPatternTrapZ*)finder)->GetTxz();
    Double_t tyz = ((TGeoPatternTrapZ*)finder)->GetTyz();
    Double_t zmin, zmax, ox,oy,oz;
@@ -673,10 +675,11 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       for (Int_t vert2=0; vert2<4; vert2++)
          ((TGeoArb8*)shape)->SetVertex(vert2+4, points_hi[2*vert2]-ox, points_hi[2*vert2+1]-oy);
       vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+      vmulti->AddVolume(vol);
       voldiv->AddNodeOffset(vol, idiv, oz, opt.Data());
       ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
    }
-   return voldiv;
+   return vmulti;
 }   
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.6 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.7 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -296,6 +296,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // returns pointer to volume to be divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
    switch (iaxis) {
@@ -335,6 +336,8 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return voldiv;            
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+   vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+   vmulti->AddVolume(vol);
    voldiv->SetFinder(finder);
    finder->SetBasicVolume(vol);
    finder->SetDivIndex(voldiv->GetNdaughters());
@@ -342,7 +345,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       voldiv->AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
       ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);    
    }
-   return vol;
+   return vmulti;
 }   
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.15 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.16 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -115,6 +115,7 @@ TGeoVolume::TGeoVolume()
    fField    = 0;
    fMedium   = 0;
    fOption   = "";
+   TObject::ResetBit(kVolumeImportNodes);
 }
 //-----------------------------------------------------------------------------
 TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med)
@@ -129,6 +130,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fOption   = "";
    fMedium   = (TGeoMedium*)med;
    if (gGeoManager) gGeoManager->AddVolume(this);
+   TObject::ResetBit(kVolumeImportNodes);
 }
 //-----------------------------------------------------------------------------
 TGeoVolume::~TGeoVolume()
@@ -185,10 +187,12 @@ void TGeoVolume::ClearShape()
 void TGeoVolume::CheckShapes()
 {
 // check for negative parameters in shapes.
+// THIS METHOD LEAVES SOME GARBAGE NODES -> memory leak, to be fixed
 //   printf("Checking %s\n", GetName());
    if (!fNodes) return;
    Int_t nd=fNodes->GetEntriesFast();
    TGeoNode *node = 0;
+   TGeoNode *new_node;
    const TGeoShape *shape = 0;
    TGeoVolume *old_vol;
    for (Int_t i=0; i<nd; i++) {
@@ -202,6 +206,8 @@ void TGeoVolume::CheckShapes()
 //         printf("Node %s/%s has shape with negative parameters. \n", 
 //                 GetName(), node->GetName());
 //         old_vol->InspectShape();
+         // make a copy of the node
+         new_node = node->MakeCopyNode();
          TGeoShape *new_shape = shape->GetMakeRuntimeShape(fShape);
          if (!new_shape) {
             printf("***ERROR - could not resolve runtime shape for volume %s\n",
@@ -212,7 +218,10 @@ void TGeoVolume::CheckShapes()
          new_volume->SetShape(new_shape);
 //         printf(" new volume %s shape params :\n", new_volume->GetName());
 //         new_volume->InspectShape();
-         node->SetVolume(new_volume);
+         new_node->SetVolume(new_volume);
+         // decouple the old node and put the new one instead
+         fNodes->AddAt(new_node, i);
+         new_volume->CheckShapes();
       }
    }
 }     
@@ -262,11 +271,11 @@ void TGeoVolume::cd(Int_t inode) const
 //-----------------------------------------------------------------------------
 void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
-// Add a TGeoNodePos to the list of nodes. This is the usual method for adding
+// Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
    TGeoMatrix *matrix = (mat==0)?gGeoIdentity:(TGeoMatrix*)mat;
    if (!vol) {
-      Error("AddNodeMatrix", "Volume is NULL");
+      Error("AddNode", "Volume is NULL");
       return;
    }
    if (!vol->IsValid()) {
@@ -274,15 +283,11 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix 
       printf("### invalid volume was : %s\n", vol->GetName());
       return;
    }
-   if (!fNodes) fNodes = new TObjArray();
+   if (!fNodes) fNodes = new TObjArray();   
 
    if (fFinder) {
-   // volume already divided. Add the node to all its divisions.
-      TGeoVolume *div_vol;
-      for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
-         div_vol = fFinder->GetNodeOffset(idiv)->GetVolume();
-         div_vol->AddNode(vol, copy_no, matrix, option);
-      }
+      // volume already divided.
+      Error("AddNode", "Cannot add node %s_%i into divided volume %s", vol->GetName(), copy_no, GetName());
       return;
    }
 
@@ -291,6 +296,8 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix 
    fNodes->Add(node);
    char *name = new char[strlen(vol->GetName())+7];
    sprintf(name, "%s_%i", vol->GetName(), copy_no);
+   if (fNodes->FindObject(name))
+      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
@@ -318,19 +325,37 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
 //-----------------------------------------------------------------------------
 void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
-   if (!fFinder) {
-      AddNode(vol, copy_no, mat, option);
-      TGeoNode *node = (TGeoNode*)fNodes->At(GetNdaughters()-1);
-      node->SetOverlapping();
-      if (vol->GetMedium() == fMedium)
-         node->SetVirtual();
-      return;   
-   } 
-   TGeoVolume *div_vol;
-   for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
-      div_vol = fFinder->GetNodeOffset(idiv)->GetVolume();
-      div_vol->AddNodeOverlap(vol,copy_no,mat,option);
-   }        
+// Add a TGeoNode to the list of nodes. This is the usual method for adding
+// daughters inside the container volume.
+   TGeoMatrix *matrix = (mat==0)?gGeoIdentity:(TGeoMatrix*)mat;
+   if (!vol) {
+      Error("AddNodeOverlap", "Volume is NULL");
+      return;
+   }
+   if (!vol->IsValid()) {
+      Error("AddNodeOverlap", "Won't add node with invalid shape");
+      printf("### invalid volume was : %s\n", vol->GetName());
+      return;
+   }
+   if (!fNodes) fNodes = new TObjArray();   
+
+   if (fFinder) {
+      // volume already divided.
+      Error("AddNodeOverlap", "Cannot add node %s_%i into divided volume %s", vol->GetName(), copy_no, GetName());
+      return;
+   }
+
+   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
+   node->SetMotherVolume(this);
+   fNodes->Add(node);
+   char *name = new char[strlen(vol->GetName())+7];
+   sprintf(name, "%s_%i", vol->GetName(), copy_no);
+   if (fNodes->FindObject(name))
+      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
+   node->SetName(name);
+   node->SetOverlapping();
+   if (vol->GetMedium() == fMedium)
+   node->SetVirtual();
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Int_t /*ndiv*/, Option_t * /*option*/)
@@ -369,21 +394,24 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Double_t step)
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
 {
 // division a la G3
+//   printf("--- dividing %s into %s, ndiv=%i\n", GetName(), divname, ndiv);
    TString stype = fShape->ClassName();
-   TGeoVolume *vol = 0;
-   if (!ndiv && start == 0) {
+//   TGeoVolume *vol = 0;
+   if (!ndiv && start != 0) {
       printf("Error : Divide %s type %s into %s- ndivisions=0\n",GetName(), stype.Data(), divname);
       return this;
    }
    if (!fNodes) fNodes = new TObjArray();
-   if ((!ndiv) && (start != 0)) return fShape->Divide(this, divname, iaxis, step);
+   if ((!ndiv) && (start == 0)) return fShape->Divide(this, divname, iaxis, step);
    if (fFinder) {
-   // volume already divided. Divide again all its divisions.
-      for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
-         vol = fFinder->GetNodeOffset(idiv)->GetVolume();
-         vol->Divide(divname, iaxis, ndiv, start, step);
-      }
-      return this;
+   // volume already divided.
+      Error("Divide","volume %s already divided", GetName());
+      return 0;
+//      for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
+//         vol = fFinder->GetNodeOffset(idiv)->GetVolume();
+//         vol->Divide(divname, iaxis, ndiv, start, step);
+//      }
+//      return this;
    }
    return fShape->Divide(this, divname, iaxis, ndiv, start, step);
 }
@@ -562,12 +590,13 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
    Int_t nd = other->GetNdaughters();
    if (!nd) return;
    if (fNodes) {
-      printf("Warning : volume %s had already nodes\n", GetName());
+//      printf("Warning : volume %s had already nodes -> replace them\n", GetName());
       delete fNodes;
    }
    fNodes = new TObjArray();
 //   printf("other : %s\n nd=%i", other->GetName(), nd);
    for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
+   TObject::SetBit(kVolumeImportNodes);
 }      
 //-----------------------------------------------------------------------------
 void TGeoVolume::GrabFocus()
@@ -610,6 +639,7 @@ TGeoVolume *TGeoVolume::MakeCopyVolume()
     TObjArray *list = new TObjArray();
     // attach it to new volume
     vol->SetNodes(list);
+    ((TObject*)vol)->SetBit(kVolumeImportNodes);
     for (i=0; i<nd; i++) {
        //create copies of nodes and add them to list
        node = GetNode(i)->MakeCopyNode();
@@ -872,6 +902,7 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
    SetName(name);
    SetMedium(med);
    gGeoManager->GetListOfGVolumes()->Add(this);
+//   printf("--- volume multi %s created\n", name);
 }
 //-----------------------------------------------------------------------------
 TGeoVolumeMulti::~TGeoVolumeMulti()
@@ -880,59 +911,65 @@ TGeoVolumeMulti::~TGeoVolumeMulti()
    if (fVolumes) delete fVolumes;
 }
 //-----------------------------------------------------------------------------
+void TGeoVolumeMulti::AddVolume(TGeoVolume *vol) 
+{
+// Add a volume with valid shape to the list of volumes. Copy all existing nodes
+// to this volume
+   fVolumes->Add(vol);
+   if (fNodes)
+      vol->MakeCopyNodes(this);
+}
+   
+//-----------------------------------------------------------------------------
 void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
-// Add a TGeoNodePos to the list of volumes. This is the usual method for adding
+// Add a new node to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
+   TGeoVolume::AddNode(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
       volume = GetVolume(ivo);
-      if (!fAttSet) {
-         volume->SetLineColor(GetLineColor());
-         volume->SetLineStyle(GetLineStyle());
-         volume->SetLineWidth(GetLineWidth());
-         volume->SetVisibility(IsVisible());
-         fAttSet = kTRUE;
-      }   
+      volume->SetLineColor(GetLineColor());
+      volume->SetLineStyle(GetLineStyle());
+      volume->SetLineWidth(GetLineWidth());
+      volume->SetVisibility(IsVisible());
       volume->AddNode(vol, copy_no, mat, option); 
    }
+//   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
 //-----------------------------------------------------------------------------
 void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
+   TGeoVolume::AddNodeOverlap(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
       volume = GetVolume(ivo);
-      if (!fAttSet) {
-         volume->SetLineColor(GetLineColor());
-         volume->SetLineStyle(GetLineStyle());
-         volume->SetLineWidth(GetLineWidth());
-         volume->SetVisibility(IsVisible());
-         fAttSet = kTRUE;
-      }   
+      volume->SetLineColor(GetLineColor());
+      volume->SetLineStyle(GetLineStyle());
+      volume->SetLineWidth(GetLineWidth());
+      volume->SetVisibility(IsVisible());
       volume->AddNodeOverlap(vol, copy_no, mat, option); 
    }
+//   printf("--- vmulti %s : node ovlp %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step)
 {
-// division a la G3
+// division of multiple volumes
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
    TGeoVolumeMulti *div = new TGeoVolumeMulti(divname, fMedium);
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
       vol = GetVolume(ivo);
-      if (!fAttSet) {
-         vol->SetLineColor(GetLineColor());
-         vol->SetLineStyle(GetLineStyle());
-         vol->SetLineWidth(GetLineWidth());
-         vol->SetVisibility(IsVisible());
-         fAttSet = kTRUE;
-      }   
+      vol->SetLineColor(GetLineColor());
+      vol->SetLineStyle(GetLineStyle());
+      vol->SetLineWidth(GetLineWidth());
+      vol->SetVisibility(IsVisible());
       div->AddVolume(vol->Divide(divname,iaxis,ndiv,start,step)); 
    }
+//   printf("--- volume multi %s (%i volumes) divided\n", GetName(), nvolumes);
    return div;
 }
 //-----------------------------------------------------------------------------

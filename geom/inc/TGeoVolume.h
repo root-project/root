@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.15 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.16 2003/01/07 09:48:41 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -195,7 +195,7 @@ public:
    TGeoVolumeMulti(const char* name, const TGeoMedium *med=0);
    virtual ~TGeoVolumeMulti();
 
-   void            AddVolume(const TGeoVolume *vol) {fVolumes->Add((TObject*)vol);}
+   void            AddVolume(TGeoVolume *vol);
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");

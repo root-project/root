@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.6 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.7 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -34,8 +34,8 @@
 class TGeoPatternFinder : public TObject
 {
 protected :
-   Double_t            fStep;           // division length
-   Double_t            fStart;          // starting point
+   Double_t            fStep;           // division step length
+   Double_t            fStart;          // starting point on divided axis
    Double_t            fEnd;            // ending point
    Int_t               fCurrent;        // current division element
    Int_t               fNdivisions;     // number of divisions
@@ -59,13 +59,16 @@ public:
    virtual TGeoMatrix *GetMatrix()   {return fMatrix;}
    Int_t               GetNdiv()     {return fNdivisions;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
+   Double_t            GetStart() const  {return fStart;}
+   Double_t            GetStep() const   {return fStep;}
+   Double_t            GetEnd() const    {return fEnd;}
    TGeoVolume         *GetVolume() const {return fVolume;}
    virtual TGeoNode   *FindNode(Double_t * /*point*/) {return 0;} 
    virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
-  ClassDef(TGeoPatternFinder, 1)              // patterns to divide volumes
+  ClassDef(TGeoPatternFinder, 2)              // patterns to divide volumes
 };
 
 

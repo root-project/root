@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.12 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.13 2003/01/07 09:48:42 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -134,9 +134,9 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
    if (fIndX) delete [] fIndX;
    if (fIndY) delete [] fIndY;
    if (fIndZ) delete [] fIndZ;
-   if (fExtraX) delete [] fIndX;
-   if (fExtraY) delete [] fIndY;
-   if (fExtraZ) delete [] fIndZ;
+   if (fExtraX) delete [] fExtraX;
+   if (fExtraY) delete [] fExtraY;
+   if (fExtraZ) delete [] fExtraZ;
 //   printf("IndX IndY IndZ...\n");
    if (fCheckList) delete [] fCheckList;
 //   printf("checklist...\n");
@@ -1654,6 +1654,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       memcpy(fIndX, ind, current*sizeof(Int_t));
       if (fExtraX) delete [] fExtraX;
       fNex = indextra;
+      if (indextra>nmaxslices*4) printf("Woops!!!\n");
       fExtraX = new Int_t[indextra];
       memcpy(fExtraX, extra, indextra*sizeof(Int_t));
    }   
@@ -1773,6 +1774,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       memcpy(fIndY, &ind[0], current*sizeof(Int_t));
       if (fExtraY) delete [] fExtraY;
       fNey = indextra;
+      if (indextra>nmaxslices*4) printf("Woops!!!\n");
       fExtraY = new Int_t[indextra];
       memcpy(fExtraY, extra, indextra*sizeof(Int_t));
    }
@@ -1893,6 +1895,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       memcpy(fIndZ, &ind[0], current*sizeof(Int_t));
       if (fExtraZ) delete [] fExtraZ;
       fNez = indextra;
+      if (indextra>nmaxslices*4) printf("Woops!!!\n");
       fExtraZ = new Int_t[indextra];
       memcpy(fExtraZ, extra, indextra*sizeof(Int_t));
    }   

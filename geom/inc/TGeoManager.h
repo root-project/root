@@ -81,7 +81,7 @@ private :
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
-   UChar_t              *fBitsArray;        //! bits used for voxelization
+   UChar_t              *fBits;             //! bits used for voxelization
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
    TGeoNode             *fCurrentNode;      //! current node
@@ -155,6 +155,33 @@ public:
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
 
+   //--- GEANT3-like geometry creation
+   TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
+                                         Double_t start, Double_t step); 
+   TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Double_t step); 
+   void                   Matrix(Int_t index, Double_t theta1, Double_t phi1, 
+                                       Double_t theta2, Double_t phi2, 
+                                       Double_t theta3, Double_t phi3); 
+   TGeoMaterial          *Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid);
+   TGeoMaterial          *Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
+                                        Int_t nelem, Float_t *wmat, Int_t uid);
+   TGeoMaterial          *Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
+                                        Int_t nelem, Double_t *wmat, Int_t uid);
+   TGeoMedium            *Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
+                                       Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
+                                       Double_t stemax, Double_t deemax, Double_t epsil,
+                                       Double_t stmin); 
+   void                   Node(const char *name, Int_t nr, const char *mother, 
+                                     Double_t x, Double_t y, Double_t z, Int_t irot, 
+                                     Bool_t isOnly, Float_t *upar, Int_t npar=0); 
+   void                   Node(const char *name, Int_t nr, const char *mother, 
+                                     Double_t x, Double_t y, Double_t z, Int_t irot, 
+                                     Bool_t isOnly, Double_t *upar, Int_t npar=0); 
+   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed, 
+                                       Float_t *upar, Int_t npar=0); 
+   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed, 
+                                       Double_t *upar, Int_t npar=0); 
+   void                   SetVolumeAttribute(const char *name, const char *att, Int_t val);
    //--- geometry building
    void                   BuildDefaultMaterials();
    void                   CloseGeometry(Option_t *option="");
@@ -241,7 +268,7 @@ public:
    //--- utilities 
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=1000);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
-   UChar_t               *GetBits() {return fBitsArray;}
+   UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    
    

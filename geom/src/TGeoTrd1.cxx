@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.8 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.9 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -150,11 +150,11 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    if (cn>0) {
       snxt = saf[0]/cn;
       norm[0] = norm[1] = 0;
-      norm[2] = -1.;
+      norm[2] = 1.;
    } else {
       snxt = -saf[1]/cn;             
       norm[0] = norm[1] = 0;
-      norm[2] = 1.;
+      norm[2] = -1.;
    }
    // now check X facettes
    cn = -calf*dir[0]+salf*dir[2];
@@ -162,9 +162,9 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[2]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = -calf;
+         norm[0] = calf;
          norm[1] = 0;
-         norm[2] = salf;
+         norm[2] = -salf;
       }
    }
    cn = calf*dir[0]+salf*dir[2];
@@ -172,9 +172,9 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[3]/cn;
       if (s<snxt) {
          snxt = s;
-         norm[0] = calf;
+         norm[0] = -calf;
          norm[1] = 0;
-         norm[2] = salf;
+         norm[2] = -salf;
       }
    }
    // now check Y facettes
@@ -183,14 +183,14 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       s = saf[4]/cn;
       if (s<snxt) {
          norm[0] = norm[2] = 0;
-         norm[1] = -1;
+         norm[1] = 1;
          return s;
       }   
    } else {
       s = -saf[5]/cn;         
       if (s<snxt) {
          norm[0] = norm[2] = 0;
-         norm[1] = 1;
+         norm[1] = -1;
          return s;
       }
    }            
@@ -434,6 +434,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // division axis is supplied, returns pointer to volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Double_t zmin, zmax, dx1n, dx2n;
@@ -454,12 +455,14 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTrd1(fDx1, fDx2, step/2, fDz);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          opt = "Y";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return vol;
+         return vmulti;
       case 3:
          if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
          if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
@@ -469,6 +472,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          for (id=0; id<ndiv; id++) {
             zmin = start+id*step;
             zmax = start+(id+1)*step;
@@ -476,11 +480,12 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
             shape = new TGeoTrd1(dx1n, dx2n, fDy, step/2.);
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
+            vmulti->AddVolume(vol);
             opt = "Z";             
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return voldiv;
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return voldiv;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.7 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -339,6 +339,7 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Int_t id;
@@ -351,16 +352,18 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             printf("   volume was %s\n", voldiv->GetName());
          }
          finder = new TGeoPatternCylR(voldiv, ndiv, start, start+ndiv*step);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());
          for (id=0; id<ndiv; id++) {
             shape = new TGeoTube(start+id*step, start+(id+1)*step, fDz);
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
             opt = "R";
             voldiv->AddNodeOffset(vol, id, 0, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return voldiv;
+         return vmulti;
       case 2:  //---                Phi division
          if (step<=0) step=360./ndiv;
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
@@ -368,12 +371,14 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return vol;
+         return vmulti;
       case 3: //---                  Z division
          if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
          if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
@@ -385,12 +390,14 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTube(fRmin, fRmax, step/2);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          opt = "Z";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return vol;
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return voldiv;            
@@ -1091,6 +1098,7 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
 // volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Double_t dphi;
@@ -1104,16 +1112,18 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
             printf("   volume was %s\n", voldiv->GetName());
          }
          finder = new TGeoPatternCylR(voldiv, ndiv, start, start+ndiv*step);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());
          for (id=0; id<ndiv; id++) {
             shape = new TGeoTubeSeg(start+id*step, start+(id+1)*step, fDz, fPhi1, fPhi2);
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
             opt = "R";
             voldiv->AddNodeOffset(vol, id, 0, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return voldiv;
+         return vmulti;
       case 2:  //---                 Phi division
          dphi = fPhi2-fPhi1;
          if (dphi<0) dphi+=360.;
@@ -1123,12 +1133,14 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return vol;
+         return vmulti;
       case 3: //---                  Z division
          if (step<=0) {step=2*fDz/ndiv; start=-fDz;}
          if (((start+fDz)<-1E-4) || ((start+ndiv*step-fDz)>1E-4)) {
@@ -1140,12 +1152,14 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, step/2, fPhi1, fPhi2);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
          opt = "Z";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return vol;
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return voldiv;            

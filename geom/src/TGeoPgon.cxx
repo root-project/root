@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.11 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.12 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -926,6 +926,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
 // In case a wrong division axis is supplied, returns pointer to volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
+   TGeoVolumeMulti *vmulti;    //--- generic divided volume
    TGeoPatternFinder *finder;  //--- finder to be attached 
    TString opt = "";           //--- option to be attached
    Int_t nedges = fNedges;
@@ -944,18 +945,20 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          nedges = nedges/ndiv;
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoPgon(-step/2, step, nedges, fNz);
          for (is=0; is<fNz; is++)
             ((TGeoPgon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]); 
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
             opt = "Phi";
             for (id=0; id<ndiv; id++) {
                voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
                ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
             }
-            return vol;
+            return vmulti;
       case 3: // ---                Z division
          // find start plane
          for (ipl=0; ipl<fNz-1; ipl++) {
@@ -971,6 +974,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             return voldiv;
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());
          opt = "Z";
@@ -985,10 +989,11 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             ((TGeoPgon*)shape)->DefineSection(0, -step/2, rmin1, rmax1); 
             ((TGeoPgon*)shape)->DefineSection(1,  step/2, rmin2, rmax2); 
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
-         return voldiv;
+         return vmulti;
       default:
          Error("Divide", "Wrong axis type for division");
          return voldiv;            
