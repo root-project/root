@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.58 2004/09/28 06:39:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.59 2004/10/07 08:32:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1467,7 +1467,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    
    // create a clone of the old histogram if newname is specified
    TH2 *hnew = this;
-   if (strlen(newname) > 0) {
+   if (newname && strlen(newname)) {
       hnew = (TH2*)Clone();
       hnew->SetName(newname);
    }
