@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.7 2004/04/08 17:58:32 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.8 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -396,7 +396,10 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
          }
       }
    
-      iter++;   // (Could check iteration count here.)
+      if (iter++ == 50) {  // (check iteration count here.)
+        Error("MakeSchurr","too many iterations");
+        break;
+      } 
    
       // Look for two consecutive small sub-diagonal elements
    

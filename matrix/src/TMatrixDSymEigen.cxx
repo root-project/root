@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.6 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.7 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -229,7 +229,10 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
     if (m > l) {
       Int_t iter = 0;
       do {
-        iter++;  // (Could check iteration count here.)
+        if (iter++ == 30) {  // (check iteration count here.)
+          Error("MakeEigenVectors","too many iterations");
+          break;
+        }
 
         // Compute implicit shift
 
