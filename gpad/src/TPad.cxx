@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.153 2004/11/15 12:35:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.154 2004/11/15 14:44:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -846,6 +846,16 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
    Double_t xlow, ylow, xup, yup;
    TPad * newpad;
 
+   Int_t  n = 0;
+   TObject *obj;
+   TIter next(GetListOfPrimitives());
+
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPad::Class())) {
+         n++;
+      }
+   }
+
    switch (event) {
 
    case kButton1Down:
@@ -887,7 +897,7 @@ void TPad::CreateNewPad(Int_t event, Int_t px, Int_t py, Int_t)
       gROOT->SetEditorMode();
       boxdrawn = 0;
       if (xup <= xlow || yup <= ylow) return;
-      newpad = new TPad("newpad","newpad",xlow, ylow, xup, yup);
+      newpad = new TPad(Form("%s_%d",GetName(),n+1),"newpad",xlow, ylow, xup, yup);
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
