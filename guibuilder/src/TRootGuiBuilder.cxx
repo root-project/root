@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.9 2004/10/26 09:39:23 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.10 2004/12/07 15:34:27 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -312,6 +312,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 
    delete fMain->GetContainer();
    fMain->SetContainer(new TRootGuiBuilderContainer(fMain));
+   fMain->SetCleanup(-1);  //deep cleanup
 
    if (fManager) {
       fEditor = new TGuiBldEditor(cf);
@@ -480,9 +481,26 @@ TRootGuiBuilder::~TRootGuiBuilder()
 }
 
 //______________________________________________________________________________
+void TRootGuiBuilder::CloseWindow()
+{
+   // close GUI builder via "Close" button
+
+   TGWindow *root = (TGWindow*)fClient->GetRoot();
+
+   root->SetEditable(kFALSE);
+   fManager->SetEditable(kFALSE);
+   fManager->SetBuilder(0);
+   fManager->SetPropertyEditor(0);
+   fManager = 0;
+
+   gGuiBuilder = 0;
+   delete this;
+}
+
+//______________________________________________________________________________
 void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 {
-   //
+   // add new action to widget palette
 
    if (!act || !sect) return;
 
@@ -1043,16 +1061,6 @@ void TRootGuiBuilder::HandleWindowClosed(Int_t )
       TGWindow *root = (TGWindow*)fClient->GetRoot();
       fEditable = FindEditableMdiFrame(root);
    }
-}
-
-//______________________________________________________________________________
-void TRootGuiBuilder::CloseWindow()
-{
-   //
-
-   TGWindow *root = (TGWindow*)fClient->GetRoot();
-   root->SetEditable(kFALSE);
-   if (gDragManager) gDragManager->SetEditable(kFALSE);
 }
 
 //______________________________________________________________________________

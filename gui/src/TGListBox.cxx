@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.31 2004/12/08 12:04:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.32 2004/12/08 17:13:41 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -54,6 +54,24 @@ ClassImp(TGTextLBEntry)
 ClassImp(TGLineLBEntry)
 ClassImp(TGLBContainer)
 ClassImp(TGListBox)
+
+//______________________________________________________________________________
+TGLBEntry::TGLBEntry(const TGWindow *p, Int_t id, UInt_t options, Pixel_t back) :
+             TGFrame(p, 10, 10, options | kOwnBackground, back)
+{
+   // ctor
+
+   fActive = kFALSE;
+   fEntryId = id;
+   fBkcolor = back;
+
+   if (p && p->InheritsFrom(TGContainer::Class())) {
+      TGContainer* cont = (TGContainer*)p;
+      if (!cont->IsMapSubwindows()) {
+         fClient->UnregisterWindow(this);
+      }
+   }
+}
 
 //______________________________________________________________________________
 void TGLBEntry::Activate(Bool_t a)
@@ -323,6 +341,7 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
+   fMapSubwindows = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -818,7 +837,6 @@ void TGListBox::InitListBox()
    fVport = new TGViewPort(this, 6, 6, kChildFrame | kOwnBackground, fgWhitePixel);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
-   fLbc->SetMapSubwindows(kFALSE);
    fLbc->fViewPort = fVport;
 
    fLbc->Associate(this);

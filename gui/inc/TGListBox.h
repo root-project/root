@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.20 2004/12/07 14:36:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.21 2004/12/08 17:13:41 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -68,9 +68,7 @@ protected:
 
 public:
    TGLBEntry(const TGWindow *p = 0, Int_t id = -1, UInt_t options = kHorizontalFrame,
-             Pixel_t back = GetWhitePixel()) :
-      TGFrame(p, 10, 10, options | kOwnBackground, back)
-      { fActive = kFALSE; fEntryId = id; fBkcolor = back; }
+             Pixel_t back = GetWhitePixel());
 
    virtual void Activate(Bool_t a);
    virtual void Toggle();

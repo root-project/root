@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.12 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.13 2004/10/26 09:39:23 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -119,10 +119,12 @@ TGMdiMainFrame::~TGMdiMainFrame()
    }
 
    if (fFontCurrent) fClient->FreeFont((TGFont *)fFontCurrent);
-   if (fFontNotCurrent) fClient->FreeFont((TGFont *)fFontNotCurrent);
+   if (fFontNotCurrent != fFontCurrent) fClient->FreeFont((TGFont *)fFontNotCurrent);
+
    delete fBoxGC;
 
    if (!MustCleanup()) {
+
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
       if (main) {

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.28 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.29 2004/12/07 15:34:27 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -3021,6 +3021,8 @@ void TGuiBldDragManager::SetPropertyEditor(TGuiBldEditor *e)
    //
 
    fEditor = e;
+
+   if (!fEditor) return;
 
    fEditor->ChangeSelected(fPimpl->fLastFrame);
    Connect("Selected(TGFrame*)", "TGuiBldEditor", fEditor, "ChangeSelected(TGFrame*)");
