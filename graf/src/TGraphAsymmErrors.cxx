@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.30 2004/03/19 12:35:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.31 2004/03/25 07:26:42 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -19,8 +19,15 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
+#include "TH1.h"
 
 ClassImp(TGraphAsymmErrors)
+
+namespace {
+  unsigned long GLOBAL_k;   // used to pass k[i] into equations
+  unsigned long GLOBAL_N;   // used to pass N[i] into equations
+  double        CONFLEVEL;  // confidence level for the interval
+}
 
 //______________________________________________________________________________
 //
@@ -205,6 +212,16 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
 }   
 
 //______________________________________________________________________________
+TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option)
+       : TGraph()
+{
+// Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
+// pass/total. (see TGraphAsymmErrors::BayesDivide)
+   
+   BayesDivide(pass, total, option);
+}
+
+//______________________________________________________________________________
 TGraphAsymmErrors::~TGraphAsymmErrors()
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -258,6 +275,257 @@ void TGraphAsymmErrors::Apply(TF1 *f)
 }
 
 //______________________________________________________________________________
+void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option)
+{
+// Fills this TGraphAsymmErrors by dividing two input TH1 histograms pass/total. 
+//
+// Andy Haas (haas@fnal.gov)
+// Univeristy of Washington
+//
+// Method and code directly taken from:
+// Marc Paterno (paterno@fnal.gov)
+// FNAL/CD
+//
+// The assumption is that the entries in "pass" are a 
+// subset of those in "total". That is, we create an "efficiency" 
+// graph, where each entry is between 0 and 1, inclusive. 
+// The resulting graph can be fit to functions, using standard methods:
+// graph->Fit("erf")... for instance. (You have to define the erf
+// function for yourself for now, sorry.)
+//
+// The points are assigned an x value at the center of each histogram bin.
+// The y values are #pass/#total, between 0 and 1.
+// The x errors span each histogram bin (lowedge->lowedge+width)
+// The y errors are the fun part. :)
+//
+// The y errors are assigned based on applying Bayes theorem.
+// The model is the Binomial distribution, and the "prior" is 
+// the flat distribution from 0 to 1.
+// If there is no data in a bin of the total histogram, no information
+// can be obtained for that bin, so no point is made on the graph.
+//
+// The complete method and a beautiful discussion can be found here:
+// http://home.fnal.gov/~paterno/images/effic.pdf
+// And more information is on these pages:
+// http://home.fnal.gov/~paterno/probability/localresources.html
+// A backup of the main document is here:
+// http://www-clued0.fnal.gov/~haas/documents/paterno_effic.pdf
+//
+// A 68.3% Confidence Level is used to assign the errors. 
+// Warning! You should understand, the errors reported are the shortest
+// ranges containing 68.3% of the probability distrubution. The errors are
+// not exactly Gaussian! The Minuit fitting routines will assume that
+// the errors are Gaussian. But this is a reasonable approximation.
+// A fit using the full shape of the error distribution for each point
+// would be far more difficult to perform.
+
+   if (pass->GetNbinsX() != total->GetNbinsX()){
+      Error("BayesDivide","Histograms must have the same number of X bins!");
+      return;
+   }
+
+   Set(pass->GetNbinsX());
+  
+   // Ok, now set the points for each bin
+   // (Note: the TH1 bin content is shifted to the right one... 
+   //  bin=0 is underflow, bin=nbins+1 is overflow)
+
+   double mode, low, high; //these will hold the result of the Bayes calculation
+
+   for (int b=1; b<=pass->GetNbinsX(); ++b) { // loop through the bins
+      int t = (int)total->GetBinContent(b);
+      if (!t) continue;  //don't add points for bins with no information
+
+      int p = (int)pass->GetBinContent(b);
+      if (p>t) {
+	 Warning("BayesDivide","Histogram bin %d in pass has more entries than corresponding bin in total! (%d>%d)",b,p,t);
+	 continue; //we may as well not go on...
+      }
+
+      Efficiency(p,t,0.683,mode,low,high); //This is the Bayes calculation...
+
+      //Set the point center and its errors
+      SetPoint(b-1,pass->GetBinCenter(b),mode);
+      SetPointError(b-1,pass->GetBinLowEdge(b)-pass->GetBinCenter(b),pass->GetBinCenter(b)-(pass->GetBinLowEdge(b)+pass->GetBinWidth(b)),mode-low,high-mode);
+
+      TString opt = option;
+      opt.ToLower();
+      //The debug prints out what we get for each point...
+      if (opt.Contains("p")) {
+         printf("b=%d, xlow=%f, xcenter=%f, xhigh=%f, mode=%f, low=%f, high=%f\n",b,pass->GetBinLowEdge(b),pass->GetBinCenter(b),pass->GetBinLowEdge(b)+pass->GetBinWidth(b),mode,low,high);
+      }
+  }
+}
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Beta_ab(double a, double b, int k, int N) const
+{
+   // Calculates the fraction of the area under the
+   // curve x^k*(1-x)^(N-k) between x=a and x=b
+   
+   if (a == b) return 0;    // don't bother integrating over zero range
+   int c1 = k+1;
+   int c2 = N-k+1;
+   return Ibetai(c1,c2,b)-Ibetai(c1,c2,a);
+}
+
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Betacf(double a, double b, double x) const
+{
+  // Evaluates the continued fraction for the incomplete beta function
+  // calculation in Ibeta(); uses modified Lentz's method
+  // Adapted from Numerical Recipes in C, 2nd edition.
+  // Translated to C++ by by Marc Paterno
+   
+   const int    kMAXIT = 100;
+   const double kEPS   = 3.0e-7;
+   const double kFPMIN = 1.0e-30;
+   int m;
+
+   double qab=a+b;
+   double qap=a+1.0;
+   double qam=a-1.0;
+   double c=1.0;
+   double d=1.0-qab*x/qap;
+   if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+   d=1.0/d;
+   double h=d;
+   for (m=1;m<=kMAXIT;m++) {
+      int m2=2*m;
+      double aa=m*(b-m)*x/((qam+m2)*(a+m2));
+      d=1.0+aa*d;
+      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+      c=1.0+aa/c;
+      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
+      d=1.0/d;
+      h *= d*c;
+      aa = -(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+      d=1.0+aa*d;
+      if (TMath::Abs(d) < kFPMIN) d=kFPMIN;
+      c=1.0+aa/c;
+      if (TMath::Abs(c) < kFPMIN) c=kFPMIN;
+      d=1.0/d;
+      double del=d*c;
+      h *= del;
+      if (TMath::Abs(del-1.0) < kEPS) break;
+   }
+   if (m > kMAXIT) {
+      Error("Betacf","a or b too big, or MAXIT too small, a=%g, b=%g, kMAXIT=%d",a,b,kMAXIT);
+   }
+   return h;
+}
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Ibetai(double a, double b, double x) const
+{
+   // Calculates the incomplete beta function  I_x(a,b); this is
+   // the incomplete beta function divided by the complete beta function
+   
+  double bt;
+  if (x < 0.0 || x > 1.0) {
+     Error("Ibetai","Illegal x in routine Ibetai: x = %g",x);
+     return 0;
+  }
+  if (x == 0.0 || x == 1.0)
+     bt=0.0;
+  else
+     bt=TMath::Exp(TMath::LnGamma(a+b)-TMath::LnGamma(a)-TMath::LnGamma(b)+a*log(x)+b*log(1.0-x));
+
+  if (x < (a+1.0)/(a+b+2.0))
+     return bt*Betacf(a,b,x)/a;
+  else
+     return 1.0-bt*Betacf(b,a,1.0-x)/b;
+}
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Betai(double a, double b, double x) const
+{
+   // Calculates the incomplete beta function B_x(a,b), as defined
+   // in Gradshteyn and Ryzhik (4th edition) 8.391
+   
+   // calculates the complete beta function
+   double beta = TMath::Exp(TMath::LnGamma(a)+TMath::LnGamma(b)-TMath::LnGamma(a+b));
+   return Ibetai(a,b,x)*beta;
+}
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Brent(double ax, double bx, double cx, double tol, double *xmin) const 
+{
+// Implementation file for the numerical equation solver library.
+// This includes root finding and minimum finding algorithms.
+// Adapted from Numerical Recipes in C, 2nd edition.
+// Translated to C++ by Marc Paterno
+   
+   const int kITMAX = 100;
+   const double kCGOLD =  0.3819660;
+   const double kZEPS = 1.0e-10;
+
+   int iter;
+   double a,b,d=0.,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
+   double e=0.0;
+
+   a=(ax < cx ? ax : cx);
+   b=(ax > cx ? ax : cx);
+   x=w=v=bx;
+   fw=fv=fx=Interval(x);
+   for (iter=1;iter<=kITMAX;iter++) {
+      xm=0.5*(a+b);
+      tol2=2.0*(tol1=tol*fabs(x)+kZEPS);
+      if (fabs(x-xm) <= (tol2-0.5*(b-a))) {
+         *xmin=x;
+         return fx;
+      }
+      if (fabs(e) > tol1) {
+         r=(x-w)*(fx-fv);
+         q=(x-v)*(fx-fw);
+         p=(x-v)*q-(x-w)*r;
+         q=2.0*(q-r);
+         if (q > 0.0) p = -p;
+         q=fabs(q);
+         etemp=e;
+         e=d;
+         if (fabs(p) >= fabs(0.5*q*etemp) || p <= q*(a-x) || p >= q*(b-x))
+	    d=kCGOLD*(e=(x >= xm ? a-x : b-x));
+         else {
+	    d=p/q;
+	    u=x+d;
+	    if (u-a < tol2 || b-u < tol2)
+	       d=TMath::Sign(tol1,xm-x);
+         }
+     } else {
+        d=kCGOLD*(e=(x >= xm ? a-x : b-x));
+     }
+     u=(fabs(d) >= tol1 ? x+d : x+TMath::Sign(tol1,d));
+     fu=Interval(u);
+     if (fu <= fx) {
+        if (u >= x) a=x; else b=x;
+        v  = w;
+        w  = x;
+        x  = u;
+        fv = fw;
+        fw = fx;
+        fx = fu;
+     } else {
+        if (u < x) a=u; else b=u;
+        if (fu <= fw || w == x) {
+	   v=w;
+	   w=u;
+	   fv=fw;
+	   fw=fu;
+        } else if (fu <= fv || v == x || v == w) {
+	   v=u;
+	   fv=fu;
+        }
+     }
+   }
+   Error("Brent","Too many interations");
+   *xmin=x;
+   return fx;
+}
+
+
+//______________________________________________________________________________
 void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
   for (Int_t i=0;i<fNpoints;i++) {
@@ -281,6 +549,51 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
      if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
   }
 }
+
+//______________________________________________________________________________
+void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel, 
+	   double& mode, double& low, double& high) const
+{
+   // Calculate the shortest central confidence interval containing the required
+   // probability content.
+   // Interval(low) returns the length of the interval starting at low
+   // that contains CONFLEVEL probability. We use Brent's method,
+   // except in two special cases: when k=0, or when k=N
+   // Main driver routine
+
+   //If there are no entries, then we know nothing, thus return the prior...
+   if (0==N) {
+      mode = .5; low = 0.0; high = 1.0;
+      return;
+   }
+
+   // Calculate the most probable value for the posterior cross section.
+   // This is easy, 'cause it is just k/N
+   double efficiency = (double)k/N;
+   
+   double low_edge;
+   double high_edge;
+  
+   if (k == 0) {
+      low_edge = 0.0;
+      high_edge = SearchUpper(low_edge, k, N, conflevel);
+   } else if (k == N) {
+      high_edge = 1.0;
+      low_edge = SearchLower(high_edge, k, N, conflevel);
+   } else {
+      GLOBAL_k = k;
+      GLOBAL_N = N;
+      CONFLEVEL = conflevel;
+      Brent(0.0, 0.5, 1.0, 1.0e-9, &low_edge);
+      high_edge = low_edge + Interval(low_edge);
+    }
+
+   // return output
+   mode = efficiency;
+   low = low_edge;
+   high = high_edge;
+}
+
 
 //______________________________________________________________________________
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
@@ -347,6 +660,19 @@ Int_t TGraphAsymmErrors::InsertPoint()
    fEXhigh = newEXhigh;
    fEYhigh = newEYhigh;
    return ipoint;
+}
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::Interval(double low) const
+{
+   // Return the length of the interval starting at low
+   // that contains CONFLEVEL of the x^GLOBAL_k*(1-x)^(GLOBAL_N-GLOBAL_k)
+   // distribution.
+   // If there is no sufficient interval starting at low, we return 2.0
+   
+   double high = SearchUpper(low, GLOBAL_k, GLOBAL_N, CONFLEVEL);
+   if (high == -1.0) return 2.0; //  so that this won't be the shortest interval
+   return (high - low);
 }
 
 //______________________________________________________________________________
@@ -601,6 +927,68 @@ void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   grae->Draw("
       <<quote<<option<<quote<<");"<<endl;
+}
+
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::SearchLower(double high, int k, int N, double c) const
+{
+   // Integrates the binomial distribution with
+   // parameters k,N, and determines what is the lower edge of the
+   // integration region which ends at high, and which contains
+   // probability content c. If a lower limit is found, the value is
+   // returned. If no solution is found, the -1 is returned.
+   // check to see if there is any solution by verifying that the integral down
+   // to the minimum lower limit (0) is greater than c
+   
+   double integral = Beta_ab(0.0, high, k, N);
+   if (integral == c) return 0.0;      // lucky -- this is the solution
+   if (integral < c) return -1.0;      // no solution exists
+   double too_low = 0.0;               // lower edge estimate
+   double too_high = high;
+   double test;
+
+   // use a bracket-and-bisect search
+   // now we loop 20 times, to end with a root guaranteed accurate to better
+   // than 0.1%
+   for (int loop=0; loop<20; loop++) {
+      test = 0.5*(too_high + too_low);
+      integral = Beta_ab(test, high, k, N);
+      if (integral > c)  too_low = test;
+      else too_high = test;
+   }
+   return test;
+}
+
+
+//______________________________________________________________________________
+double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
+{
+   // Integrates the binomial distribution with
+   // parameters k,N, and determines what is the upper edge of the
+   // integration region which starts at low which contains probability
+   // content c. If an upper limit is found, the value is returned. If no
+   // solution is found, -1 is returned.   
+   // check to see if there is any solution by verifying that the integral up
+   // to the maximum upper limit (1) is greater than c
+   
+   double integral = Beta_ab(low, 1.0, k, N);
+   if (integral == c) return 1.0;    // lucky -- this is the solution
+   if (integral < c) return -1.0;    // no solution exists
+   double too_high = 1.0;            // upper edge estimate
+   double too_low = low;
+   double test;
+
+   // use a bracket-and-bisect search
+   // now we loop 20 times, to end with a root guaranteed accurate to better
+   // than 0.1%
+   for (int loop=0; loop<20; loop++) {
+      test = 0.5*(too_low + too_high);
+      integral = Beta_ab(low, test, k, N);
+      if (integral > c)  too_high = test;
+      else too_low = test;
+   }
+   return test;
 }
 
 //______________________________________________________________________________
