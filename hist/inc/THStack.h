@@ -1,7 +1,8 @@
-// Author: Rene Brun   12/10/2000
+// @(#)root/hist:$Name:$:$Id:$
+// Author: Rene Brun   10/12/2001
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -40,7 +41,7 @@ protected:
     Double_t    fMinimum;    //Minimum value for plotting along y
 
     void BuildStack();
-    
+
 public:
 
         THStack();
