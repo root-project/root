@@ -1,5 +1,5 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.1 2002/08/09 14:12:22 rdm Exp $
-// Author: Reiner Rohlfs   28/11/2001
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.2 2002/08/09 16:43:30 rdm Exp $
+// Author: FOns Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun, Fons Rademakers and Reiner Rohlfs *
@@ -48,6 +48,7 @@
 extern "C" {
 #   include <afterbase.h>
 #   include <afterimage.h>
+    extern Display *dpy;    // defined in afterbase.c
 }
 
 const Int_t kFRS = 5;  // size of frame of image on pad in pixels
@@ -588,9 +589,9 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    SetName(pad->GetName());
 
    if (w == 0)
-      w = pad->GetWw();
+      w = pad->UtoPixel(1.);
    if (h == 0)
-      h = pad->GetWh();
+      h = pad->VtoPixel(0.);
 
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvas()->GetCanvasID()
                                          : pad->GetPixmapID();
@@ -662,10 +663,8 @@ void TASImage::Paint(Option_t *option)
    ASImage *image = fImage;
 
    // Get geometry of pad
-   Int_t to_w = TMath::Abs(gPad->XtoPixel(gPad->GetX2()) -
-                           gPad->XtoPixel(gPad->GetX1()));
-   Int_t to_h = TMath::Abs(gPad->YtoPixel(gPad->GetY2()) -
-                           gPad->YtoPixel(gPad->GetY1()));
+   Int_t to_w = gPad->UtoPixel(1.);
+   Int_t to_h = gPad->VtoPixel(0.);
    Double_t pad_w = to_w;
    Double_t pad_h = to_h;
 
@@ -721,9 +720,14 @@ void TASImage::Paint(Option_t *option)
 
    if (tile) {
 
+      if (fScaledImage) {
+         destroy_asimage(&fScaledImage);
+         fScaledImage = 0;
+      }
       fScaledImage = tile_asimage(fgVisual, fImage, tile_x, tile_y,
-                                  to_w, to_h, tile_tint, ASA_XImage, 0,
-                                  ASIMAGE_QUALITY_TOP);
+                                  //to_w, to_h, tile_tint, ASA_XImage,
+                                  to_w, to_h, tile_tint, ASA_ASImage,
+                                  GetImageCompression(), GetImageQuality());
       image = fScaledImage;
 
    } else {
@@ -741,8 +745,8 @@ void TASImage::Paint(Option_t *option)
          }
          if (!fScaledImage) {
             if (fImage->width != fZoomWidth || fImage->height != fZoomHeight) {
-                // zoom and scale image
-                ASImage *tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
+               // zoom and scale image
+               ASImage *tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
                                   fImage->height - fZoomHeight - fZoomOffY,
                                   fZoomWidth, fZoomHeight, 0, ASA_ASImage, GetImageCompression(),
                                   GetImageQuality());
@@ -753,7 +757,7 @@ void TASImage::Paint(Option_t *option)
             } else {
                // scale image, no zooming
                fScaledImage = scale_asimage(fgVisual, fImage, to_w, to_h,
-                                   /* ASA_XImage */  ASA_ASImage, GetImageCompression(),
+                                            ASA_ASImage, GetImageCompression(),
                                             GetImageQuality());
             }
          }
@@ -767,15 +771,46 @@ void TASImage::Paint(Option_t *option)
       return;
    }
 
-   Display *dpy = (Display*)gVirtualX->GetDisplay();
-   Pixmap pxmap = asimage2pixmap(fgVisual, DefaultRootWindow(dpy), image,
-                                 0, kTRUE);
+   Pixmap pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
+                                 image, 0, kTRUE);
    Int_t wid = gVirtualX->AddWindow(pxmap, to_w, to_h);
    gPad->cd();
    gVirtualX->CopyPixmap(wid, kFRS, kFRS);
    gVirtualX->RemoveWindow(wid);
+   gVirtualX->DeletePixmap(pxmap);
 
    gPad->cd();
+
+   if (grad_im) {
+      // draw color bar
+      pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
+                             grad_im, 0, kTRUE);
+      wid = gVirtualX->AddWindow(pxmap, UInt_t(0.3 * pal_w), to_h - 20);
+
+      gPad->cd();
+      gVirtualX->CopyPixmap(wid, Int_t(to_w + 0.2 * pal_w), kFRS + 20);
+      gVirtualX->RemoveWindow(wid);
+      gVirtualX->DeletePixmap(pxmap);
+
+      gPad->cd();
+
+      // values of palette
+      TGaxis axis;
+      Int_t ndiv = 510;
+      double min = fMinValue;
+      double max = fMaxValue;
+      axis.SetLineColor(0);       // draw white ticks
+      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS - 1) / pad_h,
+                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 21) / pad_h,
+                     min, max, ndiv, "+LU");
+      min = fMinValue;
+      max = fMaxValue;
+      axis.SetLineColor(1);       // draw black ticks
+      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS) / pad_h,
+                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 20) / pad_h,
+                     min, max, ndiv, "+L");
+
+   }
 
    // loop over pxmap and draw image to PostScript
    if (gVirtualPS) {
@@ -835,36 +870,6 @@ void TASImage::Paint(Option_t *option)
       }
    }
 
-   if (grad_im) {
-      // draw color bar
-      pxmap = asimage2pixmap(fgVisual, DefaultRootWindow(dpy), grad_im,
-                             0, kTRUE);
-      wid = gVirtualX->AddWindow(pxmap, UInt_t(0.3 * pal_w), to_h - 20);
-
-      gPad->cd();
-      gVirtualX->CopyPixmap(wid, Int_t(to_w + 0.2 * pal_w), kFRS + 20);
-      gVirtualX->RemoveWindow(wid);
-
-      gPad->cd();
-
-      // values of palette
-      TGaxis axis;
-      Int_t ndiv = 510;
-      double min = fMinValue;
-      double max = fMaxValue;
-      axis.SetLineColor(0);       // draw white ticks
-      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS - 1) / pad_h,
-                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 21) / pad_h,
-                     min, max, ndiv, "+LU");
-      min = fMinValue;
-      max = fMaxValue;
-      axis.SetLineColor(1);       // draw black ticks
-      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS) / pad_h,
-                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 20) / pad_h,
-                     min, max, ndiv, "+L");
-
-   }
-
    if (grad_im)
       destroy_asimage(&grad_im);
 }
@@ -904,7 +909,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!IsValid()) return;
 
-   if (event ==kButton1Motion || event == kButton1Down  ||
+   if (event == kButton1Motion || event == kButton1Down  ||
        event == kButton1Up) {
 
       // convert to image pixel on screen
@@ -1069,8 +1074,14 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
    if (!InitVisual())
       return;
 
-   if (toWidth < 1) toWidth = 1;
-   if (toHeight < 1 ) toHeight = 1;
+   if (toWidth < 1)
+       toWidth = 1;
+   if (toHeight < 1 )
+      toHeight = 1;
+   if (toWidth > 30000)
+      toWidth = 30000;
+   if (toHeight > 30000)
+      toHeight = 30000;
 
    ASImage *img = scale_asimage(fgVisual, fImage, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
@@ -1162,7 +1173,9 @@ void TASImage::Flip(Int_t flip)
    }
 
    ASImage *img = flip_asimage(fgVisual, fImage, 0, 0, w, h, rflip,
-                               ASA_ASImage, 0, ASIMAGE_QUALITY_TOP);
+                               ASA_ASImage, GetImageCompression(),
+                               GetImageQuality());
+
    if (fImage)
       destroy_asimage(&fImage);
 
@@ -1172,6 +1185,8 @@ void TASImage::Flip(Int_t flip)
    }
 
    fImage = img;
+
+   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -1200,7 +1215,8 @@ void TASImage::Mirror(Bool_t vert)
 
    ASImage *img = mirror_asimage(fgVisual, fImage, 0, 0,
                                  fImage->width, fImage->height, vert,
-                                 ASA_ASImage, 0, ASIMAGE_QUALITY_TOP);
+                                 ASA_ASImage, GetImageCompression(),
+                                 GetImageQuality());
    if (fImage)
       destroy_asimage(&fImage);
 
@@ -1240,7 +1256,8 @@ Bool_t TASImage::InitVisual()
    if (fgVisual) return kTRUE;
    if (gROOT->IsBatch()) return kFALSE;
 
-   Display *dpy  = (Display*)gVirtualX->GetDisplay();
+   dpy = (Display*) gVirtualX->GetDisplay();
+
    Int_t screen  = gVirtualX->GetScreen();
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
