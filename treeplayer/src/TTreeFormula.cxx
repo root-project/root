@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.27 2001/04/09 08:33:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.28 2001/04/10 16:36:05 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -22,6 +22,9 @@
 #include "TInterpreter.h"
 #include "TDataType.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
+#include "TBranchElement.h"
+#include "TLeafElement.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -486,31 +489,56 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       
       // Analyze the content of 'right'
       
+      TClass * cl = 0;
       if (leaf->InheritsFrom("TLeafObject") ) {
          TLeafObject *lobj = (TLeafObject*)leaf;
-         if (!strstr(right,"(")) {
-            // There is no function calls so it has to be a 
-            // data member.
-            TClass * cl = ((TLeafObject*)leaf)->GetClass();
-            if (cl!=0) {
-               TDataMember *member = cl->GetDataMember(right);
-               fDataMembers.Add(member);
-               fMethods.Add(0);
-               fIndex[code] = code-kMETHOD; // This has to be changed :(
-            }
-         } else {
-            TClass * cl = ((TLeafObject*)leaf)->GetClass();
-            if (cl!=0) {
-               TMethodCall *method = lobj->GetMethodCall(right);
-               if (!method) return -1;
-               fMethods.Add(method);
-               fDataMembers.Add(0);
-               fIndex[code] = code-kMETHOD; // This has to be changed :(
-            }
+         cl = lobj->GetClass();
+      } else if (leaf->InheritsFrom("TLeafElement")) {
+         TLeafElement * lElem = (TLeafElement*) leaf;
+         if (lElem->IsOnTerminalBranch()) {
+           TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
+           Int_t type = BranchEl->GetStreamerType();
+           if ( type == 63 ) {
+              TStreamerInfo *info = BranchEl->GetInfo();
+              TStreamerElement *elem = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+              if (elem) cl = elem->GetClassPointer();
+           }
          }
-      } else {
+      }
+      if (cl==0) {
          fMethods.Add(0);
          fDataMembers.Add(0);
+      } else {     
+        if (!strstr(right,"(")) {
+           // There is no function calls so it has to be a 
+           // data member.
+           //cl->
+           TDataMember *member = cl->GetDataMember(right);
+           fDataMembers.Add(member);
+           fMethods.Add(0);
+           fIndex[code] = code-kDATAMEMBER; // This has to be changed :(
+        } else {
+           char *namecpy = new char[strlen(right)+1];
+           strcpy(namecpy,right);
+           char *params = strchr(namecpy,'(');
+           if (params) { *params = 0; params++; }
+           else params = ")";
+
+           if (cl->GetClassInfo()==0) {
+             Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
+             return -1;
+           }             
+           TMethodCall *method = new TMethodCall(cl, namecpy, params);
+           delete [] namecpy;
+           if (method->GetMethod()) {
+             fMethods.Add(method);
+             fDataMembers.Add(0);
+             fIndex[code] = code-kMETHOD; // This has to be changed :(
+           } else {          
+             Error("TTreeFormula","Unknown method:%s",right);
+             return -1;
+           }
+        }
       }         
       
       // Let see if we can understand the structure of this branch.
@@ -643,8 +671,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
          else                                  return leaf->GetValue(0);
       } else {
          leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-         if (!(leaf->IsA() == TLeafObject::Class())) return leaf->GetValue(real_instance);
-         return GetValueLeafObject(fIndex[0],(TLeafObject *)leaf);
+         if ( fIndex[0] == -kMETHOD ) return GetValueLeafObject(fIndex[0],(TLeafObject *)leaf);
+         return leaf->GetValue(real_instance);
       }
    }
    for(i=0;i<fNval;i++) {
@@ -705,8 +733,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
             else                                  param[i] = leaf->GetValue(0);
          } else {
             leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-            if (!(leaf->IsA() == TLeafObject::Class())) param[i] = leaf->GetValue(real_instance);
-            else param[i] = GetValueLeafObject(fIndex[i],(TLeafObject *)leaf);
+            if (fIndex[i] == (i-kMETHOD)) 
+               param[i] = GetValueLeafObject(fIndex[i],(TLeafObject *)leaf);
+            else 
+               param[i] = leaf->GetValue(real_instance);
          }
       }
    }
@@ -967,7 +997,14 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf) const
             offset = dm->GetClass()->GetStreamerInfo()->GetDataMemberOffset(dm,dummy);
          }
 
-         char *thisobj = (char*)leaf->GetObject();
+         char *thisobj;
+         if (leaf->InheritsFrom("TLeafObject") ) thisobj = (char*)leaf->GetObject();
+         else {
+           TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+           TStreamerInfo * info = branch->GetInfo();
+           Int_t offset = info->GetOffsets()[branch->GetID()];
+           thisobj = (char*) *(void**)((((char*)branch->GetAddress())+offset));
+         }
          switch (dm->GetDataType()->GetType()) {
             case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+offset));
             case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+offset));
@@ -988,7 +1025,14 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf) const
       
    }
 
-   void *thisobj = leaf->GetObject();
+   void *thisobj; 
+   if (leaf->InheritsFrom("TLeafObject") ) thisobj = leaf->GetObject();
+   else {
+      TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+      TStreamerInfo * info = branch->GetInfo();
+      Int_t offset = info->GetOffsets()[branch->GetID()];
+      thisobj = *(void**)((((char*)branch->GetAddress())+offset));
+   }
 
    TMethodCall::EReturnType r = m->ReturnType();
 
