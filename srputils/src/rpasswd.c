@@ -1,10 +1,8 @@
-/* @(#)root/srputils:$Name:  $:$Id: rpasswd.c,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $ */
+/* @(#)root/srputils:$Name:  $:$Id: rpasswd.c,v 1.2 2000/11/27 10:49:30 rdm Exp $ */
 /*
  * Create a private SRP passwd file.
  */
 
-#include "prototypes.h"
-#include "defines.h"
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
@@ -12,11 +10,21 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pwd.h>
-#ifdef __linux
 #include <string.h>
+
+#ifndef P_
+#if __STDC__
+#define P_(x) x
 #else
-extern char *strncpy(char *dest, const char *src, size_t n);
+#define P_(x) ()
 #endif
+#endif
+#define STRFCPY(A,B) \
+	(strncpy((A), (B), sizeof(A) - 1), (A)[sizeof(A) - 1] = '\0')
+extern int obscure P_((const char *, const char *, const struct passwd *));
+extern char *Basename P_((char *str));
+extern struct passwd *get_my_pwent P_((void));
+extern char *xstrdup P_((const char *str));
 
 #include "pwauth.h"
 #include "pwio.h"
@@ -255,7 +263,6 @@ int main(int argc, char **argv)
     */
    if (new_password(pw)) {
       fprintf(stderr, UNCHANGED, name);
-      closelog();
       exit(1);
    }
 
