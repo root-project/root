@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.6 2001/05/31 16:23:10 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.7 2001/06/02 17:22:05 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -541,16 +541,15 @@ void *TThread::Fun(void *ptr)
    TThreadCleaner dummy;
 
    th = (TThread *)ptr;
-
+   th->fId = SelfId(); 
+   th->SetUniqueID(th->fId);
+   
    // Default cancel state is OFF
    // Default cancel type  is DEFERRED
    // User can change it by call SetCancelON & SetCancelAsynchronous()
    SetCancelOff();
    SetCancelDeferred();
    CleanUpPush((void *)&AfterCancel,th);  // Enable standard cancelling function
-
-   th = (TThread *)ptr;
-   th->fId = SelfId();
 
    sprintf(cbuf,"Thread %s.%ld is running",th->GetName(),th->fId);
    TThread::Printf("\n %s\n\n",cbuf);
