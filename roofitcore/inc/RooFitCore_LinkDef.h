@@ -28,6 +28,8 @@
 #pragma link C++ function Extended ;
 #pragma link C++ function NumCPU ;
 #pragma link C++ function DataError ;
+#pragma link C++ function Full ;
+#pragma link C++ function Partial ;
 
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooRealVar- ;
