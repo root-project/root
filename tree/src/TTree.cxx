@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.119 2002/04/06 14:55:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.120 2002/04/06 16:42:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1682,10 +1682,17 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     Special functions and variables
 //     ===============================
 //
-//  'ENTRY':  A TTree::Draw formula can use the special variable ENTRY
+//  Entry$:  A TTree::Draw formula can use the special variable Entry$
 //  to access the entry number being read.  For example to draw every 
 //  other entry use:
-//    tree.Draw("myvar","ENTRY%2==0");
+//    tree.Draw("myvar","Entry$%2==0");
+//
+//  Entry$    : return the current entry number (== TTree::GetReadEntry())
+//  Entries$  : return the total number of entries (== TTree::GetEntries())
+//  Length$   : return the total number of element of this formula for this
+//  		   entry (==TTreeFormula::GetNdata())
+//  Iteration$: return the current iteration over this formula for this 
+//                 entry (i.e. varies from 0 to Length$).
 //
 //     Making a Profile histogram
 //     ==========================

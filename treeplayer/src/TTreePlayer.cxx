@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.92 2002/03/19 17:05:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.93 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -658,10 +658,17 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     Special functions and variables
 //     ===============================
 //
-//  'ENTRY':  In TTree::Draw formula can use the special variable ENTRY
+//  Entry$:  A TTree::Draw formula can use the special variable Entry$
 //  to access the entry number being read.  For example to draw every 
 //  other entry use:
-//    tree.Draw("myvar","ENTRY%2==0");
+//    tree.Draw("myvar","Entry$%2==0");
+//
+//  Entry$    : return the current entry number (== TTree::GetReadEntry())
+//  Entries$  : return the total number of entries (== TTree::GetEntries())
+//  Length$   : return the total number of element of this formula for this
+//  		   entry (==TTreeFormula::GetNdata())
+//  Iteration$: return the current iteration over this formula for this 
+//                 entry (i.e. varies from 0 to Length$).
 //
 //     Making a Profile histogram
 //     ==========================
@@ -1844,6 +1851,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          //Int_t kmax = 0;
          //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
          //else                     sprintf(blen,"%d",len);
+
+         const char *stars = " ";
+         if (bre->GetBranchCount2()) {
+            stars = "*";
+         }
 	 // Dimensions can be in the branchname for a split Object with a fix length C array.
 	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
 	 char *dimensions = 0;
@@ -1859,15 +1871,24 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 	   } else dimensions[0] = 0;
 	   if (twodim) strcat(dimensions,(char*)(twodim+1));
 	 }
+         const char* leafcountName = leafcount->GetName();
+         char b2len[128];
+         if (bre->GetBranchCount2()) {
+            TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
+            strcpy(b2len,l2->GetName());
+            bname = &b2len[0];
+            while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+            leafcountName = b2len;
+         }
          if (dimensions) {
-            if (kmax) fprintf(fp,"   %-15s %s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(),
-			                                    branchname,blen,dimensions,leafcount->GetName());
-	    else      fprintf(fp,"   %-15s %s[%d]%s;   //[%s]\n",leaf->GetTypeName(),
-			                                branchname,len,dimensions,leafcount->GetName());
-	    delete dimensions;
+            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
+                              branchname,blen,dimensions,leafcountName);
+            else      fprintf(fp,"   %-14s %s%s[%d]%s;   //[%s]\n",leaf->GetTypeName(), stars, 
+                              branchname,len,dimensions,leafcountName);
+            delete dimensions;
          } else {
-            if (kmax) fprintf(fp,"   %-15s %s[kMax%s];   //[%s]\n",leaf->GetTypeName(), branchname,blen,leafcount->GetName());
-            else      fprintf(fp,"   %-15s %s[%d];   //[%s]\n",leaf->GetTypeName(), branchname,len,leafcount->GetName());
+            if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s];   //[%s]\n",leaf->GetTypeName(), stars, branchname,blen,leafcountName);
+            else      fprintf(fp,"   %-14s %s%s[%d];   //[%s]\n",leaf->GetTypeName(), stars, branchname,len,leafcountName);
          }
       } else {
          if (strstr(branchname,"[")) len = 1;

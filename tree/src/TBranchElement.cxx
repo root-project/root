@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.84 2002/04/04 07:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.85 2002/04/06 14:55:36 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -876,9 +876,56 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      } else if (fType == 31) {    // sub branch of a TClonesArray
        fNdata = fBranchCount->GetNdata();
        Int_t atype = fStreamerType;
-       if (atype > 34) return;
+       if (atype > 54) return;
        if (!fAddress) return;
        Int_t n = fNdata;
+       if (atype>40) {
+          atype -= 40;
+          if (!fBranchCount2) return;
+          const char *len_where = (char*)fBranchCount2->fAddress;
+          if (!len_where) return; 
+          Int_t len_atype = fBranchCount2->fStreamerType;
+          Int_t length;
+          Int_t k;
+          Char_t isArray;
+          for( k=0; k<n; k++) {
+             char **where = &(((char**)fAddress)[k]);
+             delete [] *where;
+             *where = 0; 
+             switch(len_atype) {
+                case  1:  {length = ((Char_t*)len_where)[k]; break;}
+                case  2:  {length = ((Short_t*) len_where)[k]; break;}
+                case  3:  {length = ((Int_t*)   len_where)[k]; break;}
+                case  4:  {length = ((Long_t*)  len_where)[k]; break;}
+                   //case  5:  {length = ((Float_t*) len_where)[k]; break;}
+                case  6:  {length = ((Int_t*)   len_where)[k]; break;}
+                   //case  8:  {length = ((Double_t*)len_where)[k]; break;}
+                case 11:  {length = ((UChar_t*) len_where)[k]; break;}
+                case 12:  {length = ((UShort_t*)len_where)[k]; break;}
+                case 13:  {length = ((UInt_t*)  len_where)[k]; break;}
+                case 14:  {length = ((ULong_t*) len_where)[k]; break;}
+                default: continue;
+             }
+             if (length<=0) continue;
+             b >> isArray; 
+             if (isArray == 0) continue; 
+             switch (atype) {
+                case  1:  {*where=new char[sizeof(Char_t)*length]; b.ReadFastArray((Char_t*) *where, length); break;}
+                case  2:  {*where=new char[sizeof(Short_t)*length]; b.ReadFastArray((Short_t*) *where, length); break;}
+                case  3:  {*where=new char[sizeof(Int_t)*length]; b.ReadFastArray((Int_t*)   *where, length); break;}
+                case  4:  {*where=new char[sizeof(Long_t)*length]; b.ReadFastArray((Long_t*)  *where, length); break;}
+                case  5:  {*where=new char[sizeof(Float_t)*length]; b.ReadFastArray((Float_t*) *where, length); break;}
+                case  6:  {*where=new char[sizeof(Int_t)*length]; b.ReadFastArray((Int_t*)   *where, length); break;}
+                case  8:  {*where=new char[sizeof(Double_t)*length]; b.ReadFastArray((Double_t*)*where, length); break;}
+                case 11:  {*where=new char[sizeof(UChar_t)*length]; b.ReadFastArray((UChar_t*) *where, length); break;}
+                case 12:  {*where=new char[sizeof(UShort_t)*length]; b.ReadFastArray((UShort_t*)*where, length); break;}
+                case 13:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
+                case 14:  {*where=new char[sizeof(ULong_t)*length]; b.ReadFastArray((ULong_t*) *where, length); break;}
+                case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
+             }
+          }
+          return;
+       }
        if (atype > 20) {
           atype -= 20;
           TLeafElement *leaf = (TLeafElement*)fLeaves.UncheckedAt(0);
