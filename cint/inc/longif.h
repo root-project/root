@@ -591,7 +591,7 @@ typedef long double G__double92;
 /**************************************************************************
 * HP-UX
 **************************************************************************/
-#elif !defined(__hpux) && !defined(G__HPUX)
+#elif defined(__hpux) defined(G__HPUX)
 
 typedef double G__double92;
 
