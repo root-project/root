@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.6 2000/07/10 06:17:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.7 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -207,8 +207,7 @@ public:
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0); export ROOTBUILD=debug
-
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Reset(Option_t *option="");
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
