@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.4 2004/06/30 12:59:51 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.5 2004/07/20 09:40:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 
   The user's function in script.h are not exposed by ACLiC.
 
-  Revice the method to avoid the useless refreshing of the generated file
+  Review the method to avoid the useless refreshing of the generated file
   - for most efficiency it would require a different name for each tree
 */
 
@@ -71,6 +71,18 @@ class TStreamerElement;
 #include "TStreamerElement.h"
 #include "TSystem.h"
 #include "TLeafObject.h"
+
+void Debug(Int_t level, const char *va_(fmt), ...)
+{
+   // Use this function in case an error occured.
+   
+   if (gDebug>=level) {
+      va_list ap;
+      va_start(ap,va_(fmt));
+      ErrorHandler(kInfo,"TTreeProxyGenerator",va_(fmt), ap);
+      va_end(ap);
+   }
+}
 
 namespace {
 
@@ -322,7 +334,7 @@ namespace ROOT {
          // this is a template instantiation.
          // let's ignore it for now
 
-         Error("AddForward","Forward declaration of templated class not implemented yet.");
+         if (gDebug>=6) Warning("AddForward","Forward declaration of templated class not implemented yet.");
       } else {
          fListOfForwards.Add(new TNamed(classname,Form("class %s;\n",classname)));
       }
@@ -363,7 +375,7 @@ namespace ROOT {
       }
    }
 
-   UInt_t TTreeProxyGenerator::AnalyzeBranch(TBranch *branch, UInt_t level,
+   UInt_t TTreeProxyGenerator::AnalyzeBranch(TBranch *genbranch, UInt_t level,
                                              TBranchProxyClassDescriptor *topdesc)
    {
       // Analyze the branch and populate the TTreeProxyGenerator or the topdesc with
@@ -382,175 +394,171 @@ namespace ROOT {
       Bool_t  isclones = false;
       EContainer container = kNone;
 
+      TBranchElement *branch = dynamic_cast<TBranchElement*>(genbranch);
+      if (branch==0) {
+         Error("AnalyzeBranch",
+               "Non TBranchElement not implemented yet in AnalyzeBranch (this should not happen)");
+         return 0;
+      }
+
       if (topdesc && topdesc->IsClones()) {
          container = kClones;
          middle = "Cla";
          isclones = true;
       }
 
-      if (branch->IsA()==TBranchElement::Class()) {
+      Int_t bid = branch->GetID();
 
-         TBranchElement *be = (TBranchElement*)branch;
+      TStreamerElement *element = 0;
+      TStreamerInfo *info = branch->GetInfo();
+      
+      if (bid==-2) {
+         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
+               bid);
+      } else if (bid==-1) {
+         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
+               bid);
+      } else if (bid>=0) {
+         
+         element = (TStreamerElement *)info->GetElements()->At(bid);
+         
+      } else {
+         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
+               bid);
+      }
+      
+      if (element) {
+         bool ispointer = false;
+         switch(element->GetType()) {
 
-         Int_t bid = be->GetID();
-
-         TStreamerElement *element = 0;
-         TStreamerInfo *info = be->GetInfo();
-
-         if (bid==-2) {
-            Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-                  bid);
-         } else if (bid==-1) {
-            Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-                  bid);
-         } else if (bid>=0) {
-
-            element = (TStreamerElement *)info->GetElements()->At(bid);
-
-         } else {
-            Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-                  bid);
-         }
-
-         if (element) {
-            bool ispointer = false;
-            switch(element->GetType()) {
-
-               case TStreamerInfo::kChar:    { proxyTypeName = "T" + middle + "CharProxy"; break; }
-               case TStreamerInfo::kShort:   { proxyTypeName = "T" + middle + "ShortProxy"; break; }
-               case TStreamerInfo::kInt:     { proxyTypeName = "T" + middle + "IntProxy"; break; }
-               case TStreamerInfo::kLong:    { proxyTypeName = "T" + middle + "LongProxy"; break; }
-               case TStreamerInfo::kLong64:  { proxyTypeName = "T" + middle + "Long64Proxy"; break; }
-               case TStreamerInfo::kFloat:   { proxyTypeName = "T" + middle + "FloatProxy"; break; }
-               case TStreamerInfo::kDouble:  { proxyTypeName = "T" + middle + "DoubleProxy"; break; }
-               case TStreamerInfo::kDouble32:{ proxyTypeName = "T" + middle + "Double32Proxy"; break; }
-               case TStreamerInfo::kUChar:   { proxyTypeName = "T" + middle + "UCharProxy"; break; }
-               case TStreamerInfo::kUShort:  { proxyTypeName = "T" + middle + "UShortProxy"; break; }
-               case TStreamerInfo::kUInt:    { proxyTypeName = "T" + middle + "UIntProxy"; break; }
-               case TStreamerInfo::kULong:   { proxyTypeName = "T" + middle + "ULongProxy"; break; }
-               case TStreamerInfo::kULong64: { proxyTypeName = "T" + middle + "ULong64Proxy"; break; }
-               case TStreamerInfo::kBits:    { proxyTypeName = "T" + middle + "UIntProxy"; break; }
-
-               case TStreamerInfo::kCharStar: { proxyTypeName = GetArrayType(element,"Char",container); break; }
-
-                  // array of basic types  array[8]
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:    { proxyTypeName = GetArrayType(element,"Long",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kLong64:  { proxyTypeName = GetArrayType(element,"Long64",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat:   { proxyTypeName = GetArrayType(element,"Float",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:  { proxyTypeName = GetArrayType(element,"Double",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32:{ proxyTypeName = GetArrayType(element,"Double32",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar:   { proxyTypeName = GetArrayType(element,"UChar",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:  { proxyTypeName = GetArrayType(element,"UShort",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-
-                  // pointer to an array of basic types  array[n]
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:    { proxyTypeName = GetArrayType(element,"Long",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64:  { proxyTypeName = GetArrayType(element,"Long64",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:   { proxyTypeName = GetArrayType(element,"Float",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble:  { proxyTypeName = GetArrayType(element,"Double",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32:{ proxyTypeName = GetArrayType(element,"Double32",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:   { proxyTypeName = GetArrayType(element,"UChar",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort:  { proxyTypeName = GetArrayType(element,"UShort",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
-               case TStreamerInfo::kOffsetP + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
-
-                  // array counter //[n]
-               case TStreamerInfo::kCounter: { proxyTypeName = "T" + middle + "IntProxy"; break; }
-
-
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
-               case TStreamerInfo::kObjectp:
-               case TStreamerInfo::kObjectP:
-               case TStreamerInfo::kAnyp:
-               case TStreamerInfo::kAnyP:
-                  // set as pointers and fall through to the next switches
-                  ispointer = true;
-               case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
-               case TStreamerInfo::kObject:
-               case TStreamerInfo::kTString:
-               case TStreamerInfo::kTNamed:
-               case TStreamerInfo::kTObject:
-               case TStreamerInfo::kAny: {
-                  TClass *cl = element->GetClassPointer();
-                  if (cl) {
-                     proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
-                     cname = cl->GetName();
-                     if (cl==TClonesArray::Class()) {
-                        isclones = true;
-                        cname = be->GetClonesName();
-                        if (cname.Length()==0) {
-                           // We may have any unsplit clones array
-                           Int_t i = branch->GetTree()->GetReadEntry();
-                           if (i<0) i = 0;
-                           branch->GetEntry(i);
-                           char *obj = be->GetObject();
-
-                           const char *ename = 0;
-                           ename = element->GetName();
-
-                           TBranchElement *parent = (TBranchElement*)be->GetMother()->GetSubBranch(be);
-                           const char *pclname = parent->GetClassName();
-
-                           TClass *clparent = gROOT->GetClass(pclname);
-                           // TClass *clm = gROOT->GetClass(GetClassName());
-                           Int_t lOffset = 0; // offset in the local streamerInfo.
-                           if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
-                           else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
-
-                           TClonesArray *arr;
-                           if (ispointer) {
-                              arr = (TClonesArray*)*(void**)(obj+lOffset);
-                           } else {
-                              arr = (TClonesArray*)(obj+lOffset);
-                           }
-                           cname = arr->GetClass()->GetName();
-
+            case TStreamerInfo::kChar:    { proxyTypeName = "T" + middle + "CharProxy"; break; }
+            case TStreamerInfo::kShort:   { proxyTypeName = "T" + middle + "ShortProxy"; break; }
+            case TStreamerInfo::kInt:     { proxyTypeName = "T" + middle + "IntProxy"; break; }
+            case TStreamerInfo::kLong:    { proxyTypeName = "T" + middle + "LongProxy"; break; }
+            case TStreamerInfo::kLong64:  { proxyTypeName = "T" + middle + "Long64Proxy"; break; }
+            case TStreamerInfo::kFloat:   { proxyTypeName = "T" + middle + "FloatProxy"; break; }
+            case TStreamerInfo::kDouble:  { proxyTypeName = "T" + middle + "DoubleProxy"; break; }
+            case TStreamerInfo::kDouble32:{ proxyTypeName = "T" + middle + "Double32Proxy"; break; }
+            case TStreamerInfo::kUChar:   { proxyTypeName = "T" + middle + "UCharProxy"; break; }
+            case TStreamerInfo::kUShort:  { proxyTypeName = "T" + middle + "UShortProxy"; break; }
+            case TStreamerInfo::kUInt:    { proxyTypeName = "T" + middle + "UIntProxy"; break; }
+            case TStreamerInfo::kULong:   { proxyTypeName = "T" + middle + "ULongProxy"; break; }
+            case TStreamerInfo::kULong64: { proxyTypeName = "T" + middle + "ULong64Proxy"; break; }
+            case TStreamerInfo::kBits:    { proxyTypeName = "T" + middle + "UIntProxy"; break; }
+               
+            case TStreamerInfo::kCharStar: { proxyTypeName = GetArrayType(element,"Char",container); break; }
+               
+               // array of basic types  array[8]
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:    { proxyTypeName = GetArrayType(element,"Long",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kLong64:  { proxyTypeName = GetArrayType(element,"Long64",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat:   { proxyTypeName = GetArrayType(element,"Float",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:  { proxyTypeName = GetArrayType(element,"Double",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32:{ proxyTypeName = GetArrayType(element,"Double32",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar:   { proxyTypeName = GetArrayType(element,"UChar",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:  { proxyTypeName = GetArrayType(element,"UShort",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
+               
+               // pointer to an array of basic types  array[n]
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:    { proxyTypeName = GetArrayType(element,"Long",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64:  { proxyTypeName = GetArrayType(element,"Long64",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:   { proxyTypeName = GetArrayType(element,"Float",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble:  { proxyTypeName = GetArrayType(element,"Double",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32:{ proxyTypeName = GetArrayType(element,"Double32",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:   { proxyTypeName = GetArrayType(element,"UChar",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort:  { proxyTypeName = GetArrayType(element,"UShort",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:   { proxyTypeName = GetArrayType(element,"ULong",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64: { proxyTypeName = GetArrayType(element,"ULong64",container ); break; }
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
+               
+               // array counter //[n]
+            case TStreamerInfo::kCounter: { proxyTypeName = "T" + middle + "IntProxy"; break; }
+               
+               
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
+            case TStreamerInfo::kObjectp:
+            case TStreamerInfo::kObjectP:
+            case TStreamerInfo::kAnyp:
+            case TStreamerInfo::kAnyP:
+               // set as pointers and fall through to the next switches
+               ispointer = true;
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
+            case TStreamerInfo::kObject:
+            case TStreamerInfo::kTString:
+            case TStreamerInfo::kTNamed:
+            case TStreamerInfo::kTObject:
+            case TStreamerInfo::kAny: 
+            case TStreamerInfo::kBase: {
+               TClass *cl = element->GetClassPointer();
+               if (cl) {
+                  proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
+                  cname = cl->GetName();
+                  if (cl==TClonesArray::Class()) {
+                     isclones = true;
+                     cname = branch->GetClonesName();
+                     if (cname.Length()==0) {
+                        // We may have any unsplit clones array
+                        Int_t i = branch->GetTree()->GetReadEntry();
+                        if (i<0) i = 0;
+                        branch->GetEntry(i);
+                        char *obj = branch->GetObject();
+                        
+                        const char *ename = 0;
+                        ename = element->GetName();
+                        
+                        TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
+                        const char *pclname = parent->GetClassName();
+                        
+                        TClass *clparent = gROOT->GetClass(pclname);
+                        // TClass *clm = gROOT->GetClass(GetClassName());
+                        Int_t lOffset = 0; // offset in the local streamerInfo.
+                        if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
+                        else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
+                        
+                        TClonesArray *arr;
+                        if (ispointer) {
+                           arr = (TClonesArray*)*(void**)(obj+lOffset);
+                        } else {
+                           arr = (TClonesArray*)(obj+lOffset);
                         }
-                        if (cname.Length()==0) {
-                           Error("AnalyzeBranch",
-                                 "Introspection of TClonesArray in older file not implemented yet.");
-                        }
+                        cname = arr->GetClass()->GetName();
+                        
+                     }
+                     if (cname.Length()==0) {
+                        Error("AnalyzeBranch",
+                              "Introspection of TClonesArray in older file not implemented yet.");
                      }
                   }
-                  else Error("AnalyzeBranch",
-                             "Missing class for %s.",
-                             branch->GetName());
-                  if (element->IsA()==TStreamerBase::Class()) {
-                     isBase = true;
-                     prefix  = "base";
-                  }
-                  AddForward(cl);
-                  AddHeader(cl);
-                  break;
                }
-
-               default:
-                  Error("AnalyzeBranch",
-                        "Unsupported type for %s (%d).",
-                        branch->GetName(),element->GetType());
-
+               else Error("AnalyzeBranch",
+                          "Missing class for %s.",
+                          branch->GetName());
+               if (element->IsA()==TStreamerBase::Class()) {
+                  isBase = true;
+                  prefix  = "base";
+               }
+               AddForward(cl);
+               AddHeader(cl);
+               break;
             }
-
+               
+            default:
+               Error("AnalyzeBranch",
+                     "Unsupported type for %s (%d).",
+                     branch->GetName(),element->GetType());
+               
          }
-
-      } else {
-
-         Error("AnalyzeBranch",
-               "Non TBranchElement not implemented yet in AnalyzeBranch (this should not happen)");
-         return extraLookedAt;
-
+         
       }
 
       if ( branch->GetListOfBranches()->GetEntries() > 0 ) {
@@ -562,11 +570,13 @@ namespace ROOT {
 
          TClass *cl = gROOT->GetClass(cname);
          if (cl) {
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), branch->GetName(),
+            TStreamerInfo *info = branch->GetInfo();
+            if (strcmp(cl->GetName(),info->GetName())!=0) {
+               info = cl->GetStreamerInfo(); // might be the wrong version
+            }
+            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
+                                                     branch->GetName(),
                                                      isclones, branch->GetSplitLevel());
-         }
-
-         if (cldesc) {
             TBranch *subbranch;
             TIter subnext( branch->GetListOfBranches() );
             while ( (subbranch = (TBranch*)subnext()) ) {
@@ -577,9 +587,6 @@ namespace ROOT {
 
             TBranchProxyClassDescriptor *added = AddClass(cldesc);
             if (added) proxyTypeName = added->GetName();
-            // this codes and the previous 2 lines move from inside the if (cl)
-            // aboce and this line was used to avoid unecessary work:
-            // if (added!=cldesc) cldesc = 0;
          }
 
 
@@ -591,7 +598,12 @@ namespace ROOT {
 
          TClass *cl = gROOT->GetClass(cname);
          if (cl) {
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), branch->GetName(),
+            TStreamerInfo *info = branch->GetInfo();
+            if (strcmp(cl->GetName(),info->GetName())!=0) {
+               info = cl->GetStreamerInfo(); // might be the wrong version
+            }
+            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info, 
+                                                     branch->GetName(),
                                                      isclones, 0 /* unsplit object */);
          }
          if (cldesc) {
@@ -610,7 +622,7 @@ namespace ROOT {
             // if (added!=cldesc) cldesc = 0;
          }
 
-      }
+      } 
 
       TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
 
@@ -626,10 +638,37 @@ namespace ROOT {
       if (leaf && !isclones) dataMemberName = leaf->GetName();
       else dataMemberName = branch->GetName();
 
+      TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
+      TString brprefix;
+
       Int_t pos;
       pos = dataMemberName.Index(".");
       if (pos != -1) {
-         dataMemberName.Remove(0,pos+1);
+         
+         if (pos!=-1 && topdesc && 
+             dataMemberName.BeginsWith( topdesc->GetSubBranchPrefix() ) ) {
+            brprefix += topdesc->GetSubBranchPrefix();
+            dataMemberName.Remove(0,strlen( topdesc->GetSubBranchPrefix() )+1);
+         }
+         pos = dataMemberName.Index(".");
+         if (pos != -1 &&             
+             strncmp( mom->GetName(), 
+                      dataMemberName.Data(), 
+                      strlen(mom->GetName()) ) ==0 ) {
+            brprefix += dataMemberName(0,pos+1);
+            dataMemberName.Remove(0,strlen(mom->GetName())+1);
+         }
+         TBranch *topmother = branch->GetMother();
+         if ( strncmp( topmother->GetName(), 
+                       dataMemberName.Data(), 
+                       strlen(topmother->GetName()) ) ==0 ) 
+         {
+            // This test will get it wrong if the element has the same
+            // name as the main branch
+            brprefix = dataMemberName(0,pos+1);
+            dataMemberName.Remove(0,strlen(topmother->GetName())+1);
+         } 
+         pos = dataMemberName.Index(".");
       }
       pos = dataMemberName.Index("[");
       if (pos != -1) {
@@ -639,7 +678,8 @@ namespace ROOT {
 
       TString branchName = branch->GetName();
 
-      if (pos != -1 && container==kClones && branch->IsA()==TBranchElement::Class()) {
+      if (pos != -1) {
+
          // We still have a "." in the name, we assume that we are in the case
          // where we reach an embedded object in the object contained in the
          // TClonesArray
@@ -647,15 +687,25 @@ namespace ROOT {
          // Discover the type of this object.
          TString name = dataMemberName(0,pos);
 
-         TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
-         TString cname = mom->GetClonesName();
-         TString prefix = mom->GetName();
-         prefix += ".";
-         prefix += name;
-         // prefix += ".";
+         TString cname; 
+
+         TBranchProxyClassDescriptor::EInClones loc = TBranchProxyClassDescriptor::kOut;
+         if (container!=kClones) {
+            cname = topdesc->GetTitle(); 
+         } else {
+            loc = TBranchProxyClassDescriptor::kInsideClones;
+            cname = mom->GetClonesName();
+         }
+         Debug(4,"Seeing br=%s, td=%s name=%s cl=%s -%s- -%s-\n",
+               branch->GetName(),topdesc->GetTitle(),name.Data(),
+               cname.Data(),topdesc->GetSubBranchPrefix(),brprefix.Data());
+//          TString brprefix = mom->GetName();
+         if (brprefix.Length() && brprefix[brprefix.Length()-1]!='.') brprefix += ".";
+         brprefix += name;
+         // brprefix += ".";
 
 
-         if ( topdesc && strcmp(topdesc->GetBranchName(),prefix.Data())==0 ) {
+         if ( topdesc && strcmp(topdesc->GetBranchName(),brprefix.Data())==0 ) {
 
             // Assume we coming recursively from the previous case!
             dataMemberName.Remove(0,pos+1);
@@ -664,7 +714,7 @@ namespace ROOT {
 
             TStreamerElement* branchStreamerElem = 0;
 
-            TStreamerInfo *momInfo = mom->GetInfo();
+            TStreamerInfo *momInfo = topdesc->GetInfo();
             if (cname != momInfo->GetName()) {
                // We do not have the correct TStreamerInfo, this is
                // because there is no proper 'branch' holding this sub-object
@@ -712,7 +762,7 @@ namespace ROOT {
                }
 
             } else {
-
+ 
                branchStreamerElem = (TStreamerElement*)
                   momInfo->GetElements()->FindObject(name.Data());
 
@@ -733,12 +783,17 @@ namespace ROOT {
             TClass *cl = branchStreamerElem->GetClassPointer();
 
             cname = cl->GetName();
-            proxyTypeName = Form("TClaObjProxy<%s >",cname.Data());
+            if (container==kClones) {
+               proxyTypeName = Form("TClaObjProxy<%s >",cname.Data());
+            } else {
+               proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
+            }
 
             TBranchProxyClassDescriptor *cldesc;
 
-            cldesc = new TBranchProxyClassDescriptor( cl->GetName(), prefix.Data(), prefix.Data(),
-                                                      TBranchProxyClassDescriptor::kInsideClones,
+            cldesc = new TBranchProxyClassDescriptor( cl->GetName(), cl->GetStreamerInfo(),
+                                                      brprefix.Data(), brprefix.Data(),
+                                                      loc,
                                                       branch->GetSplitLevel()-1);
 
             TIter next(mom->GetListOfBranches());
@@ -749,7 +804,7 @@ namespace ROOT {
 
             do {
                TString subname = subbranch->GetName();
-               if ( subname.BeginsWith( prefix ) ) {
+               if ( subname.BeginsWith( brprefix ) ) {
                   Int_t skipped = 0;
                   if (cldesc) {
 
@@ -777,7 +832,79 @@ namespace ROOT {
             if (pos != -1) {
                branchName.Remove(pos);
             }
+         }
 
+      }
+
+      if ( extraLookedAt==0 && topdesc 
+           && ((container!=kClones && strcmp(topdesc->GetTitle(),branch->GetClassName())!=0)
+               || (container==kClones && strcmp(topdesc->GetTitle(),branch->GetInfo()->GetName())!=0 ) ) ) {
+         
+         Debug(4,"Handling base class for br==%s %d %d %d %s\n",
+               branch->GetName(),extraLookedAt,container,isclones,cname.Data());
+         TBranchProxyClassDescriptor *cldesc;
+         TIter nextel( topdesc->GetInfo()->GetElements() );
+         TStreamerElement *elem;
+         
+         TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
+         TIter next(mom->GetListOfBranches());
+         TBranch *subbranch;
+         while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
+         
+         while ( (elem = (TStreamerElement*)nextel()) ) {
+            if (elem->IsBase()) {
+               
+
+               TClass *clb = elem->GetClassPointer();
+               cldesc = new TBranchProxyClassDescriptor(clb->GetName(), clb->GetStreamerInfo(),
+                                                        branch->GetName(), brprefix.Data(),
+                                                        isclones, branch->GetSplitLevel());
+               
+               Int_t skipped = 0;
+               do {
+                  skipped = AnalyzeBranch( subbranch, level, cldesc);
+                  Int_t s = 0;
+                  while( s<skipped && next() ) { s++; };
+                  
+                  extraLookedAt += 1 + skipped;
+                  
+                  subbranch = (TBranch*)next();
+                  if (subbranch) {
+                     // Find the TStreamerInfo 
+                     TString subname = subbranch->GetName();
+                     if ( brprefix.Length() != 0 ) {
+                        Debug(6,"Base class check %s %s\n",subname.Data(),brprefix.Data());
+                        
+                        if (! subname.BeginsWith( brprefix ) ) break;
+                        
+                        subname.Remove(0,brprefix.Length()+1);
+                        Int_t pos = subname.Index('.');
+                        if (pos != -1) subname.Remove(pos);
+
+                        if ( cldesc->GetInfo()->GetElements()->FindObject( subname.Data() ) ) {
+                           // We are still in this base class.
+                           Debug(6,"Base clas continue in %s for %s\n",clb->GetName(),subname.Data());
+                           continue;
+                        }
+                     }
+                     if ( strcmp( subbranch->GetClassName(), clb->GetName() ) !=0 ) break;
+                     Debug(6,"base loop: br=%s id=%d %s\n",
+                           subbranch->GetName(),((TBranchElement*)subbranch)->GetID(),brprefix.Data());
+                     if ( ((TBranchElement*)subbranch)->GetID() == 0 ) break;
+                  }
+               } while ( subbranch ); 
+               
+               Debug(4,"Base class done with %s (%s)\n",clb->GetName(),brprefix.Data());
+
+               TBranchProxyClassDescriptor *added = AddClass(cldesc);
+               if (added) proxyTypeName = added->GetName();
+             
+               topdesc->AddDescriptor( new TBranchProxyDescriptor( element->GetName(), 
+                                                                   proxyTypeName, branch->GetName() ),
+                                       kTRUE );
+               return extraLookedAt - 1;
+  
+            }
          }
       }
 
@@ -792,8 +919,6 @@ namespace ROOT {
                                                            proxyTypeName,
                                                            branchName.Data() ) );
       }
-      //fprintf(stderr,"%-*s      %-*s(director,\"%s\")\n",
-      //        0," ",10,desc->GetName(), desc->GetBranchName());
       return extraLookedAt;
    }
 
@@ -1019,7 +1144,9 @@ namespace ROOT {
 
             }
             if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' ) {
-               desc = new TBranchProxyClassDescriptor(cl->GetName(), branchname,
+               TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
+               TStreamerInfo *info = be ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+               desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
                                                       isclones, branch->GetSplitLevel());
             } else {
                type = Form("TObjProxy<%s >",cl->GetName());
@@ -1274,7 +1401,8 @@ namespace ROOT {
 
          TClass *cl = gROOT->GetClass(cname);
          if (cl) {
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), branch->GetName(),
+            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), cl->GetStreamerInfo(),
+                                                     branch->GetName(),
                                                      isclones, 0 /* non-split object */);
 
             TStreamerInfo *info = cl->GetStreamerInfo();
@@ -1550,7 +1678,7 @@ namespace ROOT {
       next = &fListOfTopProxies;
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          fprintf(hf,",\n      %-*s(&fDirector,\"%s\")",
-                 fMaxDatamemberType, data->GetName(), data->GetBranchName());
+                 fMaxDatamemberType, data->GetDataName(), data->GetBranchName());
       }
       next = &fListOfFriends;
       TFriendProxyDescriptor *clp;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.h,v 1.3 2004/06/28 05:29:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.h,v 1.4 2004/06/28 16:38:00 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 namespace ROOT {
 
    class TBranchProxyDescriptor : public TNamed {
+      TString fDataName;
       TString fBranchName;
       Bool_t fIsSplit;
 
@@ -30,7 +31,7 @@ namespace ROOT {
       const char *GetTypeName();
       const char *GetBranchName();
 
-      Bool_t IsEquivalent(const TBranchProxyDescriptor *other);
+      Bool_t IsEquivalent(const TBranchProxyDescriptor *other, Bool_t inClass = kFALSE);
       Bool_t IsSplit() const;
 
       void OutputDecl(FILE *hf, int offset, UInt_t maxVarname);

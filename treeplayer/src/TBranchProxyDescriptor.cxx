@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.2 2004/06/28 05:29:07 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -27,11 +27,14 @@ namespace ROOT {
                                                   Bool_t split) :
       TNamed(dataname,type),fBranchName(branchname),fIsSplit(split) 
    {
+      fDataName = GetName();
+      fDataName.ReplaceAll("<","_");
+      fDataName.ReplaceAll(">","_");     
    }
    
    const char *TBranchProxyDescriptor::GetDataName() 
    { 
-      return GetName(); 
+      return fDataName; 
    }
 
    const char *TBranchProxyDescriptor::GetTypeName() 
@@ -44,10 +47,19 @@ namespace ROOT {
       return fBranchName.Data(); 
    }
 
-   Bool_t TBranchProxyDescriptor::IsEquivalent(const TBranchProxyDescriptor *other) 
+   Bool_t TBranchProxyDescriptor::IsEquivalent(const TBranchProxyDescriptor *other,
+                                               Bool_t inClass) 
    {
+      // Return true if this description is the 'same' as the other decription.
+
       if ( !other ) return false;
-      if ( fBranchName != other->fBranchName ) return false;
+
+      if ( inClass ) {
+         // If this description belong to a class, the branchname will be 
+         // stripped.
+      } else {
+         if ( fBranchName != other->fBranchName ) return false;
+      }
       if ( fIsSplit != other->fIsSplit ) return false;
       if ( strcmp(GetName(),other->GetName()) ) return false;
       if ( strcmp(GetTitle(),other->GetTitle()) ) return false;
@@ -78,11 +90,11 @@ namespace ROOT {
          }
 
          fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
-                 offset," ", maxVarname, GetName(), above, subbranchname);
+                 offset," ", maxVarname, GetDataName(), above, subbranchname);
       } else {
 
          fprintf(hf,"\n%-*s      %-*s(director, obj.proxy(), \"%s\")",
-                 offset," ", maxVarname, GetName(), GetBranchName() );
+                 offset," ", maxVarname, GetDataName(), GetBranchName() );
 
          //fprintf(hf,"\n%-*s      %-*s(director, ffPrefix, \"\", \"%s\")",
          //        offset," ", maxVarname, GetName(), GetBranchName() );

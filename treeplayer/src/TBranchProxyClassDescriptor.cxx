@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.2 2004/06/28 05:29:07 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -14,6 +14,8 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TError.h"
+#include "TStreamerInfo.h"
 
 namespace ROOT {
 
@@ -38,6 +40,7 @@ namespace ROOT {
    }
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, 
+                                                            TStreamerInfo *info, 
                                                             const char *branchname,
                                                             UInt_t isclones, 
                                                             UInt_t splitlevel) :
@@ -47,8 +50,10 @@ namespace ROOT {
       fSplitLevel(splitlevel),
       fBranchName(branchname),
       fSubBranchPrefix(branchname),
+      fInfo(info),
       fMaxDatamemberType(3)
    {
+      Assert( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
    }
 
@@ -59,13 +64,15 @@ namespace ROOT {
       fSplitLevel(0),
       fBranchName(branchname),
       fSubBranchPrefix(branchname),
+      fInfo(0),
       fMaxDatamemberType(3)
    {
       // Constructor for a branch constructed from a leaf list.
       NameToSymbol();
    }
 
-   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, const char *branchname,
+   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, 
+                                                            const char *branchname,
                                                             const char *branchPrefix, UInt_t isclones,
                                                             UInt_t splitlevel) :
       TNamed(type,type),
@@ -74,8 +81,10 @@ namespace ROOT {
       fSplitLevel(splitlevel),
       fBranchName(branchname),
       fSubBranchPrefix(branchPrefix),
+      fInfo(info),
       fMaxDatamemberType(3)
    {
+      Assert( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
    }
 
@@ -93,33 +102,44 @@ namespace ROOT {
 
    UInt_t TBranchProxyClassDescriptor::GetSplitLevel() const { return fSplitLevel; }
 
-   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other) {
-      if ( !other ) return false;
-      // Purposely do not test on the name!
-      if ( strcmp(GetTitle(),other->GetTitle()) ) return false;
-      // if ( fBranchName != other->fBranchName ) return false;
-      // if ( fSubBranchPrefix != other->fSubBranchPrefix ) return false;
+   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other) 
+   {
+      // Return true if this description is the 'same' as the other decription.
 
-      if (fIsClones != other->fIsClones) return false;
+      if ( !other ) return kFALSE;
+      // Purposely do not test on the name!
+      if ( strcmp(GetTitle(),other->GetTitle()) ) return kFALSE;
+      // if ( fBranchName != other->fBranchName ) return kFALSE;
+      // if ( fSubBranchPrefix != other->fSubBranchPrefix ) return kFALSE;
+
+      if (fIsClones != other->fIsClones) return kFALSE;
 
       TBranchProxyDescriptor *desc;
       TBranchProxyDescriptor *othdesc;
 
-      if ( fListOfBaseProxies.GetSize() != other->fListOfBaseProxies.GetSize() ) return false;
+      if ( fListOfBaseProxies.GetSize() != other->fListOfBaseProxies.GetSize() ) return kFALSE;
       TIter next(&fListOfBaseProxies);
       TIter othnext(&other->fListOfBaseProxies);
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEquivalent(othdesc) ) return false;
+         if (!desc->IsEquivalent(othdesc) ) return kFALSE;
       }
 
-      if ( fListOfSubProxies.GetSize() != other->fListOfSubProxies.GetSize() ) return false;
+      if ( fListOfSubProxies.GetSize() != other->fListOfSubProxies.GetSize() ) return kFALSE;
       next = &fListOfSubProxies;
       othnext = &(other->fListOfSubProxies);
 
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEquivalent(othdesc)) return false;
+         if (!desc->IsEquivalent(othdesc,kTRUE)) return kFALSE;
+         if (desc->IsSplit()) {
+            TString leftname (  desc->GetBranchName() );
+            TString rightname(  othdesc->GetBranchName() );
+
+            leftname.Remove( 0,strlen(GetBranchName())+1);
+            rightname.Remove(0,strlen(other->GetBranchName())+1);
+            if ( leftname != rightname ) return kFALSE;
+         }
       }
       return true;
    }
@@ -174,7 +194,7 @@ namespace ROOT {
       fprintf(hf,"%-*s   %s(TBranchProxyDirector* director,const char *top,const char *mid=0) :",
               offset," ", GetName());
 
-      Bool_t wroteFirst = false;
+      Bool_t wroteFirst = kFALSE;
 
       if (fListOfBaseProxies.GetSize()) {
 
@@ -234,7 +254,7 @@ namespace ROOT {
       fprintf(hf,"%-*s   %s(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername) :",
               offset," ", GetName());
 
-      wroteFirst = false;
+      wroteFirst = kFALSE;
 
       if (fListOfBaseProxies.GetSize()) {
 
