@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.27 2004/01/05 17:44:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.28 2004/02/18 15:06:30 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -339,7 +339,7 @@ void TGTextButton::Init()
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
          const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-         main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kAnyModifier);
       }
    }
 }
