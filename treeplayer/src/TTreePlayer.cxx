@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.123 2003/04/09 08:48:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.124 2003/04/09 16:30:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -717,7 +717,12 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    Bool_t draw = kFALSE;
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
    fHistogram = (TH1*)fSelector->GetObject();
-   
+
+   if (!nrows && drawflag && !opt.Contains("same")) {
+      gPad->Clear();
+      return 0;
+   }
+        
    //*-*- 1-D distribution
    if (fDimension == 1) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
