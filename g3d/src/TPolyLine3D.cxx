@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.4 2000/12/13 15:13:48 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -55,7 +55,21 @@ ClassImp(TPolyLine3D)
 //       Example:
 //                 TPolyLine3D pl1(150, xArray, yArray, zArray);
 //
-
+// Example:
+//   void pl3() {
+//      TCanvas *c1 = new TCanvas("c1");
+//      TView *view = new TView(1);
+//      view->SetRange(0,0,0,2,2,2);
+//      const Int_t n = 100;
+//      TPolyLine3D *l = new TPolyLine3D(n);
+//      for (Int_t i=0;i<n;i++) {
+//         Double_t x = 2*gRandom->Rndm();
+//         Double_t y = 2*gRandom->Rndm();
+//         Double_t z = 2*gRandom->Rndm();
+//         l->SetPoint(i,x,y,z);
+//      }
+//      l->Draw();
+//   }
 
 
 
