@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.129 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.125 2003/08/25 22:37:39 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2871,7 +2871,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                                            const char* nextchoice,
                                            UInt_t readentry) const {
-
    // Return the leaf (if any) which contains an object containing
    // a data member which has the name provided in the arguments.
 
@@ -2912,25 +2911,10 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
          // We have a unsplit TClonesArray leaves
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
+         clonesinfo = new TFormLeafInfoClones(cl, 0);
          leafcur->GetBranch()->GetEntry(readentry);
-         TClonesArray * clones;
-
-         TBranch *branch = leafcur->GetBranch();
-         if  (   branch->IsA()==TBranchElement::Class()
-                 && ((TBranchElement*)branch)->GetType()==31) {
-
-            // We have an unsplit TClonesArray as part of a split TClonesArray!
-
-            // Let's not dig any further.  If the user really wants a data member
-            // inside the nested TClonesArray, it has to specify it explicitly.
-
-            continue;
-
-         } else {
-            clonesinfo = new TFormLeafInfoClones(cl, 0);
-            clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-         }
-         if (clones) cl = clones->GetClass();
+         TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
+         cl = clones->GetClass();
       }
       if (cl) {
          // Now that we have the class, let's check if the topchoice is of its datamember
@@ -2965,9 +2949,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   Int_t clones_offset;
                   cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                  if (leafinfo) 
-                     if (leafinfo->fNext) leafinfo->fNext->fNext = sub_clonesinfo;
-                     else leafinfo->fNext = sub_clonesinfo;
+                  if (leafinfo) leafinfo->fNext = sub_clonesinfo;
                   else leafinfo = sub_clonesinfo;
 
                   branch->GetEntry(readentry);
@@ -3026,27 +3008,18 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
       cl = lobj->GetClass();
 
    } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
-      TBranchElement *branchEl = (TBranchElement *)branch;
-      Int_t type = branchEl->GetStreamerType();
+      TBranchElement *BranchEl = (TBranchElement *)branch;
+      Int_t type = BranchEl->GetStreamerType();
       if (type==-1) {
-         cl =  branchEl->GetInfo()->GetClass();
+         cl =  BranchEl->GetInfo()->GetClass();
       } else if (type>60) {
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         cl =  branchEl->GetInfo()->GetClass();
+         cl =  BranchEl->GetInfo()->GetClass();
          TStreamerElement* element = (TStreamerElement*)
-            cl->GetStreamerInfo()->GetElems()[branchEl->GetID()];
+            cl->GetStreamerInfo()->GetElems()[BranchEl->GetID()];
          cl = element->GetClassPointer();
-         
-         if (cl==TClonesArray::Class() && branchEl->GetType() == 31 ) {
-            // we have a TClonesArray inside a split TClonesArray,
-
-            // Let's not dig any further.  If the user really wants a data member
-            // inside the nested TClonesArray, it has to specify it explicitly.
-
-            cl = 0;
-         }
       }
    }
    if (cl == TClonesArray::Class()) {
@@ -3421,12 +3394,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 
       real_instance = GetRealInstance(instance,0);
 
-      // Since the only operation in this formula is reading this branch,
-      // we are guaranteed that this function is first called with instance==0 and
-      // hence we are guaranteed that the branch is always properly read
       if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
-     
       if (fAxis) {
          char * label;
          // This portion is a duplicate (for speed reason) of the code
@@ -3447,7 +3416,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
       }
    }
 
-   Bool_t haveSeenBooleanOptimization = kFALSE;
    pos  = 0;
    pos2 = 0;
    for (i=0; i<fNoper; i++) {
@@ -3484,37 +3452,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          
          continue;
       }
-//*-*- boolean operation optimizer
-      if (action >= kBoolOptimize) {
-         Bool_t skip = kFALSE;
-         int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
-
-         if (op == 1 && (!tab[pos-1]) ) { 
-            // &&: skip the right part if the left part is already false
-
-            skip = kTRUE;
-
-            // Preserve the existing behavior (i.e. the result of a&&b is
-            // either 0 or 1)
-            tab[pos-1] = 0;
-            
-         } else if (op == 2 && tab[pos-1] ) {  
-            // ||: skip the right part if the left part is already true
-            
-            skip = kTRUE;
-
-            // Preserve the existing behavior (i.e. the result of a||b is
-            // either 0 or 1)
-            tab[pos-1] = 1;
-         }
-         
-         if (skip) {
-            int toskip = (action-kBoolOptimize) / 10;
-            i += toskip;
-         }
-         haveSeenBooleanOptimization = kTRUE;
-         continue;
-    }
 //*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
       if (action == kAlias) {
          int aliasN = i;
@@ -3545,17 +3482,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          real_instance = GetRealInstance(instance,string_code);
 
          if (!instance) leafc->GetBranch()->GetEntry(leafc->GetBranch()->GetTree()->GetReadEntry());
-         else {
-            // In the cases where we are beind (i.e. right of) a potential boolean optimization
-            // this tree variable reading may have not been executed with instance==0 which would
-            // result in the branch being potentially not read in.
-            if (haveSeenBooleanOptimization) {
-               TBranch *br = leafc->GetBranch();
-               Int_t treeEntry = br->GetTree()->GetReadEntry();
-                if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
-            }
-            if (real_instance>fNdata[string_code]) return 0;
-         }
+         else if (real_instance>fNdata[string_code]) return 0;
+
          pos2++;
          if (fLookupType[string_code]==kDirect) {
             stringStack[pos2-1] = (char*)leafc->GetValuePointer();
@@ -3565,8 +3493,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          continue;
       }
 //*-*- a tree variable
-      if (action >= kVariable) {
-         Int_t code = action-kVariable;
+      if (action >= 100000) {
+         Int_t code = action-100000;
          Double_t param;
 
          switch (fCodes[code]) {
@@ -3601,17 +3529,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                      real_instance = GetRealInstance(instance,code);
 
                      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-                     else {
-                        // In the cases where we are beind (i.e. right of) a potential boolean optimization
-                        // this tree variable reading may have not been executed with instance==0 which would
-                        // result in the branch being potentially not read in.
-                        if (haveSeenBooleanOptimization) {
-                           TBranch *br = leaf->GetBranch();
-                           Int_t treeEntry = br->GetTree()->GetReadEntry();
-                            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
-                        }
-                        if (real_instance>fNdata[code]) return 0;
-                     }
+                     else if (real_instance>fNdata[code]) return 0;
 
                      switch(fLookupType[code]) {
                         case kDirect: param = leaf->GetValue(real_instance); break;
@@ -3633,8 +3551,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          continue;
       }
 //*-*- numerical value
-      if (action >= kConstants) {
-         pos++; tab[pos-1] = fConst[action-kConstants];
+      if (action >= 50000) {
+         pos++; tab[pos-1] = fConst[action-50000];
          continue;
       }
       if (action == 0) {
@@ -4020,19 +3938,6 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 //      mode = -1 : Print column names
 //      mode = 0  : Print column values
 
-   return PrintValue(mode,0);
-}
-
-//______________________________________________________________________________
-char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
-{
-//*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
-//*-*            ====================================
-//
-//      mode = -2 : Print line with ***
-//      mode = -1 : Print column names
-//      mode = 0  : Print column values
-
    const int kMAXLENGTH = 1024;
    static char value[kMAXLENGTH];
 
@@ -4065,12 +3970,9 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
       if (mode == 0) {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
-//          Int_t ndata = ((TTreeFormula*)this)->GetNdata();
-         Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,0);
-//          fprintf(stderr,"for %s: ndata %d fNdata %d real_insta %d\n",
-//                  GetTitle(),ndata,fNdata[0], real_instance);
-         if (real_instance<fNdata[0]) {
-            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(instance));
+         Int_t ndata = ((TTreeFormula*)this)->GetNdata();
+         if (ndata) {
+            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
             char *expo = strchr(value,'e');
             if (expo) {
                if (value[0] == '-') strcpy(expo-6,expo);
@@ -4376,11 +4278,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (readentry==-1) readentry=0;
             if (!branchcount->GetAddress()) branchcount->GetEntry(readentry);
             else branchcount->TBranch::GetEntry(readentry);
-
             size = ((TBranchElement*)branchcount)->GetNdata();
-            // Reading the size as above is correct only when the branchcount
-            // is of streamer type kCounter which require the underlying data
-            // member to be signed integral type.
 
             TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
 
@@ -4440,7 +4338,6 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else if (fIndexes[i][0] >= size) {
             // unreacheable element requested:
             fManager->fUsedSizes[0] = 0;
-            fNdata[i] = 0;
             outofbounds = kTRUE;
          } else if (hasBranchCount2) {
             TFormLeafInfo * info;
@@ -4448,7 +4345,6 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (fIndexes[i][info->GetVarDim()] >= info->GetSize(fIndexes[i][0])) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
-               fNdata[i] = 0;
                outofbounds = kTRUE;
             }
          }
@@ -4463,16 +4359,11 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (fIndexes[i][0]==-1) {
                // Case where the index is not specified AND the 1st dimension has a variable
                // size.
-               if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) {
-                  fManager->fUsedSizes[0] = size;
-               }
+               if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
             } else if (fIndexes[i][0] >= size) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
-               fNdata[i] = 0;
                outofbounds = kTRUE;
-            } else {
-               fNdata[i] = size*fCumulSizes[i][1];
             }
             if (leafinfo->GetVarDim()>=0) {
                // Here we need to add the code to take in consideration the
@@ -4510,7 +4401,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       Int_t index;
       TFormLeafInfo * info = 0;
       if (fLookupType[i]!=kDirect) {
-         info = (TFormLeafInfo *)fDataMembers.At(i);
+        info = (TFormLeafInfo *)fDataMembers.At(i);
       }
       for(Int_t k=0, virt_dim=0; k < fNdimensions[i]; k++) {
          if (fIndexes[i][k]<0) {

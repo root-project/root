@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.11 2003/06/25 18:06:45 rdm Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.10 2003/06/25 14:34:53 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,8 @@
 #pragma link off all functions;
 
 #pragma link C++ enum EProperty;
+
+#pragma link C++ global gInterpreter;
 
 #pragma link C++ class TBaseClass;
 #pragma link C++ class TClass;

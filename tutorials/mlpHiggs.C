@@ -7,7 +7,6 @@ void mlpHiggs(Int_t ntrain=100) {
    
    if (!gROOT->GetClass("TMultiLayerPerceptron")) {
       gSystem->Load("libMLP");
-      gSystem->Load("libTreePlayer");
    }
 
    // Prepare inputs
@@ -63,9 +62,8 @@ void mlpHiggs(Int_t ntrain=100) {
    }
    train.Print();
    test.Print();
-   // Build and train the NN ptsumf is used as a weight since we are primarly 
-   // interested  by high pt events.
-   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf,acolin,acopl:8:type","ptsumf",simu);
+   // Build and train the NN
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf/F,ptsumf/F,acolin/F,acopl/F:8:type/I",simu);
    mlp->SetTrainingDataSet(&train);
    mlp->SetTestDataSet(&test);
    mlp->Train(ntrain, "text,graph,update=10");
@@ -74,22 +72,13 @@ void mlpHiggs(Int_t ntrain=100) {
    TH1F *sig = new TH1F("sigh", "NN output", 50, -.5, 1.5);
    bg->SetDirectory(0);
    sig->SetDirectory(0);
-   Double_t params[4];
    for (i = 0; i < background->GetEntries(); i++) {
       background->GetEntry(i);
-      params[0] = msumf;
-      params[1] = ptsumf;
-      params[2] = acolin;
-      params[3] = acopl;
-      bg->Fill(mlp->Evaluate(0, params));
+      bg->Fill(mlp->Evaluate(0, (Double_t)msumf, (Double_t)ptsumf, (Double_t)acolin, (Double_t)acopl));
    }
    for (i = 0; i < signal->GetEntries(); i++) {
       signal->GetEntry(i);
-      params[0] = msumf;
-      params[1] = ptsumf;
-      params[2] = acolin;
-      params[3] = acopl;
-      sig->Fill(mlp->Evaluate(0,params));
+      sig->Fill(mlp->Evaluate(0, (Double_t)msumf, (Double_t)ptsumf, (Double_t)acolin, (Double_t)acopl));
    }
    TCanvas *cv = new TCanvas("NNout_cv", "Neural net output");
    bg->SetLineColor(kBlue);

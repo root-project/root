@@ -179,7 +179,7 @@ class multimap {
   // _lib.multimap.access_ element access:
   //T& operator[](const Key& x);
   // modifiers:
-  iterator             insert(const value_type& x);
+  //pair<iterator, bool> insert(const value_type& x);
   iterator             insert(iterator position, const value_type& x);
 #if defined(G__KCC)
   template <class InputIterator>

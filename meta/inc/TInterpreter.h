@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.13 2003/06/13 06:17:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.12 2003/04/04 00:39:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TObjArray;
 
 
 class TInterpreter :
-#if defined(WIN32) && !defined(GDK_WIN32)
+#ifdef WIN32
            protected TWin32HookViaThread,
 #endif
            public TNamed {
@@ -105,14 +105,9 @@ public:
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
 
-   static TInterpreter  *&Instance();
-
    ClassDef(TInterpreter,0)  //ABC defining interface to generic interpreter
 };
 
-#ifndef __CINT__
-#define gInterpreter (TInterpreter::Instance())
-R__EXTERN TInterpreter* (*gPtr2Interpreter)();
-#endif
+R__EXTERN TInterpreter *gInterpreter;
 
 #endif

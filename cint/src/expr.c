@@ -7,7 +7,7 @@
  * Description:
  *  Parse C/C++ expression
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -528,7 +528,7 @@ int lenbuf;
 #endif
 
 
-#ifndef G__OLDIMPLEMENTATION1942
+#ifndef G__OLDIMPLEMENTATION1910
 /******************************************************************
 * G__exec_evalall
 *
@@ -626,7 +626,7 @@ int lenbuf;
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
 
-#else /* 1942 */
+#else /* 1910 */
 /******************************************************************
 * G__exec_evalall
 *
@@ -707,7 +707,7 @@ int lenbuf;
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
-#endif /* 1942 */
+#endif /* 1910 */
 
 
 /******************************************************************
@@ -1148,13 +1148,12 @@ char *expression;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1802
-  if(strlen(expression)>G__BUFLEN-2) {
+  if(strlen(expression)>G__BUFLEN-2) 
 #ifndef G__OLDIMPLEMENTATION1863
-    ebuf=(char*)malloc(strlen(expression)+2); /* VC++6.0 has problem. VC bug */
+    ebuf=(char*)malloc(strlen(expression)+2); /* Don't know why? t538.cxx */
 #else
     ebuf=(char*)malloc(strlen(expression)+1);
 #endif
-  }
   if(!ebuf) {
     G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
     return(G__null);
@@ -2235,13 +2234,6 @@ char *item;
       result3=G__getstaticobject(item,&known);
     }
 #endif
-#ifndef G__OLDIMPLEMENTATION1935
-#ifdef G__PTR2MEMFUNC
-    if(known==0&&result3.obj.i==0) {
-      known=G__getpointer2memberfunc(item,&result3);
-    }
-#endif
-#endif /* 1935 */
     /* undefined */
     if(known==0) {
 #ifndef G__OLDIMPLEMENTATION1173
@@ -2306,13 +2298,11 @@ char *item;
 	result3=G__getreserved(item+1,(void**)NULL,(void**)NULL);
       }
 #endif
-#ifdef G__OLDIMPLEMENTATION1935
 #ifdef G__PTR2MEMFUNC
       if(known==0&&result3.obj.i==0) {
 	known=G__getpointer2memberfunc(item,&result3);
       }
 #endif
-#endif /* 1935 */
       if (known == 0 && result3.obj.i == 0) {
 	result3=G__null;
 	if(G__noerr_defined==0) {

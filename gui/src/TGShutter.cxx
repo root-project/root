@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.5 2003/10/16 15:21:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.3 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 #include "TGButton.h"
 #include "TList.h"
 #include "TTimer.h"
-#include "Riostream.h"
 
 
 ClassImp(TGShutterItem)
@@ -63,8 +62,6 @@ void TGShutter::AddItem(TGShutterItem *item)
    TGLayoutHints *hints = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    AddFrame(item, hints);
    fTrash->Add(hints);
-   if (!fSelectedItem)
-      fSelectedItem = item;
 }
 
 //______________________________________________________________________________
@@ -136,7 +133,7 @@ void TGShutter::Layout()
    if (!fList) return;
 
    if (!fSelectedItem)
-      fSelectedItem = (TGShutterItem*) ((TGFrameElement*)GetList()->First())->fFrame;
+      fSelectedItem = (TGShutterItem*) ((TGFrameElement*)fList->First())->fFrame;
 
    exh = Int_t(fHeight - (fBorderWidth << 1));
    TIter next(fList);
@@ -174,15 +171,6 @@ void TGShutter::Layout()
 }
 
 //______________________________________________________________________________
-void TGShutter::SetSelectedItem(TGShutterItem *item)
-{
-   // Set item to be the currently open shutter item.
-
-   fSelectedItem = item;
-   Layout();
-}
-
-//______________________________________________________________________________
 TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
                              UInt_t options) :
    TGVerticalFrame (p, 10, 10, options), TGWidget (id)
@@ -212,87 +200,3 @@ TGShutterItem::~TGShutterItem()
    delete fContainer;
    delete fCanvas;
 }
-
-//______________________________________________________________________________
-void TGShutterItem::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a shutter item widget as a C++ statement(s) on output stream out
-
-   char quote = '"';
-   TGTextButton *b = (TGTextButton *)fButton;
-   const char *text = b->GetText()->GetString();
-   char hotpos = b->GetText()->GetHotPos();
-   Int_t lentext = b->GetText()->GetLength();
-   char *outext = new char[lentext+2];       // should be +2 because of \0
-   Int_t i=0;
-
-
-   while (lentext) {
-      if (i == hotpos-1) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++;
-      text++;
-      lentext--;
-   }
-   outext[i]=0;
-
-   out << endl;
-   out << "   // " << quote << outext << quote << " shutter item " << endl;
-   out << "   TGShutterItem *";
-   out << GetName() << " = new TGShutterItem(" << fParent->GetName()
-       << ", new TGHotString(" << quote << outext << quote << "),"
-       << fButton->WidgetId() << "," << GetOptionString() << ");" << endl;
-
-   delete [] outext;
-
-   TList *List = ((TGCompositeFrame *)GetContainer())->GetList();
-
-   if (!List) return;
-
-   out << "   TGCompositeFrame *" << GetContainer()->GetName()
-       << " = (TGCompositeFrame *)" << GetName() << "->GetContainer();" << endl;
-
-   TGFrameElement *el;
-   TIter next(List);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetContainer()->GetName() <<"->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
-   }
-}
-
-//______________________________________________________________________________
-void TGShutter::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a shutter widget as a C++ statement(s) on output stream out.
-
-   out << endl;
-   out << "   // shutter" << endl;
-
-   out << "   TGShutter *";
-   out << GetName() << " = new TGShutter(" << fParent->GetName() << ","
-       << GetOptionString() << ");" << endl;
-
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() <<"->AddItem(" << el->fFrame->GetName();
-      //el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
-   }
-
-   out << "   " << GetName() << "->SetSelectedItem("
-       << GetSelectedItem()->GetName() << ");" << endl;
-   out << "   " <<GetName()<< "->Resize("<<GetWidth()<<","<<GetHeight()<<");"<<endl;
-
-}
-

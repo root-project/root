@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.5 2001/08/15 13:51:19 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
 #include "TROOT.h"
-#include "Riostream.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -250,42 +249,4 @@ Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
       fCanvas->HandleInput(kMouseLeave, 0, 0);
 
    return kTRUE;
-}
-
-//______________________________________________________________________________
-void TRootEmbeddedCanvas::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save an embedded canvas as a C++ statement(s) on output stream out.
-
-   if (!GetCanvas()) return;
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   char quote ='"';
-
-   out << endl << "   // embedded canvas" << endl;   
-   out << "   TRootEmbeddedCanvas *";
-   out << GetName() << " = new TRootEmbeddedCanvas(0" << "," << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   out << "   Int_t w" << GetName() << " = " << GetName()
-       << "->GetCanvasWindowId();" << endl;
-   out << "   TCanvas *" << GetCanvas()->GetName() <<" = new TCanvas(" << quote
-       << GetCanvas()->GetName() << quote << ", 10, 10, w"
-       << GetName() << ");" << endl;
-   out << "   " << GetName() << "->AdoptCanvas(" << GetCanvas()->GetName()
-       << ");" << endl;
-
-   //Next line is a connection to TCanvas::SavePrimitives()
-   //GetCanvas()->SavePrimitive(out,option);
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.2 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -47,15 +47,15 @@ private:
 
 public:
 
-   THostAuth(const char *host = "localhost", const char *user = "",
-             Int_t nmeth = 0, Int_t *authmeth = 0, char **details = 0);
+   THostAuth();
+   THostAuth(const char *host, const char *user, Int_t nmeth, Int_t *authmeth,
+             char **details);
    THostAuth(const char *host, const char *user, Int_t authmeth,
              const char *details);
    virtual ~THostAuth();
 
    Int_t    NumMethods() const { return fNumMethods; }
    Int_t    GetMethods(Int_t meth) const { return fMethods[meth]; }
-   Bool_t   HasMethod(Int_t level);
    void     AddMethod(Int_t level, const char *details);
    void     RemoveMethod(Int_t level);
    void     ReOrder(Int_t nmet, Int_t *fmet);

@@ -7,7 +7,7 @@
  * Description:
  *  CINT iostream header file
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -472,8 +472,6 @@ class G__CINT_WS { int dmy; } WS;
 class G__CINT_HEX { int dmy; } hex;
 class G__CINT_DEC { int dmy; } dec;
 class G__CINT_OCT { int dmy; } oct;
-class G__CINT_SCIENTIFIC { int dmy; } scientific;
-class G__CINT_FIXED { int dmy; } fixed;
 class G__CINT_NOSUPPORT { int dmy; } ;
 
 #ifndef G__STD_IOSTREAM

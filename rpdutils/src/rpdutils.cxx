@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.26 2003/11/18 23:09:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.16 2003/10/07 14:03:03 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -71,12 +71,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #   define R__GLIBC
 #endif
 
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
-    (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
-     (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
 #ifndef F_LOCK
@@ -149,55 +144,13 @@ extern "C" {
    #include "rsalib.h"
 }
 
-//--- Machine specific routines ------------------------------------------------
-
-#if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
-extern "C" {
-   int seteuid(int euid);
-   int setegid(int egid);
-}
-#endif
-
-#if defined(_AIX)
-extern "C" {
-   int seteuid(uid_t euid);
-   int setegid(gid_t egid);
-}
-#endif
-
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
-    defined(cygwingcc)
-static int setresgid(gid_t r, gid_t e, gid_t)
-{
-   if (setgid(r) == -1)
-      return -1;
-   return setegid(e);
-}
-
-static int setresuid(uid_t r, uid_t e, uid_t)
-{
-   if (setuid(r) == -1)
-      return -1;
-   return seteuid(e);
-}
-#else
-#if defined(linux) && !defined(HAS_SETRESUID)
-extern "C" {
-   int setresgid(gid_t r, gid_t e, gid_t s);
-   int setresuid(uid_t r, uid_t e, uid_t s);
-}
-#endif
-#endif
-
-
 namespace ROOT {
-
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
 const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
-const char kDaemonRc[]     = ".rootdaemonrc"; // file containing daemon access rules
+const char kDaemonAccess[] = "daemon.access"; // file containing daemon access rules
 
 // To control user access
 char *gUserAllow[kMAXSEC] = { 0 };
@@ -207,7 +160,7 @@ unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 
 char gAltSRPPass[kMAXPATHLEN] = { 0 };
 char gAnonUser[64] = "rootd";
-char gSystemDaemonRc[kMAXPATHLEN] = { 0 }; // path to kDaemonRc
+char gAuthAllow[kMAXPATHLEN] = { 0 }; // path to kDaemonAccess
 char gExecDir[kMAXPATHLEN] = { 0 };   // needed to localize ssh2rpd
 char gFileLog[kMAXPATHLEN] = { 0 };
 char gOpenHost[256] = "????";         // same length as in net.cxx ...
@@ -226,9 +179,6 @@ int gGlobus = -1;
 int gNumAllow = -1;
 int gNumLeft = -1;
 int gOffSet = -1;
-int gPort = 0;
-int gPortA = 0;
-int gPortB = 0;
 int gRemPid = -1;
 int gReUseAllow = 0x1F;  // define methods for which previous auth can be reused
 int gRootLog = 0;
@@ -252,18 +202,17 @@ int  gSaltRequired = -1;
 int  gSec = -1;
 int  gTriedMeth[kMAXSEC];
 
+} //namespace ROOT
+
 #ifdef R__KRB5
 krb5_keytab gKeytab = 0;        // to allow specifying on the command line
 krb5_context gKcontext;
 #endif
 
-
 #ifdef R__GLBS
 int gShmIdCred = -1;            // global, to pass the shm ID to proofserv
 gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
 #endif
-
-} //namespace ROOT
 
 // Masks for authentication methods
 const int kAUTH_CLR_MSK = 0x1;
@@ -272,54 +221,8 @@ const int kAUTH_KRB_MSK = 0x4;
 const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
+
 namespace ROOT {
-//______________________________________________________________________________
-static int rpdstrncasecmp(const char *str1, const char *str2, int n)
-{
-   // Case insensitive string compare of n characters.
-
-   while (n > 0) {
-      int c1 = *str1;
-      int c2 = *str2;
-
-      if (isupper(c1))
-         c1 = tolower(c1);
-
-      if (isupper(c2))
-         c2 = tolower(c2);
-
-      if (c1 != c2)
-         return c1 - c2;
-
-      str1++;
-      str2++;
-      n--;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-static int rpdstrcasecmp(const char *str1, const char *str2)
-{
-   // Case insensitive string compare.
-
-   return rpdstrncasecmp(str1, str2, strlen(str2) + 1);
-}
-
-#ifdef R__KRB5
-//______________________________________________________________________________
-static void PrintPrincipal(krb5_principal principal)
-{
-   ErrorInfo("PrintPrincipal: realm == '%s'",
-             principal->realm.data);
-   ErrorInfo("PrintPrincipal: length == %d type == %d",
-             principal->length, principal->type);
-   for (int i = 0; i < principal->length; i++) {
-      ErrorInfo("PrintPrincipal: data[%d] == %s",
-                i, principal->data[i].data);
-   }
-}
-#endif
 
 //______________________________________________________________________________
 void RpdSetDebugFlag(int Debug)
@@ -680,6 +583,8 @@ int RpdCheckAuthTab(int Sec, char *User, char *Host, int RemId, int *OffSet)
                 Host, RemId, *OffSet);
 
    // First check if file exists and can be read
+   if (access(gRpdAuthTab, F_OK))
+      return retval;
    if (access(gRpdAuthTab, R_OK)) {
       ErrorInfo("RpdCheckAuthTab: can't read file %s (errno: %d)",
                 gRpdAuthTab, GetErrno());
@@ -1048,30 +953,19 @@ int RpdCheckAuthAllow(int Sec, char *Host)
    // If 'yes', returns 0, if 'no', returns 1, the number of allowed
    // methods in NumAllow, and the codes of the allowed methods (in order
    // of preference) in AllowMeth. Memory for AllowMeth must be allocated
-   // outside. Info read from gSystemDaemonRc.
+   // outside. Info read from gAuthAllow.
 
    int retval = 1, found = 0;
 
-   char theDaemonRc[kMAXPATHLEN] = { 0 };
-
-   // Check if user has a private daemon access file ...
-   struct passwd *pw = getpwuid(getuid());
-   if (pw != 0) {
-      sprintf(theDaemonRc, "%s/%s", pw->pw_dir, kDaemonRc);
-   }
-   if (pw == 0 || access(theDaemonRc, R_OK)) {
-      strcpy(theDaemonRc, gSystemDaemonRc);
-   }
    if (gDebug > 2)
       ErrorInfo
           ("RpdCheckAuthAllow: Checking file: %s for meth:%d host:%s (gNumAllow: %d)",
-           theDaemonRc, Sec, Host, gNumAllow);
+           gAuthAllow, Sec, Host, gNumAllow);
 
    // Check if info already loaded (not first call ...)
    if (gMethInit == 1) {
 
-      // Look for the method in the allowed list and flag this method
-      // as tried, if found ...
+      // Look for the method in the allowed list and flag this method as tried, if found ...
       int newtry = 0, i;
       for (i = 0; i < gNumAllow; i++) {
          if (gTriedMeth[i] == 0 && gAllowMeth[i] == Sec) {
@@ -1082,8 +976,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       }
       if (newtry == 0) {
          ErrorInfo
-             ("RpdCheckAuthAllow: new auth method proposed by %s",
-              " client not in the list or already attempted");
+             ("RpdCheckAuthAllow: new auth method proposed by client not in the list or already attempted");
          return retval;
       }
       retval = 0;
@@ -1093,18 +986,25 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       gMethInit = 1;
 
       // First check if file exists and can be read
-      if (access(theDaemonRc, R_OK)) {
+      if (access(gAuthAllow, F_OK))
+         return retval;
+      if (access(gAuthAllow, R_OK)) {
          ErrorInfo("RpdCheckAuthAllow: can't read file %s (errno: %d)",
-                   theDaemonRc, GetErrno());
+                   gAuthAllow, GetErrno());
          return retval;
       }
       // Open file
-      FILE *ftab = fopen(theDaemonRc, "r");
+      FILE *ftab = fopen(gAuthAllow, "r");
       if (ftab == 0) {
          ErrorInfo("RpdCheckAuthAllow: error opening %s (errno: %d)",
-                   theDaemonRc, GetErrno());
+                   gAuthAllow, GetErrno());
          return retval;
       }
+      // Get IP of the host in form of a string
+      char *IP = RpdGetIP(Host);
+      if (gDebug > 2)
+         ErrorInfo("RpdCheckAuthAllow: Host: %s --> IP: %s", Host, IP);
+
       // Now read the entry
       char line[kMAXPATHLEN], host[kMAXPATHLEN], rest[kMAXPATHLEN],
           cmth[kMAXPATHLEN];
@@ -1132,26 +1032,64 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             nw = sscanf(pstr, "%s %s", host, rest);
             if (nw < 2)
                continue;        // no method defined for this host
+            //         pstr = strstr(line,rest);
             pstr = line + strlen(host) + 1;
-
-            // Check if a service is specified
-            char *pcol = strstr(host, ":");
-            if (pcol) {
-               if (!strstr(pcol+1, gService))
-                  continue;
-               else
-                  host[(int)(pcol-host)] = '\0';
-            }
-            if (strlen(host) == 0)
-               strcpy(host, "default");
-
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found host: %s ", host);
 
             if (strcmp(host, "default")) {
                // now check validity of 'host' format
-               if (!RpdCheckHost(Host,host)) {
-                  goto next;
+               // Try first to understand whether it is an address or a name ...
+               int name = 0, namew = 0, nd = 0, nn = 0, nnmx = 0, nnmi =
+                   strlen(host);
+               for (i = 0; i < (int) strlen(host); i++) {
+                  if (host[i] == '.') {
+                     nd++;
+                     if (nn > nnmx)
+                        nnmx = nn;
+                     if (nn < nnmi)
+                        nnmi = nn;
+                     nn = 0;
+                     continue;
+                  }
+                  int j = (int) host[i];
+                  if (j < 48 | j > 57)
+                     name = 1;
+                  if (host[i] == '*') {
+                     namew = 1;
+                     if (nd > 0)
+                        goto next;
+                  }
+                  nn++;
+               }
+               // Act accordingly ...
+               if (name == 0) {
+                  if (nd < 4) {
+                     if (strlen(host) < 16) {
+                        if (nnmx < 4) {
+                           if (nd == 3 || host[strlen(host) - 1] == '.') {
+                              char *sp = strstr(IP, host);
+                              if (sp == 0 || sp != IP)
+                                 goto next;
+
+                           }
+                        }
+                     }
+                  }
+               } else {
+                  if (namew == 0) {
+                     if (nd > 0) {
+                        if (nd > 1 || nnmi > 0) {
+                           char *sp = strstr(Host, host);
+			   if (sp == 0 || (sp != Host &&
+                               sp != (Host+strlen(Host)-strlen(host))))
+                              goto next;
+                        }
+                     }
+                  } else {
+                     if (RpdCheckHostWild(Host, host))
+                        goto next;
+                  }
                }
             } else {
                // This is a default entry: ignore it if a host-specific entry was already
@@ -1172,7 +1110,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
          }
 
          // We are at the end and there will be a continuation line ...
-         if (rest[0] == '\\') {
+         if ((int) rest[0] == 92) {
             cont = 1;
             continue;
          }
@@ -1201,7 +1139,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             if (strlen(tmp) > 1) {
 
                for (tmet = 0; tmet < kMAXSEC; tmet++) {
-                  if (!rpdstrcasecmp(kAuthMeth[tmet], tmp))
+                  if (!strcasecmp(kAuthMeth[tmet],tmp))
                      break;
                }
                if (tmet < kMAXSEC) {
@@ -1341,6 +1279,9 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       // closing file ...
       fclose(ftab);
 
+      // Free allocated memory
+      if (IP) delete[] IP;
+
       // Use defaults if nothing found
       if (!found) {
          if (gDebug > 2)
@@ -1382,85 +1323,78 @@ int RpdCheckAuthAllow(int Sec, char *Host)
 }
 
 //______________________________________________________________________________
-int RpdCheckHost(const char *Host, const char *host)
+int RpdCheckHostWild(const char *Host, const char *host)
 {
    // Checks if 'host' is compatible with 'Host' taking into account
-   // wild cards in the host name
-   // Returns 1 if successful, 0 otherwise ...
+   // wild cards in the machine name (first field of FQDN) ...
+   // Returns 0 if successful, 1 otherwise ...
 
-   int rc = 1;
+   int rc = 0;
+   char *fH, *sH, *dum, *sp, *k;
+   int i, j, lmax;
 
-   // Strings must be both defined
-   if (!Host || !host)
-      return 0;
+   if (gDebug > 2)
+      ErrorInfo("RpdCheckHostWild: analyzing Host:%s host:%s", Host, host);
 
-   // If host is a just wild card accept it
-   if (!strcmp(host,"*"))
-      return 1;
+   // Max length for dinamic allocation
+   lmax = strlen(Host) > strlen(host) ? strlen(Host) : strlen(host);
 
-   // Try now to understand whether it is an address or a name ...
-   int name = 0, i = 0;
+   // allocate
+   fH = new char[lmax];
+   sH = new char[lmax];
+   dum = new char[lmax];
+
+   // Determine 'Host' first field (the name) ...
+   for (i = 0; i < (int) strlen(Host); i++) {
+      if (Host[i] == '.')
+         break;
+   }
+   strncpy(fH, Host, i);
+   fH[i] = '\0';
+   // ... and also the second one (the domain)
+   strcpy(sH, Host + i);
+   if (gDebug > 2)
+      ErrorInfo("RpdCheckHostWild: fH:%s sH:%s", fH, sH);
+
+   // Now check the first field ...
+   j = 0;
+   k = fH;
    for (i = 0; i < (int) strlen(host); i++) {
-      if ((host[i] < 48 || host[i] > 57) &&
-           host[i] != '*' && host[i] != '.') {
-         name = 1;
+      if (host[i] == '.')
          break;
+      if (host[i] == '*') {
+         if (i > 0) {
+            // this is the part of name before the '*' ....
+            strncpy(dum, host + j, i - j);
+            dum[i - j] = '\0';
+            if (gDebug > 2)
+               ErrorInfo("RpdCheckHostild: k:%s dum:%s", k, dum);
+            sp = strstr(k, dum);
+            if (sp == 0) {
+               rc = 1;
+               goto exit;
+            }
+            j = i + 1;
+            k = sp + strlen(dum) + 1;
+         } else
+            j++;
       }
    }
-
-   // If ref host is an IP, get IP of Host
-   char *H;
-   if (!name) {
-      H = RpdGetIP(Host);
+   // Now check the domain name (if the name matches ...)
+   if (rc == 0) {
+      strcpy(dum, host + i);
       if (gDebug > 2)
-         ErrorInfo("RpdCheckHost: Checking Host IP: %s", H);
-   } else {
-      H = new char[strlen(Host)+1];
-      strcpy(H,Host);
-      if (gDebug > 2)
-         ErrorInfo("RpdCheckHost: Checking Host name: %s", H);
+         ErrorInfo("RpdCheckHostild: sH:%s dum:%s", sH, dum);
+      sp = strstr(sH, dum);
+      if (sp == 0)
+         rc = 1;
    }
 
-   // Check if starts with wild
-   // Starting with '.' defines a full (sub)domain
-   int sos = 0;
-   if (host[0] == '*' || host[0] == '.')
-      sos = 1;
-
-   // Check if ends with wild
-   // Ending with '.' defines a name
-   int eos = 0, le = strlen(host);
-   if (host[le-1] == '*' || host[le-1] == '.')
-      eos = 1;
-
-   int first= 1;
-   int ends= 0;
-   int starts= 0;
-   char *h = new char[strlen(host)+1];
-   strcpy(h,host);
-   char *tk = strtok(h,"*");
-   while (tk) {
-
-      char *ps = strstr(H,tk);
-      if (!ps) {
-         rc = 0;
-         break;
-      }
-      if (!sos && first && ps == H)
-         starts = 1;
-      first = 0;
-
-      if (ps == H + strlen(H) - strlen(tk))
-         ends = 1;
-
-      tk = strtok(0,"*");
-
-   }
-   if (h) delete[] h;
-   if (H) delete[] H;
-
-   if ((!sos || !eos) && !starts && !ends)
-      rc = 0;
+ exit:
+   // Release allocated memory ...
+   if (fH) delete[] fH;
+   if (sH) delete[] sH;
+   if (dum) delete[] dum;
 
    return rc;
 }
@@ -1711,32 +1645,14 @@ void RpdKrb5Auth(const char *sstr)
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &Ulen, dumm);
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
    }
-
    // get service principal
-   const char *service = gService;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: gService: %s, Port: %d ",gService,gPort);
-
-   if ((strcmp(gService, "rootd") == 0  && gPort == 1094) ||
-       (strcmp(gService, "proofd") == 0 && gPort == 1093)) {
-      // keep the real service name
-   } else {
-      // default to host
-      service = "host";
-   }
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: using service: %s ",service);
-
    krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, service,
+   if ((retval = krb5_sname_to_principal(gKcontext, 0, gService,
                                          KRB5_NT_SRV_HST, &server))) {
-      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
-                service, retval, error_message(retval));
+      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %s",
+                gService, error_message(retval));
       return;
    }
-
    // listen for authentication from the client
    krb5_auth_context auth_context = 0;
    krb5_ticket *ticket;
@@ -1753,7 +1669,6 @@ void RpdKrb5Auth(const char *sstr)
       ErrorInfo("RpdKrb5Auth: recvauth failed--%s", error_message(retval));
       return;
    }
-
    // get client name
    char *cname;
    if ((retval =
@@ -1774,160 +1689,6 @@ void RpdKrb5Auth(const char *sstr)
    if (pos != string::npos)
       user = user.erase(pos);   // drop the instance
    strncpy(gUser, user.c_str(), 64);
-
-   string targetUser = gUser;
-
-   if (gClientProtocol >= 9) {
-
-       // Receive target name
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving target user ... ");
-
-       EMessageTypes kind;
-       char buffer[66];
-       NetRecv(buffer, 65, kind);
-
-       if (kind != kROOTD_KRB5) {
-          ErrorInfo("RpdKrb5Auth: protocol error, received message of type %d instead of %d\n",
-                    kind,kROOTD_KRB5);
-       }
-       buffer[65] = 0;
-       targetUser = buffer;
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
-   }
-
-   // const char* targetUser = gUser; // "cafuser";
-   if (krb5_kuserok(gKcontext, ticket->enc_part2->client, targetUser.c_str())) {
-      strncpy(gUser, targetUser.c_str(), 64);
-      reply =  "authenticated as ";
-      reply += gUser;
-   } else {
-      ErrorInfo
-        ("RpdKrb5Auth: could not change user from %s to %s",gUser,targetUser.c_str());
-   }
-
-   if (gClientProtocol >= 9) {
-
-      char *data = 0;
-      int size = 0;
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving forward cred ... ");
-
-      {
-         EMessageTypes kind;
-         char BufLen[20];
-         NetRecv(BufLen, 20, kind);
-
-         if (kind != kROOTD_KRB5) {
-            ErrorInfo("RpdKrb5Auth: protocol error, received message of type %d instead of %d\n",
-                      kind, kROOTD_KRB5);
-         }
-
-         size = atoi(BufLen);
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: got len '%s' %d ", BufLen, size);
-
-         data = new char[size+1];
-
-         // Receive and decode encoded public key
-         int Nrec = -1;
-         Nrec = NetRecvRaw(data, size);
-
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
-      }
-
-      krb5_data forwardCreds;
-      forwardCreds.data = data;
-      forwardCreds.length = size;
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received forward cred ... %d %d %d",
-                   data[0], data[1], data[2]);
-
-      int net = sock;
-      retval = krb5_auth_con_genaddrs(gKcontext, auth_context,
-                                      net, KRB5_AUTH_CONTEXT_GENERATE_REMOTE_FULL_ADDR);
-      if (retval) {
-         ErrorInfo("RpdKrb5Auth: failed auth_con_genaddrs is: %s\n",
-                   error_message(retval));
-      }
-
-      krb5_creds **creds = 0;
-      if ((retval = krb5_rd_cred(gKcontext, auth_context, &forwardCreds, &creds, 0))) {
-         ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
-         return;
-      }
-
-      struct passwd *pw = getpwnam(gUser);
-      if (pw) {
-         Int_t fromUid = getuid();
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, fromUid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
-            return;
-         }
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: saving ticket to cache ...");
-
-         krb5_context context = gKcontext;
-
-         krb5_ccache cache = 0;
-         if ((retval = krb5_cc_default(context, &cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_default failed--%s", error_message(retval));
-            return;
-         }
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
-                      krb5_cc_get_name(context,cache));
-
-         // this is not working (why?)
-         // this would mean that if a second user comes in, it will tremple
-         // the existing one :(
-         //       if ((retval = krb5_cc_gen_new(context,&cache))) {
-         //          ErrorInfo("RpdKrb5Auth: cc_gen_new failed--%s", error_message(retval));
-         //          return;
-         //       }
-
-         const char *cacheName = krb5_cc_get_name(context,cache);
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: working (2) on ticket to cache (%s) ... ",cacheName);
-
-         if ((retval = krb5_cc_initialize(context,cache,
-                                          ticket->enc_part2->client))) {
-            ErrorInfo("RpdKrb5Auth: cc_initialize failed--%s", error_message(retval));
-            return;
-         }
-
-         if ((retval = krb5_cc_store_cred(context,cache, *creds))) {
-            ErrorInfo("RpdKrb5Auth: cc_store_cred failed--%s", error_message(retval));
-            return;
-         }
-
-         if ((retval = krb5_cc_close(context,cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_close failed--%s", error_message(retval));
-            return;
-         }
-
-         //       if ( chown( cacheName, pw->pw_uid, pw->pw_gid) != 0 ) {
-         //          ErrorInfo("RpdKrb5Auth: could not change the owner ship of the cache file %s",cacheName);
-         //       }
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",cacheName);
-
-         if (setresuid(fromUid,fromUid, fromUid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
-            return;
-         }
-      }
-   }
 
    NetSend(reply.c_str(), kMESS_STRING);
    krb5_auth_con_free(gKcontext, auth_context);
@@ -2490,7 +2251,7 @@ void RpdGlobusAuth(const char *sstr)
    if (gDebug > 2)
       ErrorInfo("RpdGlobusAuth: gRemPid: %d, Subj: %s (%d %d)", gRemPid,
                 Subj, lSubj, strlen(Subj));
-   if (Subj) delete[] Subj;   // GlbClientName will be determined from the security context ...
+   if (Subj) delete[] Subj;            // GlbClientName will be determined from the security context ...
 
    // Now wait for client to communicate the issuer name of the certificate ...
    char *answer = new char[20];
@@ -2515,22 +2276,13 @@ void RpdGlobusAuth(const char *sstr)
       ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
                 client_issuer_name);
 
-   // Now we open the certificates and we check if we are able to
-   // autheticate the client
+   // Now we open the certificates and we check if we are able to autheticate the client
    // In the affirmative case we sen our subject name to the client ...
-   // NB: if we don't have su privileges we cannot make use of the
-   // local host certificates, so we have to rely on the user proxies
    char *subject_name;
-   int CertRc = 0;
-   if (getuid() == 0)
-     CertRc = GlbsToolCheckCert(client_issuer_name, &subject_name);
-   else
-     CertRc = GlbsToolCheckProxy(client_issuer_name, &subject_name);
-
-   if (CertRc) {
-      ErrorInfo("RpdGlobusAuth: %s (%s)",
-                "host does not seem to have certificate for the requested CA",
-                 client_issuer_name);
+   if (GlbsToolCheckCert(client_issuer_name, &subject_name)) {
+      ErrorInfo
+          ("RpdGlobusAuth: host does not seem to have certificate for the requested CA (%s)",
+           client_issuer_name);
       NetSend(0, kROOTD_GLOBUS);   // Notify that we did not find it
       return;
    } else {
@@ -2905,9 +2657,12 @@ void RpdDefaultAuthAllow()
 
    // Kerberos
 #ifdef R__KRB5
-   gAllowMeth[gNumAllow] = 2;
-   gNumAllow++;
-   gNumLeft++;
+   if (getuid() == 0) {
+      gAllowMeth[gNumAllow] = 2;
+      gNumAllow++;
+      gNumLeft++;
+   } else
+      gHaveMeth[2] = 0;
 #else
    // Don't have this method
    gHaveMeth[2] = 0;
@@ -3147,6 +2902,7 @@ void RpdUser(const char *sstr)
          close(fid);
       }
 
+      //      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
       if (strlen(passw) == 0 || !strcmp(passw, "x")) {
 #ifdef R__SHADOWPW
          // System V Rel 4 style shadow passwords
@@ -3163,6 +2919,7 @@ void RpdUser(const char *sstr)
 #endif
       }
       // Check if successful
+      //      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
       if (strlen(passw) == 0 || !strcmp(passw, "x")) {
          NetSend(kErrNotAllowed, kROOTD_ERR);
          ErrorInfo("RpdUser: passwd hash not available for user %s", user);
@@ -3508,15 +3265,15 @@ void RpdSavePubKey(char *PubKey, int OffSet, char *user)
       chmod(PubKeyFile, 0600);
 
       if (getuid() == 0) {
-         // Set ownership of the pub key to the user
+	// Set ownership of the pub key to the user
 
-         struct passwd *pw = getpwnam(user);
+        struct passwd *pw = getpwnam(user);
 
-         if (chown(PubKeyFile,pw->pw_uid,pw->pw_gid) == -1) {
-            ErrorInfo
-                ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
-                  PubKeyFile,GetErrno());
-         }
+        if (chown(PubKeyFile,pw->pw_uid,pw->pw_gid) == -1) {
+           ErrorInfo
+               ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
+                 PubKeyFile,GetErrno());
+        }
       }
    }
 }

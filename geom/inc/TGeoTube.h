@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.14 2003/12/10 15:31:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.11 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -51,10 +51,10 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    static  void          DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta);
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
@@ -122,11 +122,11 @@ public:
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
                                     Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -141,7 +141,7 @@ public:
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
-                                 Double_t phi1, Double_t phi2, Int_t skipz=0);
+                                 Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz=0);
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);
@@ -183,9 +183,9 @@ public:
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;

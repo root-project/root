@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.5 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.3 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -98,14 +98,14 @@ void TGeoTorus::ComputeBBox()
    }
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = (fR+fRmax)*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[0] = (fR+fRmax)*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[1] = (fR+fRmax)*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-   yc[1] = (fR+fRmax)*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
-   xc[2] = (fR-fRmax)*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[2] = (fR-fRmax)*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[3] = (fR-fRmax)*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-   yc[3] = (fR-fRmax)*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
+   xc[0] = (fR+fRmax)*TMath::Cos(fPhi1*kDegRad);
+   yc[0] = (fR+fRmax)*TMath::Sin(fPhi1*kDegRad);
+   xc[1] = (fR+fRmax)*TMath::Cos((fPhi1+fDphi)*kDegRad);
+   yc[1] = (fR+fRmax)*TMath::Sin((fPhi1+fDphi)*kDegRad);
+   xc[2] = (fR-fRmax)*TMath::Cos(fPhi1*kDegRad);
+   yc[2] = (fR-fRmax)*TMath::Sin(fPhi1*kDegRad);
+   xc[3] = (fR-fRmax)*TMath::Cos((fPhi1+fDphi)*kDegRad);
+   yc[3] = (fR-fRmax)*TMath::Sin((fPhi1+fDphi)*kDegRad);
       
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
@@ -139,8 +139,8 @@ void TGeoTorus::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 // Compute normal to closest surface from POINT. 
    Double_t phi = TMath::ATan2(point[1],point[0]);
    if (fDphi<360) {
-      Double_t phi1 = fPhi1*TMath::DegToRad();
-      Double_t phi2 = (fPhi1+fDphi)*TMath::DegToRad();
+      Double_t phi1 = fPhi1*kDegRad;
+      Double_t phi2 = (fPhi1+fDphi)*kDegRad;
       Double_t c1 = TMath::Cos(phi1);
       Double_t s1 = TMath::Sin(phi1);
       Double_t c2 = TMath::Cos(phi2);
@@ -181,7 +181,7 @@ Bool_t TGeoTorus::Contains(Double_t *point) const
 // Test if point is inside the torus.
    // check phi range
    if (fDphi!=360) {
-      Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
+      Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
       if (phi < 0) phi+=360.0;
       Double_t ddp = phi-fPhi1;
       if (ddp<0) ddp+=360.;
@@ -253,10 +253,10 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
 // Compute distance from inside point to surface of the torus.
    if (iact<3 && *safe) {
       *safe = Safety(point, kTRUE);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
-   Double_t snext = TGeoShape::Big();
+   Double_t snext = kBig;
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
    Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
    Double_t dout = ToBoundary(point,dir,fRmax);
@@ -268,16 +268,16 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
       Error("DistToOut", "cannot get outside");
       printf("point (%f,%f,%f) daxis=%f contains=%i\n", point[0],point[1],point[2],
              Daxis(point,dir,0), Contains(point));
-      return TGeoShape::Big();
+      return kBig;
    }
-   Double_t din = (hasrmin)?ToBoundary(point,dir,fRmin):TGeoShape::Big();
+   Double_t din = (hasrmin)?ToBoundary(point,dir,fRmin):kBig;
    snext = TMath::Min(dout,din);
-   Double_t dphi = TGeoShape::Big();
+   Double_t dphi = kBig;
    if (hasphi) {
       // Torus segment case.
       Double_t c1,s1,c2,s2,cm,sm;
-      Double_t phi1=fPhi1*TMath::DegToRad();
-      Double_t phi2=(fPhi1+fDphi)*TMath::DegToRad();
+      Double_t phi1=fPhi1*kDegRad;
+      Double_t phi2=(fPhi1+fDphi)*kDegRad;
       c1=TMath::Cos(phi1);
       s1=TMath::Sin(phi1);
       c2=TMath::Cos(phi2);
@@ -292,7 +292,7 @@ Double_t TGeoTorus::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double
          dphi = TGeoTubeSeg::DistToOutS(pt,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm)-1E-4;
          if (dphi>1E10) {
             Error("DistToOut", "cannot get outside");
-            return TGeoShape::Big();
+            return kBig;
          }   
       }
       Double_t daxis = Daxis(point,dir,dphi+1E-8);
@@ -307,8 +307,8 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
 // Compute distance from outside point to surface of the torus.
    if (iact<3 && *safe) {
       *safe = Safety(point, kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    Double_t daxis;
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
@@ -323,13 +323,13 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
       
    if (hasphi) {
       // Torus segment case.
-      phi=TMath::ATan2(point[1], point[0])*TMath::RadToDeg();;
+      phi=TMath::ATan2(point[1], point[0])*kRadDeg;;
       if (phi<0) phi+=360;
       ddp = phi-fPhi1;
       if (ddp<0) ddp+=360;;
       if (ddp<=fDphi) inphi=kTRUE;
-      phi1=fPhi1*TMath::DegToRad();
-      phi2=(fPhi1+fDphi)*TMath::DegToRad();
+      phi1=fPhi1*kDegRad;
+      phi2=(fPhi1+fDphi)*kDegRad;
       c1=TMath::Cos(phi1);
       s1=TMath::Sin(phi1);
       c2=TMath::Cos(phi2);
@@ -349,7 +349,7 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
    }   
    
    // If outside the ring, compute distance to it.
-   Double_t dring = TGeoShape::Big();
+   Double_t dring = kBig;
    snext = 0;
    daxis = -1;
    memcpy(pt,point,3*sizeof(Double_t));
@@ -357,7 +357,7 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (hasphi) dring = TGeoTubeSeg::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);            
       else        dring = TGeoTube::DistToInS(point,dir,fR-fRmax,fR+fRmax, fRmax);
       // If not crossing it, return BIG.
-      if (dring>1E10) return TGeoShape::Big();
+      if (dring>1E10) return kBig;
       snext = dring;
       // Check if the crossing is due to phi.
       daxis = Daxis(point,dir,snext);
@@ -382,7 +382,7 @@ Double_t TGeoTorus::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_
       dring = TGeoTubeSeg::DistToOutS(pt,dir, fR-fRmin, fR+fRmin, fRmin,c1,s1,c2,s2,cm,sm);
       if (dd<dring) return (snext+dd);
       // we were exiting a hole
-      return TGeoShape::Big();
+      return kBig;
    }    
    // We are inside the outer ring, having daxis>fRmax
    // Check intersection with outer torus
@@ -521,7 +521,7 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[2];
+   Double_t saf[3];
    Int_t i;
    Double_t rxy = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
    Double_t rad = TMath::Sqrt((rxy-fR)*(rxy-fR) + point[2]*point[2]);
@@ -533,15 +533,18 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
       return TMath::Max(saf[0], saf[1]);
    }   
 
-   Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1, fPhi1+fDphi);
-   Double_t safe = TGeoShape::Big();
-   if (in) {
-      safe = TMath::Min(saf[0], saf[1]);
-      return TMath::Min(safe, safphi);
-   }   
-   for (i=0; i<2; i++) saf[i]=-saf[i];
-   safe = TMath::Max(saf[0], saf[1]);
-   return TMath::Max(safe, safphi);
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = (fPhi1+fDphi)*kDegRad;
+   Double_t c1 = TMath::Cos(phi1);
+   Double_t s1 = TMath::Sin(phi1);
+   Double_t c2 = TMath::Cos(phi2);
+   Double_t s2 = TMath::Sin(phi2);
+
+   saf[2] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
+   if (in) return saf[TMath::LocMin(3,saf)];
+
+   for (i=0; i<3; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(3,saf)];
 }
 
 //_____________________________________________________________________________
@@ -577,11 +580,11 @@ void TGeoTorus::SetPoints(Double_t *buff) const
    Int_t indx = 0;
    // loop outer mesh -> n*n points [0, 3*n*n-1]
    for (i=0; i<n; i++) {
-      phout = (fPhi1+i*dpout)*TMath::DegToRad();
+      phout = (fPhi1+i*dpout)*kDegRad;
       co = TMath::Cos(phout);
       so = TMath::Sin(phout);
       for (j=0; j<n-1; j++) {
-         phin = j*dpin*TMath::DegToRad();
+         phin = j*dpin*kDegRad;
          ci = TMath::Cos(phin);
          si = TMath::Sin(phin);
          buff[indx++] = (fR+fRmax*ci)*co;
@@ -593,11 +596,11 @@ void TGeoTorus::SetPoints(Double_t *buff) const
    if (havermin) {
     // loop inner mesh -> n*n points [3*n*n, 6*n*n-1]
       for (i=0; i<n; i++) {
-         phout = (fPhi1+i*dpout)*TMath::DegToRad();
+         phout = (fPhi1+i*dpout)*kDegRad;
          co = TMath::Cos(phout);
          so = TMath::Sin(phout);
          for (j=0; j<n-1; j++) {
-            phin = j*dpin*TMath::DegToRad();
+            phin = j*dpin*kDegRad;
             ci = TMath::Cos(phin);
             si = TMath::Sin(phin);
             buff[indx++] = (fR+fRmin*ci)*co;
@@ -608,11 +611,11 @@ void TGeoTorus::SetPoints(Double_t *buff) const
    } else {
       if (fDphi!=360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [3*n*n, 3*n*n+1]
-         buff[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
+         buff[indx++] = fR*TMath::Cos(fPhi1*kDegRad);
+         buff[indx++] = fR*TMath::Sin(fPhi1*kDegRad);
          buff[indx++] = 0;
-         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
+         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*kDegRad);
+         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*kDegRad);
          buff[indx++] = 0;
       }
    }      
@@ -634,11 +637,11 @@ void TGeoTorus::SetPoints(Float_t *buff) const
    // loop outer mesh -> n*n points [0, n*n-1]
    // plane i = 0, n-1  point j = 0, n-1  ipoint = n*i + j
    for (i=0; i<n; i++) {
-      phout = (fPhi1+i*dpout)*TMath::DegToRad();
+      phout = (fPhi1+i*dpout)*kDegRad;
       co = TMath::Cos(phout);
       so = TMath::Sin(phout);
       for (j=0; j<n-1; j++) {
-         phin = j*dpin*TMath::DegToRad();
+         phin = j*dpin*kDegRad;
          ci = TMath::Cos(phin);
          si = TMath::Sin(phin);
          buff[indx++] = (fR+fRmax*ci)*co;
@@ -651,11 +654,11 @@ void TGeoTorus::SetPoints(Float_t *buff) const
       // loop inner mesh -> n*n points [n*n, 2*n*n-1]
       // plane i = 0, n-1  point j = 0, n-1  ipoint = n*n + n*i + j
       for (i=0; i<n; i++) {
-         phout = (fPhi1+i*dpout)*TMath::DegToRad();
+         phout = (fPhi1+i*dpout)*kDegRad;
          co = TMath::Cos(phout);
          so = TMath::Sin(phout);
          for (j=0; j<n-1; j++) {
-            phin = j*dpin*TMath::DegToRad();
+            phin = j*dpin*kDegRad;
             ci = TMath::Cos(phin);
             si = TMath::Sin(phin);
             buff[indx++] = (fR+fRmin*ci)*co;
@@ -668,11 +671,11 @@ void TGeoTorus::SetPoints(Float_t *buff) const
       // just add extra 2 points on the centers of the 2 phi cuts [n*n, n*n+1]
       // ip1 = n*(n-1) + 0;
       // ip2 = n*(n-1) + 1
-         buff[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
+         buff[indx++] = fR*TMath::Cos(fPhi1*kDegRad);
+         buff[indx++] = fR*TMath::Sin(fPhi1*kDegRad);
          buff[indx++] = 0;
-         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
+         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*kDegRad);
+         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*kDegRad);
          buff[indx++] = 0;
       }
    }      
@@ -851,12 +854,12 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
    
    Double_t x[4];
    Int_t nsol = SolveQuartic(a,b,c,d,x);
-   if (!nsol) return TGeoShape::Big();
+   if (!nsol) return kBig;
    // look for first positive solution
    for (Int_t i=0; i<nsol; i++) {
       if (x[i]>=0) return x[i];
    }
-   return TGeoShape::Big();   
+   return kBig;   
 }      
 
       

@@ -6,8 +6,6 @@
 
 #pragma link C++ class TAlien;
 #pragma link C++ class TAlienResult;
-#pragma link C++ class TAlienProof;
-#pragma link C++ class TAlienFile;
-#pragma link C++ class TAlienSystem; 
+#pragma link C++ class TAlienAttrResult;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.1 2003/08/27 15:31:14 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ void TSynapse::SetPost(TNeuron * post)
 }
 
 //______________________________________________________________________________
-Double_t TSynapse::GetValue() const
+Double_t TSynapse::GetValue()
 {
    // Returns the value: weithted input
    if (fpre)
@@ -72,7 +72,7 @@ Double_t TSynapse::GetValue() const
 }
 
 //______________________________________________________________________________
-Double_t TSynapse::GetDeDw() const
+Double_t TSynapse::GetDeDw()
 {
    // Computes the derivative of the error wrt the synapse weight.
    if (!(fpre && fpost))

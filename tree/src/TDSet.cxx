@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.9 2003/11/13 16:52:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.5 2003/06/27 11:02:34 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -50,50 +50,10 @@
 #include "TKey.h"
 #include "TError.h"
 #include "TVirtualProof.h"
-#include "TGrid.h"
-#include "TGridResult.h"
-#include "TGridProof.h"
-#include "TUrl.h"
 
 
-ClassImp(TDSetElementPfn)
-ClassImp(TDSetElementMsn)
 ClassImp(TDSetElement)
 ClassImp(TDSet)
-
-//______________________________________________________________________________
-void TDSetElementPfn::Print(Option_t *) const
-{
-   // Print contents of a physical file element.
-
-   printf("\tPFN: %-40s MSN: %-25s SIZE: %9lld CEN: %25s\n",
-          GetPfn(), GetMsn(), GetSize(), GetCen());
-}
-
-
-//______________________________________________________________________________
-TDSetElementMsn::TDSetElementMsn(TDSetElementPfn *dse)
-{
-   // Create mass storage information element.
-
-   fMsn                  = dse ? dse->GetMsn() : "";
-   fNfiles               = 1;
-   fDataSize             = dse ? dse->GetSize() : 0;
-   fNSiteDaemons         = -1;
-   fMaxSiteDaemons       = 50;
-   fDataPerSiteDaemon    = -1;
-   fMaxDataPerSiteDaemon = R__LL(5000000000); // heuristic 5 GByte
-}
-
-//______________________________________________________________________________
-void TDSetElementMsn::Print(Option_t *) const
-{
-   // Print contents of a Mass Storage element.
-
-   printf("MSN: %-32s nfiles: %-8d ndaemon: %-8d data[bytes]: %16lld\n",
-          GetMsn(), GetNfiles(), GetNSiteDaemons(), GetDataSize());
-}
-
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const TDSet *set, const char *file,
@@ -106,35 +66,11 @@ TDSetElement::TDSetElement(const TDSet *set, const char *file,
    fFileName = file;
    fFirst    = first;
    fNum      = num;
-   fPfnList  = 0;
-   fIterator = 0;
-   fCurrent  = 0;
 
    if (objname)
       fObjName = objname;
    if (dir)
       fDirectory = dir;
-}
-
-//______________________________________________________________________________
-TDSetElement::~TDSetElement()
-{
-   // Clean up the element.
-
-   delete fIterator;
-   delete fPfnList;
-}
-
-//______________________________________________________________________________
-void TDSetElement::AddPfn(const char *pfn, const char *msn, Long64_t size)
-{
-   // Add associated physical file name to this element.
-
-   if (!fPfnList) {
-      fPfnList = new TList;
-      fPfnList->SetOwner();
-   }
-   fPfnList->Add(new TDSetElementPfn(pfn, msn, size));
 }
 
 //______________________________________________________________________________
@@ -158,50 +94,19 @@ const char *TDSetElement::GetDirectory() const
 }
 
 //______________________________________________________________________________
-void TDSetElement::Reset()
+void TDSetElement::Print(Option_t *) const
 {
-   // Reset PFN list iterator.
+   // Print a TDSetElement.
 
-  if (!fIterator) {
-     fIterator = new TIter(fPfnList);
-  } else {
-     fIterator->Reset();
-  }
+   cout << IsA()->GetName()
+        << " file='" << fFileName
+        << "' dir='" << fDirectory
+        << "' obj='" << fObjName
+        << "' first=" << fFirst
+        << " num=" << fNum
+        << endl;
 }
 
-//______________________________________________________________________________
-TDSetElementPfn *TDSetElement::Next()
-{
-   // Get next PFN element.
-
-   if (!fIterator) {
-     fIterator = new TIter(fPfnList);
-   }
-   fCurrent = (TDSetElementPfn *) fIterator->Next();
-   return fCurrent;
-}
-
-//______________________________________________________________________________
-void TDSetElement::Print(Option_t *opt) const
-{
-   // Print a TDSetElement. When option="a" print full data.
-
-   if (opt && opt[0] == 'a') {
-      cout << IsA()->GetName()
-           << " file='" << fFileName
-           << "' dir='" << fDirectory
-           << "' obj='" << fObjName
-           << "' first=" << fFirst
-           << " num=" << fNum
-           << endl;
-   } else
-      cout << "\tLFN: " << fFileName << endl;
-
-   TIter next(fPfnList);
-
-   while (TDSetElementPfn *pfn = (TDSetElementPfn *) next())
-      pfn->Print(opt);
-}
 
 //______________________________________________________________________________
 TDSet::TDSet()
@@ -209,9 +114,7 @@ TDSet::TDSet()
    // Default ctor.
 
    fElements = new TList;
-   fElements->SetOwner();
-   fElementsMsn = new TList;
-   fElementsMsn->SetOwner();
+   fElements->IsOwner();
    fIsTree   = kFALSE;
    fIterator = 0;
    fCurrent  = 0;
@@ -233,9 +136,7 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
    // two levels deep.
 
    fElements = new TList;
-   fElements->SetOwner();
-   fElementsMsn = new TList;
-   fElementsMsn->SetOwner();
+   fElements->IsOwner();
    fIterator = 0;
    fCurrent  = 0;
 
@@ -266,55 +167,8 @@ TDSet::~TDSet()
 {
    // Cleanup.
 
-   delete fElementsMsn;
    delete fElements;
    delete fIterator;
-}
-
-//______________________________________________________________________________
-Bool_t TDSet::Request()
-{
-   // Request a connection to a GRID based PROOF.
-
-   if (!gGrid) {
-      if (!gProof) {
-         Error("Request", "no need to do Request(), you have no active Grid");
-         return kFALSE;
-      } else {
-         return kTRUE;
-      }
-   }
-
-   if (!gGrid->GetGridProof()) {
-      gGrid->CreateGridProof();
-   }
-
-   TGridProof* gridproof = gGrid->GetGridProof();
-   return gridproof->Request(this);
-}
-
-//______________________________________________________________________________
-Bool_t TDSet::Connect()
-{
-   // Connect to GRID based PROOF.
-
-   if (!gGrid) {
-      if (!gProof) {
-         Error("Connect", "cannot connect, no active Grid or PROOF session open");
-         return kFALSE;
-      } else {
-         return kTRUE;
-      }
-   }
-
-   TGridProof *gridproof = 0;
-   if (!(gridproof = gGrid->GetGridProof())) {
-      Error("Connect", "first execute Request() to obtain a GridProof object");
-      return kFALSE;
-   }
-
-   gridproof->Connect();
-   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -349,6 +203,7 @@ void TDSet::AddInput(TObject *obj)
    }
 }
 
+
 //______________________________________________________________________________
 void TDSet::ClearInput()
 {
@@ -357,6 +212,7 @@ void TDSet::ClearInput()
    if (gProof)
       gProof->ClearInput();
 }
+
 
 //______________________________________________________________________________
 TObject *TDSet::GetOutput(const char *name)
@@ -369,6 +225,7 @@ TObject *TDSet::GetOutput(const char *name)
    return 0;
 }
 
+
 //______________________________________________________________________________
 TList *TDSet::GetOutputList()
 {
@@ -379,8 +236,9 @@ TList *TDSet::GetOutputList()
    return 0;
 }
 
+
 //______________________________________________________________________________
-void TDSet::Print(const Option_t *opt) const
+void TDSet::Print(const Option_t *option) const
 {
    // Print TDSet basic or full data. When option="a" print full data.
 
@@ -388,11 +246,11 @@ void TDSet::Print(const Option_t *opt) const
         << fObjName << "\tin " << GetTitle()
         << "\telements " << GetListOfElements()->GetSize() << endl;
 
-   if (opt && opt[0] == 'a') {
+   if (option && *option) {
       TIter next(GetListOfElements());
       TObject *obj;
       while ((obj = next())) {
-         obj->Print(opt);
+         obj->Print(option);
       }
    }
 }
@@ -416,8 +274,8 @@ void TDSet::SetDirectory(const char *dir)
 }
 
 //______________________________________________________________________________
-Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
-                  Long64_t first, Long64_t num)
+void TDSet::Add(const char *file, const char *objname, const char *dir,
+                Long64_t first, Long64_t num)
 {
    // Add file to list of files to be analyzed. Optionally with the
    // objname and dir arguments the default, TDSet wide, objname and
@@ -425,103 +283,29 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
 
    if (!file || !*file) {
       Error("Add", "file name must be specified");
-      return kFALSE;
+      return;
    }
 
-   // check, if it already exists in the TDSet
-   TDSetElement *el;
-   Reset();
-   while ((el = Next())) {
-      if (!(strcmp(el->GetFileName(), file))) {
-         Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
-         return kFALSE;
-      }
-   }
-
-   // try, if it is a GRID lfn
-   if ((GridAdd(file, objname, dir, first, num)) < 1) {
-      // could not be resolved with the grid, just take it as it is
-      fElements->Add(new TDSetElement(this, file, objname, dir, first, num));
-   }
-   return kTRUE;
+   fElements->Add(new TDSetElement(this, file, objname, dir, first, num));
 }
 
 //______________________________________________________________________________
-Int_t TDSet::GridAdd(const char *lfn, const char *objname, const char *dir,
-                     Long64_t first, Long64_t num)
-{
-   // Resolve logical file names using TGrid methods. Returns 1 on success,
-   // 0 if there is no grid, -1 if the grid could not resolve the name.
-
-   TUrl lUrl(lfn);
-   if (!(strcmp(lUrl.GetProtocol(), ""))) {
-      if (!gGrid) {
-         Error("TDSet", "cannot resolve LFN, no active GRID");
-         return 0;
-      }
-
-      if ((strstr(lUrl.GetUrl(), "://"))) {
-         if ((strcmp(lUrl.GetProtocol(), "http"))) {
-            if ((strcmp(lUrl.GetProtocol(), gGrid->GetGrid()))) {
-               Error("TDSet", "LFN %s does not belong to the active Grid %s",
-                     lUrl.GetProtocol(), gGrid->GetGrid());
-               return 0;
-            }
-         }
-      }
-
-      // get the file size
-      TGrid::gridstat_t statbuf;
-      statbuf.st_size = -1;
-      int gridstat =  gGrid->GridStat(lfn, &statbuf);
-      if (gridstat < 0) {
-         Error("TDSet", "cannot stat LFN using TGrid::GridStat()");
-         return -1;
-      }
-
-      TGridResult *lPFN = gGrid->CreateGridResult(gGrid->GetPhysicalFileNames(lUrl.GetFile()));
-
-      fElements->Add(new TDSetElement(this, lfn, objname, dir, first, num));
-
-      TDSetElement *current = (TDSetElement *) fElements->Last();
-
-      while (Grid_Result_t *result = (Grid_Result_t*) lPFN->Next()) {
-         char newpfn[4096];
-         printf(" SE: %-25s PFN: %-25s\n", result->name.c_str(), result->name2.c_str());
-         sprintf(newpfn, "%s@%s", result->name2.c_str(), result->name.c_str());
-         current->AddPfn(result->name2.c_str(), result->name.c_str(), statbuf.st_size);
-      }
-
-      lPFN->Close();
-      delete lPFN;
-      return 1;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-Bool_t TDSet::Add(TDSet *set)
+void TDSet::Add(TDSet *set)
 {
    // Add specified data set to the this set.
 
    if (!set)
-      return kFALSE;
+      return;
 
    if (set->fName != fName) {
       Error("Add", "cannot add a set with a different type");
-      return kFALSE;
+      return;
    }
 
    TDSetElement *el;
    TIter next(set->fElements);
-   TObject *last = set == this ? fElements->Last() : 0;
-   while ((el = (TDSetElement*) next())) {
-      Add(el->GetFileName(), el->GetObjName(), el->GetDirectory(),
-          el->GetFirst(), el->GetNum());
-      if (el == last) break;
-   }
-
-   return kTRUE;
+   while ((el = (TDSetElement*) next()))
+      Add(el->GetFileName(), el->GetObjName(), el->GetDirectory());
 }
 
 //______________________________________________________________________________
@@ -568,7 +352,7 @@ TDSetElement *TDSet::Next()
 
 //______________________________________________________________________________
 Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
-                           const char *objname)
+                        const char *objname)
 {
    // Returns number of entries in tree or objects in file. Returns -1 in
    // case of error
@@ -576,13 +360,13 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    TFile *file = TFile::Open(filename);
 
    if (file == 0) {
-      ::SysError("TDSet::GetEntries", "cannot open file %s", filename);
+      ::SysError("GetEntries","cannot open file %s", filename);
       return -1;
    }
 
    TDirectory *dirsave = gDirectory;
-   if (!file->cd(path)) {
-      ::Error("TDSet::GetEntries", "cannot cd to %s", path);
+   if ( ! file->cd(path) ) {
+      ::Error("GetEntries","cannot cd to %s", path);
       delete file;
       return -1;
    }
@@ -590,11 +374,11 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    TDirectory *dir = gDirectory;
    dirsave->cd();
 
-   Long64_t entries;
+   Long64_t  entries;
    if (isTree) {
       TKey *key = dir->GetKey(objname);
       if (key == 0) {
-         ::Error("TDSet::GetEntries", "cannot find tree \"%s\" in %s",
+         ::Error("GetEntries","cannot find tree \"%s\" in %s",
                  objname, filename);
          delete file;
          return -1;
@@ -648,91 +432,4 @@ Int_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option,
 
    Error("Draw", "no active PROOF session");
    return -1;
-}
-
-//______________________________________________________________________________
-Bool_t TDSet::AddQuery(const char *path, const char *file,
-                       const char *conditions)
-{
-   // Queries the connected GRID catalog for the file.
-
-   if (!gGrid)
-      return kFALSE;
-
-   cout << "--------------------------------------------------------" << endl;
-   TGridResult *fQUERY = gGrid->CreateGridResult(gGrid->FindEx(path, file, conditions));
-
-   // loop over all results ....
-   int nFile = 0;
-   fQUERY->Reset();
-   while (Grid_Result_t *result = (Grid_Result_t*) fQUERY->Next()) {
-      nFile++;
-      // Add the LFN
-      if (!Add(result->name.c_str()))
-         continue;
-      printf("  %4d      LFN: %-40s SZ: %10d PERM: %3x TIME: %10d\n",
-             nFile, result->name.c_str(), (int)result->info.st_size,
-             result->info.st_mode, (int)result->info.st_atime);
-
-      if (result->data != 0) {
-
-         // find the last TDSetElement to add PFN information
-         TDSetElement *current = (TDSetElement *) fElements->Last();
-
-         Grid_Result_t *pfn;
-         while ((pfn = (Grid_Result_t*) gGrid->ReadResult(result->data)) != 0) {
-            printf("            PFN: %-40s    MSN: %-25s\n",
-                   pfn->name.c_str(), pfn->name2.c_str());
-            TUrl PfnUrl(pfn->name.c_str());
-            current->AddPfn(PfnUrl.GetFile(), pfn->name2.c_str(), result->info.st_size);
-         }
-      }
-   }
-   cout << "--------------------------------------------------------" << endl;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TDSet::GridPack()
-{
-   // Pack a data set corresponding to the mass storage name for
-   // PROOF processing on the Grid.
-
-   fElementsMsn->Clear();
-   Reset();
-
-   // sum up all data per site
-   while (TDSetElement *lfnE = Next()) {
-      lfnE->Reset();
-      // for the moment, we just consider the primary location of a file
-      while (TDSetElementPfn *pfnE = lfnE->Next()) {
-         GridAddElementMsn(pfnE);
-         break;
-      }
-   }
-   GridPrintPackList();
-}
-
-//______________________________________________________________________________
-void TDSet::GridPrintPackList()
-{
-   // Print list of files per mass storage device.
-
-   fElementsMsn->ForEach(TDSetElementMsn,Print)();
-   printf("--------------------------------------------------------\n");
-}
-
-//______________________________________________________________________________
-void TDSet::GridAddElementMsn(TDSetElementPfn *dsepfn)
-{
-   // Assign a physical file name to a Msn of the mass storage name list.
-
-   TDSetElementMsn *dseme = (TDSetElementMsn*) fElementsMsn->FindObject(dsepfn->GetMsn());
-   if (!dseme) {
-      dseme = new TDSetElementMsn(dsepfn);
-      fElementsMsn->Add(dseme);
-   } else {
-      dseme->Increment();
-      dseme->AddData(dsepfn->GetSize());
-   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.66 2003/09/30 13:41:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.65 2003/06/17 15:24:00 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -231,10 +231,7 @@ Int_t TCint::Load(const char *filename, Bool_t system)
    if (!system)
       i = G__loadfile(filename);
    else
-      i = G__loadsystemfile(filename); 
-   
-   UpdateListOfTypes();
-     
+      i = G__loadsystemfile(filename);
    return i;
 }
 

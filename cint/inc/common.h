@@ -7,7 +7,7 @@
  * Description:
  * Common header file for cint parser.
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -990,8 +990,7 @@ struct G__funclist {
 /*********************************************************************
 * variable length string buffer
 *********************************************************************/
-/* #define G__BUFLEN 34 */
-#define G__BUFLEN 80
+#define G__BUFLEN 34
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1836

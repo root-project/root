@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.h,v 1.3 2001/02/22 14:45:17 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.h,v 1.2 2000/11/22 16:27:44 rdm Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -22,7 +22,6 @@ R__EXTERN const char gTVHelpLayout[];
 R__EXTERN const char gTVHelpOpenSave[];
 R__EXTERN const char gTVHelpDraggingItems[];
 R__EXTERN const char gTVHelpEditExpressions[];
-R__EXTERN const char gTVHelpSession[];
 R__EXTERN const char gTVHelpUserCommands[];
 R__EXTERN const char gTVHelpContext[];
 R__EXTERN const char gTVHelpDrawing[];

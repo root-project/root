@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.7 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.5 2003/01/31 16:47:19 rdm Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -65,6 +65,7 @@ protected:
    virtual void       AddVarDims(Int_t virt_dim);
    virtual void       CancelDimension(Int_t virt_dim);
    virtual void       EnableMultiVarDims();
+   virtual void       UpdateFormulaLeaves();
    virtual void       UpdateUsedSize(Int_t &virt_dim, Int_t vsize);
 
 public:
@@ -76,11 +77,10 @@ public:
    
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
-   virtual Int_t      GetNdata(Bool_t forceLoadDim = kFALSE);
+   virtual Int_t      GetNdata();
    virtual Bool_t     Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual void       Remove(TTreeFormula*);
    virtual Bool_t     Sync();
-   virtual void       UpdateFormulaLeaves();
 
    ClassDef(TTreeFormulaManager,0) // A class coordinating several TTreeFormula objects.
 };

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.80 2003/12/11 16:35:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.72 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -163,10 +163,9 @@
 #endif
 
 #if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
+    defined(R__SUNGCC3)
 #   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-     (defined(R__SUNGCC3) && defined(__arch64__))
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
 #   define USE_SOCKLEN_T
 #endif
 
@@ -242,7 +241,7 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if (defined(__ppc__) && defined(__APPLE__))
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -534,7 +533,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -576,7 +575,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;
@@ -609,7 +608,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
 
       // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler && fFileHandler->GetSize() > 0)
+      if (fNfd > 0 && fFileHandler->GetSize() > 0)
          if (CheckDescriptors())
             if (!pendingOnly) return;
       fNfd = 0;
@@ -1379,15 +1378,6 @@ Int_t TUnixSystem::GetUid(const char *user)
 }
 
 //______________________________________________________________________________
-Int_t TUnixSystem::GetEffectiveUid()
-{
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
-   return geteuid();
-}
-
-//______________________________________________________________________________
 Int_t TUnixSystem::GetGid(const char *group)
 {
    // Returns the group's id. If group = 0, returns current user's group.
@@ -1400,15 +1390,6 @@ Int_t TUnixSystem::GetGid(const char *group)
          return grp->gr_gid;
    }
    return 0;
-}
-
-//______________________________________________________________________________
-Int_t TUnixSystem::GetEffectiveGid()
-{
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
-   return getegid();
 }
 
 //______________________________________________________________________________
@@ -2667,7 +2648,7 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #elif defined(R__KCC)
       sigact.sa_handler = (sighandlerFunc_t)sighandler;
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
-#  if defined(R__SGI64) || (__GNUG__>=3)
+#  if defined(R__SGI64)
       sigact.sa_handler = sighandler;
 #   else
       sigact.sa_handler = (void (*)(...))sighandler;
@@ -3045,7 +3026,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    // Create socket
    int sock;
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "socket");
+      ::SysError("TUnixSystem::UnixConnectTcp", "socket");
       return -1;
    }
 
@@ -3055,7 +3036,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "connect");
+      //::SysError("TUnixSystem::UnixConnectTcp", "connect");
       close(sock);
       return -1;
    }
@@ -3083,7 +3064,7 @@ int TUnixSystem::UnixUnixConnect(int port)
    }
 
    if (connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) < 0) {
-      ::SysError("TUnixSystem::UnixUnixConnect", "connect");
+      // ::SysError("TUnixSystem::UnixUnixConnect", "connect");
       close(sock);
       return -1;
    }

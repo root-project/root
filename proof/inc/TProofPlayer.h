@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.14 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.13 2003/04/11 11:48:11 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -55,7 +55,6 @@ protected:
    TList      *fInput;         //-> list with input objects
    TList      *fOutput;        //   list with output objects
    TSelector  *fSelector;      //!  the latest selector
-   TClass     *fSelectorClass; //!  class of the latest selector
    TTimer     *fFeedbackTimer; //!  timer for sending intermediate results
    TEventIter *fEvIter;        //   Iterator on events or objects
 

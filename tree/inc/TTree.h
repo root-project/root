@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.55 2003/11/12 11:09:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.51 2003/08/14 04:44:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -142,7 +142,7 @@ public:
     virtual TFriendElement *AddFriend(TTree *tree, const char* alias="", Bool_t warn = kFALSE);
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
-    virtual void      AutoSave(Option_t *option="");
+    virtual void      AutoSave();
     virtual Int_t     Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="");
     virtual Int_t     Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t     Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
@@ -254,7 +254,6 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Refresh();
     virtual void      RemoveFriend(TTree*);
     virtual void      Reset(Option_t *option="");
     virtual void      ResetBranchAddresses();
@@ -269,7 +268,6 @@ public:
     virtual void      SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
     virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
     virtual void      SetDirectory(TDirectory *dir);
-    virtual void      SetEntries(Double_t n);
     virtual void      SetEstimate(Int_t nentries=10000);
     virtual void      SetFileNumber(Int_t number=0);
     virtual void      SetEventList(TEventList *list) {fEventList = list;}
@@ -284,7 +282,7 @@ public:
     virtual void      SetTimerInterval(Int_t msec=333) {fTimerInterval=msec;}
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
-    virtual void      Show(Int_t entry=-1, Int_t lenmax=20);
+    virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(); // *MENU*
     virtual Int_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);

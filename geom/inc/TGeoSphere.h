@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.12 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.9 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -55,9 +55,9 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=0, Double_t *safe=0) const;
    Double_t              DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check=kTRUE, Bool_t firstcross=kTRUE) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -83,7 +83,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
-   virtual void          SetNumberOfDivisions(Int_t p);
+   void                  SetNumberOfDivisions(Int_t p);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

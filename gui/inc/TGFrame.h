@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.31 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.23 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -76,7 +76,7 @@ enum EFrameType {
    kTempFrame       = BIT(12)
 };
 
-//---- MWM hints stuff
+//---- MWM Hints stuff
 
 enum EMWMHints {
    // functions
@@ -145,7 +145,6 @@ protected:
    static UInt_t      fgLastButton;
    static Int_t       fgDbx, fgDby;
    static Window_t    fgDbw;
-   static UInt_t      fgUserColor;
 
    static Time_t      GetLastClick();
 
@@ -156,8 +155,6 @@ protected:
 
    const TGResourcePool *GetResourcePool() const
       { return fClient->GetResourcePool(); }
-
-   TString GetOptionString() const;                //used in SavePrimitive()
 
 public:
    // Default colors and graphics contexts
@@ -239,11 +236,7 @@ public:
    void SetWidth(UInt_t w) { fWidth = w; }
    void SetHeight(UInt_t h) { fHeight = h; }
    void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
-
-   // Printing and saving
    virtual void Print(Option_t *option="") const;
-   void SaveUserColor(ofstream &out, Option_t *);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
@@ -263,8 +256,10 @@ public:
 
 class TGCompositeFrame : public TGFrame {
 
-protected:
+private:
    TGLayoutManager *fLayoutManager;   // layout manager
+
+protected:
    TList           *fList;            // container of frame elements
 
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
@@ -313,7 +308,6 @@ public:
    Bool_t IsComposite() const { return kTRUE; }
    TList *GetList() { return fList; }
    virtual void Print(Option_t *option="") const;
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)
 };
@@ -325,7 +319,6 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVerticalFrame,0)  // Composite frame with vertical child layout
 };
@@ -336,7 +329,6 @@ public:
                      UInt_t options = kChildFrame,
                      Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHorizontalFrame,0)  // Composite frame with horizontal child layout
 };
@@ -355,14 +347,6 @@ class TGMainFrame : public TGCompositeFrame {
 
 protected:
    enum { kDontCallClose = BIT(14) };
-
-   // mapping between key and window
-   class TGMapKey : public TObject {
-   public:
-      UInt_t     fKeyCode;
-      TGWindow  *fWindow;
-      TGMapKey(UInt_t keycode, TGWindow *w) { fKeyCode = keycode; fWindow = w; }
-   };
 
    TList        *fBindList;     // list with key bindings
    TString       fWindowName;   // window name
@@ -384,10 +368,6 @@ protected:
    UInt_t        fWMWidthInc;   // WM width increments
    UInt_t        fWMHeightInc;  // WM height increments
    EInitialState fWMInitState;  // WM initial state
-
-   TString GetMWMvalueString() const;  //used in SaveSource()
-   TString GetMWMfuncString() const;   //used in SaveSource()
-   TString GetMWMinpString() const;    //used in SaveSource()
 
 public:
    TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -430,8 +410,6 @@ public:
    EInitialState GetWMState() const { return fWMInitState; }
 
    virtual const TGWindow *GetMainFrame() const { return this; }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
-   virtual void SaveSource(const char *filename, Option_t *option); // *MENU*
 
    ClassDef(TGMainFrame,0)  // Top level window frame
 };
@@ -456,8 +434,6 @@ public:
                     UInt_t options = kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
-   virtual void    SavePrimitive(ofstream &out, Option_t *option);
-   virtual void    SaveSource(const char *filename, Option_t *option); // *MENU*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };
@@ -507,11 +483,9 @@ public:
    virtual TGDimension GetDefaultSize() const;
    virtual void DrawBorder();
    virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }
-   Int_t        GetTitlePos() const { return fTitlePos; }
    virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
    virtual const char *GetTitle() const { return fText->GetString(); }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };

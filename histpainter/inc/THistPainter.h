@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.18 2003/09/15 17:19:02 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.17 2003/02/20 22:39:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -69,7 +69,6 @@ public:
     virtual void       Paint(Option_t *option="");
     virtual void       PaintArrows(Option_t *option);
     virtual void       PaintAxis(Bool_t drawGridOnly=kFALSE);
-    virtual void       PaintAxis3D(Option_t *option);
     virtual void       PaintBar(Option_t *option);
     virtual void       PaintBarH(Option_t *option);
     virtual void       PaintBoxes(Option_t *option);

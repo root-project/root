@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.7 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -69,7 +69,6 @@ public:
    virtual void   SetFrame(TGFrame *frame, Bool_t left);
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetLeft() const { return fLeft; }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
@@ -100,7 +99,6 @@ public:
    virtual void   SetFrame(TGFrame *frame, Bool_t above);
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetAbove() const { return fAbove; }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);   
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);

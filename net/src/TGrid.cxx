@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.5 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.4 2002/05/31 11:29:24 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -31,8 +31,6 @@
 #include "TROOT.h"
 #include "TPluginManager.h"
 
-TGrid *gGrid = 0;
-
 
 ClassImp(TGrid)
 
@@ -50,21 +48,57 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
    // -debug=<debug level from 1 to 10>
    // Example: "-domain=cern.ch -debug=5"
 
+
    TPluginHandler *h;
    TGrid *g = 0;
 
-   if (!uid)
-      uid = "";
-   if (!pw)
-      pw = "";
-   if (!options)
-      options = "";
+   if (!uid)     uid = "";
+   if (!pw)      pw = "";
+   if (!options) options = "";
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TGrid", grid))) {
       if (h->LoadPlugin() == -1)
          return 0;
       g = (TGrid *) h->ExecPlugin(4, grid, uid, pw, options);
    }
-   g->SetGridProof(0);
+
    return g;
+}
+
+//______________________________________________________________________________
+void TGrid::pwd() const
+{
+   // Print current working directory.
+
+   const char *p = Pwd();
+   if (p && strlen(p) > 0)
+      printf("%s\n", p);
+}
+
+//______________________________________________________________________________
+void TGrid::cd(const char *dir) const
+{
+   // Change working directory.
+
+   Cd(dir);
+}
+
+//______________________________________________________________________________
+void TGrid::ls(const char *dir, const char *options) const
+{
+   // List content of current directory.
+   // Supported options:
+   //  "l": long listing format
+   //  "a": list all entries
+   //  "d": list only directories
+
+   TGridResult *r = Ls(dir, options);
+
+   if (r) {
+      const char *item;
+      while ((item = r->Next())) {
+         printf("%s\n", item);
+      }
+      delete r;
+   }
 }

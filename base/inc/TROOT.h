@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.35 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.33 2003/06/25 18:06:44 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -38,7 +38,6 @@ class TDataType;
 class TFile;
 class TStyle;
 class TVirtualPad;
-class TVirtualProof;
 class TApplication;
 class TInterpreter;
 class TBrowser;
@@ -143,7 +142,6 @@ public:
    Bool_t            FromPopUp() const { return fFromPopUp; }
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const { return fApplication; }
-   TInterpreter     *GetInterpreter() const { return fInterpreter; }
    TClass           *GetClass(const char *name, Bool_t load = kTRUE) const;
    TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE) const;
    TColor           *GetColor(Int_t color) const;
@@ -209,7 +207,7 @@ public:
    void              ProcessLine(const char *line, Int_t *error = 0);
    void              ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   TVirtualProof    *Proof(const char *cluster = "proof://localhost", const char *configfile = 0);
+   void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();
    void              RemoveClass(TClass *);

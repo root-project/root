@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.16 2002/10/28 14:22:51 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -415,7 +415,7 @@ void NetClose()
 }
 
 //______________________________________________________________________________
-int NetInit(const char *service, int &port1, int port2, int tcpwindowsize)
+int NetInit(const char *service, int port1, int port2, int tcpwindowsize)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd. Used by rootd.
@@ -474,7 +474,6 @@ int NetInit(const char *service, int &port1, int port2, int tcpwindowsize)
    }
 
    printf("ROOTD_PORT=%d\n", port);
-   port1 = port;
 
    // And set the listen parameter, telling the system that we're
    // ready to accept incoming connection requests.
@@ -540,9 +539,7 @@ void NetInit(const char *service, int port, int tcpwindowsize)
 
    if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
             sizeof(tcp_srv_addr)) < 0)
-      Error(gErrSys,-1,
-            "NetInit: can't bind local address (sock: %d) : errno: %d",
-             tcp_srv_sock,GetErrno());
+      Error(gErrSys,-1,"NetInit: can't bind local address (sock: %d) : errno: %d",tcp_srv_sock,GetErrno());
 
    // And set the listen parameter, telling the system that we're
    // ready to accept incoming connection requests.

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.15 2003/11/18 19:28:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.12 2003/09/16 00:39:23 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -97,7 +97,7 @@ private:
    static rsa_KEY_export fgRSAPubExport;
 
    void           SetEnvironment();
-   Bool_t         GetUserPasswd(TString &user, TString &passwd,
+   Bool_t         GetUserPasswd(TString &user, TString &passwd, 
                                 Bool_t &pwhash, Bool_t &srppwd);
    Int_t          ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
    Int_t          RfioAuth(TString &user);
@@ -120,14 +120,13 @@ public:
 
    Bool_t             Authenticate();
    Bool_t             CheckNetrc(TString &user, TString &passwd);
-   Bool_t             CheckNetrc(TString &user, TString &passwd,
+   Bool_t             CheckNetrc(TString &user, TString &passwd, 
                                  Bool_t &pwhash, Bool_t &srppwd);
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }
    Bool_t             GetPwHash() const { return fPwHash; }
    Bool_t             GetSRPPwd() const { return fSRPPwd; }
    const char        *GetProtocol() const { return fProtocol; }
-   const char        *GetRemoteHost() const { return fRemote; }
    const char        *GetSshUser() const;
    void               SetUser(const char *user) { fUser = user; }
    void               SetPwHash(Bool_t pwhash) { fPwHash = pwhash; }

@@ -1,12 +1,14 @@
+
+
 Authentication to rootd/proofd servers
 ======================================
 
-The rootd/proofd daemon servers accept 6 methods of authentication, listed
+The rootd/proofd daemon servers accept 6 methods of authentication, listed 
 in Table 1, together with their internal codes and short names.
 Method 5 (rfio) is provided for fast access when security is not an issue.
-Method 0 is 'secured' by using a session public key, automatically
+Method 0 is 'secured' by using a session public key, automatically 
 generated, which allows to avoid direct exchange of passwords; since this
-may slow down the process, it can be switched of if not needed.
+may slow down the process, it can be switched of if not needed. 
 
    Table 1: authentication methods available
   +-------------------------------------------------------------------------+
@@ -26,10 +28,6 @@ $ROOTSYS/etc/system.rootrc), the file $HOME/.rootauthrc (superseded by the
 variable ROOTAUTHRC, if defined), or during the root session as explained
 below.
 
-A test macro TestAuth.C is provided under the tutorials directory. Its use
-is explained at the end of this file.
-
-
 Controlling access
 ==================
 
@@ -37,11 +35,10 @@ Upon request of access, rootd/proofd build a list of secure methods available
 locally; the list always comprises UsrPwd; SRP, Kerberos and Globus, are added
 if ROOT has been compiled with support for them; SSH is added if the 'sshd'
 daemon is running. By default the two daemons accept authentications only via
-the methods in such a list. The administrator of the daemons can, however,
+the methods in such a list. The administrator of the daemons can, however, 
 grant access via other authentication methods (or deny any access) by defining
-a host specific list in etc/system.rootdaemonrc or $HOME/.rootdaemonrc
-(see the example for this file under etc for more details).
-
+a host specific list in etc/daemon.access (see the example for this file 
+under etc for more details).
 
 Negotiation
 ===========
@@ -54,7 +51,6 @@ the server sends back the list of the remaining methods accepted (if any); the
 client compares the server list with its own list of remaining methods and
 makes a new attempt if the overlap of the two lists is not empty; and so on.
 
-
 Slave/Data servers authentication during a PROOF session
 ========================================================
 
@@ -62,8 +58,8 @@ During a PROOF session there is the potential problem of Master/Slave or
 Slave/Data_Server authentication. For slaves, the list of methods to be tried
 is specified in the proof.conf file as a list of methods short names. However,
 before build the corresponding entry in THostAuth (see below) TProofServ checks
-that the method can be applied, i.e. that there exist valid credentials.
-The way the latters are transmitted depends on the method and on the
+that the method can be applied, i.e. that there exist valid credentials. 
+The way the latters are transmitted depends on the method and on the 
 Client/Master authentication method.
 
  * UsrPwd: to authenticate 'usrpwd' to slaves, the master needs the relevant
@@ -76,7 +72,7 @@ Client/Master authentication method.
            in the .netrc or .rootnetrc files; the syntax is the same as for
            'clear' authentication with the keyword 'secure' at the place of
            'machine'. However, if the client/master authentication was also
-           'SRP', the master can receive the password from the client; the
+           'SRP', the master can receive the password from the client; the 
            password is sent encrypted with the internal RSA key generated for
            the session. To use this option, set 'Proofd.SendSRPPwd 1' in your
            .rootrc (default is 0).
@@ -95,7 +91,7 @@ Client/Master authentication method.
  * UidGid  to authenticate 'uidgid' to slaves, the user must have the same
            (uid,gid) on master and slaves.
 
-Negotiation is active also between master and slaves, so may be a good habit
+Negotiation is active also between master and slaves, so may be a good habit 
 to ask for 'uidgid' first to accelerate as possible the authentication process.
 
 The method actually used is listed by gProof->Print().
@@ -148,12 +144,12 @@ directives are the following:
 
 * The <method>.ReUse directives specify whether root reuse valid authentication
   once established; possible values are '0' or 'no' for OFF, '1' or 'yes' for ON.
-  When this option is active, the client generates a session RSA key pair and
-  transmits the public key to the server; the server generates a session 'token'
-  which can be used by the client for later access to the server.
-  This facility is implemented for all methods except UidGid (for which there would
+  When this option is active, the client generates a session RSA key pair and 
+  transmits the public key to the server; the server generates a session 'token' 
+  which can be used by the client for later access to the server. 
+  This facility is implemented for all methods except UidGid (for which there would 
   be no advantage); it is switched ON by default for UsrPwd, SRP, Globus and SSH,
-  since it allows to speed up repeated access to the same server.
+  since it allows to speed up repeated access to the same server.  
   For Krb5 it is implemented but switched OFF by default, since it does not improve
   on authentication time.
 
@@ -163,7 +159,7 @@ directives are the following:
   Globus.ReUse:  yes
   SSH.ReUse:     1
 
-  NB: unless 'UsrPwd.Crypt 0' (see below), for UsrPwd the password is always sent
+  NB: unless 'UsrPwd.Crypt 0' (see below), for UsrPwd the password is always sent 
       encrypted with the session RSA key, even if UsrPwd.ReUse is OFF.
 
 * Other directives
@@ -379,6 +375,7 @@ classes:
    methods are the ones listed in meths[nmet].
 
 
+
 TAuthDetails
 ============
 
@@ -388,74 +385,7 @@ during the same session. Each THostAuth contains a list of TAuthDetails objects
 pertaining to {host,user)
 
 
-TestAuth.C
-==========
-
-This macro is provided to test the authentication methods available.
-The macro is located under $ROOTSYS/tutorials.
-Before executing it, start a rootd daemon on a separate window
-
-  rootd -d 3 -f
-
-The "-d 3" option allows to get some debugging info, useful in the
-case something goes wrong.
-
-Then run
-
-  root -q -l $ROOTSYS/tutorials/TestAuth.C
-
-and answer to the requests for passwords or similar to initialize
-credentials. Upon success, you should get at the end something like this
 
 
-   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   +                                                                             +
-   +   Result of the tests:                                                      +
-   +                                                                             +
-   +   Method: 0 (UsrPwd): successful! (reuse: successful!)                      +
-   +   Method: 1    (SRP): successful! (reuse: successful!)                      +
-   +   Method: 2   (Krb5): successful! (reuse: successful!)                      +
-   +   Method: 3 (Globus): successful! (reuse: successful!)                      +
-   +   Method: 4    (SSH): successful! (reuse: successful!)                      +
-   +   Method: 5 (UidGid): successful!                                           +
-   +                                                                             +
-   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The macro assumes rootd accepting connections on port 1094; if this
-is not the case you can pass the port number as the first argument to
-the macro.
 
-The macro assumes hat you are trying to login as yourself to rootd,
-ie with the username your are logged in. You may change this passing
-a different username "newuser" as second argument. In this case you
-have to start rootd from the "newuser" account or as supersuser,
-to be avoid access problems. Also, for SSH, make sure that "newuser"
-can execute $ROOTSYS/bin/ssh2rpd.
-
-The macro assumes that the kerberos principal is in the form
-
-     <current_user>@<DEFAULT_REALM>
-
-where <DEFAULT_REALM> is searched for in the Kerberos conf file
-/etc/krb5.conf (or $KRB5_CONFIG). If the principal for the current
-user is different, you have to pass it as third argument to TestAuth.C.
-
-Finally, for Globus, if the certicate files and directories are not
-standard, you should pass the ones to be used as fourth argument, the
-syntax being the same as for $HOME/.rootauthrc .
-
-This is a summary of the arguments to TestAuth.C:
-
-   TestAuth.C(<port>,"<user>","<krb5_princ","<globus_det>")
-
-   <port>          = rootd port (default 1094)
-   <user>          = login user name for the test
-                    (default from getpwuid)
-   <krb5_princ>    = Principal to be used for Krb5 authentication
-                     in the form user@THE.REA.LM
-                     ( default: <running_user@Default_Realm with
-                                Default_realm taken from /etc/krb5.conf
-                                or the $KRB5_CONFIG file )
-   <globus_det>    = details for the globus authentication
-                     ( default: ad:certificates cd:$HOME/.globus
-                                cf:usercert.pem kf:userkey.pem )

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.13 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.11 2002/12/02 18:50:03 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -168,7 +168,6 @@ protected:
    void Clicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) { }
    void DoubleClicked(TGFrame *, Int_t /*btn*/) { }
    void DoubleClicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) { }
-   void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) { }
 
 public:
    TGListTree(TGWindow *p, UInt_t w, UInt_t h,
@@ -225,14 +224,11 @@ public:
    TGListTreeItem *FindItemByPathname(const char *path);
 
    virtual void OnMouseOver(TGListTreeItem *entry);  //*SIGNAL*
-   virtual void KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask);  //*SIGNAL*
    virtual void ReturnPressed(TGListTreeItem *entry);  //*SIGNAL*
    virtual void Clicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
-
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

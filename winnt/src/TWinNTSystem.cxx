@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.53 2003/12/09 16:50:50 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.49 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -84,59 +84,63 @@ static DWORD  start_time;
 
 int setitimer (int which, const struct itimerval *value, struct itimerval *oldvalue)
 {
-   //
+  UINT elapse;
 
-   UINT elapse;
-
-   if (which != ITIMER_REAL) {
+  if (which != ITIMER_REAL)
+    {
       return -1;
-   }
-   /* Check if we will wrap */
-   if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000)) {
+    }
+  /* Check if we will wrap */
+  if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000))
+    {
       return -1;
-   }
-   if (timer_active) {
-      ::KillTimer(NULL, timer_active);
+    }
+  if (timer_active)
+    {
+      KillTimer (NULL, timer_active);
       timer_active = 0;
-   }
-   if (oldvalue)
-      *oldvalue = itv;
-   if (value == NULL) {
+    }
+  if (oldvalue)
+    *oldvalue = itv;
+  if (value == NULL)
+    {
       return -1;
-   }
-   itv = *value;
-   elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
-   if (elapse == 0) {
-      if (itv.it_value.tv_usec)
-         elapse = 1;
-      else
-         return 0;
-   }
-   if (!(timer_active = SetTimer (NULL, 1, elapse, NULL))) {
+    }
+  itv = *value;
+  elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
+  if (elapse == 0)
+    if (itv.it_value.tv_usec)
+      elapse = 1;
+    else
+      return 0;
+  if (!(timer_active = SetTimer (NULL, 1, elapse, NULL)))
+    {
       return -1;
-   }
-   start_time = GetTickCount ();
-   return 0;
+    }
+  start_time = GetTickCount ();
+  return 0;
 }
 #endif
 
 //______________________________________________________________________________
 BOOL ConsoleSigHandler(DWORD sig)
 {
-   // WinNT signal handler.
 
-   switch (sig) {
-   case CTRL_C_EVENT:
+ // WinNT signal handler.
+
+  switch (sig) {
+  case CTRL_C_EVENT:
       printf(" CTRL-C hit !!! ROOT is terminated ! \n");
-   case CTRL_BREAK_EVENT:
+  case CTRL_BREAK_EVENT:
 //      return ((TWinNTSystem*)gSystem)->HandleConsoleEvent();
-   case CTRL_LOGOFF_EVENT:
-   case CTRL_SHUTDOWN_EVENT:
-   case CTRL_CLOSE_EVENT:
-   default:
+  case CTRL_LOGOFF_EVENT:
+  case CTRL_SHUTDOWN_EVENT:
+  case CTRL_CLOSE_EVENT:
+  default:
       gSystem->Exit(-1); return kTRUE;
-   }
+  }
 }
+
 
 //______________________________________________________________________________
 void SigHandler(ESignals sig)
@@ -158,18 +162,15 @@ class TTermInputLine :  public  TWin32HookViaThread
 //______________________________________________________________________________
 TTermInputLine::TTermInputLine()
 {
-   //
-
-   TWin32SendWaitClass CodeOp(this);
-   ExecCommandThread(&CodeOp,kFALSE);
-   CodeOp.Wait();
+  TWin32SendWaitClass CodeOp(this);
+  ExecCommandThread(&CodeOp,kFALSE);
+  CodeOp.Wait();
 }
 
 //______________________________________________________________________________
 void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
 {
-   // Dispatch a single event.
-   
+// Dispatch a single event.
    gROOT->GetApplication()->HandleTermInput();
    ((TWin32SendWaitClass *)code)->Release();
 }
@@ -182,30 +183,25 @@ ClassImp(TWinNTSystem)
 
 
 //______________________________________________________________________________
-BOOL TWinNTSystem::HandleConsoleEvent()
-{
-   //
+BOOL TWinNTSystem::HandleConsoleEvent(){
+ TSignalHandler *sh;
+ TIter next(fSignalHandler);
+ ESignals s;
 
-   TSignalHandler *sh;
-   TIter next(fSignalHandler);
-   ESignals s;
-
-   while (sh = (TSignalHandler*)next()) {
+ while (sh = (TSignalHandler*)next()) {
       s = sh->GetSignal();
       if (s == kSigInterrupt) {
-         sh->Notify();
-         Throw(SIGINT);
-         return TRUE;
+              sh->Notify();
+              Throw(SIGINT);
+             return TRUE;
       }
-   }
-   return FALSE;
+  }
+  return FALSE;
 }
 
 //______________________________________________________________________________
 TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 {
-   //
-
    fhProcess = GetCurrentProcess();
    fDirNameBuffer = 0;
    fShellName = 0;
@@ -225,7 +221,6 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 //______________________________________________________________________________
 TWinNTSystem::~TWinNTSystem()
 {
-   //
 
    SafeDelete(fWin32Timer);
 
@@ -247,40 +242,32 @@ TWinNTSystem::~TWinNTSystem()
    }
 
 #ifdef GDK_WIN32
-   if (hThread1) ::CloseHandle(hThread1);
+   if (hThread1) CloseHandle(hThread1);
 #endif
 
-   ::CloseHandle(fhTermInputEvent);
+   CloseHandle(fhTermInputEvent);
 }
 
 #ifdef GDK_WIN32
-//______________________________________________________________________________
 unsigned __stdcall HandleConsoleThread(void *pArg )
 {
    //
 
    while (1) {
       if(gROOT->GetApplication()) {
-         if (hEvent1) {
-            ::WaitForSingleObject(hEvent1, INFINITE);
-            ::CloseHandle(hEvent1);
-            hEvent1 = 0;
-         }
+         WaitForSingleObject(hEvent1, INFINITE);
          if(!gROOT->IsLineProcessing()) {
-            if(!gApplication->HandleTermInput()) break; // no terminal input
+            gApplication->HandleTermInput();
          }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
-         if (hEvent1) ::ResetEvent(hEvent1);
+        ResetEvent(hEvent1);
       } else {
          static int i = 0;
-         ::SleepEx(100,1);
+         SleepEx(100,1);
          i++;
          if (i>20) break; // TApplication object doesn't exist
       }
    }
 
-   ::CloseHandle(hThread1);
-   hThread1 = 0;
    _endthreadex( 0 );
    return 0;
 }
@@ -343,7 +330,7 @@ Bool_t TWinNTSystem::Init()
 
 #ifdef GDK_WIN32
     if (!gROOT->IsBatch()) {
-        hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+        hEvent1 = CreateEvent(NULL, TRUE, FALSE, NULL);
         hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
             &thread1ID );
     }
@@ -390,17 +377,18 @@ const char *TWinNTSystem::BaseName(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+ //______________________________________________________________________________
 void TWinNTSystem::CreateIcons()
 {
-   //  char shellname[] =  "RootShell32.dll";
-   const char *shellname =  fShellName;
+ //  char shellname[] =  "RootShell32.dll";
+  const char *shellname =  fShellName;
 
-   HINSTANCE hShellInstance  = ::LoadLibrary(shellname);
-   fhSmallIconList  = 0;
-   fhNormalIconList = 0;
+  HINSTANCE hShellInstance  = LoadLibrary(shellname);
+  fhSmallIconList  = 0;
+  fhNormalIconList = 0;
 
-   if (hShellInstance) {
+  if (hShellInstance)
+  {
       fhSmallIconList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                                          GetSystemMetrics(SM_CYSMICON),
                                          ILC_MASK,kTotalNumOfICons,1);
@@ -410,7 +398,7 @@ void TWinNTSystem::CreateIcons()
                                           ILC_MASK,kTotalNumOfICons,1);
 
       HICON hicon;
-      HICON hDummyIcon =  ::LoadIcon(NULL, IDI_APPLICATION);
+      HICON hDummyIcon =  LoadIcon(NULL, IDI_APPLICATION);
 
 //*-*  Add "ROOT" main icon
       hicon = LoadIcon(GetModuleHandle(NULL),MAKEINTRESOURCE(101));
@@ -462,18 +450,18 @@ void TWinNTSystem::CreateIcons()
 
 //______________________________________________________________________________
 void  TWinNTSystem::SetShellName(const char *name)
-{
-   //
-
-   const char *shellname = "SHELL32.DLL";
-   
-   if (name) {
-      fShellName = new char[lstrlen(name)+1];
-      strcpy((char *)fShellName,name);
-   } else {
+ {
+     const char *shellname = "SHELL32.DLL";
+     if (name)
+     {
+         fShellName = new char[lstrlen(name)+1];
+         strcpy((char *)fShellName,name);
+     }
+     else
+     {
 //*-* use the system "shell32.dll" file as the icons stock.
 //*-*  Check the type of the OS
-      OSVERSIONINFO OsVersionInfo;
+       OSVERSIONINFO OsVersionInfo;
 
 //*-*         Value                      Platform
 //*-*  ----------------------------------------------------
@@ -485,20 +473,25 @@ void  TWinNTSystem::SetShellName(const char *name)
       GetVersionEx(&OsVersionInfo);
       if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
         fShellName = strcpy(new char[lstrlen(shellname)+1],shellname);
-      } else {
-//*-*  for Windows 95 we have to create a local copy this file
-         const char *rootdir = gRootDir;
-         const char newshellname[] = "bin/RootShell32.dll";
-         fShellName = ConcatFileName(gRootDir,newshellname);
-
-         char sysdir[1024];
-         GetSystemDirectory(sysdir,1024);
-         char *sysfile = (char *) ConcatFileName(sysdir,shellname);
-         CopyFile(sysfile,fShellName,TRUE);  // TRUE means "don't overwrite if fShellName is exists
-         delete [] sysfile;
       }
-   }
-}
+      else
+      {
+//*-*  for Windows 95 we have to create a local copy this file
+        const char *rootdir = gRootDir;
+        const char newshellname[] = "bin/RootShell32.dll";
+        fShellName = ConcatFileName(gRootDir,newshellname);
+
+        char sysdir[1024];
+        GetSystemDirectory(sysdir,1024);
+        char *sysfile = (char *) ConcatFileName(sysdir,shellname);
+        CopyFile(sysfile,fShellName,TRUE);  // TRUE means "don't overwrite if fShellName is exists
+        delete [] sysfile;
+      }
+
+     }
+
+ }
+
 
 //______________________________________________________________________________
 void TWinNTSystem::SetProgname(const char *name)
@@ -521,14 +514,18 @@ void TWinNTSystem::SetProgname(const char *name)
 //*-* Check whether the name contains "extention"
 
       fullname = name;
-      while (!(dot = strchr(fullname,'.'))) {
-         idot = strlen(fullname);
-         const char *b = Form("%s.exe",name);
-         fullname = b;
+      while (!(dot = strchr(fullname,'.')))
+      {
+        idot = strlen(fullname);
+        const char *b = Form("%s.exe",name);
+        fullname = b;
       }
 
       idot = (ULong_t) (dot - fullname);
+
       progname = StrDup(BaseName(fullname));
+
+
       char *which = 0;
 
       if ( IsAbsoluteFileName(fullname) && !AccessPathName(fullname))
@@ -536,19 +533,21 @@ void TWinNTSystem::SetProgname(const char *name)
       else
           which = Which(Form("%s;%s",WorkingDirectory(),Getenv("PATH")), progname);
 
-      if (which) {
-         const char *dirname;
-         char driveletter = DriveName(which);
-         const char *d = DirName(which);
-         if (driveletter)
-            dirname = Form("%c:%s",driveletter,d);
-         else
-            dirname = Form("%s",d);
+      if (which)
+      {
+        const char *dirname;
+        char driveletter = DriveName(which);
+        const char *d = DirName(which);
+        if (driveletter)
+          dirname = Form("%c:%s",driveletter,d);
+        else
+          dirname = Form("%s",d);
 
-         gProgPath = StrDup(dirname);
-      } else {
-         Warning("SetProgname","Wrong Program path");
-         gProgPath = "c:/users/root/ms/bin";
+        gProgPath = StrDup(dirname);
+      }
+      else {
+          Warning("SetProgname","Wrong Program path");
+          gProgPath = "c:/users/root/ms/bin";
       }
 
 //*-*  Cut the extension for progname off
@@ -760,8 +759,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    if (gROOT->IsBatch()) {
       if (!gApplication->HandleTermInput()) {
           // wait ExitLoop()
-          ::WaitForSingleObject(fhTermInputEvent,INFINITE);
-          ::ResetEvent(fhTermInputEvent);
+          WaitForSingleObject(fhTermInputEvent,INFINITE);
+          ResetEvent(fhTermInputEvent);
       }
       return;
    }
@@ -770,11 +769,11 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fWriteready = fWritemask;
       if(gROOT->IsLineProcessing()) {
          if (!pendingOnly) {
-            ::SleepEx(1, TRUE);
+            SleepEx(1, TRUE);
             return;
          }
       }
-      if (hEvent1) ::SetEvent(hEvent1);
+      SetEvent(hEvent1);
       if (gXDisplay) {
          if(gXDisplay->Notify()) {
             if (fReadready.IsSet(gXDisplay->GetFd())) {
@@ -817,25 +816,28 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fWriteready.Zero();
 
       // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
-         if (CheckSignals(kTRUE)) {
-             if (!pendingOnly) return;
-         }
-      }
+      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+         if (CheckSignals(kTRUE))
+             if (!pendingOnly) {
+                 return;
+             }
       fSigcnt = 0;
       fSignals.Zero();
 
       // check synchronous timers
-      if (fTimers && fTimers->GetSize() > 0) {
+      if (fTimers && fTimers->GetSize() > 0)
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking file descriptor monitoring
             Long_t to = NextTimeOut(kTRUE);
             if (to > kItimerResolution || to == -1)
                return;
          }
-      }
-      if (pendingOnly) return;
+
+         if (pendingOnly) {
+             return;
+         }
    }
+
 }
 #endif
 
@@ -888,7 +890,8 @@ Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
          }
       }
    }
-   if (sigdone != -1) return kTRUE;
+   if (sigdone != -1)
+      return kTRUE;
 
    return kFALSE;
 }

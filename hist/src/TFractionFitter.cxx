@@ -1,6 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.4 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.3 2002/05/23 06:50:56 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
-// with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -137,15 +136,11 @@ TFractionFitter::TFractionFitter() :
   fractionFitter = 0;
   fIntegralMCs   = 0;
   fFractions     = 0;
-
-  fNpfits        = 0;
-  fNDF           = 0;
-  fChisquare     = 0;
 }
 
 //______________________________________________________________________________
 TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs) :
-  fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
+  fFitDone(kFALSE), fPlot(0) {
   // TFractionFitter constructor. Does a complete initialisation (including
   // consistency checks, default fit range as the whole histogram but without
   // under- and overflows, and declaration of the fit parameters). Note that
@@ -170,11 +165,6 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs) :
   Int_t par;
   for (par = 0; par < fNpar; ++par) {
      fMCs.Add(MCs->At(par));
-     // Histogram containing template prediction
-     TString s = Form("Prediction for MC sample %i",par);
-     TH1* pred = (TH1*) ((TH1*)MCs->At(par))->Clone(s);
-     pred->SetTitle(s);
-     fAji.Add(pred);
   }
   fIntegralMCs = new Double_t[fNpar];
   fFractions = new Double_t[fNpar];
@@ -410,11 +400,9 @@ void TFractionFitter::CheckConsistency() {
   Int_t x,y,z,par;
   GetRanges(minX, maxX, minY, maxY, minZ, maxZ);
   fIntegralData = 0;
-  fNpfits = 0;
   for (z = minZ; z <= maxZ; ++z) {
      for (y = minY; y <= maxY; ++y) {
         for (x = minX; x <= maxX; ++x) {
-	   fNpfits++;
 	   fIntegralData += fData->GetBinContent(x, y, z);
         }
      }
@@ -424,8 +412,6 @@ void TFractionFitter::CheckConsistency() {
      return;
   }
   TClass* cl = fData->Class();
-
-  fNDF = fNpfits - fNpar;
 
   if (fNpar < 2) {
      Error("CheckConsistency","Need at least two MC histograms");
@@ -478,9 +464,6 @@ Int_t TFractionFitter::Fit() {
   // fit
   Int_t status = fractionFitter->ExecuteCommand("MINIMIZE",0,0);
   if (status == 0) fFitDone = kTRUE;
-
-  // determine goodness of fit
-  ComputeChisquareLambda();
 
   return status;
 }
@@ -636,10 +619,6 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
 	  result -= binPrediction;
 	  if (binContent > 0 && binPrediction > 0)
 	    result += binContent*TMath::Log(binPrediction);
-
-	  if (flag == 3) {
-	     ((TH1*)fAji.At(mc))->SetBinContent(bin, binPrediction);
-	  }
 	}
 
 	if (flag == 3) {
@@ -768,108 +747,4 @@ void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int
      return;
   }
   fitter->ComputeFCN(npar, gin, f, par, flag);
-}
-
-
-//______________________________________________________________________________
-Double_t TFractionFitter::GetChisquare() const
-{
-// Return the likelihood ratio Chi-squared (chi2) for the fit.
-// The value is computed when the fit is executed successfully.
-// Chi2 calculation is based on the "likelihood ratio" lambda,
-// lambda = L(y;n) / L(m;n),
-// where L(y;n) is the likelihood of the fit result <y> describing the data <n>
-// and L(m;n) is the likelihood of an unknown "true" underlying distribution
-// <m> describing the data <n>. Since <m> is unknown, the data distribution is
-// used instead,
-// lambda = L(y;n) / L(n;n).
-// Note that this ratio is 1 if the fit is perfect. The chi2 value is then
-// computed according to
-// chi2 = -2*ln(lambda).
-// This parameter can be shown to follow a Chi-square distribution. See for
-// example S. Baker and R. Cousins, "Clarification of the use of chi-square
-// and likelihood functions in fits to histograms", Nucl. Instr. Meth. A221, 
-// pp. 437-442 (1984)
-
-   return fChisquare;
-}
-
-//______________________________________________________________________________
- Int_t TFractionFitter::GetNDF() const
-{
-// return the number of degrees of freedom in the fit
-// the fNDF parameter has been previously computed during a fit.
-// The number of degrees of freedom corresponds to the number of points
-// used in the fit minus the number of templates.
-
-   if (fNDF == 0) return fNpfits-fNpar;
-   return fNDF;
-}
-
-//______________________________________________________________________________
- Double_t TFractionFitter::GetProb() const
-{
-// return the fit probability
-   
-   Int_t ndf = fNpfits - fNpar;
-   if (ndf <= 0) return 0;
-   return TMath::Prob(fChisquare,ndf);
-}
-
-//______________________________________________________________________________
- void TFractionFitter::ComputeChisquareLambda()
-{
-// Method used internally to compute the likelihood ratio chi2
-// See the function GetChisquare() for details
-
-   if ( !fFitDone ) {
-      Error("ComputeChisquareLambda","Fit not yet (successfully) performed");
-      fChisquare = 0;
-      return;
-   }
-
-   // fPlot must be initialized and filled. Leave this to the GetPlot() method.
-   if (! fPlot) 
-     GetPlot();
-
-   Int_t minX, maxX, minY, maxY, minZ, maxZ;
-   GetRanges(minX, maxX, minY, maxY, minZ, maxZ);
-   
-   Double_t logLyn = 0; // likelihood of prediction
-   Double_t logLmn = 0; // likelihood of data ("true" distribution)
-   for(Int_t x = minX; x <= maxX; x++) {
-      for(Int_t y = minY; y <= maxY; y++) {
-	 for(Int_t z = minZ; z <= maxZ; z++) {
-	    Double_t di = fData->GetBinContent(x, y, z);
-	    Double_t fi = fPlot->GetBinContent(x, y, z);
-	    if(fi != 0) logLyn += di * TMath::Log(fi) - fi;
-	    if(di != 0) logLmn += di * TMath::Log(di) - di;
-	    for(Int_t j = 0; j < fNpar; j++) {
-	       Double_t aji = ((TH1*)fMCs.At(j))->GetBinContent(x, y, z);
-	       Double_t Aji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
-	       if(Aji != 0) logLyn += aji * TMath::Log(Aji) - aji;
-	       if(aji != 0) logLmn += aji * TMath::Log(aji) - aji;
-	    }
-	 }
-      }
-   }
-
-   fChisquare = -2*logLyn + 2*logLmn;
-
-   return;
-}
-
-//______________________________________________________________________________
-TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
-{
-// Return the adjusted MC template (Aji) for template (parm).
-// Note that the (Aji) times fractions only sum to the total prediction
-// of the fit if all weights are 1.
-
-   CheckParNo(parm);
-   if ( !fFitDone ) {
-      Error("GetMCPrediction","Fit not yet performed");
-      return 0;
-   }
-   return (TH1*) fAji.At(parm);
 }

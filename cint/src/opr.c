@@ -7,7 +7,7 @@
  * Description:
  *  Unary and binary operator handling
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1410,10 +1410,6 @@ int *ptagnum;
   char *pparen;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1926
-    re_try_after_std:
-#endif
-
   /* search for pattern "::" */
 #ifndef G__OLDIMPLEMENTATION671
   pc = G__find_first_scope_operator(name);
@@ -1458,11 +1454,7 @@ int *ptagnum;
     strcpy(temp,name+5);
     strcpy(name,temp);
     G__hash(name,(*phash),i)
-#ifndef G__OLDIMPLEMENTATION1926
-    goto re_try_after_std;
-#else
     return(G__GLOBALSCOPE);
-#endif
   }
 #endif
   

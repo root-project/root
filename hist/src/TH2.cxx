@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.46 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.44 2003/07/02 21:18:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -112,14 +112,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = (nbinsx+2)*(nbinsy+2);
-}
-
-//______________________________________________________________________________
-TH2::TH2(const TH2 &h) : TH1()
-{
-   // Copy constructor.
-   // The list of functions is not copied. (Use Clone if needed)
-   Copy((TObject&)h);
 }
 
 //______________________________________________________________________________

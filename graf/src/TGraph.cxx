@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.116 2003/11/22 21:48:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.111 2003/09/27 17:48:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -507,9 +507,9 @@ void TGraph::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   //if (opt.Contains("same"))
-   //   Error("Draw", "option \"same\" not supported,\n"
-   //         "see TGraph::PaintGraph() for options");
+   if (opt.Contains("same"))
+      Error("Draw", "option \"same\" not supported,\n"
+            "see TGraph::PaintGraph() for options");
 
    // in case of option *, set marker style to 3 (star) and replace
    // * option by option P.
@@ -1092,7 +1092,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
 
 //*-*- Set error criterion for chisquare
-   arglist[0] = TVirtualFitter::GetErrorDef();
+   arglist[0] = 1;
    if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {
@@ -1847,7 +1847,6 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
   }
    TString opt = chopt;
    opt.ToUpper();
-   opt.ReplaceAll("SAME","");
 
    if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
    if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
@@ -3888,14 +3887,6 @@ void TGraph::Streamer(TBuffer &b)
       if (R__v > 2) {
          TGraph::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (fHistogram) fHistogram->SetDirectory(0);
-         TIter next(fFunctions);
-         TObject *obj;
-         while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) {
-               TF1 *f1 = (TF1*)obj;
-               f1->SetParent(this);
-            }
-         }
          return;
       }
       //====process old versions before automatic schema evolution
@@ -4104,4 +4095,3 @@ L170:
    if (TMath::Abs(Y)-ytest <= 0) goto L150;
    goto L160;
 }
-

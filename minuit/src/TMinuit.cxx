@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.36 2003/09/19 08:08:14 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.35 2003/09/18 10:16:21 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -7555,6 +7555,7 @@ L90:
 //______________________________________________________________________________
 void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat)
 {
+
 //*-*-*-*-*Returns concerning the current status of the minimization*-*-*-*-*
 //*-*      =========================================================
 //*-*       User-called

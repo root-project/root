@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.23 2003/11/22 14:51:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.21 2003/09/16 13:40:29 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -77,10 +77,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fBuffer      = 0;
    fBranch      = branch;
    fHeaderOnly  = kFALSE;
-   if (fNevBufSize) {
-      fEntryOffset = new Int_t[fNevBufSize];
-      for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
-   }
+   if (fNevBufSize) fEntryOffset = new Int_t[fNevBufSize];
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
@@ -450,7 +447,7 @@ Int_t TBasket::WriteBuffer()
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
    if (cxlevel > 0) {
-      //if (cxlevel == 2) cxlevel--; RB: I cannot remember why we had this!
+      if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
       Int_t buflen = fKeylen + fObjlen + 28; //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];

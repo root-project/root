@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.41 2003/11/07 16:27:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.37 2003/08/20 07:00:47 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -69,10 +69,9 @@ protected:
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
-   static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
-         
+      
 public:
     // TF1 status bits
     enum {
@@ -109,7 +108,6 @@ public:
    virtual Int_t    GetNDF() const;
    virtual Int_t    GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
-   virtual Int_t    GetNumberFreeParameters() const;
    virtual Int_t    GetNumberFitPoints() const {return fNpfits;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
@@ -134,8 +132,6 @@ public:
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
-   //virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
-   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
@@ -161,7 +157,6 @@ public:
    virtual void     Update();
 
    static  TF1     *GetCurrent();
-   static  void     AbsValue(Bool_t reject=kTRUE);
    static  void     RejectPoint(Bool_t reject=kTRUE);
    static  Bool_t   RejectedPoint();
    static  void     SetCurrent(TF1 *f1);
@@ -171,12 +166,7 @@ public:
    virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
    virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return Moment(1,a,b,params,epsilon);}
    virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return CentralMoment(2,a,b,params,epsilon);}
-
-   //some useful static utility functions to compute sampling points for Integral
-   //static  void     CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps=3.0e-11);
-   //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
-   static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps=3.0e-11);
-        
+      
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 

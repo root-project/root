@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.9 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.7 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -38,7 +38,6 @@
 #include "TGPicture.h"
 #include "TMath.h"
 #include "TSystem.h"
-#include "Riostream.h"
 
 
 const TGFont *TGTreeLBEntry::fgDefaultFont = 0;
@@ -340,31 +339,4 @@ void TGFSComboBox::Update(const char *path)
          }
    }
    if (sel > 0) Select(sel);
-}
-
-//______________________________________________________________________________
-void TGFSComboBox::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a file system combo box as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
-
-   out << endl << "   // file system combo box" << endl;
-   out << "   TGFSComboBox *";
-   out << GetName() << " = new TGFSComboBox(" << fParent->GetName()
-                                          << "," << fWidgetId;
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
-
 }

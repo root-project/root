@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.10 2003/11/10 14:07:21 rdm Exp $
+// @(#)root/g3d:$Name: v3-03-09 $:$Id: TPadOpenGLView.cxx,v 1.8 2002/06/13 13:43:27 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -158,7 +158,7 @@ void TPadOpenGLView::MapOpenGL()
 
    gVirtualGL->PolygonGLMode(kFRONT,kFILL);
 
-#if defined(Inventor) || defined(R__QT)
+#ifdef Inventor
    // "Default light" with Inventor is "native" Inventor
    gVirtualGL->SetRootLight(kFALSE);
 #else

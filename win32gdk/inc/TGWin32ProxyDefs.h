@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.6 2003/08/23 14:51:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.5 2003/08/12 09:53:47 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -33,12 +33,12 @@
 // root [3] .x macro.C    //  print results
 //
 
-static int gDebugProxy = 0; // if kTRUE - use debug & profile interface
+int gDebugProxy = 0; // if kTRUE - use debug & profile interface
 
-static enum { kDebugProfile = -123, kDebugTrace = -1234 };
+enum { kDebugProfile = -123, kDebugTrace = -1234 };
 
-static unsigned int total = 0;
-static double total_time = 0;
+unsigned int total = 0;
+double total_time = 0;
 
 #define DEBUG_PROFILE_PROXY_START(method)\
    static int i = 0;\
@@ -74,90 +74,25 @@ static double total_time = 0;
       }\
    }\
 
-
-//______________________________________________________________________________
-#define RETURN_PROXY_OBJECT(klass)\
-_NAME2_(T,klass)* _NAME3_(TGWin32,klass,Proxy)::ProxyObject()\
-{\
-   static TList *gListOfProxies = new TList();\
-   static _NAME3_(TGWin32,klass,Proxy) *proxy = 0;\
-   ULong_t id = ::GetCurrentThreadId();\
-   if (proxy && (proxy->GetId()==id)) return proxy;\
-   if (id==fgMainThreadId) return _NAME3_(TGWin32,klass,Proxy)::RealObject();\
-   TIter next(gListOfProxies);\
-   while ((proxy=(_NAME3_(TGWin32,klass,Proxy)*)next())) {\
-      if (proxy->GetId()==id) {\
-         return proxy;\
-      }\
-   }\
-   proxy = new _NAME3_(TGWin32,klass,Proxy)();\
-   gListOfProxies->Add(proxy);\
-   return proxy;\
-}
-
 // ***_LOCK macros for setter methods which do nothing only set data members
 //______________________________________________________________________________
 #define VOID_METHOD_ARG0_LOCK(klass,method)\
-void _NAME3_(TGWin32,klass,Proxy)::method()\
+void _NAME2_(klass,Proxy)::method()\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    TGWin32::Lock();\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method();\
+   klass::Instance()->method();\
    TGWin32::Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
 
 //______________________________________________________________________________
 #define VOID_METHOD_ARG1_LOCK(klass,method,type1,par1)\
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1)\
+void _NAME2_(klass,Proxy)::method(type1 par1)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    TGWin32::Lock();\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(par1);\
-   TGWin32::Unlock();\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG2_LOCK(klass,method,type1,par1,type2,par2)\
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2)\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   TGWin32::Lock();\
-    _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(par1,par2);\
-   TGWin32::Unlock();\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG3_LOCK(klass,method,type1,par1,type2,par2,type3,par3)\
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3)\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   TGWin32::Lock();\
-    _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(par1,par2,par3);\
-   TGWin32::Unlock();\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG4_LOCK(klass,method,type1,par1,type2,par2,type3,par3,type4,par4)\
-void  _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4)\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   TGWin32::Lock();\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(par1,par2,par3,par4);\
-   TGWin32::Unlock();\
-   DEBUG_PROFILE_PROXY_STOP(method)\
-}
-
-//______________________________________________________________________________
-#define VOID_METHOD_ARG5_LOCK(klass,method,type1,par1,type2,par2,type3,par3,type4,par4,type5,par5)\
-void  _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5)\
-{\
-   DEBUG_PROFILE_PROXY_START(method)\
-   TGWin32::Lock();\
-    _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(par1,par2,par3,par4,par5);\
+   klass::Instance()->method(par1);\
    TGWin32::Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
@@ -166,10 +101,10 @@ void  _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type
 #define VOID_METHOD_ARG0(klass,method,sync)\
 void _NAME3_(p2,klass,method)(void *in)\
 {\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method();\
+   klass::Instance()->method();\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method()\
+void _NAME2_(klass,Proxy)::method()\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    fCallBack = &_NAME3_(p2,klass,method);\
@@ -185,10 +120,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1);\
+   klass::Instance()->method(p->par1);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1)\
+void _NAME2_(klass,Proxy)::method(type1 par1)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -211,10 +146,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2);\
+   klass::Instance()->method(p->par1,p->par2);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -238,10 +173,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3);\
+   klass::Instance()->method(p->par1,p->par2,p->par3);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -266,10 +201,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -295,10 +230,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -325,10 +260,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -356,10 +291,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -388,10 +323,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -421,10 +356,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9);\
 }\
 \
-void _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9)\
+void _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -455,10 +390,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9; type10 par10;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -490,10 +425,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9; type10 par10; type11 par11;\
    };\
    tmp *p = (tmp*)in;\
-   _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10,p->par11);\
+   klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10,p->par11);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10,type11 par11)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10,type11 par11)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    struct tmp {\
@@ -520,27 +455,27 @@ type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4
 
 //______________________________________________________________________________
 #define RETURN_METHOD_ARG0_CONST(klass,type,method)\
-type _NAME3_(TGWin32,klass,Proxy)::method() const\
+type _NAME2_(klass,Proxy)::method() const\
 {\
    type ret;\
    TGWin32::Lock();\
-   ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method();\
+   ret = klass::Instance()->method();\
    TGWin32::Unlock();\
    return ret;\
 }
 
 //______________________________________________________________________________
 #define RETURN_METHOD_ARG0(klass,type,method)\
-void _NAME3_(p2,klass,method)(void *in)\
+void _NAME4_(p2,klass,method,type)(void *in)\
 {\
    struct tmp {\
       type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method();\
+   p->ret = klass::Instance()->method();\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method()\
+type _NAME2_(klass,Proxy)::method()\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -548,7 +483,7 @@ type _NAME3_(TGWin32,klass,Proxy)::method()\
       type ret;\
    };\
    fParam = new tmp;\
-   fCallBack = &_NAME3_(p2,klass,method);\
+   fCallBack = &_NAME4_(p2,klass,method,type);\
    Bool_t batch = ForwardCallBack(1);\
    ret  = ((tmp*)fParam)->ret;\
    if (!batch) delete fParam;\
@@ -564,10 +499,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1);\
+   p->ret = klass::Instance()->method(p->par1);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1)\
+type _NAME2_(klass,Proxy)::method(type1 par1)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -593,10 +528,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2);\
+   p->ret = klass::Instance()->method(p->par1,p->par2);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -623,10 +558,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -654,10 +589,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -686,10 +621,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -719,10 +654,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -753,10 +688,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -788,10 +723,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -824,10 +759,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -861,10 +796,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9; type10 par10; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\
@@ -899,10 +834,10 @@ void _NAME4_(p2,klass,method,par1)(void *in)\
       type1 par1; type2 par2; type3 par3; type4 par4; type5 par5; type6 par6; type7 par7; type8 par8; type9 par9; type10 par10; type11 par11; type ret;\
    };\
    tmp *p = (tmp*)in;\
-   p->ret = _NAME3_(TGWin32,klass,Proxy)::RealObject()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10,p->par11);\
+   p->ret = klass::Instance()->method(p->par1,p->par2,p->par3,p->par4,p->par5,p->par6,p->par7,p->par8,p->par9,p->par10,p->par11);\
 }\
 \
-type _NAME3_(TGWin32,klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10,type11 par11)\
+type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,type5 par5,type6 par6,type7 par7,type8 par8,type9 par9,type10 par10,type11 par11)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
    type ret;\

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.9 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.7 2001/12/19 07:15:19 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ class TSignalHandler;
 class TApplication : public TObject {
 
 private:
-   Int_t              fArgc;           //Number of com   mand line arguments
+   Int_t              fArgc;           //Number of command line arguments
    char             **fArgv;           //Command line arguments
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
    Bool_t             fReturnFromRun;  //When true return from Run()
@@ -58,7 +58,6 @@ protected:
    virtual void Help(const char *line);
    virtual void InitializeColors();
    virtual void LoadGraphicsLibs();
-   virtual void MakeBatch();
    void         SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
@@ -93,7 +92,7 @@ public:
 
    int             Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
-   char           *Argv(int index) const { return fArgv ? fArgv[index] : 0; }
+   char           *Argv(int index) const { return fArgv[index]; }
    Bool_t          NoLogOpt() const { return fNoLog; }
    Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }

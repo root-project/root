@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.25 2003/12/12 18:21:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.16 2003/07/09 12:34:35 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -37,7 +37,6 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TList.h"
-#include "Riostream.h"
 
 
 const TGGC   *TGPopupMenu::fgDefaultGC = 0;
@@ -274,13 +273,13 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
 
    Int_t        dummy;
    Window_t     wtarget;
-   TGMenuTitle *target=0;
+   TGMenuTitle *target;
 
    fStick = kFALSE; // use some threshold!
 
    gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
                                    dummy, dummy, wtarget);
-   if (wtarget) target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
+   target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
    if (target != 0 && target != fCurrent) {
       // deactivate all others
@@ -436,7 +435,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fHifontStruct  = GetHilightFontStruct();
    fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
 
-   // We need to change the default context to actually use the
+   // We need to change the default context to actually use the 
    // Menu Fonts.  [Are we actually changing the global settings?]
    GCValues_t    gcval;
    gcval.fMask = kGCFont;
@@ -1242,12 +1241,10 @@ void TGPopupMenu::RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast)
 
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id)
-         ptr->fStatus |= kMenuRadioMask | kMenuRadioEntryMask;
+         ptr->fStatus |= kMenuRadioMask;
       else
-         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast) {
+         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast)
             ptr->fStatus &= ~kMenuRadioMask;
-            ptr->fStatus |=  kMenuRadioEntryMask;
-         }
 }
 
 //______________________________________________________________________________
@@ -1497,190 +1494,4 @@ const TGGC &TGMenuTitle::GetDefaultSelectedGC()
    if (!fgDefaultSelectedGC)
       fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
    return *fgDefaultSelectedGC;
-}
-
-//______________________________________________________________________________
-void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a popup menu widget as a C++ statement(s) on output stream out.
-
-   char quote = '"';
-
-   out << "   TGPopupMenu *";
-   out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
-
-   Bool_t hasradio = kFALSE;
-   Int_t r_first, r_last, r_active;
-   r_active = r_first = r_last = -1;
-
-   TGMenuEntry *mentry;
-   TIter next(GetListOfEntries());
-
-   while ((mentry = (TGMenuEntry *) next())) {
-      const char *text;
-      Int_t i, lentext, hotpos;
-      char *outext;
-
-      switch (mentry->GetType()) {
-         case kMenuEntry:
-            text = mentry->GetName();
-            lentext = mentry->fLabel->GetLength();
-            hotpos = mentry->fLabel->GetHotPos();
-            outext = new char[lentext+2];
-            i=0;
-            while (lentext) {
-               if (i == hotpos-1) {
-                  outext[i] = '&';
-                  i++;
-               }
-               outext[i] = *text;
-               i++; text++; lentext--;
-            }
-            outext[i]=0;
-
-            out << "   " << GetName() << "->AddEntry(" << quote
-                << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
-                << quote << "," << mentry->GetEntryId();
-            if (mentry->fUserData) {
-               out << "," << mentry->fUserData;
-            }
-            if (mentry->fPic) {
-               out << ",gClient->GetPicture(" << quote
-                   << gSystem->ExpandPathName(gSystem->UnixPathName(mentry->fPic->GetName()))
-                   << quote << ")";
-            }
-            out << ");" << endl;
-            delete [] outext;
-            break;
-         case kMenuPopup:
-            out << endl;
-            out << "   // cascaded menu " << quote << mentry->GetName() << quote <<endl;
-            mentry->fPopup->SavePrimitive(out, option);
-            text = mentry->GetName();
-            lentext = mentry->fLabel->GetLength();
-            hotpos = mentry->fLabel->GetHotPos();
-            outext = new char[lentext+2];
-            i=0;
-            while (lentext) {
-               if (i == hotpos-1) {
-                  outext[i] = '&';
-                  i++;
-               }
-               outext[i] = *text;
-               i++; text++; lentext--;
-            }
-            outext[i]=0;
-
-            out << "   " << GetName() << "->AddPopup(" << quote
-                << outext << quote << "," << mentry->fPopup->GetName()
-                << ");" << endl;
-            delete [] outext;
-            break;
-         case kMenuLabel:
-            out << "   " << GetName() << "->AddLabel(" << quote
-                << mentry->GetName() << quote;
-            if (mentry->fPic) {
-               out << ",gClient->GetPicture(" << quote
-                   << mentry->fPic->GetName()
-                   << quote << ")";
-            }
-            out << ");" << endl;
-            break;
-         case kMenuSeparator:
-            out << "   " << GetName() << "->AddSeparator();" << endl;
-            break;
-      }
-
-      if (!(mentry->GetStatus() & kMenuEnableMask)) {
-          out << "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
-              << ");" << endl;
-      }
-      if (mentry->GetStatus() & kMenuHideMask) {
-          out << "   " << GetName() << "->HideEntry(" << mentry->GetEntryId()
-              << ");" << endl;
-      }
-      if (mentry->GetStatus() & kMenuCheckedMask) {
-          out << "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId()
-              << ");" << endl;
-      }
-      if (mentry->GetStatus() & kMenuDefaultMask) {
-          out << "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
-              << ");" << endl;
-      }
-      if (mentry->GetStatus() & kMenuRadioEntryMask) {
-         switch (hasradio) {
-            case kFALSE:
-               r_first = mentry->GetEntryId();
-               hasradio = kTRUE;
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-               break;
-            case kTRUE:
-               r_last = mentry->GetEntryId();
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-            break;
-         }
-      } else if (hasradio) {
-         out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
-             << "," << r_last << ");" << endl;
-         hasradio = kFALSE;
-         r_active = r_first = r_last = -1;
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TGMenuTitle::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a title menu widget as a C++ statement(s) on output stream out.
-
-   char quote = '"';
-
-   out << endl;
-   out << "   // " << quote << fLabel->GetString() << quote <<" menu" << endl;
-
-   fMenu->SavePrimitive(out, option);
-
-   const char *text = fLabel->GetString();
-   Int_t lentext = fLabel->GetLength();
-   Int_t hotpos = fLabel->GetHotPos();
-   char *outext = new char[lentext+2];
-   Int_t i=0;
-   while (lentext) {
-      if (i == hotpos-1) {
-          outext[i] = '&';
-          i++;
-      }
-      outext[i] = *text;
-      i++; text++; lentext--;
-   }
-   outext[i]=0;
-   out << "   " << fParent->GetName() << "->AddPopup(" << quote << outext
-       << quote << "," << fMenu->GetName();
-
-   delete [] outext;
-}
-
-//______________________________________________________________________________
-void TGMenuBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a menu bar widget as a C++ statement(s) on output stream out.
-
-   out << endl;
-   out << "   // menu bar" << endl;
-
-   out << "   TGMenuBar *";
-   out << GetName() << " = new TGMenuBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
-
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *)next())) {
-	     el->fFrame->SavePrimitive(out, option);
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
 }

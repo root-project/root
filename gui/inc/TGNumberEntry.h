@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.2 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.1 2001/09/18 10:55:44 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -256,8 +256,6 @@ public:
    TGButton *GetButtonDown() const {
       // Get the down button
       return fButtonDown; }
-
-   virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats
 };

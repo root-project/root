@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.14 2003/03/19 13:07:59 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.13 2003/03/05 23:33:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -44,8 +44,6 @@
 #pragma link C++ class TTreeRow-;
 #pragma link C++ class TDSet+;
 #pragma link C++ class TDSetElement+;
-#pragma link C++ class TDSetElementPfn+;
-#pragma link C++ class TDSetElementMsn+;
 
 #pragma link C++ function operator+(const TCut&, const char*);
 #pragma link C++ function operator+(const char*, const TCut&);

@@ -133,7 +133,7 @@ void TBenchmark::Start(const char *name)
 //*-*   A summary of all benchmarks can be seen via TBenchmark::Summary.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   if (!fNames) {
+   if (!fNbench) {
       fNames    = new TString[fNmax];
       fRealTime = new Float_t[fNmax];
       fCpuTime  = new Float_t[fNmax];

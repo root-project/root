@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.19 2003/06/12 05:34:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.18 2003/06/10 20:51:46 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -40,20 +40,8 @@
 #include "TTimer.h"
 #include "TProofServ.h"
 
+ClassImp(TPacketizer2)
 
-//
-// The following three utility classes manage the state of the
-// work to be performed and the slaves involved in the process.
-// A list of TFileNode(s) describes the hosts with files, each
-// has a list of TFileStat(s) keeping the state for each TDSet
-// element (file).
-//
-// The list of TSlaveStat(s) keep track of the work (being) done
-// by each slave
-//
-
-
-//------------------------------------------------------------------------------
 
 class TFileNode;
 
@@ -67,18 +55,10 @@ private:
    Long64_t       fNextEntry;    // cursor in the range, -1 when done
 
 public:
-   TFileStat(TFileNode *node, TDSetElement *elem);
-
+   TFileStat(TFileNode *node, TDSetElement *elem)
+      : fNode(node), fElement(elem), fNextEntry(elem->GetFirst()) { }
 };
 
-
-TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
-   : fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
-{
-}
-
-
-//------------------------------------------------------------------------------
 
 class TFileNode : public TObject {
 
@@ -93,7 +73,12 @@ private:
 
 public:
 
-   TFileNode(const char *name);
+   TFileNode(const char *name)
+      : fNodeName(name), fFiles(new TList), fFileIter(0), fActive(new TList), fActiveNext(0)
+   {
+      fFiles->SetOwner();
+      fActive->SetOwner(kFALSE);
+   }
    ~TFileNode() { delete fFiles; delete fFileIter; delete fActive; }
 
    const char *GetName() const { return fNodeName.Data(); }
@@ -105,17 +90,6 @@ public:
    }
 };
 
-
-TFileNode::TFileNode(const char *name)
-   : fNodeName(name), fFiles(new TList), fFileIter(0), fActive(new TList),
-     fActiveNext(0)
-{
-   fFiles->SetOwner();
-   fActive->SetOwner(kFALSE);
-}
-
-
-//------------------------------------------------------------------------------
 
 class TSlaveStat : public TObject {
 
@@ -129,7 +103,8 @@ private:
    Long64_t       fProcessed;    // number of entries processed
 
 public:
-   TSlaveStat(TSlave *slave);
+   TSlaveStat(TSlave *slave)
+      : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0) { }
 
    TFileNode  *GetFileNode() const { return fFileNode; }
    const char *GetName() const { return fSlave->GetName(); }
@@ -137,17 +112,6 @@ public:
 
    void        SetFileNode(TFileNode *node) { fFileNode = node; }
 };
-
-
-TSlaveStat::TSlaveStat(TSlave *slave)
-   : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0)
-{
-}
-
-
-//------------------------------------------------------------------------------
-
-ClassImp(TPacketizer2)
 
 
 //______________________________________________________________________________

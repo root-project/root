@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.4 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.3 2003/09/07 18:25:46 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -31,8 +31,21 @@
 ClassImp(THostAuth)
 
 //______________________________________________________________________________
+THostAuth::THostAuth(): TObject()
+{
+   // Default constructor
+
+   fHost        = "";
+   fUser        = "";
+   fNumMethods  = 0;
+   fMethods     = 0;
+   fDetails     = 0;
+   fEstablished = 0;
+}
+
+//______________________________________________________________________________
 THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
-                     Int_t *authmeth, char **details) : TObject()
+                     Int_t *authmeth, char **details)
 {
    // Create hostauth object.
 
@@ -60,23 +73,14 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
    }
 
    fNumMethods = nmeth;
-   if (fNumMethods > 0) {
-      if (authmeth != 0) {
-         fMethods    = new Int_t[fNumMethods];
-         for (i = 0; i < nmeth; i++) {
-            fMethods[i] = authmeth[i];
-         }
-      } else {
-         fNumMethods = 0;
-      }
+   fMethods    = new Int_t[nmeth];
+   if (authmeth != 0) {
+      for (i = 0; i < nmeth; i++) { fMethods[i] = authmeth[i]; }
    }
-
-   if (fNumMethods > 0) {
-      fDetails = new TString[nmeth];
-      if (details) {
-         for (i = 0; i < nmeth; i++) {
-            if (details[i]) fDetails[i] = details[i];
-         }
+   fDetails = new TString[nmeth];
+   if (details) {
+      for (i = 0; i < nmeth; i++) {
+         if (details[i]) fDetails[i] = details[i];
       }
    }
    fEstablished = new TList;
@@ -84,7 +88,7 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
 
 //______________________________________________________________________________
 THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
-                     const char *details) : TObject()
+                     const char *details)
 {
    // Create hostauth object with one method only.
 
@@ -212,28 +216,12 @@ const char *THostAuth::GetDetails(Int_t level)
    int i;
    for (i = 0; i < fNumMethods; i++) {
       if (fMethods[i] == level) {
-         if (gDebug > 3)
-            Info("GetDetails"," %d: returning fDetails[%d]: %s",
-                 level,i,fDetails[i].Data());
+         if (gDebug > 3) Info("GetDetails"," %d: returning fDetails[%d]: %s", level,i,fDetails[i].Data());
          return fDetails[i];
       }
    }
    static const char *empty = " ";
    return empty;
-}
-
-//______________________________________________________________________________
-Bool_t THostAuth::HasMethod(Int_t level)
-{
-   // Return kTRUE if method 'level' is in the list
-
-   int i;
-   for (i = 0; i < fNumMethods; i++) {
-      if (fMethods[i] == level) {
-         return kTRUE;
-      }
-   }
-   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -270,8 +258,7 @@ void THostAuth::Print(const char *proc)
 {
    // Print object content.
 
-   Info("Print",
-   "%s +------------------------------------------------------------------+",proc);
+   Info("Print","%s +------------------------------------------------------------------+",proc);
    Info("Print","%s + Host:%s - User:%s - # of available methods:%d",
          proc, fHost.Data(), fUser.Data(), fNumMethods);
    int i = 0;
@@ -279,17 +266,15 @@ void THostAuth::Print(const char *proc)
       Info("Print","%s + Method: %d (%s)  Details:%s", proc, fMethods[i],
            TAuthenticate::GetAuthMethod(fMethods[i]), fDetails[i].Data());
    }
-   Info("Print",
-   "%s +------------------------------------------------------------------+",proc);
+   Info("Print","%s +------------------------------------------------------------------+",proc);
 }
 
 //______________________________________________________________________________
 void THostAuth::PrintEstablished()
 {
-   // Print info about established authentication vis-a-vis of this Host.
+   // Print info about estalished authentication vis-a-vis of this Host.
 
-   Info("PrintEstablished",
-   "+------------------------------------------------------------------------------+");
+   Info("PrintEstablished","+------------------------------------------------------------------------------+");
    Info("PrintEstablished","+ Host:%s - Number of Established Authentications: %d",
          fHost.Data(), fEstablished->GetSize());
 
@@ -300,8 +285,7 @@ void THostAuth::PrintEstablished()
       while ((ai = (TAuthDetails*) next()))
          ai->Print("e");
    }
-   Info("PrintEstablished",
-   "+------------------------------------------------------------------------------+");
+   Info("PrintEstablished","+------------------------------------------------------------------------------+");
 }
 
 //______________________________________________________________________________

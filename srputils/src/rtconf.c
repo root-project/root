@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.3 2003/08/06 21:31:24 rdm Exp $ */
+/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.2 2001/10/04 16:53:43 rdm Exp $ */
 /*
  * Copyright (c) 1997-1999  The Stanford SRP Authentication Project
  * All Rights Reserved.
@@ -47,7 +47,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
 
 #include "t_pwd.h"
 
@@ -58,6 +57,8 @@
 
 extern int optind;
 extern char *optarg;
+
+extern int errno;
 
 struct pre_struct {
    char *pre_mod;

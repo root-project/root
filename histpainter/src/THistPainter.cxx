@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.156 2003/11/24 10:26:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.151 2003/09/18 10:46:55 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -528,13 +528,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Off  = 0;
 
 //    special 2-D options
-   Hoption.List     = 0;
-   Hoption.Zscale   = 0;
-   Hoption.FrontBox = 0;
-   Hoption.BackBox  = 0;
-   Hoption.System   = kCARTESIAN;
+   Hoption.List        = 0;
+   Hoption.Zscale      = 0;
+   Hoption.FrontBox    = 1;
+   Hoption.BackBox     = 1;
+   Hoption.System      = kCARTESIAN;
    
-   Hoption.HighRes  = 0;
+   Hoption.HighRes     = 0;
 
    //check for graphical cuts
    MakeCuts(chopt);
@@ -561,8 +561,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"LEGO");
    if (l) {
-      Hoption.FrontBox = 1;
-      Hoption.BackBox  = 1;
       Hoption.Scat = 0;
       Hoption.Lego = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
@@ -572,8 +570,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
    l = strstr(chopt,"SURF");
    if (l) {
-      Hoption.FrontBox = 1;
-      Hoption.BackBox  = 1;
       Hoption.Scat = 0;
       Hoption.Surf = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Surf = 11; l[4] = ' '; }
@@ -584,9 +580,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
-
-   l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 1; strncpy(l,"  ",2); Hoption.Scat = 0;}
-   l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 1;  strncpy(l,"  ",2); Hoption.Scat = 0;}
 
    l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
 
@@ -1343,8 +1336,8 @@ void THistPainter::Paint(Option_t *option)
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
        }
-	  if (Hoption.Same ==1) Hoption.Same = 2;
-	  goto paintstat;
+       delete [] fXbuf; delete [] fYbuf;
+      return;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
@@ -1384,8 +1377,7 @@ void THistPainter::Paint(Option_t *option)
    
    PaintTitle();    //    Draw histogram title
      //    Draw box with histogram statistics and/or fit parameters
-paintstat:
-if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -1396,8 +1388,7 @@ if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::Set
    }
    fH->SetMinimum(minsav);
    gCurrentHist = oldhist;
-   delete [] fXbuf; fXbuf = 0;
-   delete [] fYbuf; fYbuf = 0;
+   delete [] fXbuf; delete [] fYbuf;
 
 }
 
@@ -1629,77 +1620,6 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 }
 
-//______________________________________________________________________________
-void THistPainter::PaintAxis3D(Option_t *option)
-{
-   // Paint an empty 3D axis system and define the TView accroding to
-   // the histogram axis values. The method should be access via the Paint
-   // method. When accessed that way the follwoing option are available;
-   // h->Paint("BB");  // Defines the TView and paint the back box.
-   // h->Paint("bb");  // Defines the TView only.
-   // h->Paint("abb"); // Defines the TView and paint the axis.
-   // h->Paint("fb");  // Paint the front box.
-
-   TString opt = option;
-   Bool_t backbox  = opt.Contains("BB");
-
-   fXbuf[2] = Hparam.zmin;
-   fYbuf[2] = Hparam.zmax;
-   fXbuf[0] = Hparam.xmin;
-   fYbuf[0] = Hparam.xmax;
-   fXbuf[1] = Hparam.ymin;
-   fYbuf[1] = Hparam.ymax;
-
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
-
-   fLego->InitMoveScreen(-1.1,1.1);
-
-   TView *view = gPad->GetView();
-   if (!view) {
-      Error("PaintAxis3D", "no TView in current pad");
-      return;
-   }
-
-   Double_t thedeg =  90 - gPad->GetTheta();
-   Double_t phideg = -90 - gPad->GetPhi();
-   Double_t psideg = view->GetPsi();
-   Int_t irep;
-
-   view->SetView(phideg, thedeg, psideg, irep);
-
-   // Set color/style for back box
-   fLego->SetFillStyle(gPad->GetFrameFillStyle());
-   fLego->SetFillColor(gPad->GetFrameFillColor());
-   fLego->TAttFill::Modify();
-
-   Int_t backcolor = gPad->GetFrameFillColor();
-   if (Hoption.System != kCARTESIAN) backcolor = 0;
-   view->PadRange(backcolor);
-
-   fLego->SetFillStyle(fH->GetFillStyle());
-   fLego->SetFillColor(fH->GetFillColor());
-   fLego->TAttFill::Modify();
-
-   if (backbox) {
-      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
-      fLego->BackBox(90);
-   }
-
-   if (Hoption.FrontBox) {
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
-      fLego->FrontBox(90);
-   }
-
-   if (Hoption.Axis) {
-      TGaxis *axis = new TGaxis();
-      PaintLegoAxis(axis, 90);
-      Hoption.Axis = 0;
-      delete axis;
-   }
-
-   delete fLego; fLego = 0;
-}
 
 //______________________________________________________________________________
 void THistPainter::PaintBar(Option_t *)
@@ -2745,8 +2665,7 @@ void THistPainter::PaintFrame()
 
    RecalculateRange();
 
-   if (Hoption.Lego     || Hoption.Surf    || 
-       Hoption.FrontBox || Hoption.BackBox || Hoption.Contour == 14) {
+   if (Hoption.Lego || Hoption.Surf || Hoption.Contour == 14) {
       TObject *frame = gPad->FindObject("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
@@ -4698,10 +4617,7 @@ void THistPainter::PaintTable(Option_t *option)
       delete fFunctions->FindObject("palette");      
    }
    
-   if ((Hoption.FrontBox || Hoption.BackBox) && 
-        !Hoption.Lego    && !Hoption.Surf) PaintAxis3D(option);
-
-   if (fH->GetEntries() != 0 && !Hoption.Axis) {
+   if (fH->GetEntries() != 0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
       if (Hoption.Box)     PaintBoxes(option);
@@ -4709,12 +4625,10 @@ void THistPainter::PaintTable(Option_t *option)
       if (Hoption.Contour) PaintContour(option);
       if (Hoption.Text)    PaintText(option);
    }
+   if (Hoption.Lego)    PaintLego(option);
+   if (Hoption.Surf && !Hoption.Contour)    PaintSurface(option);
 
-   if (Hoption.Lego) PaintLego(option);
-   if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
-   
-   if (!Hoption.Lego    && !Hoption.Surf &&
-       !Hoption.BackBox && !Hoption.FrontBox) PaintAxis(kFALSE); // Draw the axes
+   if (!Hoption.Lego && !Hoption.Surf) PaintAxis(kFALSE);     //    Draw the axes
 
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory
@@ -4886,7 +4800,6 @@ void THistPainter::PaintTitle()
       TLatex l;
       l.SetTextSize(ht);
       l.SetTitle(fH->GetTitle());
-      ht = 1.2*l.GetYsize()/(gPad->GetY2() - gPad->GetY1());
       Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
       wt = TMath::Min(0.7, 0.02+wndc);
    }
@@ -5167,8 +5080,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    // This function returns the best format to print the error value (e)
    // knowing the parameter value (v) and the format (f) used to print it. 
 
-   static char ef[20];
-   char tf[20], tv[64];
+   char tf[20], ef[20], tv[64];
 
    // print v with the format f in tv.
    sprintf(tf,"%s%s","%",f);
@@ -5207,5 +5119,6 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
       sprintf(ef,"%s.%df","%",sv.Length()-id-1);
    }
 
-   return ef;
+   TString ff = ef;
+   return ff.Data();
 }

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -207,31 +207,31 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
   //
    switch (type) {
     case kFloat:
-         out << dec  << setw(width) << setprecision(width-3) << *(float *)buf;
+         out << setw(width) << setprecision(width-3) << *(float *)buf;
          break;
     case kInt:
-         out << dec  <<  setw(width) << *(int *)buf;
+         out <<  setw(width) << *(int *)buf;
          break;
     case kLong:
-         out << dec  << setw(width) << *(long *)buf;
+         out << setw(width) << *(long *)buf;
          break;
     case kShort:
-         out << dec  << setw(width) << *(short *)buf;
+         out << setw(width) << *(short *)buf;
          break;
     case kDouble:
-         out << dec  << setw(width) << setprecision(width-3) << *(double *)buf;
+         out << setw(width) << setprecision(width-3) << *(double *)buf;
          break;
     case kUInt:
-         out << dec  << setw(width) << *(unsigned int *)buf;
+         out << setw(width) << *(unsigned int *)buf;
          break;
     case kULong:
-         out << dec  << setw(width) << *(unsigned long *)buf;
+         out << setw(width) << *(unsigned long *)buf;
          break;
     case kUShort:
-         out  << setw(width) << "0x" << hex << *(unsigned short *)buf;
+         out << setw(width) << hex << *(unsigned short *)buf;
          break;
     case kUChar:
-         out  << setw(width) << "0x" << hex << int(*(unsigned char *)buf);
+         out << setw(width) << hex << *(unsigned char *)buf;
          break;
     case kChar:
          out << setw(width) << *(char *)buf;
@@ -1549,7 +1549,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
        if (lenbuf>0)
          iOut += sprintf(strbuf+iOut,"[%d]",(*dsc).fIndexArray[indx]);
        else
-         cout <<  "[" << dec << (*dsc).fIndexArray[indx]<<"]";
+         cout <<  "[" << (*dsc).fIndexArray[indx]<<"]";
      }
      // print comment if any
      TDataSet *nxc = nextComment();
@@ -1681,7 +1681,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
          else              cout << "\t" << setw(strlen((*member).fColumnName)) << " ";
 	   
          if (dim) {
-	   for (Int_t i=0;i<dim;i++) cout << "["<<dec<<arrayLayout[i]<<"]";
+	   for (Int_t i=0;i<dim;i++) cout << "["<<arrayLayout[i]<<"]";
            ArrayLayout(arrayLayout,(*member).fIndexArray,dim);
          }
          cout << "\t";
@@ -1881,7 +1881,7 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
         out << " " << rowId << "." << (const char*)memberName;
 
         if (dim) {
-          for (i=0;i<dim;i++) {out << "["<<dec<<arrayLayout[i]<<"]";}
+          for (i=0;i<dim;i++) {out << "["<<arrayLayout[i]<<"]";}
           ArrayLayout(arrayLayout,arraySize,dim);}
 
 //                      Generate "="

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.4 2001/09/20 17:07:23 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.3 2001/03/16 14:25:56 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -29,17 +29,14 @@
 #include "TString.h"
 #endif
 
-class TFileHandler;
-
 
 class TRint : public TApplication {
 
 private:
-   Int_t         fNcmd;               // command history number
-   TString       fDefaultPrompt;      // default prompt: "root [%d] "
-   char          fPrompt[64];         // interpreter prompt
-   Bool_t        fInterrupt;          // if true macro execution will be stopped
-   TFileHandler *fInputHandler;       // terminal input handler
+   Int_t       fNcmd;               //Command history number
+   TString     fDefaultPrompt;      //Default prompt: "root [%d] "
+   char        fPrompt[64];         //Interpreter prompt
+   Bool_t      fInterrupt;          //If true macro execution will be stopped
 
 public:
    TRint(const char *appClassName, int *argc, char **argv,

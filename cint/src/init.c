@@ -7,7 +7,7 @@
  * Description:
  *  Entry functions
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -992,16 +992,7 @@ char *argv[] ;
       G__add_macro(optarg);
       break;
     case 'E': /* Dump core at error */
-#ifndef G__OLDIMPLEMENTATION1947
-      if(1==G__catchexception) G__catchexception = 0;
-      else if(0==G__catchexception) G__catchexception=2;
-      else ++G__catchexception;
-#endif
-#ifndef G__OLDIMPLEMENTATION1946
-      ++G__coredump;
-#else
       G__coredump = 1;
-#endif
       break;
     case 'X': /* readline dumpfile execution */
       G__dumpreadline[0]=fopen(optarg,"r");
@@ -1159,9 +1150,6 @@ char *argv[] ;
       G__more(G__sout,"  -D [macro] : define macro symbol for #ifdef\n");
       G__more(G__sout,"  -e : Not ignore extern declarations\n");
       G__more(G__sout,"  -E : Dump core at error\n");
-#ifndef G__OLDIMPLEMENTATION1946
-      G__more(G__sout,"  -E -E : Exit process at error and uncaught exception\n");
-#endif
       G__more(G__sout,"  -f [file] : set break file\n");
       G__more(G__sout,"  -F [assignement] : set global variable\n");
       G__more(G__sout,"  -G [tracedmp] : dump exec trace into file\n");
@@ -1241,18 +1229,6 @@ char *argv[] ;
     signal(SIGBUS,G__buserror);
 #endif
   }
-#ifndef G__OLDIMPLEMENTATION1946
-  else if(G__coredump>=2) {
-    signal(SIGFPE,G__errorexit);
-    signal(SIGSEGV,G__errorexit);
-#ifdef SIGEMT
-    signal(SIGEMT,G__errorexit);
-#endif
-#ifdef SIGBUS
-    signal(SIGBUS,G__errorexit);
-#endif
-  }
-#endif
 #endif /* G__ROOT */
 
 
@@ -2140,9 +2116,6 @@ void G__platformMacro()
 #ifdef _WINDOWS_     /* Windows */
   sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
 #endif
-#ifdef __APPLE__     /* Apple MacOS X */
-  sprintf(temp,"G__APPLE=%ld",(long)__APPLE__); G__add_macro(temp);
-#endif
 #ifdef __VMS         /* DEC/Compac VMS */
   sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
 #endif
@@ -2434,7 +2407,7 @@ FILE *fp;
 {
   fprintf(fp,"\n");
   fprintf(fp,"cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
-  fprintf(fp,"   Copyright(c) : 1995~2003 Masaharu Goto (gotom@hanno.jp)\n");
+  fprintf(fp,"   Copyright(c) : 1995~2003 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   fprintf(fp,"   revision     : %s by M.Goto\n\n",G__cint_version());
 
 #ifdef G__DEBUG

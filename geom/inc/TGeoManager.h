@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.40 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.37 2003/09/23 10:33:15 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -108,10 +108,6 @@ private :
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
 
    Int_t                *fNodeIdArray;      //! array of node id's
-   Int_t                 fIntSize;         //! int buffer size
-   Int_t                 fDblSize;          //! dbl buffer size
-   Int_t                *fIntBuffer;        //! transient int buffer
-   Double_t             *fDblBuffer;        //! transient dbl buffer
 
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE);
@@ -122,7 +118,6 @@ private :
    Bool_t                 IsLoopingVolumes() const     {return fLoopVolumes;}
    void                   Init();
    void                   SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
-   void                   SafetyOverlaps();
    void                   Voxelize(Option_t *option = 0);
 
 public:
@@ -281,7 +276,6 @@ public:
    TGeoVolume            *MakeTubs(const char *name, const TGeoMedium *medium,
                                       Double_t rmin, Double_t rmax, Double_t dz,
                                       Double_t phi1, Double_t phi2);
-   TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
    
@@ -290,10 +284,9 @@ public:
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
-   Double_t              *FindNormalFast();
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
-   Double_t               Safety(Bool_t inside=kFALSE);
+   Double_t               Safety();
    TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
    void                   SetCurrentTrack(Int_t i) {fCurrentTrack = (TVirtualGeoTrack*)fTracks->At(i);}
@@ -340,8 +333,6 @@ public:
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
-   Int_t                 *GetIntBuffer(Int_t length);
-   Double_t              *GetDblBuffer(Int_t length);
    
    
    //--- I/O

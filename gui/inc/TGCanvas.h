@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.19 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.17 2003/07/14 12:22:48 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -126,7 +126,6 @@ public:
 
    virtual const TGFrame *GetNextSelected(void **current);
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
@@ -139,7 +138,6 @@ public:
    virtual void InvertSelection();              //*SIGNAL*
    virtual void ReturnPressed(TGFrame*);        //*SIGNAL*
    virtual void SpacePressed(TGFrame*);         //*SIGNAL*
-   virtual void KeyPressed(TGFrame*, UInt_t keysym, UInt_t mask); //*SIGNAL*
    virtual void OnMouseOver(TGFrame*);          //*SIGNAL*
    virtual void CurrentChanged(Int_t x,Int_t y);//*SIGNAL*
    virtual void CurrentChanged(TGFrame* f);     //*SIGNAL*
@@ -221,7 +219,6 @@ public:
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGCanvas,0)  // A canvas with two scrollbars and a viewport
 };

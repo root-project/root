@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.26 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.24 2003/04/19 16:59:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,7 +30,7 @@ class TMatrix;
 class TMatrixD;
 
 class TH2 : public TH1 {
-   
+
 protected:
    Stat_t     fScalefactor;     //Scale factor
    Stat_t     fTsumwy;          //Total Sum of weight*Y
@@ -52,7 +52,6 @@ public:
                                          ,Int_t nbinsy,const Double_t *ybins);
    TH2(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                          ,Int_t nbinsy,const Float_t  *ybins);
-   TH2(const TH2&);
    virtual ~TH2();
    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew) const;

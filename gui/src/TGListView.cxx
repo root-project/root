@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.22 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.19 2003/07/14 12:22:48 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -47,7 +47,6 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TGMimeTypes.h"
-#include "Riostream.h"
 
 const TGFont *TGLVEntry::fgDefaultFont = 0;
 TGGC         *TGLVEntry::fgDefaultGC = 0;
@@ -96,12 +95,10 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
       Int_t i;
       for (i = 0; fSubnames[i] != 0; ++i)
          ;
-      fCtw = new int[i+1];
-      fCtw[i] = 0;
-      for (i = 0; fSubnames[i] != 0; ++i) {
+      fCtw = new int[i];
+      for (i = 0; fSubnames[i] != 0; ++i)
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
-      }
    } else {
       fCtw = 0;
    }
@@ -118,7 +115,7 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 }
 
 //______________________________________________________________________________
-TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
+TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name, 
                      const TString& cname, TGString **subnames,
                      UInt_t options, Pixel_t back) :
    TGFrame(p, 10, 10, options, back)
@@ -163,12 +160,10 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
       Int_t i;
       for (i = 0; fSubnames[i] != 0; ++i)
          ;
-      fCtw = new int[i+1];
-      fCtw[i] = 0;
-      for (i = 0; fSubnames[i] != 0; ++i) {
+      fCtw = new int[i];
+      for (i = 0; fSubnames[i] != 0; ++i)
          fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                         fSubnames[i]->GetLength());
-      }
    } else {
       fCtw = 0;
    }
@@ -244,11 +239,10 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    fSubnames[ncol] = 0;
 
    fCtw = new int[ncol];
-   fCtw[ncol-1] = 0; 
-
+  
    for (int i = 0; i<ncol; i++) {
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                     fSubnames[i]->GetLength());
+                                     fSubnames[i]->GetLength());   
    }
 }
 
@@ -352,8 +346,6 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
                lx = (fCpos[i] + fCpos[i+1] - fCtw[i]) >> 1;
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
-
-            if (x+lx<0) break; // quick fix for mess in name
             fSubnames[i]->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
          }
       }
@@ -554,9 +546,9 @@ void TGLVContainer::SetColumns(Int_t *cpos, Int_t *jmode)
 
    TGFrameElement *el;
    TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
+   while ((el = (TGFrameElement *) next()))
       ((TGLVEntry *) el->fFrame)->SetColumns(fCpos, fJmode);
-   }
+
    Layout();
 }
 
@@ -697,7 +689,6 @@ void TGListView::SetHeaders(Int_t ncolumns)
                                               fNormGC, fFontStruct);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
-   fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fJmode[fNColumns-1]   = kTextCenterX;
    fColumns[fNColumns-1] = 0;
 }
@@ -808,10 +799,8 @@ void TGListView::Layout()
       h = fColHeader[0]->GetDefaultHeight()-4;
       for (i = 0; i < fNColumns-1; ++i) {
          w = fColHeader[i]->GetDefaultWidth()+20;
-
          if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
          if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
-
          fColHeader[i]->MoveResize(xl, fBorderWidth, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
@@ -828,8 +817,6 @@ void TGListView::Layout()
         fColHeader[i]->UnmapWindow();
    }
 
-   TGLayoutManager *lm = container->GetLayoutManager();
-   lm->SetDefaultWidth(xl);
    TGCanvas::Layout();
 
    if (fViewMode == kLVDetails) {
@@ -949,88 +936,4 @@ const TGGC &TGListView::GetDefaultGC()
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
    }
    return *fgDefaultGC;
-}
-
-//______________________________________________________________________________
-void TGListView::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a list view widget as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl << "   // list view" << endl;
-   out <<"   TGListView *";
-   out << GetName() << " = new TGListView(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   GetContainer()->SavePrimitive(out, option);
-
-   out << endl;
-   out << "   " << GetName() << "->SetContainer(" << GetContainer()->GetName()
-                << ");" << endl;
-   out << "   " << GetName() << "->SetViewMode(";
-   switch (fViewMode) {
-      case kLVLargeIcons:
-         out << "kLVLargeIcons";
-         break;
-      case kLVSmallIcons:
-         out << "kLVSmallIcons";
-         break;
-      case kLVList:
-         out << "kLVList";
-         break;
-      case kLVDetails:
-         out << "kLVDetails";
-         break;
-   }
-   out << ");" << endl;
-
-   out << "   " << GetContainer()->GetName() << "->Resize();" << endl;
-
-   if (fHScrollbar && fHScrollbar->IsMapped()) {
-   out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition()
-       << ");" << endl;
-   }
-
-   if (fVScrollbar && fVScrollbar->IsMapped()) {
-   out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition()
-       << ");" << endl;
-   }
-}
-
-//______________________________________________________________________________
-void TGLVContainer::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a list view container as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl << "   // list view container" << endl;
-   out << "   TGLVContainer *";
-
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGLVContainer(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGLVContainer(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
 }

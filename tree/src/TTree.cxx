@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.169 2003/12/16 09:01:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.162 2003/09/15 08:10:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -599,7 +599,7 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
 }
 
 //______________________________________________________________________________
-void TTree::AutoSave(Option_t *option)
+void TTree::AutoSave()
 {
 //*-*-*-*-*-*-*-*-*-*-*AutoSave tree header every fAutoSave bytes*-*-*-*-*-*
 //*-*                  ==========================================
@@ -625,75 +625,22 @@ void TTree::AutoSave(Option_t *option)
 //   in UPDATE mode.
 //   The Tree will be recovered at the status corresponding to the last AutoSave.
 //
-//   if option contains "SaveSelf", gDirectory->SaveSelf() is called.
-//   This allows another process to analyze the Tree while the Tree is being filled.
-// 
-//   By default the previous header is deleted after having written the new header.
-//   if option contains "Overwrite", the previous Tree header is deleted
-//   before written the new header. This option is slightly faster, but
-//   the default option is safer in case of a problem (disk quota exceeded)
-//   when writing the new header.
-//
-//   How to write a Tree in one process and view it from another process
-//   ===================================================================
-//   The following two scripts illustrate how to do this.
-//   The script treew.C is executed by process1, treer.C by process2
-//
-//   ----- script treew.C
-//   void treew() {
-//     TFile f("test.root","recreate");
-//     TNtuple *ntuple = new TNtuple("ntuple","Demo","px:py:pz:random:i");
-//     Float_t px, py, pz;
-//     for ( Int_t i=0; i<10000000; i++) {
-//        gRandom->Rannor(px,py);
-//        pz = px*px + py*py;
-//        Float_t random = gRandom->Rndm(1);
-//        ntuple->Fill(px,py,pz,random,i);
-//        if (i%1000 == 1) ntuple->AutoSave("SaveSelf");
-//     }
-//   }
-//
-//   ----- script treer.C
-//   void treer() {
-//      TFile f("test.root");
-//      TTree *ntuple = (TTree*)f.Get("ntuple");
-//      TCanvas c1;
-//      Int_t first = 0;
-//      while(1) {
-//         if (first == 0) ntuple->Draw("px>>hpx", "","",10000000,first);
-//         else            ntuple->Draw("px>>+hpx","","",10000000,first);
-//         first = (Int_t)ntuple->GetEntries();
-//         c1.Update();
-//         gSystem->Sleep(1000); //sleep 1 second
-//         ntuple->Refresh();
-//      }
-//   }
-      
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return;
    if (gDebug > 0) {
       printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
    }
-   TString opt = option;
-   opt.ToLower();
    fSavedBytes = fTotBytes;
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
-   if (opt.Contains("overwrite")) {
-      Write("",TObject::kOverwrite);
-   } else {
-      Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
-      if (wOK && key) {
-         key->Delete();
-         delete key;
-      }
+   Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
+   if (wOK && key) {
+      key->Delete();
+      delete key;
    }
    // save StreamerInfo
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
-   
-   if (opt.Contains("saveself")) fDirectory->SaveSelf();
-   
    dirsav->cd();
 }
 
@@ -3337,39 +3284,6 @@ TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *op
 }
 
 //______________________________________________________________________________
-void TTree::Refresh()
-{
-//  Refresh contents of this Tree and his branches from the current
-//  Tree status on its file
-//  One can call this function in case the Tree on its file is being
-//  updated by another process
-      
-   if (!fDirectory) return;
-   fDirectory->ReadKeys();
-   fDirectory->GetList()->Remove(this);
-   TTree *tree = (TTree*)fDirectory->Get(GetName());
-   if (!tree) return;
-   //copy info from tree header into this Tree
-   fEntries      = tree->fEntries;
-   fTotBytes     = tree->fTotBytes;
-   fZipBytes     = tree->fZipBytes;
-   fSavedBytes   = tree->fSavedBytes;
-   fTotalBuffers = tree->fTotalBuffers;
-      
-   //loop on all branches and update them
-   Int_t nleaves = fLeaves.GetEntriesFast();
-   for (Int_t i=0;i<nleaves;i++)  {
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-      TBranch *branch = (TBranch*)leaf->GetBranch();
-      branch->Refresh(tree->GetBranch(branch->GetName()));
-   }
-   
-   fDirectory->GetList()->Remove(tree);
-   fDirectory->GetList()->Add(this);
-   delete tree;
-}
-
-//______________________________________________________________________________
 void TTree::RemoveFriend(TTree *oldFriend)
 {
 //*-*-*-*-*-*-*-*Remove a friend from the list of friend *-*-*
@@ -3428,11 +3342,9 @@ void TTree::ResetBranchAddresses()
 //______________________________________________________________________________
 Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
-   // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
-   // then print only first 8 columns. If varexp = "*" print all columns.
-   // Otherwise a columns selection can be made using "var1:var2:var3".
-   // see TTreePlayer::Scan for more information
-   
+//*-*-*-*-*-*-*-*-*Loop on Tree & print entries following selection*-*-*-*-*-*
+//*-*              ===============================================
+
    GetPlayer();
    if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
    else         return -1;
@@ -3713,21 +3625,6 @@ void TTree::SetDirectory(TDirectory *dir)
 }
 
 //_______________________________________________________________________
-void TTree::SetEntries(Double_t n)
-{
-  // Set number of entries in the Tree.
-  // This function should be called only when one filles each branch
-  // independently via TBranch::Fill without calling TTree::Fill
-  // Calling TTree::SetEntries make sense only if the number of existing entries
-  // is null. A Warning is issued otherwise
-   
-   if (fEntries != 0) {
-      Warning("SetEntries","Trees has already %g entries",fEntries);
-   }
-   fEntries = n;
-}
-
-//_______________________________________________________________________
 void TTree::SetEstimate(Int_t n)
 {
 //*-*-*-*-*-*-*-*-*Set number of entries to estimate variable limits*-*-*-*
@@ -3820,37 +3717,33 @@ void TTree::SetWeight(Double_t w, Option_t *)
 }
 
 //_______________________________________________________________________
-void TTree::Show(Int_t entry, Int_t lenmax)
+void TTree::Show(Int_t entry)
 {
 //*-*-*-*-*-*Print values of all active leaves for entry*-*-*-*-*-*-*-*
 //*-*        ===========================================
 // if entry==-1, print current entry (default)
-// if a leaf is an array, a maximum of lenmax elements is printed.
-// 
+
    if (entry != -1) GetEntry(entry);
    printf("======> EVENT:%d\n",fReadEntry);
    TObjArray *leaves  = GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
-   Int_t ltype;
    for (Int_t i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
       TBranch *branch = leaf->GetBranch();
       if (branch->TestBit(kDoNotProcess)) continue;
       Int_t len = leaf->GetLen();
       if (len <= 0) continue;
-      len = TMath::Min(len,lenmax);
-      if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(lenmax); continue;}
+      len = TMath::Min(len,10);
+      if (leaf->IsA() == TLeafElement::Class()) {leaf->PrintValue(len); continue;}
       if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
-      ltype = 10;
-      if (leaf->IsA() == TLeafF::Class()) ltype = 5;
-      if (leaf->IsA() == TLeafD::Class()) ltype = 5;
-      if (leaf->IsA() == TLeafC::Class()) ltype = 5;
+      if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
+      if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
+      if (leaf->IsA() == TLeafC::Class()) len = 1;
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);
-         if (l == len-1) {printf("\n"); continue;}
-         printf(", ");
-         if (l%ltype==0) printf("\n                  ");
+         if (l == len-1) printf("\n");
+         else            printf(", ");
       }
    }
 }
@@ -3956,7 +3849,7 @@ Int_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *s
 //   settings.  Otherwise the fit will effectively just maximize the
 //   area.
 //
-//   It is mandatory to have a normalization variable
+//   In practice it is convenient to have a normalization variable
 //   which is fixed for the fit.  e.g.
 //
 //     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);

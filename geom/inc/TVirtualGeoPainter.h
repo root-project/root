@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.22 2003/08/29 09:55:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.21 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -85,7 +85,6 @@ public:
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
    virtual Int_t      GetBombMode() const = 0; 
    virtual const char *GetDrawPath() const = 0; 
-   virtual TGeoVolume *GetDrawnVolume() const = 0;
    virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.3 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.2 2000/09/04 17:51:31 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -60,7 +60,6 @@ public:
    void   Reset(const TVirtualPad *parent);
    void   SetText(const char *new_text);
    void   SetPosition(Int_t x, Int_t y);
-   const TGString *GetText() const;
 
    ClassDef(TGToolTip,0)  //One line help text
 };

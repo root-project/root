@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.11 2003/02/12 17:44:02 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.10 2002/08/02 20:56:10 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -112,7 +112,7 @@ public:
   inline Double_t DeltaPhi(const TVector3 &) const;
   inline Double_t DeltaR(const TVector3 &) const;
   inline Double_t DrEtaPhi(const TVector3 &) const;
-  inline TVector2 EtaPhiVector() const;
+  inline TVector2 EtaPhiVector();
   inline void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
 
   inline TVector3 & operator = (const TVector3 &);
@@ -173,7 +173,7 @@ public:
   TVector3 & Transform(const TRotation &);
   // Transformation with a Rotation matrix.
 
-  inline TVector2 XYvector() const;
+  inline TVector2 XYvector();
 
 
 
@@ -415,11 +415,11 @@ inline void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi)
 }
 
 
-inline TVector2 TVector3::EtaPhiVector() const {
+inline TVector2 TVector3::EtaPhiVector() {
   return TVector2 (Eta(),Phi());
 }
 
-inline TVector2 TVector3::XYvector() const {
+inline TVector2 TVector3::XYvector() {
   return TVector2(fX,fY);
 }
 

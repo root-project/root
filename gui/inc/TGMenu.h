@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.19 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.17 2003/07/09 00:53:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -41,13 +41,12 @@
 //--- Menu entry status mask
 
 enum EMenuEntryState {
-   kMenuActiveMask     = BIT(0),
-   kMenuEnableMask     = BIT(1),
-   kMenuDefaultMask    = BIT(2),
-   kMenuCheckedMask    = BIT(3),
-   kMenuRadioMask      = BIT(4),
-   kMenuHideMask       = BIT(5),
-   kMenuRadioEntryMask = BIT(6)
+   kMenuActiveMask  = BIT(0),
+   kMenuEnableMask  = BIT(1),
+   kMenuDefaultMask = BIT(2),
+   kMenuCheckedMask = BIT(3),
+   kMenuRadioMask   = BIT(4),
+   kMenuHideMask    = BIT(5)
 };
 
 //--- Menu entry types
@@ -201,7 +200,6 @@ public:
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
    virtual void Activate(Bool_t) { }
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };
@@ -252,7 +250,6 @@ public:
    TGPopupMenu *GetMenu() const { return fMenu; }
    const char  *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual void DoSendMessage();
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };
@@ -296,7 +293,6 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGMenuBar,0)  // Menu bar class
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.29 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.25 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -177,7 +177,7 @@ void TGeoTube::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    saf[0] = TMath::Abs(fDz-TMath::Abs(point[2])); 
-   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):TGeoShape::Big();
+   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
    saf[2] = TMath::Abs(fRmax-r);
    Int_t i = TMath::LocMin(3,saf);
    if (i==0) {
@@ -236,16 +236,11 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
    // compute distance to surface 
    // Do Z
-   Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) {
+   Double_t sz = kBig;
+   if (dir[2]>1E-20) 
       sz = (dz-point[2])/dir[2];
-      if (sz<=0.) return 0.; 
-   } else {
-      if (dir[2]<0) {
-         sz = -(dz+point[2])/dir[2];
-         if (sz<=0.) return 0.;
-      }
-   }      
+   else
+      if (dir[2]<-1E-20) sz = -(dz+point[2])/dir[2];
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<1E-10) return sz;
@@ -266,12 +261,9 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
       sr=-b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
-//   printf("Error : TGeoTube::DistToOutS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
-//          rmin,rmax,dz, point[0], point[1], point[2]);
-//   Double_t *p = gGeoManager->GetCurrentPoint();
-//   Double_t *dr = gGeoManager->GetCurrentDirection();
-//   printf("Location: (%f,%f,%f,%f,%f,%f) %s\n", p[0],p[1],p[2],dr[0],dr[1],dr[2],gGeoManager->GetPath());
-   return 0.;      
+   printf("Error : TGeoTube::DistToOutS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
+          rmin,rmax,dz, point[0], point[1], point[2]);
+   return kBig;      
 }
 
 //_____________________________________________________________________________
@@ -280,22 +272,17 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 // compute distance from inside point to surface of the tube
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
    // Do Z
-   Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) { 
+   Double_t sz = kBig;
+   if (dir[2]>1E-20) 
       sz = (fDz-point[2])/dir[2];
-      if (sz<=0.) return 0.;      
-   } else {
-      if (dir[2]<0) {
-         sz = -(fDz+point[2])/dir[2];
-         if (sz<=0.) return 0.; 
-      }
-   }           
+   else
+      if (dir[2]<-1E-20) sz = -(fDz+point[2])/dir[2];
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<1E-10) return sz;
@@ -316,7 +303,8 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       sr=-b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
-   return 0.;      
+   Error("DistToOutS","cannot exit tube !");
+   return kBig;      
 }
 
 //_____________________________________________________________________________
@@ -327,8 +315,8 @@ Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Doub
 
    // check Z planes
    Double_t xi,yi,zi;
-   Double_t s = TGeoShape::Big();
-   if (TMath::Abs(point[2])>=dz) {
+   Double_t s = kBig;
+   if (TMath::Abs(point[2])>dz) {
       if ((point[2]*dir[2])<0) {
          s = (TMath::Abs(point[2])-dz)/TMath::Abs(dir[2]);
          xi = point[0]+s*dir[0];
@@ -340,11 +328,11 @@ Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Doub
    
    // check outer cyl. surface
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
-   if (TMath::Abs(nsq)<1E-10) return TGeoShape::Big();
+   if (TMath::Abs(nsq)<1E-10) return kBig;
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t b,d;
    // only r>rmax has to be considered
-   if (rsq>=rmax*rmax) {
+   if (rsq>rmax*rmax) {
       DistToTube(rsq, nsq, rdotn, rmax, b, d);
       if (d>0) {
          s=-b-d;
@@ -365,7 +353,7 @@ Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Doub
          }
       }
    }         
-   return TGeoShape::Big();
+   return kBig;
 }   
 
 //_____________________________________________________________________________
@@ -375,8 +363,8 @@ Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // fist localize point w.r.t tube
    if (iact<3 && *safe) {
       *safe = Safety(point, kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    // find distance to shape
    return DistToInS(point, dir, fRmin, fRmax, fDz);
@@ -605,7 +593,7 @@ Double_t TGeoTube::Safety(Double_t *point, Bool_t in) const
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    saf[0] = fDz-TMath::Abs(point[2]); // positive if inside
-   saf[1] = (fRmin>1E-10)?(r-fRmin):TGeoShape::Big();
+   saf[1] = (fRmin>1E-10)?(r-fRmin):kBig;
    saf[2] = fRmax-r;
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
@@ -628,12 +616,12 @@ Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t r
          saf[0] = dz + point[2];
          break;
       case 3: // skip both
-         saf[0] = TGeoShape::Big();
+         saf[0] = kBig;
          break;
       default:
          saf[0] = dz-TMath::Abs(point[2]);         
    }
-   saf[1] = (rmin>1E-10)?(r-rmin):TGeoShape::Big();
+   saf[1] = (rmin>1E-10)?(r-rmin):kBig;
    saf[2] = rmax-r;
 //   printf("saf0=%g saf1=%g saf2=%g in=%d skipz=%d\n", saf[0],saf[1],saf[2],in,skipz);
    if (in) return saf[TMath::LocMin(3,saf)];
@@ -678,7 +666,7 @@ void TGeoTube::SetPoints(Double_t *buff) const
     if (buff) {
 
         for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
+            phi = j*dphi*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -688,7 +676,7 @@ void TGeoTube::SetPoints(Double_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
+            phi = j*dphi*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);
@@ -717,7 +705,7 @@ void TGeoTube::SetPoints(Float_t *buff) const
     if (buff) {
 
         for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
+            phi = j*dphi*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -727,7 +715,7 @@ void TGeoTube::SetPoints(Float_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
+            phi = j*dphi*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);
@@ -812,14 +800,14 @@ void TGeoTubeSeg::ComputeBBox()
 // compute bounding box of the tube segment
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = fRmax*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[0] = fRmax*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[1] = fRmax*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[1] = fRmax*TMath::Sin(fPhi2*TMath::DegToRad());
-   xc[2] = fRmin*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[2] = fRmin*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[3] = fRmin*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[3] = fRmin*TMath::Sin(fPhi2*TMath::DegToRad());
+   xc[0] = fRmax*TMath::Cos(fPhi1*kDegRad);
+   yc[0] = fRmax*TMath::Sin(fPhi1*kDegRad);
+   xc[1] = fRmax*TMath::Cos(fPhi2*kDegRad);
+   yc[1] = fRmax*TMath::Sin(fPhi2*kDegRad);
+   xc[2] = fRmin*TMath::Cos(fPhi1*kDegRad);
+   yc[2] = fRmin*TMath::Sin(fPhi1*kDegRad);
+   xc[3] = fRmin*TMath::Cos(fPhi2*kDegRad);
+   yc[3] = fRmin*TMath::Sin(fPhi2*kDegRad);
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
@@ -859,12 +847,12 @@ void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
-   Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-   Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-   Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
-   Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());
+   Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+   Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+   Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+   Double_t s2 = TMath::Sin(fPhi2*kDegRad);
    saf[0] = TMath::Abs(fDz-TMath::Abs(point[2])); 
-   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):TGeoShape::Big();
+   saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
    saf[2] = TMath::Abs(fRmax-r);
    Int_t i = TMath::LocMin(3,saf);
    if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
@@ -895,7 +883,7 @@ void TGeoTubeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
    Double_t saf[2];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
-   saf[0] = (rmin>1E-10)?TMath::Abs(r-rmin):TGeoShape::Big();
+   saf[0] = (rmin>1E-10)?TMath::Abs(r-rmin):kBig;
    saf[1] = TMath::Abs(rmax-r);
    Int_t i = TMath::LocMin(2,saf);
    if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
@@ -918,7 +906,14 @@ Bool_t TGeoTubeSeg::Contains(Double_t *point) const
 // test if point is inside this tube segment
    // first check if point is inside the tube
    if (!TGeoTube::Contains(point)) return kFALSE;
-   return IsInPhiRange(point, fPhi1, fPhi2);
+   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
+   if (phi < 0 ) phi+=360.;
+   Double_t dphi = fPhi2 -fPhi1;
+   Double_t ddp = phi-fPhi1;
+   if (ddp<0) ddp += 360.;
+//   if (ddp>360) ddp-=360;
+   if (ddp > dphi) return kFALSE;
+   return kTRUE;    
 }
 
 //_____________________________________________________________________________
@@ -935,8 +930,8 @@ Double_t TGeoTubeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, 
                                    Double_t s2, Double_t c2, Double_t sm, Double_t cm)
 {
 // compute distance from poin to both phi planes. Return minimum.
-   Double_t sfi1=TGeoShape::Big();
-   Double_t sfi2=TGeoShape::Big();
+   Double_t sfi1=kBig;
+   Double_t sfi2=kBig;
    Double_t s=0;
    Double_t un = dir[0]*s1-dir[1]*c1;
    if (un!=0) {
@@ -963,16 +958,11 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
    Double_t rsq=point[0]*point[0]+point[1]*point[1];   
    // compute distance to surface 
    // Do Z
-   Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) {
+   Double_t sz = kBig;
+   if (dir[2]>1E-20) 
       sz = (dz-point[2])/dir[2];
-      if (sz<=0) return 0.;
-   } else {
-      if (dir[2]<0) {
-         sz = -(dz+point[2])/dir[2];
-         if (sz<=0) return 0.;
-      }
-   }      
+   else
+      if (dir[2]<-1E-20) sz = -(dz+point[2])/dir[2];
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];  
    // track parralel to Z
@@ -980,7 +970,7 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
    
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];  
    Double_t b, d;
-   Double_t sr=TGeoShape::Big();
+   Double_t sr=kBig;
    Bool_t skip_outer = kFALSE;
    // inner cylinder
    if (rmin>1E-10) {
@@ -995,7 +985,7 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
    if (!skip_outer) {
       TGeoTube::DistToTube(rsq,nsq,rdotn,rmax,b,d);
       sr=-b+d;
-      if (sr<0) sr=TGeoShape::Big();
+      if (sr<0) sr=kBig;
    }
    // phi planes
    Double_t sfmin=TGeoTubeSeg::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
@@ -1006,17 +996,17 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
 Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
-   if (iact<3 && safe) {
-      *safe = SafetyS(point, kTRUE, fRmin, fRmax, fDz, fPhi1, fPhi2);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (*safe>step)) return TGeoShape::Big();
-   }
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = fPhi2*kDegRad;
    Double_t c1 = TMath::Cos(phi1);
    Double_t c2 = TMath::Cos(phi2);
    Double_t s1 = TMath::Sin(phi1);
    Double_t s2 = TMath::Sin(phi2);
+   if (iact<3 && safe) {
+      *safe = SafetyS(point, kTRUE, fRmin, fRmax, fDz,c1,s1,c2,s2);
+      if (iact==0) return kBig;
+      if ((iact==1) && (*safe>step)) return kBig;
+   }
    Double_t phim = 0.5*(phi1+phi2);
    Double_t cm = TMath::Cos(phim);
    Double_t sm = TMath::Sin(phim);
@@ -1035,8 +1025,8 @@ Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, D
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    // check Z planes
    Double_t xi, yi, zi;
-   Double_t s = TGeoShape::Big();
-   if (TMath::Abs(point[2])>=dz) {
+   Double_t s = kBig;
+   if (TMath::Abs(point[2])>dz) {
       if ((point[2]*dir[2])<0) {
          s = (TMath::Abs(point[2])-dz)/TMath::Abs(dir[2]);
          xi = point[0]+s*dir[0];
@@ -1051,11 +1041,11 @@ Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, D
    
    // check outer cyl. surface
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
-   if (TMath::Abs(nsq)<1E-10) return TGeoShape::Big();
+   if (TMath::Abs(nsq)<1E-10) return kBig;
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t b,d;
    // only r>rmax has to be considered
-   if (rsq>=rmax*rmax) {
+   if (rsq>rmax*rmax) {
       TGeoTube::DistToTube(rsq, nsq, rdotn, rmax, b, d);
       if (d>0) {
          s=-b-d;
@@ -1071,7 +1061,7 @@ Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, D
       }
    }         
    // check inner cylinder
-   Double_t snxt=TGeoShape::Big();
+   Double_t snxt=kBig;
    if (rmin>0) {
       TGeoTube::DistToTube(rsq, nsq, rdotn, rmin, b, d);
       if (d>0) {
@@ -1130,17 +1120,17 @@ Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
 {
 // compute distance from outside point to surface of the tube segment
    // fist localize point w.r.t tube
-   if (iact<3 && *safe) {
-      *safe = SafetyS(point, kFALSE, fRmin, fRmax, fDz, fPhi1, fPhi2);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
-   }
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = fPhi2*kDegRad;
    Double_t c1 = TMath::Cos(phi1);
    Double_t s1 = TMath::Sin(phi1);
    Double_t c2 = TMath::Cos(phi2);
    Double_t s2 = TMath::Sin(phi2);
+   if (iact<3 && *safe) {
+      *safe = SafetyS(point, kFALSE, fRmin, fRmax, fDz, c1,s1,c2,s2);
+      if (iact==0) return kBig;
+      if ((iact==1) && (step<=*safe)) return kBig;
+   }
    Double_t fio = 0.5*(phi1+phi2);
    Double_t cm = TMath::Cos(fio);
    Double_t sm = TMath::Sin(fio);
@@ -1330,35 +1320,33 @@ Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[3];
+   Double_t saf[4];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = fPhi2*kDegRad;
+   Double_t c1 = TMath::Cos(phi1);
+   Double_t s1 = TMath::Sin(phi1);
+   Double_t c2 = TMath::Cos(phi2);
+   Double_t s2 = TMath::Sin(phi2);
    
-   Double_t safe = TGeoShape::Big();
-   if (in) {
-      saf[0] = fDz-TMath::Abs(point[2]);
-      saf[1] = r-fRmin;
-      saf[2] = fRmax-r;
-      safe   = saf[TMath::LocMin(3,saf)];
-   } else {
-   // at least one positive
-      saf[0] = TMath::Abs(point[2])-fDz;
-      saf[1] = fRmin-r;
-      saf[2] = r-fRmax;
-      safe   = saf[TMath::LocMax(3,saf)];
-   }
-   Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
+   saf[0] = fDz-TMath::Abs(point[2]); // positive if inside
+   saf[1] = r-fRmin;
+   saf[2] = fRmax-r;
+   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
    
-   if (in) return TMath::Min(safe, safphi);
-   return TMath::Max(safe, safphi);
+   if (in) return saf[TMath::LocMin(4,saf)];
+
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
 
 //_____________________________________________________________________________
 Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
-                              Double_t phi1, Double_t phi2, Int_t skipz)
+                              Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
-   Double_t saf[3];
+   Double_t saf[4];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    
@@ -1370,24 +1358,19 @@ Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_
          saf[0] = dz + point[2];
          break;
       case 3: // skip both
-         saf[0] = TGeoShape::Big();
+         saf[0] = kBig;
          break;
       default:
          saf[0] = dz-TMath::Abs(point[2]);         
    }
    saf[1] = r-rmin;
    saf[2] = rmax-r;
-   Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1,phi2);
-   Double_t safe = TGeoShape::Big();
+   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
+
+   if (in)  return saf[TMath::LocMin(4,saf)];
    
-   if (in)  {
-      safe = saf[TMath::LocMin(3,saf)];
-      return TMath::Min(safe, safphi);
-   }   
-   
-   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(3,saf)];
-   return TMath::Max(safe, safphi);
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
 
 //_____________________________________________________________________________
@@ -1434,7 +1417,7 @@ void TGeoTubeSeg::SetPoints(Double_t *buff) const
         Int_t indx = 0;
 
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -1444,7 +1427,7 @@ void TGeoTubeSeg::SetPoints(Double_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);
@@ -1475,7 +1458,7 @@ void TGeoTubeSeg::SetPoints(Float_t *buff) const
         Int_t indx = 0;
 
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -1485,7 +1468,7 @@ void TGeoTubeSeg::SetPoints(Float_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);
@@ -1585,8 +1568,8 @@ void TGeoCtub::ComputeBBox()
    Double_t z1;
    Double_t z[8];
    // check if nxy is in the phi range
-   Double_t phi_low = TMath::ATan2(fNlow[1], fNlow[0]) *TMath::RadToDeg();
-   Double_t phi_hi = TMath::ATan2(fNhigh[1], fNhigh[0]) *TMath::RadToDeg();
+   Double_t phi_low = TMath::ATan2(fNlow[1], fNlow[0]) *kRadDeg;
+   Double_t phi_hi = TMath::ATan2(fNhigh[1], fNhigh[0]) *kRadDeg;
    Bool_t in_range_low = kFALSE;
    Bool_t in_range_hi = kFALSE;
    
@@ -1598,11 +1581,11 @@ void TGeoCtub::ComputeBBox()
       Double_t ddp = phi_low-fPhi1;
       if (ddp<0) ddp += 360.;
       if (ddp <= dphi) {
-         xc = fRmin*TMath::Cos(phi_low*TMath::DegToRad());
-         yc = fRmin*TMath::Sin(phi_low*TMath::DegToRad());
+         xc = fRmin*TMath::Cos(phi_low*kDegRad);
+         yc = fRmin*TMath::Sin(phi_low*kDegRad);
          z1 = GetZcoord(xc, yc, -fDz);
-         xc = fRmax*TMath::Cos(phi_low*TMath::DegToRad());
-         yc = fRmax*TMath::Sin(phi_low*TMath::DegToRad());
+         xc = fRmax*TMath::Cos(phi_low*kDegRad);
+         yc = fRmax*TMath::Sin(phi_low*kDegRad);
          z1 = TMath::Min(z1, GetZcoord(xc, yc, -fDz));
          if (in_range_low)
             zmin = TMath::Min(zmin, z1);
@@ -1621,11 +1604,11 @@ void TGeoCtub::ComputeBBox()
       Double_t ddp = phi_hi-fPhi1;
       if (ddp<0) ddp += 360.;
       if (ddp <= dphi) {
-         xc = fRmin*TMath::Cos(phi_hi*TMath::DegToRad());
-         yc = fRmin*TMath::Sin(phi_hi*TMath::DegToRad());
+         xc = fRmin*TMath::Cos(phi_hi*kDegRad);
+         yc = fRmin*TMath::Sin(phi_hi*kDegRad);
          z1 = GetZcoord(xc, yc, fDz);
-         xc = fRmax*TMath::Cos(phi_hi*TMath::DegToRad());
-         yc = fRmax*TMath::Sin(phi_hi*TMath::DegToRad());
+         xc = fRmax*TMath::Cos(phi_hi*kDegRad);
+         yc = fRmax*TMath::Sin(phi_hi*kDegRad);
          z1 = TMath::Max(z1, GetZcoord(xc, yc, fDz));
          if (in_range_hi) 
             zmax = TMath::Max(zmax, z1);
@@ -1638,23 +1621,23 @@ void TGeoCtub::ComputeBBox()
    }   
 
 
-   xc = fRmin*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc = fRmin*TMath::Sin(fPhi1*TMath::DegToRad());
+   xc = fRmin*TMath::Cos(fPhi1*kDegRad);
+   yc = fRmin*TMath::Sin(fPhi1*kDegRad);
    z[0] = GetZcoord(xc, yc, -fDz);
    z[4] = GetZcoord(xc, yc, fDz);
 
-   xc = fRmin*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc = fRmin*TMath::Sin(fPhi2*TMath::DegToRad());
+   xc = fRmin*TMath::Cos(fPhi2*kDegRad);
+   yc = fRmin*TMath::Sin(fPhi2*kDegRad);
    z[1] = GetZcoord(xc, yc, -fDz);
    z[5] = GetZcoord(xc, yc, fDz);
    
-   xc = fRmax*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc = fRmax*TMath::Sin(fPhi1*TMath::DegToRad());
+   xc = fRmax*TMath::Cos(fPhi1*kDegRad);
+   yc = fRmax*TMath::Sin(fPhi1*kDegRad);
    z[2] = GetZcoord(xc, yc, -fDz);
    z[6] = GetZcoord(xc, yc, fDz);
 
-   xc = fRmax*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc = fRmax*TMath::Sin(fPhi2*TMath::DegToRad()); 
+   xc = fRmax*TMath::Cos(fPhi2*kDegRad);
+   yc = fRmax*TMath::Sin(fPhi2*kDegRad); 
    z[3] = GetZcoord(xc, yc, -fDz);
    z[7] = GetZcoord(xc, yc, fDz);
    
@@ -1686,14 +1669,14 @@ void TGeoCtub::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    
    saf[0] = TMath::Abs(point[0]*fNlow[0] + point[1]*fNlow[1] + (fDz+point[2])*fNlow[2]);
    saf[1] = TMath::Abs(point[0]*fNhigh[0] + point[1]*fNhigh[1] - (fDz-point[2])*fNhigh[2]);
-   saf[2] = (fRmin>1E-10)?TMath::Abs(r-fRmin):TGeoShape::Big();
+   saf[2] = (fRmin>1E-10)?TMath::Abs(r-fRmin):kBig;
    saf[3] = TMath::Abs(fRmax-r);
    Int_t i = TMath::LocMin(4,saf);
    if (isseg) {
-      Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-      Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-      Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
-      Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());   
+      Double_t c1 = TMath::Cos(fPhi1*kDegRad);
+      Double_t s1 = TMath::Sin(fPhi1*kDegRad);
+      Double_t c2 = TMath::Cos(fPhi2*kDegRad);
+      Double_t s2 = TMath::Sin(fPhi2*kDegRad);   
       if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
          TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
          return;
@@ -1742,7 +1725,7 @@ Bool_t TGeoCtub::Contains(Double_t *point) const
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    if ((r2<fRmin*fRmin) || (r2>fRmax*fRmax)) return kFALSE;
    // check phi
-   Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
+   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
    if (phi < 0 ) phi+=360.;
    Double_t dphi = fPhi2 -fPhi1;
    Double_t ddp = phi-fPhi1;
@@ -1791,8 +1774,8 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 // compute distance from outside point to surface of the cut tube
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
-      if (iact==0) return TGeoShape::Big();
-      if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
+      if (iact==0) return kBig;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    Double_t saf[2];
    saf[0] = point[0]*fNlow[0] + point[1]*fNlow[1] + (fDz+point[2])*fNlow[2];
@@ -1801,8 +1784,8 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t r = TMath::Sqrt(rsq);
    Double_t c1=0,s1=0,c2=0,s2=0;
    Double_t fio=0, cfio=0, sfio=0, dfi=0, cdfi=0, cpsi=0;
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = fPhi2*kDegRad;
    Bool_t tub = kFALSE;
    if (TMath::Abs(fPhi2-fPhi1-360.)<1E-8) tub = kTRUE;
    if (!tub) {
@@ -1822,7 +1805,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t calf = dir[0]*fNlow[0]+dir[1]*fNlow[1]+dir[2]*fNlow[2];
    // check Z planes
    Double_t xi, yi, zi;
-   Double_t s = TGeoShape::Big();
+   Double_t s = kBig;
    if (saf[0]>0) {
       if (calf<0) {
          s = -saf[0]/calf;
@@ -1853,7 +1836,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    
    // check outer cyl. surface
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
-   if (TMath::Abs(nsq)<1E-10) return TGeoShape::Big();
+   if (TMath::Abs(nsq)<1E-10) return kBig;
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t b,d;
    // only r>fRmax has to be considered
@@ -1876,7 +1859,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
    }         
    // check inner cylinder
-   Double_t snxt=TGeoShape::Big();
+   Double_t snxt=kBig;
    if (fRmin>0) {
       TGeoTube::DistToTube(rsq, nsq, rdotn, fRmin, b, d);
       if (d>0) {
@@ -1943,12 +1926,12 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 {
 // compute distance from inside point to surface of the cut tube
    if (iact<3 && safe) *safe = Safety(point, kTRUE);
-   if (iact==0) return TGeoShape::Big();
-   if ((iact==1) && (*safe>step)) return TGeoShape::Big();
+   if (iact==0) return kBig;
+   if ((iact==1) && (*safe>step)) return kBig;
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t c1=0,s1=0,c2=0,s2=0,cm=0,sm=0,phim=0;
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
+   Double_t phi1 = fPhi1*kDegRad;
+   Double_t phi2 = fPhi2*kDegRad;
    Bool_t tub = kFALSE;
    if (TMath::Abs(fPhi2-fPhi1-360.)<1E-8) tub = kTRUE;
    if (!tub) {
@@ -1963,14 +1946,14 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    }
    // compute distance to surface 
    // Do Z
-   Double_t sz = TGeoShape::Big();
+   Double_t sz = kBig;
    Double_t saf[2];
    saf[0] = -point[0]*fNlow[0] - point[1]*fNlow[1] - (fDz+point[2])*fNlow[2];
    saf[1] = -point[0]*fNhigh[0] - point[1]*fNhigh[1] + (fDz-point[2])*fNhigh[2];
    Double_t calf = dir[0]*fNlow[0]+dir[1]*fNlow[1]+dir[2]*fNlow[2];
    if (calf>0) sz = saf[0]/calf;
    
-   Double_t sz1=TGeoShape::Big();
+   Double_t sz1=kBig;
    calf = dir[0]*fNhigh[0]+dir[1]*fNhigh[1]+dir[2]*fNhigh[2];   
    if (calf>0) {
       sz1 = saf[1]/calf;
@@ -1982,7 +1965,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // track parralel to Z
    if (TMath::Abs(nsq)<1E-10) return sz;
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];  
-   Double_t sr=TGeoShape::Big();
+   Double_t sr=kBig;
    Double_t b, d;
    Bool_t skip_outer = kFALSE;
    // inner cylinder
@@ -1998,13 +1981,13 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       TGeoTube::DistToTube(rsq, nsq, rdotn, fRmax, b, d);
       if (d>0) {
          sr=-b+d;
-         if (sr<0) sr=TGeoShape::Big();
+         if (sr<0) sr=kBig;
       } else {
          Error("DistToOut", "cannot get outside !");
       }      
    }
    // phi planes
-   Double_t sfmin = TGeoShape::Big();
+   Double_t sfmin = kBig;
    if (!tub) sfmin=DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);;
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }   
@@ -2060,7 +2043,7 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[4];
+   Double_t saf[5];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Bool_t isseg = kTRUE;
@@ -2068,20 +2051,24 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
    
    saf[0] = -point[0]*fNlow[0] - point[1]*fNlow[1] - (fDz+point[2])*fNlow[2];
    saf[1] = -point[0]*fNhigh[0] - point[1]*fNhigh[1] + (fDz-point[2])*fNhigh[2];
-   saf[2] = (fRmin<1E-10 && !isseg)?TGeoShape::Big():(r-fRmin);
+   saf[2] = (fRmin<1E-10 && !isseg)?kBig:(r-fRmin);
    saf[3] = fRmax-r;
-   Double_t safphi = TGeoShape::Big();
-   Double_t safe = TGeoShape::Big();
-   if (isseg) safphi =  TGeoShape::SafetyPhi(point, in, fPhi1, fPhi2);
-
-   if (in) {
-      safe = saf[TMath::LocMin(4,saf)];
-      return TMath::Min(safe, safphi);
+   if (isseg) {
+      Double_t phi1 = fPhi1*kDegRad;
+      Double_t phi2 = fPhi2*kDegRad;
+      Double_t c1 = TMath::Cos(phi1);
+      Double_t s1 = TMath::Sin(phi1);
+      Double_t c2 = TMath::Cos(phi2);
+      Double_t s2 = TMath::Sin(phi2);
+   
+      saf[4] =  TGeoShape::SafetyPhi(point, in, c1,s1,c2,s2);
+   } else {
+      saf[4] = kBig;
    }   
-   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(5,saf)];
-   if (isseg) return TMath::Max(safe, safphi);
-   return safe;
+
+   if (in) return saf[TMath::LocMin(5,saf)];
+   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(5,saf)];
 }
 
 //_____________________________________________________________________________
@@ -2126,7 +2113,7 @@ void TGeoCtub::SetPoints(Double_t *buff) const
         Int_t indx = 0;
 
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -2136,7 +2123,7 @@ void TGeoCtub::SetPoints(Double_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);
@@ -2167,7 +2154,7 @@ void TGeoCtub::SetPoints(Float_t *buff) const
         Int_t indx = 0;
 
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmin * TMath::Sin(phi);
@@ -2177,7 +2164,7 @@ void TGeoCtub::SetPoints(Float_t *buff) const
             indx++;
         }
         for (j = 0; j < n; j++) {
-            phi = (phi1+j*dphi)*TMath::DegToRad();
+            phi = (phi1+j*dphi)*kDegRad;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Cos(phi);
             indx++;
             buff[indx+6*n] = buff[indx] = fRmax * TMath::Sin(phi);

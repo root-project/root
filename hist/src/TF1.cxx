@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.77 2003/11/27 11:45:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.71 2003/09/23 14:56:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
 
-Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 
 ClassImp(TF1)
@@ -453,9 +452,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fNdim       = 1;
 //*-*- Store formula in linked list of formula in ROOT
 
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
    SetName(name);
+   if (gROOT->GetListOfFunctions()->FindObject(name)) return;
    gROOT->GetListOfFunctions()->Add(this);
 
    if (!gStyle) return;
@@ -515,7 +513,7 @@ TF1::~TF1()
 }
 
 //______________________________________________________________________________
-TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
+TF1::TF1(const TF1 &f1) : TFormula(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
 
    fXmin      = 0;
@@ -543,17 +541,6 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    SetFillStyle(0);
 
    ((TF1&)f1).Copy(*this);
-}
-
-//______________________________________________________________________________
-void TF1::AbsValue(Bool_t flag)
-{
-   // static function: set the fgAbsValue flag.
-   // By default TF1::Integral uses the original function value to compute the integral
-   // However, TF1::Moment, CentralMoment require to compute the integral
-   // using the absolute value of the function.
-   
-   fgAbsValue = flag;
 }
 
 //______________________________________________________________________________
@@ -1064,20 +1051,6 @@ Int_t TF1::GetNDF() const
 
    if (fNDF == 0) return fNpfits-fNpar;
    return fNDF;
-}
-
-//______________________________________________________________________________
-Int_t TF1::GetNumberFreeParameters() const
-{
-// return the number of free parameters
-   
-   Int_t nfree = fNpar;
-   Double_t al,bl;
-   for (Int_t i=0;i<fNpar;i++) {
-      ((TF1*)this)->GetParLimits(i,al,bl);
-      if (al*bl != 0 && al >= bl) nfree--;
-   }
-   return nfree;
 }
 
 //______________________________________________________________________________
@@ -1626,22 +1599,18 @@ CASE2:
   for (i=0;i<4;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = EvalPar(xx,params);
-     if (fgAbsValue) f1 = TMath::Abs(f1);
+     f1    = TMath::Abs(EvalPar(xx,params));
      xx[0] = c1-u;
-     f2    = EvalPar(xx,params);
-     if (fgAbsValue) f2 = TMath::Abs(f2);
+     f2    = TMath::Abs(EvalPar(xx,params));
      s8   += w[i]*(f1 + f2);
   }
   s16 = 0;
   for (i=4;i<12;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = EvalPar(xx,params);
-     if (fgAbsValue) f1 = TMath::Abs(f1);
+     f1    = TMath::Abs(EvalPar(xx,params));
      xx[0] = c1-u;
-     f2    = EvalPar(xx,params);
-     if (fgAbsValue) f2 = TMath::Abs(f2);
+     f2    = TMath::Abs(EvalPar(xx,params));
      s16  += w[i]*(f1 + f2);
   }
   s16 = c2*s16;
@@ -1672,39 +1641,6 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //
    Error("Integral","Must be called with a TF3 only");
    return 0;
-}
-
-#ifdef INTHEFUTURE
-//______________________________________________________________________________
-Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
-{
-    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
-    if (!g) return 0;
-    return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
-}
-#endif
-
-//______________________________________________________________________________
-Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
-{
-    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
-    if (num<=0 || x == 0 || w == 0)
-        return 0;
-
-    const Double_t a0 = (b + a)/2;
-    const Double_t b0 = (b - a)/2;
-
-    Double_t xx[1];
-    InitArgs(xx, params);
-
-    Double_t result = 0.0;
-    for (int i=0; i<num; i++)
-    {
-        xx[0] = a0 + b0*x[i];
-        result += w[i] * EvalPar(xx, params);
-    }
-
-    return result*b0;
 }
 
 //______________________________________________________________________________
@@ -1849,18 +1785,14 @@ L20:
    sum3   = 0;
    for (j=0;j<n;j++) {
       z[j]    = ctr[j] - xl2*wth[j];
-      if (fgAbsValue) f2 = TMath::Abs(EvalPar(z,fParams));
-      else            f2 = EvalPar(z,fParams);
+      f2      = TMath::Abs(EvalPar(z,fParams));
       z[j]    = ctr[j] + xl2*wth[j];
-      if (fgAbsValue) f2 += TMath::Abs(EvalPar(z,fParams));
-      else            f2 += EvalPar(z,fParams);
+      f2     += TMath::Abs(EvalPar(z,fParams));
       wthl[j] = xl4*wth[j];
       z[j]    = ctr[j] - wthl[j];
-      if (fgAbsValue) f3 = TMath::Abs(EvalPar(z,fParams));
-      else            f3 = EvalPar(z,fParams);
+      f3      = TMath::Abs(EvalPar(z,fParams));
       z[j]    = ctr[j] + wthl[j];
-      if (fgAbsValue) f3 += TMath::Abs(EvalPar(z,fParams));
-      else            f3 += EvalPar(z,fParams);
+      f3     += TMath::Abs(EvalPar(z,fParams));
       sum2   += f2;
       sum3   += f3;
       dif     = TMath::Abs(7*f2-f3-12*sum1);
@@ -1881,8 +1813,7 @@ L20:
             for (m=0;m<2;m++) {
                wthl[k] = -wthl[k];
                z[k]    = ctr[k] + wthl[k];
-               if (fgAbsValue) sum4 += TMath::Abs(EvalPar(z,fParams));
-               else            sum4 += EvalPar(z,fParams);
+               sum4 += TMath::Abs(EvalPar(z,fParams));
             }
          }
          z[k] = ctr[k];
@@ -1896,8 +1827,7 @@ L20:
       z[j] = ctr[j] + wthl[j];
    }
 L90:
-   if (fgAbsValue) sum5 += TMath::Abs(EvalPar(z,fParams));
-   else            sum5 += EvalPar(z,fParams);
+   sum5 += TMath::Abs(EvalPar(z,fParams));
    for (j=0;j<n;j++) {
       wthl[j] = -wthl[j];
       z[j] = ctr[j] + wthl[j];
@@ -2499,18 +2429,14 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
 // See TF1::Integral() for parameter definitions
 //   Author: Gene Van Buren <gene@bnl.gov>
 
-   fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
-      fgAbsValue = kFALSE;
       Error("Moment", "Integral zero over range");
       return 0;
    }
 
    TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
-   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
-   fgAbsValue = kFALSE;
-   return res;
+   return fnc.Integral(a,b,params,epsilon)/norm;
 }
 
 //______________________________________________________________________________
@@ -2521,10 +2447,8 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
 // See TF1::Integral() for parameter definitions
 //   Author: Gene Van Buren <gene@bnl.gov>
 
-   fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
-      fgAbsValue = kFALSE;
       Error("CentralMoment", "Integral zero over range");
       return 0;
    }
@@ -2533,103 +2457,6 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
 
    TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
-   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
-   fgAbsValue = kFALSE;
-   return res;
+   return fnc.Integral(a,b,params,epsilon)/norm;
 }
 
-//--------------------------------------------------------------------
-// some useful static utility functions to compute sampling points for IntegralFast
-//--------------------------------------------------------------------
-//______________________________________________________________________________
-#ifdef INTHEFUTURE
-void TF1::CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps)
-{
-    //type safe interface (static method)
-    // The number of sampling points are taken from the TGraph
-    if (!g) return;
-    CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
-}
-
-//______________________________________________________________________________
-TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
-{
-    //type safe interface (static method)
-    // A TGraph is created with new with num points and the pointer to the
-    // graph is returned by the function. It is the responsibility of the
-    // user to delete the object.
-    // if num is invalid (<=0) NULL is returned
-
-    if (num<=0)
-        return 0;
-
-    TGraph *g = new TGraph(num);
-    CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
-    return g;
-}
-#endif
-
-//______________________________________________________________________________
-void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps)
-{
-    // Type: unsafe but fast interface filling the arrays x and w (static method)
-    //
-    // Given the number of sampling points this routine fills the arrays x and w
-    // of length num, containing the abscissa and weight of the Gauss-Legendre
-    // n-point quadrature formula.
-    //
-    // Gauss-Legendre: W(x)=1  -1<x<1
-    //                 (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-    //
-    // num is the number of sampling points (>0)
-    // x and w are arrays of size num
-    // eps is the relative precision
-    //
-    // If num<=0 or eps<=0 no action is done.
-    //
-    // Reference: Numerical Recipes in C, Second Edition
-    //
-    if (num<=0 || eps<=0)
-        return;
-
-    // The roots of symmetric is the interval, so we only have to find half of them
-    const UInt_t m = (num+1)/2;
-
-    Double_t z, pp, p1,p2, p3;
-
-    // Loop over the disired roots
-    for (UInt_t i=0; i<m; i++) {
-        z = TMath::Cos(TMath::Pi()*(i+0.75)/(num+0.5));
-
-        // Starting with the above approximation to the i-th root, we enter
-        // the main loop of refinement by Newton's method
-        do {
-            p1=1.0;
-            p2=0.0;
-
-            // Loop up the recurrence relation to get the Legendre
-            // polynomial evaluated at z
-            for (int j=0; j<num; j++)
-            {
-                p3 = p2;
-                p2 = p1;
-                p1 = ((2.0*j+1.0)*z*p2-j*p3)/(j+1.0);
-            }
-            // p1 is now the desired Legendre polynomial. We next compute pp, its
-            // derivative, by a standard relation involving also p2, the polynomial
-            // of one lower order
-            pp = num*(z*p1-p2)/(z*z-1.0);
-            // Newton's method
-            z -= p1/pp;
-
-        } while (TMath::Abs(p1/pp) > eps);
-
-        // Put root and its symmetric counterpart
-        x[i]       = -z;
-        x[num-i-1] =  z;
-
-        // Compute the weight and put its symmetric counterpart
-        w[i]       = 2.0/((1.0-z*z)*pp*pp);
-        w[num-i-1] = w[i];
-    }
-}

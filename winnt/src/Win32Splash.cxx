@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.5 2003/10/10 14:24:33 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.3 2003/05/05 16:47:37 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -272,7 +272,7 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             BitBlt(hDC, 0, 0, bm.bmWidth, bm.bmHeight, hImageDC, 0, 0, SRCCOPY);
             SelectObject(hImageDC, hOldBitmap);
             EndPaint(hWnd, &ps);
-             // fetch current window title
+            // fetch current window title
             GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
             // format a "unique" NewWindowTitle
             wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
@@ -285,7 +285,7 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             // restore original window title
             ShowWindow(hwndFound, SW_RESTORE);
             SetForegroundWindow(hwndFound);
-            SetConsoleTitle("ROOT session");
+            SetConsoleTitle(pszOldWindowTitle);
             break;
 
         default:

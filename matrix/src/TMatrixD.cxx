@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.46 2003/07/17 13:42:09 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2260,28 +2260,17 @@ TMatrixD &TMatrixD::operator*=(const TMatrixD &source)
       Error("operator*=(const TMatrixD&)",
             "matrices above are unsuitable for the inplace multiplication");
 
-   Double_t *scp0;
-   TMatrixD tmp;
-   if (this == &source)
-   {
-     tmp.ResizeTo(source);
-     tmp = source;
-     scp0 = tmp.fElements;
-   }
-   else
-     scp0 = source.fElements;
-
    // One row of the old_target matrix
    Double_t *const one_row = new Double_t[fNcols];
    const Double_t *one_row_end = &one_row[fNcols];
 
-   Double_t *trp = fElements;                   // Pointer to the i-th row
+   Double_t *trp = fElements;                     // Pointer to the i-th row
    for ( ; trp < &fElements[fNrows]; trp++) {   // Go row-by-row in the target
       Double_t *wrp, *orp;                        // work row pointers
       for (wrp = trp, orp = one_row; orp < one_row_end; )
          *orp++ = *wrp, wrp += fNrows;          // Copy a row of old_target
 
-      Double_t *scp = scp0;                     // Source column pointer
+      Double_t *scp = source.fElements;           // Source column pointer
       for (wrp = trp; wrp < fElements+fNelems; wrp += fNrows) {
          Double_t sum = 0;                      // Multiply a row of old_target
          for (orp = one_row; orp < one_row_end; ) // by each col of source

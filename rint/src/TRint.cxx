@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.21 2003/10/28 14:09:48 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.19 2003/07/15 06:36:00 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -165,9 +165,8 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
    ih->Add();
    SetSignalHandler(ih);
 
-   // Handle stdin events
-   fInputHandler = new TTermInputHandler(0);
-   fInputHandler->Add();
+   TTermInputHandler *th = new TTermInputHandler(0);
+   th->Add();
 
    // Goto into raw terminal input mode
    char defhist[128];
@@ -349,53 +348,23 @@ Bool_t TRint::HandleTermInput()
       if (line[0] == 0 && Gl_eof())
          Terminate(0);
 
-      Gl_histadd(line);
-
-      TString sline = line;
-      line[0] = 0;
-
-      // strip off '\n' and leading and trailing blanks
-      sline = sline.Chop();
-      sline = sline.Strip(TString::kBoth);
-
-      fInterrupt = kFALSE;
-
-      if (!gInterpreter->GetMore() && !sline.IsNull()) fNcmd++;
-
-      // prevent recursive calling of this routine
-      fInputHandler->Remove();
-
       if (gROOT->Timer()) timer.Start();
 
-      Bool_t added = kFALSE;
-#ifdef R__EH
-      try {
-#endif
-         TRY {
-            ProcessLine(sline);
-         } CATCH(excode) {
-            // enable again input handler
-            fInputHandler->Add();
-            added = kTRUE;
-            Throw(excode);
-         } ENDTRY;
-#ifdef R__EH
-      }
-      // handle every exception
-      catch (...) {
-         // enable again intput handler
-         if (!added) fInputHandler->Add();
-         throw;
-      }
-#endif
+      Gl_histadd(line);
+
+      char *s = line;
+      while (s && *s == ' ') s++;     // strip-off leading blanks
+      s[strlen(s)-1] = '\0';          // strip also '\n' off
+      fInterrupt = kFALSE;
+
+      if (!gInterpreter->GetMore() && strlen(s) != 0) fNcmd++;
+
+      ProcessLine(s);
+
+      if (strstr(s,".reset") != s)
+          gInterpreter->EndOfLineAction();
 
       if (gROOT->Timer()) timer.Print();
-
-      // enable again intput handler
-      fInputHandler->Add();
-
-      if (!sline.BeginsWith(".reset"))
-         gInterpreter->EndOfLineAction();
 
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.59 2003/11/20 23:00:46 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.56 2003/09/21 21:38:31 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -166,15 +166,15 @@ Proofd.SendSRPPwd:      0
 
 # To be prompted for login information
 # UsrPwd.LoginPrompt:     yes
-# SRP.LoginPrompt:        yes
-# Krb5.LoginPrompt:       yes
+# SRP.LoginPrompt:        no
+# Krb5.LoginPrompt:       no
 # Globus.LoginPrompt:     yes
 # SSH.LoginPrompt:        yes
-# UidGid.LoginPrompt:     yes
+# UidGid.LoginPrompt:     no
 
 # To reuse established security context
 UsrPwd.ReUse:         yes
-SRP.ReUse:            no
+SRP.ReUse:            yes
 Krb5.ReUse:           no
 Globus.ReUse:         yes
 SSH.ReUse:            yes
@@ -198,13 +198,8 @@ Globus.ProxyKeyBits:     1024
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^castor:  TCastorFile   RFIO    "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
-+Plugin.TFile:       ^dcap:    TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^chirp:   TChirpFile    Chirp   "TChirpFile(const char*,Option_t*,const char*,Int_t)"
-+Plugin.TFile:       ^alien:   TAlienFile    RAliEn  "TAlienFile(const char*,Option_t*,const char*,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
-+Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
-+Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
-+Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"

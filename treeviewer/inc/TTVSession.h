@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.2 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.1 2001/02/22 14:45:17 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -47,9 +47,6 @@ public:
    void           ExecuteUserCode();
    void           FormFrom(TTreeViewer *tv);
    void           PlugIn(TTreeViewer *tv);
-   const char    *GetX() const {return fX.Data();}
-   const char    *GetY() const {return fY.Data();}
-   const char    *GetZ() const {return fZ.Data();}
    virtual const char *GetName() const {return fName.Data();}
    const char    *GetUserCode() {return fUserCode.Data();}
    Bool_t         HasUserCode() {return (Bool_t)fUserCode.Length();}

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.46 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.44 2003/09/20 14:39:57 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -51,7 +51,7 @@
 #include "TInterpreter.h"
 
 #include "HelpText.h"
-#include "TGFrame.h"
+
 
 // Browser menu command ids
 enum ERootBrowserCommands {
@@ -1454,6 +1454,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
    // Open tree item and list in iconbox its contents.
 
    if (item) {
+      DisplayDirectory();
       TObject *obj = (TObject *) item->GetUserData();
 
       if (obj) {
@@ -1483,7 +1484,6 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             fLt->HighlightItem(fListLevel);
          }
       }
-      DisplayDirectory();
    }
 }
 

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.7 2002/09/13 01:40:37 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.6 2001/08/15 11:43:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,12 +48,10 @@ enum EWidgetMessageTypes {
       kTE_TEXTCHANGED     = 1,
       kTE_ENTER           = 2,
       kTE_TAB             = 3,
-      kTE_KEY             = 4,
    kC_CONTAINER        = 5,
       kCT_ITEMCLICK       = 1,
       kCT_ITEMDBLCLICK    = 2,
       kCT_SELCHANGED      = 3,
-      kCT_KEY             = 4,
    kC_HSLIDER          = 6,
    kC_VSLIDER          = 7,
       kSL_POS             = 1,

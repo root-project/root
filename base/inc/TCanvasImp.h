@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.3 2001/12/20 08:44:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.2 2001/05/10 14:31:48 rdm Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -30,14 +30,9 @@ class TCanvas;
 
 
 class TCanvasImp {
-friend class TCanvas;
 
 protected:
    TCanvas  *fCanvas;   //TCanvas associated with this implementation
-
-   virtual void   Lock() { }
-   virtual void   Unlock() { }
-   virtual Bool_t IsLocked() { return kFALSE; }
 
 public:
    TCanvasImp(TCanvas *c=0) : fCanvas(c) { }

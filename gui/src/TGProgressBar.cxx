@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.8 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -23,8 +23,6 @@
 
 #include "TGProgressBar.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TColor.h"
 
 
 const TGFont *TGProgressBar::fgDefaultFont = 0;
@@ -59,27 +57,19 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
 //______________________________________________________________________________
 void TGProgressBar::SetRange(Float_t min, Float_t max)
 {
-   // Set min and max of progress bar.
+   // Set min and max of progress bar. Must be called before position is set.
 
    if (min >= max) {
       Error("SetRange", "max must be > min");
       return;
    }
-
-   Bool_t draw = kFALSE;
-   if (fPos > fMin) {
-      // already in progress... rescale
-      if (fPos < min) fPos = min;
-      if (fPos > max) fPos = max;
-      draw = kTRUE;
-   } else
-      fPos = min;
+   if (fPos > 0) {
+      Error("SetRange", "must be called before position is incremented");
+      return;
+   }
 
    fMin = min;
    fMax = max;
-
-   if (draw)
-      DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -158,6 +148,7 @@ void TGProgressBar::SetBarColor(const char *color)
 
    fClient->NeedRedraw(this);
 }
+
 
 //______________________________________________________________________________
 FontStruct_t TGProgressBar::GetDefaultFontStruct()
@@ -327,103 +318,3 @@ void TGVProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
-//______________________________________________________________________________
-void TGProgressBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save progress bar parameters as a C++ statement(s) on output stream out.
-
-   const char *barcolor;
-   char quote = '"';
-   switch (fBarType) {
-      case kFancy:
-         if (GetOptions() != (kSunkenFrame | kDoubleBorder | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << endl;
-         if (GetBackground() != GetWhitePixel()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << endl;
-         }
-         break;
-
-      case kStandard:
-         if (GetOptions() != (kSunkenFrame | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << endl;
-         if (GetBackground() != GetDefaultFrameBackground()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << endl;
-         }
-         break;
-   }
-
-   if (fBarColorGC.GetForeground() != GetDefaultSelectedBackground()) {
-      barcolor = TColor::PixelAsHexString(fBarColorGC.GetForeground());
-      out << "   " << GetName() <<"->SetBarColor(" << quote << barcolor << quote
-          << ");"  << endl;
-   }
-
-   if (fMin != 0 && fMax != 100)
-      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax << ");" << endl;
-
-   out <<"   "<< GetName() <<"->SetPosition("<< fPos <<");"<< endl;
-
-}
-
-//______________________________________________________________________________
-void TGVProgressBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a vertical progress bar as a C++ statement(s) on output stream out.
-
-
-   out << "   TGVProgressBar *";
-   out << GetName() << " = new TGVProgressBar(" << fParent->GetName();
-
-   if ((fBarType == kFancy) && (fBarWidth == kProgressBarTextWidth)) {
-      out << ",TGProgressBar::kFancy";
-   } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)){
-      out << ",TGProgressBar::kStandard";
-   }
-
-   out << "," << GetHeight() <<");" << endl;
-
-   if (GetFillType() == kBlockFill)
-      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
-
-   TGProgressBar::SavePrimitive(out, option);
-}
-
-//______________________________________________________________________________
-void TGHProgressBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a horizontal progress bar as a C++ statement(s) on output stream out
-
-   char quote = '"';
-
-   out <<"   TGHProgressBar *";
-   out << GetName() <<" = new TGHProgressBar("<< fParent->GetName();
-
-   if ((fBarType == kFancy) && (fBarWidth == kProgressBarTextWidth)) {
-      out << ",TGProgressBar::kFancy";
-   } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)){
-      out << ",TGProgressBar::kStandard";
-   }
-
-   out << "," << GetWidth() << ");" << endl;
-
-   if (GetFillType() == kBlockFill)
-      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
-
-   if (GetShowPos()) {
-       out << "   " << GetName() <<"->ShowPosition(kTRUE,";
-       if (UsePercent()) {
-           out << "kTRUE,";
-       } else {
-         out << "kFALSE,";
-       }
-       out << quote << GetFormat() << quote << ");"<< endl;
-
-   } else if (UsePercent() && !GetFillType()) {
-      out << "   " << GetName() <<"->ShowPosition();" << endl;
-   }
-   TGProgressBar::SavePrimitive(out, option);
-}

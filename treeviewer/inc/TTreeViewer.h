@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.14 2003/11/10 10:48:43 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.11 2002/09/13 19:43:12 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -50,13 +50,11 @@ class TGListTree;
 class TGListTreeItem;
 class TGListView;
 class TGHProgressBar;
-class TGButton;
 
 
 class TTreeViewer : public TGMainFrame {
 
 friend class TGClient;
-friend class TGButton;
 
 public:
    //---- item types used as user data
@@ -89,7 +87,6 @@ private:
    Int_t                fTreeIndex;             // index of current tree in list
    const TGPicture      *fPicX, *fPicY, *fPicZ; // pictures for X, Y and Z expressions
    const TGPicture      *fPicDraw, *fPicStop;   // pictures for Draw/Stop buttons
-   const TGPicture      *fPicRefr;              // pictures for Refresh buttons //ia
    Cursor_t             fDefaultCursor;         // default cursor
    Cursor_t             fWatchCursor;           // watch cursor
    TTimer               *fTimer;                // tree viewer timer
@@ -141,7 +138,6 @@ private:
    TGTextEntry          *fBarListOut;   // tree output event list name entry
    TGPictureButton      *fDRAW;         // DRAW button
    TGPictureButton      *fSTOP;         // interrupt current command (not yet)
-   TGPictureButton      *fREFR;         // REFRESH button  //ia
    TGStatusBar          *fStatusBar;    // status bar
    TGComboBox           *fCombo;        // combo box with session records
    TGPictureButton      *fBGFirst;
@@ -181,12 +177,10 @@ public:
    TTreeViewer(const TTree *tree);
    virtual       ~TTreeViewer();
 // public methods
-   void          AppendTree(TTree *tree);
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
    virtual void  CloseWindow();
    virtual void  Delete(Option_t *) { }                          // *MENU*
-   void          DoRefresh();
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*
@@ -207,7 +201,7 @@ public:
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
-   void          SaveSource(const char* filename="", Option_t *option="");            // *MENU*
+   void          SaveSource(const char* filename="");            // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
    void          SetCurrentRecord(Int_t entry);

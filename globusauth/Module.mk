@@ -26,7 +26,7 @@ GLBPATCHS     :=
 GLBPATCHO     :=
 GLBPATCHDEP   :=
 ifneq ($(GLBPATCHFLAGS),)
-GLBPATCHS     := $(MODDIRS)/globus_gsi_credential.c
+GLBPATCHS     := $(MODDIRS)/globus_gsi_system_config.c
 GLBPATCHO     := $(GLBPATCHS:.c=.o)
 GLBPATCHDEP   := $(GLBPATCHO:.o=.d)
 endif

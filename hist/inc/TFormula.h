@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.21 2003/06/30 15:45:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.20 2003/06/18 16:48:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -63,8 +63,6 @@ protected:
       kConstants    =  50000,
       kStrings      =  80000,
       kVariable     = 100000,
-      kFormulaVar   = 110000,
-      kBoolOptimize = 120000, 
       kFunctionCall = 200000
    };
 

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.12 2003/11/25 13:17:33 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.10 2002/01/21 11:04:48 brun Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -53,8 +53,6 @@ const char gTVHelpStart[] = "\
       or:\n\
          root [2] TreeViewer *tv = new TTreeViewer();\n\
          root [3] tv->SetTreeName(\"Mytree\");\n\n\
-   NOTE: Once a TTreeViewer is started, one can access it from the interpreter\n\
-         using the global identifier gTV\n\n\
 ";
 
 const char gTVHelpLayout[] = "\
@@ -80,31 +78,13 @@ The layout has the following items:\n\n\
 ";
 
 const char gTVHelpOpenSave[] = "\
-There are 3 methods of loading a tree in the TreeViewer:\n\n\
-   1. If the tree is opened in a TBrowser, one can direcly call TTree::StartViewer()\n\
-      from its context menu (righ-button click on the tree).\n\
-   If the tree is in a file, one has first to load it into memory:\n\
-   - using first <File/Open tree file> menu to open the .root file or just:\n\
-      TFile f(\"myFile\");\n\
-   - once the file is opened, one can load a tree in the tree viewer:\n\
-   2. Knowing the name of the tree:\n\
-      gTV->SetTreeName(\"myTree\"); (this method can be also called from the context\n\
-                                   menu of the panel on the right)\n\
-   3. Getting a pointer to the tree:\n\
-      TTree *tree = (TTree*)f.Get(\"myTree\");\n\
-      gTV->AppendTree(tree);\n\
-NOTE that method 2. calls gROOT->FindObject(\"myTree\") that will retreive the first\n\
-tree found with this name, not necesarry from the opened file.\n\n\
-Several trees can be opened in the same TreeViewer session :\n\n\
-   TFile *f1(\"first.root\",\"READ\");\n\
-   TTree *tree1 = (TTree*)f1->Get(\"myTree1\");\n\
-   gTV->AppendTree(tree1);\n\
-   TFile *f2(\"second.root\",\"READ\");\n\
-   TTree *tree2 = (TTree*)f2->Get(\"myTree2\");\n\
-   gTV->AppendTree(tree2);\n\n\
-To save the current session, use File/SaveSource menu or the SaveSource()\n\
-method from the context menu of the right panel (this allows changing the name of the\n\
-file)\n\n\
+To open a new tree in the viewer use <File/Open tree file> menu.\n\
+The content of the file (keys) will be listed. Use <SetTreeName> function\n\
+from the context menu of the right panel, entering a tree name among those\n\
+listed.\n\n\
+To save the current session, use <File/Save> menu or the <SaveSource>\n\
+function from the context menu of the right panel (to specify the name of the\n\
+file - name.C)\n\n\
 To open a previously saved session for the tree MyTree, first open MyTree\n\
 in the browser, then use <File/Open session> menu.\n\n\
 ";
@@ -138,27 +118,6 @@ The editor usage is the following:\n\
     be modified accordingly. Must NOT be the leading string of other aliases.\n\
     When Draw commands are issued, the name of the corresponding histogram axes\n\
     will become the aliases of the expressions.\n\n\
-";
-
-const char gTVHelpSession[] ="\
-A TreeViewer session is made by the list of user-defined expressions and cuts,\n\
-applying to a specified tree. A session can be saved using File/SaveSource menu\n\
-or the SaveSource method from the context menu of the right panel. This will\n\
-create a macro having as default name treeviewer.C that can be ran at any time to\n\
-reproduce the session.\n\n\
-Besides the list of user-defined expressions, a session may contain a list of\n\
-RECORDS. A record can be produced in the following way:\n\
-   - dragging leaves/expression on X/Y/Z\n\
-   - changing drawing options\n\
-   - clicking the RED button on the bottom when happy with the histogram\n\
-NOTE that just double clicking a leaf will not produce a record: the histogram must\n\
-be produced when clicking the DRAW button on the bottom-left.\n\n\
-The records will appear on the list of records in the bottom right of the\n\
-tree viewer. Selecting a record will draw the corresponding histogram. Records\n\
-can be played using the arrow buttons near to the record button. When saving the\n\
-session, the list of records is being saved as well.\n\n\
-Records have a default name corresponding to the Z:Y:X selection, but this can be\n\
-changed using SetRecordName() method from the right panel context menu.\n\n\
 ";
 
 const char gTVHelpUserCommands[] = "\

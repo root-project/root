@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.52 2003/11/25 17:12:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.50 2003/10/06 13:40:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -936,39 +936,22 @@ void TAxis::SetTimeFormat(const char *tformat)
 
 
 //______________________________________________________________________________
-void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
+void TAxis::SetTimeOffset(Double_t toffset)
 {
    // Change the time offset
-   // If option = "gmt" the time offset is treated as a GMT time.
-
-   TString opt = option;
-   opt.ToLower();
-
-   Bool_t gmt = kFALSE;
-   if (opt.Contains("gmt")) gmt = kTRUE;
-
-   char tmp[20]; 
+   char sqldate[20]; 
    time_t timeoff;
    struct tm* utctis;
+
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
-   utctis = gmtime(&timeoff); 
+   utctis = localtime(&timeoff); 
 
-   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
-   fTimeFormat.Append(tmp);
-
-   // append the decimal part of the time offset
-   Double_t ds = toffset-(Int_t)toffset;
-   if(ds!= 0) {
-      sprintf(tmp,"s%g",ds);
-      fTimeFormat.Append(tmp);
-   }
-
-   // If the time is GMT, stamp fTimeFormat
-   if (gmt) fTimeFormat.Append(" GMT");
+   strftime(sqldate,256,"%Y-%m-%d %H:%M:%S",utctis); 
+   fTimeFormat.Append(sqldate);
 }
 
 

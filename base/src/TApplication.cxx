@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.48 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.46 2003/07/07 14:51:45 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -151,10 +151,6 @@ TApplication::TApplication(const char *appClassName,
 
    // Create WM dependent application environment
    fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
-   if (!fAppImp) {
-      MakeBatch();
-      fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
-   }
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
@@ -271,7 +267,13 @@ void TApplication::GetOptions(int *argc, char **argv)
          fprintf(stderr, "\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
-         MakeBatch();
+         gROOT->SetBatch();
+         if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
+         gGuiFactory = gBatchGuiFactory;
+#ifndef R__WIN32
+         if (gVirtualX != gGXBatch) delete gVirtualX;
+#endif
+         gVirtualX = gGXBatch;
          argv[i] = 0;
 #if 0
       } else if (!strcmp(argv[i], "-x")) {
@@ -554,20 +556,6 @@ void TApplication::LoadGraphicsLibs()
 }
 
 //______________________________________________________________________________
-void TApplication::MakeBatch()
-{
-   // Switch to batch mode.
-
-   gROOT->SetBatch();
-   if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
-   gGuiFactory = gBatchGuiFactory;
-#ifndef R__WIN32
-   if (gVirtualX != gGXBatch) delete gVirtualX;
-#endif
-   gVirtualX = gGXBatch;
-}
-
-//______________________________________________________________________________
 void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
@@ -713,7 +701,7 @@ void TApplication::ProcessFile(const char *name, int *error)
       file.getline(currentline,kBufSize);
       if (file.eof()) break;
       s = currentline;
-      while (s && (*s == ' ' || *s == '\t') ) s++;     // strip-off leading blanks
+      while (s && *s == ' ') s++;     // strip-off leading blanks
 
       // very simple minded pre-processor parsing, only works in case macro file
       // starts with "#ifndef __CINT__". In that case everything till next

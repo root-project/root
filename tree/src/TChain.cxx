@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.85 2003/11/01 10:48:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.83 2003/09/12 15:54:16 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -583,9 +583,8 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 //     getall = 1 : get all branches
 //
 // return the total number of bytes read
-// o bytes read indicates a failure.
 
-   if (LoadTree(entry) < 0 || fTree==0) return 0;
+   if (LoadTree(entry) < 0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
 
@@ -1007,15 +1006,10 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // IMPORTANT Note 2: The input file is automatically closed and deleted.
 // This is required because in general the automatic file overflow described
 // above may happen during the merge.
-// If only the current file is produced (the file passed as first argument),
-// one can instruct Merge to not close the file by specifying the option "keep".
 //
 // The function returns the total number of files produced.
 
    if (!file) return 0;
-   TString opt = option;
-   opt.ToLower();
-
    TObjArray *lbranches = GetListOfBranches();
    if (!lbranches) return 0;
    if (!fTree) return 0;
@@ -1028,7 +1022,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // May be reset branches compression level?
    TBranch *branch;
    TIter nextb(hnew->GetListOfBranches());
-   if (opt.Contains("c")) {
+   if (strstr(option,"c") || strstr(option,"C")) {
       while ((branch = (TBranch*)nextb())) {
          branch->SetCompressionLevel(file->GetCompressionLevel());
       }
@@ -1057,7 +1051,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    hnew->Write();
    Int_t nfiles = hnew->GetFileNumber()+1;
    delete [] firstname;
-   if (!opt.Contains("keep")) delete hnew->GetCurrentFile();
+   delete hnew->GetCurrentFile();
    return nfiles;
 }
 

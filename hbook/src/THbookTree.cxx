@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.7 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.6 2002/08/13 13:44:33 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -117,7 +117,7 @@ void THbookTree::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void THbookTree::SetEntries(Double_t n)
+void THbookTree::SetEntries(Int_t n)
 {
    fEntries = n;
    TIter next(GetListOfBranches());

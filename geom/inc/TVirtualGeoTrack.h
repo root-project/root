@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.4 2003/07/07 21:16:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.3 2003/06/17 19:46:10 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 #define ROOT_TVirtualGeoTrack
 
 #ifndef ROOT_TObject
-#include "TObArray.h"
+#include "TObject.h"
 #endif
 
 #ifndef ROOT_TGeoAtt

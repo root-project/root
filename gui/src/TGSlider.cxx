@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.8 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.7 2003/05/08 17:42:43 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -48,7 +48,6 @@
 
 #include "TGSlider.h"
 #include "TGPicture.h"
-#include "Riostream.h"
 
 ClassImp(TGSlider)
 ClassImp(TGVSlider)
@@ -352,101 +351,4 @@ Bool_t TGHSlider::HandleMotion(Event_t *event)
       }
    }
    return kTRUE;
-}
-
-//______________________________________________________________________________
-TString TGSlider::GetTypeString() const
-{
-   // Returns the slider type as a string - used in SavePrimitive().
-
-   TString stype;
-
-   if (fType) {
-       if (fType & kSlider1)  {
-           if (stype.Length() == 0) stype  = "kSlider1";
-           else                     stype += " | kSlider1";
-       }
-       if (fType & kSlider2)  {
-           if (stype.Length() == 0) stype  = "kSlider2";
-           else                     stype += " | kSlider2";
-       }
-       if (fType & kScaleNo)  {
-           if (stype.Length() == 0) stype  = "kScaleNo";
-           else                     stype += " | kScaleNo";
-       }
-       if (fType & kScaleDownRight) {
-           if (stype.Length() == 0) stype  = "kScaleDownRight";
-           else                     stype += " | kScaleDownRight";
-       }
-       if (fType & kScaleBoth) {
-           if (stype.Length() == 0) stype  = "kScaleBoth";
-           else                     stype += " | kScaleBoth";
-       }
-   }
-   return stype;
-}
-
-//______________________________________________________________________________
-void TGHSlider::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out<<"   TGHSlider *";
-   out << GetName() << " = new TGHSlider(" << fParent->GetName()
-       << "," << GetWidth() << ",";
-   out << GetTypeString() << "," << WidgetId();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
-         out << "," << GetOptionString() <<");" << endl;
-       }
-   } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   if (fVmin != 0 || fVmax != (Int_t)fWidth)
-       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
-
-   if (fPos != (Int_t)fWidth/2)
-       out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
-
-   if (fScale != 10)
-       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
-}
-
-//______________________________________________________________________________
-void TGVSlider::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out<<"   TGVSlider *";
-   out << GetName() <<" = new TGVSlider("<< fParent->GetName()
-       << "," << GetHeight() << ",";
-   out << GetTypeString() << "," << WidgetId();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-
-       if (!GetOptions()) {
-            out <<");" << endl;
-       } else {
-         out << "," << GetOptionString() <<");" << endl;
-       }
-   } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   if (fVmin != 0 || fVmax != (Int_t)fHeight)
-       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
-
-   if (fPos != (Int_t)fHeight/2)
-       out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
-
-   if (fScale != 10)
-       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.10 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.9 2002/05/18 08:43:29 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -138,7 +138,7 @@ void TTask::Abort()
    // The application must take care of cleaning data structures created
    // by previous executions.
 
-   if (!fgBeginTask) {
+   if (fgBeginTask) {
       printf(" Nothing to abort: No task currently running\n");
       return;
    }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.29 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.26 2003/08/06 09:42:57 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -48,7 +48,6 @@
 #include "TGTextEditDialogs.h"
 #include "TGResourcePool.h"
 #include "TGMsgBox.h"
-#include "Riostream.h"
 
 
 Pixel_t        TGListTree::fgGrayPixel = 0;
@@ -420,8 +419,6 @@ Bool_t TGListTree::HandleKey(Event_t *event)
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
       n = strlen(input);
 
-      KeyPressed(fSelected, keysym, event->fState);
-
       switch ((EKeySym)keysym) {
          case kKey_Enter:
          case kKey_Return:
@@ -540,34 +537,6 @@ void TGListTree::OnMouseOver(TGListTreeItem *entry)
 
    if (!fOnMouseOver) Emit("OnMouseOver(TGListTreeItem*)", (Long_t)entry);
    fOnMouseOver = kTRUE;
-}
-
-//______________________________________________________________________________
-void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
-{
-   // Signal emitted when keyboard key pressed
-   //
-   // item - selected item
-   // keysym - defined in "KeySymbols.h"
-   // mask - modifier key mask, defined in "GuiTypes.h"
-   //
-   // const Mask_t kKeyShiftMask   = BIT(0);
-   // const Mask_t kKeyLockMask    = BIT(1);
-   // const Mask_t kKeyControlMask = BIT(2);
-   // const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
-   // const Mask_t kButton1Mask    = BIT(8);
-   // const Mask_t kButton2Mask    = BIT(9);
-   // const Mask_t kButton3Mask    = BIT(10);
-   // const Mask_t kButton4Mask    = BIT(11);
-   // const Mask_t kButton5Mask    = BIT(12);
-   // const Mask_t kAnyModifier    = BIT(15);
-
-   Long_t args[3];
-   args[0] = (Long_t)entry;
-   args[1] = (Long_t)keysym;
-   args[2] = (Long_t)mask;
-   Emit("KeyPressed(TGFame*,ULong_t,ULong_t)", args);
-   SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
 //______________________________________________________________________________
@@ -1767,37 +1736,4 @@ const TGGC &TGListTree::GetHighlightGC()
       fgHighlightGC = gClient->GetGC(&gcv, kTRUE);
    }
    return *fgHighlightGC;
-}
-
-//______________________________________________________________________________
-void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a list tree widget as a C++ statement(s) on output stream out
-
-   char quote = '"';
-
-   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
-
-   out << endl << "   // list tree" << endl;
-   out << "   TGListTree *";
-
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGListTree(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGListTree(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
-
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == kSunkenFrame) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   out << "   " << GetName() << "->AddItem(0," << quote
-       << GetFirstItem()->GetText() << quote << ");" << endl;
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.62 2003/11/27 15:15:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.58 2003/09/19 14:02:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -524,7 +524,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    time_t timelabel;
    Double_t timed, wTimeIni;
    struct tm* utctis;
-   Double_t rangeOffset = 0;
 
    Double_t epsilon   = 1e-5;
    const Double_t kPI = TMath::Pi();
@@ -615,8 +614,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          Int_t yy, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6) {
             struct tm tp;
-            struct tm* tptest;
-            time_t timeoffsettest;
             tp.tm_year  = yy-1900;
             tp.tm_mon   = mm-1;
             tp.tm_mday  = dd;
@@ -624,22 +621,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             tp.tm_min   = mi;
             tp.tm_sec   = ss;
             tp.tm_isdst = -1;
-            timeoffset  = mktime(&tp);
-            // have to correct this time to go back to UTC
-            timeoffsettest = (time_t)((Long_t)timeoffset);
-            tptest = gmtime(&timeoffsettest);
-            timeoffset += timeoffsettest - mktime(tptest);
-            // Add the time offset's decimal part if it is there
-            Int_t Ids   = stringtimeoffset.Index("s");
-            if (Ids >= 0) {
-               Float_t dp;
-               Int_t Lns   = stringtimeoffset.Length();
-               TString sdp = stringtimeoffset(Ids+1,Lns);
-               sscanf(sdp.Data(),"%g",&dp);
-               timeoffset += dp;
-            }
-	    // if OptionTime = 2 gmtime will be used instead of localtime
-            if (stringtimeoffset.Index("GMT")>=0) OptionTime =2;
+            timeoffset = mktime(&tp);
          } else {
             Error(where, "Time offset has not the right format");
          }
@@ -648,29 +630,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
       wmin += timeoffset - (int)(timeoffset);
       wmax += timeoffset - (int)(timeoffset);
-    // correct for time offset at a good limit (min, hour, day, month, year)
-      struct tm* tp0;
-      time_t timetp = (time_t)((Long_t)(timeoffset));
-      Double_t range = wmax - wmin;
-      Long_t rangeBase = 60;
-      if (range>60)       rangeBase = 60*20;       // minutes
-      if (range>3600)     rangeBase = 3600*20;     // hours
-      if (range>86400)    rangeBase = 86400*20;    // days
-      if (range>2419200)  rangeBase = 31556736;    // months (average # days)
-      rangeOffset = (Double_t) ((Long_t)(timeoffset)%rangeBase);
-      if (range>31536000) {
-         tp0 = gmtime(&timetp);
-         tp0->tm_mon   = 0;
-         tp0->tm_mday  = 1;
-         tp0->tm_hour  = 0;
-         tp0->tm_min   = 0;
-         tp0->tm_sec   = 0;
-         tp0->tm_isdst = -1;
-         rangeBase = (timetp-mktime(tp0)); // years
-         rangeOffset = (Double_t) (rangeBase);
-      }
-      wmax += rangeOffset;
-      wmin += rangeOffset;
    }
 
 //*-*-              Determine number of divisions 1, 2 and 3
@@ -821,10 +780,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          N1A         = N1Aold;
          NN1         = NN1old;
          Nticks      = NN1;
-         if (OptionTime) {
-            wmin        += timeoffset - (int)(timeoffset) + rangeOffset;
-            wmax        += timeoffset - (int)(timeoffset) + rangeOffset;
-         }
       }
    }
 
@@ -1384,13 +1339,9 @@ L110:
 //*-*-              Generate the time labels
 
                if (OptionTime) {
-                  timed = Wlabel + (int)(timeoffset) - rangeOffset;
+                  timed = Wlabel + (int)(timeoffset);
                   timelabel = (time_t)((Long_t)(timed));
-                  if (OptionTime == 1) {
-                     utctis = localtime(&timelabel);
-                  } else {
-                     utctis = gmtime(&timelabel);
-                  }
+                  utctis = localtime(&timelabel);
                   TString timeformattmp;
                   if (timeformat.Length() < 220) timeformattmp = timeformat;
                   else timeformattmp = "#splitline{Format}{too long}";
@@ -1972,39 +1923,22 @@ void TGaxis::SetTimeFormat(const char *tformat)
 }
 
 //______________________________________________________________________________
-void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
+void TGaxis::SetTimeOffset(Double_t toffset)
 {
    // Change the time offset
-   // If option = "gmt" the time offset is treated as a GMT time.
-
-   TString opt = option;
-   opt.ToLower();
-
-   Bool_t gmt = kFALSE;
-   if (opt.Contains("gmt")) gmt = kTRUE;
-
-   char tmp[20]; 
+   char sqldate[20];
    time_t timeoff;
    struct tm* utctis;
+     
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
-
+    
    timeoff = (time_t)((Long_t)(toffset));
-   utctis = gmtime(&timeoff); 
+   utctis = localtime(&timeoff);
 
-   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
-   fTimeFormat.Append(tmp);
-
-   // append the decimal part of the time offset
-   Double_t ds = toffset-(Int_t)toffset;
-   if(ds!= 0) {
-      sprintf(tmp,"s%g",ds);
-      fTimeFormat.Append(tmp);
-   }
-
-   // If the time is GMT, stamp fTimeFormat
-   if (gmt) fTimeFormat.Append(" GMT");
+   strftime(sqldate,256,"%Y-%m-%d %H:%M:%S",utctis);
+   fTimeFormat.Append(sqldate);
 }
 
 //______________________________________________________________________________

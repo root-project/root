@@ -247,11 +247,7 @@ extern time_t time(time_t *t);
 int S_ISLNK(mode_t m);
 int S_ISSOCK(mode_t m); 
 #endif
-#if defined(G__APPLE) || defined(__APPLE__)
-extern int fchown(int fd,int owner,int group);
-#else
 extern int fchown(int fd,uid_t owner,gid_t group);
-#endif
 extern int fchdir(int fd);
 #if !defined(G__SUN) && !defined(G__CYGWIN)
 extern char *get_current_dir_name(void);
@@ -261,7 +257,7 @@ extern char *getwd(char *buf);
 
 #if defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
-#elif defined(G__FBSD)||defined(__FreeBSD__)||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))
+#elif defined(G__FBSD) || defined(__FreeBSD__) || ((defined(G__alpha) || defined(__alpha)) && defined(G__GNUC))
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
 extern pid_t setpgrp(void);

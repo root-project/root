@@ -1,7 +1,7 @@
 {
 // example of use of TGenPhaseSpace by Valerio Filippini
    gROOT.Reset();
-   gSystem.Load("libPhysics");
+   gSystem.Load("libPhysics.so");
 
    TLorentzVector target(0.0, 0.0, 0.0, 0.938);
    TLorentzVector beam(0.0, 0.0, .65, .65);

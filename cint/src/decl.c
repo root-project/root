@@ -7,7 +7,7 @@
  * Description:
  *  Variable declaration
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -2110,11 +2110,6 @@ int tagnum,typenum;      /* overrides global variables */
 	  }
 #ifndef G__OLDIMPLEMENTATION1549
 	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
-#ifndef G__OLDIMPLEMENTATION1927
-	    /* int store_tagnumC = G__tagnum; */
-	    /* int store_def_tagnumC = G__def_tagnum; */
-	    int store_tagdefiningC = G__tagdefining;
-#endif
 #ifndef G__OLDIMPLEMENTATION1551
 	    int store_eval_localstatic = G__eval_localstatic;
 	    G__eval_localstatic=1;
@@ -2122,11 +2117,6 @@ int tagnum,typenum;      /* overrides global variables */
 	    reg=G__getexpr(temp);
 #ifndef G__OLDIMPLEMENTATION1551
 	    G__eval_localstatic=store_eval_localstatic;
-#endif
-#ifndef G__OLDIMPLEMENTATION1927
-	    /* G__tagnum = store_tagnumC; shouldn't do this */
-	    /* G__def_tagnum = store_def_tagnumC; shouldn't do this */
-	    G__tagdefining = store_tagdefiningC;
 #endif
 	  }
 #else
@@ -2653,10 +2643,6 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION931
 	      long store_struct_offsetB=G__store_struct_offset;
 #endif
-#ifndef G__OLDIMPLEMENTATION1927
-	      /* int store_def_tagnumB = G__def_tagnum; shouldn't do this */
-	      int store_tagdefiningB = G__tagdefining;
-#endif
 	      /*********************************************
 	       * G__COPYCONSTRUCTOR
 	       * default and user defined copy constructor
@@ -2699,10 +2685,6 @@ int tagnum,typenum;      /* overrides global variables */
 	      G__var_type=store_var_typeB;
 	      G__tagnum = store_tagnumB;
 	      G__typenum = store_typenumB;
-#ifndef G__OLDIMPLEMENTATION1927
-	      /* G__def_tagnum = store_def_tagnumB; shouldn't do this */
-	      G__tagdefining = store_tagdefiningB;
-#endif
 	      if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
 #ifndef G__OLDIMPLEMENTATION983
 		if(reg.tagnum==tagnum && 'u'==reg.type) {
@@ -3067,30 +3049,6 @@ char *new_name;
   /* handling static declaration */
   if(G__static_alloc==1) {
     if(G__prerun==0) {
-#ifndef G__OLDIMPLEMENTATION1950
-      /* calculate hash */
-      G__hash(name,hash,i)
-      /* get variable table entry */
-      var = G__getvarentry(name,hash,&ig15,&G__global,G__p_local);
-      if(var && INT_MAX==var->varlabel[ig15][1]) {
-	struct G__var_array *varstatic;
-	char namestatic[G__ONELINE];
-	int hashstatic,ig15static;
-	if(-1!=G__memberfunc_tagnum) /* questionable */
-	  sprintf(namestatic,"%s\\%x\\%x\\%x",name,G__func_page,G__func_now
-		  ,G__memberfunc_tagnum);
-	else
-	  sprintf(namestatic,"%s\\%x\\%x" ,name,G__func_page,G__func_now);
-	
-	G__hash(namestatic,hashstatic,i)
-	  varstatic = G__getvarentry(namestatic,hashstatic,&ig15static
-				     ,&G__global,G__p_local);
-	if(varstatic) {
-          for(i=0;i<G__MAXVARDIM;i++) 
-	    var->varlabel[ig15][i] = varstatic->varlabel[ig15static][i];
-	}
-      }
-#endif
       /* ignore local static at run time */
       c=G__fignorestream("}");
       c=G__fignorestream(",;");

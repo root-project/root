@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.18 2002/10/04 16:06:29 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.17 2002/09/14 00:31:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -106,7 +106,7 @@ private:
    void   FindUsableVisual(XVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
-                   UChar_t *image, Drawable_t id);
+                   UChar_t *image);
    void   RemovePixmap(Drawable *pix);
    void   SetColor(GC gc, Int_t ci);
    void   SetFillStyleIndex(Int_t style, Int_t fasi);
@@ -199,7 +199,7 @@ public:
    Int_t     OpenDisplay(Display *display);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);
-   Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0);
+   void      ReadGIF(Int_t x0, Int_t y0, const char *file);
    Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    Int_t     RequestString(Int_t x, Int_t y, char *text);
    void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h);

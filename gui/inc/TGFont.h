@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.1 2003/05/28 11:55:30 rdm Exp $
+// @(#)root/gui:$Name:$:$Id:$
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -74,8 +74,6 @@ public:
    void         GetFontMetrics(FontMetrics_t *m) const;
 
    void         Print(Option_t *option="") const;
-
-   virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGFont,0)   // GUI font description
 };

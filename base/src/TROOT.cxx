@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.107 2003/11/13 15:25:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.102 2003/09/05 12:55:11 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -672,10 +672,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       }
    }
    if (!temp && !strcmp(name, "gVirtualX")) {
-      return gVirtualX;
-   }
-   if (!temp && !strcmp(name, "gInterpreter")) {
-      return gInterpreter;
+      temp = gVirtualX;
    }
    if (!temp) {
       temp  = fFiles->FindObject(name);
@@ -1025,7 +1022,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
-      TString mangled = gInterpreter->GetMangledName(0, function, params);
+      TString mangled = fInterpreter->GetMangledName(0, function, params);
       while ((f = (TFunction *) next())) {
          if (mangled == f->GetMangledName()) return f;
       }
@@ -1052,7 +1049,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
-      TString mangled = gInterpreter->GetMangledNameWithPrototype(0,
+      TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
                                                                      function,
                                                                      proto);
       while ((f = (TFunction *) next())) {
@@ -1089,7 +1086,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
       Fatal("GetListOfGlobals", "fInterpreter not initialized");
 
    if (load)
-      gInterpreter->UpdateListOfGlobals();
+      fInterpreter->UpdateListOfGlobals();
 
    return fGlobals;
 }
@@ -1113,7 +1110,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
       Fatal("GetListOfGlobalFunctions", "fInterpreter not initialized");
 
    if (load)
-      gInterpreter->UpdateListOfGlobalFunctions();
+      fInterpreter->UpdateListOfGlobalFunctions();
 
    return fGlobalFunctions;
 }
@@ -1153,7 +1150,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
 
    if (load)
-      gInterpreter->UpdateListOfTypes();
+      fInterpreter->UpdateListOfTypes();
 
    return fTypes;
 }
@@ -1371,7 +1368,7 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
             fname = mac;
             fname += aclicMode;
             fname += io;
-            gInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
+            fInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
             if (*terr)
                err = -1;
             //else   // maybe not needed (RDM)
@@ -1410,7 +1407,7 @@ Int_t TROOT::Macro(const char *filename, int *error)
          fname += aclicMode;
          fname += arguments;
          fname += io;
-         result = gInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
+         result = fInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
       }
       delete [] mac;
 
@@ -1499,14 +1496,14 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
    if (fInterpreter) {
       TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
-      result = gInterpreter->Calc(line, code);
+      result = fInterpreter->Calc(line, code);
    }
 
    return result;
 }
 
 //______________________________________________________________________________
-TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
+void TROOT::Proof(const char *cluster)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
@@ -1515,15 +1512,14 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
 
    // make sure libProof is loaded and TProof can be created
    TPluginHandler *h;
+   //if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
+   //   h->LoadPlugin();
 
    if ((h = GetPluginManager()->FindHandler("TVirtualProof"))) {
       if (h->LoadPlugin() == -1)
-         return 0;
-      if (!configfile)
-         return (TVirtualProof *) h->ExecPlugin(1, cluster);
-      return (TVirtualProof *) h->ExecPlugin(2, cluster, configfile);
+         return;
+      h->ExecPlugin(1, cluster);
    }
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -1569,7 +1565,7 @@ void TROOT::Reset(Option_t *)
      //    fInterpreter->Reset();
      //    fInterpreter->SaveContext();
      // } else
-         gInterpreter->ResetGlobals();
+         fInterpreter->ResetGlobals();
 
       if (fGlobals) fGlobals->Delete();
       if (fGlobalFunctions) fGlobalFunctions->Delete();
@@ -1584,7 +1580,7 @@ void TROOT::SaveContext()
    // Save the current interpreter context.
 
    if (fInterpreter)
-      gInterpreter->SaveGlobalsContext();
+      fInterpreter->SaveGlobalsContext();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.24 2003/09/12 15:54:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.23 2003/09/04 23:19:31 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -443,7 +443,7 @@ inline TString& TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
 
 inline Bool_t TString::BeginsWith(const char* s, ECaseCompare cmp) const
-{ return Index(s, s ? strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }
+{ return Index(s, strlen(s), (Ssiz_t)0, cmp) == 0; }
 
 inline Bool_t TString::BeginsWith(const TString& pat, ECaseCompare cmp) const
 { return Index(pat.Data(), pat.Length(), (Ssiz_t)0, cmp) == 0; }

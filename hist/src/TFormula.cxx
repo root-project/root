@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.59 2003/11/25 17:07:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.54 2003/09/09 16:48:19 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -433,35 +433,25 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     !=(string)  77                  |            79
 //*-*     <<(shift)   80                  >>(shift)    81
 //*-*
-//*-*   * constants (kConstants) : 
+//*-*   * constants :
 //*-*
 //*-*    c0  50000      c1  50001  etc..
 //*-*
-//*-*   * strings (kStrings) :
+//*-*   * strings :
 //*-*
-//*-*    sX  80000      (80001 to 99999) 
+//*-*    sX  80000      (80001 to 99999) to not used yet
 //*-*
-//*-*   * variables (kFormulaVar) :
+//*-*   * variables :
 //*-*
-//*-*     x    110000     y    110001     z    110002     t    110003
+//*-*     x    100000     y    100001     z    100002     t    100003
 //*-*
 //*-*   * parameters :
 //*-*
 //*-*     [1]        101
 //*-*     [2]        102
 //*-*     etc.
-//*-*  
-//*-*   * boolean optimization (kBoolOptmize) :
 //*-*
-//*-*     Those pseudo operation are used to implement lazy evaluation of
-//*-*     && and ||.  When the left hand of the expression if false 
-//*-*     (respectively true), the evaluation of the right is entirely skipped
-//*-*     (since it would not change the value of the expreession).
-//*-*
-//*-*     &&   120011 (one operation on right) 120021 (2 operations on right)
-//*-*     ||   120012 (one operation on right) 120022 (2 operations on right)
-//*-*  
-//*-*   * functions calls (kFunctionCall) :
+//*-*   * functions calls
 //*-*
 //*-*    f0 200000  f1 200001  etc..
 //*-*
@@ -655,17 +645,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
       else {
         ctemp = chaine(0,ou-1);
         Analyze(ctemp.Data(),err,offset);
-
-        fExpr[fNoper] = "|| opt";
-        fOper[fNoper] = kBoolOptimize+2;
-        Int_t optloc = fNoper++;
-
         ctemp = chaine(ou+1,lchain-ou-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "||";
         fOper[fNoper] = 61;
-
-        fOper[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (et!=0) {
@@ -676,17 +659,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
       else {
         ctemp = chaine(0,et-1);
         Analyze(ctemp.Data(),err,offset);
-
-        fExpr[fNoper] = "&& opt";
-        fOper[fNoper] = kBoolOptimize+1;
-        Int_t optloc = fNoper++;
-
         ctemp = chaine(et+1,lchain-et-1);
         Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "&&";
         fOper[fNoper] = 60;
-
-        fOper[optloc] += (fNoper-optloc) * 10;
         fNoper++;
       }
     } else if (oux!=0) {
@@ -931,86 +907,22 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   fNoper++;
                 }
               }
-            } else {
-
-              find=0;
-
-//*-*- Check for a numerical expression
-               {
-                  Bool_t hasDot = kFALSE;
-                  Bool_t isHexa = kFALSE;
-                  Bool_t hasExpo= kFALSE;
-                  if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
-                  for (Int_t j=0; j<chaine.Length() && err==0; j++) {
-                     t=chaine[j];
-                     if (!isHexa) {
-                        if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
-                           if (hasExpo) {
-                              err=26;
-                              chaine_error=chaine;
-                           }
-                           hasExpo = kTRUE;
-                           // The previous implementation allowed a '.' in the exponent.
-                           // That information was ignored (by sscanf), we now make it an error
-                           // hasDot = kFALSE;
-                           hasDot = kTRUE;  // forbid any additional '.'
-                           if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
-                        }
-                        else {
-                           if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
-                           else {
-                              // The previous implementation was allowing ANYTHING after the '.' and thus 
-                              // made legal code like '2.3 and fpx' and was just silently ignoring the 
-                              // 'and fpx'.
-                              if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
-                                 err = 30;
-                                 chaine_error=chaine;
-                              }
-                           }
-                        }
-                     }
-                     else {
-                        if (!strchr("0123456789abcdefABCDEF",t) && (j>1)) {
-                           err = 30;
-                           chaine_error=chaine;
-                        }
-                     }
-                  }
-                  if (fNconst >= MAXCONST) err = 27;
-                  if (!err) {
-                     if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
-                     else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
-                     vafConst = (Double_t) vafConst2;}
-                     fExpr[fNoper] = chaine;
-                     k = -1;
-                     for (Int_t j=0;j<fNconst;j++) {
-                        if (vafConst == fConst[j] ) k= j;
-                     }
-                     if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
-                     fOper[fNoper] = kConstants + k;
-                     fNoper++;
-                  }
-                  if (err==30) err=0;
-                  else find = kTRUE;
-               }
-
-
 //*-*- Look for an already defined expression
-              if (find==0) {
-                 oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
-                 if (oldformula && strcmp(schain,oldformula->GetTitle())) {
-                    Int_t nprior = fNpar;
-                    Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
-                    fNpar = nprior;
-                    find=1;
-                    if (!err) {
-                       Int_t npold = oldformula->GetNpar();
-                       fNpar += npold;
-                       for (Int_t ipar=0;ipar<npold;ipar++) {
-                          fParams[ipar+fNpar-npold] = oldformula->GetParameter(ipar);
-                       }
-                    }
-                 }
+            } else {
+              find=0;
+              oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
+              if (oldformula && strcmp(schain,oldformula->GetTitle())) {
+                Int_t nprior = fNpar;
+                Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
+                fNpar = nprior;
+                find=1;
+                if (!err) {
+                  Int_t npold = oldformula->GetNpar();
+                  fNpar += npold;
+                  for (Int_t ipar=0;ipar<npold;ipar++) {
+                     fParams[ipar+fNpar-npold] = oldformula->GetParameter(ipar);
+                  }
+                }
               }
               if (find == 0) {
 //*-*- Check if chaine is a defined variable.
@@ -1020,12 +932,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 k = DefinedVariable(ctemp);
                 if (k >= 5000 && k < 10000) {
                   fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
+                  fOper[fNoper] = 100000 + k;
                   fNstring++;
                   fNoper++;
                 } else if ( k >= 0 ) {
                   fExpr[fNoper] = ctemp;
-                  fOper[fNoper] = kVariable + k;
+                  fOper[fNoper] = 100000 + k;
                   if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
                      fAlreadyFound.SetBitNumber(k);
                      fNval++;
@@ -1623,13 +1535,67 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             fExpr[fNoper] = "pi";
             fOper[fNoper] = 40;
             fNoper++;
+//*-*- None of the above. Must be a numerical expression
+//*-*  =================================================
           }
+//*-*- Maybe it is a string
           else {
-//*-*- None of the above. 
-//*-*  ==================
-             err = 30;
+            Bool_t hasDot = kFALSE;
+            Bool_t isHexa = kFALSE;
+            Bool_t hasExpo= kFALSE;
+            if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
+            for (j=0; j<chaine.Length() && err==0; j++) {
+               t=chaine[j];
+               if (!isHexa) {
+                  if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
+                     if (hasExpo) {
+                        err=26;
+                        chaine_error=chaine;
+                     }
+                     hasExpo = kTRUE;
+                     // The previous implementation allowed a '.' in the exponent.
+                     // That information was ignored (by sscanf), we now make it an error
+                     // hasDot = kFALSE;
+                     hasDot = kTRUE;  // forbid any additional '.'
+                     if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
+                  }
+                  else {
+                     if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
+                     else {
+                        // The previous implementation was allowing ANYTHING after the '.' and thus 
+                        // made legal code like '2.3 and fpx' and was just silently ignoring the 
+                        // 'and fpx'.
+                        if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
+                           if (j==0) err=26;
+                           else err = 30;
+                           chaine_error=chaine;
+                        }
+                     }
+                  }
+               }
+               else {
+                  if (!strchr("0123456789abcdefABCDEF",t) && (j>1)) {
+                     if (j==0) err=26;
+                     else err = 30;
+                     chaine_error=chaine;
+                  }
+               }
+            }
+            if (fNconst >= MAXCONST) err = 27;
+              if (!err) {
+                 if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
+                 else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
+                 vafConst = (Double_t) vafConst2;}
+                 fExpr[fNoper] = chaine;
+                 k = -1;
+                 for (j=0;j<fNconst;j++) {
+                    if (vafConst == fConst[j] ) k= j;
+                 }
+                 if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
+                 fOper[fNoper] = 50000 + k;
+                 fNoper++;
+              }
           }
-
               } // because of the indentation skips above this is slightly off
             }
           }
@@ -2163,39 +2129,9 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 
        continue;
     }
-//*-*- boolean operation optimizer
-    if (action >= kBoolOptimize) {
-       Bool_t skip = kFALSE;
-       int op = (action-kBoolOptimize) % 10; // 1 is && , 2 is ||
-       
-       if (op == 1 && (!tab[pos-1]) ) { 
-          // &&: skip the right part if the left part is already false
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a&&b is
-          // either 0 or 1)
-          tab[pos-1] = 0;
-          
-       } else if (op == 2 && tab[pos-1] ) {  
-          // ||: skip the right part if the left part is already true
-          
-          skip = kTRUE;
-          
-          // Preserve the existing behavior (i.e. the result of a||b is
-          // either 0 or 1)
-          tab[pos-1] = 1;
-       }
-       
-       if (skip) {
-          int toskip = (action-kBoolOptimize) / 10;
-          i += toskip;
-       }
-       continue;
-    }
 //*-*- a variable
-    if (action >= kFormulaVar) {
-       pos++; tab[pos-1] = x[action-kFormulaVar];
+    if (action >= 110000) {
+       pos++; tab[pos-1] = x[action-110000];
        continue;
     }
 //*-*- a tree string
@@ -2208,12 +2144,12 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
        continue;
     }
 //*-*- a tree variable
-    if (action >= kVariable) {
+    if (action >= 100000) {
        if (!precalculated) {
           precalculated = 1;
           for(j=0;j<fNval;j++) param_calc[j]=DefinedValue(j);
        }
-       pos++; tab[pos-1] = param_calc[action-kVariable];
+       pos++; tab[pos-1] = param_calc[action-100000];
        continue;
     }
 //*-*- String
@@ -2222,8 +2158,8 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
        continue;
     }
 //*-*- numerical value
-    if (action >= kConstants) {
-       pos++; tab[pos-1] = fConst[action-kConstants];
+    if (action >= 50000) {
+       pos++; tab[pos-1] = fConst[action-50000];
        continue;
     }
     if (action == 0) {
@@ -2318,7 +2254,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           pos++;
           tab[pos-1] = fParams[action - 101];
 //*-*- Polynomial
-    } else if (action > 10000 && action < kConstants) {
+    } else if (action > 10000 && action < 50000) {
           pos++;
           tab[pos-1] = 0;intermede = 1;
           inter2= action/10000; //arrondit
@@ -2461,7 +2397,7 @@ Int_t TFormula::GetOperType(Int_t oper) const
 {
   if(oper==0) return -100;        //Sign inversion
 
-  if(oper>999 && oper<kConstants) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
+  if(oper>999 && oper<50000) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
 
   if((oper>0 && oper<6) ||
      oper==20 ||
@@ -2648,17 +2584,13 @@ void TFormula::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+   Int_t i;
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
-
-         // We need to reinstate (if possible) the TMethodCall.
-         if (fFunctions.GetLast()>=0) {
-            Compile();
-         }
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2676,7 +2608,6 @@ void TFormula::Streamer(TBuffer &b)
       if (fNpar) {
          fNames  = new TString[fNpar];
       }
-      Int_t i;
       for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
       for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;

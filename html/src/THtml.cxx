@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.46 2003/11/11 18:07:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.43 2003/09/02 17:16:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -522,16 +522,15 @@ ofstream classFile;
 
                // make a link to the base class
                classFile << htmlFile;
-               classFile << "\">";
-               ReplaceSpecialChars(classFile, inheritFrom->GetName());
-               classFile << "</a>";
+               classFile << "\">" << inheritFrom->GetName() << "</a>";
                delete[]htmlFile;
                htmlFile = 0;
             } else
-               ReplaceSpecialChars(classFile, inheritFrom->GetName());
+               classFile << inheritFrom->GetName();
          }
 
          classFile << "</h2>" << endl;
+         classFile << "<pre>" << endl;
 
 
          // make a loop on member functions
@@ -604,16 +603,6 @@ ofstream classFile;
 
             num[mtype]++;
          }
-
-	 const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
-	 if (classPtr->Property() & kIsAbstract) 
-	    classFile << "&nbsp;<br><b>" 
-		      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
-		      << tab4nbsp << "Look at the <a href=\""
-		      << GetFileName((const char *) classPtr->GetDeclFileName())
-		      << "\">header</a> to check for available constructors.</b><br>" << endl;
-
-         classFile << "<pre>" << endl;
 
          Int_t i, j;
 
@@ -2783,11 +2772,6 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
       else 
          filename = classPtr->GetDeclFileName();
 
-      // classes without Impl/DeclFileName don't have docs,
-      // and classes without docs don't have output file names
-      if (!filename) 
-         return 0;
-
       char varName[80];
       const char *colon = strchr(filename, ':');
 
@@ -3146,10 +3130,7 @@ void THtml::MakeIndex(const char *filter)
                srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
          };
 
-	 // there can be no sub-path in the class name, 
-	 // and impl file names don't have absolute paths
-         if (srcdir && (!strchr(srcdir + 5, '/')) 
-             && fileNames[numberOfImpFiles][0]!='/') {
+         if (srcdir && (!strchr(srcdir + 5, '/'))) {
             strcpy(srcdir, "_");
             for (char *t = fileNames[numberOfImpFiles];
                  (t[0] = toupper(t[0])); t++);

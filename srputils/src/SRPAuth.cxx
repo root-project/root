@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.12 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.9 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -35,6 +35,9 @@ public:
 static SRPAuthInit srpauth_init;
 
 
+TSocket *sock = 0;
+THostAuth *HostAuth = 0;
+Int_t  gRSAKey = 0;
 //______________________________________________________________________________
 Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
                       const char *remote, TString &det, Int_t version)
@@ -48,7 +51,10 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    char  *usr = 0;
    char  *psswd = 0;
    Int_t  stat, kind;
-   TSocket *sock = auth->GetSocket();
+
+   // From the calling TAuthenticate
+   sock = auth->GetSocket();
+   HostAuth = auth->GetHostAuth();
 
    // send user name
    if (user && user[0])
@@ -86,13 +92,11 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        if (Options) delete[] Options;
        return 1;
      }
-     if (Options) delete[] Options;
      if (rc == -2) {
+       if (Options) delete[] Options;
        return rc;
      }
-     if (stat == kErrNotAllowed && kind == kROOTD_ERR) {
-       return 0;
-     }
+
    } else {
 
      sock->Send(usr, kROOTD_SRPUSER);
@@ -103,29 +107,8 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
         return 2;
 
      if (kind == kROOTD_ERR) {
-        TString Server = "sockd";
-        if (strstr(auth->GetProtocol(),"root"))
-           Server = "rootd";
-        if (strstr(auth->GetProtocol(),"proof"))
-           Server = "proofd";
-        if (stat == kErrConnectionRefused) {
-           if (gDebug > 0)
-              Error("SRPAuthenticate",
-                 "%s@%s does not accept connections from %s%s",
-                 Server.Data(),auth->GetRemoteHost(),
-                 auth->GetUser(),gSystem->HostName());
-           return -2;
-        } else if (stat == kErrNotAllowed) {
-           if (gDebug > 0)
-              Error("SRPAuthenticate",
-                 "%s@%s does not accept %s authentication from %s@%s",
-                 Server.Data(),auth->GetRemoteHost(),
-                 TAuthenticate::GetAuthMethod(1),
-                 auth->GetUser(),gSystem->HostName());
-        } else {
-          if (gDebug > 0)
-             TAuthenticate::AuthError("SRPAuthenticate", stat);
-        }
+        if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+        if (stat == kErrConnectionRefused) return -2;
         return 0;
      }
 
@@ -199,6 +182,13 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
 
    if (version > 1) {
 
+     // Save passwd for later use ...
+     TAuthenticate::SetGlobalUser(user);
+     TAuthenticate::SetGlobalPasswd(psswd);
+     TAuthenticate::SetGlobalPwHash(kFALSE);
+     TAuthenticate::SetGlobalSRPPwd(kTRUE);
+
+
      // Receive result of the overall process
      sock->Recv(stat, kind);
      if (kind == kROOTD_ERR) {
@@ -206,20 +196,11 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        goto out;
      }
 
-     // Save passwd for later use ...
-     TAuthenticate::SetGlobalUser(user);
-     TAuthenticate::SetGlobalPasswd(psswd);
-     TAuthenticate::SetGlobalPwHash(kFALSE);
-     TAuthenticate::SetGlobalSRPPwd(kTRUE);
-
-     Int_t  RSAKey = 0;
      if (ReUse == 1) {
 
        if (kind != kROOTD_RSAKEY)
-          Warning("SRPAuthenticate",
-                  "problems recvn RSA key flag: got message %d, flag: %d",
-                  kind,RSAKey);
-       RSAKey = 1;
+       Warning("SRPAuthenticate", "problems recvn RSA key flag: got message %d, flag: %d",kind,gRSAKey);
+       gRSAKey = 1;
 
        // Send the key securely
        TAuthenticate::SendRSAPublicKey(sock);
@@ -244,34 +225,28 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        // Decode Token
        char *Token = 0;
        if (ReUse == 1 && OffSet > -1) {
-         if (TAuthenticate::SecureRecv(sock,RSAKey,&Token) == -1) {
-           Warning("SRPAuthenticate",
-                   "Problems secure-receiving Token - may result in corrupted Token");
+         if (TAuthenticate::SecureRecv(sock,gRSAKey,&Token) == -1) {
+           Warning("SRPAuthenticate","Problems secure-receiving Token - may result in corrupted Token");
          }
        } else {
          Token = StrDup("");
        }
 
        // Create and save AuthDetails object
-       TAuthenticate::SaveAuthDetails(auth,
-          (Int_t)TAuthenticate::kSRP,OffSet,ReUse,Details,lUser,RSAKey,Token);
+       TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kSRP,OffSet,ReUse,Details,lUser,gRSAKey,Token);
        det = Details;
        if (Token) delete[] Token;
 
        // Receive result from remote Login process
        sock->Recv(stat, kind);
        if (stat==1 && kind==kROOTD_AUTH) {
-         if (gDebug>0)
-            Info("SRPAuthenticate",
-                 "Remotely authenticated as %s (OffSet:%d)",lUser,OffSet);
+         if (gDebug>0) Info("SRPAuthenticate","Remotely authenticated as %s (OffSet:%d)",lUser,OffSet);
          result = 1;
        }
 
      } else {
        if (kind != kROOTD_ERR )
-         if (gDebug>0)
-            Warning("SRPAuthenticate",
-                    "problems recvn (user,offset) length (%d:%d)",kind,stat);
+         if (gDebug>0) Warning("SRPAuthenticate", "problems recvn (user,offset) length (%d:%d)",kind,stat);
        TAuthenticate::AuthError("SRPAuthenticate", stat);
      }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.7 2003/09/30 19:04:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.6 2003/05/05 09:18:42 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -251,7 +251,6 @@ L20:
          else if (sigfig <= 1.5 && jlog==1)    siground = 1.5;
          else if (sigfig <= 2)    siground = 2;
          else if (sigfig <= 3 && jlog ==1)    siground = 3;
-         else if (sigfig <= 5 && sigfig>3 && jlog ==0) siground = 5; //added (Damir in 3.10/02)
          else if (jlog==0)        {siground = 1; jlog++;}
          else                     siground = 6;
          break;
@@ -322,24 +321,22 @@ LOK:
    Int_t oldnbins = nbins;
 
    Double_t atest = BinWidth*0.0001;
-   //if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; } //replaced by Damir in 3.10/02
-   //if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; } //by the next two lines
-   if (AL-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
-   if (BinHigh-AH >= atest) { BinHigh -= BinWidth;  nbins--; }
-   if (!OptionTime && BinLow >= BinHigh) {
+   if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
+   if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
+   if (BinLow >= BinHigh) {
       //this case may happen when nbins <=5
       BinLow = oldBinLow;
       BinHigh = oldBinHigh;
       nbins = oldnbins;
    }
-   else if (OptionTime && BinLow>=BinHigh) {
+   if (OptionTime && nbins==0) {
       nbins = 2*oldnbins;
       BinHigh = oldBinHigh;
       BinLow = oldBinLow;
       BinWidth = (oldBinHigh - oldBinLow)/nbins;
       Double_t atest = BinWidth*0.0001;
-      if (AL-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
-      if (BinHigh-AH >= atest) { BinHigh -= BinWidth;  nbins--; }
+      if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
+      if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.29 2003/10/29 22:48:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.25 2003/06/27 11:02:33 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "THashList.h"
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
+#include "TPacketizer.h"
 #include "TPacketizer2.h"
 #include "TSelector.h"
 #include "TSocket.h"
@@ -78,7 +79,6 @@ TProofPlayer::TProofPlayer()
    fInput         = new TList;
    fOutput        = 0;
    fSelector      = 0;
-   fSelectorClass = 0;
    fFeedbackTimer = 0;
    fEvIter        = 0;
 }
@@ -87,7 +87,7 @@ TProofPlayer::TProofPlayer()
 TProofPlayer::~TProofPlayer()
 {
    delete fInput;
-   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
+   delete fSelector;
    delete fFeedbackTimer;
    delete fEvIter;
 }
@@ -173,18 +173,13 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
-   fOutput = 0; 
-   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
+   fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {
-      fSelectorClass = 0;
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
    }
-   fSelectorClass = fSelector->IsA();
-
-   Int_t version = fSelector->Version();
 
    SetupFeedback();
 
@@ -195,35 +190,27 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
+   PDB(kLoop,1) Info("Process","Call Begin(0)");
 
-   if (version == 0) {
-      PDB(kLoop,1) Info("Process","Call Begin(0)");
+   if (gProof != 0 && !gProof->IsMaster()) {
       fSelector->Begin(0);
-   } else {
-      if (gProof != 0 && !gProof->IsMaster()) {
-         // on client (for local run)
-         PDB(kLoop,1) Info("Process","Call Begin(0)");
-         fSelector->Begin(0);
-      }
-      PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
-      fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
    }
+   fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
 
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
+   Bool_t useFillCut = fSelector->Version() == 0;
    Long64_t entry;
    while ((entry = fEvIter->GetNextEvent()) >= 0) {
 
+      PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
 
-      if(version == 0) {
-         PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
+      if(useFillCut) {
          if(fSelector->ProcessCut(entry)) {
-            PDB(kLoop,3)Info("Process","Call ProcessFill(%lld)", entry);
             fSelector->ProcessFill(entry);
          }
       } else {
-         PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
          fSelector->Process(entry);
       }
 
@@ -236,17 +223,11 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    delete fEvIter; fEvIter = 0;
 
    // Finalize
+   PDB(kLoop,1) Info("Process","Call Terminate");
 
-   if (version == 0) {
-      PDB(kLoop,1) Info("Process","Call Terminate()");
+   fSelector->SlaveTerminate();
+   if (gProof != 0 && !gProof->IsMaster()) {
       fSelector->Terminate();
-   } else {
-      PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
-      fSelector->SlaveTerminate();
-      if (gProof != 0 && !gProof->IsMaster()) {
-         PDB(kLoop,1) Info("Process","Call Terminate()");
-         fSelector->Terminate();
-      }
    }
 
    fOutput = fSelector->GetOutputList();
@@ -363,11 +344,9 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if ( fProof->SendFile(filename) == -1 ) return -1;
 
       if ( filename.EndsWith(".C") ) {
-         filename.Replace(filename.Length()-1,1,"h");
-         if (!gSystem->AccessPathName(filename,kReadPermission)) {
-            PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
-            if ( fProof->SendFile(filename) == -1 ) return -1;
-         }
+         filename.ReplaceAll(".C",".h");
+         PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
+         if ( fProof->SendFile(filename) == -1 ) return -1;
       }
    }
 
@@ -389,11 +368,9 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          return -1;
       }
    } else {
-      if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
-      fSelectorClass = 0;
+      delete fSelector;
       fSelector = TSelector::GetSelector(selector_file);
       if (fSelector == 0) return -1;
-      fSelectorClass = fSelector->IsA();
       fSelector->SetInputList(fInput);
       fSelector->Begin(0);
    }

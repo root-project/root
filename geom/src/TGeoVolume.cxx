@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.39 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.37 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -368,11 +368,9 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
 // default constructor
    fNodes    = 0;
    fShape    = (TGeoShape*)shape;
-   if (fShape) {
-      if (fShape->TestShapeBit(TGeoShape::kGeoBad)) {
-         Warning("Ctor", "volume %s has invalid shape", name);
-      }
-   }      
+   if (fShape->TestShapeBit(TGeoShape::kGeoBad)) {
+      Warning("Ctor", "volume %s has invalid shape", name);
+   }   
    fFinder   = 0;
    fVoxels   = 0;
    fField    = 0;
@@ -592,13 +590,11 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
       Error("AddNode", "Volume is NULL");
       return;
    }
-   if (!vol->IsAssembly()) {
-      if (!vol->IsValid()) {
-         Error("AddNode", "Won't add node with invalid shape");
-         printf("### invalid volume was : %s\n", vol->GetName());
-         return;
-      }
-   }   
+   if (!vol->IsValid()) {
+      Error("AddNode", "Won't add node with invalid shape");
+      printf("### invalid volume was : %s\n", vol->GetName());
+      return;
+   }
    if (!fNodes) fNodes = new TObjArray();   
 
    if (fFinder) {
@@ -607,34 +603,10 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
       return;
    }
 
-   TGeoNodeMatrix *node = 0;
-   char *name = 0;
-   if (vol->IsAssembly()) {
-      TGeoHMatrix *total = 0;
-      Int_t id = GetNdaughters();
-      Int_t nd = vol->GetNdaughters();
-      for (Int_t i=0; i<nd; i++) {
-         id++;
-         total = new TGeoHMatrix();
-         *total = (*matrix) * (*(vol->GetNode(i)->GetMatrix()));
-         total->RegisterYourself();
-         node = new TGeoNodeMatrix(vol->GetNode(i)->GetVolume(), total);
-         node->SetMotherVolume(this);
-         fNodes->Add(node);
-         name = new char[strlen(vol->GetNode(i)->GetVolume()->GetName())+7];
-         sprintf(name, "%s_%i", vol->GetNode(i)->GetVolume()->GetName(), id);
-         if (fNodes->FindObject(name))
-            Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
-         node->SetName(name);
-         node->SetNumber(id);
-      }
-      return;
-   }
-         
-   node = new TGeoNodeMatrix(vol, matrix);
+   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+7];
+   char *name = new char[strlen(vol->GetName())+7];
    sprintf(name, "%s_%i", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
@@ -678,13 +650,11 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
       Error("AddNodeOverlap", "Volume is NULL");
       return;
    }
-   if (!vol->IsAssembly()) {
-      if (!vol->IsValid()) {
-         Error("AddNodeOverlap", "Won't add node with invalid shape");
-         printf("### invalid volume was : %s\n", vol->GetName());
-         return;
-      }
-   }   
+   if (!vol->IsValid()) {
+      Error("AddNodeOverlap", "Won't add node with invalid shape");
+      printf("### invalid volume was : %s\n", vol->GetName());
+      return;
+   }
    if (!fNodes) fNodes = new TObjArray();   
 
    if (fFinder) {
@@ -693,38 +663,10 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
       return;
    }
 
-   TGeoNodeMatrix *node = 0;
-   char *name = 0;
-   if (vol->IsAssembly()) {
-      TGeoHMatrix *total = 0;
-      Int_t nd = vol->GetNdaughters();
-      Int_t id = GetNdaughters();
-      for (Int_t i=0; i<nd; i++) {
-         id++;
-         total = new TGeoHMatrix();
-         *total = (*matrix) * (*(vol->GetNode(i)->GetMatrix()));
-         total->RegisterYourself();
-         node = new TGeoNodeMatrix(vol->GetNode(i)->GetVolume(), total);
-         node->SetMotherVolume(this);
-         fNodes->Add(node);
-         name = new char[strlen(vol->GetNode(i)->GetVolume()->GetName())+7];
-         sprintf(name, "%s_%i", vol->GetNode(i)->GetVolume()->GetName(), id);
-         if (fNodes->FindObject(name))
-            Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
-         node->SetName(name);
-         node->SetNumber(id);
-         node->SetOverlapping();
-         if (vol->GetMedium() == fMedium)
-         node->SetVirtual();
-      }
-      return;
-   }
-
-
-   node = new TGeoNodeMatrix(vol, matrix);
+   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+7];
+   char *name = new char[strlen(vol->GetName())+7];
    sprintf(name, "%s_%i", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
@@ -750,10 +692,6 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 //         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
 //  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
-   if (IsAssembly()) {
-      Error("Divide", "Cannot divide %s since it is an assembly", GetName());
-      return 0;
-   }   
    if (fFinder) {
    // volume already divided.
       Fatal("Divide","volume %s already divided", GetName());
@@ -939,15 +877,9 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
 void TGeoVolume::Raytrace(Option_t * /*option*/)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter->GetDrawnVolume()) {
-      Draw();
-      painter->SetRaytracing();
-      return;
-   }
-   if (painter->GetDrawnVolume() != this) Draw();
-   painter->SetRaytracing();
-   painter->ModifiedPad();
+   Draw();
+   gGeoManager->GetGeomPainter()->SetRaytracing();
+   gGeoManager->GetGeomPainter()->ModifiedPad();
 }   
 
 //_____________________________________________________________________________
@@ -1323,8 +1255,6 @@ void TGeoVolume::Voxelize(Option_t *option)
    }   
    // do not voxelize divided volumes
    if (fFinder) return;
-   // nor assemblies
-   if (IsAssembly()) return;
    // or final leaves
    Int_t nd = GetNdaughters();
    if (!nd) return;
@@ -1634,20 +1564,4 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
       vol = GetVolume(ivo);
       vol->SetVisibility(vis); 
    }
-}
-
-ClassImp(TGeoVolumeAssembly)
-
-//_____________________________________________________________________________
-TGeoVolumeAssembly::TGeoVolumeAssembly()
-                   :TGeoVolume()
-{
-
-}
-
-//_____________________________________________________________________________
-TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
-                   :TGeoVolume(name, NULL, NULL)
-{
-
 }

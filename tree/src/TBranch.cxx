@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.62 2003/11/12 09:06:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.59 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -164,7 +164,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketSeek     = new Seek_t[fMaxBaskets];
-
+   fBasketEntry[0] = fEntryNumber;
    for (i=0;i<fMaxBaskets;i++) {
       fBasketBytes[i] = 0;
       fBasketEntry[i] = 0;
@@ -505,13 +505,9 @@ Int_t TBranch::Fill()
 #endif
          fMaxBaskets   = newsize;
       }
-
-      for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-         fBasketBytes[i] = 0;
-         fBasketEntry[i] = 0;
-         fBasketSeek[i]  = 0;
-      }
       fBasketEntry[fWriteBasket] = fEntryNumber;
+      fBasketBytes[fWriteBasket] = 0;
+      fBasketSeek[fWriteBasket]  = 0;
    }
    return nbytes;
 }
@@ -662,7 +658,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    }
 
    cursav->cd();
-   fBaskets.AddAt(basket,basketnumber);
+   fBaskets[basketnumber] = basket;
    if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = basketnumber;
    fNBasketRAM++;
    return basket;
@@ -1042,44 +1038,6 @@ void TBranch::ReadLeaves(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TBranch::Refresh(TBranch *b)
-{
-//  refresh this branch using new information in b
-//  This function is called by TTree::Refresh
-   
-   fEntryOffsetLen = b->fEntryOffsetLen;
-   fWriteBasket    = b->fWriteBasket;
-   fEntryNumber    = b->fEntryNumber;
-   fMaxBaskets     = b->fMaxBaskets;
-   fEntries        = b->fEntries;
-   fTotBytes       = b->fTotBytes;
-   fZipBytes       = b->fZipBytes;
-   fReadBasket     = 0;
-   fNBasketRAM     = 0;
-   delete [] fBasketBytes;
-   delete [] fBasketEntry;
-   delete [] fBasketSeek;
-   fBasketBytes = new Int_t[fMaxBaskets];
-   fBasketEntry = new Int_t[fMaxBaskets];
-   fBasketSeek  = new Seek_t[fMaxBaskets];
-   Int_t i;
-   for (i=0;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = b->fBasketBytes[i];
-      fBasketEntry[i] = b->fBasketEntry[i];
-      fBasketSeek[i]  = b->fBasketSeek[i];
-   }
-   fBaskets.Delete();
-   Int_t nbaskets = b->fBaskets.GetSize();
-   fBaskets.Expand(nbaskets);
-   //The current fWritebasket must always be in memory.
-   //Take it (just s swap) from the Tree being read
-   TBasket *basket = (TBasket*)b->fBaskets.UncheckedAt(fWriteBasket);
-   fBaskets.AddAt(basket,fWriteBasket);
-   b->fBaskets.RemoveAt(fWriteBasket);
-   basket->SetBranch(this);
-}
-   
-//______________________________________________________________________________
 void TBranch::Reset(Option_t *)
 {
 //*-*-*-*-*-*-*-*Reset a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1391,12 +1349,8 @@ void TBranch::WriteBasket(TBasket* basket)
 #endif
       fMaxBaskets   = newsize;
    }
-
-   for (Int_t i=fWriteBasket;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
-   }
    fBasketEntry[fWriteBasket] = fEntryNumber;
+   fBasketBytes[fWriteBasket] = 0;
+   fBasketSeek[fWriteBasket]  = 0;
 }
 

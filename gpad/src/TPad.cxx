@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.115 2003/11/03 14:51:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.113 2003/09/23 12:20:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3457,8 +3457,10 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
    }
 
    if (gVirtualPS) {
-      if (x < fX1 || x > fX2) return;
-      if (y < fY1 || y > fY2) return;
+      if (x < fX1) x = fX1;
+      if( x > fX2) x = fX2;
+      if (y < fY1) y = fY1;
+      if( y > fY2) y = fY2;
       gVirtualPS->Text(x, y, text);
    }
 
@@ -3620,7 +3622,7 @@ void TPad::Print(const char *filename) const
 }
 
 //______________________________________________________________________________
-void TPad::Print(const char *filenam, Option_t *option)
+void TPad::Print(const char *filename, Option_t *option)
 {
 //*-*-*-*-*Save Pad contents on a file in various formats*-*-*-*-*-*
 //*-*      ==============================================
@@ -3692,7 +3694,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 //    c1.Print("file.ps]");   // No actual print, just close.
 
    char psname[264];
-   char *filename = gSystem->ExpandPathName(filenam);
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
 
@@ -3707,8 +3708,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
-   delete [] filename;
-   
+
 //==============Save pad/canvas as a GIF file==================================
       if (strstr(opt,"gif")) {
       if (GetCanvas()->IsBatch()) {

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.11 2003/01/30 08:37:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.10 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -122,8 +122,8 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
       pxm = gPad->UtoPixel(fX);
       pym = gPad->VtoPixel(fY);
    } else {
-      pxm  = gPad->XtoAbsPixel(gPad->XtoPad(fX));
-      pym  = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+      pxm  = gPad->XtoAbsPixel(fX);
+      pym  = gPad->YtoAbsPixel(fY);
    }
    Int_t dist = (px-pxm)*(px-pxm) + (py-pym)*(py-pym);
 
@@ -200,8 +200,8 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
          fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
       } else {
-         fX = gPad->PadtoX(gPad->AbsPixeltoX(px));
-         fY = gPad->PadtoY(gPad->AbsPixeltoY(py));
+         fX = gPad->AbsPixeltoX(px);
+         fY = gPad->AbsPixeltoY(py);
       }
       gPad->Modified(kTRUE);
       gVirtualX->SetTextColor(-1);
@@ -228,7 +228,7 @@ void TMarker::Paint(Option_t *)
       Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
       PaintMarker(u,v);
    } else {
-      PaintMarker(gPad->XtoPad(fX),gPad->YtoPad(fY));
+      PaintMarker(fX,fY);
    }
 }
 

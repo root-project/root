@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.3 2003/06/30 15:45:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.2 2002/04/04 17:28:52 rdm Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -120,7 +120,7 @@ void TTreeFormulaManager::EnableMultiVarDims()
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
+Int_t TTreeFormulaManager::GetNdata()
 {
 //*-*-*-*-*-*-*-*Return number of available instances in the formulas*-*-*-*-*-*
 //*-*            ====================================================
@@ -154,17 +154,8 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 
       current = (TTreeFormula*)fFormulas.UncheckedAt(i);
       if (current->fMultiplicity!=1 && !current->fHasCast) continue;
-      if (!current->LoadCurrentDim() ) { 
-         if (forceLoadDim) {
-            for(Int_t j=i+1; j<size; j++) {
-               current = (TTreeFormula*)fFormulas.UncheckedAt(j);
-               if (current->fMultiplicity!=1 && !current->fHasCast) continue;
-               current->LoadCurrentDim();
-            }
-         }
-         fNdata = 0; 
-         return 0; 
-      }
+      if (!current->LoadCurrentDim() ) { fNdata = 0; return 0; }
+
    }
 
    if (fMultiplicity==-1) { fNdata = 1; return fCumulUsedSizes[0]; }

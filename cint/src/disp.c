@@ -7,7 +7,7 @@
  * Description:
  *  Display information
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1397,11 +1397,7 @@ char *name;
       fprintf(fout,"#define %s(",deffuncmacro->name);
       charlist = &deffuncmacro->def_para;
       while(charlist) {
-#ifndef G__OLDIMPLEMENTATION1936
-	if(charlist->string) fprintf(fout,"%s%s",charlist->string,"");
-#else
 	if(charlist->string) fprintf(fout,"%s",charlist->string);
-#endif
 	charlist=charlist->next;
 	if(charlist && charlist->next) fprintf(fout,",");
       }

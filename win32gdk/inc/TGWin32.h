@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.16 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.14 2003/08/20 14:14:21 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -92,7 +92,7 @@ private:
    void  CopyWindowtoPixmap(GdkDrawable *pix, Int_t xpos, Int_t ypos);
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
-                  UChar_t *image, Drawable_t id);
+                  UChar_t *image);
    void  RemovePixmap(GdkDrawable *pix);
    void  SetColor(GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
@@ -117,6 +117,7 @@ private:
    Bool_t NeedSplash();
 
 protected:
+   static TGWin32 *fgRealObject;    // singleton
 
    GdkVisual   *fVisual;            //
    GdkColormap *fColormap;          // Default colormap, 0 if b/w
@@ -196,7 +197,7 @@ public:
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);
-   Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0);
+   void      ReadGIF(Int_t x0, Int_t y0, const char *file);
    Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    Int_t     RequestString(Int_t x, Int_t y, char *text);
    void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h);
@@ -428,6 +429,8 @@ public:
    void         glShadeModel(UInt_t mode);
    void         glNormal3fv(const Float_t *norm);
 
+   static inline TVirtualX *Instance() { return fgRealObject; }
+   static TVirtualX *Proxy();
    static void Lock();
    static void Unlock();
 

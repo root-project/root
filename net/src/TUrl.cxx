@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.14 2003/11/13 17:55:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.11 2003/07/04 13:26:34 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -33,8 +33,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    //
    // url: [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
    //
-   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss, castor,
-   // dcache and dcap.
+   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss, castor.
    // The default protocol is http, unless defaultIsFile is true in which
    // case the url is assumed to be of type file.
    // If a passwd contains a @ it must be escaped by a \\, e.g.
@@ -66,10 +65,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "file:"
    if (!strncmp(url, "file:", 5)) {
       fProtocol = "file";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
+      fFile = url+5;
       fPort = 0;
       return;
    }
@@ -77,10 +73,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "rfio:"
    if (!strncmp(url, "rfio:", 5)) {
       fProtocol = "rfio";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
+      fFile = url+5;
       fPort = 0;
       return;
    }
@@ -88,10 +81,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "hpss:"
    if (!strncmp(url, "hpss:", 5)) {
       fProtocol = "hpss";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
+      fFile = url+5;
       fPort = 0;
       return;
    }
@@ -99,32 +89,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "castor:"
    if (!strncmp(url, "castor:", 7)) {
       fProtocol = "castor";
-      if (!strncmp(url+7, "//", 2))
-         fFile = url+9;
-      else
-         fFile = url+7;
-      fPort = 0;
-      return;
-   }
-
-     // Special case for "dcache:"
-   if (!strncmp(url, "dcache:", 7)) {
-      fProtocol = "dcache";
-      if (!strncmp(url+7, "//", 2))
-         fFile = url+9;
-      else
-         fFile = url+7;
-      fPort = 0;
-      return;
-   }
-
-   // Special case for "dcap:"
-   if (!strncmp(url, "dcap:", 5)) {
-      fProtocol = "dcap";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
+      fFile = url+7;
       fPort = 0;
       return;
    }
@@ -208,8 +173,6 @@ again:
    // Find host
    u = s;
    if ((s = strchr(u, ':')) || (s = strchr(u, '/'))) {
-      if ((strchr (u, ':') > strchr(u, '/')) && (strchr (u, '/')))
-	s = strchr(u, '/');
       sav = *s;
       *s = 0;
       fHost = u;

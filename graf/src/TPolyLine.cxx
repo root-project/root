@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.15 2002/11/05 16:09:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -150,11 +150,6 @@ Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
    for (i=0;i<Size()-1;i++) {
       d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
       if (d < distance) distance = d;
-   }
-
-//*-*- in case of a closed and filled polyline, check if we are inside
-   if (fFillColor && fFillStyle && fX[0] == fX[fLastPoint] && fY[0] == fY[fLastPoint]) {
-      if (TMath::IsInside(gPad->AbsPixeltoX(px),gPad->AbsPixeltoY(py),fLastPoint+1,fX,fY)) distance = 0;
    }
    return distance;
 }

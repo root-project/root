@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.55 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.47 2003/09/27 19:50:09 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -147,7 +147,6 @@
 // Protocol changes (see gProtocol):
 // 6: added support for kerberos5 authentication
 // 7: added support for Globus, SSH and uid/gid authentication and negotiation
-// 8: change in Kerberos authentication protocol
 
 #include "config.h"
 
@@ -211,21 +210,13 @@ extern "C" int gethostname(char *, int);
 
 #ifdef R__KRB5
 #include "Krb5Auth.h"
-namespace ROOT {
-   extern krb5_keytab  gKeytab; // to allow specifying on the command line
-   extern krb5_context gKcontext;
-}
-#endif
-
-#ifdef R__GLBS
-namespace ROOT {
-   extern int gShmIdCred;  // global, to pass the shm ID to proofserv
-}
+extern krb5_keytab  gKeytab; // to allow specifying on the command line
+extern krb5_context gKcontext;
 #endif
 
 //--- Globals ------------------------------------------------------------------
 
-const int kMaxSlaves             = 32;
+const int   kMaxSlaves         = 32;
 
 char    gFilePA[40]              = { 0 };
 
@@ -235,10 +226,15 @@ int     gDebug                   = 0;
 int     gForegroundFlag          = 0;
 int     gInetdFlag               = 0;
 int     gMaster                  =-1;
-int     gProtocol                = 8;       // increase when protocol changes
+int     gPort                    = 0;
+int     gProtocol                = 7;       // increase when protocol changes
 char    gRcFile[kMAXPATHLEN]     = { 0 };
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
+
+#ifdef R__GLBS
+extern int gShmIdCred;  // global, to pass the shm ID to proofserv
+#endif
 
 using namespace ROOT;
 
@@ -310,11 +306,8 @@ void ProofdLogin()
 
    struct passwd *pw = getpwnam(gUser);
 
-   if (!pw)
-      Error(ErrFatal, -1, "ProofdLogin: user %s does not exist locally\n", gUser);
-
-   if (pw && chdir(pw->pw_dir) == -1)
-      Error(ErrFatal, -1, "ProofdLogin: can't change directory to %s", pw->pw_dir);
+   if (chdir(pw->pw_dir) == -1)
+      Error(ErrFatal,-1,"ProofdLogin: can't change directory to %s", pw->pw_dir);
 
    if (getuid() == 0) {
 
@@ -324,15 +317,11 @@ void ProofdLogin()
       struct shmid_ds shm_ds;
       if (gShmIdCred > 0) {
         if (shmctl(gShmIdCred, IPC_STAT, &shm_ds) == -1)
-           Error(ErrFatal, -1,
-                 "ProofdLogin: can't get info about shared memory segment %d",
-                 gShmIdCred);
+           Error(ErrFatal, -1, "ProofdLogin: can't get info about shared memory segment %d", gShmIdCred);
         shm_ds.shm_perm.uid = pw->pw_uid;
         shm_ds.shm_perm.gid = pw->pw_gid;
-        if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1)
-           Error(ErrFatal, -1,
-                 "ProofdLogin: can't change ownership of shared memory segment %d",
-                 gShmIdCred);
+        if ( shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1)
+           Error(ErrFatal, -1, "ProofdLogin: can't change ownership of shared memory segment %d", gShmIdCred);
       }
 #endif
       // set access control list from /etc/initgroup
@@ -503,11 +492,11 @@ void CheckGlobus(char *rcfile)
    sprintf(etc, "%s/etc", gConfDir);
    sprintf(s, "%s/%s", etc, sname);
    // Check file existence and readibility
-   if (access(s, R_OK)) {
+   if (access(s, F_OK) || access(s, R_OK)) {
       // for backward compatibility check also $ROOTSYS/system<name> if
       // $ROOTSYS/etc/system<name> does not exist
       sprintf(s, "%s/%s", gConfDir, sname);
-      if (access(s, R_OK)) {
+      if (access(s, F_OK) || access(s, R_OK)) {
          // for backward compatibility check also $ROOTSYS/<name> if
          // $ROOTSYS/system<name> does not exist
          sprintf(s, "%s/%s", gConfDir, rcfile);
@@ -516,7 +505,7 @@ void CheckGlobus(char *rcfile)
 #endif
    // Check in the system environment ...
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking system: %s", s);
-   if (!access(s, R_OK)) {
+   if (!access(s, F_OK) && !access(s, R_OK)) {
       FILE *fs = fopen(s, "r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -536,7 +525,7 @@ void CheckGlobus(char *rcfile)
    if (getenv("HOME")) {
       sprintf(s, "%s/%s", getenv("HOME"), rcfile);
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user: %s", s);
-      if (!access(s, R_OK)) {
+      if (!access(s, F_OK) && !access(s, R_OK)) {
          FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {
             if (line[0] == '#') continue;   // skip comment lines
@@ -554,10 +543,10 @@ void CheckGlobus(char *rcfile)
    if (gDebug > 2) ErrorInfo("CheckGlobus: user: %d: %s", uGlobus, uRcFile);
 
    // Check in the local environment ...
-   sprintf(s, "%s", rcfile);
+   sprintf(s,"%s",rcfile);
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking local: %s", s);
 
-   if (!access(s, R_OK)) {
+   if (!access(s, F_OK) && !access(s, R_OK)) {
       FILE *fs = fopen(s, "r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -578,7 +567,7 @@ void CheckGlobus(char *rcfile)
    sprintf(s, "%s/proof/etc/proof.conf", gConfDir);
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking system proof.conf: %s", s);
 
-   if (!access(s, R_OK)) {
+   if (!access(s, F_OK) && !access(s, R_OK)) {
       FILE *fs = fopen(s,"r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -604,7 +593,7 @@ void CheckGlobus(char *rcfile)
       sprintf(s, "%s/.proof.conf", getenv("HOME"));
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user proof.conf: %s", s);
 
-      if (!access(s, R_OK)) {
+      if (!access(s, F_OK) && !access(s, R_OK)) {
          pGlobus = -1;
          FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {
@@ -676,7 +665,7 @@ void Authenticate()
    while (!gAuth) {
 
       if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
-         Error(ErrFatal, -1, "Authenticate: error receiving message");
+         Error(ErrFatal,-1,"Authenticate: error receiving message");
 
       // Decode the method ...
       Meth = RpdGetAuthMethod(kind);
@@ -694,7 +683,7 @@ void Authenticate()
 
       // If authentication required, check if we accept the method proposed; if not
       // send back the list of accepted methods, if any ...
-      if (Meth != -1  && gClientProtocol > 8) {
+      if (Meth != -1  && gClientProtocol > 8 ) {
 
          // Check if accepted ...
          if (RpdCheckAuthAllow(Meth, gOpenHost)) {
@@ -707,18 +696,16 @@ void Authenticate()
                   gAuthListSent = 1;
                   goto next;
                } else {
-                  Error(ErrFatal,kErrNotAllowed,
-                       "Authenticate: method not in the list sent to the client");
+                  Error(ErrFatal,kErrNotAllowed, "Authenticate: method not in the list sent to the client");
                }
             } else
-               Error(ErrFatal,kErrConnectionRefused,
-                       "Authenticate: connection refused from host %s", gOpenHost);
+               Error(ErrFatal,kErrConnectionRefused, "Authenticate: connection refused from host %s", gOpenHost);
          }
 
          // Then check if a previous authentication exists and is valid
          // ReUse does not apply for RFIO
          if (kind != kROOTD_RFIO && ProofdReUseAuth(recvbuf, kind))
-            goto next;
+            goto recvauth;
       }
 
       switch (kind) {
@@ -757,18 +744,11 @@ void Authenticate()
 
       if (gClientProtocol > 8) {
 
-         // If authentication failure prepare or continue negotiation
-         // Don't do this if this was a SSH notification failure
-         // because in such a case it was already done in the
-         // appropriate daemon child
-         int doneg = (Meth != -1 || kind == kROOTD_PASS) &&
-                     (gRemPid > 0 || kind != kROOTD_SSH);
-         if (gDebug > 2 && doneg)
-            ErrorInfo("Authenticate: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d",
-                      kind, Meth, gAuth, gNumLeft);
+         if (gDebug > 2)
+            ErrorInfo("Authenticate: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", kind, Meth, gAuth, gNumLeft);
 
          // If authentication failure, check if other methods could be tried ...
-         if (gAuth == 0 && doneg) {
+         if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
             if (gNumLeft > 0) {
                if (gAuthListSent == 0) {
                   RpdSendAuthList();
@@ -780,6 +760,39 @@ void Authenticate()
          }
       }
 
+recvauth:
+      // If authentication successfull, receive info for later authentications
+      if (gAuth == 1 && gClientProtocol > 8) {
+
+         sprintf(gFilePA,"%s/proofauth.%ld", gTmpDir, (long)getpid());
+         if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s", gFilePA);
+
+         FILE *fpa = fopen(gFilePA, "w");
+         if (fpa == 0) {
+            ErrorInfo("Authenticate: error creating file: %s", gFilePA);
+            goto next;
+         }
+
+         // Receive buffer
+         EMessageTypes kindauth;
+         int nr = NetRecv(recvbuf, kMaxBuf, kindauth);
+         if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
+            ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
+         if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
+         while (strcmp(recvbuf, "END")) {
+            // Clean buffer
+            recvbuf[nr+1] = '\0';
+            // Write it to file
+            fprintf(fpa, "%s\n", recvbuf);
+            // Get the next one
+            nr = NetRecv(recvbuf, kMaxBuf, kindauth);
+            if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
+               ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
+            if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
+         }
+         // Close suth file
+         fclose(fpa);
+      }
 next:
       continue;
    }
@@ -797,17 +810,10 @@ const char *RerouteUser()
 {
    // Look if user should be rerouted to another server node.
 
-   char conffile[1024];
+   char conffile[256];
    FILE *proofconf;
 
-   conffile[0] = 0;
-   if (getenv("HOME")) {
-      sprintf(conffile, "%s/.proof.conf", getenv("HOME"));
-      if (access(conffile, R_OK))
-         conffile[0] = 0;
-   }
-   if (conffile[0] == 0)
-      sprintf(conffile, "%s/etc/proof.conf", gConfDir);
+   sprintf(conffile, "%s/etc/proof.conf", gConfDir);
    if ((proofconf = fopen(conffile, "r")) != 0) {
       // read configuration file
       static char user_on_node[32];
@@ -910,13 +916,6 @@ void ProofdExec()
    // CleanUp authentication table, if needed or required ...
    RpdCheckSession();
 
-   // Check if at any level there is request for Globus Authetication
-   // for proofd or rootd
-   strcpy(gRcFile, ".rootrc");
-   CheckGlobus(gRcFile);
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
-
    // Init Random machinery ...
    RpdInitRand();
 
@@ -993,7 +992,7 @@ void ProofdExec()
    argvv[0] = arg0;
    argvv[1] = (char *)(gMaster ? "proofserv" : "proofslave");
    argvv[2] = gConfDir;
-   argvv[3] = gTmpDir;
+   argvv[3] = gFilePA;
    argvv[4] = gOpenHost;
    sprintf(rpid, "%d", gRemPid);
    argvv[5] = rpid;
@@ -1003,9 +1002,9 @@ void ProofdExec()
    argvv[8] = 0;
    argvv[9] = 0;
    argvv[10] = 0;
-   if (getenv("X509_CERT_DIR"))  argvv[8] = strdup(getenv("X509_CERT_DIR"));
-   if (getenv("X509_USER_CERT")) argvv[9] = strdup(getenv("X509_USER_CERT"));
-   if (getenv("X509_USER_KEY"))  argvv[10] = strdup(getenv("X509_USER_KEY"));
+   if (getenv("X509_CERT_DIR")!=0)  argvv[8] = strdup(getenv("X509_CERT_DIR"));
+   if (getenv("X509_USER_CERT")!=0) argvv[9] = strdup(getenv("X509_USER_CERT"));
+   if (getenv("X509_USER_KEY")!=0)  argvv[10] = strdup(getenv("X509_USER_KEY"));
    argvv[11] = 0;
 #else
    argvv[7] = 0;
@@ -1017,31 +1016,13 @@ void ProofdExec()
    putenv(rootsys);
 #endif
 #ifndef ROOTLIBDIR
-   char *ldpath;
+   char *ldpath = new char[21+strlen(gConfDir)];
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
-   if (getenv("SHLIB_PATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("SHLIB_PATH"))];
-      sprintf(ldpath, "SHLIB_PATH=%s/lib:%s", gConfDir, getenv("SHLIB_PATH"));
-   } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
-   }
+   sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
 #   elif defined(_AIX)
-   if (getenv("LIBPATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LIBPATH"))];
-      sprintf(ldpath, "LIBPATH=%s/lib:%s", gConfDir, getenv("LIBPATH"));
-   } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
-   }
+   sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
 #   else
-   if (getenv("LD_LIBRARY_PATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LD_LIBRARY_PATH"))];
-      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s", gConfDir, getenv("LD_LIBRARY_PATH"));
-   } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
-   }
+   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
 #   endif
    putenv(ldpath);
 #endif
@@ -1119,17 +1100,7 @@ int main(int argc, char **argv)
                      fprintf(stderr, "-p requires a port number as argument\n");
                   Error(ErrFatal, -1, "-p requires a port number as argument");
                }
-               char *p;
-               gPortA = strtol(*++argv, &p, 10);
-               if (*p == '-')
-                  gPortB = strtol(++p, &p, 10);
-               else if (*p == '\0')
-                  gPortB = gPortA;
-               if (*p != '\0' || gPortB < gPortA || gPortB < 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "invalid port number or range: %s\n", *argv);
-                  Error(ErrFatal, kErrFatal, "invalid port number or range: %s", *argv);
-               }
+               gPort = atoi(*++argv);
                break;
 
             case 'd':
@@ -1144,10 +1115,8 @@ int main(int argc, char **argv)
             case 'b':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,
-                             "-b requires a buffersize in bytes as argument\n");
-                  Error(ErrFatal, -1,
-                             "-b requires a buffersize in bytes as argument");
+                     fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
+                  Error(ErrFatal, -1, "-b requires a buffersize in bytes as argument");
                }
                tcpwindowsize = atoi(*++argv);
                break;
@@ -1155,10 +1124,8 @@ int main(int argc, char **argv)
             case 'T':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,
-                             "-T requires a dir path for temporary files [/usr/tmp]\n");
-                  Error(ErrFatal, kErrFatal,
-                             "-T requires a dir path for temporary files [/usr/tmp]");
+                     fprintf(stderr, "-T requires a dir path for temporary files [/usr/tmp]\n");
+                  Error(ErrFatal, kErrFatal, "-T requires a dir path for temporary files [/usr/tmp]");
                }
                sprintf(gTmpDir, "%s", *++argv);
                break;
@@ -1166,10 +1133,8 @@ int main(int argc, char **argv)
             case 's':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,
-                             "-s requires as argument a port number for the sshd daemon\n");
-                  Error(ErrFatal, kErrFatal,
-                             "-s requires as argument a port number for the sshd daemon");
+                     fprintf(stderr, "-s requires as argument a port number for the sshd daemon\n");
+                  Error(ErrFatal, kErrFatal, "-s requires as argument a port number for the sshd daemon");
                }
                gSshdPort = atoi(*++argv);
                break;
@@ -1204,10 +1169,8 @@ int main(int argc, char **argv)
             case 'C':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,
-                             "-C requires a file name for the host certificates file location\n");
-                  Error(ErrFatal, -1,
-                             "-C requires a file name for the host certificates file location");
+                     fprintf(stderr, "-C requires a file name for the host certificates file location\n");
+                  Error(ErrFatal, -1, "-C requires a file name for the host certificates file location");
                }
                sprintf(gHostCertConf, "%s", *++argv);
                break;
@@ -1236,17 +1199,15 @@ int main(int argc, char **argv)
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
       sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+      sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
       if (getenv("ROOTSYS")) {
          strcpy(gConfDir, getenv("ROOTSYS"));
          sprintf(gExecDir, "%s/bin", gConfDir);
-         sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
-         if (gDebug > 0)
-            ErrorInfo("main: no config directory specified using ROOTSYS (%s)",
-                      gConfDir);
+         sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
+         if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
       } else {
          if (!gInetdFlag)
             fprintf(stderr, "proofd: no config directory specified\n");
@@ -1259,7 +1220,7 @@ int main(int argc, char **argv)
       strcpy(gExecDir, ROOTBINDIR);
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gSystemDaemonRc, "%s/system%s", ROOTETCDIR, kDaemonRc);
+      sprintf(gAuthAllow, "%s/%s", ROOTETCDIR, kDaemonAccess);
 #endif
    }
 
@@ -1268,14 +1229,19 @@ int main(int argc, char **argv)
    sprintf(arg0, "%s/bin/proofserv", gConfDir);
    if (access(arg0, X_OK) == -1) {
       if (!gInetdFlag)
-         fprintf(stderr,
-                 "proofd: incorrect config directory specified (%s)\n", gConfDir);
-      Error(ErrFatal, -1,
-                 "main: incorrect config directory specified (%s)", gConfDir);
+         fprintf(stderr, "proofd: incorrect config directory specified (%s)\n", gConfDir);
+      Error(ErrFatal, -1, "main: incorrect config directory specified (%s)", gConfDir);
    }
 
    // Log to stderr if not started as daemon ...
    if (gForegroundFlag) RpdSetRootLogFlag(1);
+
+   // Check if at any level there is request for Globus Authetication
+   // for proofd or rootd
+   strcpy(gRcFile, ".rootrc");
+   CheckGlobus(gRcFile);
+   if (gDebug > 0)
+      ErrorInfo("main: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
 
    if (!gInetdFlag) {
 
@@ -1285,7 +1251,7 @@ int main(int argc, char **argv)
 
       if (!gForegroundFlag) DaemonStart(1, 0, kPROOFD);
 
-      NetInit(gService, gPortA, gPortB, tcpwindowsize);
+      NetInit(gService, gPort, tcpwindowsize);
    }
 
    if (gDebug > 0)

@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -2577,7 +2577,7 @@ char *path;
 #endif
 #ifndef G__OLDIMPLEMENTATION928
   store_allincludepath = realloc((void*)G__allincludepath
-				 ,strlen(G__allincludepath)+strlen(temp)+6);
+				 ,strlen(G__allincludepath)+strlen(temp)+5);
   if(store_allincludepath) {
 #ifndef G__OLDIMPLEMENTATION1553
     int i=0,flag=0;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.44 2003/12/05 23:43:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.40 2003/06/22 13:34:30 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -236,7 +236,7 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
 
 
 //______________________________________________________________________________
-void TProfile::Add(TF1 *, Double_t, Option_t * )
+void TProfile::Add(TF1 *, Double_t )
 {
    // Performs the operation: this = this + c1*f1
 
@@ -445,15 +445,14 @@ void TProfile::Divide(const TH1 *h1)
 //*-*                  =========================
 //
 //   this = this/h1
-// This function accepts to divide a TProfile by a histogram
 //
 
    if (!h1) {
       Error("Divide","Attempt to divide a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TH1")) {
-      Error("Divide","Attempt to divide by a non-profile or non-histogram object");
+   if (!h1->InheritsFrom("TProfile")) {
+      Error("Divide","Attempt to divide a non-profile object");
       return;
    }
    TProfile *p1 = (TProfile*)h1;
@@ -470,18 +469,13 @@ void TProfile::Divide(const TH1 *h1)
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin;
-   Double_t *cu1=0, *er1=0, *en1=0;
-   Double_t e0,e1,c12;
-   if (h1->InheritsFrom("TProfile")) {
-      cu1 = p1->GetW();
-      er1 = p1->GetW2();
-      en1 = p1->GetB();
-   }
+   Double_t *cu1 = p1->GetW();
+   Double_t *er1 = p1->GetW2();
+   Double_t *en1 = p1->GetB();
    Double_t c0,c1,w,z,x;
    for (bin=0;bin<=nbinsx+1;bin++) {
       c0  = fArray[bin];
-      if (cu1) c1  = cu1[bin];
-      else     c1  = h1->GetBinContent(bin);
+      c1  = cu1[bin];
       if (c1) w = c0/c1;
       else    w = 0;
       fArray[bin] = w;
@@ -492,13 +486,11 @@ void TProfile::Divide(const TH1 *h1)
       fTsumw2  += z*z;
       fTsumwx  += z*x;
       fTsumwx2 += z*x*x;
-      e0 = fSumw2.fArray[bin];
-      if (er1) e1 = er1[bin];
-      else     e1 = h1->GetBinError(bin);
-      c12= c1*c1;
+      Double_t e0 = fSumw2.fArray[bin];
+      Double_t e1 = er1[bin];
+      Double_t c12= c1*c1;
       if (!c1) fSumw2.fArray[bin] = 0;
       else     fSumw2.fArray[bin] = (e0*e0*c1*c1 + e1*e1*c0*c0)/(c12*c12);
-      if (!en1) continue;
       if (!en1[bin]) fBinEntries.fArray[bin] = 0;
       else           fBinEntries.fArray[bin] /= en1[bin];
    }
@@ -528,7 +520,7 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
    }
    TProfile *p1 = (TProfile*)h1;
    if (!h2->InheritsFrom("TProfile")) {
-      Error("Divide","Attempt to divide by a non-profile object");
+      Error("Divide","Attempt to divide a non-profile object");
       return;
    }
    TProfile *p2 = (TProfile*)h2;
@@ -825,7 +817,6 @@ Stat_t TProfile::GetBinError(Int_t bin) const
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
-         if (fSumw2.fArray[i] <= 0) continue; //added in 3.10/02
          scont += fArray[i];
          ssum  += fBinEntries.fArray[i];
          serr2 += fSumw2.fArray[i];
@@ -1147,7 +1138,7 @@ Int_t TProfile::Merge(TCollection *list)
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > fXaxis.GetNbins()) nbix /= 2;
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
       SetBins(nbix,xmin,xmax);
    }
 

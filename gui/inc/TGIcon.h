@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.3 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -48,7 +48,6 @@ public:
    virtual void SetPicture(const TGPicture *pic);
 
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ofstream &out, Option_t *option); 
 
    ClassDef(TGIcon,0)  // Icon GUI class
 };

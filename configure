@@ -103,7 +103,7 @@ check_library() {
     # directory [$3] or in a default path [$*].  If the second argument
     # [$2] is not "no", then shared libraries are favoured.
     # The result of the search is stored in found_lib and found_dir,
-    # which should be immediately copied, since the variables value will
+    # which  should be immediately copied, since the variables value will
     # be overwritten at next invocation of this function.
 
     # Assert that we got enough arguments
@@ -138,16 +138,14 @@ check_library() {
 	    libs="$libs $i$ext"
 	done
     done
-    slibs=""
-    for i in $lib ; do
-        for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
-            slibs="$slibs $i$ext"
-        done
-    done
     if test ! "x$shared" = "xno" ; then
+	slibs=""
+	for i in $lib ; do
+	    for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
+		slibs="$slibs $i$ext"
+	    done
+	done
 	libs="$slibs $libs"
-    else
-        libs="$libs $slibs"
     fi
 
     # Loop over the list of possible directories, and see if we can
@@ -200,7 +198,8 @@ check_library() {
 		fi
 	    done
 	done
-	if test "x$found_lib" = "x$flib" ; then
+	if test "x$shared" = "xno" || \
+	   test "x$found_lib" = "x$flib" ; then
 	    found_lib=${found_dir}/${found_lib}
 	    found_dir=""
 	else
@@ -213,16 +212,6 @@ check_library() {
 		found_dir=""
 	    fi
 	fi
-
-        # Correct path for win32
-        if test "x$platform" = "xwin32"; then
-            if test ! "x$found_lib" = "x" ; then
-                found_lib=`cygpath -m $found_lib`
-            fi
-            if test ! "x$found_dir" = "x" ; then
-               found_dir=`cygpath -m $found_dir`
-            fi
-        fi
     fi
     unset shared
     unset lib
@@ -294,7 +283,6 @@ check_header()  {
 	found_dir="include"
     fi
 
-    # Correct path for win32
     if test "x$platform" = "xwin32"; then
         if test ! "x$found_hdr" = "x" ; then
            found_hdr=`cygpath -m $found_hdr`
@@ -480,7 +468,7 @@ the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
    afs             AFS support, requires AFS libs and objects
-   alien           AliEn support, requires libAliEnAPI++ from ALICE
+   alien           AliEn support, requires libAliEn from ALICE
    asimage         Image processing support, requires libAfterImage
    cern            CERNLIB usage, build h2root and g2root
    chirp           Chirp support (Condor remote I/O), requires libchirp_client
@@ -510,8 +498,8 @@ enable/disable options, prefix with either --enable- or --disable-
 with options, prefix with --with-, enables corresponding support
 
    afs             AFS support, location of AFS distribution
-   alien-incdir    AliEn support, location of AliEnAPI++.h
-   alien-libdir    AliEn support, location of libAliEnAPI++
+   alien-incdir    AliEn support, location of AliEn.h
+   alien-libdir    AliEn support, location of libAliEn
    cern-libdir     HBOOK converter, location of CERNLIB libraries
    chirp-incdir    Chirp support, location of chirp_client.h
    chirp-libdir    Chirp support, location of libchirp_client
@@ -521,7 +509,7 @@ with options, prefix with --with-, enables corresponding support
    krb5-incdir     Kerberos5 support, location of krb5.h
    krb5-libdir     Kerberos5 support, location of libkrb5
    globus          Globus support, path to what should be GLOBUS_LOCATION
-   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.GLOBUS)
+   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.globus)
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -641,6 +629,7 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
+      --with-globus-patch=*)   globuspatchdir=$optarg ; enable_globus="yes" ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
@@ -723,7 +712,6 @@ if test $# -gt 0 ; then
       --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
       --pkglist*)     show_pkglist="yes"       ; noact="yes"         ;;
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
-      --proofdir=*)   haveconfig=-DHAVE_CONFIG ; proofdir=$optarg    ;;
       --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
       --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
       --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
@@ -1302,21 +1290,17 @@ fi
 #
 # (See http://alien.cern.ch)
 #
-# Check for libAliEnAPI++
+# Check for libAliEn
 #
 if test ! "x$enable_alien" = "xno" ; then
-    check_header "AliEnAPI++.h" "$alienincdir" $ALIEN $ALIEN/include \
+    check_header "AliEn.h" "$alienincdir" $ALIEN $ALIEN/include \
 	/opt/alien/include /usr/local/alien/include /usr/include \
 	/usr/local/include
     alienincdir=$found_dir
 
-    if test ! "x$alienincdir" = "x" ; then
-       alienincdir="$alienincdir -I$alienincdir/soap"
-    fi
-
-    check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
-	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib /usr/lib \
-        /usr/local/lib
+    check_library "libAliEn" "$enable_shared" "$alienlibdir" \
+	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib \
+	/usr/lib /usr/local/lib
     alienlib=$found_lib
     alienlibdir=$found_dir
 
@@ -1442,21 +1426,16 @@ fi
 glbextracflags=""
 glbpatchcflags=""
 if test ! "x$enable_globus" = "xno"; then
-   # Check if the GLOBUS_LOCATION variable is set
-   if test "x$globusdir" = "x" ; then
-      echo "Checking for globusdir ... no"
-      if test "x$GLOBUS_LOCATION" = "x" ; then
-          globusdir=""
-          enable_globus="no"
-          echo "Checking for GLOBUS_LOCATION ... no"
-      else
-          globusdir=$GLOBUS_LOCATION
-          echo "Checking for GLOBUS_LOCATION ... $GLOBUS_LOCATION"
-      fi
-   fi
-fi
-
-if test "x$enable_globus" = "xyes"; then
+    # Check if the GLOBUS_lOCATION variable is set
+    if test "x$globusdir" = "x" ; then
+        if test "x$GLOBUS_LOCATION" = "x" ; then
+            globusdir=""
+            enable_globus="no"
+            break
+        else
+            globusdir=$GLOBUS_LOCATION
+        fi
+    fi
 
     pthr="pthr"
     #determine flavour tag of the building
@@ -1491,217 +1470,71 @@ if test "x$enable_globus" = "xyes"; then
             done
         fi
     done
-fi
 
-if test "x$enable_globus" = "xyes"; then
+    globuslib=""
+    if test ! "x$globusdir" = "x" ; then
+        searchlibdir=$globusdir/lib
+    fi
 
-   # With more recent versions we need an additional header
-   check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
-   gsiversion="no"
-   if test ! "x$found_hdr" = "x" ; then
-       gsiversion="yes"
-       globusinc="$globusinc $found_hdr"
-       if test "x$globusincdir" = "x" ; then
-           globusincdir=$found_dir
-       else
-           for k in $globusincdir ; do
-               if test "x$k" != "x$found_dir" ; then
-                   if test "x$k" != "x-I$found_dir" ; then
-                       globusincdir="$found_dir -I$globusincdir"
-                   fi
-                fi
-           done
-       fi
-       echo "Checking for gsi version ... yes"
-   else
-       echo "Checking for gsi version ... no"
-       check_header sslutils.h "" "$searchincdir/$flavour"
-       if test ! "x$found_hdr" = "x" ; then
-          globusinc="$globusinc $found_hdr"
-          if test "x$globusincdir" = "x" ; then
-             globusincdir=$found_dir
-          else
-             for k in $globusincdir ; do
-                 if test "x$k" != "x$found_dir" ; then
-                    if test "x$k" != "x-I$found_dir" ; then
-                       globusincdir="$found_dir -I$globusincdir"
-                    fi
-                 fi
-             done
+    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
+       libssl_$flavour libcrypto_$flavour ; do
+       check_library $i "$enable_shared" "$searchlibdir" /usr/lib \
+          /usr/local/lib
+          if test "x$found_lib" = "x" ; then
+              globuslib=""
+              globuslibdir=""
+              enable_globus="no"
+              break
           fi
-       else
-         globusinc=""
-         globusincdir=""
-         enable_globus="no"
-       fi
-   fi
-fi
+          globuslib="$globuslib $found_lib"
+          if test "x$globuslibdir" = "x" ; then
+              globuslibdir=$found_dir
+          else
+              for k in $globuslibdir ; do
+                  if test "x$k" != "x$found_dir" ; then
+                      globuslibdir="$found_dir $globuslibdir"
+                  fi
+              done
+          fi
+    done
 
-if test "x$enable_globus" = "xyes"; then
+    sourcepath=""
+    if test -s $globusdir/etc/globus-user-env.sh ; then
+        sourcepath="$globusdir/etc"
+    fi
+    if test "x$sourcepath" = "x" ; then
+        echo "Checking for globus-user-env.sh ... no (cannot run as client)"
+    else
+        echo "Checking for globus-user-env.sh ... $sourcepath"
+    fi
 
-   globuslib=""
-   if test ! "x$globusdir" = "x" ; then
-       searchlibdir=$globusdir/lib
-   fi
+    initpath=""
+    if test -s $globusdir/bin/grid-proxy-init ; then
+        initpath="$globusdir/bin"
+    fi
+    if test "x$sourcepath" = "x" ; then
+        echo "Checking for grid-proxy-init ... no (cannot run as client)"
+    else
+        echo "Checking for grid-proxy-init ... $initpath"
+    fi
 
-   for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
-     libssl_$flavour libcrypto_$flavour ; do
-     check_library $i "$enable_shared" "$searchlibdir" /usr/lib \
-        /usr/local/lib
-        if test "x$found_lib" = "x" ; then
-            globuslib=""
-            globuslibdir=""
-            enable_globus="no"
-            break
+    if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
+        globuslib=""
+        enable_globus="no"
+    fi
+
+    if test "x$enable_globus" = "xyes"; then
+        glbextracflags="-DR__GLBS"
+        if test ! "x$globuspatchdir" = "x" ; then
+            glbpatchcflags="-DR__GLBCPATCH -I$globusincdir \
+                          -I$globuspatchdir/globus_gsi_credential-0.5/library/ \
+                          -I$globuspatchdir/globus_gssapi_gsi-3.6/library/ \
+                          -I$globuspatchdir/globus_gsi_credential-0.5/ \
+                          -I$globuspatchdir/globus_openssl-0.10/crypto/ \
+                          -I$globuspatchdir/globus_gsi_sysconfig-0.3/library/"
+            echo "Applying experimental patch to globus_gsi_system_config.c"
         fi
-        globuslib="$globuslib $found_lib"
-        if test "x$globuslibdir" = "x" ; then
-            globuslibdir=$found_dir
-        else
-            for k in $globuslibdir ; do
-                if test "x$k" != "x$found_dir" ; then
-                    globuslibdir="$found_dir $globuslibdir"
-                fi
-            done
-        fi
-   done
-fi
-
-if test "x$enable_globus" = "xyes"; then
-
-   # In more recent versions some functions are found in a separated library
-   # so, if it exists, add it to the list
-   check_library libglobus_gsi_credential_$flavour "$enable_shared" "$searchlibdir" \
-          /usr/lib /usr/local/lib
-   if test ! "x$found_lib" = "x" ; then
-      globuslib="$globuslib $found_lib"
-      if test "x$globuslibdir" = "x" ; then
-         globuslibdir=$found_dir
-      else
-         for k in $globuslibdir ; do
-             if test "x$k" != "x$found_dir" ; then
-                globuslibdir="$found_dir $globuslibdir"
-             fi
-         done
-      fi
-   fi
-
-   # Need to source this before init proxies
-   sourcepath=""
-   if test -s $globusdir/etc/globus-user-env.sh ; then
-      sourcepath="$globusdir/etc"
-   fi
-   if test "x$sourcepath" = "x" ; then
-      echo "Checking for globus-user-env.sh ... no (cannot run as client)"
-   else
-      echo "Checking for globus-user-env.sh ... $sourcepath"
-   fi
-
-   # Need this to init proxies
-   initpath=""
-   if test -s $globusdir/bin/grid-proxy-init ; then
-      initpath="$globusdir/bin"
-   fi
-   if test "x$sourcepath" = "x" ; then
-      echo "Checking for grid-proxy-init ... no (cannot run as client)"
-   else
-      echo "Checking for grid-proxy-init ... $initpath"
-   fi
-
-   if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
-      globuslib=""
-      enable_globus="no"
-   fi
-
-fi
-
-if test "x$enable_globus" = "xyes"; then
-
-   glbextracflags="-DR__GLBS"
-   if test "x$gsiversion" = "xyes" ; then
-      glbextracflags="$glbextracflags -DR__GLBS22"
-   fi
-
-   # Everything seems ok: now check if there is the need for a patch
-   patchneeded="no"
-   tobepatched="globus_gsi_credential"
-   package="globus_gsi_credential"
-   packdir="$globusdir/etc/globus_packages/$package"
-   if test -d $packdir ; then
-      for i in pkg_data_${flavour}_rtl.gpt pkg_data_${flavour}_dev.gpt ; do
-         if test -r $packdir/$i ; then
-            packfileinfo=$packdir/$i
-            break
-         fi
-      done
-      version=""
-      if test ! "x$packfileinfo" = "x" ; then
-         packfiletmp=`basename $packfileinfo`
-         echo "Checking $packfiletmp ... $packdir"
-         versionstring=`grep Minor $packfileinfo`
-         for i in $versionstring ; do
-            for k in 5 7 8 9 ; do
-               if test "Minor=\"$k\"" = "$i" ; then
-                  version="0.$k"
-                  break 2
-               fi
-            done
-         done
-      fi
-      if test "x$version" = "x" ; then
-         patchneeded="no"
-         echo "Checking need for globus patch ... no"
-      else
-         patchneeded="yes"
-         echo "Checking need for globus patch ... yes"
-      fi
-
-   else
-      echo "Checking globus patch need ... no"
-   fi
-
-   # Now find includes needed for patch, if the case
-   if test "x$patchneeded" = "xyes" ; then
-
-      # build patching flags
-      glbpatchcflags="-DR__GLBCPATCH"
-
-      for i in globus_gsi_system_config.h globus_gsi_cert_utils.h ; do
-         dirtmp=`find $globusincdir -name $i -exec dirname {} \;`
-         if test ! "x$dirtmp" = "x" ; then
-            echo "Checking for $i ... $dirtmp"
-            add="yes"
-            for k in $glbpatchcflags ; do
-               if test "x$k" = "x-I$dirtmp" ; then
-                  add="no"
-               fi
-            done
-            if test "x$add" == "xyes" ; then
-               glbpatchcflags="$glbpatchcflags -I$dirtmp"
-            fi
-         else
-            echo "Checking for $i ... no (globus patch not applied)"
-            patchneeded="no"
-            glbpatchcflags=""
-            break
-         fi
-      done
-   fi
-
-   if test "x$patchneeded" = "xyes" ; then
-
-      # Path with patched files and includes
-      globuspatchdir="globusauth/src/patches/$tobepatched/$version"
-
-      # copy patched file in the globusauth/src directory
-      cp -rp $globuspatchdir/$tobepatched.c globusauth/src/$tobepatched.c
-
-      glbpatchcflags="$glbpatchcflags -I$globuspatchdir/include"
-
-      if test ! "x$glbpatchcflags" = "x" ; then
-         echo "Applying experimental patch to $tobepatched.c"
-      fi
-   fi
+    fi
 fi
 
 ######################################################################

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.8 2003/12/10 14:23:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -30,8 +30,7 @@
 
 #include "TGIcon.h"
 #include "TGPicture.h"
-#include "TSystem.h"
-#include "Riostream.h"
+
 
 ClassImp(TGIcon)
 
@@ -68,37 +67,4 @@ void TGIcon::DoRedraw()
    // Redraw picture.
 
    if (fPic) fPic->Draw(fId, GetBckgndGC()(), 0, 0);
-}
-
-//______________________________________________________________________________
-void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save an icon widget as a C++ statement(s) on output stream out.
-
-   char quote = '"';
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   if (!fPic) {
-      Error("SavePrimitive()", "icon pixmap not found ");
-      return;
-   }
-
-   const char *picname = fPic->GetName();
-
-   out <<"   TGIcon *";
-   out << GetName() << " = new TGIcon(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote
-	      << gSystem->ExpandPathName(gSystem->UnixPathName(picname))                       // if no path
-       << quote << ")" << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.21 2003/05/16 15:00:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.20 2003/05/16 13:49:34 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -337,9 +337,8 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
                if (clss.IsNull()) break;
                TString plugin = strtok(0, "; ");
                if (plugin.IsNull()) break;
+               strtok(0, ";\"");
                TString ctor = strtok(0, ";\"");
-               if (!ctor.Contains("("))
-                  ctor = strtok(0, ";\"");
                AddHandler(s, regexp, clss, plugin, ctor);
                cnt++;
             }

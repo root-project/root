@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.7 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.5 2003/01/22 11:23:03 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -69,14 +69,6 @@ TGApplication::TGApplication(const char *appClassName,
    if (!fDisplay) gSystem->SetDisplay();
    fClient = new TGClient(fDisplay);
 
-   if (fClient->IsZombie()) {
-      Error("TGApplication", "cannot switch to batch mode, exiting...");
-      gSystem->Exit(1);
-   }
-
-   // a GUI application is never run in batch mode
-   gROOT->SetBatch(kFALSE);
-
 #if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
@@ -87,7 +79,7 @@ TGApplication::TGApplication(const char *appClassName,
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
-      if (ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
          TPluginHandler *h;
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
             h->LoadPlugin();
@@ -121,8 +113,8 @@ TGApplication::TGApplication(const char *appClassName,
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
-   // to allow user to interact with TCanvas's under WIN32
-   gROOT->SetLineHasBeenProcessed();
+   gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
+
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.145 2003/12/04 07:12:37 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.142 2003/08/05 21:17:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -6,12 +6,12 @@
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/rootcint.            *
+ * For the list of contributors see $ROOTSYS/README/rootcint.             *
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// CREDITS                                                              //
+// CREDITS                                                             //
 //                                                                      //
 // This program generates the CINT dictionaries needed in order to      //
 // get access to your classes via the interpreter.                      //
@@ -365,16 +365,16 @@ void Fatal(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-string R__tmpnam()
+string R__tmpnam() 
 {
    // return a unique temporary file name as defined by tmpnam
-
+   
    static char filename[L_tmpnam+2];
    static string tmpdir;
-
+   
    if (tmpdir.length()==0 && strlen(P_tmpdir)<=2) {
       // P_tmpdir will be prepended to the result of tmpnam
-      // if it is less that 2 character it is likely to
+      // if it is less that 2 character it is likely to 
       // just be '/' or '\\'.
       // Let's add the temp directory.
       char *tmp;
@@ -384,9 +384,9 @@ string R__tmpnam()
       else tmpdir = ".";
       tmpdir += '/';
    }
-
+   
    tmpnam(filename);
-
+   
    string result(tmpdir);
    result += filename;
    result += "_rootcint";
@@ -3095,8 +3095,6 @@ void WriteShadowClass(G__ClassInfo &cl)
          } else {
             fprintf(fp, ", ");
          }
-         if (b.Property() & G__BIT_ISVIRTUAL)
-            fprintf(fp, " virtual");
          if (b.Property() & G__BIT_ISPRIVATE)
             fprintf(fp, " private ");
          else if (b.Property() & G__BIT_ISPROTECTED)
@@ -3105,7 +3103,6 @@ void WriteShadowClass(G__ClassInfo &cl)
             fprintf(fp, " public ");
          else
             fprintf(fp, " UNKNOWN inheritance ");
-
          string type_name;
          GetFullyQualifiedName(b,type_name);
          fprintf(fp, "%s", type_name.c_str());
@@ -3625,10 +3622,6 @@ int main(int argc, char **argv)
 #ifdef __INTEL_COMPILER
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
-#endif
-#ifdef _xlc_
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D_xlc_=%ld", (long)_xlc_); argcc++;
 #endif
 #ifdef __GNUC__
          argvv[argcc] = (char *)calloc(64, 1);

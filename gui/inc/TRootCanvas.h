@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.7 2003/10/08 09:50:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.6 2003/05/11 14:59:10 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -63,7 +63,6 @@ private:
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
-   Long_t               fLockState;  // indicate drawing lock/unlock state
 
    void     CreateCanvas(const char *name);
 
@@ -74,10 +73,6 @@ private:
    Bool_t   HandleContainerMotion(Event_t *ev);
    Bool_t   HandleContainerExpose(Event_t *ev);
    Bool_t   HandleContainerCrossing(Event_t *ev);
-
-   void     Lock();
-   void     Unlock();
-   Bool_t   IsLocked() { return fLockState; } 
 
 public:
    TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height);

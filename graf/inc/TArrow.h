@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.5 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
                 void   Copy(TObject &arrow) const;
         virtual void   Draw(Option_t *option="");
         virtual void   DrawArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
-                               ,Float_t arrowsize=0 ,Option_t *option="");
+                               ,Float_t arrowsize=0.05 ,Option_t *option=">");
         Float_t        GetAngle() const {return fAngle;}
         Float_t        GetArrowSize() const {return fArrowSize;}
         Option_t      *GetOption() const { return fOption.Data();}

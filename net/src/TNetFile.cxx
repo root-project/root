@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.41 2003/11/28 18:01:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.36 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -433,7 +433,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
       fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
                              tcpwindowsize);
       if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open %d parallel connections to rootd on "
+         Error("TNetFile", "can't open %d parallel connections to rootd on "
                "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
          goto zombie;
       }
@@ -443,7 +443,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    } else {
       fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
       if (!fSocket->IsValid()) {
-         Error("ConnectServer", "can't open connection to rootd on host %s at port %d",
+         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
                fUrl.GetHost(), fUrl.GetPort());
          goto zombie;
       }
@@ -468,19 +468,26 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Check if rootd supports new options
    if (forceRead && fProtocol < 5) {
-      Warning("ConnectServer", "rootd does not support \"+read\" option");
+      Warning("TNetFile", "rootd does not support \"+read\" option");
       forceRead = kFALSE;
    }
 
    // Authenticate remotely
-   if (gDebug > 2) Info("ConnectServer", "user from Url: %s", fUrl.GetUser());
-   auth = new TAuthenticate(fSocket, fUrl.GetHost(),
-                Form("%s:%d",fUrl.GetProtocol(),fProtocol), fUrl.GetUser());
-
+   if (gDebug > 2) Info("Authenticate", "User from Url: %s", fUrl.GetUser());
+   if (!strcmp(fUrl.GetProtocol(), "roots")) {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("roots:%d", fProtocol), fUrl.GetUser());
+   } else if (!strcmp(fUrl.GetProtocol(), "rootk")) {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("rootk:%d", fProtocol), fUrl.GetUser());
+   } else {
+      auth = new TAuthenticate(fSocket, fUrl.GetHost(),
+                               Form("rootd:%d", fProtocol), fUrl.GetUser());
+   }
    // Attempt authentication
    if (!auth->Authenticate()) {
-      Error("ConnectServer", "authentication failed for %s@%s",
-            auth->GetUser(), fUrl.GetHost());
+      Error("TNetFile", "%s authentication failed for host %s",
+            TAuthenticate::GetAuthMethod(auth->GetSecurity()), fUrl.GetHost());
       delete auth;
       goto zombie;
    }
@@ -578,7 +585,7 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    }
 
    if (!fUrl.IsValid()) {
-      Error("Create", "invalid URL specified: %s", url);
+      Error("TNetFile", "invalid URL specified: %s", url);
       goto zombie;
    }
 
@@ -589,10 +596,10 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    EMessageTypes kind;
    Int_t stat;
    ConnectServer(&stat, &kind, netopt, tcpwindowsize, forceOpen, forceRead);
-   if (gDebug > 2) Info("Create", "got from host %d %d", stat, kind);
+   if (gDebug > 2) Info("TNetFile", "TNetFile: got from host %d %d", stat, kind);
 
    if (kind == kROOTD_ERR) {
-      PrintError("Create", stat);
+      PrintError("TNetFile", stat);
       goto zombie;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.8 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.7 2002/04/18 23:17:43 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -110,6 +110,12 @@ private:
    Int_t  fSec;           // seconds
    Int_t  fNanoSec;       // nanoseconds
 
+   void Set();
+   void Set(Int_t year, Int_t month,  Int_t day,
+            Int_t hour, Int_t min,    Int_t sec,
+            Int_t nsec, Bool_t isUTC, Int_t secOffset);
+   void Set(Int_t date,   Int_t time, Int_t nsec,
+            Bool_t isUTC, Int_t secOffset);
    void NormalizeNanoSec();
 
 public:
@@ -135,18 +141,6 @@ public:
               Bool_t isUTC = kTRUE, Int_t secOffset = 0);
 
    virtual ~TTimeStamp() { }
-
-   // initialize to current time with nsec field incremented from static
-   void Set();
-
-   // construction from bits and pieces
-   void Set(Int_t year, Int_t month,  Int_t day,
-            Int_t hour, Int_t min,    Int_t sec,
-            Int_t nsec, Bool_t isUTC, Int_t secOffset);
-
-   // compatibility with TDatime
-   void Set(Int_t date,   Int_t time, Int_t nsec,
-            Bool_t isUTC, Int_t secOffset);
 
    timespec_t   GetTimeSpec() const
       { timespec_t value = {fSec,fNanoSec}; return value; }

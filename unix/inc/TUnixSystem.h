@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.13 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.12 2003/08/21 14:31:01 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -155,8 +155,6 @@ public:
    //---- Users & Groups
    Int_t             GetUid(const char *user = 0);
    Int_t             GetGid(const char *group = 0);
-   Int_t             GetEffectiveUid();
-   Int_t             GetEffectiveGid();
    UserGroup_t      *GetUserInfo(Int_t uid);
    UserGroup_t      *GetUserInfo(const char *user = 0);
    UserGroup_t      *GetGroupInfo(Int_t gid);

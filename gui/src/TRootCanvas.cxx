@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.19 2003/11/24 10:51:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.14 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -38,13 +38,11 @@
 #include "TApplication.h"
 #include "TFile.h"
 #include "TInterpreter.h"
-#include "Riostream.h"
 
 #include "HelpText.h"
 
 #ifdef WIN32
- #include <windows.h>
- #undef SendMessage
+#   undef SendMessage
 #endif
 
 
@@ -133,7 +131,8 @@ private:
 public:
    TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev);
+   Bool_t  HandleButton(Event_t *ev)
+                { return fCanvas->HandleContainerButton(ev); }
    Bool_t  HandleDoubleClick(Event_t *ev)
                 { return fCanvas->HandleContainerDoubleClick(ev); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
@@ -147,7 +146,6 @@ public:
                 { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
                 { return fCanvas->HandleContainerCrossing(ev); }
-   void    SavePrimitive(ofstream &out, Option_t *);
 };
 
 //______________________________________________________________________________
@@ -166,32 +164,7 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
-Bool_t TRootContainer::HandleButton(Event_t *event)
-{
-   // Directly handle scroll mouse buttons (4 and 5), only pass buttons
-   // 1, 2 and 3 on to the TCanvas.
 
-   TGViewPort *vp = (TGViewPort*)fParent;
-   Int_t y = vp->GetVPos();
-   UInt_t page = vp->GetHeight()/4;
-   Int_t newpos;
-
-   if (event->fCode == kButton4) {
-      //scroll up
-      newpos = y - page;
-      if (newpos < 0) newpos = 0;
-      fCanvas->fCanvasWindow->SetVsbPosition(newpos);
-      return kTRUE;
-   }
-   if (event->fCode == kButton5) {
-      // scroll down
-      newpos = fCanvas->fCanvasWindow->GetVsbPosition() + page;
-      fCanvas->fCanvasWindow->SetVsbPosition(newpos);
-      return kTRUE;
-   }
-   return fCanvas->HandleContainerButton(event);
-}
 
 ClassImp(TRootCanvas)
 
@@ -225,7 +198,6 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    fButton  = 0;
    fAutoFit = kTRUE;   // check also menu entry
-   fLockState = 0;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
@@ -358,6 +330,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    AddFrame(fStatusBar, fStatusBarLayout);
 
    // Misc
+
    SetWindowName(name);
    SetIconName(name);
    SetIconPixmap("macro_s.xpm");
@@ -861,28 +834,6 @@ void TRootCanvas::FitCanvas()
 }
 
 //______________________________________________________________________________
-void TRootCanvas::Lock()
-{
-   // lock updating canvas
-
-   if (IsLocked()) return;
-#ifdef WIN32
-   ::InterlockedIncrement(&fLockState);
-#endif
-}
-
-//______________________________________________________________________________
-void TRootCanvas::Unlock()
-{
-   //  unlock updating canvas
-
-   if (!IsLocked()) return;
-#ifdef WIN32
-   ::InterlockedDecrement(&fLockState);
-#endif
-}
-
-//______________________________________________________________________________
 void TRootCanvas::ShowMenuBar(Bool_t show)
 {
    // Show or hide menubar.
@@ -1044,18 +995,4 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
    return kTRUE;
-}
-
-//______________________________________________________________________________
-void TRootContainer::SavePrimitive(ofstream &out, Option_t *)
-{
-   // Save a canvas container as a C++ statement(s) on output stream out.
-
-   out << endl << "   // canvas container" << endl;
-   out << "   Int_t canvasID = gVirtualX->InitWindow((ULong_t)"
-       << GetParent()->GetParent()->GetName() << "->GetId());" << endl;
-   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << endl;
-   out << "   TGCompositeFrame *";
-   out << GetName() << " = new TGCompositeFrame(gClient,winC"
-       << "," << GetParent()->GetName() << ");" << endl;
 }

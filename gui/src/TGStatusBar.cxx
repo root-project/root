@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.4 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -30,38 +30,33 @@
 
 #include "TGStatusBar.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 
 
 const TGFont *TGStatusBar::fgDefaultFont = 0;
 TGGC         *TGStatusBar::fgDefaultGC = 0;
-TGLayoutHints *TGStatusBar::fgHints = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
 
 
-class TGStatusBarPart : public TGHorizontalFrame {
+class TGStatusBarPart : public TGCompositeFrame {
 friend class TGStatusBar;
 private:
    TGString  *fStatusInfo;    // status text to be displayed in this part
    Int_t      fYt;            // y position of text in frame
    virtual void DoRedraw();
-
 public:
-   TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back = GetDefaultFrameBackground());
+   TGStatusBarPart(const TGWindow *p, Int_t y, ULong_t back = GetDefaultFrameBackground());
    ~TGStatusBarPart() { delete fStatusInfo; DestroyWindow(); }
    void SetText(TGString *text);
-   const TGString *GetText() const { return fStatusInfo; }
 };
 
 //______________________________________________________________________________
-TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back)
-   : TGHorizontalFrame(p, 5, 5, kChildFrame | kHorizontalFrame, back)
+TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t y, ULong_t back)
+   : TGCompositeFrame(p, 5, 5, kChildFrame, back)
 {
    // Create statusbar part frame. This frame will contain the text for this
    // statusbar part.
 
    fStatusInfo = 0;
-   fYt = y + 1;
-   fHeight = h;
+   fYt = y;
    MapWindow();
 }
 
@@ -80,7 +75,7 @@ void TGStatusBarPart::DoRedraw()
 {
    // Draw string in statusbar part frame.
 
-   TGHorizontalFrame::DoRedraw();
+   TGFrame::DoRedraw();
 
    if (fStatusInfo)
       fStatusInfo->Draw(fId, TGStatusBar::GetDefaultGC()(), 3, fYt);
@@ -92,7 +87,7 @@ ClassImp(TGStatusBar)
 //______________________________________________________________________________
 TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
                          UInt_t options, ULong_t back) :
-   TGHorizontalFrame(p, w, h, options, back)
+   TGFrame(p, w, h, options, back)
 {
    // Create a status bar widget. By default it consist of one part.
    // Multiple parts can be created using SetParts().
@@ -109,10 +104,10 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->GetFontProperties(GetDefaultFontStruct(), max_ascent, max_descent);
    int ht = max_ascent + max_descent;
 
-   fYt = max_ascent;
+   fYt = 2 + max_ascent;
 
-   fStatusPart[0] = new TGStatusBarPart(this, ht, fYt);
-   AddFrame(fStatusPart[0], fgHints);
+   fStatusPart[0] = new TGStatusBarPart(this, fYt-1);
+
    Resize(w, ht + 5);
 }
 
@@ -240,7 +235,6 @@ void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
    delete [] fStatusPart;
    delete [] fParts;
    delete [] fXt;
-   fList->Delete();
 
    fStatusPart = new TGStatusBarPart* [npart];
    fParts      = new Int_t [npart];
@@ -248,8 +242,7 @@ void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
 
    int tot = 0;
    for (i = 0; i < npart; i++) {
-      fStatusPart[i] = new TGStatusBarPart(this, fHeight, fYt);
-      AddFrame(fStatusPart[i], fgHints);
+      fStatusPart[i] = new TGStatusBarPart(this, fYt-1);
       fParts[i] = parts[i];
       tot += parts[i];
       if (tot > 100)
@@ -281,7 +274,6 @@ void TGStatusBar::SetParts(Int_t npart)
    delete [] fStatusPart;
    delete [] fParts;
    delete [] fXt;
-   fList->Delete();
 
    fStatusPart = new TGStatusBarPart* [npart];
    fParts      = new Int_t [npart];
@@ -290,8 +282,7 @@ void TGStatusBar::SetParts(Int_t npart)
    int sz  = 100/npart;
    int tot = 0;
    for (i = 0; i < npart; i++) {
-      fStatusPart[i] = new TGStatusBarPart(this, fHeight, fYt);
-      AddFrame(fStatusPart[i], fgHints);
+      fStatusPart[i] = new TGStatusBarPart(this, fYt-1);
       fParts[i] = sz;
       tot += sz;
    }
@@ -325,78 +316,4 @@ TGCompositeFrame *TGStatusBar::GetBarPart(Int_t npart) const
    // something more interesting than text ;-)
 
    return  ((npart<fNpart) && (npart>=0)) ? (TGCompositeFrame*)fStatusPart[npart] : 0;
-}
-
-//______________________________________________________________________________
-TGDimension TGStatusBar::GetDefaultSize() const
-{
-   //
-
-   UInt_t h = fHeight;
-
-   for (int i = 0; i < fNpart; i++) {
-      h = TMath::Max(h,fStatusPart[i]->GetDefaultHeight()+1);
-   }
-   return TGDimension(fWidth, h);
-}
-
-//______________________________________________________________________________
-void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-    // Save a status bar widget as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl;
-   out << "   // status bar" << endl;
-
-   out << "   TGStatusBar *";
-   out << GetName() <<" = new TGStatusBar("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kHorizontalFrame)) {
-           out <<");" << endl;
-      } else {
-        out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-     out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   int i; char quote = '"';
-
-   if (fNpart > 1)  {
-      out << "   Int_t parts" << GetName()+5 << "[] = {" << fParts[0];
-
-      for (i=1; i<fNpart; i++) {
-           out  << "," << fParts[i];
-      }
-      out << "};" << endl;
-
-      out << "   " << GetName() << "->SetParts(parts" << GetName()+5
-          << "," << fNpart << ");" <<endl;
-   }
-   for (i=0; i<fNpart; i++) {
-      if (fStatusPart[i]->GetText()) {
-          out << "   " << GetName() << "->SetText(" << quote
-              << fStatusPart[i]->GetText()->GetString()
-              << quote << "," << i << ");" << endl;
-      } else {
-         if (!fStatusPart[i]->GetList()) continue;
-         out << "   TGCompositeFrame *" << fStatusPart[i]->GetName()
-             << " = " << GetName() << "->GetBarPart(" << i << ");" << endl;
-
-         TGFrameElement *el;
-         TIter next(fStatusPart[i]->GetList());
-
-         while ((el = (TGFrameElement *) next())) {
-            el->fFrame->SavePrimitive(out, option);
-            out << "   " << fStatusPart[i]->GetName() << "->AddFrame("
-                << el->fFrame->GetName();
-            el->fLayout->SavePrimitive(out, option);
-            out << ");" << endl;
-         }
-      }
-   }
 }

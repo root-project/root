@@ -13,7 +13,6 @@ makecint -mk Makefile -dl cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
 rem -l "c:\Program Files\DevStudio\Vc\Lib\wsock32.lib"
 
 make.exe -f Makefile 
-echo > ..\..\include\cintsock.dll
 del ..\..\include\cintsock.dll
 move cintsock.dll %cintsysdir%\include\cintsock.dll
 move %cintsysdir%\include\_winsock.h %cintsysdir%\include\winsock.h

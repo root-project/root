@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.14 2003/11/25 15:57:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.11 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -49,7 +49,6 @@
 #include "TRegexp.h"
 #include "TList.h"
 #include "TSystem.h"
-#include "Riostream.h"
 
 
 ClassImp(TGFileContainer)
@@ -283,8 +282,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
       ;
-   fCtw = new int[i+1];
-   fCtw[i] = 0;
+   fCtw = new int[i];
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
@@ -329,8 +327,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
       ;
-   fCtw = new int[i+1];
-   fCtw[i] = 0;
+   fCtw = new int[i];
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
@@ -731,42 +728,8 @@ void TGFileContainer::StopRefreshTimer()
 //______________________________________________________________________________
 void TGFileContainer::StartRefreshTimer(ULong_t msec)
 {
-   // start refreshing
+   // start refreshing 
 
    fRefresh = new TViewUpdateTimer(this, msec);
    gSystem->AddTimer(fRefresh);
-}
-
-//______________________________________________________________________________
-void TGFileContainer::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a file container widget as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   char quote = '"';
-   out << endl << "   // container frame" << endl;
-   out << "   TGFileContainer *";
-
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGFileContainer(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGFileContainer(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-   out << "   " << GetCanvas()->GetName() << "->SetContainer("
-                << GetName() << ");" << endl;
-   out << "   " << GetName() << "->DisplayDirectory();" << endl;
-   out << "   " << GetName() << "->AddFile("<< quote << ".." << quote << ");" << endl;
-   out << "   " << GetName() << "->StopRefreshTimer();" << endl;
 }

@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.7 2003/11/20 16:57:46 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.4 2002/08/09 13:56:00 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,8 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TGraph2D-;
-#pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphSmooth+;
 #pragma link C++ class TLatex+;
 #pragma link C++ class TLegend+;

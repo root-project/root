@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.9 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.5 2003/09/24 13:24:31 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -62,9 +62,6 @@ extern int  gNumAllow;
 extern int  gNumLeft;
 extern int  gOffSet;
 extern int  gParallel;
-extern int  gPort;
-extern int  gPortA;
-extern int  gPortB;
 extern int  gRemPid;
 extern int  gReUseAllow;
 extern int  gReUseRequired;
@@ -74,7 +71,7 @@ extern int  gSshdPort;
 
 extern char gAltSRPPass[kMAXPATHLEN];
 extern char gAnonUser[64];
-extern char gSystemDaemonRc[kMAXPATHLEN];
+extern char gAuthAllow[kMAXPATHLEN];
 extern char gExecDir[kMAXPATHLEN];        // for use in rootd ...
 extern char gFile[kMAXPATHLEN];
 extern char gFileLog[kMAXPATHLEN];
@@ -87,7 +84,7 @@ extern char gUser[64];
 extern char gPasswd[64];                  // only used for anonymous access
 
 extern const char *kAuthMeth[kMAXSEC];    // authentication method list
-extern const char kDaemonRc[];        // file containing daemon access rules
+extern const char kDaemonAccess[];        // file containing daemon access rules
 
 extern SigPipe_t gSigPipeHook;
 
@@ -127,7 +124,7 @@ int NetRecv(char *msg, int max);
 int NetOpen(int inetdflag, EService service);
 void NetClose();
 const char *NetRemoteHost();
-int  NetInit(const char *service, int &port1, int port2, int tcpwindowsize);
+int  NetInit(const char *service, int port1, int port2, int tcpwindowsize);
 void NetInit(const char *service, int port, int tcpwindowsize);
 void NetSetOptions(EService service, int sock, int tcpwindowsize);
 
@@ -147,7 +144,7 @@ int  RpdCleanupAuthTab(char *Host, int RemId);
 int  RpdCheckAuthTab(int Sec, char *User, char *Host,int RemId, int *OffSet);
 bool RpdReUseAuth(const char *sstr, int kind);
 int  RpdCheckAuthAllow(int Sec, char *Host);
-int  RpdCheckHost(const char *Host, const char *host);
+int  RpdCheckHostWild(const char *Host, const char *host);
 char *RpdGetIP(const char *host);
 void RpdSendAuthList();
 void RpdCheckSession();
@@ -187,11 +184,6 @@ int  RpdSecureRecv(char **Str);
 // Globus stuff ...
 #ifdef R__GLBS
 extern "C" {
-#ifdef R__GLBS22
-   #include <globus_gsi_credential.h>
-#else
-   #include <sslutils.h>
-#endif
    #include <globus_gss_assist.h>
    #include <openssl/x509.h>
    #include <openssl/pem.h>
@@ -204,7 +196,6 @@ namespace ROOT {
 void  GlbsToolError(char *, int, int, int);
 int   GlbsToolCheckCert(char *, char **);
 int   GlbsToolCheckContext(int);
-int   GlbsToolCheckProxy(char *, char **);
 int   GlbsToolStoreContext(gss_ctx_id_t, char *);
 int   GlbsToolStoreToShm(gss_buffer_t, int *);
 char *GlbsToolExpand(char *);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.53 2003/11/08 12:55:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.49 2003/09/29 12:31:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -174,7 +174,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCh           = wh +28;
    fMenuBar      = kFALSE;
    fBatch        = kFALSE;
-
    if (gROOT->IsBatch())
      fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    else
@@ -500,12 +499,6 @@ void TCanvas::Build()
 }
 
 //______________________________________________________________________________
-TCanvas::TCanvas(const TCanvas &) : TPad()
-{
-   // Intentionally not implemented
-}
-
-//______________________________________________________________________________
 TCanvas::~TCanvas()
 {
    // Canvas destructor
@@ -526,8 +519,6 @@ void TCanvas::Browse(TBrowser *b)
 void TCanvas::Destructor()
 {
    // Actual canvas destructor.
-
-   if (fCanvasImp && fCanvasImp->IsLocked()) fCanvasImp->Unlock();
 
    if (gThreadXAR) {
       void *arr[2];
@@ -733,7 +724,6 @@ TObject *TCanvas::DrawClonePad()
      clone = obj->Clone();
      pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
   }
-  pad->ResizePad();
   pad->Modified();
   pad->Update();
   padsav->cd();
@@ -1348,37 +1338,6 @@ void TCanvas::RunAutoExec()
 }
 
 //______________________________________________________________________________
-void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save primitives in this canvas in C++ macro file with GUI
-
-   Bool_t invalid = kFALSE;
-
-   // Write canvas options (in $TROOT or $TStyle)
-   if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<endl;
-   }
-   if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<endl;
-   }
-   if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<endl;
-   }
-   if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
-   }
-   if (GetHighLightColor() != 5) {
-      out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
-   }
-
-   // Now recursively scan all pads of this canvas
-   cd();
-   if (invalid) SetName("c1");
-   TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
-}
-
-//______________________________________________________________________________
 void TCanvas::SaveSource(const char *filename, Option_t *option)
 {
 //*-*-*-*-*-*-*Save primitives in this canvas as a C++ macro file*-*-*-*-*-*
@@ -1716,9 +1675,6 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, NULL)) return;
    }
 
-   if (fCanvasImp && fCanvasImp->IsLocked()) return;
-   if (fCanvasImp) fCanvasImp->Lock();
-
    if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
 
    PaintModified();           // Repaint all modified pad's
@@ -1726,7 +1682,6 @@ void TCanvas::Update()
    Flush();                   // Copy all pad pixmaps to the screen
 
    SetCursor(kCross);
-   if (fCanvasImp) fCanvasImp->Unlock();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.12 2003/11/17 09:49:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.8 2003/07/10 15:58:06 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 #include "TGResourcePool.h"
 #include "TList.h"
 #include "TMath.h"
-#include "Riostream.h"
 
 
 const TGFont *TGTab::fgDefaultFont = 0;
@@ -290,13 +289,12 @@ void TGTab::RemoveTab(Int_t tabIndex)
 
    while ((elTab = (TGFrameElement *) next())) {
       elCont = (TGFrameElement *) next();
-
+      
       if (count == tabIndex) {
          elCont->fFrame->UnmapWindow();   // will be destroyed later
-         TGFrame *frame = elTab->fFrame;
          RemoveFrame(elTab->fFrame);
-         frame->DestroyWindow();
-         delete frame;
+         elTab->fFrame->DestroyWindow();
+         delete elTab->fFrame;
          fRemoved->Add(elCont->fFrame);   // delete only in dtor
          RemoveFrame(elCont->fFrame);
          if (tabIndex == fCurrent) {
@@ -480,104 +478,4 @@ const TGGC &TGTab::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
-}
-
-//______________________________________________________________________________
-void TGTab::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a tab widget as a C++ statement(s) on output stream out
-
-   char quote = '"';
-
-   // font + GC
-   option = GetName()+5;         // unique digit id of the name
-   char ParGC[50], ParFont[50];
-   sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
-   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
-      TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
-      if (ufont) {
-         ufont->SavePrimitive(out, option);
-         sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
-
-      TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
-      if (userGC) {
-         userGC->SavePrimitive(out, option);
-         sprintf(ParGC,"uGC->GetGC()");
-      } 
-   }
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl << "   // tab widget" << endl;
-
-   out << "   TGTab *";
-   out << GetName() << " = new TGTab(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-       if (GetOptions() == kChildFrame) {
-          if (fFontStruct == GetDefaultFontStruct()) {
-             if (fNormGC == GetDefaultGC()()) {
-                out <<");" << endl;
-               } else {
-                 out << "," << ParGC <<");" << endl;
-               }
-           } else {
-             out << "," << ParGC << "," << ParFont <<");" << endl;
-           }
-       } else {
-         out << "," << ParGC << "," << ParFont << "," << GetOptionString() <<");" << endl;
-       }
-   } else {
-     out << "," << ParGC << "," << ParFont << "," << GetOptionString()  << ",ucolor);" << endl;
-   }
-
-   TGCompositeFrame *cf;
-   for (Int_t i=0; i<GetNumberOfTabs(); i++) {
-      cf = GetTabContainer(i);
-      out << endl << "   // container of " << quote
-          << GetTabTab(i)->GetString() << quote << endl;
-      out << "   TGCompositeFrame *" << cf->GetName() << ";" << endl;
-      out << "   " << cf->GetName() << " = " << GetName()
-                   << "->AddTab(" << quote << GetTabTab(i)->GetString()
-                   << quote << ");" << endl;
-      if (((TGCompositeFrame *)cf)->GetLayoutManager() != 0) {
-         out << "   " << cf->GetName() <<"->SetLayoutManager(";
-         ((TGCompositeFrame *)cf)->GetLayoutManager()->SavePrimitive(out, option);
-         out << ");" << endl;
-      }
-
-      TGFrameElement *el;
-      TIter next(cf->GetList());
-      while ((el = (TGFrameElement *) next())) {
-         el->fFrame->SavePrimitive(out, option);
-		       out << "   " << cf->GetName() << "->AddFrame(" << el->fFrame->GetName();
-					    el->fLayout->SavePrimitive(out, option);
-					    out << ");" << endl;
-      }
-      //cf->SavePrimitive(out, option);
-      if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
-         GetTabTab(i)->SaveUserColor(out, option);
-         out << "   TGTabElement *tab" << i << " = "
-             << GetName() << "->GetTabTab(" << i << ");" << endl;
-         out << "   tab" << i << "->ChangeBackground(ucolor);" << endl;
-      }
-
-   }
-   out << endl << "   " << GetName() << "->SetTab(" << GetCurrent() << ");" << endl;
-   out << endl << "   " << GetName() << "->Resize(" << GetName()
-       << "->GetDefaultSize());" << endl;
-}
-
-// __________________________________________________________________________
-void TGTabLayout::SavePrimitive(ofstream &out, Option_t *)
-{
-
-   // Save tab layout manager as a C++ statement(s) on out stream
-
-   out << "new TGTabLayout(" << fMain->GetName() << ")";
-
 }

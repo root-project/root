@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.23 2003/06/22 13:34:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.22 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
     TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Axis_t ylow,Axis_t yup, Option_t *option="");
     TProfile(const TProfile &profile);
     virtual ~TProfile();
-    virtual void    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
+    virtual void    Add(TF1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     static  void    Approximate(Bool_t approx=kTRUE);

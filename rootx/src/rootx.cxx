@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.10 2003/07/27 08:05:07 brun Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.9 2002/03/29 18:18:11 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -332,7 +332,7 @@ int main(int argc, char **argv)
 #elif defined(__sun) && defined(__SVR4)
    handle.sa_handler = SigUsr1;
 #elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
-#   if defined(IRIX64) || (__GNUG__>=3)
+#   if defined(IRIX64)
    handle.sa_handler = SigUsr1;
 #   else
    handle.sa_handler = (void (*)(...))SigUsr1;

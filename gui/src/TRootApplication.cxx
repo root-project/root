@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.4 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.3 2001/04/22 16:00:56 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -42,11 +42,6 @@ TRootApplication::TRootApplication(const char *appClassName,
       gSystem->SetDisplay();
 
    fClient = new TGClient(fDisplay);
-
-   if (fClient->IsZombie()) {
-      delete fClient;
-      fClient = 0;
-   }
 }
 
 //______________________________________________________________________________

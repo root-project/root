@@ -30,10 +30,6 @@ lib/dll_stl
   containers. string, vector and map are currently supported. Goto lib/stl
   directory and do 'setup.bat'. 
 
-lib/prec_stl
-   lib/perc_stl directory contains dummy header files for precompiling STL
-  containers.
-
 lib/WildCard
 lib/wintcldl
    lib/WildCard and lib/wintcldl directories contains build environment for
@@ -54,10 +50,9 @@ lib/gl
    lib/gl directory contains build environment for include/gl.dll.
   This DLL includes basic openGL API.
 
-lib/qt
-   lib/qt directory contains build environment for include/qtcint.dll.
-  This DLL includes basic Qt library API.
-
+lib/prec_stl
+   lib/perc_stl directory contains dummy header files for precompiling STL
+  containers.
 
 lib/stream
 lib/cbstream

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.3 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -79,8 +79,6 @@ protected:
    Bool_t           fDragging;      // true if in dragging mode
    const TGPicture *fSliderPic;     // picture to draw slider
 
-   TString GetTypeString() const;   // used in SavePrimitive
-
 public:
    TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id = -1,
             UInt_t options = kChildFrame,
@@ -122,7 +120,6 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kSliderWidth, fHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVSlider,0)  // Vertical slider widget
 };
@@ -145,7 +142,6 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kSliderHeight); }
-   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHSlider,0)  // Horizontal slider widget
 };

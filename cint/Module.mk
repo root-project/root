@@ -47,8 +47,6 @@ CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
 
 ifeq ($(CXX),KCC)
 CINTS2       += $(MODDIRS)/kccstrm.cxx
-CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/longif3.cxx
 else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
@@ -147,14 +145,6 @@ CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
-endif
-ifeq ($(CXX),xlC)
-ifeq ($(PLATFORM),macosx)
-CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/gcc3strm.cxx
-CINTS2       += $(MODDIRS)/longif3.cxx
-endif
 endif
 
 CINTS        := $(CINTS1) $(CINTS2)

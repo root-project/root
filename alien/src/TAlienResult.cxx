@@ -1,5 +1,5 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.3 2003/11/13 15:15:11 rdm Exp $
-// Author: Andreas Peters 04/09/2003
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.1 2002/05/13 10:38:10 rdm Exp $
+// Author: Fons Rademakers   8/1/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -13,11 +13,12 @@
 //                                                                      //
 // TAlienResult                                                         //
 //                                                                      //
-// Class defining interface to an AliEn grid result.                    //
+// Class defining interface to an AliEn query result.                   //
 //                                                                      //
 // Related class is TAlien.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 
 #include "TAlienResult.h"
 
@@ -25,22 +26,18 @@
 ClassImp(TAlienResult)
 
 //______________________________________________________________________________
-TAlienResult::TAlienResult(Grid_ResultHandle_t result)
+TAlienResult::TAlienResult(AlienResult_t *result)
 {
-   // Create a result object and initialize it with the AliEn result struct.
+   // Create result object and initialize it with the alien result struct.
 
    fResult  = result;
-
-   if (!gGrid) {
-      Error("TAlienResult", "no instance of gGrid");
-      return;
-   }
+   fCurrent = 0;
+   fResults = 0;
 
    if (fResult) {
-      gGrid->ResetResult(fResult);
-      while (gGrid->ReadResult(fResult))
+      while (AlienFetchResult(fResult))
          fResults++;
-      gGrid->ResetResult(fResult);
+      AlienResetResult(fResult);
    }
 }
 
@@ -53,37 +50,27 @@ TAlienResult::~TAlienResult()
 }
 
 //______________________________________________________________________________
-void TAlienResult::Close()
+void TAlienResult::Close(Option_t *)
 {
    // Close result object.
 
-   if (!gGrid) {
-      Error("Close", "no instance of gGrid");
-      return;
-   }
-
    if (fResult)
-      gGrid->CloseResult(fResult);
-   fResult = 0;
-
-   TGridResult::Close();
+      AlienFreeResult(fResult);
+   fResult  = 0;
+   fResults = 0;
+   fCurrent = 0;
 }
 
 //______________________________________________________________________________
-Grid_Result_t *TAlienResult::Next()
+const char *TAlienResult::Next()
 {
    // Returns next result. Returns 0 when end of result set is reached.
-
-   if (!gGrid) {
-      Error("Next", "no instance of gGrid");
-      return 0;
-   }
 
    if (!fResult)
       return 0;
 
    fCurrent++;
-   return gGrid->ReadResult(fResult);
+   return AlienFetchResult(fResult);
 }
 
 //______________________________________________________________________________
@@ -91,40 +78,7 @@ void TAlienResult::Reset()
 {
    // Reset result iterator, i.e. Next() returns first result.
 
-   if (!gGrid) {
-      Error("Reset", "no instance of gGrid");
-      return;
-   }
-
    if (fResult)
-      gGrid->ResetResult(fResult);
+      AlienResetResult(fResult);
    fCurrent = 0;
-}
-
-//______________________________________________________________________________
-void TAlienResult::Print(Option_t *opt) const
-{
-   // List contents of result.
-
-   if (!opt) opt = "";
-
-   const_cast<TAlienResult*>(this)->Reset();
-   int cnt = 0;
-   Grid_Result_t *result;
-   while ((result = (Grid_Result_t *) const_cast<TAlienResult*>(this)->Next())) {
-      cnt++;
-      printf("%s", opt);
-      if (strlen(opt))
-         printf("     - %-32s %-32s\n", result->name.c_str(),
-                result->name2.c_str());
-      else
-         printf(" [%2d] %-32s %-32s\n", cnt, result->name.c_str(),
-                result->name2.c_str());
-      if (result->data) {
-         TString indentation = opt;
-         indentation += "   ";
-         TAlienResult subresult(result->data);
-         subresult.Print(indentation);
-      }
-   }
 }

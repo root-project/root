@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.4 2001/06/22 16:10:17 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -43,8 +43,6 @@ protected:
    TGGC(GCValues_t *values, Bool_t calledByGCPool);
    void UpdateValues(GCValues_t *v);
 
-   TString GetMaskString() const;    //used in SavePrimitive()
-
 public:
    TGGC(GCValues_t *values = 0);
    TGGC(const TGGC &g);
@@ -82,32 +80,17 @@ public:
    const GCValues_t *GetAttributes() const { return &fValues; }
    Mask_t            GetMask() const { return fValues.fMask; }
    EGraphicsFunction GetFunction() const { return fValues.fFunction; }
-   ULong_t           GetPlaneMask() const { return fValues.fPlaneMask; }
    Pixel_t           GetForeground() const { return fValues.fForeground; }
    Pixel_t           GetBackground() const { return fValues.fBackground; }
    Int_t             GetLineWidth() const { return fValues.fLineWidth; }
    Int_t             GetLineStyle() const { return fValues.fLineStyle; }
-   Pixmap_t          GetTile() const { return fValues.fTile; }
-   Pixmap_t          GetStipple() const { return fValues.fStipple; }
-   Int_t             GetTileStipXOrigin() const { return fValues.fTsXOrigin; }
-   Int_t             GetTileStipYOrigin() const { return fValues.fTsYOrigin; }
-   Int_t             GetSubwindowMode() const { return fValues.fSubwindowMode; }
    FontH_t           GetFont() const { return fValues.fFont; }
-   Bool_t            GetGraphicsExposures() const { return fValues.fGraphicsExposures; }
-   Int_t             GetClipXOrigin() const { return fValues.fClipXOrigin; }
-   Int_t             GetClipYOrigin() const { return fValues.fClipYOrigin; }
-   Pixmap_t          GetClipMask() const { return fValues.fClipMask; }
    Int_t             GetCapStyle() const { return fValues.fCapStyle; }
    Int_t             GetJoinStyle() const { return fValues.fJoinStyle; }
    Int_t             GetFillStyle() const { return fValues.fFillStyle; }
    Int_t             GetFillRule() const { return fValues.fFillRule; }
-   Int_t             GetDashOffset() const { return fValues.fDashOffset; }
-   Int_t             GetDashLen() const { return fValues.fDashLen; }
-   const char       *GetDashes() const { return fValues.fDashes; }
-   Int_t             GetArcMode() const { return fValues.fArcMode; }
 
    void Print(Option_t *option="") const;
-   void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGGC,0)  // Graphics context
 };

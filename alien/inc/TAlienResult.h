@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.2 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/alien:$Name:$:$Id:$
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -23,30 +23,32 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGrid
-#include "TGrid.h"
-#endif
-
 #ifndef ROOT_TGridResult
 #include "TGridResult.h"
 #endif
 
+#if !defined(__CINT__)
+#include <AliEn.h>
+#else
+struct AlienResult_t;
+#endif
+
+
 class TAlienResult : public TGridResult {
 
 private:
-   Grid_ResultHandle_t fResult;    // AliEn result handle
+   AlienResult_t  *fResult;    // AliEn result object
 
 public:
-   TAlienResult(Grid_ResultHandle_t result);
-   virtual ~TAlienResult();
+   TAlienResult(AlienResult_t *result);
+   ~TAlienResult();
 
-   void           Close();
-   const char    *GetValue() { return 0; }
-   Grid_Result_t *Next();
-   void           Print(Option_t *option = "") const;
-   void           Reset();
+   void        Close(Option_t *option="");
+   const char *GetValue() { return 0; }
+   const char *Next();
+   void        Reset();
 
-   ClassDef(TAlienResult,0)    // AliEn Grid_Result result
+   ClassDef(TAlienResult,0)  // AliEn query result
 };
 
 #endif

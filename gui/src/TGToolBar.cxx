@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.9 2003/11/28 12:09:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.4 2003/05/23 16:20:24 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -33,11 +33,7 @@
 #include "TList.h"
 #include "TGButton.h"
 #include "TGPicture.h"
-#include "TGPicture.h"
-#include "TGToolTip.h"
-#include "TSystem.h"
-#include "TROOT.h"
-#include "Riostream.h"
+
 
 ClassImp(TGToolBar)
 
@@ -100,21 +96,6 @@ void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacin
 }
 
 //______________________________________________________________________________
-void TGToolBar::ChangeIcon(ToolBarData_t *button, const char *new_icon)
-{
-   // Change the icon of a toolbar button.
-
-   const TGPicture *pic = fClient->GetPicture(new_icon);
-   if (!pic) {
-      Error("ChangeIcon", "pixmap not found: %s", new_icon);
-      return;
-   }
-   fPictures->Add((TObject*)pic);
-
-   ((TGPictureButton *)button->fButton)->SetPicture(pic);
-}
-
-//______________________________________________________________________________
 void TGToolBar::Cleanup()
 {
    // Cleanup and delete all objects contained in this composite frame.
@@ -127,82 +108,4 @@ void TGToolBar::Cleanup()
    fTrash = 0;
 
    TGCompositeFrame::Cleanup();
-}
-
-//______________________________________________________________________________
-void TGToolBar::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save an horizontal slider as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl;
-   out << "   // tool bar" << endl;
-
-   out << "   TGToolBar *";
-   out << GetName() << " = new TGToolBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
-
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() <<");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   char quote = '"';
-
-   int i = 0;
-   const char *picname;
-
-   TGFrameElement *f;
-   TIter next(GetList());
-
-   while ((f = (TGFrameElement *) next())) {
-      if (f->fFrame->InheritsFrom(TGPictureButton::Class())) {
-         if (!gROOT->ClassSaved(TGPictureButton::Class())) {
-            //  declare a structure used for pictute buttons
-            out << endl << "   ToolBarData_t t;" << endl;
-         }
-
-         TGPictureButton *pb = (TGPictureButton *)f->fFrame;
-         picname = pb->GetPicture()->GetName();
-
-         out << "   t.fPixmap = " << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(picname))
-             << quote << ";" << endl;
-         out << "   t.fTipText = " << quote
-             << pb->GetToolTip()->GetText()->GetString() << quote << ";" << endl;
-         if (pb->GetState() == kButtonDown) {
-            out << "   t.fStayDown = kTRUE;" << endl;
-         } else {
-            out << "   t.fStayDown = kFALSE;" << endl;
-         }
-         out << "   t.fId = " << i+1 << ";" << endl;
-         out << "   t.fButton = 0;" << endl;
-         out << "   " << GetName() << "->AddButton(" << GetParent()->GetName()
-             << ",&t," << f->fLayout->GetPadLeft() << ");" << endl;
-         if (pb->GetState() == kButtonDown) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDown);"  << endl;
-         }
-         if (pb->GetState() == kButtonDisabled) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDisabled);" << endl;
-         }
-         if (pb->GetState() == kButtonEngaged) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonEngaged);"  << endl;
-         }
-         i++;
-      } else {
-         f->fFrame->SavePrimitive(out, option);
-		       out << "   " << GetName()<<"->AddFrame(" << f->fFrame->GetName();
-         f->fLayout->SavePrimitive(out, option);
-         out << ");"<< endl;
-      }
-   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.10 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.8 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 #include "TGScrollBar.h"
 #include "TGPicture.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 
 
 ClassImp(TGComboBoxPopup)
@@ -303,44 +302,4 @@ void TGComboBox::Selected(Int_t widgetId, Int_t id)
    args[1] = id;
 
    Emit("Selected(Int_t,Int_t)", args);
-}
-
-//______________________________________________________________________________
-void TGComboBox::SavePrimitive(ofstream &out, Option_t *option)
-{
-   // Save a combo box widget as a C++ statement(s) on output stream out.
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << endl << "   // combo box" << endl;
-   out << "   TGComboBox *";
-   out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
-
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
-      } else {
-         out << "," << GetOptionString() << ");" << endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
-   }
-
-   TGTextLBEntry *b;
-   TGFrameElement *el;
-   TGListBox *lb = GetListBox();
-
-   TIter next(((TGLBContainer *)lb->GetContainer())->GetList());
-
-   while ((el = (TGFrameElement *) next())) {
-      b = (TGTextLBEntry *) el->fFrame;
-      out << "   " << GetName() << "->AddEntry(";
-      b->SavePrimitive(out, option);
-      out <<  ");" << endl;
-   }
-
-   out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
-
 }

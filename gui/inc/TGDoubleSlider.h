@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.6 2003/07/04 08:48:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -96,8 +96,6 @@ protected:
    Bool_t           fReversedScale; // reverse which end is min and max
    Bool_t           fMarkEnds;      // lines marking where stretch zones begin
 
-   TString          GetSString() const; // returns scaling type as string
-
    static void      FixBounds(Float_t &min, Float_t &max);
 
 public:
@@ -169,7 +167,6 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kDoubleSliderWidth, fHeight); }
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -195,7 +192,6 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kDoubleSliderHeight); }
-   virtual void  SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };

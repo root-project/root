@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.33 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.29 2003/08/29 09:55:29 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,8 +20,6 @@
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
 
-#include "TGeoTube.h"
-#include "TGeoCone.h"
 #include "TGeoSphere.h"
 #include "TGeoPcon.h"
 #include "TGeoTorus.h"
@@ -186,20 +184,15 @@ void TGeoPainter::DefineColors() const
 {
 // Define 100 colors with increasing light intensities for each basic color (1-7)
 // Register these colors at indexes starting with 300.
-   TColor *color = gROOT->GetColor(300);
-   if (color) return;
+   TColor *color;
    Int_t i,j;
    Float_t r,g,b,h,l,s;
    
    for (i=1; i<8; i++) {
       color = (TColor*)gROOT->GetListOfColors()->At(i);
-      if (!color) {
-         Warning("DefineColors", "No colors defined");
-         return;
-      }	 
       color->GetHLS(h,l,s);
       for (j=0; j<100; j++) {
-         l = 0.25+0.5*j/99.;
+         l = 0.8*j/99.;
          TColor::HLS2RGB(h,l,s,r,g,b);
          new TColor(300+(i-1)*100+j, r,g,b);
       }
@@ -213,31 +206,16 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
    Int_t color, j;
    Int_t c = base%8;
    if (c==0) return c;
-   if (light<0.25) {
+   if (light<0) {
       j=0;
    } else {
       if (light>0.8) j=99;
-      else j = Int_t(99*(light-0.25)/0.5);
+      else j = Int_t(99*light/0.8);
    }   
    color = 300 + (c-1)*100+j;
    return color;
 }
 
-//______________________________________________________________________________
-TGeoVolume *TGeoPainter::GetDrawnVolume() const
-{
-// Get currently drawn volume.
-   if (!gPad) return 0;
-   TList *list = gPad->GetListOfPrimitives();
-   Int_t size = list->GetSize();
-   TObject *obj;
-   for (Int_t i=0; i<size; i++) {
-      obj = list->At(i);
-      if (obj->InheritsFrom("TGeoVolume")) return ((TGeoVolume*)obj);
-   }
-   return 0;
-}         
- 
 //______________________________________________________________________________
 Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
 {
@@ -1037,27 +1015,15 @@ void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
 // Create a box 3D buffer for a given shape.
    X3DPoints *buff = new X3DPoints;
    Int_t n = fNsegments;
-   Int_t numpoints = 4*n;
+   const Int_t numpoints = 4*n;
+
+   buff->numPoints = numpoints;
 
    Double_t *points = new Double_t[3*numpoints];
    TGeoShape *shape = vol->GetShape();
-   Double_t rmin = 0.;
-   if (shape->TestShapeBit(TGeoShape::kGeoTube)) rmin=((TGeoTube*)shape)->GetRmin();
-   else rmin=((TGeoCone*)shape)->GetRmin1()+((TGeoCone*)shape)->GetRmin2();
 
    shape->SetPoints(points);
 
-   if (rmin==0.) {
-      Int_t inew = numpoints/2;
-      Double_t *ptn = new Double_t[3*inew];
-      memcpy(&ptn[0], &points[3*n], 3*n*sizeof(Double_t));
-      memcpy(&ptn[3*n], &points[9*n], 3*n*sizeof(Double_t));
-      delete [] points;
-      points = ptn;
-      numpoints = inew;
-   }
-
-   buff->numPoints = numpoints;
    buff->points = points;
    return buff;
 }   
@@ -1847,34 +1813,14 @@ void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
 // Create a box 3D buffer for a given shape.
    X3DPoints *buff = new X3DPoints;
 
-   TGeoPcon *shape = (TGeoPcon*)vol->GetShape();
-   const Int_t n = shape->GetNsegments()+1;
-   Int_t nz = shape->GetNz();
+   TGeoShape *shape = vol->GetShape();
+   const Int_t n = ((TGeoPcon*)shape)->GetNsegments()+1;
+   Int_t nz = ((TGeoPcon*)shape)->GetNz();
    if (nz < 2) return 0;
    Int_t numpoints =  nz*2*n;
    if (numpoints <= 0) return 0;
    Double_t *points = new Double_t[3*numpoints];
    shape->SetPoints(points);
-   if (shape->GetDphi()==360.) {
-      Double_t *ptn = new Double_t[3*numpoints];
-      Int_t inew = 0;
-      for (Int_t i=0; i<nz; i++) {
-         if (shape->GetRmin(i)>0.) {
-            memcpy(&ptn[3*inew], &points[6*i*n], 6*n*sizeof(Double_t));
-            inew += 2*n;
-         } else {
-            memcpy(&ptn[3*inew], &points[6*i*n+3*n], 3*n*sizeof(Double_t));
-            inew += n;
-         }
-      }
-      if (inew<numpoints) {
-         delete [] points;
-         numpoints = inew;
-         points = new Double_t[3*numpoints];
-         memcpy(points, ptn, 3*numpoints*sizeof(Double_t));
-      }
-      delete [] ptn;
-   }
    buff->numPoints = numpoints;
    buff->points = points;
    return buff;
@@ -2261,7 +2207,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Int_t istep;
    Int_t base_color, color;
    Double_t light;
-   Double_t stemin=0, stemax=TGeoShape::Big();
+   Double_t stemin=0, stemax=1E30;
    TPoint *pxy = new TPoint[1];
    Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
    Int_t n10 = npoints/10;
@@ -2295,7 +2241,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          if (fClippingShape) {
             if (inclip) {
                stemin = fClippingShape->DistToOut(cop,dir,3);
-               stemax = TGeoShape::Big();
+               stemax = 1E30;
             } else {
                stemax = fClippingShape->DistToIn(cop,dir,3);
                stemin = 0;
@@ -2306,13 +2252,11 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
             if (fClippingShape) {
                if (stemin>1E10) break;
                if (stemin>0) {
-                  // we are inside clipping shape
                   gGeoManager->SetStep(stemin);
                   next = gGeoManager->Step();
                   steptot = 0;
                   stemin = 0;
                   if (next) {
-                     // we found something after clipping region
                      TGeoVolume *nextvol = next->GetVolume();
                      if (nextvol->TGeoAtt::TestBit(TGeoAtt::kVisOnScreen)) {
                         done = kTRUE;
@@ -2322,13 +2266,8 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                         break;
                      }
                   }
-                  inclip = fClippingShape->Contains(point);
-                  gGeoManager->SetStep(1E-3);
-                  while (inclip) {
-                     gGeoManager->Step();
-                     inclip = fClippingShape->Contains(point);
-                  }   
-                  stemax = fClippingShape->DistToIn(point,dir,3);
+                  inclip = kTRUE;
+                  stemax = fClippingShape->DistToOut(point,dir,3);
                }
             }              
             fGeom->FindNextBoundary();
@@ -2360,7 +2299,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   inclip = fClippingShape->Contains(point);
                   if (inclip) {
                      stemin = fClippingShape->DistToOut(point,dir,3);
-                     stemax = TGeoShape::Big();
+                     stemax = 1E30;
                      continue;
                   } else {
                      stemin = 0;
@@ -2392,7 +2331,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
 //         for (i=0; i<3; i++) refl[i] = dir[i] - 2.*dotni*norm[i];
 //         calf = refl[0]*tosource[0]+refl[1]*tosource[1]+refl[2]*tosource[2];
          calf = norm[0]*tosource[0]+norm[1]*tosource[1]+norm[2]*tosource[2];
-         light = 0.25+0.5*TMath::Abs(calf);
+         light = 0.8*TMath::Abs(calf);
          color = GetColor(base_color, light);
 
          // Go back to cross again the boundary
