@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.3 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.4 2000/06/13 10:56:59 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -316,6 +316,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //       chopt='-': tick mark are drawn on the negative side.
 //       i.e: '+-' --> tick marks are drawn on both sides of the axis.
 //       chopt='U': Unlabeled axis, default is labeled.
+//
+// Size of tick marks
+// ------------------
+// By default, tick marks have a length equal to 3 per cent of the
+// axis length.
+// When the option "S" is specified, the length of the tick marks
+// is equal to fTickSize*axis_length, where fTickSize may be set
+// via TGaxis::SetTickSize.
 //
 // Position of labels on axis.
 // ---------------------------
