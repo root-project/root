@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.16 2003/10/18 17:00:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.17 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1216,7 +1216,7 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGTextButton(" << fParent->GetName()
        << "," << quote << outext << quote;
 
-   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
@@ -1271,7 +1271,7 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
        << ",gClient->GetPicture(" << quote << fPic->GetName() << quote << ")";
 
-   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
          if (fWidgetId == -1) {
             out << ");" << endl;
@@ -1341,7 +1341,7 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
       }
    }
 
-   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
@@ -1411,7 +1411,7 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
       }
    }
 
-   if (GetOptions() == kRaisedFrame | kDoubleBorder) {
+   if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
