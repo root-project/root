@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.211 2004/11/17 20:29:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.212 2004/11/18 06:13:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -539,20 +539,23 @@ namespace {
 
       if (oldClass == 0 || newClass == 0) return kFALSE;
 
-      if ( ! (strlen(newClass->GetName()) > strlen(oldClass->GetName()) ) ) return kFALSE;
       UInt_t newlen = strlen(newClass->GetName());
       UInt_t oldlen = strlen(oldClass->GetName());
 
-      for(UInt_t i = 0, done = false; (i<oldlen) && !done ; ++i) {
-         switch ( oldClass->GetName()[i] ) {
-            case ':' : return kFALSE; /* old class is in some scope */
-            case '<' : done = kTRUE; break; /* we got to a template parameter, so the old class was not in any scope */
+      const char *oldname = oldClass->GetName();
+      for(UInt_t i = oldlen, done = false, nest = 0; (i>0) && !done ; --i) {
+         switch ( oldClass->GetName()[i-1] ) {
+            case '>' : ++nest; break;
+            case '<' : --nest; break;
+            case ':' : if (nest==0) oldname= &(oldClass->GetName()[i]); done = kTRUE; break;
          }
       }
+      oldlen = strlen(oldname);
+      if ( ! (strlen(newClass->GetName()) > strlen(oldClass->GetName()) ) ) return kFALSE;
 
       const char* newEnd = & ( newClass->GetName()[ newlen - oldlen ] );
 
-      if (0 != strcmp( newEnd, oldClass->GetName() ) ) return kFALSE;
+      if (0 != strcmp( newEnd, oldname ) ) return kFALSE;
  
       Int_t oldv = oldClass->GetStreamerInfo()->GetClassVersion();
 
