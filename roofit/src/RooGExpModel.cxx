@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.15 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.15 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -123,8 +122,8 @@ Int_t RooGExpModel::basisCode(const char* name) const
 Double_t RooGExpModel::evaluate() const 
 {  
   static Double_t root2(sqrt(2.)) ;
-  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
-  static Double_t rootpi(sqrt(atan2(0.,-1.)));
+//   static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
+//   static Double_t rootpi(sqrt(atan2(0.,-1.)));
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -460,7 +459,7 @@ Int_t RooGExpModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooGExpModel::analyticalIntegral(Int_t code) const 
 {
   static Double_t root2 = sqrt(2.) ;
-  static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+//   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   Double_t ssfInt(1.0) ;
 
   // Code must be 1 or 2

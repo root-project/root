@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.cc,v 1.13 2004/08/07 06:45:40 bartoldu Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.13 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +33,7 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 			       RooAbsReal& a, RooAbsReal& b,
 			       RooAbsReal& effRatio, RooAbsReal& delMistag,
 			       const RooResolutionModel& model, DecayType type) :
-  RooConvolutedPdf(name,title,model,t), 
+  RooAbsAnaConvPdf(name,title,model,t), 
   _absLambda("absLambda","Absolute value of lambda",this,a),
   _argLambda("argLambda","Arg(Lambda)",this,b),
   _effRatio("effRatio","B0/B0bar efficiency ratio",this,effRatio),
@@ -70,7 +69,7 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 
 
 RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) : 
-  RooConvolutedPdf(other,name), 
+  RooAbsAnaConvPdf(other,name), 
   _absLambda("absLambda",this,other._absLambda),
   _argLambda("argLambda",this,other._argLambda),
   _effRatio("effRatio",this,other._effRatio),

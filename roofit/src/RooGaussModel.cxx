@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.30 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.30 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -327,7 +326,7 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 Double_t RooGaussModel::analyticalIntegral(Int_t code) const 
 {
   static Double_t root2 = sqrt(2.) ;
-  static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+  //static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   static Double_t rootpi = sqrt(atan2(0.0,-1.0));
   Double_t ssfInt(1.0) ;
 

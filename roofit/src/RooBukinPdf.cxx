@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.4 2004/10/29 08:55:54 herent Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.4 2004/11/29 13:38:00 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *

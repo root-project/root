@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.rdl,v 1.7 2002/09/10 02:01:30 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.rdl,v 1.8 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_BCP_EFF_DECAY
 #define ROO_BCP_EFF_DECAY
 
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 
-class RooBCPEffDecay : public RooConvolutedPdf {
+class RooBCPEffDecay : public RooAbsAnaConvPdf {
 public:
 
   enum DecayType { SingleSided, DoubleSided, Flipped };

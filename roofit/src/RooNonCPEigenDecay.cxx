@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.16 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.16 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -26,7 +25,7 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
-// Time-dependent RooConvolutedPdf for CP violating decays 
+// Time-dependent RooAbsAnaConvPdf for CP violating decays 
 // to Non-CP eigenstates (eg, B0 -> rho+- pi-+).
 // For a description of the physics model see the 
 // BaBar Physics Book, section 6.5.2.3 .
@@ -67,7 +66,7 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					RooAbsReal&     delS,
 					const RooResolutionModel& model, 
 					DecayType       type )
-  : RooConvolutedPdf( name, title, model, t ), 
+  : RooAbsAnaConvPdf( name, title, model, t ), 
   _acp      ( "acp",      "acp",                this, acp      ),
   _avgC        ( "C",        "C",                  this, C        ),
   _delC     ( "delC",     "delC",               this, delC     ),
@@ -123,7 +122,7 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					RooAbsReal&     delS,
 					const RooResolutionModel& model, 
 					DecayType       type )
-  : RooConvolutedPdf( name, title, model, t ), 
+  : RooAbsAnaConvPdf( name, title, model, t ), 
   _acp      ( "acp",      "acp",                this, acp      ),
   _avgC        ( "C",        "C",                  this, C        ),
   _delC     ( "delC",     "delC",               this, delC     ),
@@ -165,7 +164,7 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 }
 
 RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name ) 
-  : RooConvolutedPdf( other, name ), 
+  : RooAbsAnaConvPdf( other, name ), 
   _acp      ( "acp",      this, other._acp      ),
   _avgC        ( "C",        this, other._avgC        ),
   _delC     ( "delC",     this, other._delC     ),

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBlindTools.cc,v 1.10 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.10 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *

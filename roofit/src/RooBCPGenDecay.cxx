@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.11 2004/08/07 06:45:40 bartoldu Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
@@ -39,7 +38,7 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 			       RooAbsReal& delMistag,
                                RooAbsReal& mu,
 			       const RooResolutionModel& model, DecayType type) :
-  RooConvolutedPdf(name,title,model,t), 
+  RooAbsAnaConvPdf(name,title,model,t), 
   _avgC("C","Coefficient of cos term",this,a),
   _avgS("S","Coefficient of cos term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
@@ -74,7 +73,7 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 
 
 RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) : 
-  RooConvolutedPdf(other,name), 
+  RooAbsAnaConvPdf(other,name), 
   _avgC("C",this,other._avgC),
   _avgS("S",this,other._avgS),
   _avgMistag("avgMistag",this,other._avgMistag),

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.5 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooChebychev.cc,v 1.5 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *

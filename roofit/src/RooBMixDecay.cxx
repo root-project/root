@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.17 2004/10/31 01:23:32 herent Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.17 2004/11/29 13:43:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +33,7 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 			   RooAbsReal& mistag, RooAbsReal& delMistag,
 			   const RooResolutionModel& model, 
 			   DecayType type) :
-  RooConvolutedPdf(name,title,model,t), 
+  RooAbsAnaConvPdf(name,title,model,t), 
   _type(type),
   _mistag("mistag","Mistag rate",this,mistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),
@@ -63,7 +62,7 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 
 
 RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) : 
-  RooConvolutedPdf(other,name), 
+  RooAbsAnaConvPdf(other,name), 
   _type(other._type),
   _mistag("mistag",this,other._mistag),
   _delMistag("delMistag",this,other._delMistag),

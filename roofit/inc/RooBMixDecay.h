@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.rdl,v 1.8 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBMixDecay.rdl,v 1.9 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_BMIX_DECAY
 #define ROO_BMIX_DECAY
 
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 
-class RooBMixDecay : public RooConvolutedPdf {
+class RooBMixDecay : public RooAbsAnaConvPdf {
 public:
 
   enum DecayType { SingleSided, DoubleSided, Flipped };

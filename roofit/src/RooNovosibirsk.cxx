@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.6 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.6 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -19,7 +18,6 @@
 // RooNovosibirsk implements the Novosibirsk function 
 //
 
-//#include "BaBar/BaBar.hh"
 
 #include <math.h>
 

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.11 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDecay.cc,v 1.11 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooDecay.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +29,7 @@ ClassImp(RooDecay)
 RooDecay::RooDecay(const char *name, const char *title, 
 		   RooRealVar& t, RooAbsReal& tau, 
 		   const RooResolutionModel& model, DecayType type) :
-  RooConvolutedPdf(name,title,model,t), 
+  RooAbsAnaConvPdf(name,title,model,t), 
   _t("t","time",this,t),
   _tau("tau","decay time",this,tau),
   _type(type)
@@ -51,7 +50,7 @@ RooDecay::RooDecay(const char *name, const char *title,
 
 
 RooDecay::RooDecay(const RooDecay& other, const char* name) : 
-  RooConvolutedPdf(other,name), 
+  RooAbsAnaConvPdf(other,name), 
   _t("t",this,other._t),
   _tau("tau",this,other._tau),
   _type(other._type),

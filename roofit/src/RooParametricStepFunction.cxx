@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id: RooParametricStepFunction.cc,v 1.2 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooParametricStepFunction.cc,v 1.2 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *

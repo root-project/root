@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.cc,v 1.8 2004/08/07 06:45:42 bartoldu Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.8 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *
@@ -23,7 +22,6 @@
 // algorithm. Select the faster algorithm either in the constructor, or with
 // the selectFastAlgorithm() method.
 
-//#include "BaBar/BaBar.hh"
 
 #include <iostream>
 #include <math.h>

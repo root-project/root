@@ -1,8 +1,7 @@
-#include "BaBar/BaBar.hh"
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.11 2004/08/07 06:45:41 bartoldu Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -19,7 +18,6 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-//#include "BaBar/BaBar.hh"
 #include <iostream>
 #include <math.h>
 
@@ -32,7 +30,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.11 2004/08/07 06:45:41 bartoldu Exp $";
+"$Id: RooDstD0BG.cc,v 1.11 2004/11/29 13:06:21 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,

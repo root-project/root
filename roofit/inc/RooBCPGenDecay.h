@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.rdl,v 1.7 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBCPGenDecay.rdl,v 1.8 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   JS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu  *
  *                                                                           *
@@ -16,11 +16,11 @@
 #ifndef ROO_BCPGEN_DECAY
 #define ROO_BCPGEN_DECAY
 
-#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 
-class RooBCPGenDecay : public RooConvolutedPdf {
+class RooBCPGenDecay : public RooAbsAnaConvPdf {
 public:
 
   enum DecayType { SingleSided, DoubleSided, Flipped };
