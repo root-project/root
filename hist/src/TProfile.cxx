@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.11 2001/02/21 14:57:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.12 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -606,9 +606,11 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    Stat_t eprim2  = TMath::Abs(err2/sum - contsum*contsum);
    eprim          = TMath::Sqrt(eprim2);
    Double_t test = 1;
-   if (err2 != 0) test = eprim2*sum/err2;
+   if (err2 != 0 && sum < 5) test = eprim2*sum/err2;
+//printf("bin=%d, cont=%g, sum=%g, err2=%g, eprim2=%g, test=%g\n",bin,cont,sum,err2,eprim2,test);
    //if statistics is unsufficient, take approximation.
    // error is set to the average error on all bins
+   //if (eprim <= 0) { test in version 2.25/03
    if (test < 1.e-4) {
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
