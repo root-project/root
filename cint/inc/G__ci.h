@@ -28,9 +28,6 @@
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
-#ifndef G__ROOT
-#define G__ROOT
-#endif
 
 
 /* 1770 changes implementation of skipping function implementation during
@@ -672,13 +669,8 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
-#if defined(G__ROOT) && !defined(G__MYLOCALROOTBUILD)
-#define G__ONELINE      512  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      256  /* Variable name */
-#else
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      256  /* Variable name */
-#endif
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
