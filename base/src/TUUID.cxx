@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.9 2002/07/09 21:11:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.10 2002/07/11 21:46:22 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -182,7 +182,7 @@ TUUID::TUUID()
    Format(clockseq, timestamp);
 
    time_last = timestamp;
-   fUUIDIndex = 1<<31;
+   fUUIDIndex = 1<<30;
 }
 
 //______________________________________________________________________________
@@ -240,7 +240,7 @@ void TUUID::SetFromString(const char *uuid)
    fNode[3]               = (UChar_t) node[3];
    fNode[4]               = (UChar_t) node[4];
    fNode[5]               = (UChar_t) node[5];
-   fUUIDIndex             = 1<<31;
+   fUUIDIndex             = 1<<30;
 }
 
 //______________________________________________________________________________
