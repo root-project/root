@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.86 2004/11/19 14:28:17 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.87 2004/11/22 23:49:13 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -388,16 +388,16 @@ Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
-Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
-#Plugin.TVirtualPadEditor:  Ged TPadEditorOld GedOld       "TPadEditorOld()"
-Plugin.TVirtualPadEditor: Ged TGedEditor    Ged          "TGedEditor(TCanvas*)"
-Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL   "TViewerOpenGL(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
-Plugin.TVirtualDragManager: GuiBld TGuiBldDragManager    GuiBld    "TGuiBldDragManager()"
-Plugin.TGuiBuilder:         GuiBld TRootGuiBuilder       GuiBld    "TRootGuiBuilder()"
-Unix.*.Plugin.TVirtualGLImp: *  TX11GL        RGL   "TX11GL()"
-WinNT.*.Plugin.TVirtualGLImp: * TGWin32GL     RGL   "TGWin32GL()"
+Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TVirtualPadEditor:  GedOld TPadEditorOld GedOld    "TPadEditorOld()"
++Plugin.TVirtualPadEditor: Ged    TGedEditor    Ged       "TGedEditor(TCanvas*)"
+Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d         "TViewerX3D(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL         "TViewerOpenGL(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV         "TViewerOIV(TVirtualPad*)"
+Plugin.TVirtualDragManager: *   TGuiBldDragManager GuiBld "TGuiBldDragManager()"
+Plugin.TGuiBuilder:         *   TRootGuiBuilder    GuiBld "TRootGuiBuilder()"
+Unix.*.Plugin.TVirtualGLImp:  * TX11GL       RGL          "TX11GL()"
+WinNT.*.Plugin.TVirtualGLImp: * TGWin32GL    RGL          "TGWin32GL()"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

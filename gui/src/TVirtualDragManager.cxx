@@ -1,4 +1,4 @@
-// $Id: TVirtualDragManager.cxx,v 1.1 2004/09/08 17:16:09 brun Exp $
+// $Id: TVirtualDragManager.cxx,v 1.2 2004/09/08 17:34:19 rdm Exp $
 // Author: Valeriy Onuchin   02/08/04
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TVirtualDragManager::TVirtualDragManager()
 //______________________________________________________________________________
 TVirtualDragManager *TVirtualDragManager::Instance()
 {
-   // Load plugin and create drag manager object
+   // Load plugin and create drag manager object.
 
    if (gDragManager) return gDragManager;
 
@@ -46,8 +46,7 @@ TVirtualDragManager *TVirtualDragManager::Instance()
 
    // load plugin
    if (!loaded) {
-      h = gROOT->GetPluginManager()->FindHandler("TVirtualDragManager", "GuiBld");
-
+      h = gROOT->GetPluginManager()->FindHandler("TVirtualDragManager");
       if (h) {
          if (h->LoadPlugin() == -1) return 0;
          loaded = kTRUE;

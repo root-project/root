@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.1 2004/10/15 15:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.2 2004/10/17 16:31:05 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TGuiBuilder::TGuiBuilder()
 
    // load plugin
    if (!gGuiBuilder) {
-      gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder", "GuiBld");
+      gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder");
 
       if (!gHandler || (gHandler->LoadPlugin() == -1)) return;
 
@@ -137,6 +137,6 @@ TGuiBuilder::~TGuiBuilder()
 TGuiBuilder *TGuiBuilder::Instance()
 {
    // return an instance of TGuiBuilder object
-  
+
    return (gGuiBuilder? gGuiBuilder : new TGuiBuilder());
 }
