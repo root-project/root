@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.19 2002/05/09 22:55:12 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.20 2002/05/10 21:32:08 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -240,13 +240,16 @@ public: \
 #endif
 
 
+#if defined(__CINT__) && !defined(__MAKECINT__)
+#define ClassImp(name)
+#else
 #define ClassImp(name) \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
    static int _R__UNIQUE_(R__dummyint) = \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);  \
 }
-
+#endif
 //---- ClassDefT macros for templates with one template argument ---------------
 // ClassDefT  corresponds to ClassDef
 // ClassDefT2 goes in the same header as ClassDefT but must be
@@ -255,7 +258,7 @@ namespace ROOT { \
 
 
 // This ClassDefT is stricly redundant and is kept only for
-// backward compatibility. Using #define ClassDef ClassDefT in confusing
+// backward compatibility. Using #define ClassDef ClassDefT is confusing
 // the CINT parser.
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
