@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.10 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.11 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -279,6 +279,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                kMWMInputModeless);
 
    MapWindow();
+   fFc->DisplayDirectory();
    fClient->WaitFor(this);
 }
 
