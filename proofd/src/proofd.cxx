@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.42 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.43 2003/09/23 23:45:29 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -321,12 +321,12 @@ void ProofdLogin()
       // for credential export to allow proofserv to destroy them
       struct shmid_ds shm_ds;
       if (gShmIdCred > 0) {
-        if ( shmctl(gShmIdCred,IPC_STAT,&shm_ds) == -1)
-           Error(ErrFatal,-1,"ProofdLogin: can't get info about shared memory segment %d", gShmIdCred);
+        if (shmctl(gShmIdCred, IPC_STAT, &shm_ds) == -1)
+           Error(ErrFatal, -1, "ProofdLogin: can't get info about shared memory segment %d", gShmIdCred);
         shm_ds.shm_perm.uid = pw->pw_uid;
         shm_ds.shm_perm.gid = pw->pw_gid;
-        if ( shmctl(gShmIdCred,IPC_SET,&shm_ds) == -1)
-           Error(ErrFatal,-1,"ProofdLogin: can't change ownership of shared memory segment %d", gShmIdCred);
+        if ( shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1)
+           Error(ErrFatal, -1, "ProofdLogin: can't change ownership of shared memory segment %d", gShmIdCred);
       }
 #endif
       // set access control list from /etc/initgroup
@@ -334,9 +334,9 @@ void ProofdLogin()
 
       // set uid and gid
       if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         Error(ErrFatal,-1,"ProofdLogin: can't setgid for user %s", gUser);
+         Error(ErrFatal, -1, "ProofdLogin: can't setgid for user %s", gUser);
       if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         Error(ErrFatal,-1,"ProofdLogin: can't setuid for user %s", gUser);
+         Error(ErrFatal, -1, "ProofdLogin: can't setuid for user %s", gUser);
    }
 
    // set HOME env
@@ -1201,14 +1201,14 @@ int main(int argc, char **argv)
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
       sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+      sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
       if (getenv("ROOTSYS")) {
          strcpy(gConfDir, getenv("ROOTSYS"));
          sprintf(gExecDir, "%s/bin", gConfDir);
-         sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+         sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
          if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
       } else {
          if (!gInetdFlag)
@@ -1222,7 +1222,7 @@ int main(int argc, char **argv)
       strcpy(gExecDir, ROOTBINDIR);
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gAuthAllow, "%s/rpdauth.allow", ROOTETCDIR);
+      sprintf(gAuthAllow, "%s/%s", ROOTETCDIR, kDaemonAccess);
 #endif
    }
 

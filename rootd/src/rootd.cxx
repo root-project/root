@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.59 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.60 2003/09/23 23:45:29 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2360,7 +2360,7 @@ int main(int argc, char **argv)
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
       sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+      sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
@@ -2368,7 +2368,7 @@ int main(int argc, char **argv)
          if (getenv("ROOTSYS")) {
             strcpy(gConfDir, getenv("ROOTSYS"));
             sprintf(gExecDir, "%s/bin", gConfDir);
-            sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+            sprintf(gAuthAllow, "%s/etc/%s", gConfDir, kDaemonAccess);
             if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
          } else {
             if (!gInetdFlag)
@@ -2383,7 +2383,7 @@ int main(int argc, char **argv)
       strcpy(gExecDir, ROOTBINDIR);
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gAuthAllow, "%s/rpdauth.allow", ROOTETCDIR);
+      sprintf(gAuthAllow, "%s/%s", ROOTETCDIR, kDaemonAccess);
 #endif
    }
 

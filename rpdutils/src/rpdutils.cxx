@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.10 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.11 2003/09/23 23:45:29 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -150,9 +150,10 @@ extern "C" {
 namespace ROOT {
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
-const char kMethods[]    = "usrpwd srp    krb5   globus ssh    uidgid";
-const char kRootdPass[]  = ".rootdpass";
-const char kSRootdPass[] = ".srootdpass";
+const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
+const char kRootdPass[]    = ".rootdpass";
+const char kSRootdPass[]   = ".srootdpass";
+const char kDaemonAccess[] = "daemon.access"; // file containing daemon access rules
 
 // To control user access
 char *gUserAllow[kMAXSEC] = { 0 };
@@ -162,10 +163,10 @@ unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 
 char gAltSRPPass[kMAXPATHLEN] = { 0 };
 char gAnonUser[64] = "rootd";
-char gAuthAllow[kMAXPATHLEN] = "/etc/root/rpdauth.allow"; // defines host-specific allowed methods for auth
-char gExecDir[kMAXPATHLEN] = { 0 }; // needed to localize ssh2rpd
+char gAuthAllow[kMAXPATHLEN] = { 0 }; // path to kDaemonAccess
+char gExecDir[kMAXPATHLEN] = { 0 };   // needed to localize ssh2rpd
 char gFileLog[kMAXPATHLEN] = { 0 };
-char gOpenHost[256] = "????";       // same length as in net.cxx ...
+char gOpenHost[256] = "????";         // same length as in net.cxx ...
 char gPasswd[64] = { 0 };
 char gRpdAuthTab[kMAXPATHLEN] = { 0 };  // keeps track of authentication info
 char gService[10] = "????";         // "rootd" or "proofd", defined in proofd/rootd.cxx ...
@@ -939,11 +940,10 @@ bool RpdReUseAuth(const char *sstr, int kind)
 int RpdCheckAuthAllow(int Sec, char *Host)
 {
    // Check if required auth method is allowed for 'Host'.
-   // If 'yes', returns 0,
-   // if 'no', returns 1, the number of allowed methods in NumAllow, and the
-   // codes of the allowed methods (in order of preference) in AllowMeth.
-   // Memory for AllowMeth must be allocated outside.
-   // Info read from /etc/root/rpdauth.allow.
+   // If 'yes', returns 0, if 'no', returns 1, the number of allowed
+   // methods in NumAllow, and the codes of the allowed methods (in order
+   // of preference) in AllowMeth. Memory for AllowMeth must be allocated
+   // outside. Info read from gAuthAllow.
 
    int retval = 1, found = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.3 2003/09/07 18:25:47 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.4 2003/09/11 23:12:18 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -74,7 +74,7 @@ extern char gAuthAllow[kMAXPATHLEN];
 extern char gExecDir[kMAXPATHLEN];        // for use in rootd ...
 extern char gFile[kMAXPATHLEN];
 extern char gFileLog[kMAXPATHLEN];
-extern char gHostCertConf[kMAXPATHLEN];   // Defines certificate location for globus authentication
+extern char gHostCertConf[kMAXPATHLEN];   // defines certificate location for globus authentication
 extern char gOpenHost[256];
 extern char gService[10];                 // "rootd" or "proofd", defined in proofd/rootd.cxx ...
 extern char gTmpDir[kMAXPATHLEN];         // directory for temporary files (RW)
@@ -83,6 +83,7 @@ extern char gUser[64];
 extern char gPasswd[64];                  // only used for anonymous access
 
 extern const char *kAuthMeth[kMAXSEC];    // authentication method list
+extern const char kDaemonAccess[];        // file containing daemon access rules
 
 extern SigPipe_t gSigPipeHook;
 
