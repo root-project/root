@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.11 2002/07/15 15:23:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.12 2002/07/16 13:09:15 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -580,14 +580,14 @@ Double_t TRandom::Rndm(Int_t)
 
    const Float_t kCONS = 4.6566128730774E-10;
    const Int_t kMASK31 = 2147483647;
+   const Int_t kMASK24 = 2147483392;
 
    fSeed *= 69069;
       // keep only lower 31 bits
    fSeed &= kMASK31;
       // Set lower 8 bits to zero to assure exact float
-   Int_t jy = (fSeed/256)*256;
-   Float_t random = kCONS*jy;
-   return Double_t(random);
+   UInt_t jy = (fSeed&kMASK24);
+   return Double_t(kCONS*jy);
 }
 
 //______________________________________________________________________________
