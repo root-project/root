@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.61 2004/08/13 17:03:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.62 2004/08/17 15:06:56 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1962,7 +1962,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    sname[i] = 0;
 
    out << endl;
-   out << "void " << sname << "()" << endl;
+   out << "void " << gSystem->BaseName(sname) << "()" << endl;
    delete [] sname;
 
    out <<"{"<< endl;
