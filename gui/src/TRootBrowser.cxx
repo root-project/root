@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.10 2001/03/08 20:16:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.11 2001/06/27 16:54:25 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1197,14 +1197,17 @@ void TRootBrowser::ShowStatusBar(Bool_t show)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::SetDefaults()
+void TRootBrowser::SetDefaults(const char *iconStyle, const char *sortBy)
 {
    // Set defaults depending on settings in the user's .rootrc.
 
    const char *opt;
 
    // IconStyle: big, small, list, details
-   opt = gEnv->GetValue("Browser.IconStyle", "small");
+   if (iconStyle)
+      opt = iconStyle;
+   else
+      opt = gEnv->GetValue("Browser.IconStyle", "small");
    if (!strcasecmp(opt, "big"))
       SetViewMode(kViewLargeIcons, kTRUE);
    else if (!strcasecmp(opt, "small"))
@@ -1217,7 +1220,10 @@ void TRootBrowser::SetDefaults()
       SetViewMode(kViewSmallIcons, kTRUE);
 
    // SortBy: name, type, size, date
-   opt = gEnv->GetValue("Browser.SortBy", "name");
+   if (sortBy)
+      opt = sortBy;
+   else
+      opt = gEnv->GetValue("Browser.SortBy", "name");
    if (!strcasecmp(opt, "name"))
       SetSortMode(kViewArrangeByName);
    else if (!strcasecmp(opt, "type"))
