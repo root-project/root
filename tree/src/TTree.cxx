@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.93 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.94 2001/10/16 16:28:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1023,10 +1023,22 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    // #pragma link C++ class TArrayC-!;  rootflag = 3
    // #pragma link C++ class TBits+;     rootflag = 4
    // #pragma link C++ class Txxxx+!;    rootflag = 6
-   Bool_t hasCustomStreamer = kFALSE;
-   if (cl == TClonesArray::Class())         hasCustomStreamer = kTRUE;
-   if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
+   
+   if (cl == TClonesArray::Class()) {
+      TClonesArray *clones = (TClonesArray *)cl;
+      if (splitlevel > 0) {
+         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) 
+            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",clones->GetClass()->GetName());
+      } else {
+         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) clones->BypassStreamer(kFALSE);
+         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
+         fBranches.Add(branch);
+         return branch;
+      }
+   }
 
+   Bool_t hasCustomStreamer = kFALSE;
+   if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
    if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
@@ -1584,6 +1596,25 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
 //     tree->SetEventList(elist);
 //     tree->Draw("py");
+//
+//  If arrays are used in the selection critera, the entry entered in the 
+//  list are all the entries that have at least one element of the array that
+//  satisfy the selection.
+//  Example:
+//      tree.Draw(">>pyplus","fTracks.fPy>0");
+//      tree->SetEventList(pyplus);
+//      tree->Draw("fTracks.fPy");
+//  will draw the fPy of ALL tracks in event with at least one track with
+//  a positive fPy.
+//  
+//  To select only the elements that did match the original selection 
+//  use TEventList::SetReapplyCut.
+//  Example:
+//      tree.Draw(">>pyplus","fTracks.fPy>0");
+//      pyplus->SetReapplyCut(kTRUE);
+//      tree->SetEventList(pyplus);
+//      tree->Draw("fTracks.fPy");
+//  will draw the fPy of only the tracks that have a positive fPy.
 //
 //  Note: Use tree->SetEventList(0) if you do not want use the list as input.
 //
@@ -2345,6 +2376,8 @@ Int_t TTree::MakeCode(const char *filename)
 //
 //          Author: Rene Brun
 //====>
+
+   Warning("MakeCode","MakeCode is obsolete. Use MakeClass or MakeSelector instead");
 
    GetPlayer();
    if (!fPlayer) return 0;
