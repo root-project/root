@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.62 2003/10/01 17:53:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.63 2003/10/06 15:15:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2784,7 +2784,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
 }   
 
 //_____________________________________________________________________________
-Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
+Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change)
 {
 // Checks if point (x,y,z) is still in the current node.
    Double_t point[3];
@@ -2793,66 +2793,85 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
    point[2] = z;
    TGeoVolume *vol = fCurrentNode->GetVolume();
    if (fIsOutside) {
-      if (vol->GetShape()->Contains(point)) return kFALSE;
+      if (vol->GetShape()->Contains(point)) {
+         if (!change) return kFALSE;
+         FindNode(x,y,z);
+         return kFALSE;
+      }   
       return kTRUE;
    }   
    Double_t local[3];
    // convert to local frame
    MasterToLocal(point,local);
-   if (!vol->GetShape()->Contains(local)) return kFALSE;
-   PushPath();
    // check if still in current volume.
-   Int_t nd = vol->GetNdaughters();
-   if (!nd) {
-      PopPath();
-      return kTRUE;
+   if (!vol->GetShape()->Contains(local)) {
+      if (!change) return kFALSE;
+      CdUp();
+      FindNode(x,y,z);
+      return kFALSE;
    }   
+   // check if there are daughters
+   Int_t nd = vol->GetNdaughters();
+   if (!nd) return kTRUE;
+   
    TGeoNode *node;
    TGeoPatternFinder *finder = vol->GetFinder();
    if (finder) {
       node=finder->FindNode(local);
-      PopPath();
-      if (node) return kFALSE;
+      if (node) {
+         if (!change) return kFALSE;
+         CdDown(node->GetIndex());
+         SearchNode(kTRUE,node);
+         return kFALSE;
+      }   
       return kTRUE;
    }
+   // if we are not allowed to do changes, save the current path
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    Int_t *check_list = 0;
    Int_t ncheck = 0;
    Double_t local1[3];
    if (voxels) {
       check_list = voxels->GetCheckList(local, ncheck);
-      if (!check_list) {
-         PopPath();
-         return kTRUE;
-      }   
+      if (!check_list) return kTRUE;
+      if (!change) PushPath(); 
       for (Int_t id=0; id<ncheck; id++) {
          node = vol->GetNode(check_list[id]);
          CdDown(check_list[id]);
          fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
          if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
-            PopPath();
-            return kFALSE;
+            if (!change) {
+               PopPath();
+               return kFALSE;
+            }
+            SearchNode(kTRUE);
+            return kFALSE;   
          }   
          CdUp();
       }
-      PopPath();
+      if (!change) PopPath();
       return kTRUE;
    }      
    Int_t id = 0;
+   if (!change) PushPath(); 
    while ((node=fCurrentNode->GetDaughter(id++))) {
       CdDown(id-1);
       fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
       if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
-         PopPath();
-         return kFALSE;
+         if (!change) {
+            PopPath();
+            return kFALSE;
+         }
+         SearchNode(kTRUE);
+         return kFALSE;      
       }   
       CdUp();
       if (id == nd) {
-         PopPath();
+         if (!change) PopPath();
          return kTRUE;
       }
    }
-   PopPath();
+   if (!change) PopPath();
    return kTRUE;
 }   
 

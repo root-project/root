@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.36 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.37 2003/09/23 10:33:15 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -304,7 +304,7 @@ public:
    Double_t               GetStep() const              {return fStep;}
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
-   Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z);
+   Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
