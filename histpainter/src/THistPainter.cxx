@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.110 2002/12/04 15:11:52 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.111 2002/12/05 10:24:15 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1831,8 +1831,14 @@ void THistPainter::PaintColorLevels(Option_t *)
 //
 //    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Double_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
+   Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
+
    Double_t zmin = fH->GetMinimum();
+   if (Hoption.Logz) {
+      if (zmin > 0) zmin = TMath::Log10(zmin);
+      else return;
+   }
+
    Double_t dz = Hparam.zmax - zmin;
    if (dz <= 0) return;
 
@@ -1863,10 +1869,10 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
          if (Hoption.Logz) {
-            if (z != 0) z = TMath::Log10(z);
-            else        z = Hparam.zmin;
+            if (z > 0) z = TMath::Log10(z);
+            else       z = zmin;
          }
-         if (z <= Hparam.zmin) continue;
+         if (z <= zmin) continue;
          xup  = xk + xstep;
          xlow = xk;
          if (Hoption.Logx) {
@@ -1887,7 +1893,31 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (ylow < gPad->GetUymin()) continue;
          if (xup  > gPad->GetUxmax()) continue;
          if (yup  > gPad->GetUymax()) continue;
-         color = Int_t(0.01+(z-zmin)*scale);
+
+         if (fH->TestBit(TH1::kUserContour)) {
+            zc = fH->GetContourLevel(0);
+            if (Hoption.Logz) {
+               if (zc > 0) zc = TMath::Log10(zc);
+               else        zc = zmin;
+            }
+            if (z < zc) continue;
+            color = -1;
+            for (Int_t k=0; k<ndiv; k++) {
+               zc = fH->GetContourLevel(k);
+               if (Hoption.Logz) {
+                  if (zc > 0) zc = TMath::Log10(zc);
+                  else        zc = zmin;
+               }
+	       if (z < zc) {
+                  continue;
+               } else {
+                  color++;
+               }
+            }
+         } else {
+            color = Int_t(0.01+(z-zmin)*scale);
+         }
+
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
          if (z >= Hparam.zmax) theColor = ncolors-1;
          fH->SetFillColor(gStyle->GetColorPalette(theColor));
