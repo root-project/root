@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.10 2004/05/27 08:32:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.11 2004/07/07 22:42:40 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -110,7 +110,7 @@ private:
    Int_t  fSec;           // seconds
    Int_t  fNanoSec;       // nanoseconds
 
-   void NormalizeNanoSec();
+   void   NormalizeNanoSec();
 
 public:
    // empty ctor (builds current time with nsec field incremented from static)
@@ -168,6 +168,10 @@ public:
    UInt_t       GetTime(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
                         UInt_t *hour = 0, UInt_t *min = 0,
                         UInt_t *sec = 0) const;
+   Int_t        GetDayOfYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
+   Int_t        GetDayOfWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
+   Int_t        GetWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
+   Bool_t       IsLeapYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
 
    void         Add(const TTimeStamp &offset);
 
@@ -179,8 +183,11 @@ public:
    // Utility functions
    static Int_t   GetZoneOffset();
    static time_t  MktimeFromUTC(tm_t *tmstruct);
-   static Bool_t  IsLeapYear(Int_t year);
    static void    DumpTMStruct(const tm_t &tmstruct);
+   static Int_t   GetDayOfYear(Int_t day, Int_t month, Int_t year);
+   static Int_t   GetDayOfWeek(Int_t day, Int_t month, Int_t year);
+   static Int_t   GetWeek(Int_t day, Int_t month, Int_t year);
+   static Bool_t  IsLeapYear(Int_t year);
 
    ClassDef(TTimeStamp,1)  //Encapsulates seconds and ns since EPOCH
 };

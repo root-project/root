@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.12 2003/04/03 13:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.13 2004/07/07 22:42:40 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -251,9 +251,9 @@ UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
    time_t atime = fSec + secOffset;
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 
-   if (year)  *year  = ptm->tm_year + 1900;
-   if (month) *month = ptm->tm_mon + 1;
    if (day)   *day   = ptm->tm_mday;
+   if (month) *month = ptm->tm_mon + 1;
+   if (year)  *year  = ptm->tm_year + 1900;
 
    return (1900+ptm->tm_year)*10000 + (1+ptm->tm_mon)*100 + ptm->tm_mday;
 }
@@ -273,6 +273,74 @@ UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
    if (sec)  *sec  = ptm->tm_sec;
 
    return ptm->tm_hour*10000 + ptm->tm_min*100 + ptm->tm_sec;
+}
+
+//______________________________________________________________________________
+Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
+{
+   // Get the day of the year represented by this time stamp value.
+   // Valid return values range between 1 and 366, where January 1 = 1.
+
+   time_t atime = fSec + secOffset;
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+
+   Int_t day   = ptm->tm_mday;
+   Int_t month = ptm->tm_mon + 1;
+   Int_t year  = ptm->tm_year + 1900;
+
+   return GetDayOfYear(day, month, year);
+}
+
+//______________________________________________________________________________
+Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
+{
+   // Method is using Zeller's formula for calculating the day number.
+   // Valid return values range between 1 and 7, where Monday = 1.
+
+   time_t atime = fSec + secOffset;
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+
+   Int_t day   = ptm->tm_mday;
+   Int_t month = ptm->tm_mon + 1;
+   Int_t year  = ptm->tm_year + 1900;
+
+   return GetDayOfWeek(day, month, year);
+}
+
+//______________________________________________________________________________
+Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
+{
+   // Get the week of the year. Valid return values are between 1 and 53.
+
+   time_t atime = fSec + secOffset;
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+
+   Int_t day   = ptm->tm_mday;
+   Int_t month = ptm->tm_mon + 1;
+   Int_t year  = ptm->tm_year + 1900;
+
+   return GetWeek(day, month, year);
+}
+
+//______________________________________________________________________________
+Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
+{
+   // Is the year a leap year.
+   // The calendar year is 365 days long, unless the year is exactly divisible
+   // by 4, in which case an extra day is added to February to make the year
+   // 366 days long. If the year is the last year of a century, eg. 1700, 1800,
+   // 1900, 2000, then it is only a leap year if it is exactly divisible by
+   // 400. Therefore, 1900 wasn't a leap year but 2000 was. The reason for
+   // these rules is to bring the average length of the calendar year into
+   // line with the length of the Earth's orbit around the Sun, so that the
+   // seasons always occur during the same months each year.
+
+   time_t atime = fSec + secOffset;
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+
+   Int_t year = ptm->tm_year + 1900;
+
+   return IsLeapYear(year);
 }
 
 //______________________________________________________________________________
@@ -518,23 +586,18 @@ time_t TTimeStamp::MktimeFromUTC(tm_t *tmstruct)
 {
    // Equivalent of standard routine "mktime" but
    // using the assumption that tm struct is filled with UTC, not local, time.
-
+   //
    // This version *ISN'T* configured to handle every possible
    // weirdness of out-of-range values in the case of normalizing
    // the tm struct.
-
+   //
    // This version *DOESN'T* correctly handle values that can't be
    // fit into a time_t (i.e. beyond year 2038-01-18 19:14:07, or
    // before the start of Epoch).
 
-   const Int_t days[]     = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-   const Int_t daysLeap[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
+   Int_t daysInMonth[] = { 31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
    Int_t year = tmstruct->tm_year + 1900;
-   Bool_t isleap = TTimeStamp::IsLeapYear(year);
-
-   const Int_t *daysInMonth = days;
-   if (isleap) daysInMonth = daysLeap;
+   daysInMonth[1] = IsLeapYear(year) ? 29 : 28;
 
    // fill in tmstruct->tm_yday
 
@@ -572,6 +635,71 @@ time_t TTimeStamp::MktimeFromUTC(tm_t *tmstruct)
 }
 
 //______________________________________________________________________________
+Int_t TTimeStamp::GetDayOfYear(Int_t day, Int_t month, Int_t year)
+{
+   // Get the day of the year represented by day, month and year.
+   // Valid return values range between 1 and 366, where January 1 = 1.
+
+   Int_t dayOfYear = 0;
+   Int_t daysInMonth[] = { 31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+   daysInMonth[1] = IsLeapYear(year) ? 29 : 28;
+
+   for (Int_t i = 0; i < (month - 1); i++)
+      dayOfYear += daysInMonth[i];
+   dayOfYear += day;
+
+   return dayOfYear;
+}
+
+//______________________________________________________________________________
+Int_t TTimeStamp::GetDayOfWeek(Int_t day, Int_t month, Int_t year)
+{
+   // Method is using Zeller's formula for calculating the day number.
+   // Valid return values range between 1 and 7, where Monday = 1.
+
+   Int_t dayno;
+
+   if (month < 3) {
+      year--;
+      month += 12;
+   }
+
+   dayno = 1 + day + 2*month + 3*(month + 1)/5 + year + year/4 - year/100 + year/400;
+   dayno %= 7;
+
+   // make monday first day of week
+   return ((dayno == 0) ? 7 : dayno);
+}
+
+//______________________________________________________________________________
+Int_t TTimeStamp::GetWeek(Int_t day, Int_t month, Int_t year)
+{
+   // Get the week of the year. Valid week values are between 1 and 53.
+   // The return value is the year*100+week (1 Jan may be in the last
+   // week of the previous year so the year must be returned too).
+
+   Int_t dayOfYear = GetDayOfYear(day, month, year);
+   Int_t dayJan1st = GetDayOfWeek(1, 1, year);
+   Int_t week = (dayOfYear + dayJan1st - 2) / 7 + 1;
+
+   if (dayJan1st > 4)
+      week--;
+
+   if (week == 53) {
+      Int_t dayNextJan1st = GetDayOfWeek(1, 1, year + 1);
+      if (dayNextJan1st > 1 && dayNextJan1st < 5) {
+         year++;
+         week = 1;
+      }
+   } else if (week == 0) {
+      Int_t dayPrevJan1st = GetDayOfWeek(1, 1, year - 1);
+      week = (dayPrevJan1st < 5 && dayJan1st > 4) ? 53 : 52;
+      year--;
+   }
+   return year * 100 + week;
+}
+
+//______________________________________________________________________________
 Bool_t TTimeStamp::IsLeapYear(Int_t year)
 {
    // Is the given year a leap year.
@@ -584,18 +712,7 @@ Bool_t TTimeStamp::IsLeapYear(Int_t year)
    // line with the length of the Earth's orbit around the Sun, so that the
    // seasons always occur during the same months each year.
 
-   if (year%4 != 0)
-      return kFALSE;
-   else {
-      if (year%400 == 0)
-         return kTRUE;
-      else {
-         if (year%100 == 0)
-            return kFALSE;
-         else
-            return kTRUE;
-      }
-   }
+   return (year % 4 == 0) && !((year % 100 == 0) && (year % 400 > 0));
 }
 
 //______________________________________________________________________________
