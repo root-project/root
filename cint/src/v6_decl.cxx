@@ -2814,6 +2814,9 @@ int tagnum,typenum;      /* overrides global variables */
 	      G__debug=store_debug;
 	      G__step=store_step;
 	      G__setdebugcond();
+#ifndef G__OLDIMPLEMENTATION1875
+	      G__prerun = store_prerun;
+#endif
 	    }
 	    cin=G__initstruct(new_name);
 	  }

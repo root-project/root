@@ -2526,6 +2526,9 @@ int func_now;
 #ifndef G__OLDIMPLEMENTATION1329
 	pointlevel += G__newtype.nindex[typenum];
 #endif
+#ifndef G__OLDIMPLEMENTATION1872
+	ifunc->para_isconst[func_now][iin]|=G__newtype.isconst[typenum];
+#endif
       }
 #ifndef G__OLDIMPLEMENTATION1433
       G__tagdefining = store_tagdefining;

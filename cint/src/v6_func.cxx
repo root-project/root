@@ -913,6 +913,296 @@ int isrealloc;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1871
+/******************************************************************
+* G__operatorfunction()
+*
+*
+******************************************************************/
+G__value G__operatorfunction(presult,item,known3,result7,funcname)
+G__value *presult;
+char* item;
+int *known3;
+char* result7;
+char* funcname;
+{
+  G__value result3;
+  struct G__param fpara;
+  int ig15=0;
+  int ig35=0;
+  int nest=0;
+  int double_quote=0, single_quote=0;
+  int lenitem = strlen(item);
+  int overflowflag=0;
+  int castflag=0;
+  int base1=0;
+  int nindex=0;
+  int itmp;
+
+  fpara.paran=0;
+#ifndef G__OLDIMPLEMENTATION834
+  fpara.next = (struct G__param*)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1472
+  fpara.para[0].type = 0;
+#endif
+  
+  /* Get Parenthesis */
+  
+  /******************************************************
+   * this if statement should be always true,
+   * should be able to omit.
+   ******************************************************/
+  if(ig15<lenitem) {
+    
+    /*****************************************************
+     * scan '(param1,param2,param3)'
+     *****************************************************/
+    while(ig15<lenitem) {
+#ifndef G__OLDIMPLEMENTATION1705
+      int tmpltnest=0;
+#endif
+      
+      /*************************************************
+       * scan one parameter upto 'param,' or 'param)'
+       * by reading upto ',' or ')'
+       *************************************************/
+      ig35 = 0;
+      nest=0;
+      single_quote=0;
+      double_quote=0;
+      while((((item[ig15]!=',')&&(item[ig15]!=')'))||
+	     (nest>0)||
+#ifndef G__OLDIMPLEMENTATION1705
+	     (tmpltnest>0)||
+#endif
+	     (single_quote>0)||(double_quote>0))&&(ig15<lenitem)) {
+	switch(item[ig15]) {
+	case '"' : /* double quote */
+	  if(single_quote==0) double_quote ^= 1;
+	  break;
+	case '\'' : /* single quote */
+	  if(double_quote==0) single_quote ^= 1;
+	  break;
+	case '(':
+	case '[':
+	case '{':
+	  if((double_quote==0)&& (single_quote==0)) nest++;
+	  break;
+	case ')':
+	case ']':
+	case '}':
+	  if((double_quote==0)&& (single_quote==0)) nest--;
+	  break;
+	case '\\':
+#ifndef G__OLDIMPLEMENTATION1340
+	  result7[ig35++] = item[ig15++];
+#else
+	  fpara.parameter[fpara.paran][ig35++]=item[ig15++];
+#endif
+	  break;
+#ifndef G__OLDIMPLEMENTATION1705
+	case '<':
+	  if(double_quote==0&&single_quote==0) {
+	    result7[ig35]=0;
+	    if(0==strcmp(result7,"operator") ||
+#ifndef G__OLDIMPLEMENTATION1772
+               tmpltnest || 
+#endif
+	       G__defined_templateclass(result7) ) ++tmpltnest;
+	  }
+	  break;
+	case '>':
+	  if(double_quote==0&&single_quote==0) {
+	    if(tmpltnest) --tmpltnest;
+	  }
+	  break;
+#endif
+	}
+#ifndef G__OLDIMPLEMENTATION1340
+	result7[ig35++] = item[ig15++];
+#else
+	fpara.parameter[fpara.paran][ig35++]=item[ig15++];
+#endif
+#ifndef G__OLDIMPLEMENTATION1036
+	if(ig35>=G__ONELINE-1) {
+#ifndef G__OLDIMPLEMENTATION1340
+	  if(result7[0]=='"') {
+#else
+	  if(fpara.parameter[fpara.paran][0]=='"') {
+#endif
+	    G__value bufv;
+	    char bufx[G__LONGLINE];
+#ifndef G__OLDIMPLEMENTATION1340
+	    strncpy(bufx,result7,G__ONELINE-1);
+#else
+	    strncpy(bufx,fpara.parameter[fpara.paran],G__ONELINE-1);
+#endif
+	    while((((item[ig15]!=',')&&(item[ig15]!=')'))||
+		   (nest>0)||(single_quote>0)||
+		   (double_quote>0))&&(ig15<lenitem)) {
+	      switch(item[ig15]) {
+	      case '"' : /* double quote */
+		if(single_quote==0) double_quote ^= 1;
+		break;
+	      case '\'' : /* single quote */
+		if(double_quote==0) single_quote ^= 1;
+		break;
+	      case '(':
+	      case '[':
+	      case '{':
+		if((double_quote==0)&& (single_quote==0)) nest++;
+		break;
+	      case ')':
+	      case ']':
+	      case '}':
+		if((double_quote==0)&& (single_quote==0)) nest--;
+		break;
+	      case '\\':
+		bufx[ig35++]=item[ig15++];
+		break;
+	      }
+	      bufx[ig35++]=item[ig15++];
+	      if(ig35>=G__LONGLINE-1) {
+		G__genericerror("Limitation: Too long function argument");
+		return(G__null);
+	      }
+	    }
+	    bufx[ig35]=0;
+	    bufv = G__strip_quotation(bufx);
+#ifndef G__OLDIMPLEMENTATION1340
+	    sprintf(result7,"(char*)(%ld)",bufv.obj.i);
+#else
+	    sprintf(fpara.parameter[fpara.paran],"(char*)(%ld)",bufv.obj.i);
+#endif
+#ifndef G__OLDIMPLEMENTATION1340
+	    ig35=strlen(result7)+1;
+#else
+	    ig35=strlen(fpara.parameter[fpara.paran])+1;
+#endif
+	    break;
+	  }
+#ifndef G__OLDIMPLEMENTATION1340
+	  else if(ig35>G__LONGLINE-1) {
+	    G__fprinterr(G__serr,
+               "Limitation: length of one function argument be less than %d"
+		    ,G__LONGLINE);
+	    G__genericerror((char*)NULL);
+	    G__fprinterr(G__serr,"Use temp variable as workaround.\n");
+	    *known3=1;
+	    return(G__null);
+	  }
+#endif
+	  else {
+#ifndef G__OLDIMPLEMENTATION1340
+	    overflowflag=1;
+#else
+	    G__fprinterr(G__serr,
+    "Limitation: length of one function argument be less than %d",G__ONELINE);
+	    G__genericerror((char*)NULL);
+	    G__fprinterr(G__serr,"Use temp variable as workaround.\n");
+	    *known3=1;
+	    return(G__null);
+#endif
+	  }
+	}
+#endif
+      }
+      /*************************************************
+       * if ')' is found at the middle of expression,
+       * this should be casting or pointer to function
+       *
+       *  v                    v            <-- this makes
+       *  (type)expression  or (*p_func)();    castflag=1
+       *       ^                       ^    <-- this makes
+       *                                       castflag=2
+       *************************************************/
+      if((item[ig15]==')')&&(ig15<lenitem-1)) {
+	if(1==castflag) {
+#ifndef G__OLDIMPLEMENTATION407
+	  if(('-'==item[ig15+1]&&'>'==item[ig15+2]) || '.'==item[ig15+1]) 
+	    castflag=3;
+#else
+	  if('-'==item[ig15+1] || '.'==item[ig15+1]) castflag=3;
+#endif
+	  else                                       castflag=2;
+	}
+#ifndef G__OLDIMPLEMENTATION407
+	else if(('-'==item[ig15+1]&&'>'==item[ig15+2]) ||'.'==item[ig15+1]) {
+#else
+	else if('-'==item[ig15+1]||'.'==item[ig15+1]) {
+#endif
+	  castflag=3;
+	  base1=ig15+1;
+	}
+	else if(item[ig15+1]=='[') {
+	  nindex=fpara.paran+1;
+	}
+#ifndef G__OLDIMPLEMENTATION1150
+        else if(funcname[0] && isalnum(item[ig15+1])) {
+	  G__fprinterr(G__serr,"Error: %s  Syntax error?",item);
+	  /* G__genericerror((char*)NULL); , avoid risk of side-effect */
+	  G__printlinenum();
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1871
+	else {
+	  ++ig15;
+	  result7[ig35]='\0';
+	  strcpy(fpara.parameter[fpara.paran],result7);
+#ifndef G__OLDIMPLEMENTATION1876
+	  if(ig35) fpara.parameter[++fpara.paran][0]='\0';
+#else
+	  fpara.parameter[++fpara.paran][0]='\0';
+#endif
+	  for(itmp=0;itmp<fpara.paran;itmp++) {
+	    fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
+	  }
+	  if(G__parenthesisovldobj(&result3,presult,"operator()"
+				   ,&fpara,G__TRYNORMAL)) {
+	    return(G__operatorfunction(&result3,item+ig15+1,known3
+				       ,result7,funcname));
+	  }
+	}
+#endif
+      }
+      
+      /*************************************************
+       * set null char to parameter list buffer.
+       *************************************************/
+      ig15++;
+#ifndef G__OLDIMPLEMENTATION1340
+      result7[ig35]='\0';
+      if(ig35<G__ONELINE) {
+	strcpy(fpara.parameter[fpara.paran],result7);
+      }
+      else {
+#ifndef G__OLDIMPLEMENTATION1824
+	strcpy(fpara.parameter[fpara.paran],"@");
+	fpara.para[fpara.paran] = G__getexpr(result7);
+#endif
+      }
+#ifndef G__OLDIMPLEMENTATION1876
+      if(ig35) fpara.parameter[++fpara.paran][0]='\0';
+#else
+      fpara.parameter[++fpara.paran][0]='\0';
+#endif
+#else
+      fpara.parameter[fpara.paran++][ig35]='\0';
+      fpara.parameter[fpara.paran][0]='\0';
+#endif
+    }
+  }
+
+  for(itmp=0;itmp<fpara.paran;itmp++) {
+    fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
+  }
+  G__parenthesisovldobj(&result3,presult,"operator()",&fpara,G__TRYNORMAL);
+
+  return(result3);
+}
+#endif
+
 /******************************************************************
 * G__value G__getfunction(item,known3,memfunc_flag)
 *
@@ -1282,6 +1572,29 @@ int memfunc_flag;
 	  G__fprinterr(G__serr,"Error: %s  Syntax error?",item);
 	  /* G__genericerror((char*)NULL); , avoid risk of side-effect */
 	  G__printlinenum();
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1871
+	else if(
+#ifdef G__OLDIMPLEMENTATION1876
+		ig35&&
+#endif
+		(isalpha(item[0]) || '_'==item[0] || '$'==item[0])) {
+	  int itmp;
+	  result7[ig35]='\0';
+	  strcpy(fpara.parameter[fpara.paran],result7);
+#ifndef G__OLDIMPLEMENTATION1876
+	  if(ig35) fpara.parameter[++fpara.paran][0]='\0';
+#else
+	  fpara.parameter[++fpara.paran][0]='\0';
+#endif
+	  for(itmp=0;itmp<fpara.paran;itmp++) {
+	    fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
+	  }
+	  if(G__parenthesisovld(&result3,funcname,&fpara,G__TRYNORMAL)) {
+	    return(G__operatorfunction(&result3,item+ig15+2,known3
+				       ,result7,funcname));
+	  }
 	}
 #endif
       }
@@ -2492,6 +2805,18 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION405
     if(nindex&&isupper(result3.type)) {
       G__getindexedvalue(&result3,fpara.parameter[nindex]);
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1871
+    else if(nindex&&'u'==result3.type) {
+      int len;
+      strcpy(fpara.parameter[0],fpara.parameter[nindex]+1);
+      len = strlen(fpara.parameter[0]);
+      if(len>1) fpara.parameter[0][len-1]=0;
+      fpara.para[0] = G__getexpr(fpara.parameter[0]);
+      fpara.paran=1;
+      G__parenthesisovldobj(&result3,&result3,"operator[]"
+			    ,&fpara,G__TRYNORMAL);
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1515
@@ -4395,21 +4720,31 @@ char *result;
 	sprintf(fmt,"%%s%s",onefmt);
 #ifndef G__OLDIMPLEMENTATION1739
 	if('u'==libp->para[ipara].type) {
+	  char llbuf[100];
 	  G__value *pval = &libp->para[ipara];
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longlong")==0) {
-	    sprintf(onefmt,fmt ,result,*(long*)G__int(*pval));
+	    sprintf(llbuf
+	    ,"G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+		    ,(long)fmt,(long)onefmt,pval->obj.i);
+	    G__getitem(llbuf);
+	    strcat(result,fmt);
 	  }
 	  else if(strcmp(G__struct.name[pval->tagnum],"G__ulonglong")==0) {
-	    sprintf(onefmt,fmt ,result,*(unsigned long*)G__int(*pval));
+	    sprintf(llbuf
+	    ,"G__printformatull((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+		    ,(long)fmt,(long)onefmt,pval->obj.i);
+	    G__getitem(llbuf);
+	    strcat(result,fmt);
 	  }
 	  else {
 	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	    strcpy(result,onefmt);
 	  }
 	}
 	else {
 	  sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+	  strcpy(result,onefmt);
 	}
-	strcpy(result,onefmt);
 #else
 	sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
 	strcpy(result,onefmt);

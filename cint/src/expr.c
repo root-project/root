@@ -1043,7 +1043,7 @@ char *expression;
 
 #ifndef G__OLDIMPLEMENTATION1802
   if(strlen(expression)>G__BUFLEN-2) 
-#ifndef G__OLDIMPLEMENTATION1863_YET 
+#ifdef G__OLDIMPLEMENTATION1863_YET 
     ebuf=(char*)malloc(strlen(expression)+2); /* Don't know why? t538.cxx */
 #else
     ebuf=(char*)malloc(strlen(expression)+1);
@@ -1951,7 +1951,37 @@ char *item;
     }
     else {
 #ifndef G__OLDIMPLEMENTATION918
+#ifndef G__OLDIMPLEMENTATION1874
+      unsigned long xxx=0;
+      char llbuf[100];
+      int lltagnum,lltypenum;
+      int match;
+      if('u'==c) { /* long long */
+	int store_tagnum = G__tagnum;
+	G__loadlonglong(&lltagnum,&lltypenum,G__LONGLONG);
+	G__tagnum=lltagnum;
+	sprintf(llbuf,"G__longlong(\"%s\")",item);
+	result3=G__getfunction(llbuf,&match,G__TRYIMPLICITCONSTRUCTOR);
+	G__store_tempobject(result3);
+	G__tagnum=store_tagnum;
+	c='u';
+      }
+      else if('t'==c) { /* unsigned long long */
+	int store_tagnum = G__tagnum;
+	G__loadlonglong(&lltagnum,&lltypenum,G__ULONGLONG);
+	G__tagnum=lltagnum;
+	sprintf(llbuf,"G__ulonglong(\"%s\")",item);
+	result3=G__getfunction(llbuf,&match,G__TRYIMPLICITCONSTRUCTOR);
+	G__store_tempobject(result3);
+	G__tagnum=store_tagnum;
+	c='u';
+      }
+      else {
+	xxx=strtoul(item,NULL,10);
+      }
+#else
       unsigned long xxx=strtoul(item,NULL,10);
+#endif
       if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
       if(xxx==ULONG_MAX) {
         char ulongmax[100];
@@ -1962,16 +1992,31 @@ char *item;
         if(strcmp(ulongmax,item)!=0) 
           G__genericerror("Error: integer literal too large");
       } 
+#ifndef G__OLDIMPLEMENTATION1874
+      if('u'!=c) {
+	G__letint(&result3,c,xxx);
+	result3.obj.i=xxx;
+      }
+#else
       G__letint(&result3,c,xxx);
       result3.obj.i=xxx;
+#endif
       /* G__letint(&result3,c,strtoul(item,NULL,10)); */
 #else
       G__letint(&result3,c,atol(item));
 #endif
     }
+#ifndef G__OLDIMPLEMENTATION1874
+    if('u'!=c) {
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      result3.ref = 0;
+    }
+#else
     result3.tagnum = -1;
     result3.typenum = -1;
     result3.ref = 0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1259
     result3.isconst = G__CONSTVAR;
 #endif

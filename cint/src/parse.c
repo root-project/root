@@ -522,6 +522,20 @@ G__value *presult;
 #ifndef G__OLDIMPLEMENTATION1711
     statement[len] = 0; 
 #endif
+#ifndef G__OLDIMPLEMENTATION1876
+    *pc=G__fgetspace();
+    while(*pc=='(') {
+      len = strlen(statement);
+      statement[len++] = *pc;
+      *pc = G__fgetstream_newtemplate(statement+len,")");
+      len = strlen(statement);
+      statement[len++] = *pc;
+      statement[len] = 0; 
+      *pc=G__fgetspace();
+    }
+    fseek(G__ifile.fp,-1,SEEK_CUR);
+    if(G__dispsource) G__disp_mask=1;
+#endif
 #ifdef G__ASM
     if(G__asm_noverflow) G__asm_clear();
 #endif
@@ -4428,6 +4442,13 @@ G__value G__exec_statement()
 					,&mparen))
 		 return(G__block_goto);
 	    }
+#ifndef G__OLDIMPLEMENTATION1877
+	    if(result.type==G__block_break.type) {
+	      if(result.obj.i==G__BLOCK_CONTINUE) {
+		return(result);
+	      }
+	    }
+#endif
 	    iout=0;
 	    spaceflag=0;
 	  }

@@ -58,6 +58,15 @@ extern void G__set_cpp_environmentlongif();
 namespace std {} using namespace std;
 #endif
 #endif
+extern "C" {
+#ifdef __WIN32
+__int64 G__strtoll(const char*, char**, int);
+unsigned __int64 G__strtoull(const char*, char**, int);
+#else
+long long G__strtoll(const char*, char**, int);
+unsigned long long G__strtoull(const char*, char**, int);
+#endif
+}
 
 /**************************************************************************
 * makecint
@@ -136,6 +145,9 @@ class G__longlong {
   G__longlong(char l) { dat = (G__int64)l; }
 #endif
   G__longlong(const G__longlong& x) { dat=x.dat; }
+#if 1
+  G__longlong(const char* s) { dat=G__strtoll(s,NULL,10); }
+#endif
   ~G__longlong() {  }
 
   // conversion operator
@@ -324,6 +336,9 @@ class G__ulonglong {
   G__ulonglong(char l) { dat = (G__uint64)l; }
 #endif
   G__ulonglong(const G__ulonglong& x) { dat=x.dat; }
+#if 1
+  G__ulonglong(const char* s) { dat=G__strtoull(s,NULL,10); }
+#endif
   ~G__ulonglong() {  }
 
   // conversion operator
@@ -465,7 +480,7 @@ inline int operator==(const G__ulonglong& a,const G__ulonglong& b){
 inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
 #ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
-  sprintf(buf,"%lld",a.dat);
+  sprintf(buf,"%llu",a.dat);
   ost << buf;
 #else
   //long *upper = (long*)(&a+1);
@@ -479,7 +494,7 @@ inline istream& operator>>(istream& ist,G__ulonglong& a) {
 #ifndef G__OLDIMPLEMENTATION1686
   char buf[50];
   ist >> buf;
-  sscanf(buf,"%lld",&a.dat);
+  sscanf(buf,"%llu",&a.dat);
 #else
   //long *upper = (long*)(&a+1);
   long *lower = (long*)&a;
@@ -488,6 +503,17 @@ inline istream& operator>>(istream& ist,G__ulonglong& a) {
   return(ist);
 }
 #endif
+
+#include <stdio.h>
+void G__printformatll(char* out,const char* fmt,void *p) {
+  long long *pll = (long long*)p;
+  sprintf(out,fmt,*pll);
+}
+void G__printformatull(char* out,const char* fmt,void *p) {
+  unsigned long long *pll = (unsigned long long*)p;
+  sprintf(out,fmt,*pll);
+}
+
 
 inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
@@ -517,6 +543,7 @@ int G__ateval(unsigned long x) {return(0);}
 
 
 #endif /* G__LONGLONG_H */
+
 
 /* /% C %/ */
 /***********************************************************************

@@ -2449,6 +2449,99 @@ G__value *defined;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1871
+/**************************************************************************
+* G__parenthesisovldobj()
+*
+**************************************************************************/
+int G__parenthesisovldobj(result3,result,realname,libp,flag)
+G__value *result3;
+G__value *result;
+char *realname;
+struct G__param *libp;
+int flag;
+{
+  int known;
+  long store_struct_offset;
+  int store_tagnum;
+  int funcmatch;
+  int hash;
+  int store_exec_memberfunc;
+  int store_memberfunc_tagnum;
+  int store_memberfunc_struct_offset;
+
+  store_exec_memberfunc=G__exec_memberfunc;
+  store_memberfunc_tagnum=G__memberfunc_tagnum;
+  store_memberfunc_struct_offset=G__memberfunc_struct_offset;
+
+  store_struct_offset = G__store_struct_offset;
+  store_tagnum = G__tagnum;
+  G__store_struct_offset = result->obj.i;
+  G__tagnum = result->tagnum;
+
+#ifdef G__ASM
+  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg) {
+      G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+      G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
+    }
+#endif
+    G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+    G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+    G__inc_cp_asm(2,0);
+  }
+#endif
+
+  G__hash(realname,hash,known);
+
+  G__fixedscope=0;
+
+  for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+    if(-1!=G__tagnum) G__incsetup_memfunc(G__tagnum);
+    if(G__interpret_func(result3,realname,libp,hash
+			 ,G__struct.memfunc[G__tagnum]
+			 ,funcmatch,G__CALLMEMFUNC)==1 ) {
+      G__store_struct_offset = store_struct_offset;
+      G__tagnum = store_tagnum;
+
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp] = G__POPSTROS;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+
+      G__exec_memberfunc=store_exec_memberfunc;
+      G__memberfunc_tagnum=store_memberfunc_tagnum;
+      G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+      return(1);
+    }
+  }
+
+  G__store_struct_offset = store_struct_offset;
+  G__tagnum = store_tagnum;
+
+#ifdef G__ASM
+  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+#endif
+    G__asm_inst[G__asm_cp] = G__POPSTROS;
+    G__inc_cp_asm(1,0);
+  }
+#endif
+
+  G__exec_memberfunc=store_exec_memberfunc;
+  G__memberfunc_tagnum=store_memberfunc_tagnum;
+  G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+  return(0);
+}
+
+#endif
 
 /**************************************************************************
 * G__parenthesisovld()
@@ -2476,6 +2569,13 @@ int flag;
     return(0);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1871
+  if(0==funcname[0]) {
+    result = *result3;
+  }
+  else 
+#endif
+
   if(flag==G__CALLMEMFUNC) {
     G__incsetup_memvar(G__tagnum);
     result = G__getvariable(funcname,&known,(struct G__var_array*)NULL
@@ -2485,7 +2585,13 @@ int flag;
     result = G__getvariable(funcname,&known,&G__global,G__p_local);
   }
 
-  if(0==known || -1 == result.tagnum) return(0);
+  if(
+#ifndef G__OLDIMPLEMENTATION1876
+     1!=known 
+#else
+     0==known 
+#endif
+     || -1 == result.tagnum) return(0);
 
   store_exec_memberfunc=G__exec_memberfunc;
   store_memberfunc_tagnum=G__memberfunc_tagnum;

@@ -137,9 +137,14 @@ char baseaccess;
 int G__baseconstructorwp()
 {
   int c;
-  int n=0;
   char buf[G__ONELINE];
+  int n=0;
+#ifndef G__OLDIMPLEMENTATION1870
+  struct G__baseparam *pbaseparamin = (struct G__baseparam*)NULL;
+  struct G__baseparam *pbaseparam = pbaseparamin;
+#else
   struct G__baseparam baseparam;
+#endif
   
   /*  X::X(int a,int b) : base1(a), base2(b) { }
    *                   ^
@@ -150,27 +155,65 @@ int G__baseconstructorwp()
   while(','==c) {
     c=G__fgetstream_newtemplate(buf,"({,"); /* case 3) */
     if('('==c) {
+#ifndef G__OLDIMPLEMENTATION1870
+      if(pbaseparamin) {
+	pbaseparam->next
+	  = (struct G__baseparam*)malloc(sizeof(struct G__baseparam));
+	pbaseparam=pbaseparam->next;
+      }
+      else {
+	pbaseparamin
+	  = (struct G__baseparam*)malloc(sizeof(struct G__baseparam));
+	pbaseparam=pbaseparamin;
+      }
+      pbaseparam->next = (struct G__baseparam*)NULL;
+      pbaseparam->name = (char*)NULL;
+      pbaseparam->param = (char*)NULL;
+      pbaseparam->name=(char*)malloc(strlen(buf)+1);
+      strcpy(pbaseparam->name,buf);
+#else
       baseparam.name[n]=(char*)malloc(strlen(buf)+1);
       strcpy(baseparam.name[n],buf);
+#endif
 #ifndef G__OLDIMPLEMENTATION438
       c=G__fgetstream_newtemplate(buf,")");
 #else
       c=G__fgetstream(buf,")");
 #endif
+#ifndef G__OLDIMPLEMENTATION1870
+      pbaseparam->param=(char*)malloc(strlen(buf)+1);
+      strcpy(pbaseparam->param,buf);
+#else
       baseparam.param[n]=(char*)malloc(strlen(buf)+1);
       strcpy(baseparam.param[n],buf);
+#endif
       ++n;
       c=G__fgetstream(buf,",{");
     }
   }
   
+#ifndef G__OLDIMPLEMENTATION1870
+  G__baseconstructor(n,pbaseparamin);
+#else
   G__baseconstructor(n,&baseparam);
+#endif
   
+#ifndef G__OLDIMPLEMENTATION1870
+  pbaseparam = pbaseparamin;
+  while(pbaseparam) {
+    struct G__baseparam *pb = pbaseparam->next;
+    free((void*)pbaseparam->name);
+    free((void*)pbaseparam->param);
+    free((void*)pbaseparam);
+    pbaseparam=pb;
+  }
+#else
   while(n>0) {
     --n;
     free((void*)baseparam.param[n]);
     free((void*)baseparam.name[n]);
   }
+#endif
   
   fseek(G__ifile.fp,-1,SEEK_CUR);
   if(G__dispsource) G__disp_mask=1;
@@ -271,15 +314,26 @@ long baseoffset;
 *  Recursively call base class constructor
 *
 **************************************************************************/
-int G__baseconstructor(n,pbaseparam)
+#ifndef G__OLDIMPLEMENTATION1870
+int G__baseconstructor(n, pbaseparamin)
+int n;
+struct G__baseparam *pbaseparamin;
+#else
+int G__baseconstructor(n, pbaseparam)
 int n;
 struct G__baseparam *pbaseparam;
+#endif
 {
   struct G__var_array *mem;
   struct G__inheritance *baseclass;
   int store_tagnum;
   long store_struct_offset;
-  int i,j;
+  int i;
+#ifndef G__OLDIMPLEMENTATION1870
+  struct G__baseparam *pbaseparam;
+#else
+  int j;
+#endif
   char *tagname,*memname;
   int flag;
   char construct[G__ONELINE];
@@ -361,6 +415,17 @@ struct G__baseparam *pbaseparam;
       flag=0;
       tagname = G__struct.name[G__tagnum];
       if(donen<n) {
+#ifndef G__OLDIMPLEMENTATION1870
+	pbaseparam = pbaseparamin;
+	while(pbaseparam) {
+	  if(strcmp(pbaseparam->name,tagname)==0) {
+	    flag=1;
+	    ++donen;
+	    break;
+	  }
+	  pbaseparam=pbaseparam->next;
+	}
+#else
 	for(j=0;j<n;j++) {
 	  if(strcmp(pbaseparam->name[j],tagname)==0) {
 	    flag=1;
@@ -368,22 +433,35 @@ struct G__baseparam *pbaseparam;
 	    break;
 	  }
 	}
+#endif
       }
-      if(flag) 
-	sprintf(construct,"%s(%s)" ,tagname,pbaseparam->param[j]);
-      else 
-	sprintf(construct,"%s()",tagname);
+#ifndef G__OLDIMPLEMENTATION1870
+      if(flag) sprintf(construct,"%s(%s)" ,tagname,pbaseparam->param);
+      else sprintf(construct,"%s()",tagname);
+#else
+      if(flag) sprintf(construct,"%s(%s)" ,tagname,pbaseparam->param[j]);
+      else sprintf(construct,"%s()",tagname);
+#endif
       
       
       if(G__dispsource) {
 	G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct);
       }
+#ifdef G__OLDIMPLEMENTATION1870
       j=0;
+#endif
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled class */
 	G__globalvarpointer=G__store_struct_offset;
       }
       else G__globalvarpointer=G__PVOID;
+#ifndef G__OLDIMPLEMENTATION1870
+      { 
+	int tmp=0;
+	G__getfunction(construct,&tmp ,G__TRYCONSTRUCTOR);
+      }
+#else
       G__getfunction(construct,&j ,G__TRYCONSTRUCTOR);
+#endif
       /* Set virtual_offset to every base classes for possible multiple
        * inheritance. */
       if(-1 != G__struct.virtual_offset[G__tagnum]) {
@@ -434,6 +512,17 @@ struct G__baseparam *pbaseparam;
 	flag=0;
 	memname=mem->varnamebuf[i];
 	if(donen<n) {
+#ifndef G__OLDIMPLEMENTATION1870
+	  pbaseparam = pbaseparamin;
+	  while(pbaseparam) {
+	    if(strcmp(pbaseparam->name ,memname)==0) {
+	      flag=1;
+	      ++donen;
+	      break;
+	    }
+	    pbaseparam=pbaseparam->next;
+	  }
+#else
 	  for(j=0;j<n;j++) {
 	    if(strcmp(pbaseparam->name[j] ,memname)==0) {
 	      flag=1;
@@ -441,6 +530,7 @@ struct G__baseparam *pbaseparam;
 	      break;
 	    }
 	  }
+#endif
 	}
 	if(flag) {
 	  if(G__PARAREFERENCE==mem->reftype[i]) {
@@ -448,7 +538,13 @@ struct G__baseparam *pbaseparam;
 	    if(G__NOLINK!=G__globalcomp) 
 #endif
 	      {
-	    if('\0'==pbaseparam->param[j][0]) {
+	    if(
+#ifndef G__OLDIMPLEMENTATION1870
+	       '\0'==pbaseparam->param[0]
+#else
+	       '\0'==pbaseparam->param[j][0]
+#endif
+	       ) {
 	      G__fprinterr(G__serr,"Error: No initializer for reference %s "
 		      ,memname);
 	      G__genericerror((char*)NULL);
@@ -459,8 +555,13 @@ struct G__baseparam *pbaseparam;
 	      }
 	    continue;
 	  }
+#ifndef G__OLDIMPLEMENTATION1870
+	  sprintf(construct,"%s(%s)" ,G__struct.name[G__tagnum]
+		  ,pbaseparam->param);
+#else
 	  sprintf(construct,"%s(%s)" ,G__struct.name[G__tagnum]
 		  ,pbaseparam->param[j]);
+#endif
 	}
 	else {
 	  sprintf(construct,"%s()" ,G__struct.name[G__tagnum]);
@@ -481,21 +582,41 @@ struct G__baseparam *pbaseparam;
 	}
 	p_inc = mem->varlabel[i][1];
 	size = G__struct.size[G__tagnum];
+#ifdef G__OLDIMPLEMENTATION1870
 	j=0;
+#endif
 	do {
 	  if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled */
 	    G__globalvarpointer=G__store_struct_offset;
 	  }
 	  else G__globalvarpointer = G__PVOID;
+#ifndef G__OLDIMPLEMENTATION1870
+	  {
+	    int tmp=0;
+	    G__getfunction(construct,&tmp ,G__TRYCONSTRUCTOR);
+	  }
+#else
 	  G__getfunction(construct,&j ,G__TRYCONSTRUCTOR);
+#endif
 	  G__store_struct_offset += size;
 	  --p_inc;
-	} while(p_inc>=0 && j) ;
+	} while(p_inc>=0) ;
       } /* if('u') */
 
       else if(donen<n && G__LOCALSTATIC!=mem->statictype[i]) {
 	flag=0;
 	memname=mem->varnamebuf[i];
+#ifndef G__OLDIMPLEMENTATION1870
+	pbaseparam=pbaseparamin;
+	while(pbaseparam) {
+	  if(strcmp(pbaseparam->name ,memname)==0) {
+	    flag=1;
+	    ++donen;
+	    break;
+	  }
+	  pbaseparam=pbaseparam->next;
+	}
+#else
 	for(j=0;j<n;j++) {
 	  if(strcmp(pbaseparam->name[j] ,memname)==0) {
 	    flag=1;
@@ -503,13 +624,20 @@ struct G__baseparam *pbaseparam;
 	    break;
 	  }
 	}
+#endif
 	if(flag) {
 	  if(G__PARAREFERENCE==mem->reftype[i]) {
 #ifndef G__OLDIMPLEMENTATION945
 	    if(G__NOLINK!=G__globalcomp) 
 #endif
 	      {
-	    if('\0'==pbaseparam->param[j][0]) {
+	    if(
+#ifndef G__OLDIMPLEMENTATION1870
+	       '\0'==pbaseparam->param[0]
+#else
+	       '\0'==pbaseparam->param[j][0]
+#endif
+	       ) {
 	      G__fprinterr(G__serr,"Error: No initializer for reference %s "
 		      ,memname);
 	      G__genericerror((char*)NULL);
@@ -523,54 +651,102 @@ struct G__baseparam *pbaseparam;
 	  else {
 	    addr = store_struct_offset+mem->p[i];
 	    if(isupper(mem->type[i])) {
+#ifndef G__OLDIMPLEMENTATION1870
+	      lval = G__int(G__getexpr(pbaseparam->param));
+#else
 	      lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 	      *(long*)addr = lval;
 	    }
 	    else {
 	      switch(mem->type[i]) {
 	      case 'b':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(unsigned char*)addr = lval;
 		break;
 	      case 'c':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(char*)addr = lval;
 		break;
 	      case 'r':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(unsigned short*)addr = lval;
 		break;
 	      case 's':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(short*)addr = lval;
 		break;
 	      case 'h':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(unsigned int*)addr = lval;
 		break;
 	      case 'i':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(int*)addr = lval;
 		break;
 	      case 'k':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(unsigned long*)addr = lval;
 		break;
 	      case 'l':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param));
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(long*)addr = lval;
 		break;
 	      case 'f':
+#ifndef G__OLDIMPLEMENTATION1870
+		dval = G__double(G__getexpr(pbaseparam->param));
+#else
 		dval = G__double(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(float*)addr = dval;
 		break;
 	      case 'd':
+#ifndef G__OLDIMPLEMENTATION1870
+		dval = G__double(G__getexpr(pbaseparam->param));
+#else
 		dval = G__double(G__getexpr(pbaseparam->param[j]));
+#endif
 		*(double*)addr = dval;
 		break;
 #ifndef G__OLDIMPLEMENTATION1604
 	      case 'g':
+#ifndef G__OLDIMPLEMENTATION1870
+		lval = G__int(G__getexpr(pbaseparam->param))?1:0;
+#else
 		lval = G__int(G__getexpr(pbaseparam->param[j]))?1:0;
+#endif
 		*(unsigned char*)addr = lval;
 		break;
 #endif

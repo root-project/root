@@ -216,7 +216,11 @@ struct G__ifunc_table *G__ifunc_exist G__P((struct G__ifunc_table *ifunc_now,int
 struct G__ifunc_table *G__ifunc_ambiguous G__P((struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist,int derivedtagnum));
 void G__inheritclass G__P((int to_tagnum,int from_tagnum,char baseaccess));
 int G__baseconstructorwp G__P((void));
+#ifndef G__OLDIMPLEMENTATION1870
 int G__baseconstructor G__P((int n,struct G__baseparam *pbaseparam));
+#else
+int G__baseconstructor G__P((int n,struct G__baseparam *pbaseparam));
+#endif
 int G__basedestructor G__P((void));
 int G__basedestructrc G__P((struct G__var_array *mem));
 #ifdef G__VIRTUALBASE
@@ -415,6 +419,9 @@ int G__label_access_scope G__P((char *statement,int *piout,int *pspaceflag,int *
 int G__cmp G__P((G__value buf1,G__value buf2));
 int G__getunaryop G__P((char unaryop,char *expression,char *buf,G__value *preg));
 int G__overloadopr G__P((int operatorin,G__value expressionin,G__value *defined));
+#ifndef G__OLDIMPLEMENTATION1871
+int G__parenthesisovldobj G__P((G__value *result3,G__value *result,char *realname,struct G__param *libp,int flag));
+#endif
 int G__parenthesisovld G__P((G__value *result3,char *funcname,struct G__param *libp,int flag));
 int G__tryindexopr G__P((G__value *result7,G__value *para,int paran,int ig25));
 int G__exec_delete G__P((char *statement,int *piout,int *pspaceflag,int isarray,int mparen));

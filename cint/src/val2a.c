@@ -1365,7 +1365,12 @@ int *type;
       /******************************
        * long
        ******************************/
+#ifndef G__OLDIMPLEMENTATION1874
+      if('l'==*type) *type = 'u';
+      else           *type = 'l';
+#else
       *type = 'l';
+#endif
       break;
 #ifdef G__NEVER
     case 's':

@@ -720,8 +720,14 @@ struct G__newarylist {
 * struct for storing base class constructor
 **************************************************************************/
 struct G__baseparam {
-	char *name[G__MAXBASE];
-	char *param[G__MAXBASE];
+#ifndef G__OLDIMPLEMENTATION1870
+  char *name;
+  char *param;
+  struct G__baseparam *next;
+#else
+  char *name[G__MAXBASE];
+  char *param[G__MAXBASE];
+#endif
 };
 
 

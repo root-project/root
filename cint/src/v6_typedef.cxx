@@ -1629,7 +1629,7 @@ int parent_tagnum;
 #endif
 #ifndef G__OLDIMPLEMENTATION1394
   G__static_isconst = reftype/0x100;
-  reftype = reftype%100;
+  reftype = reftype%0x100;
 #endif
   ret = G__search_typename(typename,typein,tagnum,reftype);
   G__static_parent_tagnum = -1;

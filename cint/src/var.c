@@ -4516,7 +4516,11 @@ struct G__var_array *varglobal,*varlocal;
     if(result.obj.i==0)
       return(G__null);
     else {
+#ifndef G__OLDIMPLEMENTATION1876
+      *known2=2;
+#else
       *known2=1;
+#endif
 #ifndef G__OLDIMPLEMENTATION549
 #ifdef G__ASM
       if(G__asm_noverflow) {

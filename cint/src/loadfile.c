@@ -1912,7 +1912,11 @@ char *filenamein;
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
 #ifndef G__OLDIMPLEMENTATION1705
-     (len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
+     (
+#ifndef G__OLDIMPLEMENTATION1873
+      dllpost[0] && 
+#endif
+      len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
 #endif
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
 	       strcmp(filename+len-2,".A")==0))
