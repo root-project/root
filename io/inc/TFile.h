@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.13 2001/10/01 10:36:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.14 2001/10/02 16:46:00 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -49,7 +49,6 @@ protected:
    Int_t       fNbytesFree;       //Number of bytes for free segments structure
    Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
    Int_t       fWritten;          //Number of objects written so far
-   Int_t       fProcessCount;     //Number of TProcessIDs in the file
    TString     fOption;           //File options
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
@@ -110,7 +109,6 @@ public:
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   Int_t             GetProcessCount() const {return fProcessCount;}
    Seek_t            GetSize() const;
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;

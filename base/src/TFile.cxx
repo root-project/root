@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.40 2001/10/01 10:34:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.41 2001/10/02 16:47:35 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -303,6 +303,8 @@ TFile::~TFile()
 
    Close();
 
+   delete fProcessIDs; fProcessIDs = 0;
+   
    SafeDelete(fFree);
    SafeDelete(fCache);
 
@@ -338,7 +340,6 @@ void TFile::Init(Bool_t create)
       fSeekDir     = key->GetSeekKey();
       fSeekFree    = 0;
       fNbytesFree  = 0;
-      fProcessCount= 0;
       WriteHeader();
       char *buffer = key->GetBuffer();
       TNamed::FillBuffer(buffer);
@@ -371,7 +372,6 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &fCompress);
       frombuf(buffer, &fSeekInfo);
       frombuf(buffer, &fNbytesInfo);
-      frombuf(buffer, &fProcessCount);
       fSeekDir = fBEGIN;
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
@@ -437,29 +437,7 @@ void TFile::Init(Bool_t create)
                                 (Long_t)this));
    }
 
-   fProcessIDs = new TObjArray(fProcessCount+2);
-   if (fWritable) {
-      //read last ProcessID 
-      char pidname[32];
-      sprintf(pidname,"ProcessID%d",fProcessCount);
-      TProcessID *pidc = (TProcessID *)gROOT->GetListOfProcessIDs()->First();
-      TProcessID *pid  = (TProcessID *)Get(pidname);
-      if (!pid) {
-         fProcessCount++;
-         fProcessIDs->AddAt(pidc,fProcessCount);
-         pidc->IncrementCount();
-         pidc->Write(pidc->GetName());
-      } else {
-         //check that a similar pid is not already registered in gROOT
-         if (strcmp(pidc->GetTitle(),pid->GetTitle())) {
-            fProcessCount++;
-            sprintf(pidname,"ProcessID%d",fProcessCount);
-            fProcessIDs->AddAt(pidc,fProcessCount);
-            pidc->IncrementCount();
-            pidc->Write(pidname);
-         }
-      }
-   }
+   fProcessIDs = new TObjArray(10);
    return;
 
 zombie:
@@ -479,13 +457,6 @@ void TFile::Close(Option_t *)
    if (IsWritable()) {
       TStreamerInfo::SetCurrentFile(this);
       WriteStreamerInfo();
-      //delete the TProcessID if no references have been written
-      if (!TestBit(kHasReferences)) {
-         char pidname[20];
-         sprintf(pidname,"%s;1",fProcessIDs->At(fProcessCount)->GetName());
-         Delete(pidname);
-         fProcessCount--;
-      }
    }
 
    delete fClassIndex;
@@ -533,13 +504,15 @@ void TFile::Close(Option_t *)
    }
    TStreamerInfo::SetCurrentFile(gFile);
 
-   TIter nextp(fProcessIDs);
+   //delete the TProcessIDs
+   TIter next(fProcessIDs);
    TProcessID *pid;
-   while ((pid = (TProcessID *)nextp())) {
-      Int_t count = pid->DecrementCount();
-      if (!count) delete pid;
+   while ((pid = (TProcessID*)next())) {
+      if (!pid->DecrementCount()) {
+         fProcessIDs->Remove(pid);
+         if (pid != TProcessID::GetProcessID(0)) delete pid;
+      }
    }
-   delete fProcessIDs;
    
    gROOT->GetListOfFiles()->Remove(this);
 
@@ -1299,7 +1272,6 @@ void TFile::WriteHeader()
    tobuf(buffer, fCompress);
    tobuf(buffer, fSeekInfo);
    tobuf(buffer, fNbytesInfo);
-   tobuf(buffer, fProcessCount);
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
