@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.5 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.6 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -86,6 +86,8 @@ protected:
    static char        *WinNTSigname(ESignals sig);
    static int          WinNTFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
+   static int          WinNTFSstat(const char *path, Long_t *id, Long_t *bsize,
+                                    Long_t *blocks, Long_t *bfree);
    static int          WinNTTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          WinNTWinNTConnect(const char *hostname, int port);
    static int          WinNTTcpService(int port,  Bool_t reuse, int backlog, int tcpwindowsize);
@@ -176,6 +178,8 @@ public:
    int               SetNonBlock(int fd);
    int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
                                  Long_t *flags, Long_t *modtime);
+   int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
+                                 Long_t *blocks, Long_t *bfree);
    const char       *UnixPathName(const char *unixpathname);
 
    //---- Dynamic Loading --------------------------------------
