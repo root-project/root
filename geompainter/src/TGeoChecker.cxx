@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.6 2002/10/11 16:41:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.7 2002/10/13 15:45:24 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -168,7 +168,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          while (step<1E10) {
             // now see if we can make an other step
             dstep = 0.;
-            if (!is_null) {
+            if (is_null) {
                dstep = 0.1;
                fGeom->SetStep(dstep);
                endnode = fGeom->Step();
