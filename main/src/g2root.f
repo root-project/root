@@ -392,8 +392,9 @@ C
             endif
             line=' '
             write(line,3010)astring(1:nc),matname(1:ncn)
-     +          ,mname(1:ncm)
- 3010       format('mix = new TGeoMixture("mix',a,'","',a,'",',a,');')
+     +          ,mname(1:ncm),q(jma+8)
+ 3010       format('mix = new TGeoMixture("mix',a,'","',a,'",',a,
+     +              ',',g14.6,');')
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
             do 292 im=1,nm
