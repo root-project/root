@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d *.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += merging headerTest clonesATest EmbeddedTest inheritTest relationsTest
+TEST_TARGETS += iobug merging headerTest clonesATest EmbeddedTest inheritTest relationsTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -77,4 +77,7 @@ endif
 
 
 merging: merging.log
+	$(TestDiff)
+
+iobug: iobug.log
 	$(TestDiff)
