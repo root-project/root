@@ -1,5 +1,5 @@
 CLEAN_TARGETS += $(local_clean)
-TEST_TARGETS += retobjTest
+TEST_TARGETS += enum retobjTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -19,4 +19,7 @@ Event.new.split0.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 
 local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.root result $(ALL_LIBRARIES)
 
+enum.log: Enum_C.$(DllSuf)
 
+enum: enum.log
+	$(TestDiff)
