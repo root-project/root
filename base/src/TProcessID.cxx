@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.1 2001/10/01 10:29:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.2 2001/10/01 14:15:51 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "TFile.h"
 #include "TObjArray.h"
 #include "TSystem.h"
-#include "TDatime.h"
+#include "TUUID.h"
 
 ClassImp(TProcessID)
 
@@ -50,6 +50,7 @@ ClassImp(TProcessID)
 //______________________________________________________________________________
 TProcessID::TProcessID()
 {
+   fCount = 0;
    fMap = 0;
    gROOT->GetListOfCleanups()->Add(this);
 }
@@ -58,12 +59,10 @@ TProcessID::TProcessID()
 TProcessID::TProcessID(Int_t pid)
 {
    char name[20];
-   char title[100];
-   TDatime d;
    sprintf(name,"ProcessID%d",pid);
-   sprintf(title,"pid%d_%s_%s",gSystem->GetPid(),gSystem->HostName(),d.AsString());
    SetName(name);
-   SetTitle(title);
+   TUUID u;
+   SetTitle(u.AsString());
    fMap = 0;
    fCount = 0;
    gROOT->GetListOfCleanups()->Add(this);
