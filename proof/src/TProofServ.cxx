@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.73 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.74 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -302,12 +302,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
-   gROOT->LoadClass("TGeometry",   "Graf3d");
-   gROOT->LoadClass("TTree",       "Tree");
-   gROOT->LoadClass("TMatrix",     "Matrix");
-   gROOT->LoadClass("TMinuit",     "Minuit");
    gROOT->LoadClass("TPostScript", "Postscript");
-   gROOT->LoadClass("TCanvas",     "Gpad");
 
    // Load user functions
    const char *logon;
