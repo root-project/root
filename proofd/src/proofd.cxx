@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.22 2002/01/22 10:53:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.23 2002/01/27 17:44:18 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -104,7 +104,7 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
+#if defined(__MACH__) && !defined(__APPLE__)
 #   define R__GLIBC
 #endif
 

@@ -410,7 +410,8 @@ LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nostdlib ../lib/macosx-fpsave.o
+SOFLAGS       = -dynamiclib -flat_namespace -undefined suppress -nostdlib \
+                $(ROOTSYS)/lib/macosx-fpsave.o
 endif
 
 ifeq ($(ARCH),hiux)
@@ -578,7 +579,7 @@ ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -676,7 +677,7 @@ ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -708,7 +709,7 @@ ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -740,7 +741,7 @@ ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) $@
+	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
@@ -771,7 +772,7 @@ ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) $@
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
