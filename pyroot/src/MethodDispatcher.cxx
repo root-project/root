@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.7 2004/08/11 04:42:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.8 2004/11/05 09:05:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -92,7 +92,7 @@ PyObject* PyROOT::MethodDispatcher::operator()( PyObject* aTuple, PyObject* aDic
    }
 
    char txt[ 256 ];
-   sprintf( txt, "none of the %d overloaded methods succeeded", m_methods.size() );
+   sprintf( txt, "none of the %d overloaded methods succeeded", (int) m_methods.size() );
    PyErr_SetString( PyExc_TypeError, txt );
    return 0;
 }
