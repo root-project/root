@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.4 2000/12/13 15:13:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,6 +52,8 @@ public:
     ClassDef(TLeafF,1)  //A TLeaf for a 32 bit floating point data type.
 };
 
+// if leaf is a simple type, i must be set to 0
+// if leaf is an array, i is the array element number to be returned
 inline Double_t TLeafF::GetValue(Int_t i) const { return fValue[i]; }
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.13 2001/04/16 19:15:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.14 2001/05/18 15:57:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -104,8 +104,9 @@ const char *TLeafI::GetTypeName() const
 //______________________________________________________________________________
 Double_t TLeafI::GetValue(Int_t i) const
 {
-//*-*-*-*-*-*-*-*Returns current value of leaf*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =============================
+// Returns current value of leaf
+// if leaf is a simple type, i must be set to 0
+// if leaf is an array, i is the array element number to be returned
 
    if (fIsUnsigned) return (UInt_t)fValue[i];
    return fValue[i];
