@@ -150,9 +150,13 @@ MAKECINTO    := $(MAKECINTS:.c=.o)
 MAKECINT     := bin/makecint$(EXEEXT)
 
 ##### iosenum.h #####
-IOSENUMC     := $(MODDIR)/iosenum/iosenum.cxx
-IOSENUMA     := $(MODDIR)/iosenum/iosenum.$(ARCH)
 IOSENUM      := $(MODDIR)/include/iosenum.h
+IOSENUMC     := $(MODDIR)/iosenum/iosenum.cxx
+ifeq ($(GCC_MAJOR),3)
+IOSENUMA     := $(MODDIR)/iosenum/iosenum.$(ARCH)3
+else
+IOSENUMA     := $(MODDIR)/iosenum/iosenum.$(ARCH)
+endif
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CINTH))
