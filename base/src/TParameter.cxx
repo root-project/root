@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.61 2004/06/04 16:28:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TParameter.cxx,v 1.1 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn   21/06/2004
 
 /*************************************************************************
@@ -19,10 +19,6 @@
 
 
 #include "TParameter.h"
-
-// explicit template instantiation of the versions specified in LinkDef.h
-template class TParameter<Double_t>;
-template class TParameter<Long_t>;
 
 
 templateClassImp(TParameter)
