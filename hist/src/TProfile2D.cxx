@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.18 2003/08/20 07:59:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.19 2003/10/28 16:36:40 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -12,6 +12,8 @@
 #include "TProfile2D.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
+
+Bool_t TProfile2D::fgApproximate = kFALSE;
 
 ClassImp(TProfile2D)
 
@@ -201,6 +203,7 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 
    fZmin = zmin;
    fZmax = zmax;
+   fScaling = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -265,7 +268,7 @@ void TProfile2D::Add(const TH1 *h1, Double_t c1)
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
          fArray[bin]             +=  c1*cu1[bin];
          fSumw2.fArray[bin]      += ac1*er1[bin];
-         fBinEntries.fArray[bin] += ac1*en1[bin];
+         if (!fScaling) fBinEntries.fArray[bin] += ac1*en1[bin];
       }
    }
 }
@@ -328,9 +331,29 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
          fArray[bin]             =  c1*cu1[bin] +  c2*cu2[bin];
          fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
-         fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
+         if (fScaling) {
+            fBinEntries.fArray[bin] = en1[bin];
+         } else {
+            fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
+         }
       }
    }
+}
+
+
+//______________________________________________________________________________
+void TProfile2D::Approximate(Bool_t approx)
+{
+//     static function
+// set the fgApproximate flag. When the flag is true, the function GetBinError
+// will approximate the bin error with the average profile error on all bins
+// in the following situation only
+//  - the number of bins in the profile2D is less than 10404 (eg 100x100)
+//  - the bin number of entries is small ( <5)
+//  - the estimated bin error is extremely small compared to the bin content
+//  (see TProfile2D::GetBinError)
+   
+   fgApproximate = approx;
 }
 
 
@@ -788,8 +811,22 @@ Stat_t TProfile2D::GetBinEntries(Int_t bin) const
 Stat_t TProfile2D::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile2D histogram*-*-*-*-*-*-*-*-*
-//*-*          =========================================
-
+//
+// Computing errors: A moving field
+// =================================
+// The computation of errors for a TProfile2D has evolved with the versions
+// of ROOT. The difficulty is in computing errors for bins with low statistics.
+// - prior to version 3.10, we had no special treatment of low statistic bins.
+//   As a result, these bins had huge errors. The reason is that the
+//   expression eprim2 is very close to 0 (rounding problems) or 0.
+// - The algorithm is modified/protected for the case
+//   when a TProfile2D is projected (ProjectionX). The previous algorithm
+//   generated a N^2 problem when projecting a TProfile2D with a large number of 
+//   bins (eg 100000).
+// - in version 3.10/02, a new static function TProfile::Approximate
+//   is introduced to enable or disable (default) the approximation.
+//   (see also comments in TProfile::GetBinError)
+   
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
@@ -801,7 +838,10 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
    Stat_t contsum = cont/sum;
    Stat_t eprim2  = TMath::Abs(err2/sum - contsum*contsum);
    eprim          = TMath::Sqrt(eprim2);
-   if (eprim <= 0) {
+   Double_t test = 1;
+   if (err2 != 0 && sum < 5) test = eprim2*sum/err2;
+   //if (eprim <= 0) { //was in 3.10/01
+   if (fgApproximate && fNcells <=10404 && (test < 1.e-4 || eprim2 < 1e-6)) { //in 3.10/02
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
@@ -816,6 +856,13 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
    }
    if (fErrorMode == kERRORMEAN) return eprim/TMath::Sqrt(sum);
    else if (fErrorMode == kERRORSPREAD) return eprim;
+   else if (fErrorMode == kERRORSPREADI) {
+      if (eprim != 0) return eprim/TMath::Sqrt(sum);
+      return 1/TMath::Sqrt(12*sum);
+   }
+   else if (fErrorMode == kERRORSPREADG) {
+      return eprim/TMath::Sqrt(sum);
+   }
    else return eprim;
 }
 
@@ -1318,7 +1365,9 @@ void TProfile2D::Scale(Double_t c1)
 //
 
    Double_t ent = fEntries;
+   fScaling = kTRUE;
    Add(this,this,c1,0);
+   fScaling = kFALSE;
    fEntries = ent;
 }
 

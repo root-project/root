@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.16 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.17 2003/08/20 07:59:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -35,6 +35,8 @@ protected:
     EErrorType  fErrorMode;       //Option to compute errors
     Double_t    fZmin;            //Lower limit in Z (if set)
     Double_t    fZmax;            //Upper limit in Z (if set)
+    Bool_t      fScaling;         //!True when TProfile2D::Scale is called
+static Bool_t   fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t, Axis_t, Stat_t) {return -2;} //may not use
@@ -63,6 +65,7 @@ public:
     virtual void    Add(TF1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+    static  void    Approximate(Bool_t approx=kTRUE);
             void    BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
     virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void    Copy(TObject &hnew) const;
@@ -108,7 +111,7 @@ public:
     virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile2D,3)  //Profile2D histogram class
+    ClassDef(TProfile2D,4)  //Profile2D histogram class
 };
 
 #endif
