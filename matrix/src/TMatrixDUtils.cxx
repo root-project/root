@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.6 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.7 2002/09/09 05:37:26 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -490,8 +490,8 @@ TMatrixDRow::TMatrixDRow(const TMatrixD &matrix, Int_t row)
 void TMatrixDRow::operator=(const TMatrixDRow &mr)
 {
    if (fMatrix != mr.fMatrix && AreCompatible(*fMatrix,*mr.fMatrix)) {
-      Doubl_t *rp1 = fPtr;
-      Doubl_t *rp2 = mr.fPtr;
+      Double_t *rp1 = fPtr;
+      Double_t *rp2 = mr.fPtr;
       for ( ; rp1 < fPtr + fMatrix->fNelems; rp1 += fInc,rp2 += fInc)
          *rp1 = *rp2;
    }
