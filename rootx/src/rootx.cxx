@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.2 2000/06/16 15:23:01 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.3 2000/12/10 16:02:49 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -237,6 +237,10 @@ static void WaitChild(int childpid)
             break;
          ResetErrno();
       }
+
+      if (WIFEXITED(status))
+         exit(WEXITSTATUS(status));
+
       if (WIFSTOPPED(status)) {         // child got ctlr-Z
          raise(SIGTSTP);                // stop also parent
          kill(childpid, SIGCONT);       // if parent wakes up, wake up child
