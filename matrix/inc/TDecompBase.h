@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.9 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.10 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -89,7 +89,7 @@ public :
 
   TDecompBase &operator= (const TDecompBase &source);
 
-  ClassDef(TDecompBase,2) // Matrix Decompositition Base
+  ClassDef(TDecompBase,2) // Matrix Decomposition Base
 };
 
 Double_t TDecompBase::SetTol(Double_t newTol) 
