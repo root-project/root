@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.4 2004/08/23 16:05:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.5 2004/08/26 16:59:22 rdm Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -48,6 +48,8 @@ class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStream
       fCase(0), fKind(kNoType_t) {}
    void Init();
    void Destruct(Int_t first,Int_t last,Int_t n);
+protected:
+   void SetValueClass(TClass *newcl);
 
 public:
    TVirtualCollectionProxy* Generate() const  { return new TEmulatedVectorProxy(fProxiedName); }

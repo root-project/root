@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.8 2004/08/20 21:02:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.9 2004/08/23 16:05:43 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -44,15 +44,19 @@ namespace ROOT {
       
       TClass      *fValueClass;  //! TClass of object in collection
       EDataType    fType;        //! Type of the content (see TDataType).
-      
+
+   protected:
+
+      void    SetValueClass(TClass *newcl) { fValueClass = newcl; }
+
    public:
       TVirtualCollectionProxy* Generate() const  { return new TVectorProxy<vec>(); }
       TVectorProxy() : fValueClass(0), fType(kNoType_t) {}
-      
+   
       void    SetProxy(void *objstart) { fProxied = (vec*)objstart; }
       void    PushProxy(void *objstart) { 
-	 fProxyList.push_back(fProxied);
-	 fProxied = (vec*)objstart;
+         fProxyList.push_back(fProxied);
+         fProxied = (vec*)objstart;
       }
       void    PopProxy() { fProxied = (vec*)fProxyList.back(); fProxyList.pop_back(); } 
 
@@ -190,6 +194,10 @@ namespace ROOT {
       struct boolholder {
          bool val;
       };
+
+   protected:
+
+      void    SetValueClass(TClass *newcl) { }
 
    public:
       TVirtualCollectionProxy* Generate() const  { return new TBoolVectorProxy<vec>(); }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.2 2004/02/18 07:28:02 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.3 2004/08/20 21:02:10 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -30,6 +30,8 @@
 class TVirtualCollectionProxy {
 protected:
    TClass *fClass;
+   virtual void SetValueClass(TClass *newcl) = 0;
+   friend TClass;
 
 public:
    TVirtualCollectionProxy() : fClass(0) {};

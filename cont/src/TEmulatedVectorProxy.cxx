@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.6 2004/08/20 21:02:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.7 2004/09/07 17:02:27 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -78,12 +78,12 @@ void TEmulatedVectorProxy::Init()
 
    fSize = -1;
 
-   if ( inside == "string" ) {
+   if ( inside == "string" || inside == "std::string" ) {
       fCase = R__BIT_ISSTRING;
       insideTypename = "string";
       fValueClass = gROOT->GetClass("string");
 
-   } else if ( inside == "string*" ) {
+   } else if ( inside == "string*" || inside == "std::string*"  ) {
 
       fCase = R__BIT_ISSTRING|G__BIT_ISPOINTER;
       insideTypename = "string";
@@ -326,7 +326,13 @@ void    TEmulatedVectorProxy::Resize(UInt_t n, Bool_t forceDelete)
    }//end for
 
 }
- 
+
+//______________________________________________________________________________
+void TEmulatedVectorProxy::SetValueClass(TClass *newcl) 
+{
+   fValueClass = newcl;
+}
+
 //______________________________________________________________________________
 UInt_t  TEmulatedVectorProxy::Size() const
 {
