@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.102 2001/11/21 17:59:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.103 2001/11/22 15:05:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2388,8 +2388,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                        Int_t nch; b >> nch;
                        Int_t l = b.Length();
                        b.SetBufferOffset(l+4+nch);
-                       break;
                      }
+                     break;
                   }
 
          // skip Class *  derived from TObject with comment field  //->
