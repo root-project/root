@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.55 2004/09/01 07:30:26 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.56 2004/09/29 10:43:11 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
     (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR<=3) || \
-    (defined(R__MACOSX) && defined(__xlc__))
+    (defined(R__MACOSX) && defined(__xlC__))
 #define R__BROKEN_FUNCTION_TEMPLATES
 #endif
 

@@ -12,10 +12,6 @@ MAINDIRS     := $(MAINDIR)/src
 MAINDIRI     := $(MAINDIR)/inc
 MAINDIRW     := $(MAINDIR)/win32
 
-ifeq ($(PLATFORM),macosxxlc)
-CXXFLAGS_NO_INVALID=$(patsubst :invalid,,$(CXXFLAGS))
-endif
-
 ##### root.exe #####
 ROOTEXES     := $(MODDIRS)/rmain.cxx
 ROOTEXEO     := $(ROOTEXES:.cxx=.o)
@@ -95,11 +91,6 @@ INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
                 $(SSH2RPDDEP)
 
 ##### local rules #####
-ifeq ($(PLATFORM),macosxxlc)
-$(ROOTEXEO): $(ROOTEXES)
-	$(CXX) $(OPT) $(CXXFLAGS_NO_INVALID) -o $@ -c $<
-endif
-
 $(ROOTEXE):     $(ROOTEXEO) $(ROOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(ROOTULIBS) \
 		   $(RPATH) $(ROOTLIBS) $(RINTLIBS) $(SYSLIBS)

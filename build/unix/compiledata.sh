@@ -45,12 +45,11 @@ if [ "$ARCH" = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
-      SOFLAGS="-bundle $OPT -flat_namespace -undefined dynamic_lookup"
+      SOFLAGS="-bundle $OPT -undefined dynamic_lookup"
       MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    else
-      SOFLAGS="-bundle $OPT -flat_namespace -undefined suppress"
+      SOFLAGS="-bundle $OPT -undefined suppress"
    fi
-   LDFLAGS=`echo $LDFLAGS | sed  -e "s/ -flat_namespace / /" -e "s/ -$OPT / /" `
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
     SOFLAGS=$SOFLAGS\$LibName.$SOEXT
