@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.131 2003/12/18 13:21:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.132 2003/12/27 16:14:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1920,11 +1920,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          
          fAliases.AddAtAndExpand(primary,fNoper);
          fExpr[fNoper] = "";
-         fOper[fNoper] = kAlternate + isstring; // if isstring=1 then it is kAlternateString
+         fOper[fNoper] = (Int_t)kAlternate + isstring; // if isstring=1 then it is kAlternateString
          ++fNoper;
          
          fAliases.AddAtAndExpand(alternate,fNoper);
-         return kAlias + isstring - kVariable; // need to compensate for the TFormula induced offset
+         return (Int_t)kAlias + isstring - (Int_t)kVariable; // need to compensate for the TFormula induced offset
       }
    }
 
