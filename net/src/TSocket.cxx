@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.23 2004/07/29 11:16:51 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.24 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -917,12 +917,14 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    TString protosave = proto;
 
    // Get rid of authentication suffix
-   TString asfx = proto;
+   TString asfx = "";
    if (proto.EndsWith("up") || proto.EndsWith("ug")) {
+      asfx = proto;
       asfx.Remove(0,proto.Length()-2);
       proto.Resize(proto.Length()-2);
    } else if (proto.EndsWith("s") || proto.EndsWith("k") ||
               proto.EndsWith("g") || proto.EndsWith("h")) {
+      asfx = proto;
       asfx.Remove(0,proto.Length()-1);
       proto.Resize(proto.Length()-1);
    }
