@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.111 2003/09/06 21:13:00 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.112 2003/09/12 07:45:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4215,6 +4215,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 //*-*        ======================================================
 
    TPad *padsav = (TPad*)gPad;
+   gPad = this;
    char quote='"';
    char lcname[10];
    const char *cname = GetName();
