@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.128 2004/05/06 12:58:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.129 2004/05/31 18:05:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
+#include "TBrowser.h"
 
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
@@ -497,9 +498,13 @@ void TGraph::Apply(TF1 *f)
 
 
 //______________________________________________________________________________
-void TGraph::Browse(TBrowser *)
+void TGraph::Browse(TBrowser *b)
 {
-    Draw(gEnv->GetValue("TGraph.BrowseOption","alp"));
+   TString opt = gEnv->GetValue("TGraph.BrowseOption","");
+   if (opt.IsNull()) {
+      opt = b ? b->GetDrawOption() : "alp";
+   }
+    Draw(opt.Data());
     gPad->Update();
 }
 
