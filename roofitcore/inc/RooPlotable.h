@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.rdl,v 1.2 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.1 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,8 @@
 #include "TString.h"
 #include "RooFitCore/RooPrintable.hh"
 
+class TObject;
+
 class RooPlotable : public RooPrintable {
 public:
   inline RooPlotable() : _ymin(0), _ymax(0) { }
@@ -30,6 +32,7 @@ public:
   inline Double_t getYAxisMin() const { return _ymin; }
   inline Double_t getYAxisMax() const { return _ymax; }
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  TObject *crossCast();
 protected:
   TString _yAxisLabel;
   Double_t _ymin, _ymax;

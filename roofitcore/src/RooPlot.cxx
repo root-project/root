@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.7 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.8 2001/05/07 06:26:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,6 +26,7 @@
 
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooPlotable.hh"
 #include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooArgSet.hh"
 
@@ -41,56 +42,60 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.7 2001/05/02 18:09:00 david Exp $";
+"$Id: RooPlot.cc,v 1.8 2001/05/07 06:26:13 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
-  TH1(histName(),"RooPlotFrame",0,xmin,xmax), _plotVarClone(0), 
+  TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
   _plotVarSet(0), _items()
 {
-  fDimension=1 ;
   // Create an empty frame with the specified x-axis limits.
   initialize();
 }
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
-  TH1(histName(),"RooPlotFrame",0,xmin,xmax), _plotVarClone(0), 
+  TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
   _plotVarSet(0), _items()
 {
   // Create an empty frame with the specified x- and y-axis limits.
-  fDimension=1 ;
   SetMinimum(ymin);
   SetMaximum(ymax);
   initialize();
 }
 
 RooPlot::RooPlot(const RooAbsReal &var) :
-  TH1(histName(),var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()),
+  TH1(histName(),"RooPlot",0,var.getPlotMin(),var.getPlotMax()),
   _plotVarClone(0), _plotVarSet(0), _items()
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
-  fDimension=1 ;
-  
+
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = RooArgSet("",var).snapshot() ;
   _plotVarClone= (RooAbsReal*)_plotVarSet->find(var.GetName()) ;
   _plotVarSet->Print("v") ;
   
+  TString xtitle(var.GetTitle());
   if(0 != strlen(var.getUnit())) {
-    fTitle.Append(" (");
-    fTitle.Append(var.getUnit());
-    fTitle.Append(")");
+    xtitle.Append(" (");
+    xtitle.Append(var.getUnit());
+    xtitle.Append(")");
   }
-  SetXTitle((Text_t*)fTitle.Data());
+  SetXTitle(xtitle.Data());
+
+  TString title("A RooPlot of \"");
+  title.Append(var.GetTitle());
+  title.Append("\"");
+  SetTitle(title.Data());
   initialize();
 }
 
 void RooPlot::initialize() {
   // Perform initialization that is common to all constructors.
 
-  setPadFactor(1.05);
+  fDimension=1 ;
+  setPadFactor(0.05);
   _iterator= _items.MakeIterator();
   assert(0 != _iterator);
 }
@@ -98,9 +103,7 @@ void RooPlot::initialize() {
 
 TString RooPlot::histName() const 
 {
-  char buf[128] ;
-  sprintf(buf,"frame(%08x)",this) ;
-  return TString(buf) ;
+  return TString(Form("frame(%08x)",this)) ;
 }
 
 RooPlot::~RooPlot() {
@@ -140,6 +143,40 @@ TObject *RooPlot::addObject(const TObject *obj, Option_t *drawOptions) {
   return clone;
 }
 
+void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
+  // Add the specified plotable object to our plot. Increase our y-axis
+  // limits to fit this object if necessary. The default lower-limit
+  // is zero unless we are plotting an object that takes on negative values.
+  // This call transfers ownership of the plotable object to this class.
+  // The plotable object will be deleted when this plot object is deleted.
+
+  // get this object's y-axis limits w/o padding
+  Double_t ymin= plotable->getYAxisMin();
+  if(ymin > 0) ymin= 0;
+  Double_t ymax= plotable->getYAxisMax();
+
+  // calculate the padded values
+  Double_t ypad= getPadFactor()*(ymax-ymin);
+  ymax+= ypad;
+  if(ymin < 0) ymin-= ypad;
+
+  // update our limits if necessary
+  if(GetMaximum() < ymax) SetMaximum(ymax);
+  if(GetMinimum() > ymin) SetMinimum(ymin);
+
+  // use this object's y-axis title if we don't have one already
+  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(plotable->getYAxisLabel());
+
+  // add this element to our list and remember its drawing option
+  TObject *obj= plotable->crossCast();
+  if(0 == obj) {
+    cout << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
+  }
+  else {
+    _items.Add(obj,drawOptions);
+  }
+}
+
 RooHist *RooPlot::addHistogram(const TH1 *data, Option_t *drawOptions) {
   // Convert a one-dimensional TH1 into a RooHist object and add the
   // new RooHist to this plot. Use the specified options provided to
@@ -170,16 +207,7 @@ RooHist *RooPlot::addHistogram(const TH1 *data, Option_t *drawOptions) {
   RooHist *graph= new RooHist(*data);
   if(0 == graph) return 0;
 
-  // adjust our frame's range if necessary
-  Float_t ymax= getPadFactor()*graph->getYAxisMax();
-  if(GetMaximum() < ymax) SetMaximum(ymax);
-
-  // use this histogram's y-axis title if we don't have one already
-  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(graph->getYAxisLabel());
-  cout << "title is now " << GetYaxis()->GetTitle() << endl;
-
-  // add this element to our list and remember its drawing option
-  _items.Add(graph,drawOptions);
+  addPlotable(graph,drawOptions);
 
   return graph;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.11 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.12 2001/05/07 06:26:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -271,7 +271,8 @@ RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
     return 0;
   }
 
-  // deep-clone ourselves
+  // deep-clone ourselves so that the plotting process will not disturb
+  // our original expression tree
   RooArgSet *cloneList = RooArgSet("",*this).snapshot() ;
   RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
 
@@ -279,15 +280,15 @@ RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
   RooArgSet args("args",*realVar);
   clone->recursiveRedirectServers(args);
 
-  // create a temporary curve of our function using our redirected clone
+  // create a new curve of our function using the clone to do the evaluations
   RooCurve *curve= new RooCurve(*clone,*realVar);
 
   // add a copy of the temporary curve to the specified plot frame
-  frame->addObject(curve, drawOptions);
+  frame->addPlotable(curve, drawOptions);
 
   // cleanup
-  delete cloneList; // this will remove the plot var's client relationship to this clone
-  delete curve;
+  delete cloneList;
+
   return frame;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.6 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooPlot.rdl,v 1.7 2001/05/07 06:26:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -19,6 +19,7 @@
 class RooAbsReal;
 class RooArgSet ;
 class RooHist;
+class RooPlotable;
 class TAttLine;
 class TAttFill;
 class TAttMarker;
@@ -31,6 +32,10 @@ public:
   RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax);
   virtual ~RooPlot();
   Stat_t GetBinContent(Int_t) const;
+
+  // add objects to our plot
+  void addPlotable(RooPlotable *plotable, Option_t *drawOptions);
+
   TObject *addObject(const TObject* obj, Option_t* drawOptions= "");
   RooHist *addHistogram(const TH1* data, Option_t* drawOptions= "P");
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
@@ -43,7 +48,7 @@ public:
   TObject *findObject(const char *name) const;
 
   inline Double_t getPadFactor() const { return _padFactor; }
-  inline void setPadFactor(Double_t factor) { if(factor > 0) _padFactor= factor; }
+  inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
 
   TAttLine *getAttLine(const char *name) const;
   TAttFill *getAttFill(const char *name) const;
