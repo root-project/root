@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.21 2002/07/10 19:21:15 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.22 2002/07/16 17:22:52 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -302,6 +302,8 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
    fStatus     = 0;
    fEmpty      = 0;
    fMethodCall = 0;
+   fGraphicsMode = kTRUE;
+   fPlot       = 0;
    SetMaxIterations();
 
    mninit(5,6,7);
@@ -323,6 +325,8 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
    fStatus     = 0;
    fEmpty      = 0;
    fMethodCall = 0;
+   fGraphicsMode = kTRUE;
+   fPlot       = 0;
    SetMaxIterations();
 
    mninit(5,6,7);
@@ -345,6 +349,7 @@ TMinuit::~TMinuit()
 //*-*                  =========================
 
    DeleteArrays();
+   delete fPlot;
    delete fMethodCall;
    gROOT->GetListOfSpecials()->Remove(this);
    if (gMinuit == this) gMinuit = 0;
@@ -5925,10 +5930,25 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
  //*-*        CHPT(I) = character to be plotted at this position
  //*-*        the input point arrays XPT, YPT, CHPT are destroyed.
  //*-*
+ //*-*
+ //*-*   If fGraphicsmode is true (default), a TGraph object is produced
+ //*-*   via the Plug-in handler. To get the plot, you can do:
+ //*-*       TGraph *gr = (TGraph*)gMinuit->GetPlot();
+ //*-*       gr->Draw("al");
+ //*-*   
  //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-     /* Initialized data */
 
+     if (fGraphicsMode) {
+        TPluginHandler *h;
+        if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
+           //remove the first two points
+           if (h->LoadPlugin() != -1)
+           fPlot = (TObject*)h->ExecPlugin(3,nxypt-2,&xpt[2],&ypt[2]);
+        }
+        return;
+     }
+     
      static TString cdot   = ".";
      static TString cslash = "/";
 

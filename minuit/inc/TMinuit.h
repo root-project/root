@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.3 2002/02/13 10:13:11 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.4 2002/02/13 11:34:40 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -159,6 +159,7 @@ public:
         Bool_t       fLnolim;           //true if there are no limits on any parameters (not yet used)
         Bool_t       fLnewmn;           //true if the previous process has unexpectedly improved FCN
         Bool_t       fLphead;           //true if a heading should be put out for the next parameter definition
+        Bool_t       fGraphicsMode;     //true if graphics mode on (default)
         char         *fChpt;            //Character to be plotted at the X,Y contour positions
         TString      *fCpnam;           //Array of parameters names
         TString      fCfrom;            //
@@ -171,6 +172,7 @@ public:
         TString      *fOrigin;          //
         TString      *fWarmes;          //
         TObject      *fObjectFit;       //Pointer to object being fitted
+        TObject      *fPlot;            //Pointer to TGraph object created by mncont
         TMethodCall  *fMethodCall;      //Pointer to MethodCall in case of interpreted function
         void         (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
@@ -193,6 +195,7 @@ public:
  virtual Int_t  GetNumFreePars();
  virtual Int_t  GetNumPars();
  virtual Int_t  GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError );
+ virtual TObject *GetPlot() {return fPlot;}
  Int_t          GetStatus() {return fStatus;}
  virtual Int_t  Migrad();
  virtual void   mnamin();
@@ -256,6 +259,7 @@ public:
  virtual Int_t  SetErrorDef( Double_t up );
  virtual void   SetFCN(void *fcn);
  virtual void   SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
+ virtual void   SetGraphicsMode(Bool_t mode=kTRUE) {fGraphicsMode = mode;}
  virtual void   SetMaxIterations(Int_t maxiter=500) {fMaxIterations = maxiter;}
  virtual void   SetObjectFit(TObject *obj) {fObjectFit=obj;}
  virtual Int_t  SetPrintLevel( Int_t printLevel=0 );
