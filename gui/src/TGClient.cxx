@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.5 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.6 2000/10/09 19:15:59 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -207,7 +207,6 @@ FontStruct_t TGTreeLBEntry::fgDefaultFontStruct;
 TGGC TGStatusBar::fgDefaultGC;
 FontStruct_t TGStatusBar::fgDefaultFontStruct;
 
-TGGC TGProgressBar::fgDefaultBarColorGC;
 TGGC TGProgressBar::fgDefaultGC;
 FontStruct_t TGProgressBar::fgDefaultFontStruct;
 
@@ -420,7 +419,6 @@ TGClient::TGClient(const char *dpyName)
    TGTextEntry::fgDefaultSelectedBackgroundGC =
    TGTextView::fgDefaultSelectedBackgroundGC =
    TGPopupMenu::fgDefaultSelectedBackgroundGC;
-   TGProgressBar::fgDefaultBarColorGC.SetAttributes(&gval);
 
    TGLVEntry::fgSelPixel =
    TGTextLBEntry::fgSelPixel =

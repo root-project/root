@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.1 2000/10/09 19:13:29 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -18,7 +18,10 @@
 // TGProgressBar, TGHProgressBar and TGVProgressBar                     //
 //                                                                      //
 // The classes in this file implement progress bars. Progress bars can  //
-// be used show progress of tasks taken more then a few seconds.        //
+// be used to show progress of tasks taking more then a few seconds.    //
+// TGProgressBar is an abstract base class, use either TGHProgressBar   //
+// or TGVProgressBar. TGHProgressBar can in addition show the position  //
+// as text in the bar.                                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +45,11 @@ protected:
    Int_t         fPosPix;       // position of progress bar in pixel coordinates
    Int_t         fBarWidth;     // progress bar width
    EFillType     fType;         // fill type (default kSolidFill)
+   TString       fFormat;       // format used to show position not in percent
    Bool_t        fShowPos;      // show position value (default false)
    Bool_t        fPercent;      // show position in percent (default true)
-   GContext_t    fBarColorGC;   // progress bar drawing context
+   Bool_t        fDrawBar;      // if true draw only bar in DoRedraw()
+   TGGC          fBarColorGC;   // progress bar drawing context
    GContext_t    fNormGC;       // text drawing graphics context
    FontStruct_t  fFontStruct;   // font used to draw position text
 
@@ -60,7 +65,7 @@ public:
 public:
    TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                  ULong_t back = fgWhitePixel,
-                 GContext_t barcolor = fgDefaultBarColorGC(),
+                 ULong_t barcolor = fgDefaultSelectedBackground,
                  GContext_t norm = fgDefaultGC(),
                  FontStruct_t font = fgDefaultFontStruct,
                  UInt_t options = kDoubleBorder | kSunkenFrame);
@@ -71,8 +76,8 @@ public:
    void         Increment(Float_t inc);
    void         Reset();
    void         SetFillType(EFillType type);
-   void         ShowPosition(Bool_t set = kTRUE);
-   void         SetPercent(Bool_t set = kTRUE);
+   void         SetBarColor(ULong_t color);
+   void         SetBarColor(const char *color);
    Float_t      GetMin() const { return fMin; }
    Float_t      GetMax() const { return fMax; }
    Float_t      GetPosition() const { return fPos; }
@@ -81,7 +86,6 @@ public:
 
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
-   static const TGGC   &GetDefaultBarColorGC();
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
 };
@@ -95,7 +99,7 @@ protected:
 public:
    TGHProgressBar(const TGWindow *p, UInt_t w = 4, UInt_t h = kProgressBarWidth,
                   ULong_t back = fgWhitePixel,
-                  GContext_t barcolor = fgDefaultBarColorGC(),
+                  ULong_t barcolor = fgDefaultSelectedBackground,
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
@@ -104,6 +108,9 @@ public:
 
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, fBarWidth); }
+
+   void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
+                     const char *format = "%.2f");
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
 };
@@ -117,7 +124,7 @@ protected:
 public:
    TGVProgressBar(const TGWindow *p, UInt_t w = kProgressBarWidth, UInt_t h = 4,
                   ULong_t back = fgWhitePixel,
-                  GContext_t barcolor = fgDefaultBarColorGC(),
+                  ULong_t barcolor = fgDefaultSelectedBackground,
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
