@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.3 2002/02/06 18:27:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.4 2002/03/14 18:12:54 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -40,11 +40,17 @@
 #include "TString.h"
 #include "TError.h"
 #include "Riostream.h"
+#ifdef R__WIN32
+#include "Windows4Root.h"
+#else
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 
 ClassImp(TTimeStamp);
 
-const Int_t nsPerSec = 1000000000;
+const Int_t kNsPerSec = 1000000000;
 
 //______________________________________________________________________________
 ostream& operator<<(ostream& os, const TTimeStamp& ts)
@@ -305,14 +311,32 @@ void TTimeStamp::Set()
    // No accounting for nanoseconds with std ANSI functions,
    // ns part faked so that subsequent calls simply add 1 to it
    // this ensures that calls within the same second come back
-   // distinct (and sortable).
+   // distinct (and sortable). Time is since Jan 1, 1970.
 
-   time_t now;
-   time(&now);
-   fSec = now;
+#ifdef R__WIN32
+   ULARGE_INTEGER time;
+   GetSystemTimeAsFileTime((FILETIME *)&time);
+   // NT keeps time in FILETIME format which is 100ns ticks since
+   // Jan 1, 1601. TTimeStamps use time in 100ns ticks since Jan 1, 1970.
+   // The difference is 134764 days.
+   time.QuadPart -=
+            (unsigned __int64) (1000*1000*10)       // seconds
+          * (unsigned __int64) (60 * 60 * 24)       // days
+          * (unsigned __int64) (134764);            // # of days
+
+   timestamp->high = time.HighPart;
+   timestamp->low  = time.LowPart;
+   fSec     = Int_t(time.QuadPart/(1000*1000*10));
+   fNanoSec = Int_t(time.QuadPart - fSec) * 100;
+#else
+   struct timeval tp;
+   gettimeofday(&tp, 0);
+   fSec     = tp.tv_sec;
+   fNanoSec = tp.tv_usec * 1000;
+#endif
 
    static Int_t fake_ns = 0;
-   fNanoSec = fake_ns++;
+   fNanoSec += fake_ns++;
 }
 
 //______________________________________________________________________________
@@ -411,13 +435,13 @@ void TTimeStamp::NormalizeNanoSec()
 
    // deal with negative values
    while (fNanoSec < 0) {
-      fNanoSec += nsPerSec;
+      fNanoSec += kNsPerSec;
       fSec -= 1;
    }
 
    // deal with values inf fNanoSec greater than one sec
-   while (fNanoSec >= nsPerSec) {
-      fNanoSec -= nsPerSec;
+   while (fNanoSec >= kNsPerSec) {
+      fNanoSec -= kNsPerSec;
       fSec += 1;
    }
 }
