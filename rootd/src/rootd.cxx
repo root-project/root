@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.35 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.36 2002/01/22 10:53:29 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -213,7 +213,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   int initgroups(const char *name, int basegid);
+   //int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }

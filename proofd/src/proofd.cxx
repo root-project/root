@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.21 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.22 2002/01/22 10:53:28 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -142,7 +142,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   int initgroups(const char *name, int basegid);
+   //int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
