@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.24 2002/09/16 12:49:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.25 2002/09/16 22:19:17 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1464,7 +1464,7 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
-#if !defined(R__ACC) && !defined(__DECCXX_VER)
+#if !defined(R__ACC) && !defined(__DECCXX_VER) && !defined(R__WIN32)
 
    G__load_text(RQ_OBJECT_STRING);
 
