@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNovosibirsk.cc,v 1.3 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -27,15 +27,16 @@
 
 ClassImp(RooNovosibirsk)
 
+
 RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
-			     RooRealVar& _x,     RooRealVar& _peak,
-			     RooRealVar& _width, RooRealVar& _tail) :
+			     RooAbsReal& _x,     RooAbsReal& _peak,
+			     RooAbsReal& _width, RooAbsReal& _tail) :
   // The two addresses refer to our first dependent variable and
   // parameter, respectively, as declared in the rdl file
   RooAbsPdf(name, title),
   x("x","x",this,_x),
-  peak("peak","peak",this,_peak),
   width("width","width",this,_width),
+  peak("peak","peak",this,_peak),
   tail("tail","tail",this,_tail)
 {
 }
@@ -43,8 +44,8 @@ RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),
-  peak("peak",this,other.peak),
   width("width",this,other.width),
+  peak("peak",this,other.peak),
   tail("tail",this,other.tail)
 {
 }
@@ -54,7 +55,6 @@ Double_t RooNovosibirsk::evaluate() const {
   // value of _norm to normalize the result.
 
   double qa=0,qb=0,qc=0,qx=0,qy=0;
-  double result=0;
 
   if(fabs(tail) < 1.e-7) 
     qc = 0.5*pow(((x-peak)/width),2);

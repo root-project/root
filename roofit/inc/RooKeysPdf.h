@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooKeysPdf.rdl,v 1.6 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,6 @@ public:
   virtual ~RooKeysPdf();
   
   void LoadDataSet( RooDataSet& data);
-  Double_t _rho;
 
 protected:
   
@@ -62,6 +61,7 @@ private:
   // cached info on variable
   Char_t _varName[128];
   Double_t _lo, _hi, _binWidth;
+  Double_t _rho;
   
   ClassDef(RooKeysPdf,1) // Non-Parametric KEYS PDF
 };

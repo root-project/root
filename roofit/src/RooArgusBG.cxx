@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooArgusBG.cc,v 1.8 2002/09/10 02:01:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,42 +65,31 @@ Double_t RooArgusBG::evaluate() const {
 }
 
 
+Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const
+{
+  if (p.arg().isConstant()) {
+    // We can integrate over m if power = 0.5
+    if (matchArgs(allVars,analVars,m) && p == 0.5) return 1;
+  }
+  return 0;
 
-// void RooArgusBG::initGenerator() {
-//   // calculate our value at m(min)
-//   Double_t tmin= _mmin/m0;
-//   Double_t umin= 1 - tmin*tmin;
-//   _maxProb= _mmin*sqrt(umin)*exp(c*umin)/_norm;
-//   // check the roots of this PDF to see if there are any local maxima
-//   // within our range of m values
-//   if(c != 0) {
-//     Double_t tmp1= 1+c;
-//     Double_t tmp2= sqrt(1+c*c);
-//     Double_t t1= (tmp1+tmp2)/(2*c);
-//     Double_t t2= (tmp1-tmp2)/(2*c);
-//     if(t1 > 0) {
-//       Double_t u1= 1 - t1;
-//       t1= m0*sqrt(t1);
-//       if(t1 > _mmin && t1 < _mmax) {
-// 	Double_t prob1= t1*sqrt(u1)*exp(c*u1)/_norm;
-// 	if(prob1 > _maxProb) _maxProb= prob1;
-//       }
-//     }
-//     if(t2 > 0) {
-//       Double_t u2= 1 - t2;
-//       t2= m0*sqrt(t2);
-//       if(t2 > _mmin && t2 < _mmax) {
-// 	Double_t prob2= t2*sqrt(u2)*exp(c*u2)/_norm;
-// 	if(prob2 > _maxProb) _maxProb= prob2;
-//       }
-//     }
-//   }
-//   else {
-//     Double_t u1= 0.5;
-//     Double_t t1= m0/sqrt(2);
-//     if(t1 > _mmin && t1 < _mmax) {
-//       Double_t prob1= t1*sqrt(u1)*exp(c*u1)/_norm;
-//       if(prob1 > _maxProb) _maxProb= prob1;
-//     }
-//   }
-// }
+}
+
+
+Double_t RooArgusBG::analyticalIntegral(Int_t code) const
+{
+  assert(code==1);
+  // Formula for integration over m when p=0.5
+  static const Double_t pi = atan2(0.0,-1.0);
+  Double_t min = (m.min() < m0) ? m.min() : m0;
+  Double_t max = (m.max() < m0) ? m.max() : m0;
+  Double_t f1 = (1.-pow(min/m0,2));
+  Double_t f2 = (1.-pow(max/m0,2));
+  Double_t aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/pow(-c,1.5)*sqrt(pi)*erf(sqrt(-c*f1)));
+  Double_t aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/pow(-c,1.5)*sqrt(pi)*erf(sqrt(-c*f2)));
+  Double_t area = aHigh - aLow;
+  return area;
+
+}
+
+

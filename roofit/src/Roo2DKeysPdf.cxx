@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.12 2002/09/10 02:01:30 verkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -521,10 +521,10 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   if(xname == "") xname = "x";
   if(yname == "") yname = "y";
 
-  TBranch * b_x  = _theTree->Branch(xname, &theX, " x/D");
-  TBranch * b_y  = _theTree->Branch(yname, &theY, " y/D");
-  TBranch * b_hx = _theTree->Branch("hx",  &hx,   " hx/D");
-  TBranch * b_hy = _theTree->Branch("hy",  &hx,  " hy/D");
+  _theTree->Branch(xname, &theX, " x/D");
+  _theTree->Branch(yname, &theY, " y/D");
+  _theTree->Branch("hx",  &hx,   " hx/D");
+  _theTree->Branch("hy",  &hx,  " hy/D");
 
   for(Int_t iEvt = 0; iEvt < _nEvents; iEvt++)
   {

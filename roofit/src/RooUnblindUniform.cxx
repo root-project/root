@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooUnblindUniform.cc,v 1.2 2002/09/10 02:01:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,14 +42,18 @@ RooUnblindUniform::RooUnblindUniform() : _blindEngine("")
 
 RooUnblindUniform::RooUnblindUniform(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,0.,scale), _value("value","Uniform blinded value",this,cpasym) 
+  : RooAbsHiddenReal(name,title), 
+  _value("value","Uniform blinded value",this,cpasym), 
+  _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 RooUnblindUniform::RooUnblindUniform(const RooUnblindUniform& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _value("asym",this,other._value)
+  RooAbsHiddenReal(other, name), 
+  _value("asym",this,other._value),
+  _blindEngine(other._blindEngine) 
 {
   // Copy constructor
 

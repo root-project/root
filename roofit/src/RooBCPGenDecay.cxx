@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.7 2002/09/10 02:01:30 verkerke Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.8 2002/09/11 10:44:17 jgsmith Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
@@ -29,6 +29,7 @@
 ClassImp(RooBCPGenDecay) 
 ;
 
+
 RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -43,12 +44,12 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
   _mu("mu","Tagg efficiency difference",this,mu),  
-  _tag("tag","CP state",this,tag),
+  _t("t","time",this,t),
   _tau("tau","decay time",this,tau),
   _dm("dm","mixing frequency",this,dm),
-  _t("t","time",this,t),
-  _type(type),
-  _genB0Frac(0)
+  _tag("tag","CP state",this,tag),
+  _genB0Frac(0),
+  _type(type)
 {
   // Constructor
   switch(type) {
@@ -78,15 +79,15 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
   _avgMistag("avgMistag",this,other._avgMistag),
   _delMistag("delMistag",this,other._delMistag),
   _mu("mu",this,other._mu),
-  _tag("tag",this,other._tag),
+  _t("t",this,other._t),
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
-  _t("t",this,other._t),
+  _tag("tag",this,other._tag),
+  _genB0Frac(other._genB0Frac),
   _type(other._type),
   _basisExp(other._basisExp),
   _basisSin(other._basisSin),
-  _basisCos(other._basisCos),
-  _genB0Frac(other._genB0Frac)
+  _basisCos(other._basisCos)
 {
   // Copy constructor
 }

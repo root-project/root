@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNovosibirsk.rdl,v 1.2 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -29,8 +29,8 @@ public:
   // underscore in the variable names to distinguish them from your
   // own local versions.
   RooNovosibirsk(const char *name, const char *title,
-		 RooRealVar& _x,     RooRealVar& _peak,
-		 RooRealVar& _width, RooRealVar& _tail);
+		 RooAbsReal& _x,     RooAbsReal& _peak,
+		 RooAbsReal& _width, RooAbsReal& _tail);
 
   RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;	
 

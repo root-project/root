@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.13 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -65,23 +65,23 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					const RooResolutionModel& model, 
 					DecayType       type )
   : RooConvolutedPdf( name, title, model, t ), 
-    _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
-    _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
-    _wQ       ( "wQ",       "mischarge",          this, wQ       ),
-    _acp      ( "acp",      "acp",                this, acp      ),
-    _avgC        ( "C",        "C",                  this, C        ),
-    _delC     ( "delC",     "delC",               this, delC     ),
-    _avgS        ( "S",        "S",                  this, S        ),
-    _delS     ( "delS",     "delS",               this, delS     ),
-    _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
-    _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
-    _tag      ( "tag",      "CP state",           this, tag      ),
-    _tau      ( "tau",      "decay time",         this, tau      ),
-    _dm       ( "dm",       "mixing frequency",   this, dm       ),
-    _t        ( "t",        "time",               this, t        ),
-    _type     ( type ),
-    _genB0Frac     ( 0 ),
-    _genRhoPlusFrac( 0 )
+  _acp      ( "acp",      "acp",                this, acp      ),
+  _avgC        ( "C",        "C",                  this, C        ),
+  _delC     ( "delC",     "delC",               this, delC     ),
+  _avgS        ( "S",        "S",                  this, S        ),
+  _delS     ( "delS",     "delS",               this, delS     ),
+  _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
+  _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
+  _t        ( "t",        "time",               this, t        ),
+  _tau      ( "tau",      "decay time",         this, tau      ),
+  _dm       ( "dm",       "mixing frequency",   this, dm       ),
+  _tag      ( "tag",      "CP state",           this, tag      ),
+  _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
+  _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
+  _wQ       ( "wQ",       "mischarge",          this, wQ       ),
+  _genB0Frac     ( 0 ),
+  _genRhoPlusFrac( 0 ),
+  _type     ( type )
 {
 
   // Constructor
@@ -121,22 +121,22 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 					const RooResolutionModel& model, 
 					DecayType       type )
   : RooConvolutedPdf( name, title, model, t ), 
-    _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
-    _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
-    _acp      ( "acp",      "acp",                this, acp      ),
-    _avgC        ( "C",        "C",                  this, C        ),
-    _delC     ( "delC",     "delC",               this, delC     ),
-    _avgS        ( "S",        "S",                  this, S        ),
-    _delS     ( "delS",     "delS",               this, delS     ),
-    _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
-    _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
-    _tag      ( "tag",      "CP state",           this, tag      ),
-    _tau      ( "tau",      "decay time",         this, tau      ),
-    _dm       ( "dm",       "mixing frequency",   this, dm       ),
-    _t        ( "t",        "time",               this, t        ),
-    _type     ( type ),
-    _genB0Frac     ( 0 ),
-    _genRhoPlusFrac( 0 )
+  _acp      ( "acp",      "acp",                this, acp      ),
+  _avgC        ( "C",        "C",                  this, C        ),
+  _delC     ( "delC",     "delC",               this, delC     ),
+  _avgS        ( "S",        "S",                  this, S        ),
+  _delS     ( "delS",     "delS",               this, delS     ),
+  _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
+  _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
+  _t        ( "t",        "time",               this, t        ),
+  _tau      ( "tau",      "decay time",         this, tau      ),
+  _dm       ( "dm",       "mixing frequency",   this, dm       ),
+  _tag      ( "tag",      "CP state",           this, tag      ),
+  _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
+  _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
+  _genB0Frac     ( 0 ),
+  _genRhoPlusFrac( 0 ),
+  _type     ( type )
 {
   
   // dummy mischarge (must be set to zero!)
@@ -163,26 +163,26 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
 
 RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name ) 
   : RooConvolutedPdf( other, name ), 
-    _rhoQ     ( "rhoQ",     this, other._rhoQ     ),
-    _correctQ ( "correctQ", this, other._correctQ ),
-    _wQ       ( "wQ",       this, other._wQ       ),
-    _acp      ( "acp",      this, other._acp      ),
-    _avgC        ( "C",        this, other._avgC        ),
-    _delC     ( "delC",     this, other._delC     ),
-    _avgS        ( "S",        this, other._avgS        ),
-    _delS     ( "delS",     this, other._delS     ),
-    _avgW     ( "avgW",     this, other._avgW     ),
-    _delW     ( "delW",     this, other._delW     ),
-    _tag      ( "tag",      this, other._tag      ),
-    _tau      ( "tau",      this, other._tau      ),
-    _dm       ( "dm",       this, other._dm       ),
-    _t        ( "t",        this, other._t        ),
-    _type          ( other._type           ),
-    _basisExp      ( other._basisExp       ),
-    _basisSin      ( other._basisSin       ),
-    _basisCos      ( other._basisCos       ),
-    _genB0Frac     ( other._genB0Frac      ),
-    _genRhoPlusFrac( other._genRhoPlusFrac )
+  _acp      ( "acp",      this, other._acp      ),
+  _avgC        ( "C",        this, other._avgC        ),
+  _delC     ( "delC",     this, other._delC     ),
+  _avgS        ( "S",        this, other._avgS        ),
+  _delS     ( "delS",     this, other._delS     ),
+  _avgW     ( "avgW",     this, other._avgW     ),
+  _delW     ( "delW",     this, other._delW     ),
+  _t        ( "t",        this, other._t        ),
+  _tau      ( "tau",      this, other._tau      ),
+  _dm       ( "dm",       this, other._dm       ),
+  _tag      ( "tag",      this, other._tag      ),
+  _rhoQ     ( "rhoQ",     this, other._rhoQ     ),
+  _correctQ ( "correctQ", this, other._correctQ ),
+  _wQ       ( "wQ",       this, other._wQ       ),
+  _genB0Frac     ( other._genB0Frac      ),
+  _genRhoPlusFrac( other._genRhoPlusFrac ),
+  _type          ( other._type           ),
+  _basisExp      ( other._basisExp       ),
+  _basisSin      ( other._basisSin       ),
+  _basisCos      ( other._basisCos       )
 {
   // Copy constructor
 }
@@ -370,7 +370,7 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     }
 
     // opposite charge?
-    Int_t rhoQc = _rhoQ*int(_correctQ);
+    // Int_t rhoQc = _rhoQ*int(_correctQ);
 
     Double_t a_sin_p = _avgS + _delS;
     Double_t a_sin_m = _avgS - _delS;

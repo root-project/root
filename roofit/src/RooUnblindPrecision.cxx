@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooUnblindPrecision.cc,v 1.4 2002/09/10 02:01:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,8 +46,8 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 Double_t scale, RooAbsReal& value,
 					 Bool_t sin2betaMode)
   : RooAbsHiddenReal(name,title), 
-  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode), 
-  _value("value","Precision blinded value",this,value)
+  _value("value","Precision blinded value",this,value),
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
@@ -58,8 +58,8 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 Double_t scale, RooAbsReal& value, RooAbsCategory& blindState,
 					 Bool_t sin2betaMode)
   : RooAbsHiddenReal(name,title,blindState), 
-  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode), 
-  _value("value","Precision blinded value",this,value)
+  _value("value","Precision blinded value",this,value),
+  _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode) 
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
@@ -67,8 +67,8 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 
 RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
-  _blindEngine(other._blindEngine), 
-  _value("asym",this,other._value)
+  _value("asym",this,other._value),
+  _blindEngine(other._blindEngine) 
 {
   // Copy constructor
 }

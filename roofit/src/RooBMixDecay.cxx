@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.12 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.13 2002/09/18 22:17:53 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,11 +34,11 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 			   const RooResolutionModel& model, 
 			   DecayType type) :
   RooConvolutedPdf(name,title,model,t), 
+  _type(type),
   _mistag("mistag","Mistag rate",this,mistag),
+  _delMistag("delMistag","Delta mistag rate",this,delMistag),
   _mixState("mixState","Mixing state",this,mixState),
   _tagFlav("tagFlav","Flavour of tagged B0",this,tagFlav),
-  _delMistag("delMistag","Delta mistag rate",this,delMistag),
-  _type(type),
   _tau("tau","Mixing life time",this,tau),
   _dm("dm","Mixing frequency",this,dm),
   _t("_t","time",this,t), _genMixFrac(0)
@@ -63,16 +63,16 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 
 RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) : 
   RooConvolutedPdf(other,name), 
+  _type(other._type),
   _mistag("mistag",this,other._mistag),
+  _delMistag("delMistag",this,other._delMistag),
   _mixState("mixState",this,other._mixState),
   _tagFlav("tagFlav",this,other._tagFlav),
-  _delMistag("delMistag",this,other._delMistag),
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
   _t("t",this,other._t),
   _basisExp(other._basisExp),
   _basisCos(other._basisCos),
-  _type(other._type),
   _genMixFrac(other._genMixFrac),
   _genFlavFrac(other._genFlavFrac),
   _genFlavFracMix(other._genFlavFracMix),

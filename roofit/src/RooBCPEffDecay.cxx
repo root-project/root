@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBCPEffDecay.cc,v 1.10 2002/09/10 02:01:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +25,7 @@
 ClassImp(RooBCPEffDecay) 
 ;
 
+
 RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -35,16 +36,16 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
   RooConvolutedPdf(name,title,model,t), 
   _absLambda("absLambda","Absolute value of lambda",this,a),
   _argLambda("argLambda","Arg(Lambda)",this,b),
-  _CPeigenval("CPeigenval","CP eigen value",this,CPeigenval),
   _effRatio("effRatio","B0/B0bar efficiency ratio",this,effRatio),
+  _CPeigenval("CPeigenval","CP eigen value",this,CPeigenval),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
-  _tag("tag","CP state",this,tag),
+  _t("t","time",this,t),
   _tau("tau","decay time",this,tau),
   _dm("dm","mixing frequency",this,dm),
-  _t("t","time",this,t),
-  _type(type),
-  _genB0Frac(0)
+  _tag("tag","CP state",this,tag),
+  _genB0Frac(0),
+  _type(type)
 {
   // Constructor
   switch(type) {
@@ -71,19 +72,19 @@ RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) :
   RooConvolutedPdf(other,name), 
   _absLambda("absLambda",this,other._absLambda),
   _argLambda("argLambda",this,other._argLambda),
-  _CPeigenval("CPeigenval",this,other._CPeigenval),
   _effRatio("effRatio",this,other._effRatio),
+  _CPeigenval("CPeigenval",this,other._CPeigenval),
   _avgMistag("avgMistag",this,other._avgMistag),
   _delMistag("delMistag",this,other._delMistag),
-  _tag("tag",this,other._tag),
+  _t("t",this,other._t),
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
-  _t("t",this,other._t),
+  _tag("tag",this,other._tag),
+  _genB0Frac(other._genB0Frac),
   _type(other._type),
   _basisExp(other._basisExp),
   _basisSin(other._basisSin),
-  _basisCos(other._basisCos),
-  _genB0Frac(other._genB0Frac)
+  _basisCos(other._basisCos)
 {
   // Copy constructor
 }

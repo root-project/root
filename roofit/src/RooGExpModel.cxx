@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooGExpModel.cc,v 1.10 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x,
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
   rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  _nlo(nlo), _flip(type==Flipped), _flatSFInt(kFALSE)
+  _flip(type==Flipped), _nlo(nlo), _flatSFInt(kFALSE)
 {  
 }
 
@@ -49,7 +49,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x,
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,_rsSF),
   rsf("rsf","RLife Scale Factor",this,_rsSF),
-  _nlo(nlo), _flip(type==Flipped),
+  _flip(type==Flipped),
+  _nlo(nlo), 
   _flatSFInt(kFALSE)
 {  
 }
@@ -64,7 +65,8 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x,
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,_sigmaSF),
   rsf("rsf","RLife Scale Factor",this,_rlifeSF),
-  _nlo(nlo), _flip(type==Flipped),
+  _flip(type==Flipped),
+  _nlo(nlo), 
   _flatSFInt(kFALSE)
 {  
 }
@@ -76,8 +78,8 @@ RooGExpModel::RooGExpModel(const RooGExpModel& other, const char* name) :
   rlife("rlife",this,other.rlife),
   ssf("ssf",this,other.ssf),
   rsf("rsf",this,other.rsf),
-  _nlo(other._nlo),
   _flip(other._flip),
+  _nlo(other._nlo),
   _flatSFInt(other._flatSFInt)
 {
 }
@@ -121,7 +123,6 @@ Double_t RooGExpModel::evaluate() const
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
-  Double_t arg=x/sigma;
   Double_t fsign = _flip?-1:1 ;
 
   Double_t sig = sigma*ssf ;

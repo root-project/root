@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooUnblindOffset.cc,v 1.4 2002/09/10 02:01:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,9 @@ RooUnblindOffset::RooUnblindOffset() : _blindEngine("")
 
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,0.,scale), _value("value","Offset blinded value",this,cpasym) 
+  : RooAbsHiddenReal(name,title), 
+  _value("value","Offset blinded value",this,cpasym),
+  _blindEngine(blindString,RooBlindTools::full,0.,scale) 
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
@@ -52,15 +54,17 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 				   const char *blindString, Double_t scale, RooAbsReal& cpasym,
 				   RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState),
-    _blindEngine(blindString,RooBlindTools::full,0.,scale),
-    _value("value","Offset blinded value",this,cpasym) 
+    _value("value","Offset blinded value",this,cpasym), 
+    _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) : 
-  RooAbsHiddenReal(other, name), _blindEngine(other._blindEngine), _value("asym",this,other._value)
+  RooAbsHiddenReal(other, name), 
+  _value("asym",this,other._value),
+  _blindEngine(other._blindEngine) 
 {
   // Copy constructor
 

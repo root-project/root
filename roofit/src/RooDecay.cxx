@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDecay.cc,v 1.7 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.8 2002/10/23 00:54:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,8 +53,8 @@ RooDecay::RooDecay(const RooDecay& other, const char* name) :
   RooConvolutedPdf(other,name), 
   _t("t",this,other._t),
   _tau("tau",this,other._tau),
-  _basisExp(other._basisExp),
-  _type(other._type)
+  _type(other._type),
+  _basisExp(other._basisExp)
 {
   // Copy constructor
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.8 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,8 +44,9 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), _blindEngine(blindString), 
-  _asym("asym","CP Asymmetry",this,cpasym)
+  : RooAbsHiddenReal(name,title), 
+  _asym("asym","CP Asymmetry",this,cpasym),
+  _blindEngine(blindString)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
@@ -53,8 +54,9 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState)
-  : RooAbsHiddenReal(name,title,blindState), _blindEngine(blindString), 
-  _asym("asym","CP Asymmetry",this,cpasym)
+  : RooAbsHiddenReal(name,title,blindState), 
+  _asym("asym","CP Asymmetry",this,cpasym),
+  _blindEngine(blindString)
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
@@ -62,8 +64,8 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
-  _blindEngine(other._blindEngine), 
-  _asym("asym",this,other._asym)
+  _asym("asym",this,other._asym),
+  _blindEngine(other._blindEngine) 
 {
   // Copy constructor
 }

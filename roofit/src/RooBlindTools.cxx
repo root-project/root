@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBlindTools.cc,v 1.7 2002/09/10 02:01:31 verkerke Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
@@ -28,15 +28,16 @@
 
 ClassImp(RooBlindTools)
 
+
 //----------------
 // Constructors --
 //----------------
 RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
 			     Double_t centralValue, Double_t sigmaOffset, Bool_t s2bMode) :
 
-  _mode(Mode),
   _PrecisionOffsetScale(sigmaOffset),
   _PrecisionCentralValue(centralValue),
+  _mode(Mode),
   _s2bMode(s2bMode)
 {
   setup(stSeed);

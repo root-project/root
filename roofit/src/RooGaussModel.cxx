@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.24 2002/09/10 02:01:32 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.25 2002/11/04 22:36:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,11 +30,11 @@ ClassImp(RooGaussModel)
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,x), 
+  _flatSFInt(kFALSE),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
-  _flatSFInt(kFALSE)
+  ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1))
 {  
 }
 
@@ -43,11 +43,11 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x,
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _msSF) : 
   RooResolutionModel(name,title,x), 
+  _flatSFInt(kFALSE),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,_msSF),
-  ssf("ssf","Sigma Scale Factor",this,_msSF),
-  _flatSFInt(kFALSE)
+  ssf("ssf","Sigma Scale Factor",this,_msSF)
 {  
 }
 
@@ -56,22 +56,22 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x,
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) : 
   RooResolutionModel(name,title,x), 
+  _flatSFInt(kFALSE),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma),
   msf("msf","Mean Scale Factor",this,_meanSF),
-  ssf("ssf","Sigma Scale Factor",this,_sigmaSF),
-  _flatSFInt(kFALSE)
+  ssf("ssf","Sigma Scale Factor",this,_sigmaSF)
 {  
 }
 
 
 RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) : 
   RooResolutionModel(other,name),
+  _flatSFInt(other._flatSFInt),
   mean("mean",this,other.mean),
   sigma("sigma",this,other.sigma),
   msf("msf",this,other.msf),
-  ssf("ssf",this,other.ssf),
-  _flatSFInt(other._flatSFInt)
+  ssf("ssf",this,other.ssf)
 {
 }
 

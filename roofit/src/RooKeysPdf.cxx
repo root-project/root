@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooKeysPdf.cc,v 1.10 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,6 +50,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   // form the lookup table
   LoadDataSet(data);
 }
+
 
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
