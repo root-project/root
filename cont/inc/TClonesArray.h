@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -32,8 +32,8 @@ class TClass;
 class TClonesArray : public TObjArray {
 
 protected:
-   TClass       *fClass;       //Pointer to the class
-   TObjArray    *fKeep;        //Saved copies of pointers to objects
+   TClass       *fClass;       //!Pointer to the class
+   TObjArray    *fKeep;        //!Saved copies of pointers to objects
 
 public:
    enum {
