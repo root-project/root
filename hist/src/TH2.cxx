@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.22 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.23 2002/01/20 10:21:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -991,20 +991,20 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    }
 
    //   Find second Kolmogorov distance 
-   Double_t dfmax2 = dfmax = 0;
+   Double_t dfmax2 = 0;
    rsum1=0, rsum2=0;
    for (j=jbeg;j<=jend;j++) {
       for (i=ibeg;i<=iend;i++) {
          rsum1 += s1*h1->GetCellContent(i,j);
          rsum2 += s2*h2->GetCellContent(i,j);
-         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+         dfmax2 = TMath::Max(dfmax2, TMath::Abs(rsum1-rsum2));
       }
    }
 
    //    Get Kolmogorov probability
    Double_t factnm;
-   if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
-   else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
+   if (afunc1)      factnm = TMath::Sqrt(sum2);
+   else if (afunc2) factnm = TMath::Sqrt(sum1);
    else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
    Double_t z  = dfmax*factnm;
    Double_t z2 = dfmax2*factnm;
