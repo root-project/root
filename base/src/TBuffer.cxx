@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf)
    Assert(sizeof(Float_t) == 4);
    Assert(sizeof(Double_t) == 8);
 
-   if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
+   if (!buf && bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
