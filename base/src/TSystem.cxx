@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.98 2004/07/22 06:49:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.99 2004/07/22 20:37:50 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1061,6 +1061,15 @@ FILE *TSystem::TempFileName(TString &, const char *)
 
    AbstractMethod("TempFileName");
    return 0;
+}
+
+//______________________________________________________________________________
+int TSystem::Chmod(const char *, UInt_t)
+{
+   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+
+   AbstractMethod("Chmod");
+   return -1;
 }
 
 //______________________________________________________________________________

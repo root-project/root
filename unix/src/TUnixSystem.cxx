@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.107 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.108 2004/07/08 17:55:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1351,6 +1351,14 @@ char *TUnixSystem::ExpandPathName(const char *path)
    if (ExpandPathName(patbuf))
       return 0;
    return StrDup(patbuf.Data());
+}
+
+//______________________________________________________________________________
+int TUnixSystem::Chmod(const char *file, UInt_t mode)
+{
+   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+
+   return ::chmod(file, mode);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.18 2004/05/10 17:31:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.19 2004/05/17 12:13:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -155,6 +155,7 @@ public:
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                                Long_t *blocks, Long_t *bfree);
+   int               Chmod(const char *file, UInt_t mode);
    int               Umask(Int_t mask);
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
