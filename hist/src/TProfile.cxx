@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.33 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.34 2003/02/24 08:36:32 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -715,6 +715,7 @@ Stat_t TProfile::GetBinContent(Int_t bin) const
 
    if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
+   if (!fArray) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
 }
 
@@ -836,6 +837,7 @@ void TProfile::GetStats(Stat_t *stats) const
    Stat_t w;
    Axis_t x;
    for (bin=0;bin<6;bin++) stats[bin] = 0;
+   if (!fBinEntries.fArray) return;
    for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
       w         = fBinEntries.fArray[binx];
       x         = fXaxis.GetBinCenter(binx);

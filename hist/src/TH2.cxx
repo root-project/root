@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.38 2002/12/03 10:25:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.39 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1545,6 +1545,7 @@ Stat_t TH2C::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -1764,6 +1765,7 @@ Stat_t TH2S::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -1979,6 +1981,7 @@ Stat_t TH2F::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -2202,6 +2205,7 @@ Stat_t TH2D::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 

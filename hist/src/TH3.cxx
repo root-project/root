@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.29 2002/12/03 10:25:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.30 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1574,6 +1574,7 @@ Stat_t TH3C::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH3C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -1787,6 +1788,7 @@ Stat_t TH3S::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH3S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -1979,6 +1981,7 @@ Stat_t TH3F::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH3F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 
@@ -2171,6 +2174,7 @@ Stat_t TH3D::GetBinContent(Int_t bin) const
    if (fBuffer) ((TH3D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
    return Stat_t (fArray[bin]);
 }
 

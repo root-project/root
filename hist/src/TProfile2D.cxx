@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.14 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.15 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -726,6 +726,7 @@ Stat_t TProfile2D::GetBinContent(Int_t bin) const
 
    if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
+   if (!fArray) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
 }
 
@@ -810,6 +811,7 @@ void TProfile2D::GetStats(Stat_t *stats) const
    Stat_t w;
    Axis_t x,y;
    for (bin=0;bin<9;bin++) stats[bin] = 0;
+   if (!fBinEntries.fArray) return;
    for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
       y = fYaxis.GetBinCenter(biny);
       for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
