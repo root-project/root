@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.40 2002/02/15 14:07:14 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.41 2002/03/20 18:47:30 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -274,10 +274,13 @@ extern "C" {
 #endif
 
 #ifdef R__KRB5
-#include <krb5.h>
+extern "C" {
+   #include <com_err.h>
+   #include <krb5.h>
+   int krb5_net_write(krb5_context, int, const char *, int);
+}
 #include <string>
 extern krb5_deltat krb5_clockskew;
-extern "C" int krb5_net_write(krb5_context, int, const char *, int);
 #endif
 
 #include "rootdp.h"

@@ -1041,25 +1041,52 @@ if test ! "x$enable_krb5" = "xno" ; then
     fi
     check_header "krb5.h" "$krb5incdir" /usr/athena/include \
 	    /usr/local/athena/include /usr/kerberos/include \
-	    /usr/local/kerberos/include /usr/include /usr/local/include
+	    /usr/krb5/include /usr/local/kerberos/include \
+	    /usr/include /usr/local/include
     krb5inc=$found_hdr
     krb5incdir=$found_dir
 
+    # check whether using MIT krb5
+    krb5mit=yes
+    check_library libk5crypto "no" "$krb5libdirorg" /usr/athena/lib \
+	    /usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
+  	    /usr/local/kerberos/lib /usr/lib /usr/local/lib
+    if test "x$found_lib" = "x" ; then
+	krb5mit=no
+    fi
+
     krb5lib=""
     krb5libdir=""
-    for i in libkrb5 libcom_err libss libk5crypto; do
-	check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
-	    /usr/local/athena/lib /usr/kerberos/lib \
-	    /usr/local/kerberos/lib /usr/lib /usr/local/lib
-	if test "x$found_lib" = "x" ; then
-	    krb5lib=""
-	    krb5libdir=""
-	    enable_krb5="no"
-	    break
-	fi
-	krb5lib="$krb5lib $found_lib"
-	krb5libdir="$krb5libdir $found_dir"
-    done
+
+    if test $krb5mit = yes ; then
+	for i in libkrb5 libcom_err libss libk5crypto; do
+	    check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
+		/usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
+		/usr/local/kerberos/lib /usr/lib /usr/local/lib
+	    if test "x$found_lib" = "x" ; then
+		krb5lib=""
+		krb5libdir=""
+		enable_krb5="no"
+		break
+	    fi
+	    krb5lib="$krb5lib $found_lib"
+	    krb5libdir="$krb5libdir $found_dir"
+	done
+    else
+	for i in libkrb5 libcom_err libcrypto ; do
+	    check_library $i "no" "$krb5libdirorg" /usr/athena/lib \
+		/usr/local/athena/lib /usr/kerberos/lib /usr/krb5/lib \
+		/usr/local/kerberos/lib /usr/lib /usr/local/lib
+	    if test "x$found_lib" = "x" ; then
+		krb5lib=""
+		krb5libdir=""
+		enable_krb5="no"
+		break
+	    fi
+	    krb5lib="$krb5lib $found_lib"
+	    krb5libdir="$krb5libdir $found_dir"
+	done
+    fi
 
     # on linux, the resolver lives in a separate library
     if test ! "x$krb5lib" = "x" ; then

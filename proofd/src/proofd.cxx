@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.25 2002/03/13 01:48:52 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.26 2002/03/20 18:54:57 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -205,10 +205,13 @@ extern "C" {
 #endif
 
 #ifdef R__KRB5
-#include <krb5.h>
+extern "C" {
+   #include <com_err.h>
+   #include <krb5.h>
+   int krb5_net_write(krb5_context, int, const char *, int);
+}
 #include <string>
 extern krb5_deltat krb5_clockskew;
-extern "C" int krb5_net_write(krb5_context, int, const char *, int);
 #endif
 
 #include "proofdp.h"

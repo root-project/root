@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:$:$Id:$
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.1 2002/03/20 18:47:30 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -40,8 +40,11 @@
 #include <signal.h>
 #include <string.h>
 
-#include <krb5.h>
-extern "C" int krb5_net_read(krb5_context, int, char *, int); // ow ow ow!
+extern "C" {
+   #include <com_err.h>
+   #include <krb5.h>
+   int krb5_net_read(krb5_context, int, char *, int); // ow ow ow!
+}
 
 #include "TSocket.h"
 #include "TAuthenticate.h"
@@ -109,7 +112,8 @@ Int_t Krb5Authenticate(TSocket *socket, TString &user)
 
    // test for CRC-32
    if (!valid_cksumtype(CKSUMTYPE_CRC32)) {
-      com_err("<Krb5Authenticate>", KRB5_PROG_SUMTYPE_NOSUPP, "while using CRC-32");
+      com_err("<Krb5Authenticate>", KRB5_PROG_SUMTYPE_NOSUPP,
+              "while using CRC-32");
       gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
@@ -120,8 +124,8 @@ Int_t Krb5Authenticate(TSocket *socket, TString &user)
    krb5_principal server;
    if ((retval = krb5_sname_to_principal(context, serv_host, service,
                                          KRB5_NT_SRV_HST, &server))) {
-      com_err("<Krb5Authenticate>", retval, "while generating service principal "
-              "%s/%s", serv_host, service);
+      com_err("<Krb5Authenticate>", retval, "while generating service "
+              "principal %s/%s", serv_host, service);
       gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
@@ -137,7 +141,8 @@ Int_t Krb5Authenticate(TSocket *socket, TString &user)
    // get our principal from the cache
    krb5_principal client;
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-      com_err("<Krb5Authenticate>", retval, "while getting client principal name");
+      com_err("<Krb5Authenticate>", retval, "while getting client principal "
+              "name");
       gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
@@ -173,7 +178,8 @@ Int_t Krb5Authenticate(TSocket *socket, TString &user)
    }
    if (retval == KRB5_SENDAUTH_REJECTED) {
       // got an error
-      Error("Krb5Authenticate", "sendauth rejected, error reply is:\n\t\"%*s\"\n",
+      Error("Krb5Authenticate", "sendauth rejected, error reply "
+            "is:\n\t\"%*s\"\n",
             err_ret->text.length, err_ret->text.data);
       gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
