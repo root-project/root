@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.16 2002/02/01 06:04:46 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.17 2002/02/20 19:46:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -69,10 +69,16 @@ public:
   virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P") const;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
 			      const char* cut="", Option_t* drawOptions="P") const ;
-  virtual RooPlot* statOn(RooPlot* frame, RooRealVar &var,
+  virtual RooPlot* statOn(RooPlot* frame, const char *what, 
 			  const char *label= "", Int_t sigDigits= 2,
 			  Option_t *options= "NELU", Double_t xmin=0.15, 
 			  Double_t xmax= 0.65,Double_t ymax=0.85);
+  virtual RooPlot* statOn(RooPlot* frame, RooRealVar &var,
+			  const char *label= "", Int_t sigDigits= 2,
+			  Option_t *options= "NELU", Double_t xmin=0.15, 
+			  Double_t xmax= 0.65,Double_t ymax=0.85) { 
+    return statOn(frame,"NMR",label,sigDigits,options,xmin,xmax,ymax) ;
+  }
 
 
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const;

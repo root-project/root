@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.33 2002/01/24 20:00:50 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.34 2002/02/20 19:46:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1138,15 +1138,23 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
 
 
 
-RooPlot* RooTreeData::statOn(RooPlot* frame, RooRealVar &var,
-			     const char *label, Int_t sigDigits,
-			     Option_t *options, Double_t xmin,
-			     Double_t xmax, Double_t ymax) {
+RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label, Int_t sigDigits,
+			     Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax) 
+{
 
   Bool_t showLabel= (label != 0 && strlen(label) > 0);
 
+  TString whatStr(what) ;
+  whatStr.ToUpper() ;
+  Bool_t showN = whatStr.Contains("N") ;
+  Bool_t showR = whatStr.Contains("R") ;
+  Bool_t showM = whatStr.Contains("M") ;
+  Int_t nPar= 0;
+  if (showN) nPar++ ;
+  if (showR) nPar++ ;
+  if (showM) nPar++ ;
+
   // calculate the box's size
-  Int_t nPar= 3;
   Real_t dy(0.06), ymin(ymax-nPar*dy);
   if(showLabel) ymin-= dy;
 
@@ -1162,14 +1170,14 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, RooRealVar &var,
   // add formatted text for each statistic
   TText *text(0);
   RooRealVar N("N","Number of Events",numEntries(kTRUE));
-  RooRealVar *mean= meanVar(var);
-  RooRealVar *rms= rmsVar(var);
+  RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar());
+  RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar());
   TString *rmsText= rms->format(sigDigits,options);
   TString *meanText= mean->format(sigDigits,options);
   TString *NText= N.format(sigDigits,options);
-  text= box->AddText(rmsText->Data());
-  text= box->AddText(meanText->Data());
-  text= box->AddText(NText->Data());
+  if (showR) text= box->AddText(rmsText->Data());
+  if (showM) text= box->AddText(meanText->Data());
+  if (showN) text= box->AddText(NText->Data());
 
   // cleanup heap memory
   delete NText;
