@@ -10,23 +10,23 @@ Warning in <TClass::TClass>: no dictionary for class MyClass is available
 *Entries :        2 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :myvar     :                                                        *
-*Entries :        2 : Total  Size=        572 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        616 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :arr       : arr_                                                   *
-*Entries :        2 : Total  Size=       3078 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=       3458 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :arr.fUniqueID : fUniqueID[arr_]                                    *
-*Entries :        2 : Total  Size=        712 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        756 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    3 :arr.fBits : fBits[arr_]                                            *
-*Entries :        2 : Total  Size=        688 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        732 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    4 :arr.chunk : chunk[arr_]                                            *
-*Entries :        2 : Total  Size=        776 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        820 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ************************
