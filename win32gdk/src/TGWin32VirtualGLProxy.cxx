@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.7 2004/09/29 06:55:13 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.8 2004/11/23 15:51:38 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -120,3 +120,5 @@ VOID_METHOD_ARG4(VirtualGL, MoveSelected, TGLRender *, render, Double_t, x, Doub
 VOID_METHOD_ARG1(VirtualGL, EndMovement, TGLRender *, render, 1)
 VOID_METHOD_ARG1(VirtualGL, Invalidate, TGLRender *, render, 1)
 VOID_METHOD_ARG1(VirtualGL, DrawSphere, const Float_t *, color, 1)
+VOID_METHOD_ARG7(VirtualGL, PrintObjects, Int_t, format, Int_t, sort, TGLRender *, render, TGLWindow *, glWin, Float_t, rad, Float_t, yc, Float_t, zc, 1)
+

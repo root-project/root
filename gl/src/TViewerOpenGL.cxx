@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.47 2005/01/19 13:19:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.48 2005/01/20 17:28:14 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -116,8 +116,10 @@ enum EGLViewerCommands {
    kGLXOZ,
    kGLYOZ,
    kGLPersp,
-   kGLPrintEPS,
-   kGLPrintPDF,
+   kGLPrintEPS_SIMPLE,
+   kGLPrintEPS_BSP,
+   kGLPrintPDF_SIMPLE,
+   kGLPrintPDF_BSP,
    kGLExit
 };
 
@@ -129,6 +131,7 @@ const Int_t TViewerOpenGL::fgInitW = 780;
 const Int_t TViewerOpenGL::fgInitH = 670;
 
 int format = GL2PS_EPS;
+int sort   = GL2PS_BSP_SORT;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
@@ -185,8 +188,10 @@ void TViewerOpenGL::CreateViewer()
 {
    // Menus creation
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
-   fFileMenu->AddEntry("&Print EPS", kGLPrintEPS);
-   fFileMenu->AddEntry("&Print PDF", kGLPrintPDF);
+   fFileMenu->AddEntry("&Print EPS", kGLPrintEPS_SIMPLE);
+   fFileMenu->AddEntry("&Print EPS (High quality)", kGLPrintEPS_BSP);
+   fFileMenu->AddEntry("&Print PDF", kGLPrintPDF_SIMPLE);
+   fFileMenu->AddEntry("&Print PDF (High quality)", kGLPrintPDF_BSP);
    fFileMenu->AddEntry("&Exit", kGLExit);
    fFileMenu->Associate(this);
 
@@ -632,47 +637,14 @@ void TViewerOpenGL::DrawObjects()const
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::PrintObjects()const
+void TViewerOpenGL::PrintObjects() const
 {
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
    // graphics files and can be huge and long to generate.
-
-   char *pFileName = "viewer.eps";
-   if (format == GL2PS_PDF) pFileName = "viewer.pdf";
-   Info("Print", "Start creating %s. Please wait ...", pFileName);
-
-   if (FILE *output = fopen (pFileName, "w+"))
-   {
-      int buffsize = 0, state = GL2PS_OVERFLOW;
-      while (state == GL2PS_OVERFLOW) {
-         MakeCurrent();
-         buffsize += 1024*1024;
-         gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
-         format, GL2PS_BSP_SORT,
-         GL2PS_USE_CURRENT_VIEWPORT
-         | GL2PS_SIMPLE_LINE_OFFSET | GL2PS_SILENT
-         | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
-         | 0,
-         GL_RGBA, 0, NULL,0, 0, 0,
-         buffsize, output, NULL);
-         gVirtualGL->NewMVGL();
-         Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-         Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
-      
-         gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
-         gVirtualGL->PushGLMatrix();
-         gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);
-         gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
-         gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
-         gVirtualGL->PopGLMatrix();
-         gVirtualGL->TraverseGraph((TGLRender *)fRender);
-         SwapBuffers();
-         state = gl2psEndPage();
-      }
-      fclose (output);
-      if (!gSystem->AccessPathName(pFileName))
-      Info("Print", "ROOT file %s has been created", pFileName);
-   }
+    MakeCurrent();
+    gVirtualGL->PrintObjects(format, sort, fRender, fCanvasContainer->GetGLWindow(),
+                             fRad, fYc, fZc);
+    SwapBuffers();
 }
 
 
@@ -727,12 +699,24 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             hd->Popup();
             break;
          }
-         case kGLPrintEPS:
+         case kGLPrintEPS_SIMPLE:
             format = GL2PS_EPS;
+	    sort   = GL2PS_SIMPLE_SORT;
             PrintObjects();
             break;
-         case kGLPrintPDF:
+         case kGLPrintEPS_BSP:
+            format = GL2PS_EPS;
+	    sort   = GL2PS_BSP_SORT;
+            PrintObjects();
+            break;
+         case kGLPrintPDF_SIMPLE:
             format = GL2PS_PDF;
+	    sort   = GL2PS_SIMPLE_SORT;
+            PrintObjects();
+            break;
+         case kGLPrintPDF_BSP:
+            format = GL2PS_PDF;
+	    sort   = GL2PS_BSP_SORT;
             PrintObjects();
             break;
          case kGLXOY:

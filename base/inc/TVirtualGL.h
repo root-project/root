@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.13 2004/09/13 09:56:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.14 2004/09/29 06:55:13 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 class TGLSceneObject;
 class TPoints3DABC;
 class TGLRender;
+class TGLWindow;
 
 class TVirtualGLImp {
 
@@ -159,6 +160,8 @@ public:
    virtual void EndMovement(TGLRender *render) = 0;
    virtual void Invalidate(TGLRender *render) = 0;
    virtual void DrawSphere(const Float_t *rgba) = 0;
+   virtual void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
+                             Float_t rad, Float_t yc, Float_t zc) = 0;
 
    static TVirtualGL *&Instance();
 

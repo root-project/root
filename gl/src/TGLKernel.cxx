@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.28 2004/11/29 12:43:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.29 2004/11/29 21:59:07 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -25,9 +25,12 @@
 #include "TColor.h"
 #include "TPoints3DABC.h"
 #include "TGLRender.h"
+#include "TGLRenderArea.h"
+#include "TSystem.h"
 
 #include <GL/gl.h>
 
+#include "gl2ps.h"
 
 #ifndef   ColorOffset
  #define  ColorOffset 0
@@ -1535,4 +1538,48 @@ void TGLKernel::DrawSphere(const Float_t *rgba)
       gluSphere(quad, 1., 100, 100);
    }
    glDisable(GL_BLEND);
+}
+
+//______________________________________________________________________________
+void TGLKernel::PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
+                             Float_t rad, Float_t yc, Float_t zc)
+{
+   // Generates a PostScript or PDF output of the OpenGL scene. They are vector
+   // graphics files and can be huge and long to generate.
+
+   char *pFileName = "viewer.eps";
+   if (format == GL2PS_PDF) pFileName = "viewer.pdf";
+   Info("Print", "Start creating %s. Please wait ...", pFileName);
+
+   if (FILE *output = fopen (pFileName, "w+b"))
+   {
+      int buffsize = 0, state = GL2PS_OVERFLOW;
+      while (state == GL2PS_OVERFLOW) {
+         glWin->MakeCurrent();
+         buffsize += 1024*1024;
+         gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+         format, sort, GL2PS_USE_CURRENT_VIEWPORT
+         | GL2PS_SIMPLE_LINE_OFFSET | GL2PS_SILENT
+         | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
+         | 0,
+         GL_RGBA, 0, NULL,0, 0, 0,
+         buffsize, output, NULL);
+         gVirtualGL->NewMVGL();
+         Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+         Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
+      
+         gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
+         gVirtualGL->PushGLMatrix();
+         gVirtualGL->TranslateGL(0., rad + yc, -rad - zc);
+         gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
+         gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
+         gVirtualGL->PopGLMatrix();
+         gVirtualGL->TraverseGraph(render);
+         glWin->Refresh();
+         state = gl2psEndPage();
+      }
+      fclose (output);
+      if (!gSystem->AccessPathName(pFileName))
+         Info("Print", "ROOT file %s has been created", pFileName);
+   }
 }
