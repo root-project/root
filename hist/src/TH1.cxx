@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.197 2004/08/05 17:20:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.198 2004/08/11 13:08:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1455,8 +1455,27 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                Double_t b22= b2*b2*d2;
                if (!b2) { fSumw2.fArray[bin] = 0; continue;}
                if (binomial) {
-                  //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
-                  fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
+                  if (b1 != b2) {
+                     //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
+                     fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
+                  } else {
+                     //in case b1=b2 use a simplification of the special algorithm 
+                     //from TGraphAsymmErrors::BayesDivide calling Efficiency, etc 
+                     Double_t too_low  = 0;
+                     Double_t too_high = 1;
+                     Double_t integral;
+                     Double_t a = b1+1;
+                     Double_t x;
+                     for (Int_t loop=0; loop<20; loop++) {
+                        x = 0.5*(too_high + too_low);
+                        Double_t bt = TMath::Exp(TMath::LnGamma(a+1)-TMath::LnGamma(a)+a*log(x)+log(1-x));
+                        if (x < (a+1.0)/(a+3.0)) integral = 1 - bt*TMath::BetaCf(x,a,1)/a;
+                        else                     integral = bt*TMath::BetaCf(1-x,1,a);
+                        if (integral > 0.683)  too_low  = x;
+                        else                   too_high = x;
+                     }
+                     fSumw2.fArray[bin] = (1-x)*(1-x)/4;
+                  }
                } else {
                   fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
                }
