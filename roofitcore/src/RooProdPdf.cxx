@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.21 2002/04/10 20:59:05 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.22 2002/05/03 21:49:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -403,11 +403,15 @@ void RooProdPdf::syncAnaInt(RooArgSet& partIntSet, Int_t code) const
       // This product term factorizes, no partial integral needs to be created
     } else if (normSet && pdfDepList->getSize()==0) {
     } else {
-      RooArgSet* iSet = pdf->getDependents(intSet) ;
-      RooAbsReal* partInt = pdf->createIntegral(*iSet,*pdfDepList) ;
-      partInt->setOperMode(operMode()) ;
-      partIntSet.addOwned(*partInt) ;
-      delete iSet ;
+      if (intSet->getSize()>0) {
+	RooArgSet* iSet = pdf->getDependents(intSet) ;
+	RooAbsReal* partInt = pdf->createIntegral(*iSet,*pdfDepList) ;
+	partInt->setOperMode(operMode()) ;
+	partIntSet.addOwned(*partInt) ;
+	delete iSet ;
+      } else {
+	partIntSet.add(*pdf) ;
+      }
     }
 
     delete pdfDepList ;
@@ -436,7 +440,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
   Double_t value(1.0) ;
   _intIter->Reset() ;
   while(partInt=(RooAbsReal*)_intIter->Next()) {    
-    Double_t piVal = partInt->getVal() ;
+    Double_t piVal = partInt->getVal(normSet) ;
     value *= piVal ;
 //     cout << GetName() << ": value *= " << piVal << " (" << partInt->GetName() << ")" << endl ;
     if (value<_cutOff) {
