@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.54 2004/04/24 16:42:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.55 2004/04/24 16:48:03 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2809,7 +2809,7 @@ Double_t TMath::StruveL1(Double_t x)
 }
 
 //______________________________________________________________________________
-Int_t TMath::Binomial(Int_t n,Int_t k) 
+Double_t TMath::Binomial(Int_t n,Int_t k) 
 {
   // 
   // Calculate the binomial coefficient
@@ -2823,7 +2823,7 @@ Int_t TMath::Binomial(Int_t n,Int_t k)
   Double_t fact=k2+1;
   for(Int_t i=k1;i>1;i--) 
     fact*=static_cast<Double_t>(k2+i)/i;
-  return TMath::Nint(fact);
+  return fact;
 }
 
 //______________________________________________________________________________

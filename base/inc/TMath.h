@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.35 2004/04/23 10:30:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.36 2004/04/24 16:42:33 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -292,8 +292,8 @@ public:
    static Double_t StruveL1(Double_t x);             // Modified Struve functions of order 1
 
    // Statistics
-   static Int_t  Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
-   static Bool_t Permute(Int_t n, Int_t *a); // Find permutations
+   static Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
+   static Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
 
    ClassDef(TMath,0)  //Interface to math routines
 };
