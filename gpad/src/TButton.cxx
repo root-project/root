@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.2 2000/06/13 11:25:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.3 2001/05/28 06:21:47 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -264,14 +264,29 @@ void TButton::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TButton *";
    }
+   char *cm = (char*)GetMethod();
+   Int_t nch = strlen(cm);
+   char *cmethod = new char[nch+10];
+   Int_t i = 0;
+   while(*cm) {
+      if (*cm == '"') {
+         cmethod[i] = '\\';
+         i++;
+      }
+      cmethod[i] = *cm;
+      i++;
+      cm++;
+   }
+   cmethod[i] = 0;
    out<<"button = new TButton("<<quote<<GetTitle()
-      <<quote<<","<<quote<<GetMethod()<<quote
+      <<quote<<","<<quote<<cmethod<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
-
+   delete [] cmethod;
+   
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,61,.65);
