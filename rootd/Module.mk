@@ -29,9 +29,9 @@ INCLUDEFILES += $(ROOTDDEP)
 include/%.h:    $(ROOTDDIRI)/%.h
 		cp $< $@
 
-$(ROOTD):       $(ROOTDO) $(RSAO) $(GLBPATCHO) $(RPDUTILO)
+$(ROOTD):       $(ROOTDO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTDO) $(RPDUTILO) $(GLBPATCHO) \
-		   $(RSAO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
+		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
 all-rootd:      $(ROOTD)
 

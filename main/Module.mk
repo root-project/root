@@ -111,8 +111,8 @@ $(HADD):        $(HADDO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(RPATH) $(ROOTLIBS) $(SYSLIBS)
 
-$(SSH2RPD):     $(SSH2RPDO)
-		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO) $(SYSLIBS)
+$(SSH2RPD):     $(SSH2RPDO) $(SNPRINTFO)
+		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO) $(SNPRINTFO) $(SYSLIBS)
 
 $(H2ROOT):      $(H2ROOTO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
