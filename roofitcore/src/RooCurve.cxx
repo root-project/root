@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.14 2001/09/18 02:03:45 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.15 2001/09/18 22:38:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.14 2001/09/18 02:03:45 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.15 2001/09/18 22:38:35 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -88,6 +88,16 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
       // remove x from the set of vars to be projected
       vars.remove(*found);
     }
+
+    // Remove args from vars that PDF doesn't depend on
+    TIterator* iter = vars.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (!f.dependsOn(*arg)) {
+	vars.remove(*arg) ;
+      }
+    }
+    delete iter ;
 
     // project out any remaining normalization variables
     if(vars.getSize() > 0) {
