@@ -1,4 +1,4 @@
-#! /bin/sh 
+#! /bin/sh
 
 # Script to create auxiliary CINT dll's.
 # Called by main Makefile.
@@ -77,7 +77,8 @@ fi
 LONGDIR=$CINTDIRL/longlong
 
 $CINT -w1 -zlong -n$LONGDIR/G__cpp_long.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longlong.h $LONGDIR/longdbl.h
+   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longdbl.h
+#   -DG__MAKECINT -c-1 -A -Z0 $LONGDIR/longlong.h $LONGDIR/longdbl.h
 $CXX $OPT $CINTCXXFLAGS -I. -Icint -o $LONGDIR/G__cpp_long.o \
    -c $LONGDIR/G__cpp_long.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" long.$SOEXT $CINTDIRI/long.$SOEXT \
@@ -99,13 +100,13 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdfunc.$SOEXT \
    $CINTDIRI/stdfunc.$SOEXT "$STDFUNCDIR/G__c_stdfunc.o"
 rename $CINTDIRI/stdfunc
 
-$CINT -w1 -zstdcxxfunc -n$STDFUNCDIR/G__c_stdcxxfunc.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -Z0 $STDFUNCDIR/stdcxxfunc.h
-$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $STDFUNCDIR/G__c_stdcxxfunc.o \
-   -c $STDFUNCDIR/G__c_stdcxxfunc.cxx
-$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdcxxfunc.$SOEXT \
-   $CINTDIRI/stdcxxfunc.$SOEXT "$STDFUNCDIR/G__c_stdcxxfunc.o"
-rename $CINTDIRI/stdcxxfunc
+#$CINT -w1 -zstdcxxfunc -n$STDFUNCDIR/G__c_stdcxxfunc.cxx -D__MAKECINT__ \
+#   -DG__MAKECINT -c-1 -A -Z0 $STDFUNCDIR/stdcxxfunc.h
+#$CXX $OPT $CINTCXXFLAGS -I. -Icint -o $STDFUNCDIR/G__c_stdcxxfunc.o \
+#   -c $STDFUNCDIR/G__c_stdcxxfunc.cxx
+#$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stdcxxfunc.$SOEXT \
+#   $CINTDIRI/stdcxxfunc.$SOEXT "$STDFUNCDIR/G__c_stdcxxfunc.o"
+#rename $CINTDIRI/stdcxxfunc
 
 rm -f $STDFUNCDIR/G__c_stdfunc.c $STDFUNCDIR/G__c_stdfunc.h \
       $STDFUNCDIR/G__c_stdfunc.o $STDFUNCDIR/G__c_stdcxxfunc.cxx \
