@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.131 2002/08/05 09:27:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.132 2002/08/09 22:35:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -296,6 +296,7 @@
 #include "Api.h"
 
 Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
+Int_t TTree::fgMaxTreeSize = 1900000000;
 
 TTree *gTree;
 const Int_t kMaxLen = 512;
@@ -332,6 +333,7 @@ TTree::TTree(): TNamed()
    fFriends        = 0;
    fMakeClass      = 0;
    fNotify         = 0;
+   fFileNumber     = 0;
 }
 
 //______________________________________________________________________________
@@ -373,6 +375,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fFriends        = 0;
    fMakeClass      = 0;
    fNotify         = 0;
+   fFileNumber     = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -1328,6 +1331,100 @@ TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 }
 
 //______________________________________________________________________________
+TFile *TTree::ChangeFile(TFile *file) 
+{
+  // called by TTree::Fill when file has reached its maximum fgMaxTreeSize.
+  // Create a new file. If the original file is named "myfile.root",
+  // subsequent files are named "myfile_1.root", "myfile_2.root", etc.
+  // 
+  // Return pointer to new file
+  // Currently, the automatic change of file is restricted
+  // to the case where the Tree is in the top level directory.
+  // The file should not contain sub-directories.
+  //
+  // Before switching to a new file, the Tree header is written
+  // to the current file, then the current file is closed.
+  //
+  // To process the multiple files created by ChangeFile, one must use
+  // a TChain.
+  //
+  // fgMaxTreeSize can be set via the static function TTree::SetMaxTreeSize.
+  // The default value of fgMaxTreeSize is 1.9 Gigabytes.
+  //
+  // If the current file contains other objects like TH1 and TTree,
+  // these objects are automatically moved to the new file.
+  //
+  // IMPORTANT NOTE: 
+  // Be careful when writing the final Tree header to the file!
+  // Don't do:
+  //  TFile *file = new TFile("myfile.root","recreate");
+  //  TTree *T = new TTree("T","title");
+  //  T->Fill(); //loop
+  //  file->Write();  
+  //  file->Close();
+  // but do the following:
+  //  TFile *file = new TFile("myfile.root","recreate");
+  //  TTree *T = new TTree("T","title");
+  //  T->Fill(); //loop
+  //  file = T->GetCurrentFile(); //to get the pointer to the current file
+  //  file->Write();  
+  //  file->Close();
+  
+   
+   file->cd();
+   Write();
+   Reset();
+   fFileNumber++;
+   char *fname = new char[2000];
+   fname[0] = 0;
+   strcpy(fname,file->GetName());
+   if (fFileNumber > 1) {
+      char *cunder = strrchr(fname,'_');
+      if (cunder) {
+         sprintf(cunder,"_%d",fFileNumber);
+         strcat(fname,strrchr(file->GetName(),'.'));
+      } else {
+         char fcount[10];
+         sprintf(fcount,"_%d",fFileNumber);
+         strcat(fname,fcount);
+      } 
+   } else {
+      char *cdot = strrchr(fname,'.');
+      if (cdot) {
+         sprintf(cdot,"_%d",fFileNumber);
+         strcat(fname,strrchr(file->GetName(),'.'));
+      } else {
+         char fcount[10];
+         sprintf(fcount,"_%d",fFileNumber);
+         strcat(fname,fcount);
+      }
+   }
+   Int_t compress = file->GetCompressionLevel();
+   TFile *newfile = TFile::Open(fname,"recreate","chain files",compress);
+   Printf("Fill: Switching to new file: %s",fname);
+   
+   // current directory may contain histograms and trees.
+   // These objects must be moved to the new file
+   TObject *obj;
+   while((obj = file->GetList()->First())) {
+      file->GetList()->Remove(obj);
+      if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TTree")) {
+         gROOT->ProcessLine(Form("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);",obj->ClassName(),(Long_t)obj,(Long_t)newfile));
+      }
+   }
+   SetDirectory(newfile);
+   delete file;
+   gFile = newfile;
+   TIter nextb(GetListOfBranches());
+   TBranch *branch;
+   while ((branch = (TBranch*)nextb())) {
+      branch->SetFile(newfile);
+   }
+   delete [] fname;
+   return newfile;
+}
+
+//______________________________________________________________________________
 TTree *TTree::CloneTree(Int_t nentries, Option_t *option)
 {
 // Create a clone of this tree and copy nentries
@@ -1893,7 +1990,19 @@ Int_t TTree::Fill()
       nbytes += branch->Fill();
    }
    fEntries++;
+   
    if (fTotBytes-fSavedBytes > fAutoSave) AutoSave();
+
+   //check that output file is still below the maximum size.
+   //If above, close the current file and continue on a new file.
+   //Currently, the automatic change of file is restricted
+   //to the case where the Tree is in the top level directory.
+   if (!fDirectory) return nbytes;
+   TFile *file = fDirectory->GetFile();
+   if (file->GetBytesWritten() > (Double_t)fgMaxTreeSize) {
+      if (fDirectory == (TDirectory*)file) ChangeFile(file);
+   }
+   
    return nbytes;
 }
 
@@ -2495,6 +2604,15 @@ Double_t TTree::GetMaximum(const char *columname)
    return cmax;
 }
 
+
+//______________________________________________________________________________
+Int_t TTree::GetMaxTreeSize()
+{
+// static function
+// return maximum size of a Tree file
+
+   return fgMaxTreeSize;
+}
 
 //______________________________________________________________________________
 Double_t TTree::GetMinimum(const char *columname)
@@ -3217,6 +3335,19 @@ void TTree::SetEstimate(Int_t n)
    fEstimate = n;
    GetPlayer();
    if (fPlayer) fPlayer->SetEstimate(n);
+}
+
+//______________________________________________________________________________
+void TTree::SetMaxTreeSize(Int_t maxsize)
+{
+// static function
+// Set the maximum size of a Tree file.
+// In TTree::fill, when the file has a size > fgMaxTreeSize,
+// the function closes the current file and starts writing into
+// a new file with a name of the style "file_1.root" if the original
+// requested file name was "file.root"
+
+   fgMaxTreeSize = maxsize;
 }
 
 //______________________________________________________________________________
