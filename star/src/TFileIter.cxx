@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.3 2001/05/13 11:10:06 brun Exp $
+// $Id: TFileIter.cxx,v 1.4 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -132,7 +132,7 @@ TFileIter::~TFileIter()
 { 
   if (fRootFile && fOwnTFile )
   {  // delete own TFile if any
-    fRootFile->Write();
+    if (fRootFile->IsWritable()) fRootFile->Write();
     fRootFile->Close();
     delete fRootFile;
     fRootFile = 0;
