@@ -1,139 +1,141 @@
 {
 //  Prints a summary of all ROOT benchmarks (must be run before)
-//  The ROOTMARK number printed is by reference to an HP735/99
-//  taken by definition as 27 ROOTMARKS in interactive mode
-//  and 46 ROOTMARKS in batch mode.
+//  The ROOTMARK number printed is by reference to a Pentium III 600 Mhz
+//  (DELL Inspiron 7500 with 256 MBytes memory and 18 GBytes IDE disk)
+//  taken by definition as 200 ROOTMARKS in batch mode in executing
+//     root -b -q benchmarks.C
+//
 
-   Int_t nbench  = 0;
-   Float_t rtall = 0;
-   Float_t cpall = 0;
-   Float_t hp735 = 27;
-   Float_t norm  = hp735;
+   Float_t rtall   = 0;
+   Float_t cpall   = 0;
+   Float_t norm    = 200;  //obtained rootmarks on Dell Inspiron 600 Mhz
    Float_t rtmark,cpmark;
+   Bool_t batch = gROOT->IsBatch();
 
    printf("---------------ROOT %s benchmarks summary--------------------\n",gROOT->GetVersion());
-   gBenchmark->Summary();
+   gBenchmark->Summary(rtall,cpall);
    printf("\n---------------ROOT %s benchmarks summary (in ROOTMARKS)-----\n",gROOT->GetVersion());
-   printf("   For comparison, an HP735/99 is benchmarked at 27 ROOTMARKS\n");
+   printf("   For comparison, an Pentium III 600Mhz is benchmarked at 200 ROOTMARKS\n");
    Float_t hsimple_rt = gBenchmark->GetRealTime("hsimple");
    Float_t hsimple_ct = gBenchmark->GetCpuTime("hsimple");
    if (hsimple_rt > 0) {
-      rtmark = norm*(10.62/hsimple_rt);
-      cpmark = norm*(8.19/hsimple_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.78/hsimple_rt);
+         cpmark = norm*(0.78/hsimple_ct);
+      } else {
+         rtmark = norm*(2.31/hsimple_rt);
+         cpmark = norm*(1.27/hsimple_ct);
+      }
       printf("hsimple     = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t hsum_rt = gBenchmark->GetRealTime("hsum");
    Float_t hsum_ct = gBenchmark->GetCpuTime("hsum");
    if (hsum_rt > 0) {
-      rtmark = norm*(6.09/hsum_rt);
-      cpmark = norm*(4.21/hsum_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.42/hsum_rt);
+         cpmark = norm*(0.42/hsum_ct);
+      } else {
+         rtmark = norm*(1.42/hsum_rt);
+         cpmark = norm*(0.81/hsum_ct);
+      }
       printf("hsum        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t fillrandom_rt = gBenchmark->GetRealTime("fillrandom");
    Float_t fillrandom_ct = gBenchmark->GetCpuTime("fillrandom");
    if (fillrandom_rt > 0) {
-      rtmark = norm*(0.92/fillrandom_rt);
-      cpmark = norm*(0.29/fillrandom_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.03/fillrandom_rt);
+         cpmark = norm*(0.03/fillrandom_ct);
+      } else {
+         rtmark = norm*(0.20/fillrandom_rt);
+         cpmark = norm*(0.06/fillrandom_ct);
+      }
       printf("fillrandom  = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t fit1_rt = gBenchmark->GetRealTime("fit1");
    Float_t fit1_ct = gBenchmark->GetCpuTime("fit1");
    if (fit1_rt > 0) {
-      rtmark = norm*(1.42/fit1_rt);
-      cpmark = norm*(0.76/fit1_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.10/fit1_rt);
+         cpmark = norm*(0.08/fit1_ct);
+      } else {
+         rtmark = norm*(0.22/fit1_rt);
+         cpmark = norm*(0.13/fit1_ct);
+      }
       printf("fit1        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t tornado_rt = gBenchmark->GetRealTime("tornado");
    Float_t tornado_ct = gBenchmark->GetCpuTime("tornado");
    if (tornado_rt > 0) {
-      rtmark = norm*(1.04/tornado_rt);
-      cpmark = norm*(0.88/tornado_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.12/tornado_rt);
+         cpmark = norm*(0.11/tornado_ct);
+      } else {
+         rtmark = norm*(0.19/tornado_rt);
+         cpmark = norm*(0.11/tornado_ct);
+      }
       printf("tornado     = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t na49_rt = gBenchmark->GetRealTime("na49");
    Float_t na49_ct = gBenchmark->GetCpuTime("na49");
    if (na49_rt > 0) {
-      rtmark = norm*(31.08/na49_rt);
-      cpmark = norm*(30.64/na49_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      rtmark = norm*(6.59/na49_rt);
+      cpmark = norm*(6.59/na49_ct);
       printf("na49        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
+   }
+
+   Float_t geometry_rt = gBenchmark->GetRealTime("geometry");
+   Float_t geometry_ct = gBenchmark->GetCpuTime("geometry");
+   if (geometry_rt > 0) {
+      rtmark = norm*(0.39/geometry_rt);
+      cpmark = norm*(0.39/geometry_ct);
+      printf("geometry    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t na49view_rt = gBenchmark->GetRealTime("na49view");
    Float_t na49view_ct = gBenchmark->GetCpuTime("na49view");
    if (na49view_rt > 0) {
-      rtmark = norm*(2.82/na49view_rt);
-      cpmark = norm*(1.48/na49view_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.11/na49view_rt);
+         cpmark = norm*(0.11/na49view_ct);
+      } else {
+         rtmark = norm*(0.73/na49view_rt);
+         cpmark = norm*(0.24/na49view_ct);
+      }
       printf("na49view    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t ntuple1_rt = gBenchmark->GetRealTime("ntuple1");
    Float_t ntuple1_ct = gBenchmark->GetCpuTime("ntuple1");
    if (ntuple1_rt > 0) {
-      rtmark = norm*(8.27/ntuple1_rt);
-      cpmark = norm*(7.24/ntuple1_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
+      if (batch) {
+         rtmark = norm*(0.78/ntuple1_rt);
+         cpmark = norm*(0.78/ntuple1_ct);
+      } else {
+         rtmark = norm*(1.25/ntuple1_rt);
+         cpmark = norm*(0.89/ntuple1_ct);
+      }
       printf("ntuple1     = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
-   Float_t tree_rt = gBenchmark->GetRealTime("tree");
-   Float_t tree_ct = gBenchmark->GetCpuTime("tree");
-   if (tree_rt > 0) {
-      rtmark = norm*(1.35/tree_rt);
-      cpmark = norm*(0.90/tree_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
-      printf("tree        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
-   }
-
-   Float_t geometry_rt = gBenchmark->GetRealTime("geometry");
-   Float_t geometry_ct = gBenchmark->GetCpuTime("geometry");
-   if (geometry_rt > 0) {
-      rtmark = norm*(7.15/geometry_rt);
-      cpmark = norm*(6.14/geometry_ct);
-      nbench++;
-      rtall += rtmark;
-      cpall += cpmark;
-      printf("geometry    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
-   }
-
-   if (nbench) {
-      Float_t rtmean  = rtall/nbench;
-      Float_t cpmean  = cpall/nbench;
-      Float_t rtmarks = (rtall+cpall)/(2*nbench);
-      if (gROOT->IsBatch()) rtmarks *= 27./46.;
-      printf("MEAN        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmean,cpmean);
+   if (rtall) {
+      Float_t rtdell, cpdell;
+      if (batch) {
+         rtdell    = 9.00;
+         cpdell    = 8.83;
+      } else {
+         rtdell    = 13.04;
+         cpdell    = 10.33;
+      }
+      Float_t rootmarks = norm*(rtdell+cpdell)/(rtall+cpall);
       printf("\n");
       printf("****************************************************\n");
-      printf("* Your machine is estimated at %7.2f ROOTMARKS   *\n",rtmarks);
+      printf("* Your machine is estimated at %7.2f ROOTMARKS   *\n",rootmarks);
       printf("****************************************************\n");
    } else {
       printf(" You must run the ROOT benchmarks before executing this command\n");
