@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.10 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.11 2003/06/17 09:13:56 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
-   void             ShowPoints(Option_t *option="");
+   //void             ShowPoints(Option_t *option="");
    void             Test(Int_t npoints, Option_t *option);
    void             TestOverlaps(const char *path);
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
