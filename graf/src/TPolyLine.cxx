@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.7 2001/05/31 21:36:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.8 2002/01/15 15:40:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@ TPolyLine::TPolyLine(): TObject()
    fN = 0;
    fX = 0;
    fY = 0;
+   fLastPoint = -1;
 }
 
 //______________________________________________________________________________
@@ -38,6 +39,7 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
 {
 //*-*-*-**-*-*PolyLine normal constructor without initialisation*-*-*-*-*-*-*-*
 //*-*         ==================================================
+   fLastPoint = -1;
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
@@ -50,6 +52,7 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
+   fLastPoint = -1;
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
@@ -69,6 +72,7 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    fY = new Double_t[fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   fLastPoint = fN-1;
    fOption = option;
 }
 
@@ -79,6 +83,7 @@ TPolyLine::~TPolyLine()
 //*-*                  ===========================
    if (fX) delete [] fX;
    if (fY) delete [] fY;
+   fLastPoint = fN-1;
 }
 
 //______________________________________________________________________________
@@ -101,6 +106,7 @@ void TPolyLine::Copy(TObject &obj)
    ((TPolyLine&)obj).fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++)  {((TPolyLine&)obj).fX[i] = fX[i]; ((TPolyLine&)obj).fY[i] = fY[i];}
    ((TPolyLine&)obj).fOption = fOption;
+   ((TPolyLine&)obj).fLastPoint = fLastPoint;
 }
 
 //______________________________________________________________________________
@@ -120,7 +126,7 @@ Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t i, pxp, pyp, d;
    Int_t distance = big;
 
-   for (i=0;i<fN;i++) {
+   for (i=0;i<Size();i++) {
       pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
@@ -129,7 +135,7 @@ Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
    if (distance < kMaxDiff) return distance;
 
 //*-*- check if point is near one of the connecting lines
-   for (i=0;i<fN-1;i++) {
+   for (i=0;i<Size()-1;i++) {
       d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
       if (d < distance) distance = d;
    }
@@ -151,11 +157,7 @@ void TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option
 {
 //*-*-*-*-*-*-*-*-*Draw this polyline with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
-   TPolyLine *newpolyline = new TPolyLine();
-   newpolyline->fN =n;
-   newpolyline->fX = new Double_t[fN];
-   newpolyline->fY = new Double_t[fN];
-   for (Int_t i=0; i<fN;i++) { newpolyline->fX[i] = x[i]; newpolyline->fY[i] = y[i];}
+   TPolyLine *newpolyline = new TPolyLine(n,x,y);
    TAttLine::Copy(*newpolyline);
    TAttFill::Copy(*newpolyline);
    newpolyline->fOption = fOption;
@@ -187,6 +189,8 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t *x=0, *y=0;
 
    if (!gPad->IsEditable()) return;
+   
+   Int_t np = Size();
 
    switch (event) {
 
@@ -201,9 +205,9 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
       if (x || y) break;
-      x = new Int_t[fN+1];
-      y = new Int_t[fN+1];
-      for (i=0;i<fN;i++) {
+      x = new Int_t[np+1];
+      y = new Int_t[np+1];
+      for (i=0;i<np;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
          gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
@@ -245,7 +249,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kMouseMotion:
 
       MIDDLE = kTRUE;
-      for (i=0;i<fN;i++) {
+      for (i=0;i<np;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
          d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
@@ -260,7 +264,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
       if (MIDDLE) {
-         for(i=0;i<fN-1;i++) {
+         for(i=0;i<np-1;i++) {
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
@@ -269,8 +273,8 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
          }
-         pxp = x[fN-1]+dpx;
-         pyp = y[fN-1]+dpy;
+         pxp = x[np-1]+dpx;
+         pyp = y[np-1]+dpy;
          gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
          gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
          gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
@@ -279,7 +283,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dpy += py - pyold;
          pxold = px;
          pyold = py;
-         for(i=0;i<fN-1;i++) {
+         for(i=0;i<np-1;i++) {
             gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
             pxp = x[i]+dpx;
             pyp = y[i]+dpy;
@@ -288,8 +292,8 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
          }
-         pxp = x[fN-1]+dpx;
-         pyp = y[fN-1]+dpy;
+         pxp = x[np-1]+dpx;
+         pyp = y[np-1]+dpy;
          gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
          gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
          gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
@@ -331,13 +335,13 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines
          gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
+                     ymin - dyr*gPad->GetBottomMargin(),
+                     xmax + dxr*gPad->GetRightMargin(),
+                     ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
 
       if (MIDDLE) {
-         for(i=0;i<fN;i++) {
+         for(i=0;i<np;i++) {
             fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
             fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
          }
@@ -363,14 +367,50 @@ void TPolyLine::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("TPolyLine  N=%d\n",fN);
 }
+   
+//______________________________________________________________________________
+Int_t TPolyLine::Merge(TCollection *list)
+{
+// Merge polylines in the collection in this polyline
+   
+   if (!list) return 0;
+   TIter next(list);
+
+   //first loop to count the number of entries
+   TPolyLine *pl;
+   Int_t npoints = 0;
+   while ((pl = (TPolyLine*)next())) {
+      if (!pl->InheritsFrom(TPolyLine::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",pl->ClassName(),this->ClassName());
+         return -1;
+      }
+      npoints += pl->Size();
+   }
+   
+   //extend this polyline to hold npoints
+   pl->SetPoint(npoints-1,0,0);
+   
+   //merge all polylines
+   next.Reset();
+   while ((pl = (TPolyLine*)next())) {
+      Int_t np = pl->Size();
+      Double_t *x = pl->GetX();
+      Double_t *y = pl->GetY();
+      for (Int_t i=0;i<np;i++) {
+         SetPoint(i,x[i],y[i]);
+      }
+   }
+   
+   return npoints;
+}
 
 //______________________________________________________________________________
 void TPolyLine::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint this polyline with its current attributes*-*-*-*-*-*-*
 //*-*              ===============================================
-   if (strlen(option) > 0) PaintPolyLine(fN, fX, fY, option);
-   else                    PaintPolyLine(fN, fX, fY, fOption.Data());
+   if (strlen(option) > 0) PaintPolyLine(fLastPoint+1, fX, fY, option);
+   else                    PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
 }
 
 //______________________________________________________________________________
@@ -426,7 +466,7 @@ void TPolyLine::SavePrimitive(ofstream &out, Option_t *option)
    SaveFillAttributes(out,"pline",0,1001);
    SaveLineAttributes(out,"pline",1,1,1);
 
-   for (Int_t i=0;i<fN;i++) {
+   for (Int_t i=0;i<Size();i++) {
       out<<"   pline->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
    }
    out<<"   pline->Draw("
@@ -434,13 +474,70 @@ void TPolyLine::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyLine::SetPoint(Int_t point, Double_t x, Double_t y)
+Int_t TPolyLine::SetNextPoint(Double_t x, Double_t y)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Initialize one point of the polyline*-*-*-*-*-*-*-*-*
-//*-*                    ====================================
-       if (point < 0 || point >= fN) return;
-       fX[point] = x;
-       fY[point] = y;
+   // Set point following LastPoint to x, y.
+   // Returns index of the point (new last point).
+
+   fLastPoint++;
+   SetPoint(fLastPoint, x, y);
+   return fLastPoint;
+}
+
+//______________________________________________________________________________
+void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
+{
+   // set point number n
+   // if n is greater than the current size, the arrays are automatically
+   // extended
+   
+   if (n < 0) return;
+   if (!fX || !fY || n >= fN) {
+      // re-allocate the object
+      Int_t newN = TMath::Max(2*fN,n+1);
+      Double_t *savex = new Double_t [newN];
+      Double_t *savey = new Double_t [newN];
+      if (fX && fN){
+         memcpy(savex,fX,fN*sizeof(Double_t));
+         memset(&savex[fN],0,(newN-fN)*sizeof(Double_t));
+         delete [] fX;
+      }
+      if (fY && fN){
+         memcpy(savey,fY,fN*sizeof(Double_t));
+         memset(&savey[fN],0,(newN-fN)*sizeof(Double_t));
+         delete [] fY;
+      }
+      fX = savex;
+      fY = savey;
+      fN = newN;
+   }
+   fX[n] = x;
+   fY[n] = y;
+   fLastPoint = TMath::Max(fLastPoint,n);
+}
+
+//______________________________________________________________________________
+void TPolyLine::SetPolyLine(Int_t n)
+{
+   SetPoint(n-1,0,0);
+}
+
+//______________________________________________________________________________
+void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*-*Set new values for this polyline*-*-*-*-*-*-*-*-*-*
+//*-*                    ================================
+   fN =n;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
+   for (Int_t i=0; i<fN;i++) {
+      if (x) fX[i] = (Double_t)x[i];
+      if (y) fY[i] = (Double_t)y[i];
+   }
+   fOption = option;
+   fLastPoint = fN-1;
 }
 
 //______________________________________________________________________________
@@ -448,16 +545,17 @@ void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Set new values for this polyline*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
-       fN =n;
-       if (fX) delete [] fX;
-       if (fY) delete [] fY;
-       fX = new Double_t[fN];
-       fY = new Double_t[fN];
-       for (Int_t i=0; i<fN;i++) {
-          if (x) fX[i] = x[i];
-          if (y) fY[i] = y[i];
-       }
-       fOption = option;
+   fN =n;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
+   for (Int_t i=0; i<fN;i++) {
+      if (x) fX[i] = x[i];
+      if (y) fY[i] = y[i];
+   }
+   fOption = option;
+   fLastPoint = fN-1;
 }
 
 //_______________________________________________________________________
