@@ -32,6 +32,7 @@ public:
    void         SetItemName(const char* name);
    void         SetAlias(const char* alias) {fAlias = alias;}
    void         SetTrueName(const char* name) {fTrueName = name;}
+   void         SetSmallPic(const TGPicture *spic);
    void         Empty();  
    
   ClassDef(TGLVTreeEntry, 0)	// Item that goes into the tree list view widget
@@ -59,13 +60,14 @@ public:
    virtual ~TGTreeLVC() {}
    virtual void AddItem(TGLVTreeEntry *item)
                 { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode);}
-   void         ClearAll();     // clear all items of expression type
    const char*  Cut();
+   void         EmptyAll();     // empty all items of expression type
    const char*  Ex();
    const char*  Ey();
    const char*  Ez();
    void         SetListView(TGListView *lv) {fListView = lv;}
    void	        RemoveNonStatic();
+   const char*  ScanList();
    void	        SelectItem(const char* name);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);

@@ -58,6 +58,20 @@ void TGLVTreeEntry::Empty()
    SetAlias("");
    SetTrueName("");
 }
+//______________________________________________________________________________
+void TGLVTreeEntry::SetSmallPic(const TGPicture *spic)
+{
+   const TGPicture *cspic = fSmallPic;
+   fSmallPic = spic;
+   fCurrent = fSmallPic;
+   if (fSelPic) delete fSelPic;
+   fSelPic = 0;
+   if (fActive) {
+      fSelPic = new TGSelectedPicture(fClient, fCurrent);
+   } 
+   DoRedraw(); 
+   fClient->FreePicture(cspic);     
+}
 
 ClassImp(TGTreeLVC)
 
@@ -125,6 +139,18 @@ const char* TGTreeLVC::Ez()
    return 0;
 }
 //______________________________________________________________________________
+const char* TGTreeLVC::ScanList()
+{
+// return the cut entry
+   TGFrameElement *el = (TGFrameElement *) fList->At(4);
+   if (el) {
+      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+      if (f) return f->GetTrueName(); 	
+      return 0;
+   }	
+   return 0;
+}
+//______________________________________________________________________________
 Bool_t TGTreeLVC::HandleButton(Event_t *event)
 {
    // Handle mouse button event in container.
@@ -184,8 +210,23 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
    	   while ((el = (TGFrameElement *) next())) {
               TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
               if ((f == fLastActive) || !f->IsActive()) continue;
-                 f->Activate(kFALSE);
-                 ((TGLVTreeEntry *) fLastActive)->Copy(f);
+                 ULong_t *itemType = (ULong_t *) f->GetUserData();
+                 fLastActive->Activate(kFALSE);
+                 if (!(*itemType & kLTPackType)) { 
+		    ((TGLVTreeEntry *) fLastActive)->Copy(f);
+		 } else {
+		    if (!strlen(f->GetTrueName())) {
+		       f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
+		    } else {
+		       TString name = f->GetTrueName();
+		       name += ":";
+		       name += ((TGLVTreeEntry *)fLastActive)->GetTrueName();
+		       f->SetTrueName(name.Data());
+		    }
+		    f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
+		 }
+		 
+		 fLastActive = f;
            }
 	   if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
               SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
@@ -237,7 +278,7 @@ Bool_t TGTreeLVC::HandleMotion(Event_t *event)
    return kTRUE;
 }
 //______________________________________________________________________________
-void TGTreeLVC::ClearAll()
+void TGTreeLVC::EmptyAll()
 {
 // Clear all names and aliases for expression type items
    TGFrameElement *el;
@@ -245,8 +286,13 @@ void TGTreeLVC::ClearAll()
    while ((el = (TGFrameElement *) next())) {
       TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
       UInt_t *userData = (UInt_t *) f->GetUserData();
-      if (((*userData) & kLTExpressionType)) {
-         f->Empty();
+      if (*userData & kLTExpressionType) {
+         if (*userData & kLTPackType) {
+	    f->SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
+	    f->SetTrueName("");    
+	 } else { 
+	    f->Empty();
+	 }
       }	   
    }
 }
@@ -336,7 +382,7 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       SetBackgroundColor(color);
       Window_t wdum;
       Int_t ax, ay;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 0,
+      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
                                       (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
                                       ax, ay, wdum);
       MoveResize(ax, ay, w, GetDefaultHeight());   

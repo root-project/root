@@ -43,7 +43,7 @@
 //---- item types used as user data
 enum EListItemType {
    kLTNoType            = 0,
-   kLTMapType           = BIT(0),
+   kLTPackType          = BIT(0),
    kLTTreeType          = BIT(1),
    kLTBranchType        = BIT(2),
    kLTLeafType          = BIT(3),
@@ -51,7 +51,6 @@ enum EListItemType {
    kLTDragType          = BIT(5),
    kLTExpressionType    = BIT(6),
    kLTCutType           = BIT(7),
-   kLTMapTreeType       = kLTMapType | kLTTreeType
 };
 
 
@@ -80,6 +79,7 @@ private:
    TTimer               *fTimer;                // tree viewer timer
    Bool_t               fCounting;              // true if timer is counting
    Bool_t               fStopMapping;           // true if branch don't need remapping
+   Bool_t               fEnableCut;             // true if cuts are enabled
 // menu bar, menu bar entries and layouts
    TGLayoutHints        *fMenuBarLayout;
    TGLayoutHints        *fMenuBarItemLayout;
@@ -144,22 +144,22 @@ private:
    void         MapOptions(Long_t parm1);
    void         MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
    void         Message(const char* msg);
+   const char*  ScanList();
    void         SetParentTree(TGListTreeItem *item);
    void         Warning(const char* msg);
 public:
    TTreeView(const char* treeName = 0);
    virtual      ~TTreeView();
 // public methods
-   void	        ClearAll();                                     // *MENU*
-   void         ClearExpression();                              // *MENU*
    virtual void CloseWindow();
    virtual void	Delete(Option_t *option = "") {}                // *MENU*
    void         EditExpression();                               // *MENU*
+   void         Empty();                                        // *MENU*
+   void	        EmptyAll();                                     // *MENU*
    void         ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
    void         ExecuteDraw();
    TTree*       GetTree() {return fTree;};
    Bool_t       HandleTimer(TTimer *timer);
-   void         MakeListOfFiles();
    Int_t        MakeSelector(const char* selector = 0);         // *MENU*	
    void         PrintEntries();
    Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*

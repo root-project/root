@@ -28,6 +28,7 @@ static const char* opt2D[14] =
 
 // Menu command id's
 enum ERootTreeViewCommands {
+   kFileCanvas,
    kFileBrowse,
    kFileLoadLibrary = 3,
    kFileSaveSettings,
@@ -175,8 +176,8 @@ ClassImp(TTreeView)
 // Context menu for the right panel :
 //  A general context manu of class TTreeView is acivated if the user
 // right-clicks the right panel. Commands are :
-//  - ClearAll        : clears the content of all expressions;
-//  - ClearExpression : clear the content of the clicked expression;
+//  - EmptyAll        : empty the content of all expressions;
+//  - Empty           : empty the content of the clicked expression;
 //  - EditExpression  : pops-up the expression editor;
 //  - ExecuteCommand  : execute a user command;
 //  - MakeSelector    : equivalent of TTree::MakeSelector();
@@ -271,6 +272,7 @@ void TTreeView::BuildInterface()
 //*-*              =========================
    //--- timer
    fCounting = kFALSE;
+   fEnableCut = kTRUE;
    fTimer = new TTimer(this, 50, kTRUE);
    //--- cursors
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
@@ -298,6 +300,7 @@ void TTreeView::BuildInterface()
    //--- create menus --------------------------------------------------------
    //--- File menu
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu->AddEntry("&New canvas",      kFileCanvas);
    fFileMenu->AddEntry("&Browse",          kFileBrowse);
    fFileMenu->AddEntry("&Load Library...", kFileLoadLibrary);
    fFileMenu->AddEntry("&Save Settings",   kFileSaveSettings);
@@ -471,15 +474,18 @@ void TTreeView::BuildInterface()
    fToolBar->AddFrame(fBarHist, lo);
    //--- Hist check button
    fBarH = new TGCheckButton(fToolBar, "Hist");
+   fBarH->SetToolTipText("Checked : redraw only current histogram");
    fBarH->SetState(kButtonUp);
    fToolBar->AddFrame(fBarH, lo);
    //--- Scan check button
    fBarScan = new TGCheckButton(fToolBar, "Scan");
    fBarScan->SetState(kButtonUp);
+   fBarScan->SetToolTipText("Check to scan branches colected in the scan box ");
    fToolBar->AddFrame(fBarScan, lo);
    //--- Rec check button
    fBarRec = new TGCheckButton(fToolBar, "Rec");
    fBarRec->SetState(kButtonDown);
+   fBarRec->SetToolTipText("Check to record commands in history file and be verbose");
    fToolBar->AddFrame(fBarRec, lo);
    //--- 1'st horizontal tool bar separator ----------------------------------------
    TGHorizontal3DLine *toolBarSep = new TGHorizontal3DLine(this);
@@ -609,8 +615,6 @@ void TTreeView::BuildInterface()
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   // make the list of root files from the working directory and map them
-//   MakeListOfFiles();
    
    // put default items in the listview on the right
    const TGPicture *pic, *spic;
@@ -646,6 +650,15 @@ void TTreeView::BuildInterface()
    //--- Cut item (scissors icon)
    fLVContainer->AddItem(entry);
    entry->MapWindow();
+
+   pic = gClient->GetPicture("pack_t.xpm");
+   spic = gClient->GetPicture("pack-empty_t.xpm");
+   entry = new TGLVTreeEntry(fLVContainer,pic,spic,new TGString("Scan box"),0,kLVSmallIcons);
+   entry->SetUserData(new ULong_t(kLTExpressionType | kLTPackType));
+   //--- Cut item (scissors icon)
+   fLVContainer->AddItem(entry);
+   entry->MapWindow();
+   entry->SetTrueName("");
    
    pic = gClient->GetPicture("expression_t.xpm");
    spic = gClient->GetPicture("expression_t.xpm");   
@@ -746,15 +759,25 @@ TTreeView::~TTreeView()
    delete fTimer;
 }
 //______________________________________________________________________________
-void TTreeView::ClearAll()
+const char* TTreeView::Cut()
+{
+   return fLVContainer->Cut();
+}
+//______________________________________________________________________________
+const char* TTreeView::ScanList()
+{
+   return fLVContainer->ScanList();
+}
+//______________________________________________________________________________
+void TTreeView::EmptyAll()
 {
 //*-*-*-*-*-*-*-*-*Clear the content of all items in the list view*-*-*-*-*-*-*
 //*-*              ================================================
-   fLVContainer->ClearAll();
+   fLVContainer->EmptyAll();
 }
 //______________________________________________________________________________
-void TTreeView::ClearExpression()
-//*-*-*-*-*-*-*-*-*Clear the content of the selected expression*-*-*-*-*-*-*-*-*-*-*
+void TTreeView::Empty()
+//*-*-*-*-*-*-*-*-*Empty the content of the selected expression*-*-*-*-*-*-*-*-*-*-*
 //*-*              ============================================
 {
    void *p = 0;
@@ -768,17 +791,14 @@ void TTreeView::ClearExpression()
       Warning("Not expression type.");
       return;
    }
-   item->SetItemName("");
-   item->SetTrueName("");
-   item->SetAlias("");
+   if (*itemType & kLTPackType) {
+      item->SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
+      item->SetTrueName("");
+      return;
+   }
+   item->Empty();
 }
-//______________________________________________________________________________
-const char* TTreeView::Cut()
-{
-//*-*-*-*-*-*-*-*-*Get the selection expression*-*-*-*-*-*-*-*-*-*-*
-//*-*              ============================
-   return fLVContainer->Cut();
-}
+
 //______________________________________________________________________________
 Int_t TTreeView::Dimension()
 {
@@ -848,19 +868,26 @@ void TTreeView::ExecuteDraw()
          return;
       }
    }
-   // check if Scan is checked
+   // check if cut is enabled
+   const char *cut = "";
+   if (fEnableCut) cut = Cut();
+   
+   // get entries to be processed   
    Int_t nentries = (Int_t)(fSlider->GetMaxPosition() - 
                             fSlider->GetMinPosition() + 1);
    Int_t firstentry =(Int_t) fSlider->GetMinPosition();
+
+   // check if Scan is checked and if there is something in the box
+   if (strlen(ScanList())) sprintf(varexp, ScanList());
    if (fBarScan->GetState() == kButtonDown) {
       sprintf(command, "tree->Scan(\"%s\",\"%s\",\"%s\", %i, %i);", 
-              varexp, Cut(), gopt, nentries, firstentry);
+              varexp, cut, gopt, nentries, firstentry);
       ExecuteCommand(command, kTRUE);
       return;
    }
    // send draw command
    sprintf(command, "tree->Draw(\"%s\",\"%s\",\"%s\", %i, %i);", 
-           varexp, Cut(), gopt, nentries, firstentry);
+           varexp, cut, gopt, nentries, firstentry);
    ExecuteCommand(command, kTRUE);
    gPad->Update();
 }
@@ -1007,7 +1034,7 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   if ((ltItem = fLt->GetSelected()) != 0) {
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
-                     if (!(*itemType & kLTMapType) && ((*itemType) & kLTTreeType)) {
+                     if (*itemType & kLTTreeType) {
                      // already mapped tree item clicked 
                         Int_t index = (Int_t)(*itemType >> 8);
                         SwitchTree(index);
@@ -1068,7 +1095,7 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   if ((ltItem = fLt->GetSelected()) != 0) {
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
-                     if (!(*itemType & kLTMapType) && ((*itemType) & kLTTreeType)) {
+                     if (*itemType & kLTTreeType) {
                      // already mapped tree item clicked 
                         Int_t index = (Int_t)(*itemType >> 8);
                         SwitchTree(index);
@@ -1115,7 +1142,7 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                switch (parm1) {
                // handle button messages
                   case kRESET:
-                     ClearAll();
+                     EmptyAll();
                      break;
                   case kDRAW:
                      fVarDraw = kFALSE;
@@ -1157,6 +1184,9 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   break;
                }
                switch (parm1) {
+	          case kFileCanvas:
+		     gROOT->GetMakeDefCanvas()();
+		     break;
                   case kFileBrowse:
                      break;
                   case kFileLoadLibrary:
@@ -1349,8 +1379,17 @@ Bool_t TTreeView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  fVarDraw = kTRUE;
                                  // draw on double-click
                                  ExecuteDraw();
+				 break;
                               }
                            }
+			   if (*itemType & kLTCutType) {
+			      fEnableCut = !fEnableCut;
+			      if (fEnableCut) {
+			         item->SetSmallPic(gClient->GetPicture("cut_t.xpm"));
+			      } else {
+			         item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
+			      } 
+			   }
                         }
                      }
                      break;
@@ -1608,53 +1647,6 @@ void TTreeView::SetParentTree(TGListTreeItem *item)
       index = (Int_t)(*itemType >> 8);
       SwitchTree(index);
    }
-}
-//______________________________________________________________________________
-void TTreeView::MakeListOfFiles()
-{
-//*-*-*-*-*-*-*-*-*Map the list of files from working directory*-*-*-*-*-*-*-*-*-*-*
-//*-*              ============================================
-   TGListTreeItem *base = 0; // first item
-   ULong_t *itemType;
-   itemType = new ULong_t(kLTNoType);
-   // add working directory as an item on the left
-   TGListTreeItem *parent = fLt->AddItem(base, gSystem->WorkingDirectory(), itemType);
-   TString savdir = gSystem->WorkingDirectory();
-   if (!gSystem->ChangeDirectory(savdir)) return;
-   void *dirp;
-   if ((dirp = gSystem->OpenDirectory(".")) == 0) {
-      gSystem->ChangeDirectory(savdir.Data());
-      return;
-   } 
-   const char *name;
-   TString sname;
-   TGListTreeItem *child;
-   gVirtualX->SetCursor(fLt->GetId(), fWatchCursor);
-   // loop all files and check if they are root files
-   while ((name = gSystem->GetDirEntry(dirp)) != 0) {
-      sname = name;
-      if (sname.Contains(".root") && (sname != ".rootrc")) {
-         itemType = new ULong_t(kLTMapType);
-         // add it as child item
-         child = fLt->AddItem(parent, name, itemType, gClient->GetPicture("rootdb_t.xpm"),gClient->GetPicture("rootdb_t.xpm"));
-         TGListTreeItem *treeitem = 0;
-         TFile rootfile(name);
-         TKey *key;
-         TIter nextkey(rootfile.GetListOfKeys());
-         // loop keys from the root file (avoid getting trees directly in memory)
-         while ((key = (TKey*)nextkey())) {
-         // check for trees
-            if (!strcmp(key->GetClassName(),"TTree") ||
-                !strcmp(key->GetClassName(),"TNtuple")) {
-               itemType = new ULong_t(kLTMapTreeType);
-               treeitem = fLt->AddItem(child, key->GetName(), itemType, gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm")); 
-            }
-         }
-      }
-   }
-   fLt->MapSubwindows();
-   gSystem->ChangeDirectory(savdir.Data());
-   gVirtualX->SetCursor(fLt->GetId(), fDefaultCursor);
 }
 //______________________________________________________________________________
 void TTreeView::Message(const char* msg)
