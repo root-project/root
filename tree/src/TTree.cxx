@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.206 2004/08/20 21:25:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.207 2004/08/27 15:56:17 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1607,6 +1607,7 @@ TFile *TTree::ChangeFile(TFile *file)
          while ((branch = (TBranch*)nextb())) {
             branch->SetFile(newfile);
          }
+		 if (t->GetBranchRef()) t->GetBranchRef()->SetFile(newfile);
       }
    }
    delete file;
