@@ -16,6 +16,9 @@ ROOTRCIN=config/rootrc.in
 ROOTRCOUT=etc/system.rootrc
 MEMPROBEIN=config/memprobe.in
 MEMPROBEOUT=bin/memprobe
+MIMEUNIXIN=config/mimes.unix.in
+MIMEWIN32IN=config/mimes.win32.in
+MIMEOUT=etc/root.mimes
 TMAKEIN=test/Makefile.in
 TMAKEOUT=test/Makefile
 
@@ -1492,6 +1495,17 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@iconpath@|$iconpath|"           \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# etc/root.mimes
+#
+echo $ac_n "Writing $MIMEOUT ... $ac_c"
+if [ "$platform" = "win32" ]; then
+   cp -f $MIMEWIN32IN $MIMEOUT
+else
+   cp -f $MIMEUNIXIN $MIMEOUT
+fi
 echo "done"
 
 #---------------------------------------------------------------------
