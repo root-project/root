@@ -9,6 +9,9 @@
 #else
 //#include <prec_stl/map>
 //#include <_map.h>  // cint can not instantiate map template body
+template <class Key, class T, 
+          class Compare=less<Key>,
+          class Allocator=allocator<pair<const Key, T> > > class map;
 #endif
 
 #include <_multimap>
