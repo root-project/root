@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.11 2001/01/15 01:28:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.12 2001/02/09 14:03:16 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -352,13 +352,13 @@ Bool_t TKey::IsFolder() const
     Bool_t ret = kFALSE;
 
     TClass *classPtr = gROOT->GetClass( (const char * ) fClassName );
-    if( classPtr ) {
+    if( classPtr && classPtr->GetClassInfo()) {
        TObject *obj = ( TObject * ) classPtr->New();
        if( obj ) {
            ret = obj->IsFolder();
            delete obj;
        }
-    }
+    } 
 
     return( ret );
 }
