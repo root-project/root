@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.6 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.7 2001/02/09 10:02:04 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -73,6 +73,7 @@ public:
          Int_t      GetParNumber(const char *name) const;
  virtual void       Print(Option_t *option="") const; // *MENU*
  virtual void       SetNumber(Int_t number) {fNumber = number;}
+ virtual void       SetParameter(const char *name, Double_t parvalue);
  virtual void       SetParameter(Int_t ipar, Double_t parvalue);
  virtual void       SetParameters(Double_t *params);
  virtual void       SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0

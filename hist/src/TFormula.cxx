@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.11 2001/01/13 18:25:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.12 2001/02/09 10:02:04 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1796,6 +1796,18 @@ void TFormula::Print(Option_t *) const
    for (i=0;i<fNpar;i++) {
       Printf(" Par%3d  %20s = %g",i,GetParName(i),fParams[i]);
    }
+}
+
+//______________________________________________________________________________
+void TFormula::SetParameter(const char *name, Double_t value)
+{
+//*-*-*-*-*-*-*-*Initialize parameter number ipar*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*            ================================
+
+   Int_t ipar = GetParameter(name);
+   if (ipar <0 || ipar >= fNpar) return;
+   fParams[ipar] = value;
+   Update();
 }
 
 //______________________________________________________________________________
