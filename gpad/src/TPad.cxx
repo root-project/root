@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.102 2003/05/19 13:40:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.103 2003/05/23 14:46:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4125,7 +4125,16 @@ void TPad::ResizePad(Option_t *option)
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) Modified(kTRUE);
       }
    }
-   if (fView) fView->ResizePad();
+   if (fView) {
+      TPad *padsav  = (TPad*)gPad;
+      if (padsav == this) {
+         fView->ResizePad();
+      } else {
+         cd();
+         fView->ResizePad();
+         padsav->cd();
+      }   
+   }   
 }
 
 
