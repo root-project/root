@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttFillCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttFillCanvas.cxx,v 1.2 2001/05/28 06:20:52 brun Exp $
 // Author: Rene Brun   04/07/96
 // ---------------------------------- AttFillCanvas.C
 
@@ -44,35 +44,40 @@ TAttFillCanvas::TAttFillCanvas(const char *name, const char *title, UInt_t ww, U
 //*-*-*-*-*-*-*-*-*-*-*-*AttFillCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================
 
-   static Int_t lsty[10] = {1001,3004,3005,3006,3007,0,3013,3010,3014,3012};
    TVirtualPad *padsav = gPad;
 
    BuildStandardButtons();
 
 //*-*- Fill styles choice buttons
    TGroupButton *test1 = 0;
-   Float_t xlow, ylow, wpad, hpad;
+   Float_t xlow, ylow;
+   Float_t xmin = 0.03;
+   Float_t xmax = 1-xmin;
+   Float_t ymin = 0.12;
+   Float_t ymax = 0.58;
+   Float_t wpad = (xmax-xmin)/7;
+   Float_t hpad = (ymax-ymin)/4;
    Int_t i,j;
-   wpad = 0.19;
-   hpad = 0.20;
    char command[64];
    Int_t number = 0;
-   for (j=0;j<2;j++) {
-      ylow = 0.12 + j*hpad;
-      for (i=0;i<5;i++) {
-         xlow = 0.05 + i*wpad;
-         sprintf(command,"SetFillStyle(%d)",lsty[number]);
+   for (j=0;j<4;j++) {
+      ylow = ymin + j*hpad;
+      for (i=0;i<7;i++) {
+         if (number == 25) {number++; continue;}
+         xlow = xmin + i*wpad;
+         sprintf(command,"SetFillStyle(%d)",3001+number);
          test1 = new TGroupButton("Style","",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
-         if (number == 0) {
+         if (number == 26) { //fill
             test1->SetBorderMode(-1);
             test1->SetFillColor(1);
-         } else {
-            test1->SetFillColor(10);
-         }
-         if (number == 5) {
+            test1->SetMethod("SetFillStyle(1001)");
+         } else if (number == 27) { //hollow
+            test1->SetMethod("SetFillStyle(0)");
             test1->SetFillStyle(1001);
-         } else {
-            test1->SetFillStyle(lsty[number]);
+            test1->SetFillColor(10);
+         } else { //pattern
+            test1->SetFillColor(10);
+            test1->SetFillStyle(3001+number);
          }
          test1->SetBorderSize(2);
          test1->Draw();
