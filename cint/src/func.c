@@ -6193,7 +6193,8 @@ char *result;
 	  }
 	  else {
 #ifndef G__OLDIMPLEMENTATION2083
-	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
+       ++usedpara;
+	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++; 
 #else
 	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
 #endif
@@ -6252,7 +6253,8 @@ char *result;
 	  }
 	  else {
 #ifndef G__OLDIMPLEMENTATION2083
-	    sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++;
+       ++usedpara; 
+       sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++; 
 #else
 	    sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
 #endif
@@ -6317,7 +6319,7 @@ char *result;
     case '*': /* printf("%*s",4,"*"); */
       if(fmtflag==1) {
 #ifndef G__OLDIMPLEMENTATION2083
-	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++;
+   sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++; usedpara++;
 #else
 	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[ipara++]));
 #endif
