@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v3-03-05 $:$Id: TGText.cxx,v 1.12 2002/04/22 15:06:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.13 2002/06/10 18:35:38 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TGTextLine::~TGTextLine()
    // Delete a line of text.
 
    if (fString)
-      delete fString;
+      delete [] fString;
 }
 
 //______________________________________________________________________________
@@ -92,7 +92,7 @@ void TGTextLine::Clear()
    // Clear a line of text.
 
    if (fString)
-      delete fString;
+      delete [] fString;
    fString = 0;
    fLength = 0;
 }
@@ -108,7 +108,7 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
       length = fLength - pos;
 
    if (fLength - length <= 0) {
-      delete fString;
+      delete [] fString;
       fLength = 0;
       fString = 0;
       return;
@@ -116,7 +116,7 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
    char *newstring = new char[fLength - length+1];
    strncpy(newstring, fString, (UInt_t)pos);
    strncpy(newstring+pos, fString+pos+length, UInt_t(fLength-pos-length));
-   delete fString;
+   delete [] fString;
    fString = newstring;
    fLength = fLength - length;
    fString[fLength] = '\0';
@@ -137,7 +137,7 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
    if (fLength - pos  > 0)
       strncpy(newstring+pos+strlen(text), fString+pos, UInt_t(fLength-pos));
    fLength = fLength + strlen(text);
-   delete fString;
+   delete [] fString;
    fString = newstring;
    fString[fLength] ='\0';
 }
@@ -175,7 +175,7 @@ void TGTextLine::DelChar(ULong_t pos)
       strncpy(newstring+pos-1, fString+pos, UInt_t(fLength-pos+1));
    else
       newstring[pos-1] = 0;
-   delete fString;
+   delete [] fString;
    fString = newstring;
    fLength--;
 }
@@ -195,7 +195,7 @@ void TGTextLine::InsChar(ULong_t pos, char character)
    newstring[pos] = character;
    if (fLength - pos > 0)
       strncpy(newstring+pos+1, fString+pos, UInt_t(fLength-pos));
-   delete fString;
+   delete [] fString;
    fString = newstring;
    fLength++;
 }
