@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.30 2004/07/08 17:11:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.31 2004/07/09 04:45:24 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -368,10 +368,15 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
 
    Reset();
 
-
    // Heuristic for starting packet size
-   fPacketSize = fTotalEntries / (20 * fSlaveStats->GetSize());
-   if ( fPacketSize < 1 ) fPacketSize = 1;
+   Int_t nslaves = fSlaveStats->GetSize();
+   if (nslaves > 0) {
+      fPacketSize = fTotalEntries / (20 * nslaves);
+      if ( fPacketSize < 1 ) fPacketSize = 1;
+   } else {
+      fPacketSize = 1;
+   }
+
    PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %lld", fPacketSize);
 
    if ( fValid ) {
