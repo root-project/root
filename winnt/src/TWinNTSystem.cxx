@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.93 2004/06/08 10:43:07 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.94 2004/06/08 21:11:54 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1078,7 +1078,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
    while (1) {
-      if (gROOT->IsLineProcessing()) {
+      if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          if (!pendingOnly) {
             SleepEx(1, TRUE);
             return;
