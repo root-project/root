@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.192 2004/07/23 14:06:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.193 2004/07/28 07:08:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2036,10 +2036,16 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //         TH1F h("h","test",100,-2,2);
 //         h.FillRandom("gaus",1000);
 //         h.Fit("gaus");
-//         TMatrixD matrix(npar,npar);
-//         gMinuit->mnemat(matrix.GetMatrixArray(),npar);
+//         TMatrixD matrix(npar,npar,gMinuit->GetCovarianceMatrix());
 //         matrix.Print();
 //         matrix.Draw("text");
+//      Example3: via the TVirtualFitter interface (works with TMinuit, TFumili, etc)
+//         TH1F h("h","test",100,-2,2);
+//         h.FillRandom("gaus",1000);
+//         h.Fit("gaus");
+//         TVirtualfitter *fitter = TVirtualFitter::GetFitter();
+//         TMatrixD matrix(npar,npar,fitter->GetCovarianceMatrix());
+//         Double_t errorFirstPar = fitter->GetCovarianceMatrixElement(0,0);
 //
 //
 //      Changing the maximum number of parameters
