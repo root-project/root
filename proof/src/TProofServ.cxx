@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.58 2003/11/06 15:08:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.59 2003/11/07 03:29:42 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -38,11 +38,16 @@
 #include <AvailabilityMacros.h>
 #endif
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
-    (defined(__APPLE__) && (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3))
+    (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
+     (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
+#ifndef F_LOCK
 #define F_LOCK             (LOCK_EX | LOCK_NB)
+#endif
+#ifndef F_ULOCK
 #define F_ULOCK             LOCK_UN
+#endif
 #endif
 
 #include "TProofServ.h"
