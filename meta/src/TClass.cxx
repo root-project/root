@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.50 2001/05/25 06:24:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.51 2001/05/25 09:41:41 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -317,7 +317,7 @@ TClass::TClass(const char *name, Version_t cversion,
       gROOT->GetListOfClasses()->Remove(oldcl);
       delete oldcl;
    }
-      
+
    if (oldcl) {
       //we must update the class pointers pointing to oldcl in all TStreamerElements
       TIter nextClass(gROOT->GetListOfClasses());
@@ -332,7 +332,7 @@ TClass::TClass(const char *name, Version_t cversion,
             }
          }
       }
-                     
+
       //we must notify all Trees in all files. In particular
       //TLeafObjects must update pointers to the class.
       TObject * obj;
@@ -1138,7 +1138,7 @@ void *TClass::New(Bool_t defConstructor)
       TStreamerInfo *sinfo = GetStreamerInfo();
       Int_t l = sinfo->GetSize();
       char *pp = new char[l];
-      for (Int_t i=0;i<l;i++) pp[i] = 0;
+      memset(pp, 0, l);
       sinfo->New(pp);
       return pp;
    }
@@ -1164,7 +1164,7 @@ void *TClass::New(void *arena, Bool_t defConstructor)
       TStreamerInfo *sinfo = GetStreamerInfo();
       Int_t l = sinfo->GetSize();
       char *pp = (char*)arena;
-      for (Int_t i=0;i<l;i++) pp[i] = 0;
+      memset(pp, 0, l);
       sinfo->New(pp);
       return arena;
    }
