@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.2 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.h,v 1.3 2003/11/25 13:17:33 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -39,24 +39,24 @@ public:
    Bool_t               fScanRedirected;        // redirect switch
    Bool_t               fCutEnabled;            // true if current cut is active
    TString              fUserCode;              // command executed when record is conected
-   Bool_t               fAutoexec;              // autoexecute user code command   
+   Bool_t               fAutoexec;              // autoexecute user code command
 public:
    TTVRecord();                                 // default constructor
    ~TTVRecord() {}                              // destructor
-   
+
    void           ExecuteUserCode();
    void           FormFrom(TTreeViewer *tv);
    void           PlugIn(TTreeViewer *tv);
-   const char    *GetX() const {return fX.Data();}
-   const char    *GetY() const {return fY.Data();}
-   const char    *GetZ() const {return fZ.Data();}
-   virtual const char *GetName() const {return fName.Data();}
-   const char    *GetUserCode() {return fUserCode.Data();}
-   Bool_t         HasUserCode() {return (Bool_t)fUserCode.Length();}
-   Bool_t         MustExecuteCode() {return fAutoexec;}
-   void           SetAutoexec(Bool_t autoexec=kTRUE) {fAutoexec=autoexec;} // *MENU*
+   const char    *GetX() const {return fX;}
+   const char    *GetY() const {return fY;}
+   const char    *GetZ() const {return fZ;}
+   virtual const char *GetName() const {return fName;}
+   const char    *GetUserCode() const {return fUserCode;}
+   Bool_t         HasUserCode() const {return fUserCode.Length() != 0 ? kTRUE : kFALSE;}
+   Bool_t         MustExecuteCode() const {return fAutoexec;}
+   void           SetAutoexec(Bool_t autoexec=kTRUE) {fAutoexec=autoexec;} // *TOGGLE* *GETTER=MustExecuteCode
    void           SetName(const char* name = "") {fName = name;}
-   void           SetX(const char *x = "", const char *xal = "-empty-") {fX = x; fXAlias = xal;} 
+   void           SetX(const char *x = "", const char *xal = "-empty-") {fX = x; fXAlias = xal;}
    void           SetY(const char *y = "", const char *yal = "-empty-") {fY = y; fYAlias = yal;}
    void           SetZ(const char *z = "", const char *zal = "-empty-") {fZ = z; fZAlias = zal;}
    void           SetCut(const char *cut = "", const char *cal = "-empty-") {fCut = cut; fCutAlias = cal;}
@@ -76,7 +76,7 @@ private:
    TTreeViewer   *fViewer;                      // associated tree viewer
    Int_t          fCurrent;                     // index of current record
    Int_t          fRecords;                     // number of records
-   
+
 public:
    TTVSession(TTreeViewer *tv);
    ~TTVSession();
@@ -91,9 +91,9 @@ public:
    TTVRecord     *Last()     {return GetRecord(fRecords-1);}
    TTVRecord     *Next()     {return GetRecord(fCurrent+1);}
    TTVRecord     *Previous() {return GetRecord(fCurrent-1);}
-   
+
    void           RemoveLastRecord();
-   void           Show(TTVRecord *rec);   
+   void           Show(TTVRecord *rec);
    void           SaveSource(ofstream &out);
    void           UpdateRecord(const char *name);
 
