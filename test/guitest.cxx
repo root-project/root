@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.2 2000/07/11 18:03:23 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -259,7 +259,7 @@ private:
    TGLayoutHints    *fL2;     // layout of OK button
 
 public:
-   Editor(const TGWindow *main, const char *title, UInt_t w, UInt_t h);
+   Editor(const TGWindow *main, UInt_t w, UInt_t h);
    virtual ~Editor();
 
    void   LoadBuffer(const char *buffer);
@@ -267,6 +267,7 @@ public:
 
    TGTextEdit *GetEditor() const { return fEdit; }
 
+   void   SetTitle();
    void   Popup();
    void   CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
@@ -444,7 +445,7 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kCM_BUTTON:
                //printf("Button was pressed, id = %ld\n", parm1);
                if (parm1 == 150) {
-                  Editor *ed = new Editor(this, "ROOT Editor", 600, 400);
+                  Editor *ed = new Editor(this, 600, 400);
                   ed->LoadBuffer(editortxt);
                   ed->Popup();
                }
@@ -1295,7 +1296,7 @@ Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-Editor::Editor(const TGWindow *main, const char *title, UInt_t w, UInt_t h) :
+Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
     TGTransientFrame(gClient->GetRoot(), main, w, h)
 {
    // Create an editor in a dialog.
@@ -1308,8 +1309,7 @@ Editor::Editor(const TGWindow *main, const char *title, UInt_t w, UInt_t h) :
    fL2 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);
    AddFrame(fOK, fL2);
 
-   SetWindowName(title);
-   SetIconName(title);
+   SetTitle();
 
    MapSubwindows();
 
@@ -1334,6 +1334,23 @@ Editor::~Editor()
    delete fOK;
    delete fL1;
    delete fL2;
+}
+
+void Editor::SetTitle()
+{
+   // Set title in editor window.
+
+   TGText *txt = GetEditor()->GetText();
+   Bool_t untitled = !strlen(txt->GetFileName()) ? kTRUE : kFALSE;
+
+   char title[256];
+   if (untitled)
+      sprintf(title, "ROOT Editor - Untitled");
+   else
+      sprintf(title, "ROOT Editor - %s", txt->GetFileName());
+
+   SetWindowName(title);
+   SetIconName(title);
 }
 
 void Editor::Popup()
@@ -1364,7 +1381,6 @@ void Editor::CloseWindow()
    delete this;
 }
 
-//______________________________________________________________________________
 Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
 {
    // Process OK button.
@@ -1375,6 +1391,22 @@ Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
             case kCM_BUTTON:
                // Only one button and one action...
                delete this;
+               break;
+            default:
+               break;
+         }
+         break;
+      case kC_TEXTVIEW:
+         switch (GET_SUBMSG(msg)) {
+            case kTXT_CLOSE:
+               // close window
+               delete this;
+               break;
+            case kTXT_OPEN:
+               SetTitle();
+               break;
+            case kTXT_SAVE:
+               SetTitle();
                break;
             default:
                break;
