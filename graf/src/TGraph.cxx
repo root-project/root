@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.90 2002/12/19 07:47:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.91 2003/01/02 22:41:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3167,7 +3167,7 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    delete [] fY;
    fX = newX;
    fY = newY;
-   gPad->Modified();
+   if (gPad) gPad->Modified();
    return ipoint;
 }
 
