@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.33 2002/02/18 20:19:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.34 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1569,13 +1569,28 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      ::Info("ACLiC","creating the dictionary files");
      if (gDebug>4)  ::Info("ACLiC",rcint.Data());
   }
-  int result = !gSystem->Exec(rcint);
 
-  if (gDebug>3) {
-     ::Info("ACLiC","compiling the dictionary and script files");
-     if (gDebug>4)  ::Info("ACLiC",cmd.Data());
+  Int_t dictResult = gSystem->Exec(rcint);
+  if (dictResult) {
+     if (dictResult) {
+        if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
+        else ::Error("ACLiC","Dictionary generation failed!");
+     }
   }
-  if (result) result = !gSystem->Exec( cmd );
+  Bool_t result = !dictResult;
+
+  if (result) {
+     if (gDebug>3) {
+        ::Info("ACLiC","compiling the dictionary and script files");
+        if (gDebug>4)  ::Info("ACLiC",cmd.Data());
+     }
+     Int_t compilationResult = gSystem->Exec( cmd );
+     if (compilationResult) {
+        if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
+        else ::Error("ACLiC","Compilation failed!");
+     }
+     result = !compilationResult;
+  }
 
   if ( result ) {
 
