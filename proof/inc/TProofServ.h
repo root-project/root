@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.3 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.4 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -63,6 +63,7 @@ private:
 
    void        Setup();
    void        RedirectOutput();
+   Int_t       CatMotd();
    void        Info(const char *method, const char *msgfmt, ...) const; // should be in TObject
 
 public:
@@ -100,7 +101,7 @@ public:
    Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
    void        Reset(const char *dir);
    Int_t       ReceiveFile(const char *file, Bool_t bin, Long_t size);
-   void        SendLogFile();
+   void        SendLogFile(Int_t status = 0);
    void        SendStatus();
 
    void        Terminate(int status);

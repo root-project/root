@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.3 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.4 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -130,6 +130,8 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
    fMasterServ    = fMaster == "" ? kTRUE : kFALSE;
    fSendGroupView = kTRUE;
    fImage         = "";
+   fStatus        = 0;
+   fParallel      = 0;
    fTree          = 0;
 
    // sort slaves by descending performance index
@@ -221,6 +223,10 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
       if (slave->IsValid()) {
          fAllMonitor->Add(slave->GetSocket());
          Collect(slave);
+         if (fStatus == -99) {
+            Error("Init", "not allowed to connect to PROOF master server");
+            return 0;
+         }
          slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
       } else {
          Error("Init", "failed to connect to a PROOF master server");
@@ -233,6 +239,9 @@ Int_t TProof::Init(const char *master, Int_t port, const char *conffile,
 
    // By default go into parallel mode
    GoParallel(9999);
+
+   // Send relevant initial state to slaves
+   SendInitialState();
 
    if (IsValid())
       gROOT->GetListOfSockets()->Add(this);
@@ -393,11 +402,11 @@ Int_t TProof::GetNumberOfBadSlaves() const
 }
 
 //______________________________________________________________________________
-void TProof::GetStatus()
+void TProof::AskStatus()
 {
-   // Get the status of the slaves.
+   // Ask the status of the slaves.
 
-   if (!IsValid() || !IsMaster()) return;
+   if (!IsValid()) return;
 
    Broadcast(kPROOF_STATUS, kAll);
    Collect(kAll);
@@ -550,7 +559,7 @@ Bool_t TProof::IsParallel() const
    if (IsMaster())
       return GetNumberOfActiveSlaves() > 1 ? kTRUE : kFALSE;
    else
-      return kTRUE;  // fix: get number of active slaves in client
+      return fParallel > 1 ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -679,9 +688,10 @@ Int_t TProof::Collect(ESlaves list)
 //______________________________________________________________________________
 Int_t TProof::Collect(TMonitor *mon)
 {
-   // Collect responses from the slave servers. Returns the number of slaves
-   // that responded.
+   // Collect responses from the slave servers. Returns the number of messages
+   // received. Can be 0 if there are no active slaves.
 
+   fStatus = 0;
    if (!mon->GetActive()) return 0;
 
    DeActivateAsyncInput();
@@ -693,7 +703,7 @@ Int_t TProof::Collect(TMonitor *mon)
    fCpuTime   = 0.0;
 
    while (loop) {
-      char      str[512], str2[512];
+      char      str[512];
       TMessage *mess;
       TSocket  *s;
       TSlave   *sl;
@@ -755,21 +765,30 @@ Int_t TProof::Collect(TMonitor *mon)
             break;
 
          case kPROOF_LOGFILE:
-            RecvLogFile(s);              // no break
+            {
+               Int_t size;
+               (*mess) >> size;
+               RecvLogFile(s, size);
+            }
+            break;
+
          case kPROOF_LOGDONE:
+            (*mess) >> fStatus >> fParallel;
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
             break;
 
          case kPROOF_STATUS:
-            sl = FindSlave(s);
-            mess->ReadString(str, sizeof(str));
-            sscanf(str, "%lf %f %f %s", &sl->fBytesRead, &sl->fRealTime,
-                   &sl->fCpuTime, str2);
-            sl->fWorkDir = str2;
-            fBytesRead += sl->fBytesRead;
-            fRealTime  += sl->fRealTime;
-            fCpuTime   += sl->fCpuTime;
+            if (IsMaster()) {
+               sl = FindSlave(s);
+               (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
+                       >> sl->fWorkDir;
+               fBytesRead += sl->fBytesRead;
+               fRealTime  += sl->fRealTime;
+               fCpuTime   += sl->fCpuTime;
+            } else {
+               (*mess) >> fParallel;
+            }
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
             break;
@@ -968,14 +987,18 @@ void TProof::Print(Option_t *option)
       Printf("User:                     %s", GetUser());
       Printf("Protocol version:         %d", GetProtocol());
       Printf("Log level:                %d", GetLogLevel());
-      if (IsValid()) {
-         Printf("*** Master server:");
+      if (IsValid())
          SendPrint();
-      }
-   } else {
-      Printf("Master host name:         %s", gSystem->HostName());
-      GetStatus();
 
+   } else {
+      AskStatus();
+      if (IsParallel())
+         Printf("*** Master server (parallel mode, %d slaves):",
+                GetNumberOfActiveSlaves());
+      else
+         Printf("*** Master server (sequential mode):");
+
+      Printf("Master host name:         %s", gSystem->HostName());
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
       Printf("Protocol version:         %d", GetProtocol());
@@ -999,18 +1022,41 @@ void TProof::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProof::RecvLogFile(TSocket *s)
+void TProof::RecvLogFile(TSocket *s, Int_t size)
 {
    // Receive the log file of the slave with socket s.
 
-   while (1) {
-      char str[256];
-      int  what;
+   const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
+   char buf[kMAXBUF];
 
-      s->Recv(str, sizeof(str), what);
-      if (what == kPROOF_LOGDONE) break;
+   Int_t  left, r;
+   Long_t filesize = 0;
 
-      printf("%s", str);
+   while (filesize < size) {
+      left = Int_t(size - filesize);
+      if (left > kMAXBUF)
+         left = kMAXBUF;
+      r = s->RecvRaw(&buf, left);
+      if (r > 0) {
+         char *p = buf;
+
+         filesize += r;
+         while (r) {
+            Int_t w;
+
+            w = write(fileno(stdout), p, r);
+
+            if (w < 0) {
+               SysError("RecvLogFile", "error writing to stdout");
+               break;
+            }
+            r -= w;
+            p += w;
+         }
+      } else if (r < 0) {
+         Error("RecvLogFile", "error during receiving log file");
+         break;
+      }
    }
 }
 
@@ -1087,11 +1133,15 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
    // Command can be any legal command line command, however commands
    // like ".x file.C" or ".L file.C" will not cause the file.C to be
    // transfered to the PROOF cluter. In that case use TProof::Exec().
+   // Returns the status send by the remote server as part of the
+   // kPROOF_LOGDONE message. Typically this is the return code of the
+   // command on the remote side.
 
    if (!IsValid()) return 0;
 
    Broadcast(cmd, kMESS_CINT, list);
-   return Collect(list);
+   Collect(list);
+   return fStatus;
 }
 
 //______________________________________________________________________________
@@ -1236,8 +1286,21 @@ void TProof::SetLogLevel(Int_t level)
 //______________________________________________________________________________
 Int_t TProof::SetParallel(Int_t nodes)
 {
+   // Tell RPOOF how many slaves to use in parallel. Returns the number of
+   // parallel slaves.
 
-   return 0;
+   if (!IsValid()) return 0;
+
+   if (IsMaster()) {
+      GoParallel(nodes);
+      return SendCurrentState();
+   } else {
+      TMessage mess(kPROOF_PARALLEL);
+      mess << nodes;
+      Broadcast(mess);
+      Collect();
+      return fParallel;
+   }
 }
 
 //______________________________________________________________________________
@@ -1250,6 +1313,7 @@ Int_t TProof::GoParallel(Int_t nodes)
    if (nodes <= 0) nodes = 1;
 
    fActiveSlaves->Clear();
+   fActiveMonitor->RemoveAll();
 
    TIter next(fSlaves);
 
@@ -1267,16 +1331,23 @@ Int_t TProof::GoParallel(Int_t nodes)
    fActiveMonitor->DeActivateAll();
 
    // Get slave status (will set the slaves fWorkDir correctly)
-   GetStatus();
+   AskStatus();
 
    // Find active slaves with unique image
    FindUniqueSlaves();
 
-   // Set initial state
-   SendInitialState();
+   // Send new group-view to slaves
    SendGroupView();
 
-   return GetNumberOfActiveSlaves();
+   Int_t n = GetNumberOfActiveSlaves();
+   if (IsMaster()) {
+      if (n > 1)
+         printf("PROOF set to parallel mode (%d slaves)\n", n);
+      else
+         printf("PROOF set to sequential mode)\n");
+   }
+
+   return n;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.4 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.5 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include <io.h>
 typedef long off_t;
 #endif
+#include <errno.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -187,6 +189,14 @@ TProofServ::TProofServ(int *argc, char **argv)
    Setup();
    RedirectOutput();
 
+   // Send message of the day to the client
+   if (IsMaster()) {
+      if (CatMotd() == -1) {
+         SendLogFile(-99);
+         Terminate(0);
+      }
+   }
+
    // Load user functions
    const char *logon;
    logon = gEnv->GetValue("Proof.Load", (char*)0);
@@ -223,6 +233,62 @@ TProofServ::~TProofServ()
    // live anyway.
 
    delete fSocket;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CatMotd()
+{
+   // Print message of the day (in fConfDir/proof/etc/motd). The motd
+   // is not shown more than once a dat. If the file fConfDir/proof/etc/noproof
+   // exists, show its contents and close the connection.
+
+   TString motdname;
+   TString lastname;
+   FILE   *motd;
+   Bool_t  show = kFALSE;
+
+   motdname = fConfDir + "/proof/etc/noproof";
+   if ((motd = fopen(motdname, "r"))) {
+      int c;
+      printf("\n");
+      while ((c = getc(motd)) != EOF)
+         putchar(c);
+      fclose(motd);
+      printf("\n");
+
+      return -1;
+   }
+
+   // get last modification time of the file ~/proof/.prooflast
+   lastname = TString(kPROOF_WorkDir) + "/.prooflast";
+   char *last = gSystem->ExpandPathName(lastname.Data());
+   Long_t id, size, flags, modtime, lasttime;
+   if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
+      lasttime = 0;
+
+   // show motd at least once per day
+   if (time(0) - lasttime > (time_t)86400)
+      show = kTRUE;
+
+   motdname = fConfDir + "/proof/etc/motd";
+   if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
+      if (modtime > lasttime || show) {
+         if ((motd = fopen(motdname, "r"))) {
+            int c;
+            printf("\n");
+            while ((c = getc(motd)) != EOF)
+               putchar(c);
+            fclose(motd);
+            printf("\n");
+         }
+      }
+   }
+
+   int fd = creat(last, 0600);
+   close(fd);
+   delete [] last;
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -415,6 +481,15 @@ void TProofServ::HandleSocketInput()
             char  name[512];
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
+         }
+         break;
+
+      case kPROOF_PARALLEL:
+         if (IsMaster()) {
+            Int_t nodes;
+            (*mess) >> nodes;
+            gProof->SetParallel(nodes);
+            SendLogFile();
          }
          break;
 
@@ -653,11 +728,6 @@ void TProofServ::RedirectOutput()
 
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
-
-#if 0
-   // Send message of the day to the client.
-   if (IsMaster()) CatMotd();
-#endif
 }
 
 //______________________________________________________________________________
@@ -753,10 +823,6 @@ Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
 
    chmod(file, 0644);
 
-   // Double check. At this point sizes should be equal.
-   if (filesize != size)
-      Warning("ReceiveFile", "file %s does not have the expected length", file);
-
    return 0;
 }
 
@@ -769,7 +835,7 @@ void TProofServ::Run(Bool_t retrn)
 }
 
 //______________________________________________________________________________
-void TProofServ::SendLogFile()
+void TProofServ::SendLogFile(Int_t status)
 {
    // Send log file to master.
 
@@ -783,24 +849,37 @@ void TProofServ::SendLogFile()
    lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
    left = Int_t(ltot - lnow);
 
-   if (left <= 0)
-      fSocket->Send(kPROOF_LOGDONE);
-   else {
-      fSocket->Send(kPROOF_LOGFILE);
+   if (left > 0) {
+      fSocket->Send(left, kPROOF_LOGFILE);
 
-      while (left > 0) {
-         char line[256];
+      const Int_t kMAXBUF = 32768;  //16384  //65536;
+      char buf[kMAXBUF];
+      Int_t len;
+      do {
+         while ((len = read(fileno(fLogFile), buf, kMAXBUF)) < 0 &&
+                TSystem::GetErrno() == EINTR)
+            TSystem::ResetErrno();
 
-         if (fgets(line, sizeof(line), fLogFile) == 0) {
-            left = 0;
-         } else {
-            left -= strlen(line);
-            fSocket->Send(line);
+         if (len < 0) {
+            SysError("SendLogFile", "error reading log file");
+            break;
          }
-         if (!left)
-            fSocket->Send(kPROOF_LOGDONE);
-      }
+
+         if (fSocket->SendRaw(buf, len) < 0) {
+            SysError("SendLogFile", "error sending log file");
+            break;
+         }
+
+      } while (len > 0);
    }
+
+   TMessage mess(kPROOF_LOGDONE);
+   if (IsMaster())
+      mess << status << gProof->GetNumberOfActiveSlaves();
+   else
+      mess << status << (Int_t) 1;
+
+   fSocket->Send(mess);
 }
 
 //______________________________________________________________________________
@@ -808,11 +887,14 @@ void TProofServ::SendStatus()
 {
    // Send status of slave server to master or client.
 
-   char str[64];
-
-   sprintf(str, "%g %.3f %.3f %s", TFile::GetFileBytesRead(), fRealTime,
-           fCpuTime, gSystem->WorkingDirectory());
-   fSocket->Send(str, kPROOF_STATUS);
+   if (!IsMaster()) {
+      TMessage mess(kPROOF_STATUS);
+      mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime
+           << gSystem->WorkingDirectory();
+      fSocket->Send(mess);
+   } else {
+      fSocket->Send(gProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);
+   }
 }
 
 //______________________________________________________________________________

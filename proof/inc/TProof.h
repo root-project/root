@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.3 2000/11/21 12:27:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.4 2000/11/24 18:11:32 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -64,6 +64,8 @@ private:
    Int_t     fPort;          //port we are connected to (proofd = 1093)
    Int_t     fProtocol;      //protocol version number
    Int_t     fLogLevel;      //server debug logging level
+   Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
+   Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
    Bool_t    fMasterServ;    //true if we are a master server
    Bool_t    fSendGroupView; //send new group view
    TList    *fSlaves;        //list of all slave servers as in config file
@@ -86,7 +88,7 @@ private:
    Int_t     Collect(TMonitor *mon);
    void      ConnectFiles();
    void      GetUserInfo();
-   void      GetStatus();
+   void      AskStatus();
    Int_t     GoParallel(Int_t nodes);
    void      Limits(TSocket *s, TMessage &mess);
    void      MarkBad(TSlave *sl);
@@ -118,6 +120,7 @@ public:
    const char *GetImage() const { return fImage.Data(); }
    Int_t       GetPort() const { return fPort; }
    Int_t       GetProtocol() const { return fProtocol; }
+   Int_t       GetStatus() const { return fStatus; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    void        SetLogLevel(Int_t level);
 
@@ -153,7 +156,7 @@ public:
    void     HandleAsyncInput(TSocket *s);
 
    void     Loop(TTree *tree);
-   void     RecvLogFile(TSocket *s);
+   void     RecvLogFile(TSocket *s, Int_t size);
 
    Int_t    DisConnectFile(const TFile *file);
    Int_t    ConnectFile(const TFile *file);
