@@ -3,7 +3,7 @@ Processing runEqualTest.C...
 ===========================================================================
 class privateOp2
  size=0x4 FILE:equal_C.so LINE:-1
- (tagnum=695,voffset=-1,isabstract=0,parent=-1,gcomp=0:-1,d21=~cd=8)
+ (tagnum=696,voffset=-1,isabstract=0,parent=-1,gcomp=0:-1,d21=~cd=8)
 List of base class--------------------------------------------------------
 List of member variable---------------------------------------------------
 Defined in privateOp2

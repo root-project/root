@@ -45,6 +45,29 @@ public:
    privateOp op;
 };
 
+class withRef : public top  {
+   const int &ref;
+   int &ref2;
+public:
+   withRef(int &p) : ref(p),ref2(p) {};
+};
+
+class withHiddenRef : public top {
+   withHiddenRef &operator=(const withHiddenRef&); // intentionally NOT implemented
+   int a;
+#ifndef __CINT__
+   const int &ref;
+   int &ref2;
+#endif
+public:
+   withHiddenRef(int &p) : ref(p),ref2(p) {};
+};
+
+#ifdef __CINT__
+#pragma link C++ class withHiddenRef-;
+#endif
+
+
 void copying() {
 //    test2 t1;
 //    test2 t2;

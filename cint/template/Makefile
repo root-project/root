@@ -4,8 +4,16 @@ SUBDIRS = separateDict separateDictNamespace
 
 include ../../root/Rules.mk
 
-test: operator1 simpleSeparateDict forwardDecl
+test: operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
 	true;
+
+typenameTest:
+	rootcint -f typenameTestDict.C -c -D__CINT2__ typenameTest.C linkdef.h 
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+else
+	rootcint -f typenameTestDict.C -c typenameTest.C linkdef.h 
+endif
 
 operator1:
 	@rm  -f operator1.cint.out operator1.comp.out
@@ -32,3 +40,4 @@ constructorDict.C: constructor.hh
 	$(CMDECHO) rootcint -f constructorDict.C -c constructor.hh linkdef.h
 
 constructorTest: constructorDict.o
+

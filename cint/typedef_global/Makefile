@@ -1,15 +1,16 @@
 TEST_TARGETS += scopeTest scopeTest2
+CLEAN_TARGETS += $(ALL_LIBRARIES) output
 
 include ../../root/Rules.mk
 
 
-baddict.C: mycl.C LinkDef.h
-	$(CMDECHO) rootcint -f baddict.C -c -DBAD mycl.C LinkDef.h
+badDict.C: mycl.C LinkDef.h
+	$(CMDECHO) rootcint -f badDict.C -c -DBAD mycl.C LinkDef.h
 
-gooddict.C: mycl.C LinkDef.h
-	$(CMDECHO) rootcint -f gooddict.C -c mycl.C LinkDef.h
+goodDict.C: mycl.C LinkDef.h
+	$(CMDECHO) rootcint -f goodDict.C -c mycl.C LinkDef.h
 
-myclbad.so: baddict.C
+myclbad.so: badDict.C
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
@@ -41,7 +42,7 @@ endif
 endif
 
 
-myclgood.so: gooddict.C
+myclgood.so: goodDict.C
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
@@ -80,5 +81,4 @@ scopeTest2: run.C myclgood.so
 	$(CMDECHO) root.exe -l -q -b rungood.C   2>&1 | grep -v Processing | sed -e s/myclgood.so/mycl.so\ / > output  
 	$(CMDECHO) diff good.output output
 
-CLEAN_TARGET += *.so output baddict* gooddict*
 

@@ -1,5 +1,5 @@
 TEST_TARGETS += constTest constCharTest
-CLEAN_TARGET += *.so output
+CLEAN_TARGET += $(ALL_LIBRARIES) output
 
 include ../../root/Rules.mk
 

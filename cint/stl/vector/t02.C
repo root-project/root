@@ -1,5 +1,7 @@
-#include <vector.h>
-#include <iostream.h>
+#include <vector>
+#include <iostream>
+
+using namespace std;
 
 void t02() {
 

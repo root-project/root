@@ -10,6 +10,7 @@ Defined in MyClass
 run.C             3 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
 libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
@@ -25,7 +26,7 @@ libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
 libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
 libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
 ===========================================================================
 class Name::MyClass
  size=0xc FILE:libmaster.so LINE:-1
@@ -36,6 +37,7 @@ Defined in MyClass
 run.C             3 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
 libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
@@ -51,7 +53,7 @@ libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
 libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
 libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
 libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
 ===========================================================================
 class Name::MyClass
@@ -63,6 +65,7 @@ Defined in MyClass
 run.C             3 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
 libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
@@ -78,6 +81,6 @@ libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
 libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
 libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
 libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
 libmaster.so     -1:-1   0 public: TH1F& func(TH1F* t);

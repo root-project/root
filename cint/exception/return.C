@@ -14,10 +14,13 @@ public:
 void* dataManager::getVtColumn(int level) throw(std::exception) {
    if (level==1) {
       std::exception e;
-      throw (e);
+      throw e;
    }
    if (level==2) {
       throw (myex("test"));
+   }
+   if (level==3) {
+      throw 1;
    }
    return 0;
 }
