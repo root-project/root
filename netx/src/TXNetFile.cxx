@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -109,7 +109,8 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
   fSize = 0;
   if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
      if (!fgTagAlreadyPrinted) {
-        Info("CreateTXNf","(C) 2004 SLAC TXNetFile (eXtended TNetFile) %s");
+        Info("CreateTXNf","(C) 2004 SLAC TXNetFile (eXtended TNetFile) %s",
+             gROOT->GetVersion());
         fgTagAlreadyPrinted = kTRUE;
      }
 
