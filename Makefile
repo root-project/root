@@ -262,7 +262,7 @@ distclean:: clean
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
-	@rm -rf htmldoc
+	@rm -rf htmldoc README/ChangeLog
 	@cd test && $(MAKE) distclean
 
 version: $(CINTTMP)
