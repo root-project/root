@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.39 2001/11/19 19:53:54 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.40 2001/11/22 01:07:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 
 class TDirectory ;
 class RooAbsRealLValue ;
+class RooRealVar ;
 #include "RooFitCore/RooTreeData.hh"
 #include "RooFitCore/RooDirItem.hh"
 
@@ -28,17 +29,17 @@ public:
 
   // Constructors, factory methods etc.
   RooDataSet() ; 
-  RooDataSet(const char *name, const char *title, const RooArgSet& vars) ;
+  RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName=0) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, const char *cuts=0);
+	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);
   RooDataSet(const char *name, const char *title, RooDataSet *t, 
-	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
+	     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
   RooDataSet(const char *name, const char *title, TTree *t, 
-	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
+	     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
-	     const RooArgSet& vars, const char *cuts=0);
+	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);
   RooDataSet(const char *name, const char *filename, const char *treename, 
-	     const RooArgSet& vars, const char *cuts=0);  
+	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);  
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
@@ -50,7 +51,12 @@ public:
 			  const char *indexCatName=0) ;
   Bool_t write(const char* filename) ;
 
-  virtual Double_t weight() const { return 1.0 ; } ; 
+  void setWeightVar(const char* name=0) ;
+  void setWeightVar(const RooAbsArg& arg) { setWeightVar(arg.GetName()) ; }
+
+  virtual Double_t weight() const ; 
+  virtual const RooArgSet* get(Int_t index) const;
+  virtual const RooArgSet* get() const ; 
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0);
@@ -64,15 +70,22 @@ public:
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
+  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
+
 protected:
 
   friend class RooProdGenContext ;
   Bool_t merge(const TList& data) ;
+
+  void initialize(const char* wgtVarName) ;
   
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
+
+  RooArgSet _varsNoWgt ;   // Vars without weight variable
+  RooRealVar* _wgtVar ;
 
   ClassDef(RooDataSet,1) // Unbinned data set
 };
