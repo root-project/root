@@ -1331,12 +1331,14 @@ if test ! "x$enable_dcache" = "xno" ; then
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
-    check_symbol dc_lseek64 "$dcaplib" "$dcaplibdir"
-    if test  $found_symbol -eq 0 ; then
-        echo "### Need dc_lseek64 in libdcap, upgrade your d-cache client library"
-        dcaplib=
-        dcaplibdir=
-        dcapincdir=
+    if test ! "x$dcaplib" = "x" ; then
+        check_symbol dc_lseek64 "$dcaplib" "$dcaplibdir"
+        if test  $found_symbol -eq 0 ; then
+            echo "### Need dc_lseek64 in libdcap, upgrade your d-cache client library"
+            dcaplib=
+            dcaplibdir=
+            dcapincdir=
+        fi
     fi
 
     if test "x$dcapincdir" = "x" || test "x$dcaplib" = "x"; then
