@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.118 2004/01/26 17:21:29 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.119 2004/02/10 10:29:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3620,6 +3620,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 //   if option  =  0   - as "ps"
 //               "ps"  - Postscript file is produced (see special cases below)
 //               "eps" - an Encapsulated Postscript file is produced
+//               "pdf" - a PDF file is produced
 //               "svg" - a SVG file is produced
 //               "gif" - a GIF file is produced
 //               "cxx" - a C++ macro file is produced
@@ -3732,6 +3733,48 @@ void TPad::Print(const char *filenam, Option_t *option)
       delete fsave;
       if (dirsav) dirsav->cd();
       if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname);
+      return;
+   }
+
+//==============Save pad/canvas as a PDF file====================================
+   if (strstr(opt,"pdf")) {
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
+
+      Bool_t noScreen = kFALSE;
+      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
+         noScreen = kTRUE;
+         GetCanvas()->SetBatch(kTRUE);
+      }
+
+      TPad *padsav = (TPad*)gPad;
+      cd();
+      TVirtualPS *psave = gVirtualPS;
+
+      if (!gVirtualPS) {
+         // Plugin Postscript/PDF driver
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+         }
+      }
+
+      // Create a new PDF file
+      gVirtualPS->SetName(psname);
+      gVirtualPS->Open(psname);
+      gVirtualPS->SetBit(kPrintingPS);
+///   gVirtualPS->NewPage();
+      Paint();
+      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+
+      if (!gSystem->AccessPathName(psname)) Info("Print", "PDF file %s has been created", psname);
+
+      delete gVirtualPS;
+      gVirtualPS = psave;
+      gVirtualPS = 0;
+      padsav->cd();
+
       return;
    }
 
@@ -4170,6 +4213,7 @@ void TPad::SaveAs(const char *filename)
 //   if filename is "", the file produced is padname.ps
 //   if filename starts with a dot, the padname is added in front
 //   if filename contains .eps, an Encapsulated Postscript file is produced
+//   if filename contains .pdf, a PDF file is produced
 //   if filename contains .svg, a SVG file is produced
 //   if filename contains .gif, a GIF file is produced
 //   if filename contains .C or .cxx, a C++ macro file is produced
@@ -4194,6 +4238,8 @@ void TPad::SaveAs(const char *filename)
                Print(psname,"root");
    else if (strstr(psname,".eps"))
                Print(psname,"eps");
+   else if (strstr(psname,".pdf"))
+               Print(psname,"pdf");
    else if (strstr(psname,".svg"))
                Print(psname,"svg");
    else

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.32 2003/11/21 07:39:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.33 2003/11/25 06:18:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -549,7 +549,7 @@ Float_t TStyle::GetLabelSize( Option_t *axis) const
 //______________________________________________________________________________
 const char *TStyle::GetLineStyleString(Int_t i) const
 {
-//   return line style string (used by Popscript).
+//   return line style string (used by PostScript).
 //   See SetLineStyleString for more explanations
 
    if (i < 1 || i > 29) return fLineStyle[0].Data();

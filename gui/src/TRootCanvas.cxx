@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.26 2004/01/30 08:12:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.27 2004/01/30 18:44:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -62,6 +62,7 @@ enum ERootCanvasCommands {
    kFileSaveAsC,
    kFileSaveAsPS,
    kFileSaveAsEPS,
+   kFileSaveAsPDF,
    kFileSaveAsSVG,
    kFileSaveAsGIF,
    kFilePrint,
@@ -240,6 +241,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileMenu->AddEntry("Save As...",          kFileSaveAs);
    fFileMenu->AddEntry("Save As canvas.ps",   kFileSaveAsPS);
    fFileMenu->AddEntry("Save As canvas.eps",  kFileSaveAsEPS);
+   fFileMenu->AddEntry("Save As canvas.pdf",  kFileSaveAsPDF);
    fFileMenu->AddEntry("Save As canvas.svg",  kFileSaveAsSVG);
    fFileMenu->AddEntry("Save As canvas.gif",  kFileSaveAsGIF);
    fFileMenu->AddEntry("Save As canvas.C",    kFileSaveAsC);
@@ -534,6 +536,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileSaveAsEPS:
                      fCanvas->SaveAs(".eps");
+                     break;
+                  case kFileSaveAsPDF:
+                     fCanvas->SaveAs(".pdf");
                      break;
                   case kFileSaveAsSVG:
                      fCanvas->SaveAs(".svg");

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.4 2002/04/11 11:41:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.5 2003/01/20 08:44:46 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -34,6 +34,7 @@ TVirtualPS::TVirtualPS()
 {
    // VirtualPS default constructor
    fStream = 0;
+   fNByte = 0;
 }
 
 //______________________________________________________________________________
@@ -59,7 +60,7 @@ void TVirtualPS::PrintStr(const char *str)
    if( str[0] == '@') {
       if( fLenBuffer ) {
          fStream->write(fBuffer, fLenBuffer);
-         fStream->write("\n",1);
+         fStream->write("\n",1); fNByte++;
       }
       if ( len < 2)  {
          fBuffer[0] = ' ';
@@ -68,29 +69,33 @@ void TVirtualPS::PrintStr(const char *str)
       }
       fLenBuffer = len-1;
       fPrinted = kTRUE;
+      fNByte += len-1;
       return;
    }
 
    if( str[len-1] == '@') {
       if( fLenBuffer ) {
          fStream->write(fBuffer, fLenBuffer);
-         fStream->write("\n",1);
+         fStream->write("\n",1); fNByte++;
       }
       fStream->write(str, len-1);
       fStream->write("\n",1);
       fLenBuffer = 0;
+      fNByte += len;
       fPrinted = kTRUE;
       return;
    }
 
    if( (len + fLenBuffer ) > kMaxBuffer) {
       fStream->write(fBuffer, fLenBuffer);
-      fStream->write("\n",1);
+      fStream->write("\n",1); fNByte++;
       strcpy(fBuffer, str);
       fLenBuffer = len;
+      fNByte += len;
    } else {
       strcpy(fBuffer + fLenBuffer, str);
       fLenBuffer += len;
+      fNByte += len;
    }
    fPrinted = kTRUE;
 }
@@ -102,13 +107,14 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
 
    if( (len + fLenBuffer ) > kMaxBuffer) {
       fStream->write(fBuffer, fLenBuffer);
-      fStream->write("\n",1);
+      fStream->write("\n",1); fNByte++;
       strcpy(fBuffer, str);
       fLenBuffer = len;
    } else {
       strcpy(fBuffer + fLenBuffer, str);
       fLenBuffer += len;
    }
+   fNByte += len;
    fPrinted = kTRUE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.5 2002/02/14 18:04:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.6 2002/02/22 08:30:37 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 class TVirtualPS : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {
 
 protected:
+   Int_t        fNByte;           //Number of bytes written in the file (PDF)
    Int_t        fLenBuffer;       //Buffer length
    Bool_t       fPrinted;         //True when a page must be printed
    ofstream    *fStream;          //File stream identifier
