@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.40 2001/05/16 06:46:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.41 2001/05/19 20:27:05 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -623,7 +623,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                  cl =  BranchEl->GetInfo()->GetClass();
                }
             }
-            if (cl && cl->GetClassInfo()) {
+            if (cl && cl->GetClassInfo() && cl->GetMethodAny(work)) {
                TMethodCall *method = new TMethodCall(cl, work, params);
                if (method->GetMethod()) {
                   // We have a method that works.
