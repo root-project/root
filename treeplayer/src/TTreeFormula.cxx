@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.167 2005/03/04 19:37:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.168 2005/03/07 17:00:17 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -81,6 +81,10 @@ ClassImp(TTreeFormula)
 //
 //
 
+//______________________________________________________________________________
+inline static void R__LoadBranch(TBranch *br, Long64_t entry, Bool_t quickLoad) {
+   if (!quickLoad || br->GetReadEntry()!=entry)  br->GetEntry(entry);
+}
 
 //______________________________________________________________________________
 //
@@ -109,7 +113,8 @@ public:
 //
 
 //______________________________________________________________________________
-TTreeFormula::TTreeFormula(): TFormula(), fDidBooleanOptimization(kFALSE)
+TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), 
+                              fDidBooleanOptimization(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default constructor*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
@@ -138,7 +143,7 @@ TTreeFormula::TTreeFormula(): TFormula(), fDidBooleanOptimization(kFALSE)
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
-  :TFormula(), fTree(tree), fDidBooleanOptimization(kFALSE)
+   :TFormula(), fTree(tree), fQuickLoad(kFALSE), fDidBooleanOptimization(kFALSE)
 {
    // Normal TTree Formula Constuctor
 
@@ -148,7 +153,8 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
                            const std::vector<std::string>& aliases)
-  :TFormula(), fTree(tree), fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE)
+   :TFormula(), fTree(tree), fQuickLoad(kFALSE),
+    fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE)
 {
    // Constructor used during the expansion of an alias
    Init(name,expression);
@@ -1078,7 +1084,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                // We need to retrieve the class of its content.
 
                TBranch *branch = leaf->GetBranch();
-               branch->GetEntry(readentry);
+               R__LoadBranch(branch,readentry,fQuickLoad);
                TClonesArray * clones;
                if (previnfo) clones = (TClonesArray*)previnfo->GetLocalValuePointer(leaf,0);
                else {
@@ -1237,7 +1243,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                // We need to retrieve the class of its content.
 
                TBranch *branch = leaf->GetBranch();
-               branch->GetEntry(readentry);
+               R__LoadBranch(branch,readentry,fQuickLoad);
                TClonesArray * clones;
                if (maininfo) {
                   clones = (TClonesArray*)maininfo->GetLocalValuePointer(leaf,0);
@@ -1293,7 +1299,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                // We need to retrieve the class of its content.
 
                TBranch *branch = leaf->GetBranch();
-               branch->GetEntry(readentry);
+               R__LoadBranch(branch,readentry,fQuickLoad);
 
                if (maininfo==0) {
 
@@ -1349,7 +1355,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                      TFormLeafInfo* clonesinfo = 
                         new TFormLeafInfo(cl, clones_offset, curelem);
                      TClonesArray * clones;
-                     leaf->GetBranch()->GetEntry(readentry);
+                     R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
 
                      if (previnfo) {
                         previnfo->fNext = clonesinfo;
@@ -2344,7 +2350,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
          // We have a unsplit TClonesArray leaves
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
-         leafcur->GetBranch()->GetEntry(readentry);
+         R__LoadBranch(leafcur->GetBranch(),readentry,fQuickLoad);
          TClonesArray * clones;
 
          TBranch *branch = leafcur->GetBranch();
@@ -2424,7 +2430,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                      else leafinfo->fNext = sub_clonesinfo;
                   else leafinfo = sub_clonesinfo;
 
-                  branch->GetEntry(readentry);
+                  R__LoadBranch(branch,readentry,fQuickLoad);
 
                   TClonesArray * clones = (TClonesArray*)leafinfo->GetValuePointer(leafcur,0);
 
@@ -2523,7 +2529,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
       // unsplitted and/or top leaf/branch.
       TClonesArray * clones = 0;
       TBranch *branchcur = branch;
-      branchcur->GetEntry(readentry);
+      R__LoadBranch(branchcur,readentry,fQuickLoad);
       if (branch->InheritsFrom(TBranchObject::Class()) ) {
          clones = (TClonesArray*)(lobj->GetObject());
       } else if (branch->InheritsFrom(TBranchElement::Class()) ) {
@@ -2536,7 +2542,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
          }
          if (clones==0) {
             TBranch *branchcur = branch;
-            branchcur->GetEntry(readentry);
+            R__LoadBranch(branchcur,readentry,fQuickLoad);
             TClass * mother_cl;
             mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
 
@@ -2849,7 +2855,9 @@ void* TTreeFormula::EvalObject(int instance)
 
    Int_t real_instance = GetRealInstance(instance,0);
 
-   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
+   if (!instance) R__LoadBranch(leaf->GetBranch(),
+                                leaf->GetBranch()->GetTree()->GetReadEntry(),
+                                fQuickLoad);
    else if (real_instance>fNdata[0]) return 0;
    if (fAxis) {
       return 0;
@@ -2881,8 +2889,10 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 
       Int_t real_instance = GetRealInstance(instance,0);
 
-      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-      else if (real_instance>fNdata[0]) return 0;
+      if (!instance) {
+         TBranch *branch = leaf->GetBranch();
+         R__LoadBranch(branch,branch->GetTree()->GetReadEntry(),fQuickLoad);
+      } else if (real_instance>fNdata[0]) return 0;
 
       if (fLookupType[0]==kDirect) {
          return (char*)leaf->GetValuePointer();
@@ -2904,7 +2914,11 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
       hence we are guaranteed that the branch is always properly read */                        \
-   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());    \
+   if (instance==0) {                                                                           \
+      TBranch *br = leaf->GetBranch();                                                          \
+      Long64_t tentry = br->GetTree()->GetReadEntry();                                          \
+      R__LoadBranch(br,tentry,fQuickLoad);                                                      \
+   }                                                                                            \
    else if (real_instance>fNdata[0]) return 0;                                                  \
                                                                                                 \
    if (fAxis) {                                                                                 \
@@ -2926,10 +2940,12 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (!instance) {                                                                             \
+   if (instance==0) {                                                                           \
         TBranch *branch = (TBranch*)fBranches.UncheckedAt(code);                                \
-        if (branch) branch->GetEntry(branch->GetTree()->GetReadEntry());                        \
-        else if (fDidBooleanOptimization) {                                                     \
+        if (branch) {                                                                           \
+           Long64_t treeEntry = branch->GetTree()->GetReadEntry();                              \
+           R__LoadBranch(branch,treeEntry,fQuickLoad);                                          \
+        } else if (fDidBooleanOptimization) {                                                   \
            branch = leaf->GetBranch();                                                          \
            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                              \
            if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );              \
@@ -2955,7 +2971,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 
 // Note that the redundance and structure in this code is tailored to improve
 // efficiencies.
-
 
    if (fNoper == 1 && fNcodes > 0) {
 
@@ -3301,15 +3316,18 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                // Now let calculate what physical instance we really need.
                const Int_t real_instance = GetRealInstance(instance,string_code);
 
-               if (!instance) leafc->GetBranch()->GetEntry(leafc->GetBranch()->GetTree()->GetReadEntry());
-               else {
+               if (!instance) {
+                  TBranch *branch = leafc->GetBranch();
+                  Long64_t readentry = branch->GetTree()->GetReadEntry();
+                  R__LoadBranch(branch,readentry,fQuickLoad);
+               } else {
                   // In the cases where we are beind (i.e. right of) a potential boolean optimization
                   // this tree variable reading may have not been executed with instance==0 which would
                   // result in the branch being potentially not read in.
                   if (fDidBooleanOptimization) {
                      TBranch *br = leafc->GetBranch();
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
-                     if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+                     R__LoadBranch(br,treeEntry,kTRUE);
                   }
                   if (real_instance>fNdata[string_code]) return 0;
                }
@@ -3670,7 +3688,9 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
    if (fNstring && fNval==0 && fNoper==1) {
       if (mode == 0) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-         leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
+         TBranch *branch = leaf->GetBranch();
+         Long64_t readentry = branch->GetTree()->GetReadEntry();
+         R__LoadBranch(branch,readentry,fQuickLoad);
          const char * val = 0;
          if (fLookupType[0]==kDirect) {
             val = (const char*)leaf->GetValuePointer();
@@ -4008,7 +4028,7 @@ void TTreeFormula::LoadBranches()
 
       TBranch *br = leaf->GetBranch();
       Long64_t treeEntry = br->GetTree()->GetReadEntry();
-      if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+      R__LoadBranch(br,treeEntry,kTRUE);
 
       TTreeFormula *alias = (TTreeFormula*)fAliases.UncheckedAt(i);
       if (alias) alias->LoadBranches();
@@ -4066,7 +4086,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             // read branchcount value
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
-            if (!branchcount->GetAddress()) branchcount->GetEntry(readentry);
+            if (!branchcount->GetAddress()) R__LoadBranch(branchcount,readentry,fQuickLoad);
             else branchcount->TBranch::GetEntry(readentry);
 
             size = ((TBranchElement*)branchcount)->GetNdata();
@@ -4079,7 +4099,8 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             // NOTE: could be sped up
             if (fHasMultipleVarDim[i]) {// info && info->GetVarDim()>=0) {
                info = (TFormLeafInfo* )fDataMembers.At(i);
-               if (branch->GetBranchCount2()) branch->GetBranchCount2()->GetEntry(readentry);
+               if (branch->GetBranchCount2()) R__LoadBranch(branch->GetBranchCount2(),readentry,fQuickLoad);
+               else R__LoadBranch(branch,readentry,fQuickLoad);
 
                // Here we need to add the code to take in consideration the
                // double variable length
@@ -4107,7 +4128,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
-            branchcount->GetEntry(readentry);
+            R__LoadBranch(branchcount,readentry,fQuickLoad);
             size = leaf->GetLen() / leaf->GetLenStatic();
          }
          if (hasBranchCount2) {
@@ -4155,7 +4176,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
-            branch->GetEntry(readentry);
+            R__LoadBranch(branch,readentry,fQuickLoad);
             size = (Int_t) leafinfo->GetCounterValue(leaf);
             if (fIndexes[i][0]==-1) {
                // Case where the index is not specified AND the 1st dimension has a variable
@@ -4206,7 +4227,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
-            branch->GetEntry(readentry);
+            R__LoadBranch(branch,readentry,fQuickLoad);
             if (leafinfo->GetNdata(leaf)==0) {
                outofbounds = kTRUE;
             }

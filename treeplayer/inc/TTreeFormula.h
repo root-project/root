@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.40 2005/02/07 17:23:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.41 2005/02/18 09:15:08 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -86,6 +86,7 @@ protected:
    TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
    TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
+   Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
    
 
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
@@ -166,11 +167,13 @@ public:
    //the mutable keyword. 
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
    virtual Bool_t      IsInteger() const;
+           Bool_t      IsQuickLoad() const { return fQuickLoad; }
    virtual Bool_t      IsString() const;
    virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual char       *PrintValue(Int_t mode=0) const;
    virtual char       *PrintValue(Int_t mode, Int_t instance, const char *decform = "9.9") const;
    virtual void        SetAxis(TAxis *axis=0);
+           void        SetQuickLoad(Bool_t quick) { fQuickLoad = quick; }
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        UpdateFormulaLeaves();
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.15 2005/02/16 01:29:56 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.16 2005/02/16 20:18:27 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1445,6 +1445,7 @@ namespace ROOT {
                      Error("AnalyzeTree",
                            "Introspection of TClonesArray in older file not implemented yet.");
                   }
+                  delete formula;
                }
             }
             else Error("AnalyzeTree","missing class for %s.",branch->GetName());

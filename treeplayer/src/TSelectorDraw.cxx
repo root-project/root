@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.44 2005/02/11 16:42:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.45 2005/02/14 12:54:06 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -792,6 +792,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
+      fSelect->SetQuickLoad(kTRUE);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return kFALSE; }
    }
 
@@ -823,21 +824,25 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    fTree->ResetBit(TTree::kForceRead);
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
+      fVar1->SetQuickLoad(kTRUE);
       if (!fVar1->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar1);
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
+      fVar2->SetQuickLoad(kTRUE);
       if (!fVar2->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar2);
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
+      fVar3->SetQuickLoad(kTRUE);
       if (!fVar3->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar3);
    }
    if (ncols >= 4) {
       fVar4 = new TTreeFormula("Var4",GetNameByIndex(title,index,3),fTree);
+      fVar4->SetQuickLoad(kTRUE);
       if (!fVar4->GetNdim()) { ClearFormula(); return kFALSE;}
       fManager->Add(fVar4);
    }

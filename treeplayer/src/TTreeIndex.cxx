@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.7 2004/12/08 10:15:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.8 2005/02/07 17:23:31 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -283,7 +283,10 @@ TTreeFormula *TTreeIndex::GetMajorFormula()
 {
    // return a pointer to the TreeFormula corresponding to the majorname
 
-   if (!fMajorFormula) fMajorFormula = new TTreeFormula("Major",fMajorName.Data(),fTree);
+   if (!fMajorFormula) {
+      fMajorFormula = new TTreeFormula("Major",fMajorName.Data(),fTree);
+      fMajorFormula->SetQuickLoad(kTRUE);
+   }
    return fMajorFormula;
 }
 
@@ -292,7 +295,10 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 {
    // return a pointer to the TreeFormula corresponding to the minorname
 
-   if (!fMinorFormula) fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
+   if (!fMinorFormula) {
+      fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
+      fMajorFormula->SetQuickLoad(kTRUE);
+   }
    return fMinorFormula;
 }
 
@@ -301,7 +307,10 @@ TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *T)
 {
    // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
 
-   if (!fMajorFormulaParent) fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
+   if (!fMajorFormulaParent) {
+      fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
+      fMajorFormulaParent->SetQuickLoad(kTRUE);
+   }
    return fMajorFormulaParent;
 }
 
@@ -310,7 +319,10 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *T)
 {
    // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
 
-   if (!fMinorFormulaParent) fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
+   if (!fMinorFormulaParent) {
+      fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
+      fMinorFormulaParent->SetQuickLoad(kTRUE);
+   }
    return fMinorFormulaParent;
 }
 

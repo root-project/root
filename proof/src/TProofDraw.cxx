@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.4 2004/07/29 10:54:54 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.5 2004/12/28 20:51:25 brun Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -59,6 +59,7 @@ void TProofDraw::Init(TTree *tree)
    fManager = new TTreeFormulaManager();
 
    fSelFormula = new TTreeFormula("Selection", fSelection, tree);
+   fSelFormula->SetQuickLoad(kTRUE);
    if (fSelFormula->GetNdim() == 0) {
       SetError("Init", Form("selection invalid (%s)", fSelection.Data()));
       ClearFormulas();
@@ -82,6 +83,7 @@ void TProofDraw::Init(TTree *tree)
    PDB(kDraw,1) fSelFormula->Print();
 
    fVarXFormula = new TTreeFormula("VarX", fVarX, tree);
+   fVarXFormula->SetQuickLoad(kTRUE);
    if (fVarXFormula->GetNdim() == 0) {
       SetError("Init", Form("varX invalid (%s)", fVarX.Data()));
       ClearFormulas();
