@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.2 2000/05/29 06:19:21 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -32,9 +32,9 @@ class TMethodCall;
 class TLeafObject : public TLeaf {
 
 protected:
-    TClass      *fClass;          //pointer to class
-    void        **fObjAddress;    //Address of Pointer to object
-    Bool_t       fVirtual;        //Support for Virtuality
+    TClass      *fClass;          //! pointer to class
+    void        **fObjAddress;    //! Address of Pointer to object
+    Bool_t       fVirtual;        //! Support for Virtuality
     
 public:
     TLeafObject();
@@ -43,7 +43,7 @@ public:
 
     virtual void    FillBasket(TBuffer &b);
     TClass          *GetClass() {return fClass;}
-    TMethodCall     *GetMethodCall(char *name);
+    TMethodCall     *GetMethodCall(const char *name);
     TObject         *GetObject() {return (TObject*)(*fObjAddress);}
     const char      *GetTypeName() const ;
     Bool_t          IsVirtual() {return fVirtual;}
@@ -51,7 +51,7 @@ public:
     virtual void    SetAddress(void *add=0);
     virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
     
-    ClassDef(TLeafObject,1)  //A TLeaf for a general object derived from TObject.
+    ClassDef(TLeafObject,2)  //A TLeaf for a general object derived from TObject.
 };
 
 #endif
