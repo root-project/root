@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TWin32GLKernel.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TWin32GLKernel.cxx,v 1.2 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 #include "TWin32GLKernel.h"
@@ -645,7 +645,7 @@ void TWin32GLKernel::ExecThreadCB(TWin32SendClass *command)
             switch (type) {
             case kBoolType:
                 {
-                    Bool_t *params = (Bool_t *)(command->GetData(2));
+                    UChar_t *params = (UChar_t *)(command->GetData(2));
                     TGLKernel::GetGL(mode,params);
                 }
                 break;
