@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.175 2003/08/25 22:37:39 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.176 2003/09/12 11:09:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1047,7 +1047,7 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
 
    TObjArray *sinfos = cl->GetStreamerInfos();
    TStreamerInfo *info = (TStreamerInfo *)sinfos->At(cl->GetClassVersion());
-   //TStreamerInfo *info = cl->GetStreamerInfo();
+   if (!info) info = cl->GetStreamerInfo();
    if (!info) return 0;
    TStreamerElement *element = (TStreamerElement *)info->fElements->FindObject(countName);
    if (!element) return 0;
