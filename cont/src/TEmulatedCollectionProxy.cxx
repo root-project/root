@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.3 2004/11/01 23:09:45 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.4 2004/11/02 21:51:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -347,9 +347,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
     case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( i->read_any_object(fVal,b) );
     case G__BIT_ISPOINTER|R__BIT_ISSTRING:
-#ifndef R__AIX
       DOLOOP( i->read_std_string_pointer(b) );
-#endif
     case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:  
       DOLOOP( i->read_tstring_pointer(vsn3,b) );
   }
@@ -392,9 +390,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
     case G__BIT_ISPOINTER|G__BIT_ISCLASS:
       DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
     case R__BIT_ISSTRING|G__BIT_ISPOINTER:
-#ifndef R__AIX
       DOLOOP( i->write_std_string_pointer(b) );
-#endif
     case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
       DOLOOP( i->write_tstring_pointer(b) );
   }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.6 2004/11/01 12:26:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.7 2004/11/02 21:51:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include <iostream>
 
 #define MESSAGE(which,text)  
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -197,6 +198,23 @@ public:
     }
   }
 };
+
+#ifdef R__AIX
+//______________________________________________________________________________
+void TGenCollectionProxy::StreamHelper::read_std_string_pointer(TBuffer& b)  {
+  TString s;
+  std::string* str = (std::string*) (ptr() ? ptr() : new std::string());
+  s.Streamer(b);
+  *str = s;
+  set(str);
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy::StreamHelper::write_std_string_pointer(TBuffer& b)  {
+  const char* c = (const char*)(ptr() ? (*(std::string**)this)->c_str() : "");
+  TString(c).Streamer(b);
+}
+#endif
 
 //______________________________________________________________________________
 TGenCollectionProxy::Value::Value(const Value& copy)  {

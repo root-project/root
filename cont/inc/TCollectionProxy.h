@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.2 2004/11/01 12:26:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.3 2004/11/02 21:51:10 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -29,13 +29,15 @@ class TVirtualCollectionProxy;
 
 #if defined(_WIN32) 
   #if _MSC_VER<1300
-    #define TYPENAME 
+    #define TYPENAME
+    #define R__VCXX6
   #else
     #define TYPENAME typename
   #endif
 #else
   #define TYPENAME typename
 #endif
+
 
 namespace ROOT {
   /** @class TCollectionProxy::Environ TCollectionProxy.h TCollectionProxy.h 
@@ -89,6 +91,16 @@ public:
 #else
   typedef const std::type_info& Info_t;
 #endif
+
+
+  template <class T, class Q> struct pair_holder {
+    T first;
+    Q second;
+    pair_holder() {}
+    pair_holder(const pair_holder& c) : first(c.first), second(c.second) {}
+    ~pair_holder() {}
+  };
+
   template <class T> struct Address {
     static void* address(T ref) {
       return (void*)&ref;
@@ -169,11 +181,16 @@ public:
     }
     static void* destruct(void* env)  {
       PEnv_t   e = PEnv_t(env);
-      PCont_t  c = PCont_t(e->object);
       PValue_t m = PValue_t(e->start);
+#if defined(R__VCXX6)
+      PCont_t  c = PCont_t(e->object);
       TYPENAME T::allocator_type a = c->get_allocator();
       for (size_t i=0; i < e->size; ++i, ++m )
         a.destroy(m);
+#else
+      for (size_t i=0; i < e->size; ++i, ++m )
+        m->~Value_t();
+#endif
       return 0;
     }
   };
@@ -308,8 +325,8 @@ public:
 
   /// Generate proxy from template
   template <class T> static Proxy_t* genProxy(const T&)  {
-    std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
     return genExplicitProxy(typeid(TYPENAME T::Cont_t),
                             sizeof(TYPENAME T::Iter_t),
                             (((char*)&p->second)-((char*)&p->first)),
@@ -361,11 +378,11 @@ public:
 
   /// Generate class streamer from template
   template <class T> static TClassStreamer* genClassStreamer(const T&)  {
-    std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
     return genExplicitClassStreamer(typeid(TYPENAME T::Cont_t),
                                     sizeof(TYPENAME T::Iter_t),
-                                (((char*)&p->second)-((char*)&p->first)),
+                                    (((char*)&p->second)-((char*)&p->first)),
                                     T::value_offset(),
                                     T::size,
                                     T::resize,
@@ -397,8 +414,8 @@ public:
 
   /// Generate member streamer from template
   template <class T> static TMemberStreamer* genMemberStreamer(const T&)  {
-    std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
-       (std::pair<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
+    pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p = 
+       (pair_holder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
     return genExplicitMemberStreamer( typeid(TYPENAME T::Cont_t),
                                       sizeof(TYPENAME T::Iter_t),
                                       (((char*)&p->second)-((char*)&p->first)),

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.15 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -122,6 +122,10 @@ public:
       ((TString*)this)->Streamer(b);
       return this;
     }
+#ifdef R__AIX
+    void read_std_string_pointer(TBuffer& b);
+    void write_std_string_pointer(TBuffer& b);
+#else
     void read_std_string_pointer(TBuffer& b) {
       TString s;
       std::string* str = (std::string*) (ptr() ? ptr() : new std::string());
@@ -133,6 +137,7 @@ public:
       const char* c = (const char*)(ptr() ? (*(std::string**)this)->c_str() : "");
       TString(c).Streamer(b);
     }
+#endif
     void read_any_object(Value* v, TBuffer& b)  {
       void* p = ptr();
       if ( p )  {
