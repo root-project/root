@@ -4,7 +4,7 @@ test: tests
 
 
 
-SUBDIRS = stl specialobj template other typedef_global const
+SUBDIRS = stl specialobj template other typedef_global const typedef templateMembers
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
