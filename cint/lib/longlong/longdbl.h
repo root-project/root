@@ -122,7 +122,7 @@ class G__longdouble {
   friend istream& operator>>(istream& ist,G__longdouble& a);
 #endif
 
- private: 
+  //private: 
 #ifndef __CINT__
   G__double92 dat;
 #endif
@@ -176,6 +176,10 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 }
 #endif
 
+int G__ateval(const G__longdouble& a) {
+  fprintf(stdout,"(long double)%g\n",a.dat);
+  return(1);
+}
 
 #ifdef __MAKECINT__
 /*

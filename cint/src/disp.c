@@ -1653,9 +1653,9 @@ long offset;
     else {
     search_again:
       startindex=0;
-      while((strcmp(index,var->varnamebuf[startindex])!=0)&&
-	    (startindex<var->allvar)) {
-	startindex++;
+      while((strcmp(index,var->varnamebuf[startindex])!=0)) {
+	++startindex;
+	if(startindex>=var->allvar) break;
       }
       if(startindex==var->allvar&&var->next) {
 	var=var->next;

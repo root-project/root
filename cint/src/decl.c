@@ -143,6 +143,10 @@ char *new_name;
 	G__def_struct_member = store_def_struct_member;
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1686
+      G__tagnum=G__defined_tagname("G__ulonglong",2);
+      G__typenum=G__search_typename("unsigned long long",'u',G__tagnum,G__PARANORMAL);
+#endif
 #ifndef G__OLDIMPLEMENTATION1533
       G__tagnum=G__defined_tagname("G__longdouble",2);
       G__typenum=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
@@ -206,6 +210,10 @@ char *new_name;
 	G__def_struct_member = store_def_struct_member;
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1686
+      G__tagnum=G__defined_tagname("G__ulonglong",2);
+      G__typenum=G__search_typename("unsigned long long",'u',G__tagnum,G__PARANORMAL);
+#endif
       G__tagnum=G__defined_tagname("G__longlong",2);
       G__typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
       G__tagnum=G__defined_tagname("G__longdouble",2);

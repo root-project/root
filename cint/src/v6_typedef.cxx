@@ -552,6 +552,11 @@ void G__define_type()
 	G__def_struct_member = store_def_struct_member;
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1686
+      strcpy(tagname,"G__ulonglong");
+      itemp=G__defined_tagname(tagname,2);
+      G__search_typename("unsigned long long",'u',itemp,G__PARANORMAL);
+#endif
 #ifndef G__OLDIMPLEMENTATION1533
       strcpy(tagname,"G__longdouble");
       itemp=G__defined_tagname(tagname,2);
@@ -582,6 +587,11 @@ void G__define_type()
 #endif
       }
 
+#ifndef G__OLDIMPLEMENTATION1686
+      strcpy(tagname,"G__ulonglong");
+      itemp=G__defined_tagname(tagname,2);
+      G__search_typename("unsigned long long",'u',itemp,G__PARANORMAL);
+#endif
       strcpy(tagname,"G__longlong");
       itemp=G__defined_tagname(tagname,2);
       G__search_typename("long long",'u',itemp,G__PARANORMAL);
