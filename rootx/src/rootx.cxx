@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.8 2001/11/06 13:38:27 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.9 2002/03/29 18:18:11 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -70,6 +70,12 @@
 #endif
 #ifndef UTMP_FILE
 #define UTMP_FILE "/etc/utmp"
+#endif
+
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#define ROOTBINARY "root_exe.exe"
+#else
+#define ROOTBINARY "root.exe"
 #endif
 
 extern void PopupLogo();
@@ -361,9 +367,9 @@ int main(int argc, char **argv)
 
    // Build argv vector
 #ifdef ROOTBINDIR
-   sprintf(arg0, "%s/root.exe", ROOTBINDIR);
+   sprintf(arg0, "%s/%s", ROOTBINDIR, ROOTBINARY);
 #else
-   sprintf(arg0, "%s/bin/root.exe", getenv("ROOTSYS"));
+   sprintf(arg0, "%s/bin/%s", getenv("ROOTSYS"), ROOTBINARY);
 #endif
    argvv[0] = arg0;
    argvv[1] = (char *) "-splash";
@@ -383,11 +389,11 @@ int main(int argc, char **argv)
    // Exec failed
 #ifndef ROOTBINDIR
    fprintf(stderr,
-	   "%s: can't start ROOT -- check that %s/bin/root.exe exists!\n",
-           argv[0], getenv("ROOTSYS"));
+	   "%s: can't start ROOT -- check that %s/bin/%s exists!\n",
+           argv[0], getenv("ROOTSYS"), ROOTBINARY);
 #else
-   fprintf(stderr, "%s: can't start ROOT -- check that %s/root.exe exists!\n",
-           argv[0], ROOTBINDIR);
+   fprintf(stderr, "%s: can't start ROOT -- check that %s/%s exists!\n",
+           argv[0], ROOTBINDIR, ROOTBINARY);
 #endif
 
    return 1;

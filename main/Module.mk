@@ -16,7 +16,11 @@ MAINDIRW     := $(MAINDIR)/win32
 ROOTEXES     := $(MODDIRS)/rmain.cxx
 ROOTEXEO     := $(ROOTEXES:.cxx=.o)
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
+ifeq ($(ARCH),win32gcc)
+ROOTEXE      := bin/root_exe.exe
+else
 ROOTEXE      := bin/root.exe
+endif
 ROOTNEXE     := bin/rootn.exe
 ifeq ($(PLATFORM),win32)
 ROOTICON     := icons/RootIcon.obj
