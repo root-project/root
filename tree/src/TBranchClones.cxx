@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.10 2001/01/18 09:41:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.11 2001/01/20 21:15:46 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -214,7 +214,7 @@ Int_t TBranchClones::GetEntry(Int_t entry, Int_t getall)
 //*-*      ====================================================================
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
-   Int_t nbytes = fBranchCount->GetEntry(entry);
+   Int_t nbytes = fBranchCount->GetEntry(entry, getall);
    TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
    fN = Int_t(leafcount->GetValue());
    if (fN <= 0) {
