@@ -30,7 +30,7 @@ public:
 
 #endif
 
-void tt() {
+void duplicate() {
    HistMan m;
    m.Book<TH1D>("","",3,2,1,"");
    m.Book<TH2D>("","",3,2,1,4,3,1,"");
