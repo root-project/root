@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.50 2001/06/06 07:21:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.51 2001/07/03 16:48:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2291,7 +2291,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //
 //   see TTreePlayer::DrawSelect for explanation of the other parameters.
 
-   TTreeFormula *select, **var;
+   TTreeFormula **var;
    TString *cnames;
    TString onerow;
    TString opt = option;
@@ -2311,11 +2311,11 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    }
 
 //*-*- Compile selection expression if there is one
-   select = 0;
+   fSelect = 0;
    if (strlen(selection)) {
-      select = new TTreeFormula("Selection",selection,fTree);
-      if (!select) return principal;
-      if (!select->GetNdim()) { delete select; return principal; }
+      fSelect = new TTreeFormula("Selection",selection,fTree);
+      if (!fSelect) return principal;
+      if (!fSelect->GetNdim()) { delete fSelect; fSelect = 0; return principal; }
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -2351,13 +2351,18 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 
 //*-*- loop on all selected entries
    fSelectedRows = 0;
+   Int_t tnumber = -1;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       fTree->LoadTree(entryNumber);
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+      if (tnumber != fTree->GetTreeNumber()) {
+         tnumber = fTree->GetTreeNumber();
+         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+      }
+      if (fSelect) {
+         fSelect->GetNdata();
+         if (fSelect->EvalInstance(0) == 0) continue;
       }
       onerow = Form("* %8d ",entryNumber);
       for (i=0;i<ncols;i++) {
@@ -2375,7 +2380,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    }
 
 //*-*- delete temporary objects
-   delete select;
+   delete fSelect; fSelect = 0;
    for (i=0;i<ncols;i++) {
       delete var[i];
    }
@@ -2611,10 +2616,15 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       printf("%s*\n",onerow.Data());
 //*-*- loop on all selected entries
    fSelectedRows = 0;
+   Int_t tnumber = -1;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       fTree->LoadTree(entryNumber);
+      if (tnumber != fTree->GetTreeNumber()) {
+         tnumber = fTree->GetTreeNumber();
+         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+      }
       if (fSelect) {
          fSelect->GetNdata();
          if (fSelect->EvalInstance(0) == 0) continue;
@@ -2673,7 +2683,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    // be made using "var1:var2:var3". In case of error 0 is returned otherwise
    // a TSQLResult object which must be deleted by the user.
 
-   TTreeFormula *select, **var;
+   TTreeFormula **var;
    TString *cnames;
    TString onerow;
    Int_t entry,entryNumber,i,nch;
@@ -2690,11 +2700,11 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    }
 
    // compile selection expression if there is one
-   select = 0;
+   fSelect = 0;
    if (strlen(selection)) {
-      select = new TTreeFormula("Selection",selection,fTree);
-      if (!select) return 0;
-      if (!select->GetNdim()) { delete select; return 0; }
+      fSelect = new TTreeFormula("Selection",selection,fTree);
+      if (!fSelect) return 0;
+      if (!fSelect->GetNdim()) { delete fSelect; fSelect = 0; return 0; }
    }
 
    // if varexp is empty, take first 8 columns by default
@@ -2732,13 +2742,18 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
 
    // loop on all selected entries
    fSelectedRows = 0;
+   Int_t tnumber = -1;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       fTree->LoadTree(entryNumber);
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+      if (tnumber != fTree->GetTreeNumber()) {
+         tnumber = fTree->GetTreeNumber();
+         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+      }
+      if (fSelect) {
+         fSelect->GetNdata();
+         if (fSelect->EvalInstance(0) == 0) continue;
       }
 
       TTreeRow *row = new TTreeRow(ncols);
@@ -2750,7 +2765,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    }
 
    // delete temporary objects
-   delete select;
+   delete fSelect; fSelect = 0;
    for (i=0;i<ncols;i++) {
       delete var[i];
    }
